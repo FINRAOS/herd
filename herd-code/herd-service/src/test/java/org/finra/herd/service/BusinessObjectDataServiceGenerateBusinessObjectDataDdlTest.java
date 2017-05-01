@@ -2310,20 +2310,13 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     @Test
     public void testGenerateBusinessObjectDataDdlIncludeAllRegisteredSubPartitionsSecondSubPartitionValidNonAvailableStorageUnitBdataArchived()
     {
-        // Create two VALID sub-partitions both with "available" storage units in a non-Glacier storage.
+        // Create two VALID sub-partitions both with "available" storage units.
         List<StorageUnitEntity> storageUnitEntities = businessObjectDataServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(
                 Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2)));
 
-        // Update the second sub-partition storage unit status to DISABLED.
-        storageUnitEntities.get(1).setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.DISABLED));
-
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
+        // Update the second sub-partition storage unit status to ARCHIVED.
+        storageUnitEntities.get(1).setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ARCHIVED));
 
         // Try to retrieve business object data DDL with "IncludeAllRegisteredSubPartitions" option enabled.
         try
@@ -2349,7 +2342,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     @Test
     public void testGenerateBusinessObjectDataDdlIncludeAllRegisteredSubPartitionsSecondSubPartitionInvalidBdataArchived()
     {
-        // Create two VALID sub-partitions both with "available" storage units in a non-Glacier storage.
+        // Create two VALID sub-partitions both with "available" storage units.
         List<StorageUnitEntity> storageUnitEntities = businessObjectDataServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(
                 Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2)));
@@ -2358,55 +2351,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         storageUnitEntities.get(1).getBusinessObjectData()
             .setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.INVALID));
 
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
-
-        // Try to retrieve business object data DDL with "IncludeAllRegisteredSubPartitions" option enabled.
-        try
-        {
-            businessObjectDataService.generateBusinessObjectDataDdl(
-                new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
-                    new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE,
-                        NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION,
-                    NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
-                    INCLUDE_DROP_TABLE_STATEMENT, INCLUDE_IF_NOT_EXISTS_OPTION, INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA,
-                    INCLUDE_ALL_REGISTERED_SUBPARTITIONS, NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS));
-            fail("Suppose to throw an ObjectNotFoundException when second sub-partition has a non-available storage unit status.");
-        }
-        catch (ObjectNotFoundException e)
-        {
-            assertEquals(String.format("Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
-                "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, PARTITION_VALUE, SUB_PARTITION_VALUE_2, DATA_VERSION, STORAGE_NAME), e.getMessage());
-        }
-    }
-
-    @Test
-    public void testGenerateBusinessObjectDataDdlIncludeAllRegisteredSubPartitionsSecondSubPartitionInvalidNonAvailableStorageUnitBdataArchived()
-    {
-        // Create two VALID sub-partitions both with "available" storage units in a non-Glacier storage.
-        List<StorageUnitEntity> storageUnitEntities = businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(
-                Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2)));
-
-        // Update the second sub-partition business object data status to INVALID.
-        storageUnitEntities.get(1).getBusinessObjectData()
-            .setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.INVALID));
-
-        // Update the second sub-partition storage unit status to DISABLED.
-        storageUnitEntities.get(1).setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.DISABLED));
-
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
+        // Update the second sub-partition storage unit status to ARCHIVED.
+        storageUnitEntities.get(1).setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ARCHIVED));
 
         // Try to retrieve business object data DDL with "IncludeAllRegisteredSubPartitions" option enabled.
         try
@@ -2441,52 +2387,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         storageUnitEntities.get(1).getBusinessObjectData()
             .setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.DELETED));
 
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
-
-        // Retrieve business object data DDL with "IncludeAllRegisteredSubPartitions" option enabled.
-        BusinessObjectDataDdl resultBusinessObjectDataDdl = businessObjectDataService.generateBusinessObjectDataDdl(
-            new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE,
-                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION,
-                NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT,
-                INCLUDE_IF_NOT_EXISTS_OPTION, INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA, INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
-                NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Both sub-partitions should. Only the first sub-partition should be present in the generated DDL.
-        assertEquals(new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
-            .getExpectedBusinessObjectDataDdlTwoPartitionLevels(Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1)))),
-            resultBusinessObjectDataDdl);
-    }
-
-    @Test
-    public void testGenerateBusinessObjectDataDdlIncludeAllRegisteredSubPartitionsSecondSubPartitionDeletedNonAvailableStorageUnitBdataArchived()
-    {
-        // Create two VALID sub-partitions both with "available" storage units in a non-Glacier storage.
-        List<StorageUnitEntity> storageUnitEntities = businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(
-                Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2)));
-
-        // Update the second sub-partition business object data status to DELETED.
-        storageUnitEntities.get(1).getBusinessObjectData()
-            .setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.DELETED));
-
-        // Update the second sub-partition storage unit status to DISABLED.
-        storageUnitEntities.get(1).setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.DISABLED));
-
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
+        // Update the second sub-partition storage unit status to ARCHIVED.
+        storageUnitEntities.get(1).setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ARCHIVED));
 
         // Retrieve business object data DDL with "IncludeAllRegisteredSubPartitions" option enabled.
         BusinessObjectDataDdl resultBusinessObjectDataDdl = businessObjectDataService.generateBusinessObjectDataDdl(

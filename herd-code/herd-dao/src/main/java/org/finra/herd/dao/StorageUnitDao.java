@@ -25,14 +25,14 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 public interface StorageUnitDao extends BaseJpaDao
 {
     /**
-     * Retrieves a list of storage units that belong to GLACIER storage and have the origin S3 storage unit in RESTORING state. The returned list is ordered by
-     * the "updated on" timestamp of the origin S3 storage units, starting with an S3 storage unit that has the RESTORING status the longest.
+     * Retrieves a list of storage units that belong to S3 storage and have the relative S3 storage unit in RESTORING state. The returned list is ordered by the
+     * "updated on" timestamp of the S3 storage units, starting with an S3 storage unit that has the RESTORING status the longest.
      *
      * @param maxResult the maximum number of results to retrieve
      *
      * @return the list of storage unit entities
      */
-    public List<StorageUnitEntity> getGlacierStorageUnitsToRestore(int maxResult);
+    public List<StorageUnitEntity> getS3StorageUnitsToRestore(int maxResult);
 
     /**
      * Gets a storage unit identified by the given business object data entity and storage entity. Returns {@code null} if storage unit entity does not exist.
@@ -65,28 +65,6 @@ public interface StorageUnitDao extends BaseJpaDao
     public StorageUnitEntity getStorageUnitByStorageNameAndDirectoryPath(String storageName, String directoryPath);
 
     /**
-     * Retrieves a list of storage units that belong to the specified storage for the specified business object data.
-     *
-     * @param storageEntity the storage entity
-     * @param businessObjectDataEntities the list of business object data entities
-     *
-     * @return the list of storage unit entities
-     */
-    public List<StorageUnitEntity> getStorageUnitsByStorageAndBusinessObjectData(StorageEntity storageEntity,
-        List<BusinessObjectDataEntity> businessObjectDataEntities);
-
-    /**
-     * Retrieves a list of storage units that belong to storage of the specified storage platform for the specified business object data.
-     *
-     * @param storagePlatform the storage platform
-     * @param businessObjectDataEntity the business object data entity
-     *
-     * @return the list of storage unit entities
-     */
-    public List<StorageUnitEntity> getStorageUnitsByStoragePlatformAndBusinessObjectData(String storagePlatform,
-        BusinessObjectDataEntity businessObjectDataEntity);
-
-    /**
      * Retrieves a list of storage unit entities per specified parameters.
      *
      * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
@@ -110,4 +88,26 @@ public interface StorageUnitDao extends BaseJpaDao
     public List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey,
         List<List<String>> partitionFilters, Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames,
         String storagePlatformType, String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits);
+
+    /**
+     * Retrieves a list of storage units that belong to the specified storage for the specified business object data.
+     *
+     * @param storageEntity the storage entity
+     * @param businessObjectDataEntities the list of business object data entities
+     *
+     * @return the list of storage unit entities
+     */
+    public List<StorageUnitEntity> getStorageUnitsByStorageAndBusinessObjectData(StorageEntity storageEntity,
+        List<BusinessObjectDataEntity> businessObjectDataEntities);
+
+    /**
+     * Retrieves a list of storage units that belong to storage of the specified storage platform for the specified business object data.
+     *
+     * @param storagePlatform the storage platform
+     * @param businessObjectDataEntity the business object data entity
+     *
+     * @return the list of storage unit entities
+     */
+    public List<StorageUnitEntity> getStorageUnitsByStoragePlatformAndBusinessObjectData(String storagePlatform,
+        BusinessObjectDataEntity businessObjectDataEntity);
 }

@@ -37,7 +37,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.StorageFileDao;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
@@ -60,6 +59,7 @@ import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
+import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StoragePolicyDaoHelper;
@@ -87,7 +87,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
     private S3Service s3Service;
 
     @Mock
-    private StorageFileDao storageFileDao;
+    private StorageFileDaoHelper storageFileDaoHelper;
 
     @Mock
     private StorageFileHelper storageFileHelper;
@@ -351,7 +351,6 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn(TEST_S3_KEY_PREFIX);
         when(storageFileHelper.createStorageFilesFromEntities(storageFileEntities)).thenReturn(storageFiles);
         when(storageFileHelper.getFilePathsFromStorageFiles(storageFiles)).thenReturn(storageFilePaths);
-        when(storageFileDao.getStorageFileCount(STORAGE_NAME, TEST_S3_KEY_PREFIX + "/")).thenReturn(Long.valueOf(storageFileEntities.size()));
         doAnswer(new Answer<Void>()
         {
             public Void answer(InvocationOnMock invocation)
@@ -398,7 +397,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(storageFileHelper).createStorageFilesFromEntities(storageFileEntities);
         verify(storageFileHelper).getFilePathsFromStorageFiles(storageFiles);
         verify(storageFileHelper).validateStorageFiles(storageFilePaths, TEST_S3_KEY_PREFIX, businessObjectDataEntity, STORAGE_NAME);
-        verify(storageFileDao).getStorageFileCount(STORAGE_NAME, TEST_S3_KEY_PREFIX + "/");
+        verify(storageFileDaoHelper).validateStorageFilesCount(STORAGE_NAME, businessObjectDataKey, TEST_S3_KEY_PREFIX, storageFileEntities.size());
         verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ARCHIVING);
         verify(configurationHelper).getProperty(ConfigurationValue.S3_ENDPOINT);
         verifyNoMoreInteractionsHelper();
@@ -414,7 +413,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, s3KeyPrefixHelper, s3Service, storageFileDao,
+        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, s3KeyPrefixHelper, s3Service, storageFileDaoHelper,
             storageFileHelper, storageHelper, storagePolicyDaoHelper, storagePolicyHelper, storageUnitDaoHelper);
     }
 }

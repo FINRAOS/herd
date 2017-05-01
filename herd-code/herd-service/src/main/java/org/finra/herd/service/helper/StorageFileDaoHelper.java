@@ -18,11 +18,13 @@ package org.finra.herd.service.helper;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.StorageFileDao;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
@@ -33,6 +35,9 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 @Component
 public class StorageFileDaoHelper
 {
+    @Autowired
+    private BusinessObjectDataHelper businessObjectDataHelper;
+
     @Autowired
     private StorageFileDao storageFileDao;
 
@@ -82,5 +87,32 @@ public class StorageFileDaoHelper
         }
 
         return storageFileEntity;
+    }
+
+    /**
+     * Validates that storage does not have any other registered storage files that start with the specified S3 key prefix, but belong to some other business
+     * object data instances.
+     *
+     * @param storageName the storage name
+     * @param businessObjectDataKey the business object data key
+     * @param s3KeyPrefix the S3 key prefix
+     * @param expectedStorageFilesCount the expected number of storage files that match the specified S3 key prefix in the storage
+     */
+    public void validateStorageFilesCount(String storageName, BusinessObjectDataKey businessObjectDataKey, String s3KeyPrefix, int expectedStorageFilesCount)
+    {
+        // Get count of all storage files from the storage that start with the specified S3 key prefix.
+        // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
+        String s3KeyPrefixWithTrailingSlash = StringUtils.appendIfMissing(s3KeyPrefix, "/");
+        Long registeredStorageFilesCount = storageFileDao.getStorageFileCount(storageName, s3KeyPrefixWithTrailingSlash);
+
+        // Check if the number of registered storage files that match the S3 key prefix is equal to the expected value.
+        if (registeredStorageFilesCount != expectedStorageFilesCount)
+        {
+            throw new IllegalStateException(String
+                .format("Found %d registered storage file(s) matching business object data S3 key prefix in the storage that is not equal to the number " +
+                    "of storage files (%d) registered with the business object data in that storage. " +
+                    "Storage: {%s}, s3KeyPrefix {%s}, business object data: {%s}", registeredStorageFilesCount, expectedStorageFilesCount, storageName,
+                    s3KeyPrefixWithTrailingSlash, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+        }
     }
 }

@@ -60,9 +60,9 @@ public class BusinessObjectDataFinalizeRestoreServiceImpl implements BusinessObj
      */
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void finalizeRestore(StorageUnitAlternateKeyDto glacierStorageUnitKey)
+    public void finalizeRestore(StorageUnitAlternateKeyDto storageUnitKey)
     {
-        finalizeRestoreImpl(glacierStorageUnitKey);
+        finalizeRestoreImpl(storageUnitKey);
     }
 
     /**
@@ -72,45 +72,44 @@ public class BusinessObjectDataFinalizeRestoreServiceImpl implements BusinessObj
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public List<StorageUnitAlternateKeyDto> getGlacierStorageUnitsToRestore(int maxResult)
+    public List<StorageUnitAlternateKeyDto> getS3StorageUnitsToRestore(int maxResult)
     {
-        return getGlacierStorageUnitsToRestoreImpl(maxResult);
+        return getS3StorageUnitsToRestoreImpl(maxResult);
     }
 
     /**
-     * Finalizes restore of a Glacier storage unit.
+     * Finalizes restore of an S3 storage unit.
      *
-     * @param glacierStorageUnitKey the Glacier storage unit key
+     * @param storageUnitKey the storage unit key
      */
-    protected void finalizeRestoreImpl(StorageUnitAlternateKeyDto glacierStorageUnitKey)
+    protected void finalizeRestoreImpl(StorageUnitAlternateKeyDto storageUnitKey)
     {
         // Build the business object data restore DTO.
-        BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(glacierStorageUnitKey);
+        BusinessObjectDataRestoreDto businessObjectDataRestoreDto = businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(storageUnitKey);
 
         // Execute the S3 specific steps required to finalize the business object data restore.
         businessObjectDataFinalizeRestoreHelperService.executeS3SpecificSteps(businessObjectDataRestoreDto);
 
         // Execute the after step regardless if the above step failed or not. Please note that the after step returns true on success and false otherwise.
-        businessObjectDataFinalizeRestoreHelperService.enableOriginStorageUnit(businessObjectDataRestoreDto);
+        businessObjectDataFinalizeRestoreHelperService.completeFinalizeRestore(businessObjectDataRestoreDto);
 
         // Create storage unit notification for the origin storage unit.
         notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-            businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getOriginStorageName(),
-            businessObjectDataRestoreDto.getNewOriginStorageUnitStatus(), businessObjectDataRestoreDto.getOldOriginStorageUnitStatus());
+            businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getStorageName(),
+            businessObjectDataRestoreDto.getNewStorageUnitStatus(), businessObjectDataRestoreDto.getOldStorageUnitStatus());
     }
 
     /**
-     * Retrieves the keys for Glacier storage units that are currently being restored.
+     * Retrieves a list of keys for S3 storage units that are currently being restored.
      *
      * @param maxResult the maximum number of results to retrieve
      *
      * @return the list of storage unit keys
      */
-    protected List<StorageUnitAlternateKeyDto> getGlacierStorageUnitsToRestoreImpl(int maxResult)
+    protected List<StorageUnitAlternateKeyDto> getS3StorageUnitsToRestoreImpl(int maxResult)
     {
-        // Retrieves a list of storage units that belong to GLACIER storage and have the origin S3 storage unit in RESTORING state.
-        List<StorageUnitEntity> storageUnitEntities = storageUnitDao.getGlacierStorageUnitsToRestore(maxResult);
+        // Retrieves a list of storage units that belong to S3 storage and have the relative S3 storage unit in RESTORING state.
+        List<StorageUnitEntity> storageUnitEntities = storageUnitDao.getS3StorageUnitsToRestore(maxResult);
 
         // Build a list of storage unit keys.
         List<StorageUnitAlternateKeyDto> storageUnitKeys = new ArrayList<>();

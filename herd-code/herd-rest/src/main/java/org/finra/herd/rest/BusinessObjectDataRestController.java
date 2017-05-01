@@ -80,46 +80,34 @@ public class BusinessObjectDataRestController extends HerdBaseController
     private StorageUnitService storageUnitService;
 
     /**
-     * <p> Gets the S3 key prefix for writing or accessing business object data. </p> <p> This endpoint requires a namespace. </p> <p> Requires READ permission
-     * on namespace </p>
+     * Performs a search and returns a list of business object data key values and relative statuses for a range of requested business object data. <p> Requires
+     * READ permission on namespace </p>
      *
-     * @param namespace the namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object format usage
-     * @param businessObjectFormatFileType the business object format file type
-     * @param businessObjectFormatVersion the business object format version
-     * @param partitionKey the partition key
-     * @param partitionValue the partition value
-     * @param subPartitionValues the list of sub-partition values
-     * @param businessObjectDataVersion the business object data version
-     * @param storageName the storage name
-     * @param createNewVersion Whether a new business object data can be created
-     * @param servletRequest the servlet request
+     * @param businessObjectDataAvailabilityRequest the business object data availability request
      *
-     * @return the S3 key prefix
+     * @return the business object data availability information
      */
-    @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages" +
-            "/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
-            "/businessObjectFormatVersions/{businessObjectFormatVersion}/s3KeyPrefix",
-        method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_S3_KEY_PREFIX_GET)
-    @ApiOperation(value = "Gets the S3 key prefix information for a specified namespace")
-    public S3KeyPrefixInformation getS3KeyPrefix(@PathVariable("namespace") String namespace,
-        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
-        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
-        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
-        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion,
-        @RequestParam(value = "partitionKey", required = false) String partitionKey, @RequestParam("partitionValue") String partitionValue,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
-        @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
-        @RequestParam(value = "storageName", required = false) String storageName,
-        @RequestParam(value = "createNewVersion", required = false, defaultValue = "false") Boolean createNewVersion, ServletRequest servletRequest)
+    @RequestMapping(value = "/businessObjectData/availability", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_AVAILABILITY_POST)
+    public BusinessObjectDataAvailability checkBusinessObjectDataAvailability(
+        @RequestBody BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest)
     {
-        return storageUnitService.getS3KeyPrefix(
-            validateRequestAndCreateBusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, subPartitionValues, businessObjectDataVersion, servletRequest), partitionKey, storageName,
-            createNewVersion);
+        return businessObjectDataService.checkBusinessObjectDataAvailability(businessObjectDataAvailabilityRequest);
+    }
+
+    /**
+     * Performs an availability check for a collection of business object data. <p> Requires READ permission on ALL namespaces </p>
+     *
+     * @param businessObjectDataAvailabilityCollectionRequest the business object data availability collection request
+     *
+     * @return the business object data availability information
+     */
+    @RequestMapping(value = "/businessObjectData/availabilityCollection", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_AVAILABILITY_COLLECTION_POST)
+    public BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollection(
+        @RequestBody BusinessObjectDataAvailabilityCollectionRequest businessObjectDataAvailabilityCollectionRequest)
+    {
+        return businessObjectDataService.checkBusinessObjectDataAvailabilityCollection(businessObjectDataAvailabilityCollectionRequest);
     }
 
     /**
@@ -149,87 +137,6 @@ public class BusinessObjectDataRestController extends HerdBaseController
         businessObjectDataDaoHelper.triggerNotificationsForCreateBusinessObjectData(businessObjectData);
 
         return businessObjectData;
-    }
-
-    /**
-     * Retrieves existing business object data entry information. <p/> NOTE: When both business object format version and business object data version are not
-     * specified, the business object format version has the precedence. The latest business object format version is determined by a sub-query, which does the
-     * following: <p> <ul> <li>selects all available data for the specified business object format (disregarding business object format version), partition
-     * values, and business object data status (default is "VALID") <li>gets the latest business object format version from the records selected in the previous
-     * step </ul> <p> <p> Requires READ permission on namespace </p>
-     *
-     * @param namespace the namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object format usage
-     * @param businessObjectFormatFileType the business object format file type
-     * @param businessObjectFormatPartitionKey the partition key of the business object format. When specified, the partition key is validated against the
-     * partition key associated with the relative business object format
-     * @param partitionValue the partition value of the business object data
-     * @param subPartitionValues the list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
-     * @param businessObjectFormatVersion the version of the business object format. When the business object format version is not specified, the business
-     * object data with the latest business format version available for the specified partition values is returned
-     * @param businessObjectDataVersion the version of the business object data. When business object data version is not specified, the latest version of
-     * business object data of the specified business object data status is returned
-     * @param businessObjectDataStatus the status of the business object data. When business object data version is specified, this parameter is ignored.
-     * Default value is "VALID"
-     * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
-     *
-     * @return the retrieved business object data information
-     */
-    @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}" +
-            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}",
-        method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_GET)
-    public BusinessObjectData getBusinessObjectData(@PathVariable("namespace") String namespace,
-        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
-        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
-        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
-        @RequestParam(value = "partitionKey", required = false) String businessObjectFormatPartitionKey, @RequestParam("partitionValue") String partitionValue,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
-        @RequestParam(value = "businessObjectFormatVersion", required = false) Integer businessObjectFormatVersion,
-        @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
-        @RequestParam(value = "businessObjectDataStatus", required = false) String businessObjectDataStatus,
-        @RequestParam(value = "includeBusinessObjectDataStatusHistory", required = false) Boolean includeBusinessObjectDataStatusHistory)
-    {
-        return businessObjectDataService.getBusinessObjectData(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), businessObjectFormatPartitionKey,
-            businessObjectDataStatus, includeBusinessObjectDataStatusHistory);
-    }
-
-    /**
-     * Retrieves a list of existing business object data versions. <p> Requires READ permission on namespace </p>
-     *
-     * @param namespace the namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object format usage
-     * @param businessObjectFormatFileType the business object format file type
-     * @param partitionValue the partition value
-     * @param subPartitionValues the list of sub-partition values
-     * @param businessObjectFormatVersion the business object format version
-     * @param businessObjectDataVersion the business object data version
-     *
-     * @return the retrieved business object data versions
-     */
-    @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}" +
-            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/versions",
-        method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_VERSIONS_GET)
-    public BusinessObjectDataVersions getBusinessObjectDataVersions(@PathVariable("namespace") String namespace,
-        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
-        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
-        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType, @RequestParam("partitionValue") String partitionValue,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
-        @RequestParam(value = "businessObjectFormatVersion", required = false) Integer businessObjectFormatVersion,
-        @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion)
-    {
-        return businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion));
     }
 
     /**
@@ -419,37 +326,6 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Performs a search and returns a list of business object data key values and relative statuses for a range of requested business object data. <p> Requires
-     * READ permission on namespace </p>
-     *
-     * @param businessObjectDataAvailabilityRequest the business object data availability request
-     *
-     * @return the business object data availability information
-     */
-    @RequestMapping(value = "/businessObjectData/availability", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_AVAILABILITY_POST)
-    public BusinessObjectDataAvailability checkBusinessObjectDataAvailability(
-        @RequestBody BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest)
-    {
-        return businessObjectDataService.checkBusinessObjectDataAvailability(businessObjectDataAvailabilityRequest);
-    }
-
-    /**
-     * Performs an availability check for a collection of business object data. <p> Requires READ permission on ALL namespaces </p>
-     *
-     * @param businessObjectDataAvailabilityCollectionRequest the business object data availability collection request
-     *
-     * @return the business object data availability information
-     */
-    @RequestMapping(value = "/businessObjectData/availabilityCollection", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_AVAILABILITY_COLLECTION_POST)
-    public BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollection(
-        @RequestBody BusinessObjectDataAvailabilityCollectionRequest businessObjectDataAvailabilityCollectionRequest)
-    {
-        return businessObjectDataService.checkBusinessObjectDataAvailabilityCollection(businessObjectDataAvailabilityCollectionRequest);
-    }
-
-    /**
      * Retrieves the DDL to initialize the specified type of the database system to perform queries for a range of requested business object data in the
      * specified storage. <p> Requires READ permission on namespace </p>
      *
@@ -478,217 +354,6 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestBody BusinessObjectDataDdlCollectionRequest businessObjectDataDdlCollectionRequest)
     {
         return businessObjectDataService.generateBusinessObjectDataDdlCollection(businessObjectDataDdlCollectionRequest);
-    }
-
-    /**
-     * Registers data as INVALID for objects which exist in S3 but are not registered in herd. <p> Requires WRITE permission on namespace </p>
-     *
-     * @param businessObjectDataInvalidateUnregisteredRequest the business object data invalidate un-register request
-     *
-     * @return the business object data invalidate unregistered response
-     */
-    @RequestMapping(value = "/businessObjectData/unregistered/invalidation", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_UNREGISTERED_INVALIDATE)
-    public BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectData(
-        @RequestBody BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
-    {
-        BusinessObjectDataInvalidateUnregisteredResponse businessObjectDataInvalidateUnregisteredResponse =
-            businessObjectDataService.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
-
-        // Trigger notifications.
-        businessObjectDataDaoHelper.triggerNotificationsForInvalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredResponse);
-
-        return businessObjectDataInvalidateUnregisteredResponse;
-    }
-
-    /**
-     * Gets the AWS credential to upload to the specified business object data and storage. <p> Requires WRITE permission on namespace </p>
-     *
-     * @param namespace the namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object format usage
-     * @param businessObjectFormatFileType the business object format file type
-     * @param businessObjectFormatVersion the business object format version
-     * @param partitionValue the partition value
-     * @param businessObjectDataVersion the business object data version
-     * @param createNewVersion flag to create new version
-     * @param storageName the storage name
-     * @param subPartitionValues the list of sub-partition values
-     *
-     * @return AWS credential
-     */
-    @RequestMapping(value = "/businessObjectData/upload/credential/namespaces/{namespace}" +
-        "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-        "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
-        "/partitionValues/{partitionValue}", method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_UPLOAD_CREDENTIAL_GET)
-    @ApiOperation(value = "Gets Business Object Data Upload Credentials. This is not meant for public consumption.", hidden = true)
-    public BusinessObjectDataUploadCredential getBusinessObjectDataUploadCredential(@PathVariable("namespace") String namespace,
-        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
-        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
-        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
-        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
-        @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
-        @RequestParam(value = "createNewVersion", required = false) Boolean createNewVersion,
-        @RequestParam(value = "storageName", required = true) String storageName,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
-    {
-        StorageUnitUploadCredential storageUnitUploadCredential = storageUnitService.getStorageUnitUploadCredential(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), createNewVersion, storageName);
-
-        return new BusinessObjectDataUploadCredential(storageUnitUploadCredential.getAwsCredential(), storageUnitUploadCredential.getAwsKmsKeyId());
-    }
-
-    /**
-     * Gets the AWS credential to download to the specified business object data and storage. <p> Requires READ permission on namespace </p>
-     *
-     * @param namespace the namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object format usage
-     * @param businessObjectFormatFileType the business object format file type
-     * @param businessObjectFormatVersion the business object format version
-     * @param partitionValue the partition value
-     * @param businessObjectDataVersion the business object data version
-     * @param storageName the storage name
-     * @param subPartitionValues the list of sub-partition values
-     *
-     * @return AWS credential
-     */
-    @RequestMapping(value = "/businessObjectData/download/credential/namespaces/{namespace}" +
-        "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-        "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
-        "/partitionValues/{partitionValue}/businessObjectDataVersions/{businessObjectDataVersion}", method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_DOWNLOAD_CREDENTIAL_GET)
-    @ApiOperation(value = "Gets Business Object Data Download Credentials. This is not meant for public consumption.", hidden = true)
-    public BusinessObjectDataDownloadCredential getBusinessObjectDataDownloadCredential(@PathVariable("namespace") String namespace,
-        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
-        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
-        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
-        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
-        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestParam(value = "storageName", required = true) String storageName,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
-    {
-        StorageUnitDownloadCredential storageUnitDownloadCredential = storageUnitService.getStorageUnitDownloadCredential(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), storageName);
-
-        return new BusinessObjectDataDownloadCredential(storageUnitDownloadCredential.getAwsCredential());
-    }
-
-    /**
-     * Retries a storage policy transition by forcing re-initiation of the archiving process for the specified business object data that is still in progress of
-     * a valid archiving operation. This endpoint is designed to be run only after confirmation that the business object data is stuck due to an error during
-     * archiving.
-     *
-     * @param namespace the namespace of the business object definition
-     * @param businessObjectDefinitionName the name of the business object definition
-     * @param businessObjectFormatUsage the usage of the business object format
-     * @param businessObjectFormatFileType the file type of the business object format
-     * @param businessObjectFormatVersion the version of the business object format
-     * @param partitionValue the primary partition value of the business object data
-     * @param businessObjectDataVersion the version of the business object data
-     * @param subPartitionValues the optional list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
-     * @param request the information needed to retry a storage policy transition
-     *
-     * @return the business object data information
-     */
-    @RequestMapping(
-        value = "/businessObjectData/retryStoragePolicyTransition/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
-            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
-            "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}" +
-            "/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_RETRY_STORAGE_POLICY_TRANSITION_POST)
-    public BusinessObjectData retryStoragePolicyTransition(@PathVariable("namespace") String namespace,
-        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
-        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
-        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
-        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
-        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
-        @RequestBody BusinessObjectDataRetryStoragePolicyTransitionRequest request)
-    {
-        return businessObjectDataService.retryStoragePolicyTransition(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), request);
-    }
-
-    /**
-     * Initiates a restore request for a currently archived business object data.
-     *
-     * @param namespace the namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object format usage
-     * @param businessObjectFormatFileType the business object format file type
-     * @param businessObjectFormatVersion the version of the business object format
-     * @param partitionValue the primary partition value of the business object data
-     * @param businessObjectDataVersion the version of the business object data
-     * @param subPartitionValues the list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
-     *
-     * @return the business object data information
-     */
-    @RequestMapping(
-        value = "/businessObjectData/restore/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
-            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
-            "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}" +
-            "/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_RESTORE_POST)
-    public BusinessObjectData restoreBusinessObjectData(@PathVariable("namespace") String namespace,
-        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
-        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
-        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
-        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
-        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
-    {
-        return businessObjectDataService.restoreBusinessObjectData(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion));
-    }
-
-    /**
-     * Validates the given {@code servletRequest} and constructs a new {@link BusinessObjectDataKey}. The {@code servletRequest} validation involves validations
-     * of request parameters which Spring MVC may not implement out-of-the-box. In our case, the request is asserted to no contain duplicate parameters.
-     *
-     * @param namespace the namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object format usage
-     * @param businessObjectFormatFileType the business object format type
-     * @param businessObjectFormatVersion the business object format version
-     * @param partitionValue the partition value
-     * @param subPartitionValues the list of sub-partition values
-     * @param businessObjectDataVersion the business object data version
-     * @param servletRequest the servlet request
-     *
-     * @return a new {@link BusinessObjectDataKey}
-     */
-    private BusinessObjectDataKey validateRequestAndCreateBusinessObjectDataKey(String namespace, String businessObjectDefinitionName,
-        String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue,
-        DelimitedFieldValues subPartitionValues, Integer businessObjectDataVersion, ServletRequest servletRequest)
-    {
-        // Ensure there are no duplicate query string parameters.
-        validateNoDuplicateQueryStringParams(servletRequest.getParameterMap(), "partitionKey", "partitionValue");
-
-        // Invoke the service.
-        return new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-            businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion);
-    }
-
-    /**
-     * Searches business object data based on namespace, definition name, format usage, file type, and format version. <p> Namespace and definition name are
-     * required. </p> <p> Requires READ permission on namespace </p>
-     *
-     * @param businessObjectDataSearchRequest search request
-     *
-     * @return search result
-     */
-    @RequestMapping(value = "/businessObjectData/search", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_SEARCH_POST)
-    public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
-    {
-        return businessObjectDataService.searchBusinessObjectData(businessObjectDataSearchRequest);
     }
 
     /**
@@ -740,5 +405,342 @@ public class BusinessObjectDataRestController extends HerdBaseController
         return businessObjectDataService.getAllBusinessObjectDataByBusinessObjectFormat(
             new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion));
+    }
+
+    /**
+     * Retrieves existing business object data entry information. <p/> NOTE: When both business object format version and business object data version are not
+     * specified, the business object format version has the precedence. The latest business object format version is determined by a sub-query, which does the
+     * following: <p> <ul> <li>selects all available data for the specified business object format (disregarding business object format version), partition
+     * values, and business object data status (default is "VALID") <li>gets the latest business object format version from the records selected in the previous
+     * step </ul> <p> <p> Requires READ permission on namespace </p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatPartitionKey the partition key of the business object format. When specified, the partition key is validated against the
+     * partition key associated with the relative business object format
+     * @param partitionValue the partition value of the business object data
+     * @param subPartitionValues the list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
+     * @param businessObjectFormatVersion the version of the business object format. When the business object format version is not specified, the business
+     * object data with the latest business format version available for the specified partition values is returned
+     * @param businessObjectDataVersion the version of the business object data. When business object data version is not specified, the latest version of
+     * business object data of the specified business object data status is returned
+     * @param businessObjectDataStatus the status of the business object data. When business object data version is specified, this parameter is ignored.
+     * Default value is "VALID"
+     * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
+     *
+     * @return the retrieved business object data information
+     */
+    @RequestMapping(
+        value = "/businessObjectData/namespaces/{namespace}" +
+            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}",
+        method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_GET)
+    public BusinessObjectData getBusinessObjectData(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @RequestParam(value = "partitionKey", required = false) String businessObjectFormatPartitionKey, @RequestParam("partitionValue") String partitionValue,
+        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestParam(value = "businessObjectFormatVersion", required = false) Integer businessObjectFormatVersion,
+        @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
+        @RequestParam(value = "businessObjectDataStatus", required = false) String businessObjectDataStatus,
+        @RequestParam(value = "includeBusinessObjectDataStatusHistory", required = false) Boolean includeBusinessObjectDataStatusHistory)
+    {
+        return businessObjectDataService.getBusinessObjectData(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), businessObjectFormatPartitionKey,
+            businessObjectDataStatus, includeBusinessObjectDataStatusHistory);
+    }
+
+    /**
+     * Gets the AWS credential to download to the specified business object data and storage. <p> Requires READ permission on namespace </p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param partitionValue the partition value
+     * @param businessObjectDataVersion the business object data version
+     * @param storageName the storage name
+     * @param subPartitionValues the list of sub-partition values
+     *
+     * @return AWS credential
+     */
+    @RequestMapping(value = "/businessObjectData/download/credential/namespaces/{namespace}" +
+        "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+        "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
+        "/partitionValues/{partitionValue}/businessObjectDataVersions/{businessObjectDataVersion}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_DOWNLOAD_CREDENTIAL_GET)
+    @ApiOperation(value = "Gets Business Object Data Download Credentials. This is not meant for public consumption.", hidden = true)
+    public BusinessObjectDataDownloadCredential getBusinessObjectDataDownloadCredential(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestParam(value = "storageName", required = true) String storageName,
+        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
+    {
+        StorageUnitDownloadCredential storageUnitDownloadCredential = storageUnitService.getStorageUnitDownloadCredential(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), storageName);
+
+        return new BusinessObjectDataDownloadCredential(storageUnitDownloadCredential.getAwsCredential());
+    }
+
+    /**
+     * Gets the AWS credential to upload to the specified business object data and storage. <p> Requires WRITE permission on namespace </p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param partitionValue the partition value
+     * @param businessObjectDataVersion the business object data version
+     * @param createNewVersion flag to create new version
+     * @param storageName the storage name
+     * @param subPartitionValues the list of sub-partition values
+     *
+     * @return AWS credential
+     */
+    @RequestMapping(value = "/businessObjectData/upload/credential/namespaces/{namespace}" +
+        "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+        "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
+        "/partitionValues/{partitionValue}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_UPLOAD_CREDENTIAL_GET)
+    @ApiOperation(value = "Gets Business Object Data Upload Credentials. This is not meant for public consumption.", hidden = true)
+    public BusinessObjectDataUploadCredential getBusinessObjectDataUploadCredential(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
+        @RequestParam(value = "createNewVersion", required = false) Boolean createNewVersion,
+        @RequestParam(value = "storageName", required = true) String storageName,
+        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
+    {
+        StorageUnitUploadCredential storageUnitUploadCredential = storageUnitService.getStorageUnitUploadCredential(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), createNewVersion, storageName);
+
+        return new BusinessObjectDataUploadCredential(storageUnitUploadCredential.getAwsCredential(), storageUnitUploadCredential.getAwsKmsKeyId());
+    }
+
+    /**
+     * Retrieves a list of existing business object data versions. <p> Requires READ permission on namespace </p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param partitionValue the partition value
+     * @param subPartitionValues the list of sub-partition values
+     * @param businessObjectFormatVersion the business object format version
+     * @param businessObjectDataVersion the business object data version
+     *
+     * @return the retrieved business object data versions
+     */
+    @RequestMapping(
+        value = "/businessObjectData/namespaces/{namespace}" +
+            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/versions",
+        method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_VERSIONS_GET)
+    public BusinessObjectDataVersions getBusinessObjectDataVersions(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType, @RequestParam("partitionValue") String partitionValue,
+        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestParam(value = "businessObjectFormatVersion", required = false) Integer businessObjectFormatVersion,
+        @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion)
+    {
+        return businessObjectDataService.getBusinessObjectDataVersions(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion));
+    }
+
+    /**
+     * <p> Gets the S3 key prefix for writing or accessing business object data. </p> <p> This endpoint requires a namespace. </p> <p> Requires READ permission
+     * on namespace </p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param partitionKey the partition key
+     * @param partitionValue the partition value
+     * @param subPartitionValues the list of sub-partition values
+     * @param businessObjectDataVersion the business object data version
+     * @param storageName the storage name
+     * @param createNewVersion Whether a new business object data can be created
+     * @param servletRequest the servlet request
+     *
+     * @return the S3 key prefix
+     */
+    @RequestMapping(
+        value = "/businessObjectData/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages" +
+            "/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+            "/businessObjectFormatVersions/{businessObjectFormatVersion}/s3KeyPrefix",
+        method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_S3_KEY_PREFIX_GET)
+    @ApiOperation(value = "Gets the S3 key prefix information for a specified namespace")
+    public S3KeyPrefixInformation getS3KeyPrefix(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion,
+        @RequestParam(value = "partitionKey", required = false) String partitionKey, @RequestParam("partitionValue") String partitionValue,
+        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
+        @RequestParam(value = "storageName", required = false) String storageName,
+        @RequestParam(value = "createNewVersion", required = false, defaultValue = "false") Boolean createNewVersion, ServletRequest servletRequest)
+    {
+        return storageUnitService.getS3KeyPrefix(
+            validateRequestAndCreateBusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, subPartitionValues, businessObjectDataVersion, servletRequest), partitionKey, storageName,
+            createNewVersion);
+    }
+
+    /**
+     * Registers data as INVALID for objects which exist in S3 but are not registered in herd. <p> Requires WRITE permission on namespace </p>
+     *
+     * @param businessObjectDataInvalidateUnregisteredRequest the business object data invalidate un-register request
+     *
+     * @return the business object data invalidate unregistered response
+     */
+    @RequestMapping(value = "/businessObjectData/unregistered/invalidation", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_UNREGISTERED_INVALIDATE)
+    public BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectData(
+        @RequestBody BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
+    {
+        BusinessObjectDataInvalidateUnregisteredResponse businessObjectDataInvalidateUnregisteredResponse =
+            businessObjectDataService.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
+
+        // Trigger notifications.
+        businessObjectDataDaoHelper.triggerNotificationsForInvalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredResponse);
+
+        return businessObjectDataInvalidateUnregisteredResponse;
+    }
+
+    /**
+     * Initiates a restore request for a currently archived business object data.
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the version of the business object format
+     * @param partitionValue the primary partition value of the business object data
+     * @param businessObjectDataVersion the version of the business object data
+     * @param subPartitionValues the list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
+     * @param expirationInDays the time, in days, between when the business object data is restored to the S3 bucket and when it expires
+     *
+     * @return the business object data information
+     */
+    @RequestMapping(
+        value = "/businessObjectData/restore/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+            "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}" +
+            "/businessObjectDataVersions/{businessObjectDataVersion}",
+        method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_RESTORE_POST)
+    public BusinessObjectData restoreBusinessObjectData(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
+        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestParam(value = "expirationInDays", required = false) Integer expirationInDays)
+    {
+        return businessObjectDataService.restoreBusinessObjectData(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), expirationInDays);
+    }
+
+    /**
+     * Retries a storage policy transition by forcing re-initiation of the archiving process for the specified business object data that is still in progress of
+     * a valid archiving operation. This endpoint is designed to be run only after confirmation that the business object data is stuck due to an error during
+     * archiving.
+     *
+     * @param namespace the namespace of the business object definition
+     * @param businessObjectDefinitionName the name of the business object definition
+     * @param businessObjectFormatUsage the usage of the business object format
+     * @param businessObjectFormatFileType the file type of the business object format
+     * @param businessObjectFormatVersion the version of the business object format
+     * @param partitionValue the primary partition value of the business object data
+     * @param businessObjectDataVersion the version of the business object data
+     * @param subPartitionValues the optional list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
+     * @param request the information needed to retry a storage policy transition
+     *
+     * @return the business object data information
+     */
+    @RequestMapping(
+        value = "/businessObjectData/retryStoragePolicyTransition/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+            "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}" +
+            "/businessObjectDataVersions/{businessObjectDataVersion}",
+        method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_RETRY_STORAGE_POLICY_TRANSITION_POST)
+    public BusinessObjectData retryStoragePolicyTransition(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
+        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestBody BusinessObjectDataRetryStoragePolicyTransitionRequest request)
+    {
+        return businessObjectDataService.retryStoragePolicyTransition(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), request);
+    }
+
+    /**
+     * Searches business object data based on namespace, definition name, format usage, file type, and format version. <p> Namespace and definition name are
+     * required. </p> <p> Requires READ permission on namespace </p>
+     *
+     * @param businessObjectDataSearchRequest search request
+     *
+     * @return search result
+     */
+    @RequestMapping(value = "/businessObjectData/search", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_SEARCH_POST)
+    public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
+    {
+        return businessObjectDataService.searchBusinessObjectData(businessObjectDataSearchRequest);
+    }
+
+    /**
+     * Validates the given {@code servletRequest} and constructs a new {@link BusinessObjectDataKey}. The {@code servletRequest} validation involves validations
+     * of request parameters which Spring MVC may not implement out-of-the-box. In our case, the request is asserted to no contain duplicate parameters.
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format type
+     * @param businessObjectFormatVersion the business object format version
+     * @param partitionValue the partition value
+     * @param subPartitionValues the list of sub-partition values
+     * @param businessObjectDataVersion the business object data version
+     * @param servletRequest the servlet request
+     *
+     * @return a new {@link BusinessObjectDataKey}
+     */
+    private BusinessObjectDataKey validateRequestAndCreateBusinessObjectDataKey(String namespace, String businessObjectDefinitionName,
+        String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue,
+        DelimitedFieldValues subPartitionValues, Integer businessObjectDataVersion, ServletRequest servletRequest)
+    {
+        // Ensure there are no duplicate query string parameters.
+        validateNoDuplicateQueryStringParams(servletRequest.getParameterMap(), "partitionKey", "partitionValue");
+
+        // Invoke the service.
+        return new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+            businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion);
     }
 }

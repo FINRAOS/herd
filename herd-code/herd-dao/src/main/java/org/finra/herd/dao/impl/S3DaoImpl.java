@@ -858,9 +858,9 @@ public class S3DaoImpl implements S3Dao
                         // Fail if a not already restored object is detected.
                         if (BooleanUtils.isNotFalse(objectMetadata.getOngoingRestore()))
                         {
-                            throw new IllegalArgumentException(String.format(
-                                "Archived Glacier S3 file \"%s\" is not restored. StorageClass {%s}, OngoingRestore flag {%s}, Glacier S3 bucket name {%s}",
-                                key, objectMetadata.getStorageClass(), objectMetadata.getOngoingRestore(), params.getS3BucketName()));
+                            throw new IllegalArgumentException(String
+                                .format("Archived Glacier S3 file \"%s\" is not restored. StorageClass {%s}, OngoingRestore flag {%s}, S3 bucket name {%s}",
+                                    key, objectMetadata.getStorageClass(), objectMetadata.getOngoingRestore(), params.getS3BucketName()));
                         }
                     }
                 }

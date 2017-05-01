@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -23,6 +24,7 @@ import java.util.List;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKey;
+import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
 
 public class GlobalAttributeDefinitionDaoTest extends AbstractDaoTest
 {
@@ -36,12 +38,29 @@ public class GlobalAttributeDefinitionDaoTest extends AbstractDaoTest
         globalAttributeDefinitionDaoTestHelper
             .createGlobalAttributeDefinitionEntity(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_2);
 
-        // Retrieve a list of tag type keys.
+        // Retrieve a list of global attribute definition keys.
         List<GlobalAttributeDefinitionKey> globalAttributeDefinitionKeys = globalAttributeDefinitionDao.getAllGlobalAttributeDefinitionKeys();
 
         // Validate the returned object.
         assertNotNull(globalAttributeDefinitionKeys);
         assertTrue(globalAttributeDefinitionKeys.containsAll(globalAttributeDefinitionDaoTestHelper.getTestGlobalAttributeDefinitionKeys()));
+    }
+
+    @Test
+    public void testGetGlobalAttributeDefinitionByKey()
+    {
+        // Create and persist Global Attribute Definition entities.
+        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = globalAttributeDefinitionDaoTestHelper
+            .createGlobalAttributeDefinitionEntity(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+        globalAttributeDefinitionDaoTestHelper
+            .createGlobalAttributeDefinitionEntity(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_2);
+
+        // Retrieve global attribute definition key.
+        GlobalAttributeDefinitionEntity responseEntity = globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(
+            new GlobalAttributeDefinitionKey(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_1));
+
+        // Validate the returned object.
+        assertEquals(globalAttributeDefinitionEntity, responseEntity);
     }
 
 }
