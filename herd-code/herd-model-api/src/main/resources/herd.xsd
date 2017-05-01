@@ -6925,26 +6925,25 @@
       </xs:sequence>
    </xs:complexType>
 
-
    <!-- ***** Attribute Value List ***** -->
 
-   <xs:element name="attributeValueListCreateRequest" type="attributeValueListCreateRequest">
-      <xs:annotation>
-         <xs:documentation>Attribute value list to hold list of attribute values
-         </xs:documentation>
-      </xs:annotation>
-   </xs:element>
-
-   <xs:complexType name="attributeValueListCreateRequest">
+   <xs:element name="attributeValueList" type="attributeValueList"/>
+   <xs:complexType name="attributeValueList">
       <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>Auto generated ID of the attributeValueList</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="attributeValueListKey" type="attributeValueListKey">
             <xs:annotation>
-               <xs:documentation>The attribute value list unique key</xs:documentation>
+               <xs:documentation>A wrapper for attribute value list information</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="attributeValueListKey" type="attributeValueListKey"/>
    <xs:complexType name="attributeValueListKey">
       <xs:all>
          <xs:element name="namespace" type="xs:string">
@@ -6960,35 +6959,27 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="attributeValueListKeys" type="attributeValueListKeys">
-      <xs:annotation>
-         <xs:documentation>A wrapper for attribute value list search response</xs:documentation>
-      </xs:annotation>
-   </xs:element>
-
+   <xs:element name="attributeValueListKeys" type="attributeValueListKeys"/>
    <xs:complexType name="attributeValueListKeys">
       <xs:sequence>
          <xs:element name="attributeValueListKey" type="attributeValueListKey" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>List of attribute value list on provided namespace</xs:documentation>
+               <xs:documentation>Values that uniquely identify a attribute value list</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
    </xs:complexType>
 
-   <xs:complexType name="attributeValueList">
+   <xs:element name="attributeValueListCreateRequest" type="attributeValueListCreateRequest"/>
+   <xs:complexType name="attributeValueListCreateRequest">
       <xs:all>
-         <xs:element name="id" type="xs:int">
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
             <xs:annotation>
-               <xs:documentation>Auto generated ID of the attributeValueList</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-        <xs:element name="attributeValueListKey" type="attributeValueListKey">
-            <xs:annotation>
-               <xs:documentation>A wrapper for attribute value list information</xs:documentation>
+               <xs:documentation>The attribute value list unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
    </xs:complexType>
+
 
 </xs:schema>

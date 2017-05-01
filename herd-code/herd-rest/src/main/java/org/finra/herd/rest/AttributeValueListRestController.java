@@ -50,7 +50,7 @@ public class AttributeValueListRestController extends HerdBaseController
      *
      * @return the newly created attribute value list information
      */
-    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX, method = RequestMethod.POST)
+    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX, method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_POST)
     public AttributeValueList createAttributeValueList(@RequestBody AttributeValueListCreateRequest request)
     {
@@ -84,8 +84,7 @@ public class AttributeValueListRestController extends HerdBaseController
      * @return the attribute value list information
      */
     @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX +
-        "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}", method = RequestMethod.GET, consumes = {"application/xml",
-        "application/json"})
+        "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_GET)
     public AttributeValueList getAttributeValueList(@PathVariable("namespace") String namespace,
         @PathVariable("attributeValueListName") String attributeValueListName)

@@ -86,11 +86,15 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         return createAttributeValueListFromEntity(attributeValueListEntity);
     }
 
+    /**
+     * @param attributeValueListCreateRequest Attribute value list create request object
+     *
+     * @return Attribute value list entity
+     */
     public AttributeValueListEntity createAttributeValueListEntity(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {
         // Create a new entity.
-        AttributeValueListEntity attributeValueListEntity =
-            attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey());
+        AttributeValueListEntity attributeValueListEntity = attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey());
 
         // Persist and return the new entity.
         return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
