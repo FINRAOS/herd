@@ -87,14 +87,17 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
     }
 
     /**
-     * @param attributeValueListCreateRequest Attribute value list create request object
+     * Create attribute value list entity from request.
      *
-     * @return Attribute value list entity
+     * @param attributeValueListCreateRequest the attribute value list create request
+     *
+     * @return the attribute value list entity
      */
     public AttributeValueListEntity createAttributeValueListEntity(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {
         // Create a new entity.
-        AttributeValueListEntity attributeValueListEntity = attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey());
+        AttributeValueListEntity attributeValueListEntity =
+            attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey());
 
         // Persist and return the new entity.
         return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
@@ -157,7 +160,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
     /**
      * Validates attribute value list create request.
      *
-     * @param attributeValueListCreateRequest
+     * @param attributeValueListCreateRequest the attribute value list request
      */
     private void validateAttributeValueListCreateRequest(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {
