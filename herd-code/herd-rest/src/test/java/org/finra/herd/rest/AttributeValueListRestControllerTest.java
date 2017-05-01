@@ -18,7 +18,6 @@ package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -31,13 +30,14 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import org.finra.herd.dao.AttributeValueListDao;
+import org.finra.herd.dao.AttributeValueListDaoTestHelper;
 import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
-import org.finra.herd.model.api.xml.Namespace;
-import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.service.AttributeValueListService;
 
 /**
@@ -47,6 +47,12 @@ public class AttributeValueListRestControllerTest extends AbstractRestTest
 {
 
     private static final int ONE_TIME = 1;
+
+    @Mock
+    protected AttributeValueListDao attributeValueListDao;
+
+    @Autowired
+    private AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
 
     @InjectMocks
     private AttributeValueListRestController attributeValueListRestController;
@@ -65,11 +71,10 @@ public class AttributeValueListRestControllerTest extends AbstractRestTest
     public void testCreateAttributeValueListWithInvalidNamespace() throws Exception
     {
         // Create a attribute value list.
-        AttributeValueList resultAttributeValueList =
-            new AttributeValueList(1, new AttributeValueListKey(null, ATTRIBUTE_VALUE_LIST_NAME));
+        AttributeValueList resultAttributeValueList = new AttributeValueList(1, new AttributeValueListKey(null, ATTRIBUTE_VALUE_LIST_NAME));
 
-        AttributeValueListCreateRequest attributeValueListCreateRequest = new AttributeValueListCreateRequest(
-            new AttributeValueListKey(null, ATTRIBUTE_VALUE_LIST_NAME));
+        AttributeValueListCreateRequest attributeValueListCreateRequest =
+            new AttributeValueListCreateRequest(new AttributeValueListKey(null, ATTRIBUTE_VALUE_LIST_NAME));
 
         when(attributeValueListService.createAttributeValueList(attributeValueListCreateRequest)).thenReturn(resultAttributeValueList);
 
@@ -86,46 +91,36 @@ public class AttributeValueListRestControllerTest extends AbstractRestTest
     @Test
     public void testDeleteAttributeValueList() throws Exception
     {
-        Namespace namespace = namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(NAMESPACE));
-
-        // Create and persist a attribute value list entity.
-        AttributeValueListEntity attributeValueListEntity =
-            attributeValueListDaoTestHelper.createAttributeValueListEntity(namespaceDaoTestHelper.createNamespaceEntity(), ATTRIBUTE_VALUE_LIST_NAME);
-
         // Validate that this attribute value list exists.
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
-        assertNotNull(attributeValueListDao.getAttributeValueListByKey(attributeValueListKey));
 
         when(attributeValueListService.deleteAttributeValueList(attributeValueListKey)).thenReturn(attributeValueListKey);
 
         // Delete this attribute value list.
-        AttributeValueListKey deletedAttributeValueListKey = attributeValueListRestController.deleteAttributeValueList(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
+        AttributeValueListKey deletedAttributeValueListKey =
+            attributeValueListRestController.deleteAttributeValueList(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
         // Validate the returned object.
         verify(attributeValueListService, times(ONE_TIME)).deleteAttributeValueList(attributeValueListKey);
         verifyNoMoreInteractions(attributeValueListService);
 
         assertEquals(deletedAttributeValueListKey, attributeValueListKey);
-
-        // Ensure that this attribute value list is no longer there.
-        assertNotNull(attributeValueListDao.getAttributeValueListByKey(attributeValueListKey));
     }
 
     @Test
     public void testGetAttributeValueList() throws Exception
     {
         // Create and persist a attribute value list entity.
-        attributeValueListDaoTestHelper.createAttributeValueListEntity(namespaceDaoTestHelper.createNamespaceEntity(), ATTRIBUTE_VALUE_LIST_NAME);
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
         // Create a attribute value list.
-        AttributeValueList attributeValueList =
-            new AttributeValueList(1, new AttributeValueListKey(null, ATTRIBUTE_VALUE_LIST_NAME));
+        AttributeValueList attributeValueList = new AttributeValueList(ATTRIBUTE_VALUE_LIST_ID, new AttributeValueListKey(null, ATTRIBUTE_VALUE_LIST_NAME));
 
         when(attributeValueListService.getAttributeValueList(attributeValueListKey)).thenReturn(attributeValueList);
 
 
         // Retrieve the attribute value list.
-        AttributeValueList resultAttributeValueList = attributeValueListRestController.getAttributeValueList(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
+        AttributeValueList resultAttributeValueList =
+            attributeValueListRestController.getAttributeValueList(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
         verify(attributeValueListService, times(ONE_TIME)).getAttributeValueList(attributeValueListKey);
         verifyNoMoreInteractions(attributeValueListService);

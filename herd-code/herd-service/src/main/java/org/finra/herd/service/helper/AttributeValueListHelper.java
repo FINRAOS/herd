@@ -29,8 +29,25 @@ public class AttributeValueListHelper
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
-    @Autowired
-    private NamespaceDaoHelper namespaceDaoHelper;
+    /**
+     * Gets attribute value list entity.
+     *
+     * @param attributeValueListKey the attribute value list key
+     *
+     * @return the attribute value list entity
+     */
+    public AttributeValueListEntity getAttributeValueListEntity(AttributeValueListKey attributeValueListKey)
+    {
+
+        NamespaceEntity namespaceEntity = new NamespaceEntity();
+        namespaceEntity.setCode(attributeValueListKey.getNamespace());
+
+        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
+        attributeValueListEntity.setAttributeValueListName(attributeValueListKey.getAttributeValueListName());
+        attributeValueListEntity.setNamespace(namespaceEntity);
+
+        return attributeValueListEntity;
+    }
 
     /**
      * Validates attribute value list key.
@@ -45,26 +62,5 @@ public class AttributeValueListHelper
             .setNamespace(alternateKeyHelper.validateStringParameter("attribute value list namespace code", attributeValueListKey.getNamespace()));
         attributeValueListKey.setAttributeValueListName(
             alternateKeyHelper.validateStringParameter("attribute value list name", attributeValueListKey.getAttributeValueListName()));
-    }
-
-
-    /**
-     * Gets attribute value list entity.
-     *
-     * @param attributeValueListKey the attribute value list key
-     *
-     * @return the attribute value list entity
-     */
-    public AttributeValueListEntity getAttributeValueListEntity(AttributeValueListKey attributeValueListKey)
-    {
-
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(attributeValueListKey.getNamespace());
-
-        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
-
-        attributeValueListEntity.setAttributeValueListName(attributeValueListKey.getAttributeValueListName());
-        attributeValueListEntity.setNamespace(namespaceEntity);
-
-        return attributeValueListEntity;
     }
 }

@@ -58,24 +58,6 @@ public class AttributeValueListRestController extends HerdBaseController
     }
 
     /**
-     * Gets an existing attribute for the business object data without subpartition values.
-     * <p>Requires READ permission on namespace</p>
-     *
-     * @param namespace the namespace
-     *
-     * @return the business object data attribute information
-     */
-    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX +
-        "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}", method = RequestMethod.GET, consumes = {"application/xml",
-        "application/json"})
-    @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_GET)
-    public AttributeValueList getAttributeValueList(@PathVariable("namespace") String namespace,
-        @PathVariable("attributeValueListName") String attributeValueListName)
-    {
-        return attributeValueListService.getAttributeValueList(new AttributeValueListKey(namespace, attributeValueListName));
-    }
-
-    /**
      * Deletes an existing attribute for the business object data with 1 subpartition value.
      * <p>Requires WRITE permission on namespace</p>
      *
@@ -91,6 +73,24 @@ public class AttributeValueListRestController extends HerdBaseController
         @PathVariable("attributeValueListName") String attributeValueListName)
     {
         return attributeValueListService.deleteAttributeValueList(new AttributeValueListKey(namespace, attributeValueListName));
+    }
+
+    /**
+     * Gets an existing attribute for the business object data without subpartition values.
+     * <p>Requires READ permission on namespace</p>
+     *
+     * @param namespace the namespace
+     *
+     * @return the business object data attribute information
+     */
+    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX +
+        "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}", method = RequestMethod.GET, consumes = {"application/xml",
+        "application/json"})
+    @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_GET)
+    public AttributeValueList getAttributeValueList(@PathVariable("namespace") String namespace,
+        @PathVariable("attributeValueListName") String attributeValueListName)
+    {
+        return attributeValueListService.getAttributeValueList(new AttributeValueListKey(namespace, attributeValueListName));
     }
 
     /**
