@@ -31,12 +31,14 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterState;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import com.amazonaws.services.elasticmapreduce.model.Configuration;
 import com.amazonaws.services.elasticmapreduce.model.EbsBlockDevice;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleet;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleetProvisioningSpecifications;
@@ -61,13 +63,14 @@ import org.finra.herd.model.api.xml.EmrClusterInstanceFleetProvisioningSpecifica
 import org.finra.herd.model.api.xml.EmrClusterInstanceFleetStateChangeReason;
 import org.finra.herd.model.api.xml.EmrClusterInstanceFleetStatus;
 import org.finra.herd.model.api.xml.EmrClusterInstanceFleetTimeline;
+import org.finra.herd.model.api.xml.EmrClusterInstanceTypeConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterInstanceTypeSpecification;
 import org.finra.herd.model.api.xml.EmrClusterSpotProvisioningSpecification;
 import org.finra.herd.model.api.xml.EmrClusterVolumeSpecification;
 import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.MasterInstanceDefinition;
-
+import org.finra.herd.model.api.xml.Parameter;
 /**
  * This class tests functionality within the AwsHelper class.
  */
@@ -505,7 +508,7 @@ public class EmrHelperTest extends AbstractDaoTest
         List<InstanceFleet> instanceFleets = new ArrayList<>();
         instanceFleets.add(null);
         instanceFleets.add(instanceFleet);
-        listInstanceFleetsResult.setInstanceFleets(Arrays.asList(instanceFleet));
+        listInstanceFleetsResult.setInstanceFleets(instanceFleets);
         
         assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
@@ -607,6 +610,29 @@ public class EmrHelperTest extends AbstractDaoTest
 
         assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
+        List<Configuration> configurations = new ArrayList<>();
+        Configuration configuration = new Configuration();
+        String classification = "classification 1";
+        configuration.setClassification(classification);
+        configurations.add(null);
+        configurations.add(configuration);
+        instanceTypeSpecification.setConfigurations(configurations);
+        EmrClusterInstanceTypeConfiguration emrClusterInstanceTypeConfiguration = new EmrClusterInstanceTypeConfiguration();
+        emrClusterInstanceTypeConfiguration.setClassification(classification);
+        emrClusterInstanceTypeSpecification.setConfigurations(Arrays.asList(emrClusterInstanceTypeConfiguration));
+
+        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+
+        String paramKey = "param 1";
+        String paramVal = "param val 1";
+        java.util.Map<String, String> map = new HashMap<>();
+        map.put(paramKey, paramVal);
+        configuration.setProperties(map);
+        Parameter parameter = new Parameter(paramKey, paramVal);
+        emrClusterInstanceTypeConfiguration.setProperties(Arrays.asList(parameter));
+
+        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        
         int blockDurationMin = 30;
         String timeoutAction = "action 1";
         int timeoutDurationMin = 60;
