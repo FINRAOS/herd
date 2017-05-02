@@ -30,6 +30,8 @@ import com.amazonaws.services.elasticmapreduce.model.EbsBlockDevice;
 import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleet;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleetProvisioningSpecifications;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetStatus;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetTimeline;
 import com.amazonaws.services.elasticmapreduce.model.InstanceTypeSpecification;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
@@ -42,11 +44,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.StsDao;
 import org.finra.herd.model.api.xml.EmrClusterEbsBlockDevice;
 import org.finra.herd.model.api.xml.EmrClusterInstanceFleet;
 import org.finra.herd.model.api.xml.EmrClusterInstanceFleetProvisioningSpecifications;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetStateChangeReason;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetStatus;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetTimeline;
 import org.finra.herd.model.api.xml.EmrClusterInstanceTypeConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterInstanceTypeSpecification;
 import org.finra.herd.model.api.xml.EmrClusterSpotProvisioningSpecification;
@@ -324,20 +330,58 @@ public class EmrHelper extends AwsHelper
                 if (awsInstanceFleet != null)
                 {
                     EmrClusterInstanceFleet emrInstanceFleet = new EmrClusterInstanceFleet();
-
+                    emrInstanceFleet.setId(awsInstanceFleet.getId());
                     emrInstanceFleet.setName(awsInstanceFleet.getName());
                     emrInstanceFleet.setInstanceFleetType(awsInstanceFleet.getInstanceFleetType());
                     emrInstanceFleet.setTargetOnDemandCapacity(awsInstanceFleet.getTargetOnDemandCapacity());
                     emrInstanceFleet.setTargetSpotCapacity(awsInstanceFleet.getTargetSpotCapacity());
+                    emrInstanceFleet.setProvisionedOnDemandCapacity(awsInstanceFleet.getProvisionedOnDemandCapacity());
+                    emrInstanceFleet.setProvisionedSpotCapacity(awsInstanceFleet.getProvisionedSpotCapacity());
                     emrInstanceFleet.setInstanceTypeSpecifications(getInstanceTypeSpecifications(awsInstanceFleet.getInstanceTypeSpecifications()));
                     emrInstanceFleet.setLaunchSpecifications(getLaunchSpecifications(awsInstanceFleet.getLaunchSpecifications()));
-
+                    emrInstanceFleet.setInstanceFleetStatus(getEmrClusterInstanceFleetStatus(awsInstanceFleet.getStatus()));
                     emrInstanceFleets.add(emrInstanceFleet);
                 }
             }
         }
 
         return emrInstanceFleets;
+    }
+
+    /**
+     * Returns EmrClusterInstanceFleetStatus
+     *
+     * @param instanceFleetStatus AWS object
+     *
+     * @return EmrClusterInstanceFleetStatus
+     */
+    protected EmrClusterInstanceFleetStatus getEmrClusterInstanceFleetStatus(InstanceFleetStatus instanceFleetStatus)
+    {
+        EmrClusterInstanceFleetStatus emrClusterInstanceFleetStatus = null;
+        if (instanceFleetStatus != null)
+        {
+            emrClusterInstanceFleetStatus = new EmrClusterInstanceFleetStatus();
+            emrClusterInstanceFleetStatus.setState(instanceFleetStatus.getState());
+
+            if (instanceFleetStatus.getStateChangeReason()  != null)
+            {
+                EmrClusterInstanceFleetStateChangeReason emrClusterInstanceFleetStateChangeReason
+                    = new EmrClusterInstanceFleetStateChangeReason();
+                emrClusterInstanceFleetStateChangeReason.setCode(instanceFleetStatus.getStateChangeReason().getCode());
+                emrClusterInstanceFleetStateChangeReason.setMessage(instanceFleetStatus.getStateChangeReason().getMessage());
+                emrClusterInstanceFleetStatus.setStateChangeReason(emrClusterInstanceFleetStateChangeReason);
+            }
+            if (instanceFleetStatus.getTimeline() != null)
+            {
+                InstanceFleetTimeline instanceFleetTimeline = instanceFleetStatus.getTimeline();
+                EmrClusterInstanceFleetTimeline emrClusterInstanceFleetTimeline = new EmrClusterInstanceFleetTimeline();
+                emrClusterInstanceFleetTimeline.setCreationDateTime(HerdDateUtils.getXMLGregorianCalendarValue(instanceFleetTimeline.getCreationDateTime()));
+                emrClusterInstanceFleetTimeline.setEndDateTime(HerdDateUtils.getXMLGregorianCalendarValue(instanceFleetTimeline.getEndDateTime()));
+                emrClusterInstanceFleetTimeline.setReadyDateTime(HerdDateUtils.getXMLGregorianCalendarValue(instanceFleetTimeline.getReadyDateTime()));
+                emrClusterInstanceFleetStatus.setTimeline(emrClusterInstanceFleetTimeline);
+            }
+        }
+        return emrClusterInstanceFleetStatus;
     }
 
     /**

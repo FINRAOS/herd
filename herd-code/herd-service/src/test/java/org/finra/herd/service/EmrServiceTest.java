@@ -1672,6 +1672,45 @@ public class EmrServiceTest extends AbstractServiceTest
     }
 
     /**
+     * This method tests the happy path scenario by providing all the parameters
+     */
+    @Test
+    public void testGetEmrClusterByIdWithFleetInstance() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+        emrClusterDefinition.setAmiVersion(MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
+
+        configXml = xmlHelper.objectToXml(emrClusterDefinition);
+
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+
+        // Create a new EMR cluster create request
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        EmrCluster emrCluster = emrService.createCluster(request);
+
+        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .emrClusterName(request.getEmrClusterName()).build();
+
+        EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, null);
+
+        // Validate the returned object against the input.
+        assertNotNull(emrCluster);
+        assertNotNull(emrClusterGet);
+        assertTrue(emrCluster.getId().equals(emrClusterGet.getId()));
+        assertTrue(emrCluster.getNamespace().equals(emrClusterGet.getNamespace()));
+        assertTrue(emrCluster.getEmrClusterDefinitionName().equals(emrClusterGet.getEmrClusterDefinitionName()));
+        assertTrue(emrCluster.getEmrClusterName().equals(emrClusterGet.getEmrClusterName()));
+        assertNotNull(emrClusterGet.getInstanceFleets());
+        assertTrue(emrClusterGet.getInstanceFleets().size() == 1);
+    }
+
+    /**
      * This method tests the scenario with AmazonServiceException.
      */
     @Test(expected = AmazonServiceException.class)
