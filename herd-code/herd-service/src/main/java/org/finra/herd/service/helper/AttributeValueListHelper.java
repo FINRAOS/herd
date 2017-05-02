@@ -29,6 +29,9 @@ public class AttributeValueListHelper
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
+    @Autowired
+    private NamespaceDaoHelper namespaceDaoHelper;
+
     /**
      * Gets attribute value list entity.
      *
@@ -39,8 +42,7 @@ public class AttributeValueListHelper
     public AttributeValueListEntity getAttributeValueListEntity(AttributeValueListKey attributeValueListKey)
     {
 
-        NamespaceEntity namespaceEntity = new NamespaceEntity();
-        namespaceEntity.setCode(attributeValueListKey.getNamespace());
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(attributeValueListKey.getNamespace());
 
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setAttributeValueListName(attributeValueListKey.getAttributeValueListName());

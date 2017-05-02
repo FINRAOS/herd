@@ -21,7 +21,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -32,18 +32,28 @@ public class AttributeValueListEntity extends AuditableEntity
 
     public static final String TABLE_NAME = "atrbt_value_list";
 
+    @Column(name = TABLE_NAME + "_nm")
+    private String attributeValueListName;
+
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "name_space_cd", referencedColumnName = "name_space_cd", nullable = false)
     private NamespaceEntity namespace;
 
-    @Column(name = TABLE_NAME + "_nm")
-    private String attributeValueListName;
+    public String getAttributeValueListName()
+    {
+        return attributeValueListName;
+    }
+
+    public void setAttributeValueListName(String attributeValueListName)
+    {
+        this.attributeValueListName = attributeValueListName;
+    }
 
     public Integer getId()
     {
@@ -63,15 +73,5 @@ public class AttributeValueListEntity extends AuditableEntity
     public void setNamespace(NamespaceEntity namespace)
     {
         this.namespace = namespace;
-    }
-
-    public String getAttributeValueListName()
-    {
-        return attributeValueListName;
-    }
-
-    public void setAttributeValueListName(String attributeValueListName)
-    {
-        this.attributeValueListName = attributeValueListName;
     }
 }

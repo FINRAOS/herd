@@ -26,6 +26,14 @@ import java.util.List;
  */
 public class SecurityFunctions
 {
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_ALL_GET = "FN_ATTRIBUTE_VALUE_LISTS_GET_ALL";
+
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_DELETE = "FN_ATTRIBUTE_VALUE_LISTS_DELETE";
+
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_GET = "FN_ATTRIBUTE_VALUE_LISTS_GET";
+
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_POST = "FN_ATTRIBUTE_VALUE_LISTS_POST";
+
     public static final String FN_BUILD_INFO_GET = "FN_BUILD_INFO_GET";
 
     public static final String FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_GET = "FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_GET";
@@ -210,6 +218,12 @@ public class SecurityFunctions
 
     public static final String FN_FILE_TYPES_ALL_GET = "FN_FILE_TYPES_ALL_GET";
 
+    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_ALL_GET = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_ALL_GET";
+
+    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE";
+
+    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_POST = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_POST";
+
     public static final String FN_INDEX_SEARCH_POST = "FN_INDEX_SEARCH_POST";
 
     public static final String FN_JOBS_DELETE = "FN_JOBS_DELETE";
@@ -350,20 +364,6 @@ public class SecurityFunctions
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_POST = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
 
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_PUT = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
-
-    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_POST = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_POST";
-
-    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_ALL_GET = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_ALL_GET";
-
-    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE";
-
-    public static final String FN_ATTRIBUTE_VALUE_LISTS_GET = "FN_ATTRIBUTE_VALUE_LISTS_GET";
-
-    public static final String FN_ATTRIBUTE_VALUE_LISTS_ALL_GET = "FN_ATTRIBUTE_VALUE_LISTS_ALL_GET";
-
-    public static final String FN_ATTRIBUTE_VALUE_LISTS_POST = "FN_ATTRIBUTE_VALUE_LISTS_POST";
-
-    public static final String FN_ATTRIBUTE_VALUE_LISTS_DELETE = "FN_ATTRIBUTE_VALUE_LISTS_DELETE";
 
     /**
      * Returns all the functions sorted by function name.
