@@ -67,7 +67,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
      *
      * @return the newly created allowed attribute values
      */
-    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#request.attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public AllowedAttributeValuesInformation createAllowedAttributeValues(AllowedAttributeValuesCreateRequest allowedAttributeValuesCreateRequest)
     {
@@ -115,7 +115,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
      *
      * @return the allowed attribute values information
      */
-    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.READ)
+    @NamespacePermission(fields = "#request.attributeValueListKey.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public AllowedAttributeValuesInformation getAllowedAttributeValues(AttributeValueListKey attributeValueListKey)
     {
@@ -139,7 +139,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
      *
      * @return the allowed attribute values that got deleted
      */
-    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#request.attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public AllowedAttributeValuesInformation deleteAllowedAttributeValues(AllowedAttributeValuesDeleteRequest allowedAttributeValuesDeleteRequest)
     {
