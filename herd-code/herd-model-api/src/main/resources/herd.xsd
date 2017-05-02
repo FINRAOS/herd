@@ -7332,7 +7332,6 @@
    </xs:complexType>
 
 
-
    <!-- ***** Allowed Attribute Value ***** -->
 
    <xs:element name="allowedAttributeValuesCreateRequest" type="allowedAttributeValuesCreateRequest"/>

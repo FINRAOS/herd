@@ -486,7 +486,7 @@ public class EmrHelperTest extends AbstractDaoTest
         int targetSpotCapacity = 2;
         int provisionedOnDemandCapacity = 3;
         int provisionedSpotCapacity = 4;
-        
+
         EmrClusterInstanceFleet expectedEmrInstanceFleet = new EmrClusterInstanceFleet();
         expectedEmrInstanceFleet.setId(instanceId);
         expectedEmrInstanceFleet.setName(instanceName);
@@ -509,11 +509,11 @@ public class EmrHelperTest extends AbstractDaoTest
         instanceFleets.add(null);
         instanceFleets.add(instanceFleet);
         listInstanceFleetsResult.setInstanceFleets(instanceFleets);
-        
+
         assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         EmrClusterInstanceFleetStatus emrClusterInstanceFleetStatus = new EmrClusterInstanceFleetStatus();
-        String  emrClusterInstanceFleetStatus_State = "state 1";
+        String emrClusterInstanceFleetStatus_State = "state 1";
         emrClusterInstanceFleetStatus.setState(emrClusterInstanceFleetStatus_State);
         expectedEmrInstanceFleet.setInstanceFleetStatus(emrClusterInstanceFleetStatus);
 
@@ -529,7 +529,7 @@ public class EmrHelperTest extends AbstractDaoTest
         instanceFleetStateChangeReason.setCode(emrClusterInstanceFleetStatus_StateChangeCode);
         instanceFleetStateChangeReason.setMessage(emrClusterInstanceFleetStatus_StateChangeMsg);
         instanceFleetStatus.setStateChangeReason(instanceFleetStateChangeReason);
-        InstanceFleetTimeline instanceFleetTimeline = new  InstanceFleetTimeline();
+        InstanceFleetTimeline instanceFleetTimeline = new InstanceFleetTimeline();
         java.util.Date now = Calendar.getInstance().getTime();
         instanceFleetTimeline.setCreationDateTime(now);
         instanceFleetTimeline.setReadyDateTime(now);
@@ -572,7 +572,7 @@ public class EmrHelperTest extends AbstractDaoTest
         emrClusterInstanceTypeSpecification.setBidPriceAsPercentageOfOnDemandPrice(bidPricePercent);
         emrClusterInstanceTypeSpecification.setEbsOptimized(ebsOptimized);
         expectedEmrInstanceFleet.setInstanceTypeSpecifications(Arrays.asList(emrClusterInstanceTypeSpecification));
-        
+
         assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         EbsBlockDevice ebsBlockDevice = new EbsBlockDevice();
@@ -632,11 +632,11 @@ public class EmrHelperTest extends AbstractDaoTest
         emrClusterInstanceTypeConfiguration.setProperties(Arrays.asList(parameter));
 
         assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
-        
+
         int blockDurationMin = 30;
         String timeoutAction = "action 1";
         int timeoutDurationMin = 60;
-        
+
         //to do time out action
         SpotProvisioningSpecification spotProvisioningSpecification = new SpotProvisioningSpecification();
         spotProvisioningSpecification.setBlockDurationMinutes(blockDurationMin);
