@@ -49,10 +49,6 @@
       </dependency>
       <dependency>
          <groupId>${project.groupId}</groupId>
-         <artifactId>herd-web-assets</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>${project.groupId}</groupId>
          <artifactId>herd-docs-swagger</artifactId>
       </dependency>
 
@@ -132,12 +128,6 @@
                      <artifactItems>
                         <artifactItem>
                            <groupId>${project.groupId}</groupId>
-                           <artifactId>herd-web-assets</artifactId>
-                           <type>zip</type>
-                           <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
-                        </artifactItem>
-                        <artifactItem>
-                           <groupId>${project.groupId}</groupId>
                            <artifactId>herd-docs-swagger</artifactId>
                            <type>zip</type>
                            <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
@@ -164,9 +154,6 @@
                      <includes>
                         <include>**/web.xml</include>
                      </includes>
-                  </resource>
-                  <resource>
-                     <directory>${project.build.directory}/generated-resources/herd-web-assets-${project.version}</directory>
                   </resource>
                   <resource>
                      <directory>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}</directory>
