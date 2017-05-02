@@ -63,27 +63,26 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
     /**
      * Creates a list of allowed attribute values for an existing attribute value list key.
      *
-     * @param allowedAttributeValuesCreateRequest the information needed to create the allowed attribute values
+     * @param request the information needed to create the allowed attribute values
      *
      * @return the newly created allowed attribute values
      */
     @NamespacePermission(fields = "#request.attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    public AllowedAttributeValuesInformation createAllowedAttributeValues(AllowedAttributeValuesCreateRequest allowedAttributeValuesCreateRequest)
+    public AllowedAttributeValuesInformation createAllowedAttributeValues(AllowedAttributeValuesCreateRequest request)
     {
         // Perform request validation and trim request parameters.
-        validateAllowedAttributeValuesCreateRequest(allowedAttributeValuesCreateRequest);
+        validateAllowedAttributeValuesCreateRequest(request);
 
         // Retrieve and ensure that a attribute value list exists with the specified name.
-        AttributeValueListEntity attributeValueListEntity =
-            attributeValueListHelper.getAttributeValueListEntity(allowedAttributeValuesCreateRequest.getAttributeValueListKey());
+        AttributeValueListEntity attributeValueListEntity = attributeValueListHelper.getAttributeValueListEntity(request.getAttributeValueListKey());
 
         // Load all existing allowed attribute value entities into a map for quick access.
         Map<String, AllowedAttributeValueEntity> allowedAttributeValueEntityMap =
             getAllowedAttributeValueEntityMap(attributeValueListEntity.getAllowedAttributeValues());
 
         // Fail if any of the allowed attribute values to be created already exist.
-        for (String allowedAttributeValue : allowedAttributeValuesCreateRequest.getAllowedAttributeValues())
+        for (String allowedAttributeValue : request.getAllowedAttributeValues())
         {
             if (allowedAttributeValueEntityMap.containsKey(allowedAttributeValue))
             {
@@ -95,7 +94,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
 
         // Create and persist the allowed attribute value entities.
         Collection<AllowedAttributeValueEntity> createdAllowedAttributeValueEntities = new ArrayList<>();
-        for (String allowedAttributeValue : allowedAttributeValuesCreateRequest.getAllowedAttributeValues())
+        for (String allowedAttributeValue : request.getAllowedAttributeValues())
         {
             AllowedAttributeValueEntity allowedAttributeValueEntity = new AllowedAttributeValueEntity();
             createdAllowedAttributeValueEntities.add(allowedAttributeValueEntity);
@@ -115,7 +114,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
      *
      * @return the allowed attribute values information
      */
-    @NamespacePermission(fields = "#request.attributeValueListKey.namespace", permissions = NamespacePermissionEnum.READ)
+    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public AllowedAttributeValuesInformation getAllowedAttributeValues(AttributeValueListKey attributeValueListKey)
     {
@@ -135,20 +134,19 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
     /**
      * Deletes specified allowed attribute values from an existing attribute value list which is identified by name.
      *
-     * @param allowedAttributeValuesDeleteRequest the information needed to delete the allowed attribute values
+     * @param request the information needed to delete the allowed attribute values
      *
      * @return the allowed attribute values that got deleted
      */
     @NamespacePermission(fields = "#request.attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    public AllowedAttributeValuesInformation deleteAllowedAttributeValues(AllowedAttributeValuesDeleteRequest allowedAttributeValuesDeleteRequest)
+    public AllowedAttributeValuesInformation deleteAllowedAttributeValues(AllowedAttributeValuesDeleteRequest request)
     {
         // Perform request validation and trim request parameters.
-        validateAllowedAttributeValuesDeleteRequest(allowedAttributeValuesDeleteRequest);
+        validateAllowedAttributeValuesDeleteRequest(request);
 
         // Retrieve and ensure that a attribute value list exists with the specified name.
-        AttributeValueListEntity attributeValueListEntity =
-            attributeValueListHelper.getAttributeValueListEntity(allowedAttributeValuesDeleteRequest.getAttributeValueListKey());
+        AttributeValueListEntity attributeValueListEntity = attributeValueListHelper.getAttributeValueListEntity(request.getAttributeValueListKey());
 
         // Load all existing allowed attribute value entities into a map for quick access.
         Map<String, AllowedAttributeValueEntity> allowedAttributeValueEntityMap =
@@ -156,7 +154,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
 
         // Build a list of all allowed attribute value entities to be deleted.
         Collection<AllowedAttributeValueEntity> deletedAllowedAttributeValueEntities = new ArrayList<>();
-        for (String allowedAttributeValue : allowedAttributeValuesDeleteRequest.getAllowedAttributeValues())
+        for (String allowedAttributeValue : request.getAllowedAttributeValues())
         {
             // Find the relative allowed attribute entity.
             AllowedAttributeValueEntity allowedAttributeValueEntity = allowedAttributeValueEntityMap.get(allowedAttributeValue);
@@ -185,40 +183,38 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
     /**
      * Validates the allowed attribute values create request. This method also trims request parameters.
      *
-     * @param allowedAttributeValuesCreateRequest the allowed attribute values create request
+     * @param request the allowed attribute values create request
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
 
-    private void validateAllowedAttributeValuesCreateRequest(AllowedAttributeValuesCreateRequest allowedAttributeValuesCreateRequest)
+    private void validateAllowedAttributeValuesCreateRequest(AllowedAttributeValuesCreateRequest request)
     {
-        Assert.notNull(allowedAttributeValuesCreateRequest, "An allowed attribute value create request must be specified.");
+        Assert.notNull(request, "An allowed attribute value create request must be specified.");
 
         // Perform validation and trim of the attribute value list key.
-        attributeValueListHelper.validateAttributeValueListKey(allowedAttributeValuesCreateRequest.getAttributeValueListKey());
+        attributeValueListHelper.validateAttributeValueListKey(request.getAttributeValueListKey());
 
         // Perform validation and trim of the allowed attribute values.
-        allowedAttributeValuesCreateRequest
-            .setAllowedAttributeValues(validateAllowedAttributeValues(allowedAttributeValuesCreateRequest.getAllowedAttributeValues()));
+        request.setAllowedAttributeValues(validateAllowedAttributeValues(request.getAllowedAttributeValues()));
     }
 
     /**
      * Validates the allowed attribute values delete request. This method also trims request parameters.
      *
-     * @param allowedAttributeValuesDeleteRequest the allowed attribute values delete request
+     * @param request the allowed attribute values delete request
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    private void validateAllowedAttributeValuesDeleteRequest(AllowedAttributeValuesDeleteRequest allowedAttributeValuesDeleteRequest)
+    private void validateAllowedAttributeValuesDeleteRequest(AllowedAttributeValuesDeleteRequest request)
     {
-        Assert.notNull(allowedAttributeValuesDeleteRequest, "An allowed attribute value delete request must be specified.");
+        Assert.notNull(request, "An allowed attribute value delete request must be specified.");
 
         // Perform validation and trim of the attribute value list key.
-        attributeValueListHelper.validateAttributeValueListKey(allowedAttributeValuesDeleteRequest.getAttributeValueListKey());
+        attributeValueListHelper.validateAttributeValueListKey(request.getAttributeValueListKey());
 
         // Perform validation and trim of allowed attribute values.
-        allowedAttributeValuesDeleteRequest
-            .setAllowedAttributeValues(validateAllowedAttributeValues(allowedAttributeValuesDeleteRequest.getAllowedAttributeValues()));
+        request.setAllowedAttributeValues(validateAllowedAttributeValues(request.getAllowedAttributeValues()));
     }
 
     /**
