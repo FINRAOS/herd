@@ -16,15 +16,17 @@
 package org.finra.herd.dao.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.AttributeValueListDao;
@@ -32,6 +34,8 @@ import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.model.jpa.AttributeValueListEntity_;
+import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.NamespaceEntity_;
 
 @Repository
 public class AttributeValueListDaoImpl extends AbstractHerdDao implements AttributeValueListDao
@@ -43,39 +47,52 @@ public class AttributeValueListDaoImpl extends AbstractHerdDao implements Attrib
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<AttributeValueListEntity> criteria = builder.createQuery(AttributeValueListEntity.class);
 
-        // The criteria root is the tag type code.
+        // The criteria root is the attribute value list.
         Root<AttributeValueListEntity> attributeValueListEntityRoot = criteria.from(AttributeValueListEntity.class);
 
-        // Create the standard restrictions.
-        Predicate queryRestriction = builder.equal(builder.upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)),
+        Join<AttributeValueListEntity, NamespaceEntity> namespaceEntityJoin = attributeValueListEntityRoot.join(AttributeValueListEntity_.namespace);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate namespaceRestriction = builder.equal(builder.upper(namespaceEntityJoin.get(NamespaceEntity_.code)), attributeValueListKey.getNamespace());
+        Predicate nameRestriction = builder.equal(builder.upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)),
             attributeValueListKey.getAttributeValueListName().toUpperCase());
 
-        // Add all clauses to the query.
-        criteria.select(attributeValueListEntityRoot).where(queryRestriction);
+        criteria.select(attributeValueListEntityRoot).where(builder.and(namespaceRestriction, nameRestriction));
 
-        // Run the query and return the results.
-        return entityManager.createQuery(criteria).getSingleResult();
+        return executeSingleResultQuery(criteria, String
+            .format("Found more than one attribute value list with parameters {namespace=\"%s\", attribute_value_name=\"%s\"}.",
+                attributeValueListKey.getNamespace(), attributeValueListKey.getAttributeValueListName()));
     }
 
     @Override
-    public AttributeValueListKeys getAttributeValueListKeys()
+    public AttributeValueListKeys getAttributeValueListKeys(Collection<String> namespaces)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<AttributeValueListEntity> criteria = builder.createQuery(AttributeValueListEntity.class);
 
-        // The criteria root is the tag type entity.
+        // The criteria root is the attribute value list entity.
         Root<AttributeValueListEntity> attributeValueListEntityRoot = criteria.from(AttributeValueListEntity.class);
 
-        // Get the columns.
-        Path<String> nameColumn = attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName);
+        // Join to the other tables we can filter on.
+        Join<AttributeValueListEntity, NamespaceEntity> namespaceEntityJoin = attributeValueListEntityRoot.join(AttributeValueListEntity_.namespace);
 
-        // Order the results by tag type's order and display name.
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(namespaces))
+        {
+            predicates.add(namespaceEntityJoin.get(NamespaceEntity_.code).in(namespaces));
+        }
+
+
+        // Order the results by namespace and job name.
         List<Order> orderBy = new ArrayList<>();
-        orderBy.add(builder.asc(nameColumn));
+        orderBy.add(builder.asc(namespaceEntityJoin.get(NamespaceEntity_.code)));
+        orderBy.add(builder.asc(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)));
+
 
         // Add all clauses to the query.
-        criteria.select(attributeValueListEntityRoot).orderBy(orderBy);
+        criteria.select(attributeValueListEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderBy);
 
         List<AttributeValueListKey> attributeValueListKeys = new ArrayList<>();
         for (AttributeValueListEntity entity : entityManager.createQuery(criteria).getResultList())
@@ -87,29 +104,5 @@ public class AttributeValueListDaoImpl extends AbstractHerdDao implements Attrib
         }
 
         return new AttributeValueListKeys(attributeValueListKeys);
-    }
-
-    @Override
-    public List<AttributeValueListEntity> getAttributeValueLists()
-    {
-        // Create the criteria builder and the criteria.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<AttributeValueListEntity> criteria = builder.createQuery(AttributeValueListEntity.class);
-
-        // The criteria root is the tag type entity.
-        Root<AttributeValueListEntity> attributeValueListEntityRoot = criteria.from(AttributeValueListEntity.class);
-
-        // Get the columns.
-        Path<String> nameColumn = attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName);
-
-        // Order the results by tag type's order and display name.
-        List<Order> orderBy = new ArrayList<>();
-        orderBy.add(builder.asc(nameColumn));
-
-        // Add all clauses to the query.
-        criteria.select(attributeValueListEntityRoot).orderBy(orderBy);
-
-        // Run the query and return the results.
-        return entityManager.createQuery(criteria).getResultList();
     }
 }

@@ -7218,7 +7218,6 @@
       </xs:sequence>
    </xs:complexType>
 
-
    <!-- ***** Global Attribute Definition ***** -->
 
    <xs:element name="globalAttributeDefinition" type="globalAttributeDefinition"/>
