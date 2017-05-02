@@ -29,5 +29,10 @@ public interface GlobalAttributeDefinitionDao extends BaseJpaDao
      */
     public List<GlobalAttributeDefinitionKey> getAllGlobalAttributeDefinitionKeys();
 
+    /**
+     * Gets a global attribute definition based on its key
+     *
+     * @return the global attribute definition
+     */
     public GlobalAttributeDefinitionEntity getGlobalAttributeDefinitionByKey(GlobalAttributeDefinitionKey globalAttributeDefinitionKey);
 }

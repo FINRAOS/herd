@@ -13,22 +13,22 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-(function()
+package org.finra.herd.dao;
+
+import java.util.List;
+
+import org.finra.herd.model.api.xml.AttributeValueListKey;
+import org.finra.herd.model.jpa.AllowedAttributeValueEntity;
+
+public interface AllowedAttributeValueDao extends BaseJpaDao
 {
-    'use strict';
-
-    angular.module('herd').service('PageService', PageService);
-
     /**
-     * Service which provides page information.
+     * Gets a list of allowed attribute values by attribute value list key.
+     *
+     * @param attributeValueListKey the attribute value list key
+     *
+     * @return the list of allowed attribute values
      */
-    function PageService()
-    {
-        var self = this;
+    public List<AllowedAttributeValueEntity> getAllowedAttributeValuesByAttributeValueListKey(AttributeValueListKey attributeValueListKey);
 
-        /**
-         * The title of the page.
-         */
-        self.title = null;
-    }
-})();
+}

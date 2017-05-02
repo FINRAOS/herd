@@ -61,7 +61,7 @@ public class GlobalAttributeDefinitionDaoHelper
      *
      * @throws AlreadyExistsException if the global Attribute Definition entity already exist
      */
-    public void checkGlobalAttributeDefinitionExists(GlobalAttributeDefinitionKey globalAttributeDefinitionKey) throws AlreadyExistsException
+    public void validateGlobalAttributeDefinitionNoExists(GlobalAttributeDefinitionKey globalAttributeDefinitionKey) throws AlreadyExistsException
     {
         // Validate that the global attribute definition entity does not already exist.
         if (globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey) != null)
@@ -71,5 +71,4 @@ public class GlobalAttributeDefinitionDaoHelper
                 globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(), globalAttributeDefinitionKey.getGlobalAttributeDefinitionName()));
         }
     }
-
 }

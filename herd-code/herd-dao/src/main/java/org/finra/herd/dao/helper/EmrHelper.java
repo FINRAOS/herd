@@ -363,10 +363,9 @@ public class EmrHelper extends AwsHelper
             emrClusterInstanceFleetStatus = new EmrClusterInstanceFleetStatus();
             emrClusterInstanceFleetStatus.setState(instanceFleetStatus.getState());
 
-            if (instanceFleetStatus.getStateChangeReason()  != null)
+            if (instanceFleetStatus.getStateChangeReason() != null)
             {
-                EmrClusterInstanceFleetStateChangeReason emrClusterInstanceFleetStateChangeReason
-                    = new EmrClusterInstanceFleetStateChangeReason();
+                EmrClusterInstanceFleetStateChangeReason emrClusterInstanceFleetStateChangeReason = new EmrClusterInstanceFleetStateChangeReason();
                 emrClusterInstanceFleetStateChangeReason.setCode(instanceFleetStatus.getStateChangeReason().getCode());
                 emrClusterInstanceFleetStateChangeReason.setMessage(instanceFleetStatus.getStateChangeReason().getMessage());
                 emrClusterInstanceFleetStatus.setStateChangeReason(emrClusterInstanceFleetStateChangeReason);

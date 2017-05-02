@@ -60,7 +60,7 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
         validateGlobalAttributeDefinitionCreateRequest(request);
 
         // Validate the global Attribute Definition entity does not already exist in the database.
-        globalAttributeDefinitionDaoHelper.checkGlobalAttributeDefinitionExists(request.getGlobalAttributeDefinitionKey());
+        globalAttributeDefinitionDaoHelper.validateGlobalAttributeDefinitionNoExists(request.getGlobalAttributeDefinitionKey());
 
         //Get the existing global Attribute Definition level entity
         GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity =
@@ -132,9 +132,10 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
     /**
      * Creates and persists a new global Attribute Definition entity.
      *
-     *@param globalAttributeDefinitionKey the global Attribute Definition key
-     *@param globalAttributeDefinitionLevelEntity the global attribute definition level entity
-     *@return the newly created global Attribute Definition entity
+     * @param globalAttributeDefinitionKey the global Attribute Definition key
+     * @param globalAttributeDefinitionLevelEntity the global attribute definition level entity
+     *
+     * @return the newly created global Attribute Definition entity
      */
     private GlobalAttributeDefinitionEntity createGlobalAttributeDefinitionEntity(GlobalAttributeDefinitionKey globalAttributeDefinitionKey,
         GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity)
@@ -144,5 +145,4 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
         globalAttributeDefinitionEntity.setGlobalAttributeDefinitionName(globalAttributeDefinitionKey.getGlobalAttributeDefinitionName());
         return globalAttributeDefinitionDao.saveAndRefresh(globalAttributeDefinitionEntity);
     }
-
 }

@@ -69,9 +69,7 @@ public class GlobalAttributeDefinitionDaoImpl extends AbstractHerdDao implements
             globalAttributeDefinitionKeys
                 .add(new GlobalAttributeDefinitionKey(tuple.get(globalAttributeDefinitionLevel), tuple.get(globalAttributeDefinitionName)));
         }
-
         return globalAttributeDefinitionKeys;
-
     }
 
     @Override
@@ -102,6 +100,5 @@ public class GlobalAttributeDefinitionDaoImpl extends AbstractHerdDao implements
         return executeSingleResultQuery(criteria, String.format(
             "Found more than one global attribute definition with parameters {globalAttributeDefinitionLevel=\"%s\", globalAttributeDefinitionLevel=\"%s\"}.",
             globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(), globalAttributeDefinitionKey.getGlobalAttributeDefinitionName()));
-
     }
 }

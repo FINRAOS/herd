@@ -23,13 +23,15 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
-import org.finra.herd.model.jpa.NamespaceEntity;
 
 @Component
 public class AttributeValueListDaoTestHelper
 {
     @Autowired
     private AttributeValueListDao attributeValueListDao;
+
+    @Autowired
+    private NamespaceDaoTestHelper namespaceDaoTestHelper;
 
     /**
      * Create attribute value list entity and save it in the database
@@ -42,10 +44,8 @@ public class AttributeValueListDaoTestHelper
 
     public AttributeValueListEntity createAttributeValueListEntity(String namespace, String attributeValueListName)
     {
-        NamespaceEntity namespaceEntity = new NamespaceEntity();
-        namespaceEntity.setCode(namespace);
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
-        attributeValueListEntity.setNamespace(namespaceEntity);
+        attributeValueListEntity.setNamespace(namespaceDaoTestHelper.createNamespaceEntity(namespace));
         attributeValueListEntity.setAttributeValueListName(attributeValueListName);
         return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
     }

@@ -365,6 +365,12 @@ public class SecurityFunctions
 
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_PUT = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
 
+    public static final String FN_ALLOWED_ATTRIBUTE_VALUES_DELETE = "FN_ALLOWED_ATTRIBUTE_VALUES_DELETE";
+
+    public static final String FN_ALLOWED_ATTRIBUTE_VALUES_ALL_GET = "FN_ALLOWED_ATTRIBUTE_VALUES_ALL_GET";
+
+    public static final String FN_ALLOWED_ATTRIBUTE_VALUES_POST = "FN_ALLOWED_ATTRIBUTE_VALUES_POST";
+
     /**
      * Returns all the functions sorted by function name.
      *

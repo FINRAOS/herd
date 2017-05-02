@@ -14,20 +14,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.dao.GlobalAttributeDefinitionDao;
-import org.finra.herd.dao.GlobalAttributeDefinitionLevelDao;
-import org.finra.herd.dao.GlobalAttributeDefinitionLevelDaoTestHelper;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinition;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKey;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKeys;
 import org.finra.herd.service.GlobalAttributeDefinitionService;
-import org.finra.herd.service.helper.AlternateKeyHelper;
-import org.finra.herd.service.helper.GlobalAttributeDefinitionDaoHelper;
-import org.finra.herd.service.helper.GlobalAttributeDefinitionHelper;
 
 /**
- * Created by k26425 on 4/26/2017.
+ * This class tests the functionality of global attribute definition rest controller
  */
 public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTest
 {
@@ -36,24 +30,6 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
 
     @InjectMocks
     private GlobalAttributeDefinitionRestController globalAttributeDefinitionRestController;
-
-    @Mock
-    private GlobalAttributeDefinitionDao globalAttributeDefinitionDao;
-
-    @Mock
-    private GlobalAttributeDefinitionLevelDao globalAttributeDefinitionLevelDao;
-
-    @Mock
-    private GlobalAttributeDefinitionHelper globalAttributeDefinitionHelper;
-
-    @Mock
-    private GlobalAttributeDefinitionDaoHelper globalAttributeDefinitionDaoHelper;
-
-    @Mock
-    private GlobalAttributeDefinitionLevelDaoTestHelper globalAttributeDefinitionLevelDaoTestHelper;
-
-    @Mock
-    private AlternateKeyHelper alternateKeyHelper;
 
     @Before()
     public void before()
@@ -84,7 +60,7 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
         verifyNoMoreInteractions(globalAttributeDefinitionService);
 
         //validate
-        assertEquals(new GlobalAttributeDefinition(response.getId(), globalAttributeDefinitionKey), response);
+        assertEquals(globalAttributeDefinition, response);
     }
 
     @Test
@@ -111,7 +87,7 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
         verifyNoMoreInteractions(globalAttributeDefinitionService);
 
         //validate
-        assertEquals(new GlobalAttributeDefinition(response.getId(), globalAttributeDefinitionKey), response);
+        assertEquals(globalAttributeDefinition, response);
     }
 
     @Test
@@ -125,7 +101,7 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
         GlobalAttributeDefinitionKeys globalAttributeDefinitionKeys =
             new GlobalAttributeDefinitionKeys(Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
 
-        //mock calls to external methods
+        // Mock calls to external methods
         when(globalAttributeDefinitionService.getGlobalAttributeDefinitionKeys()).thenReturn(globalAttributeDefinitionKeys);
 
         //call method under test
@@ -139,5 +115,4 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
         assertNotNull(response);
         assertEquals(response.getGlobalAttributeDefinitionKeys(), Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
     }
-
 }
