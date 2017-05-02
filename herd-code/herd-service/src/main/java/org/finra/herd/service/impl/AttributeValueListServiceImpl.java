@@ -57,35 +57,42 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
     @NamespacePermission(fields = "#request.attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public AttributeValueList createAttributeValueList(AttributeValueListCreateRequest attributeValueListCreateRequest) throws ObjectNotFoundException
+    public AttributeValueList createAttributeValueList(AttributeValueListCreateRequest request)
     {
         // Validate and trim the request parameters.
-        validateAttributeValueListCreateRequest(attributeValueListCreateRequest);
+        validateAttributeValueListCreateRequest(request);
 
-        NamespaceKey namespaceKey = new NamespaceKey(attributeValueListCreateRequest.getAttributeValueListKey().getNamespace());
+        NamespaceKey namespaceKey = new NamespaceKey(request.getAttributeValueListKey().getNamespace());
         if (namespaceService.getNamespace(namespaceKey) == null)
         {
             throw new ObjectNotFoundException(String
                 .format("No namespace available as \"%s\". To create a new attribute value list an existing namespace is required.",
-                    attributeValueListCreateRequest.getAttributeValueListKey().getNamespace()));
+                    request.getAttributeValueListKey().getNamespace()));
 
         }
 
         // Validate the attribute value list does not already exist in the database.
-        if (attributeValueListDao.getAttributeValueListByKey(attributeValueListCreateRequest.getAttributeValueListKey()) != null)
+        AttributeValueListEntity attributeValueListEntity = attributeValueListDao.getAttributeValueListByKey(request.getAttributeValueListKey());
+        if (attributeValueListEntity != null)
         {
             throw new AlreadyExistsException(String.format("Unable to create attribute value list with code \"%s\" and \"%s\" because it already exists.",
-                attributeValueListCreateRequest.getAttributeValueListKey().getNamespace(),
-                attributeValueListCreateRequest.getAttributeValueListKey().getAttributeValueListName()));
+                request.getAttributeValueListKey().getNamespace(), request.getAttributeValueListKey().getAttributeValueListName()));
         }
 
         // Create and persist a new attribute value list entity from the request information.
-        AttributeValueListEntity attributeValueListEntity = createAttributeValueListEntity(attributeValueListCreateRequest);
+        attributeValueListEntity = createAttributeValueListEntity(request);
 
         // Create and return the attribute value list object from the persisted entity.
         return createAttributeValueListFromEntity(attributeValueListEntity);
     }
 
+    /**
+     * Create attribute value list entity from request.
+     *
+     * @param attributeValueListCreateRequest the attribute value list create request
+     *
+     * @return the attribute value list entity
+     */
     public AttributeValueListEntity createAttributeValueListEntity(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {
         // Create a new entity.
@@ -135,7 +142,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         return new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName());
     }
 
-    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public AttributeValueList getAttributeValueList(AttributeValueListKey attributeValueListKey)
     {
@@ -143,8 +150,6 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         return createAttributeValueListFromEntity(attributeValueListEntity);
     }
 
-
-    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public AttributeValueListKeys getAttributeValueListKeys()
     {
@@ -154,7 +159,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
     /**
      * Validates attribute value list create request.
      *
-     * @param attributeValueListCreateRequest
+     * @param attributeValueListCreateRequest the attribute value list request
      */
     private void validateAttributeValueListCreateRequest(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {

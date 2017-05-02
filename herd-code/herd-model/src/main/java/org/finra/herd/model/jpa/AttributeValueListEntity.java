@@ -16,21 +16,14 @@
 
 package org.finra.herd.model.jpa;
 
-import java.util.Collection;
-
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.OrderBy;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Table(name = AttributeValueListEntity.TABLE_NAME)
 @Entity
@@ -39,23 +32,28 @@ public class AttributeValueListEntity extends AuditableEntity
 
     public static final String TABLE_NAME = "atrbt_value_list";
 
+    @Column(name = TABLE_NAME + "_nm")
+    private String attributeValueListName;
+
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "name_space_cd", referencedColumnName = "name_space_cd", nullable = false)
     private NamespaceEntity namespace;
 
-    @Column(name = TABLE_NAME + "_nm")
-    private String attributeValueListName;
+    public String getAttributeValueListName()
+    {
+        return attributeValueListName;
+    }
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "attributeValueListEntity", orphanRemoval = true, cascade = {CascadeType.ALL})
-    @OrderBy("allowedAttributeValue")
-    private Collection<AllowedAttributeValueEntity> allowedAttributeValues;
+    public void setAttributeValueListName(String attributeValueListName)
+    {
+        this.attributeValueListName = attributeValueListName;
+    }
 
     public Integer getId()
     {
@@ -75,25 +73,5 @@ public class AttributeValueListEntity extends AuditableEntity
     public void setNamespace(NamespaceEntity namespace)
     {
         this.namespace = namespace;
-    }
-
-    public String getAttributeValueListName()
-    {
-        return attributeValueListName;
-    }
-
-    public void setAttributeValueListName(String attributeValueListName)
-    {
-        this.attributeValueListName = attributeValueListName;
-    }
-
-    public Collection<AllowedAttributeValueEntity> getAllowedAttributeValues()
-    {
-        return allowedAttributeValues;
-    }
-
-    public void setAllowedAttributeValues(Collection<AllowedAttributeValueEntity> allowedAttributeValueEntities)
-    {
-        this.allowedAttributeValues = allowedAttributeValueEntities;
     }
 }

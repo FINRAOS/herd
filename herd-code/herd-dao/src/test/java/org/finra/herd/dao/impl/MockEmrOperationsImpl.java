@@ -37,8 +37,11 @@ import com.amazonaws.services.elasticmapreduce.model.DescribeStepRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeStepResult;
 import com.amazonaws.services.elasticmapreduce.model.HadoopStepConfig;
 import com.amazonaws.services.elasticmapreduce.model.Instance;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleet;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesResult;
 import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
@@ -432,5 +435,18 @@ public class MockEmrOperationsImpl implements EmrOperations
         }
 
         return emrClusterName;
+    }
+
+    @Override
+    public ListInstanceFleetsResult listInstanceFleets(AmazonElasticMapReduceClient emrClient, ListInstanceFleetsRequest listInstanceFleetsRequest)
+    {
+        ListInstanceFleetsResult listInstanceFleetsResult = new ListInstanceFleetsResult();
+        List<InstanceFleet> instanceFleets = new ArrayList<>();
+        InstanceFleet instanceFleet = new InstanceFleet();
+        instanceFleet.setId("mock_instance_id_1");
+        instanceFleet.setName("mock_instance_name");
+        instanceFleets.add(instanceFleet);
+        listInstanceFleetsResult.setInstanceFleets(instanceFleets);
+        return listInstanceFleetsResult;
     }
 }

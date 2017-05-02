@@ -24,6 +24,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.Step;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import org.apache.commons.lang3.StringUtils;
@@ -216,6 +217,11 @@ public class EmrServiceImpl implements EmrService
 
                 emrCluster.setStep(buildEmrStepFromAwsStep(step, verbose));
             }
+
+            // Get instance fleet
+            ListInstanceFleetsResult listInstanceFleetsResult = emrDao.getListInstanceFleetsResult(emrCluster.getId(), awsParamsDto);
+            emrCluster.setInstanceFleets(emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+            
         }
         catch (AmazonServiceException ex)
         {
