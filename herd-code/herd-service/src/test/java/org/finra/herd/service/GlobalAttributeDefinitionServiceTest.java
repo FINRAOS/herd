@@ -137,17 +137,17 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
             globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
 
-        // Mock calls to external methods
+        // Mock calls to external method.
         when(globalAttributeDefinitionDaoHelper.getGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinitionEntity);
 
-        // Call method under test
+        // Call method under test.
         GlobalAttributeDefinition response = globalAttributeDefinitionService.deleteGlobalAttributeDefinition(globalAttributeDefinitionKey);
 
-        // Verify
+        // Verify.
         verify(globalAttributeDefinitionDaoHelper).getGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey);
         verifyNoMoreInteractions(globalAttributeDefinitionDaoHelper);
 
-        // Validate
+        // Validate.
         assertEquals(new GlobalAttributeDefinition(response.getId(), globalAttributeDefinitionKey), response);
     }
 
@@ -159,18 +159,18 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey1 =
             new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2);
 
-        //mock calls to external method
+        // Mock calls to external method.
         when(globalAttributeDefinitionDao.getAllGlobalAttributeDefinitionKeys())
             .thenReturn(Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
 
-        //call method under test
+        // Call method under test.
         GlobalAttributeDefinitionKeys response = globalAttributeDefinitionService.getGlobalAttributeDefinitionKeys();
 
-        //verify
+        // Verify the interactions.
         verify(globalAttributeDefinitionDao).getAllGlobalAttributeDefinitionKeys();
         verifyNoMoreInteractions(globalAttributeDefinitionDao);
 
-        //validate
+        // Validate.
         assertNotNull(response);
         assertEquals(response.getGlobalAttributeDefinitionKeys(), Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
     }
