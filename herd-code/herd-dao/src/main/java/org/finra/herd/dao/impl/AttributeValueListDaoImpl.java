@@ -20,6 +20,7 @@ import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
@@ -32,6 +33,8 @@ import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.model.jpa.AttributeValueListEntity_;
+import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.NamespaceEntity_;
 
 @Repository
 public class AttributeValueListDaoImpl extends AbstractHerdDao implements AttributeValueListDao
@@ -43,18 +46,21 @@ public class AttributeValueListDaoImpl extends AbstractHerdDao implements Attrib
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<AttributeValueListEntity> criteria = builder.createQuery(AttributeValueListEntity.class);
 
-        // The criteria root is the tag type code.
+        // The criteria root is the attribute value list.
         Root<AttributeValueListEntity> attributeValueListEntityRoot = criteria.from(AttributeValueListEntity.class);
 
-        // Create the standard restrictions.
-        Predicate queryRestriction = builder.equal(builder.upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)),
+        Join<AttributeValueListEntity, NamespaceEntity> namespaceEntityJoin = attributeValueListEntityRoot.join(AttributeValueListEntity_.namespace);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate namespaceRestriction = builder.equal(builder.upper(namespaceEntityJoin.get(NamespaceEntity_.code)), attributeValueListKey.getNamespace());
+        Predicate nameRestriction = builder.equal(builder.upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)),
             attributeValueListKey.getAttributeValueListName().toUpperCase());
 
-        // Add all clauses to the query.
-        criteria.select(attributeValueListEntityRoot).where(queryRestriction);
+        criteria.select(attributeValueListEntityRoot).where(builder.and(namespaceRestriction, nameRestriction));
 
-        // Run the query and return the results.
-        return entityManager.createQuery(criteria).getSingleResult();
+        return executeSingleResultQuery(criteria, String
+            .format("Found more than one attribute value list with parameters {namespace=\"%s\", attribute_value_name=\"%s\"}.",
+                attributeValueListKey.getNamespace(), attributeValueListKey.getAttributeValueListName()));
     }
 
     @Override
@@ -67,15 +73,8 @@ public class AttributeValueListDaoImpl extends AbstractHerdDao implements Attrib
         // The criteria root is the tag type entity.
         Root<AttributeValueListEntity> attributeValueListEntityRoot = criteria.from(AttributeValueListEntity.class);
 
-        // Get the columns.
-        Path<String> nameColumn = attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName);
-
-        // Order the results by tag type's order and display name.
-        List<Order> orderBy = new ArrayList<>();
-        orderBy.add(builder.asc(nameColumn));
-
         // Add all clauses to the query.
-        criteria.select(attributeValueListEntityRoot).orderBy(orderBy);
+        criteria.select(attributeValueListEntityRoot);
 
         List<AttributeValueListKey> attributeValueListKeys = new ArrayList<>();
         for (AttributeValueListEntity entity : entityManager.createQuery(criteria).getResultList())

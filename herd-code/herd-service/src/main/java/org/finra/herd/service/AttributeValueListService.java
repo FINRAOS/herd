@@ -30,20 +30,11 @@ public interface AttributeValueListService
     /**
      * Creates a new attribute value list.
      *
-     * @param attributeValueListCreateRequest the information needed to create a attribute value list
+     * @param request the information needed to create a attribute value list
      *
      * @return the newly created attribute value list
      */
-    public AttributeValueList createAttributeValueList(AttributeValueListCreateRequest attributeValueListCreateRequest);
-
-    /**
-     * Gets an existing attribute value list by key.
-     *
-     * @param attributeValueListKey the attribute value list key
-     *
-     * @return the attribute value list information
-     */
-    public AttributeValueList getAttributeValueList(AttributeValueListKey attributeValueListKey);
+    AttributeValueList createAttributeValueList(AttributeValueListCreateRequest request);
 
     /**
      * Deletes an existing attribute value list by key.
@@ -52,12 +43,21 @@ public interface AttributeValueListService
      *
      * @return the attribute value list key information for the attribute that got deleted
      */
-    public AttributeValueListKey deleteAttributeValueList(AttributeValueListKey attributeValueListKey);
+    AttributeValueListKey deleteAttributeValueList(AttributeValueListKey attributeValueListKey);
+
+    /**
+     * Gets an existing attribute value list by key.
+     *
+     * @param attributeValueListKey the attribute value list key
+     *
+     * @return the attribute value list information
+     */
+    AttributeValueList getAttributeValueList(AttributeValueListKey attributeValueListKey);
 
     /**
      * Gets a list of keys for all existing attribute value lists.
      *
      * @return the list of attribute value list keys
      */
-    public AttributeValueListKeys getAttributeValueListKeys();
+    AttributeValueListKeys getAttributeValueListKeys();
 }

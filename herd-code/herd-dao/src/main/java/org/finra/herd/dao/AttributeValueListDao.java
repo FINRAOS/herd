@@ -24,7 +24,6 @@ import org.finra.herd.model.jpa.AttributeValueListEntity;
 
 public interface AttributeValueListDao extends BaseJpaDao
 {
-
     /**
      * Gets a attribute value list by its key.
      *
