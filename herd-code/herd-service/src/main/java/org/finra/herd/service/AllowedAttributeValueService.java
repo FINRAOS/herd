@@ -23,9 +23,30 @@ import org.finra.herd.model.api.xml.AttributeValueListKey;
 
 public interface AllowedAttributeValueService
 {
+    /**
+     * Creates allowed attribute values for the specified key
+     *
+     * @param allowedAttributeValuesCreateRequest the allowed attribute value create request
+     *
+     * @return the allowed attribute values information
+     */
     public AllowedAttributeValuesInformation createAllowedAttributeValues(AllowedAttributeValuesCreateRequest allowedAttributeValuesCreateRequest);
 
+    /**
+     * Retrieves an existing the allowed attribute value by key.
+     *
+     * @param attributeValueListKey the attribute value list key
+     *
+     * @return the allowed attribute values information
+     */
     public AllowedAttributeValuesInformation getAllowedAttributeValues(AttributeValueListKey attributeValueListKey);
 
+    /**
+     * Deletes an existing list of allowed attributes values by key.
+     *
+     * @param allowedAttributeValuesDeleteRequest the allowed attribute value delete request
+     *
+     * @return the deleted allowed attribute values information
+     */
     public AllowedAttributeValuesInformation deleteAllowedAttributeValues(AllowedAttributeValuesDeleteRequest allowedAttributeValuesDeleteRequest);
 }

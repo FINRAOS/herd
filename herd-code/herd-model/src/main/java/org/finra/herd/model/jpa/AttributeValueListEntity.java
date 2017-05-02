@@ -16,14 +16,21 @@
 
 package org.finra.herd.model.jpa;
 
+import java.util.Collection;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Table(name = AttributeValueListEntity.TABLE_NAME)
 @Entity
@@ -44,6 +51,11 @@ public class AttributeValueListEntity extends AuditableEntity
 
     @Column(name = TABLE_NAME + "_nm")
     private String attributeValueListName;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "attributeValueListEntity", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("allowedAttributeValue")
+    private Collection<AllowedAttributeValueEntity> allowedAttributeValues;
 
     public Integer getId()
     {
@@ -73,5 +85,15 @@ public class AttributeValueListEntity extends AuditableEntity
     public void setAttributeValueListName(String attributeValueListName)
     {
         this.attributeValueListName = attributeValueListName;
+    }
+
+    public Collection<AllowedAttributeValueEntity> getAllowedAttributeValues()
+    {
+        return allowedAttributeValues;
+    }
+
+    public void setAllowedAttributeValues(Collection<AllowedAttributeValueEntity> allowedAttributeValueEntities)
+    {
+        this.allowedAttributeValues = allowedAttributeValueEntities;
     }
 }

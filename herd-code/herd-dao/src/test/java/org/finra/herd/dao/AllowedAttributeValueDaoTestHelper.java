@@ -16,6 +16,8 @@
 package org.finra.herd.dao;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +35,6 @@ public class AllowedAttributeValueDaoTestHelper
 
     @Autowired
     private AttributeValueListDao attributeValueListDao;
-
-    @Autowired
-    private AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
 
 
     public List<AllowedAttributeValueEntity> createAllowedAttributeValueEntities(AttributeValueListKey attributeValueListKey,
@@ -62,6 +61,28 @@ public class AllowedAttributeValueDaoTestHelper
         allowedAttributeValueEntity.setAttributeValueListEntity(attributeValueListEntity);
         allowedAttributeValueEntity.setAllowedAttributeValue(allowedAttributeValue);
         return allowedAttributeValueEntity;
+    }
+
+    /**
+     * Returns a sorted list of test allowed attribute values.
+     *
+     * @return the list of allowed attribute values in ascending order
+     */
+    public List<String> getTestSortedAllowedAttributeValues()
+    {
+        List<String> allowedAttributeValues = getTestUnsortedAllowedAttributeValues();
+        Collections.sort(allowedAttributeValues);
+        return allowedAttributeValues;
+    }
+
+    /**
+     * Returns an unsorted list of test allowed attribute values.
+     *
+     * @return the unsorted list of allowed attribute values
+     */
+    public List<String> getTestUnsortedAllowedAttributeValues()
+    {
+        return Arrays.asList("1456", "5634", "9876", "3457", "5679", "9098", "1678");
     }
 
 }

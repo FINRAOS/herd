@@ -1,7 +1,6 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -14,22 +13,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.model.api.xml.GlobalAttributeDefinition;
-import org.finra.herd.model.api.xml.GlobalAttributeDefinitionCreateRequest;
-import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKey;
-import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKeys;
-import org.finra.herd.service.GlobalAttributeDefinitionService;
+import org.finra.herd.model.api.xml.AllowedAttributeValuesCreateRequest;
+import org.finra.herd.model.api.xml.AllowedAttributeValuesDeleteRequest;
+import org.finra.herd.model.api.xml.AllowedAttributeValuesInformation;
+import org.finra.herd.model.api.xml.AttributeValueListKey;
+import org.finra.herd.service.AllowedAttributeValueService;
 
 /**
- * This class tests the functionality of global attribute definition rest controller
+ * This class tests the functionality of allowed attribute value rest controller
  */
 public class AllowedAttributeValueRestControllerTest extends AbstractRestTest
 {
     @Mock
-    private GlobalAttributeDefinitionService globalAttributeDefinitionService;
+    private AllowedAttributeValueService allowedAttributeValueService;
 
     @InjectMocks
-    private GlobalAttributeDefinitionRestController globalAttributeDefinitionRestController;
+    private AllowedAttributeValueRestController allowedAttributeValueRestController;
 
     @Before()
     public void before()
@@ -38,81 +37,79 @@ public class AllowedAttributeValueRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testCreateGlobalAttributeDefinition()
+    public void testCreateAllowedAttributeValue()
     {
-        GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
-        GlobalAttributeDefinitionCreateRequest request = new GlobalAttributeDefinitionCreateRequest(globalAttributeDefinitionKey);
+        // Create attribute value list key.
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
+        AllowedAttributeValuesCreateRequest request = new AllowedAttributeValuesCreateRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE));
 
-        //create a global attribute definition
-        GlobalAttributeDefinition globalAttributeDefinition = new GlobalAttributeDefinition();
-        globalAttributeDefinition.setId(1);
-        globalAttributeDefinition.setGlobalAttributeDefinitionKey(globalAttributeDefinitionKey);
+        //Allowed Attribute Values Information
+        AllowedAttributeValuesInformation allowedAttributeValuesInformation = new AllowedAttributeValuesInformation();
+        allowedAttributeValuesInformation.setAttributeValueListKey(attributeValueListKey);
+        allowedAttributeValuesInformation.setAllowedAttributeValues(Arrays.asList(ALLOWED_ATTRIBUTE_VALUE));
 
         //mock calls to external method
-        when(globalAttributeDefinitionService.createGlobalAttributeDefinition(request)).thenReturn(globalAttributeDefinition);
+        when(allowedAttributeValueService.createAllowedAttributeValues(request)).thenReturn(allowedAttributeValuesInformation);
 
         //call method under  test
-        GlobalAttributeDefinition response = globalAttributeDefinitionRestController.createGlobalAttributeDefinition(request);
+        AllowedAttributeValuesInformation response = allowedAttributeValueRestController.createAllowedAttributeValues(request);
 
         //verify
-        verify(globalAttributeDefinitionService).createGlobalAttributeDefinition(request);
-        verifyNoMoreInteractions(globalAttributeDefinitionService);
+        verify(allowedAttributeValueService).createAllowedAttributeValues(request);
+        verifyNoMoreInteractions(allowedAttributeValueService);
 
         //validate
-        assertEquals(globalAttributeDefinition, response);
+        assertEquals(allowedAttributeValuesInformation, response);
     }
 
     @Test
-    public void testDeleteGlobalAttributeDefinition()
+    public void testDeleteAllowedAttributeValue()
     {
-        GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+        // Create attribute value list key.
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
+        AllowedAttributeValuesDeleteRequest request = new AllowedAttributeValuesDeleteRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE));
 
-        //create a global attribute definition
-        GlobalAttributeDefinition globalAttributeDefinition = new GlobalAttributeDefinition();
-        globalAttributeDefinition.setId(1);
-        globalAttributeDefinition.setGlobalAttributeDefinitionKey(globalAttributeDefinitionKey);
+        //Allowed Attribute Values Information
+        AllowedAttributeValuesInformation allowedAttributeValuesInformation = new AllowedAttributeValuesInformation();
+        allowedAttributeValuesInformation.setAttributeValueListKey(attributeValueListKey);
+        allowedAttributeValuesInformation.setAllowedAttributeValues(Arrays.asList(ALLOWED_ATTRIBUTE_VALUE));
 
         //mock calls to external method
-        when(globalAttributeDefinitionService.deleteGlobalAttributeDefinition(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinition);
+        when(allowedAttributeValueService.deleteAllowedAttributeValues(request)).thenReturn(allowedAttributeValuesInformation);
 
-        //call method under test
-        GlobalAttributeDefinition response = globalAttributeDefinitionRestController
-            .deleteGlobalAttributeDefinition(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(),
-                globalAttributeDefinitionKey.getGlobalAttributeDefinitionName());
+        //call method under  test
+        AllowedAttributeValuesInformation response = allowedAttributeValueRestController.deleteAllowedAttributeValues(request);
 
-        //verify the calls
-        verify(globalAttributeDefinitionService).deleteGlobalAttributeDefinition(globalAttributeDefinitionKey);
-        verifyNoMoreInteractions(globalAttributeDefinitionService);
+        //verify
+        verify(allowedAttributeValueService).deleteAllowedAttributeValues(request);
+        verifyNoMoreInteractions(allowedAttributeValueService);
 
         //validate
-        assertEquals(globalAttributeDefinition, response);
+        assertEquals(allowedAttributeValuesInformation, response);
     }
 
     @Test
-    public void testGetGlobalAttributeDefinition()
+    public void testGetAllowedAttributeValue()
     {
-        //create the keys
-        GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
-        GlobalAttributeDefinitionKey globalAttributeDefinitionKey1 =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2);
-        GlobalAttributeDefinitionKeys globalAttributeDefinitionKeys =
-            new GlobalAttributeDefinitionKeys(Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
+        // Create attribute value list key.
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        // Mock calls to external methods
-        when(globalAttributeDefinitionService.getGlobalAttributeDefinitionKeys()).thenReturn(globalAttributeDefinitionKeys);
+        //Allowed Attribute Values Information
+        AllowedAttributeValuesInformation allowedAttributeValuesInformation = new AllowedAttributeValuesInformation();
+        allowedAttributeValuesInformation.setAttributeValueListKey(attributeValueListKey);
+        allowedAttributeValuesInformation.setAllowedAttributeValues(Arrays.asList(ALLOWED_ATTRIBUTE_VALUE));
 
-        //call method under test
-        GlobalAttributeDefinitionKeys response = globalAttributeDefinitionRestController.getGlobalAttributeDefinitions();
+        //mock calls to external method
+        when(allowedAttributeValueService.getAllowedAttributeValues(attributeValueListKey)).thenReturn(allowedAttributeValuesInformation);
+
+        //call method under  test
+        AllowedAttributeValuesInformation response = allowedAttributeValueRestController.getAllowedAttributeValues(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
 
         //verify
-        verify(globalAttributeDefinitionService).getGlobalAttributeDefinitionKeys();
-        verifyNoMoreInteractions(globalAttributeDefinitionService);
+        verify(allowedAttributeValueService).getAllowedAttributeValues(attributeValueListKey);
+        verifyNoMoreInteractions(allowedAttributeValueService);
 
         //validate
-        assertNotNull(response);
-        assertEquals(response.getGlobalAttributeDefinitionKeys(), Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
+        assertEquals(allowedAttributeValuesInformation, response);
     }
 }

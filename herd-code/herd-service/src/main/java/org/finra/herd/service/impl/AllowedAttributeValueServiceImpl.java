@@ -32,10 +32,12 @@ import org.springframework.util.Assert;
 import org.finra.herd.dao.AllowedAttributeValueDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.AllowedAttributeValuesCreateRequest;
 import org.finra.herd.model.api.xml.AllowedAttributeValuesDeleteRequest;
 import org.finra.herd.model.api.xml.AllowedAttributeValuesInformation;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.jpa.AllowedAttributeValueEntity;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.service.AllowedAttributeValueService;
@@ -65,6 +67,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
      *
      * @return the newly created allowed attribute values
      */
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public AllowedAttributeValuesInformation createAllowedAttributeValues(AllowedAttributeValuesCreateRequest allowedAttributeValuesCreateRequest)
     {
@@ -76,13 +79,13 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
             attributeValueListHelper.getAttributeValueListEntity(allowedAttributeValuesCreateRequest.getAttributeValueListKey());
 
         // Load all existing allowed attribute value entities into a map for quick access.
-        Map<String, AllowedAttributeValueEntity> expectedPartitionValueEntityMap =
-            getAllowedAttributeValueEntityMap(attributeValueListEntity.getAllowedAttributeValueEntities());
+        Map<String, AllowedAttributeValueEntity> allowedAttributeValueEntityMap =
+            getAllowedAttributeValueEntityMap(attributeValueListEntity.getAllowedAttributeValues());
 
         // Fail if any of the allowed attribute values to be created already exist.
         for (String allowedAttributeValue : allowedAttributeValuesCreateRequest.getAllowedAttributeValues())
         {
-            if (expectedPartitionValueEntityMap.containsKey(allowedAttributeValue))
+            if (allowedAttributeValueEntityMap.containsKey(allowedAttributeValue))
             {
                 throw new IllegalArgumentException(String
                     .format("Allowed attribute value \"%s\" already exists in \"%s\" attribute value list.", allowedAttributeValue,
@@ -106,12 +109,13 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
     }
 
     /**
-     * Retrieves a range of existing allowed attribute values.
+     * Retrieves existing allowed attribute values based on the specified key
      *
      * @param attributeValueListKey the attribute value list key
      *
      * @return the allowed attribute values information
      */
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public AllowedAttributeValuesInformation getAllowedAttributeValues(AttributeValueListKey attributeValueListKey)
     {
@@ -122,7 +126,8 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
         AttributeValueListEntity attributeValueListEntity = attributeValueListHelper.getAttributeValueListEntity(attributeValueListKey);
 
         // Retrieve a list of allowed attribute values.
-        List<AllowedAttributeValueEntity> allowedAttributeValueEntities = allowedAttributeValueDao.getAllowedAttributeValuesByAttributeValueListKey(attributeValueListKey);
+        List<AllowedAttributeValueEntity> allowedAttributeValueEntities =
+            allowedAttributeValueDao.getAllowedAttributeValuesByAttributeValueListKey(attributeValueListKey);
 
         return createAllowedAttributeValuesInformationFromEntities(attributeValueListEntity, allowedAttributeValueEntities);
     }
@@ -134,6 +139,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
      *
      * @return the allowed attribute values that got deleted
      */
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public AllowedAttributeValuesInformation deleteAllowedAttributeValues(AllowedAttributeValuesDeleteRequest allowedAttributeValuesDeleteRequest)
     {
@@ -145,15 +151,15 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
             attributeValueListHelper.getAttributeValueListEntity(allowedAttributeValuesDeleteRequest.getAttributeValueListKey());
 
         // Load all existing allowed attribute value entities into a map for quick access.
-        Map<String, AllowedAttributeValueEntity> expectedPartitionValueEntityMap =
-            getAllowedAttributeValueEntityMap(attributeValueListEntity.getAllowedAttributeValueEntities());
+        Map<String, AllowedAttributeValueEntity> allowedAttributeValueEntityMap =
+            getAllowedAttributeValueEntityMap(attributeValueListEntity.getAllowedAttributeValues());
 
         // Build a list of all allowed attribute value entities to be deleted.
         Collection<AllowedAttributeValueEntity> deletedAllowedAttributeValueEntities = new ArrayList<>();
         for (String allowedAttributeValue : allowedAttributeValuesDeleteRequest.getAllowedAttributeValues())
         {
-            // Find the relative expected partition entity.
-            AllowedAttributeValueEntity allowedAttributeValueEntity = expectedPartitionValueEntityMap.get(allowedAttributeValue);
+            // Find the relative allowed attribute entity.
+            AllowedAttributeValueEntity allowedAttributeValueEntity = allowedAttributeValueEntityMap.get(allowedAttributeValue);
             if (allowedAttributeValueEntity != null)
             {
                 deletedAllowedAttributeValueEntities.add(allowedAttributeValueEntity);
@@ -169,7 +175,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
         // Perform the actual deletion.
         for (AllowedAttributeValueEntity allowedAttributeValueEntity : deletedAllowedAttributeValueEntities)
         {
-            attributeValueListEntity.getAllowedAttributeValueEntities().remove(allowedAttributeValueEntity);
+            attributeValueListEntity.getAllowedAttributeValues().remove(allowedAttributeValueEntity);
         }
         allowedAttributeValueDao.saveAndRefresh(attributeValueListEntity);
 
@@ -184,14 +190,16 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
      * @throws IllegalArgumentException if any validation errors were found
      */
 
-    private void validateAllowedAttributeValuesCreateRequest(AllowedAttributeValuesCreateRequest
-        allowedAttributeValuesCreateRequest)
+    private void validateAllowedAttributeValuesCreateRequest(AllowedAttributeValuesCreateRequest allowedAttributeValuesCreateRequest)
     {
+        Assert.notNull(allowedAttributeValuesCreateRequest, "An allowed attribute value create request must be specified.");
+
         // Perform validation and trim of the attribute value list key.
         attributeValueListHelper.validateAttributeValueListKey(allowedAttributeValuesCreateRequest.getAttributeValueListKey());
-        
+
         // Perform validation and trim of the allowed attribute values.
-        allowedAttributeValuesCreateRequest.setAllowedAttributeValues(validateAllowedAttributeValues(allowedAttributeValuesCreateRequest.getAllowedAttributeValues()));
+        allowedAttributeValuesCreateRequest
+            .setAllowedAttributeValues(validateAllowedAttributeValues(allowedAttributeValuesCreateRequest.getAllowedAttributeValues()));
     }
 
     /**
@@ -203,6 +211,8 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
      */
     private void validateAllowedAttributeValuesDeleteRequest(AllowedAttributeValuesDeleteRequest allowedAttributeValuesDeleteRequest)
     {
+        Assert.notNull(allowedAttributeValuesDeleteRequest, "An allowed attribute value delete request must be specified.");
+
         // Perform validation and trim of the attribute value list key.
         attributeValueListHelper.validateAttributeValueListKey(allowedAttributeValuesDeleteRequest.getAttributeValueListKey());
 
@@ -218,12 +228,11 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
      *
      * @return the map that maps allowed attribute values to the relative allowed attribute value entities
      */
-    private Map<String, AllowedAttributeValueEntity> getAllowedAttributeValueEntityMap(
-        Collection<AllowedAttributeValueEntity> allowedAttributeValueEntities)
+    private Map<String, AllowedAttributeValueEntity> getAllowedAttributeValueEntityMap(Collection<AllowedAttributeValueEntity> allowedAttributeValueEntities)
     {
         Map<String, AllowedAttributeValueEntity> allowedAttributeValueEntityMap = new HashMap<>();
 
-        allowedAttributeValueEntities.forEach( (allowedAttributeValueEntity)  -> {
+        allowedAttributeValueEntities.forEach((allowedAttributeValueEntity) -> {
             allowedAttributeValueEntityMap.put(allowedAttributeValueEntity.getAllowedAttributeValue(), allowedAttributeValueEntity);
         });
 

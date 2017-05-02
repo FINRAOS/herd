@@ -143,6 +143,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         return createAttributeValueListFromEntity(attributeValueListEntity);
     }
 
+
     @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public AttributeValueListKeys getAttributeValueListKeys()

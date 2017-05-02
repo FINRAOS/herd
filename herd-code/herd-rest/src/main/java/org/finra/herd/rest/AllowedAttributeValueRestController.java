@@ -67,9 +67,11 @@ public class AllowedAttributeValueRestController extends HerdBaseController
      *
      * @return the allowed attribute values
      */
-    @RequestMapping(value = ALLOWED_ATTRIBUTE_VALUES_URI_PREFIX + "/allowedAttributeValues/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}", method = RequestMethod.GET)
+    @RequestMapping(value = ALLOWED_ATTRIBUTE_VALUES_URI_PREFIX +
+        "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_ALLOWED_ATTRIBUTE_VALUES_ALL_GET)
-    public AllowedAttributeValuesInformation getAllowedAttributeValues(@PathVariable("namespace") String namespace, @PathVariable("attributeValueListName") String attributeValueListName)
+    public AllowedAttributeValuesInformation getAllowedAttributeValues(@PathVariable("namespace") String namespace,
+        @PathVariable("attributeValueListName") String attributeValueListName)
     {
         return allowedAttributeValueService.getAllowedAttributeValues(new AttributeValueListKey(namespace, attributeValueListName));
     }
