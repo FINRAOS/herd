@@ -255,11 +255,6 @@
          </dependency>
          <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>herd-web-assets</artifactId>
-            <version>${project.version}</version>
-         </dependency>
-         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>herd-docs-swagger</artifactId>
             <version>${project.version}</version>
          </dependency>
