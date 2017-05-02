@@ -37,13 +37,17 @@ import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterState;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import com.amazonaws.services.elasticmapreduce.model.EbsBlockDevice;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleet;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetProvisioningSpecifications;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleetStateChangeReason;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleetStatus;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleetTimeline;
 import com.amazonaws.services.elasticmapreduce.model.InstanceTypeSpecification;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
+import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
+import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,11 +55,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.EmrDao;
+import org.finra.herd.model.api.xml.EmrClusterEbsBlockDevice;
 import org.finra.herd.model.api.xml.EmrClusterInstanceFleet;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetProvisioningSpecifications;
 import org.finra.herd.model.api.xml.EmrClusterInstanceFleetStateChangeReason;
 import org.finra.herd.model.api.xml.EmrClusterInstanceFleetStatus;
 import org.finra.herd.model.api.xml.EmrClusterInstanceFleetTimeline;
 import org.finra.herd.model.api.xml.EmrClusterInstanceTypeSpecification;
+import org.finra.herd.model.api.xml.EmrClusterSpotProvisioningSpecification;
+import org.finra.herd.model.api.xml.EmrClusterVolumeSpecification;
 import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.MasterInstanceDefinition;
@@ -493,7 +501,10 @@ public class EmrHelperTest extends AbstractDaoTest
         instanceFleet.setTargetSpotCapacity(targetSpotCapacity);
         instanceFleet.setProvisionedSpotCapacity(provisionedSpotCapacity);
         instanceFleet.setProvisionedOnDemandCapacity(provisionedOnDemandCapacity);
-        
+
+        List<InstanceFleet> instanceFleets = new ArrayList<>();
+        instanceFleets.add(null);
+        instanceFleets.add(instanceFleet);
         listInstanceFleetsResult.setInstanceFleets(Arrays.asList(instanceFleet));
         
         assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
@@ -559,6 +570,60 @@ public class EmrHelperTest extends AbstractDaoTest
         emrClusterInstanceTypeSpecification.setEbsOptimized(ebsOptimized);
         expectedEmrInstanceFleet.setInstanceTypeSpecifications(Arrays.asList(emrClusterInstanceTypeSpecification));
         
+        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+
+        EbsBlockDevice ebsBlockDevice = new EbsBlockDevice();
+        String device = "device 1";
+        ebsBlockDevice.setDevice(device);
+        List<EbsBlockDevice> ebsBlockDevices = new ArrayList<>();
+        ebsBlockDevices.add(ebsBlockDevice);
+        ebsBlockDevices.add(null);
+        instanceTypeSpecification.setEbsBlockDevices(ebsBlockDevices);
+        EmrClusterEbsBlockDevice emrClusterEbsBlockDevice = new EmrClusterEbsBlockDevice();
+        emrClusterEbsBlockDevice.setDevice(device);
+        emrClusterInstanceTypeSpecification.setEbsBlockDevices(Arrays.asList(emrClusterEbsBlockDevice));
+        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+
+        int iops = 100;
+        int sizeInGB = 20;
+        String volumeType = "volume type 1";
+        VolumeSpecification volumeSpecification = new VolumeSpecification();
+        volumeSpecification.setIops(iops);
+        volumeSpecification.setSizeInGB(sizeInGB);
+        volumeSpecification.setVolumeType(volumeType);
+        ebsBlockDevice.setVolumeSpecification(volumeSpecification);
+        EmrClusterVolumeSpecification emrClusterVolumeSpecification = new EmrClusterVolumeSpecification();
+        emrClusterVolumeSpecification.setIops(iops);
+        emrClusterVolumeSpecification.setSizeInGB(sizeInGB);
+        emrClusterVolumeSpecification.setVolumeType(volumeType);
+        emrClusterEbsBlockDevice.setVolumeSpecification(emrClusterVolumeSpecification);
+        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+
+        InstanceFleetProvisioningSpecifications instanceFleetProvisioningSpecifications = new InstanceFleetProvisioningSpecifications();
+        instanceFleet.setLaunchSpecifications(instanceFleetProvisioningSpecifications);
+        EmrClusterInstanceFleetProvisioningSpecifications emrClusterInstanceFleetProvisioningSpecifications =
+            new EmrClusterInstanceFleetProvisioningSpecifications();
+        expectedEmrInstanceFleet.setLaunchSpecifications(emrClusterInstanceFleetProvisioningSpecifications);
+
+        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+
+        int blockDurationMin = 30;
+        String timeoutAction = "action 1";
+        int timeoutDurationMin = 60;
+        
+        //to do time out action
+        SpotProvisioningSpecification spotProvisioningSpecification = new SpotProvisioningSpecification();
+        spotProvisioningSpecification.setBlockDurationMinutes(blockDurationMin);
+        spotProvisioningSpecification.setTimeoutAction(timeoutAction);
+        spotProvisioningSpecification.setTimeoutDurationMinutes(timeoutDurationMin);
+        instanceFleetProvisioningSpecifications.setSpotSpecification(spotProvisioningSpecification);
+
+        EmrClusterSpotProvisioningSpecification emrClusterSpotProvisioningSpecification = new EmrClusterSpotProvisioningSpecification();
+        emrClusterSpotProvisioningSpecification.setBlockDurationMinutes(blockDurationMin);
+        emrClusterSpotProvisioningSpecification.setTimeoutAction(timeoutAction);
+        emrClusterSpotProvisioningSpecification.setTimeoutDurationMinutes(timeoutDurationMin);
+        emrClusterInstanceFleetProvisioningSpecifications.setSpotSpecification(emrClusterSpotProvisioningSpecification);
+
         assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
     }
