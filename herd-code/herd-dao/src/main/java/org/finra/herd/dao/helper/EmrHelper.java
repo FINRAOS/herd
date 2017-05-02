@@ -499,7 +499,6 @@ public class EmrHelper extends AwsHelper
                 if (awsInstanceTypeConfig != null)
                 {
                     EmrClusterInstanceTypeSpecification emrClusterInstanceTypeSpecification = new EmrClusterInstanceTypeSpecification();
-
                     emrClusterInstanceTypeSpecification.setInstanceType(awsInstanceTypeConfig.getInstanceType());
                     emrClusterInstanceTypeSpecification.setWeightedCapacity(awsInstanceTypeConfig.getWeightedCapacity());
                     emrClusterInstanceTypeSpecification.setBidPrice(awsInstanceTypeConfig.getBidPrice());
@@ -564,11 +563,8 @@ public class EmrHelper extends AwsHelper
 
             for (Map.Entry<String, String> entry : properties.entrySet())
             {
-                if (entry != null)
-                {
-                    Parameter parameter = new Parameter(entry.getKey(), entry.getValue());
-                    parameters.add(parameter);
-                }
+                Parameter parameter = new Parameter(entry.getKey(), entry.getValue());
+                parameters.add(parameter);
             }
         }
 

@@ -5571,7 +5571,7 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="InstanceFleetStatus" type="emrClusterInstanceFleetStatus" minOccurs="0">
+         <xs:element name="instanceFleetStatus" type="emrClusterInstanceFleetStatus" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The current status of the instance fleet</xs:documentation>
             </xs:annotation>
