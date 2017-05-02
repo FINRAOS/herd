@@ -15,8 +15,6 @@
 */
 package org.finra.herd.dao;
 
-import static org.finra.herd.dao.AbstractDaoTest.ATTRIBUTE_VALUE_LIST_NAME;
-
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,20 +31,36 @@ public class AttributeValueListDaoTestHelper
     @Autowired
     private AttributeValueListDao attributeValueListDao;
 
-    public AttributeValueListEntity createAttributeValueListEntity(NamespaceEntity namespaceEntity, String attributValueListName)
+    /**
+     * Create attribute value list entity and save it in the database
+     *
+     * @param namespace namespace of the attribute value list.
+     * @param attributeValueListName name of the attribute value list
+     *
+     * @return Attribute value list entity
+     */
+
+    public AttributeValueListEntity createAttributeValueListEntity(String namespace, String attributeValueListName)
     {
+        NamespaceEntity namespaceEntity = new NamespaceEntity();
+        namespaceEntity.setCode(namespace);
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(attributValueListName);
+        attributeValueListEntity.setAttributeValueListName(attributeValueListName);
         return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
     }
 
-    public AttributeValueListKeys getTestAttributeValueListKeys()
+    /**
+     * @param namespace
+     * @param attributeValueListName
+     *
+     * @return
+     */
+    public AttributeValueListKeys getTestAttributeValueListKeys(String namespace, String attributeValueListName)
     {
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey("NamespaceTest" + AbstractDaoTest.getRandomSuffix(), ATTRIBUTE_VALUE_LIST_NAME);
-        AttributeValueListKey attributeValueListKey1 =
-            new AttributeValueListKey("NamespaceTest" + AbstractDaoTest.getRandomSuffix(), ATTRIBUTE_VALUE_LIST_NAME);
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(namespace, attributeValueListName);
+        AttributeValueListKey attributeValueListKeyDuplicate = new AttributeValueListKey(namespace, attributeValueListName);
 
-        return new AttributeValueListKeys(Arrays.asList(attributeValueListKey, attributeValueListKey1));
+        return new AttributeValueListKeys(Arrays.asList(attributeValueListKey, attributeValueListKeyDuplicate));
     }
 }

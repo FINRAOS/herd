@@ -83,6 +83,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ATTRIBUTE_VALUE_4 = "Attribute Value 4";
 
+    public static final String ATTRIBUTE_VALUE_LIST = "UT_Attribute_Value_list_1_" + RANDOM_SUFFIX;
+
+    public static final int ATTRIBUTE_VALUE_LIST_ID = 1009;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAME = "UT_Attribute_Value_list_Name_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE = "UT_Attribute_Value_list_Namespace_" + RANDOM_SUFFIX;
+
     public static final String AWS_ACCOUNT_ID = "UT_AwsAccountId_1_" + RANDOM_SUFFIX;
 
     public static final String AWS_ASSUMED_ROLE_ACCESS_KEY = "UT_AwsAssumedRoleAccessKey_1_" + RANDOM_SUFFIX;
@@ -281,6 +289,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer FORMAT_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer FOURTH_FORMAT_VERSION = 3;
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_INVALID_LEVEL = "BUS_OBJECT_FORMAT";
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_LEVEL = "BUS_OBJCT_FRMT";
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_1 = "UT_DEF_NAME_1_" + RANDOM_SUFFIX;
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_2 = "UT_DEF_NAME_2_" + RANDOM_SUFFIX;
 
     public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
 
@@ -530,7 +546,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String S3_ENDPOINT = "UT_S3_Endpoint_" + RANDOM_SUFFIX;
 
-    public static final String S3_KEY = "UT_S3_Key_" + RANDOM_SUFFIX;
+    public static final String S3_KEY = "UT_S3_Key_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_KEY_2 = "UT_S3_Key_2_" + RANDOM_SUFFIX;
 
     public static final String S3_KEY_PREFIX = "UT_S3_Key_Prefix_" + RANDOM_SUFFIX;
 
@@ -744,14 +762,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
-    public static final String ATTRIBUTE_VALUE_LIST = "UT_Attribute_Value_list_1_" + RANDOM_SUFFIX;
-
-    public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE = "UT_Attribute_Value_list_Namespace_" + RANDOM_SUFFIX;
-
-    public static final String ATTRIBUTE_VALUE_LIST_ID = "UT_Attribute_Value_list_Namespace_" + RANDOM_SUFFIX;
-
-    public static final String ATTRIBUTE_VALUE_LIST_NAME = "UT_Attribute_Value_list_Name_" + RANDOM_SUFFIX;
-
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_CODE = "UT_TagTypeCode_1_" + RANDOM_SUFFIX;
@@ -813,14 +823,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String USER_TELEPHONE_NUMBER = "UT_User_Telephone_Number_" + RANDOM_SUFFIX;
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
-
-    public static final String GLOBAL_ATTRIBUTE_DEFINITON_LEVEL = "BUS_OBJCT_FRMT";
-
-    public static final String GLOBAL_ATTRIBUTE_DEFINITON_INVALID_LEVEL = "BUS_OBJECT_FORMAT";
-
-    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_1 = "UT_DEF_NAME_1_" + RANDOM_SUFFIX;
-
-    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_2 = "UT_DEF_NAME_2_" + RANDOM_SUFFIX;
 
     // A holding location for a property source.
     // When we remove the property source from the environment, we will place it here as a holding area. Then when we want to add it back into the
@@ -923,6 +925,18 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected FileTypeDaoTestHelper fileTypeDaoTestHelper;
+
+    @Autowired
+    protected GlobalAttributeDefinitionDao globalAttributeDefinitionDao;
+
+    @Autowired
+    protected GlobalAttributeDefinitionDaoTestHelper globalAttributeDefinitionDaoTestHelper;
+
+    @Autowired
+    protected GlobalAttributeDefinitionLevelDao globalAttributeDefinitionLevelDao;
+
+    @Autowired
+    protected GlobalAttributeDefinitionLevelDaoTestHelper globalAttributeDefinitionLevelDaoTestHelper;
 
     @Autowired
     protected HerdCollectionHelper herdCollectionHelper;
@@ -1087,12 +1101,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected TagTypeDao tagTypeDao;
-
-    @Autowired
-    protected AttributeValueListDao attributeValueListDao;
-
-    @Autowired
-    protected AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
 
     @Autowired
     protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
