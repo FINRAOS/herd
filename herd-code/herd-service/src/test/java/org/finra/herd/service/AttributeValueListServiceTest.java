@@ -25,9 +25,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,11 +45,13 @@ import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
 import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceKey;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.helper.AttributeValueListDaoHelper;
 import org.finra.herd.service.helper.AttributeValueListHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.NamespaceSecurityHelper;
 import org.finra.herd.service.impl.AttributeValueListServiceImpl;
 
 /**
@@ -84,6 +86,9 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
 
     @Mock
     private NamespaceDaoHelper namespaceDaoHelper;
+
+    @Mock
+    private NamespaceSecurityHelper namespaceSecurityHelper;
 
     @Mock
     private NamespaceService namespaceService;
@@ -280,9 +285,10 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         AttributeValueListKey attributeValueListKeyDuplicate = new AttributeValueListKey(NAMESPACE, attribute_value_list_name);
         AttributeValueListKeys attributeValueListKeys = new AttributeValueListKeys(Arrays.asList(attributeValueListKey, attributeValueListKeyDuplicate));
 
-        List<String> authorizedNamespaces = new ArrayList<>();
+        Set<String> authorizedNamespaces = new HashSet<>();
         authorizedNamespaces.add("atrbt_value_list_test_namespace");
 
+        when(namespaceSecurityHelper.getAuthorizedNamespaces(NamespacePermissionEnum.READ)).thenReturn(authorizedNamespaces);
         // Mock the call to the attribute value list service
         when(attributeValueListDao.getAttributeValueListKeys(authorizedNamespaces)).thenReturn(attributeValueListKeys);
 

@@ -53,7 +53,8 @@ public class AttributeValueListDaoImpl extends AbstractHerdDao implements Attrib
         Join<AttributeValueListEntity, NamespaceEntity> namespaceEntityJoin = attributeValueListEntityRoot.join(AttributeValueListEntity_.namespace);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate namespaceRestriction = builder.equal(builder.upper(namespaceEntityJoin.get(NamespaceEntity_.code)), attributeValueListKey.getNamespace());
+        Predicate namespaceRestriction =
+            builder.equal(builder.upper(namespaceEntityJoin.get(NamespaceEntity_.code)), attributeValueListKey.getNamespace().toUpperCase());
         Predicate nameRestriction = builder.equal(builder.upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)),
             attributeValueListKey.getAttributeValueListName().toUpperCase());
 
