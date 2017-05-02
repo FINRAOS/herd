@@ -154,6 +154,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean ALLOW_MISSING_DATA = true;
 
+    public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
+
     public static final Boolean CREATE_NEW_VERSION = true;
 
     public static final Boolean DELETE_FILES = true;
@@ -403,6 +405,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected TaskService activitiTaskService;
+
+    @Autowired
+    protected AttributeValueListService attributeValueListService;
 
     @Autowired
     protected AwsHelper awsHelper;
@@ -673,9 +678,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
-
-    @Autowired
-    protected AttributeValueListService attributeValueListService;
 
     @Autowired
     protected TagTypeService tagTypeService;
