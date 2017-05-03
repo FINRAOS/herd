@@ -89,9 +89,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final int ATTRIBUTE_VALUE_LIST_ID = 1009;
 
-    public static final String ATTRIBUTE_VALUE_LIST_NAME = "UT_Attribute_Value_list_Name_" + RANDOM_SUFFIX;
+    public static final String ATTRIBUTE_VALUE_LIST_NAME = "UT_Attribute_Value_List_Name_1_" + RANDOM_SUFFIX;
 
-    public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE = "UT_Attribute_Value_list_Namespace_" + RANDOM_SUFFIX;
+    public static final String ATTRIBUTE_VALUE_LIST_NAME_2 = "UT_Attribute_Value_List_Name_2_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE = "UT_Attribute_Value_List_Namespace_1_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE_2 = "UT_Attribute_Value_List_Namespace_2_" + RANDOM_SUFFIX;
 
     public static final String AWS_ACCOUNT_ID = "UT_AwsAccountId_1_" + RANDOM_SUFFIX;
 

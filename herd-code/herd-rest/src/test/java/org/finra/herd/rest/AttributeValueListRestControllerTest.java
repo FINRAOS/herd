@@ -17,8 +17,6 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -30,10 +28,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import org.finra.herd.dao.AttributeValueListDao;
-import org.finra.herd.dao.AttributeValueListDaoTestHelper;
 import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
@@ -45,15 +40,6 @@ import org.finra.herd.service.AttributeValueListService;
  */
 public class AttributeValueListRestControllerTest extends AbstractRestTest
 {
-
-    private static final int ONE_TIME = 1;
-
-    @Mock
-    protected AttributeValueListDao attributeValueListDao;
-
-    @Autowired
-    private AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
-
     @InjectMocks
     private AttributeValueListRestController attributeValueListRestController;
 
@@ -66,90 +52,96 @@ public class AttributeValueListRestControllerTest extends AbstractRestTest
         MockitoAnnotations.initMocks(this);
     }
 
-
     @Test
-    public void testCreateAttributeValueListWithInvalidNamespace() throws Exception
+    public void testCreateAttributeValueList()
     {
-        // Create a attribute value list.
-        AttributeValueList resultAttributeValueList = new AttributeValueList(1, new AttributeValueListKey(null, ATTRIBUTE_VALUE_LIST_NAME));
+        // Create an attribute value list key.
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        AttributeValueListCreateRequest attributeValueListCreateRequest =
-            new AttributeValueListCreateRequest(new AttributeValueListKey(null, ATTRIBUTE_VALUE_LIST_NAME));
+        // Create an attribute value list.
+        AttributeValueList attributeValueList = new AttributeValueList(ATTRIBUTE_VALUE_LIST_ID, attributeValueListKey);
 
-        when(attributeValueListService.createAttributeValueList(attributeValueListCreateRequest)).thenReturn(resultAttributeValueList);
+        // Create an attribute value list create request.
+        AttributeValueListCreateRequest request = new AttributeValueListCreateRequest(attributeValueListKey);
 
-        // calling the rest method under test
-        AttributeValueList resultAttributeValueListRest = attributeValueListRestController.createAttributeValueList(attributeValueListCreateRequest);
+        // Mock calls to external methods.
+        when(attributeValueListService.createAttributeValueList(request)).thenReturn(attributeValueList);
 
-        // Validate the returned object.
-        verify(attributeValueListService, times(ONE_TIME)).createAttributeValueList(attributeValueListCreateRequest);
+        // Call the method under test.
+        AttributeValueList result = attributeValueListRestController.createAttributeValueList(request);
+
+        // Verify the external calls.
+        verify(attributeValueListService).createAttributeValueList(request);
         verifyNoMoreInteractions(attributeValueListService);
 
-        assertEquals(resultAttributeValueListRest, resultAttributeValueList);
+        // Validate the result.
+        assertEquals(attributeValueList, result);
     }
 
     @Test
-    public void testDeleteAttributeValueList() throws Exception
+    public void testDeleteAttributeValueList()
     {
-        // Validate that this attribute value list exists.
+        // Create an attribute value list key.
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        when(attributeValueListService.deleteAttributeValueList(attributeValueListKey)).thenReturn(attributeValueListKey);
+        // Create an attribute value list.
+        AttributeValueList attributeValueList = new AttributeValueList(ATTRIBUTE_VALUE_LIST_ID, attributeValueListKey);
 
-        // Delete this attribute value list.
-        AttributeValueListKey deletedAttributeValueListKey =
-            attributeValueListRestController.deleteAttributeValueList(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
+        // Mock calls to external methods.
+        when(attributeValueListService.deleteAttributeValueList(attributeValueListKey)).thenReturn(attributeValueList);
 
-        // Validate the returned object.
-        verify(attributeValueListService, times(ONE_TIME)).deleteAttributeValueList(attributeValueListKey);
+        // Call the method under test.
+        AttributeValueList result = attributeValueListRestController.deleteAttributeValueList(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
+
+        // Verify the external calls.
+        verify(attributeValueListService).deleteAttributeValueList(attributeValueListKey);
         verifyNoMoreInteractions(attributeValueListService);
 
-        assertEquals(deletedAttributeValueListKey, attributeValueListKey);
+        // Validate the result.
+        assertEquals(attributeValueList, result);
     }
 
     @Test
-    public void testGetAttributeValueList() throws Exception
+    public void testGetAttributeValueList()
     {
-        // Create and persist a attribute value list entity.
+        // Create an attribute value list key.
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
-        // Create a attribute value list.
-        AttributeValueList attributeValueList = new AttributeValueList(ATTRIBUTE_VALUE_LIST_ID, new AttributeValueListKey(null, ATTRIBUTE_VALUE_LIST_NAME));
 
+        // Create an attribute value list.
+        AttributeValueList attributeValueList = new AttributeValueList(ATTRIBUTE_VALUE_LIST_ID, attributeValueListKey);
+
+        // Mock calls to external methods.
         when(attributeValueListService.getAttributeValueList(attributeValueListKey)).thenReturn(attributeValueList);
 
+        // Call the method under test.
+        AttributeValueList result = attributeValueListRestController.getAttributeValueList(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        // Retrieve the attribute value list.
-        AttributeValueList resultAttributeValueList =
-            attributeValueListRestController.getAttributeValueList(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
-
-        verify(attributeValueListService, times(ONE_TIME)).getAttributeValueList(attributeValueListKey);
+        // Verify the external calls.
+        verify(attributeValueListService).getAttributeValueList(attributeValueListKey);
         verifyNoMoreInteractions(attributeValueListService);
 
-        // Validate the returned object.
-        assertEquals(attributeValueList, resultAttributeValueList);
+        // Validate the result.
+        assertEquals(attributeValueList, result);
     }
 
     @Test
-    public void testGetAttributeValueLists() throws Exception
+    public void testGetAttributeValueLists()
     {
-        // Create and persist attribute value list entities.
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
-        AttributeValueListKey attributeValueListKey1 = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
+        // Create an attribute value list key.
+        AttributeValueListKeys attributeValueListKeys =
+            new AttributeValueListKeys(Arrays.asList(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME)));
 
-        AttributeValueListKeys attributeValueListKeys = new AttributeValueListKeys(Arrays.asList(attributeValueListKey, attributeValueListKey1));
+        // Mock calls to external methods.
+        when(attributeValueListService.getAttributeValueLists()).thenReturn(attributeValueListKeys);
 
-        when(attributeValueListService.getAttributeValueListKeys()).thenReturn(attributeValueListKeys);
+        // Call the method under test.
+        AttributeValueListKeys result = attributeValueListRestController.getAttributeValueLists();
 
-        // Retrieve a list of attribute value list keys.
-        AttributeValueListKeys resultAttributeValueListKeys = attributeValueListRestController.getAttributeValueLists();
-
-        verify(attributeValueListService, times(ONE_TIME)).getAttributeValueListKeys();
+        // Verify the external calls.
+        verify(attributeValueListService).getAttributeValueLists();
         verifyNoMoreInteractions(attributeValueListService);
 
-        // Validate the returned object.
-        assertNotNull(resultAttributeValueListKeys);
-        assertEquals(resultAttributeValueListKeys, attributeValueListKeys);
+        // Validate the result.
+        assertEquals(attributeValueListKeys, result);
     }
-
 }
-

@@ -29,28 +29,28 @@ public class AttributeValueListHelper
     private AlternateKeyHelper alternateKeyHelper;
 
     /**
-     * Validates attribute value list create request.
+     * Validates an attribute value list create request.
      *
      * @param attributeValueListCreateRequest the attribute value list request
      */
     public void validateAttributeValueListCreateRequest(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {
-        Assert.notNull(attributeValueListCreateRequest, "A Attribute value list create request must be specified.");
+        Assert.notNull(attributeValueListCreateRequest, "An attribute value list create request must be specified.");
         validateAttributeValueListKey(attributeValueListCreateRequest.getAttributeValueListKey());
     }
 
     /**
-     * Validates attribute value list key.
+     * Validates an attribute value list key.
      *
      * @param attributeValueListKey the attribute value list key
      */
     public void validateAttributeValueListKey(AttributeValueListKey attributeValueListKey)
     {
         // Validate.
-        Assert.notNull(attributeValueListKey, "A attribute value list key must be specified.");
+        Assert.notNull(attributeValueListKey, "An attribute value list key must be specified.");
         attributeValueListKey
-            .setNamespace(alternateKeyHelper.validateStringParameter("attribute value list namespace code", attributeValueListKey.getNamespace()));
+            .setNamespace(alternateKeyHelper.validateStringParameter("An", "attribute value list namespace code", attributeValueListKey.getNamespace()));
         attributeValueListKey.setAttributeValueListName(
-            alternateKeyHelper.validateStringParameter("attribute value list name", attributeValueListKey.getAttributeValueListName()));
+            alternateKeyHelper.validateStringParameter("An", "attribute value list name", attributeValueListKey.getAttributeValueListName()));
     }
 }

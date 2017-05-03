@@ -38,16 +38,15 @@ public class AttributeValueListDaoHelper
      * @param attributeValueListKey the attribute value list key (case insensitive)
      *
      * @return the attribute value list entity
-     * @throws ObjectNotFoundException if the attribute value list entity doesn't exist
      */
-    public AttributeValueListEntity getAttributeValueListEntity(AttributeValueListKey attributeValueListKey) throws ObjectNotFoundException
+    public AttributeValueListEntity getAttributeValueListEntity(AttributeValueListKey attributeValueListKey)
     {
         AttributeValueListEntity attributeValueListEntity = attributeValueListDao.getAttributeValueListByKey(attributeValueListKey);
 
         if (attributeValueListEntity == null)
         {
             throw new ObjectNotFoundException(String
-                .format("Attribute value list  with name \"%s\" doesn't exist for namespace \"%s\"", attributeValueListKey.getAttributeValueListName(),
+                .format("Attribute value list with name \"%s\" doesn't exist for namespace \"%s\".", attributeValueListKey.getAttributeValueListName(),
                     attributeValueListKey.getNamespace()));
         }
 
