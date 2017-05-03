@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.AllowedAttributeValueDao;
+import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.AllowedAttributeValuesCreateRequest;
 import org.finra.herd.model.api.xml.AllowedAttributeValuesDeleteRequest;
@@ -152,7 +153,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
                 .createAllowedAttributeValues(new AllowedAttributeValuesCreateRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE)));
             fail();
         }
-        catch (IllegalArgumentException e)
+        catch (AlreadyExistsException e)
         {
             assertEquals(String.format("Allowed attribute value \"%s\" already exists in \"%s\" attribute value list.", ALLOWED_ATTRIBUTE_VALUE,
                 attributeValueListEntity.getAttributeValueListName()), e.getMessage());
