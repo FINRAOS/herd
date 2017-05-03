@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.ExpectedPartitionValueInformation;
 import org.finra.herd.model.api.xml.ExpectedPartitionValueKey;
@@ -209,9 +210,9 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         try
         {
             expectedPartitionValueService.createExpectedPartitionValues(request);
-            fail("Should throw an IllegalArgumentException when expected partition value already exists.");
+            fail("Should throw an AlreadyExistsException when expected partition value already exists.");
         }
-        catch (IllegalArgumentException e)
+        catch (AlreadyExistsException e)
         {
             assertEquals(String.format("Expected partition value \"%s\" already exists in \"%s\" partition key group.", PARTITION_VALUE, PARTITION_KEY_GROUP),
                 e.getMessage());
