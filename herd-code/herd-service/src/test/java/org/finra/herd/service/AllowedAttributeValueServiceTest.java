@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.AllowedAttributeValueDao;
+import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.AllowedAttributeValuesCreateRequest;
 import org.finra.herd.model.api.xml.AllowedAttributeValuesDeleteRequest;
 import org.finra.herd.model.api.xml.AllowedAttributeValuesInformation;
@@ -108,7 +109,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(allowedAttributeValueDao, times(2)).saveAndRefresh(any(AllowedAttributeValueEntity.class));
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
-        verifyNoMoreInteractions(allowedAttributeValueDao, attributeValueListDaoHelper, alternateKeyHelper);
+        verifyNoMoreInteractionsHelper();
 
         // Validate the response.
         assertEquals(attributeValueListKey, response.getAttributeValueListKey());
@@ -158,7 +159,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         // Verify the external calls.
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
-        verifyNoMoreInteractions(attributeValueListDaoHelper, alternateKeyHelper);
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
@@ -228,7 +229,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(allowedAttributeValueDao).saveAndRefresh(any(AllowedAttributeValueEntity.class));
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
-        verifyNoMoreInteractions(allowedAttributeValueDao, attributeValueListDaoHelper, alternateKeyHelper);
+        verifyNoMoreInteractionsHelper();
 
         // Validate the response.
         assertEquals(attributeValueListKey, response.getAttributeValueListKey());
@@ -291,7 +292,52 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(alternateKeyHelper, times(2)).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
-        verifyNoMoreInteractions(alternateKeyHelper);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testDeleteAllowedAttributeValuesNoExists()
+    {
+        // Create attribute value list key.
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
+
+        // Create namespace entity.
+        NamespaceEntity namespaceEntity = new NamespaceEntity();
+        namespaceEntity.setCode(NAMESPACE_CODE);
+
+        // Create attribute value list entity.
+        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
+        attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
+        attributeValueListEntity.setNamespace(namespaceEntity);
+        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
+        attributeValueListEntity.setAllowedAttributeValues(new ArrayList<>());
+
+        // Create allowed attribute value entity.
+        AllowedAttributeValueEntity allowedAttributeValueEntity = new AllowedAttributeValueEntity();
+        allowedAttributeValueEntity.setAllowedAttributeValue(ALLOWED_ATTRIBUTE_VALUE);
+        allowedAttributeValueEntity.setAttributeValueListEntity(attributeValueListEntity);
+
+        // Mock calls to external method.
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
+        when(alternateKeyHelper.validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE)).thenReturn(ALLOWED_ATTRIBUTE_VALUE);
+
+        // Try to call method under test.
+        try
+        {
+            allowedAttributeValueService
+                .deleteAllowedAttributeValues(new AllowedAttributeValuesDeleteRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE)));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Allowed attribute value \"%s\" doesn't exist in \"%s\" attribute value list.", ALLOWED_ATTRIBUTE_VALUE,
+                attributeValueListEntity.getAttributeValueListName()), e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
+        verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
@@ -330,11 +376,19 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         // Verify the external calls.
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(allowedAttributeValueDao).getAllowedAttributeValuesByAttributeValueListKey(attributeValueListKey);
-        verifyNoMoreInteractions(allowedAttributeValueDao, attributeValueListDaoHelper);
+        verifyNoMoreInteractionsHelper();
 
         // Validate the response.
         assertEquals(attributeValueListKey, response.getAttributeValueListKey());
         assertEquals(Arrays.asList(ALLOWED_ATTRIBUTE_VALUE), response.getAllowedAttributeValues());
+    }
+
+    /**
+     * Checks if any of the mocks has any unverified interaction.
+     */
+    private void verifyNoMoreInteractionsHelper()
+    {
+        verifyNoMoreInteractions(allowedAttributeValueDao, attributeValueListDaoHelper, alternateKeyHelper);
     }
 }
 
