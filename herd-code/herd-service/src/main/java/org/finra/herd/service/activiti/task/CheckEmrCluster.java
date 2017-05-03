@@ -70,7 +70,8 @@ public class CheckEmrCluster extends BaseEmrCluster
         String emrClusterIdString = activitiHelper.getExpressionVariableAsString(emrClusterId, execution);
         boolean verboseBoolean = activitiHelper.getExpressionVariableAsBoolean(verbose, execution, "verbose", false, false);
         String accountIdString = activitiHelper.getExpressionVariableAsString(accountId, execution);
-        boolean retrieveInstanceFleetsBoolean = activitiHelper.getExpressionVariableAsBoolean(retrieveInstanceFleets, execution, "retrieveInstanceFleets", false, false);
+        boolean retrieveInstanceFleetsBoolean =
+            activitiHelper.getExpressionVariableAsBoolean(retrieveInstanceFleets, execution, "retrieveInstanceFleets", false, false);
 
         // Gets the EMR cluster details.
         EmrCluster emrCluster = emrService
