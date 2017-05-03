@@ -7349,17 +7349,6 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="allowedAttributeValueInformation" type="allowedAttributeValueInformation"/>
-   <xs:complexType name="allowedAttributeValueInformation">
-      <xs:all>
-         <xs:element name="attributeValueListKey" type="attributeValueListKey">
-            <xs:annotation>
-               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
    <xs:element name="allowedAttributeValuesInformation" type="allowedAttributeValuesInformation"/>
    <xs:complexType name="allowedAttributeValuesInformation">
       <xs:all>
