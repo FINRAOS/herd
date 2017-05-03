@@ -20,7 +20,7 @@ import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
- * This class tests the functionality of global attribute definition dao helper
+ * This class tests the functionality of global attribute definition dao helper.
  */
 public class GlobalAttributeDefinitionDaoHelperTest extends AbstractServiceTest
 {
@@ -39,10 +39,13 @@ public class GlobalAttributeDefinitionDaoHelperTest extends AbstractServiceTest
     @Test
     public void testGetGlobalAttributeDefinitionEntity()
     {
+        // Create a global attribute definition key.
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+
+        // Create a global attribute definition entity.
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
-            globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+            globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
 
         // Mock calls to external methods.
         when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinitionEntity);
@@ -50,25 +53,27 @@ public class GlobalAttributeDefinitionDaoHelperTest extends AbstractServiceTest
         // Call the method under test.
         GlobalAttributeDefinitionEntity response = globalAttributeDefinitionDaoHelper.getGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey);
 
-        // Verify the interactions.
+        // Verify the external calls.
         verify(globalAttributeDefinitionDao).getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey);
         verifyNoMoreInteractions(globalAttributeDefinitionDao);
 
-        // Validate.
+        // Validate the response.
         assertEquals(globalAttributeDefinitionEntity, response);
     }
 
     @Test
-    public void testGetGlobalAttributeDefinitionEntityIsNull()
+    public void testGetGlobalAttributeDefinitionEntityEntityNoExists()
     {
+        // Create a global attribute definition key.
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+
+        // Mock calls to external methods.
+        when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(null);
+
+        // Try to call the method under test.
         try
         {
-            // Mock calls to external methods.
-            when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(null);
-
-            // Call method under test.
             globalAttributeDefinitionDaoHelper.getGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey);
             fail();
         }
@@ -78,48 +83,58 @@ public class GlobalAttributeDefinitionDaoHelperTest extends AbstractServiceTest
                 globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(), globalAttributeDefinitionKey.getGlobalAttributeDefinitionName()),
                 e.getMessage());
         }
+
+        // Verify the external calls.
+        verify(globalAttributeDefinitionDao).getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey);
+        verifyNoMoreInteractions(globalAttributeDefinitionDao);
     }
 
     @Test
-    public void testCheckGlobalAttributeDefinitionEntityNotExists()
+    public void testValidateGlobalAttributeDefinitionNoExistsEntityExists()
     {
+        // Create a global attribute definition key.
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
-        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
-            globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
 
+        // Create a global attribute definition entity.
+        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = new GlobalAttributeDefinitionEntity();
+
+        // Mock calls to external methods.
+        when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinitionEntity);
+
+        // Try to call the method under test.
         try
         {
-            // Mock calls to external methods.
-            when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinitionEntity);
-
-            // Call method under test.
             globalAttributeDefinitionDaoHelper.validateGlobalAttributeDefinitionNoExists(globalAttributeDefinitionKey);
             fail();
         }
         catch (AlreadyExistsException e)
         {
-            assertEquals(String.format(
-                "Unable to create global attribute definition with global attribute definition level \"%s\" and global attribute definition name \"%s\" because it already exists.",
-                globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(), globalAttributeDefinitionKey.getGlobalAttributeDefinitionName()),
-                e.getMessage());
+            assertEquals(String.format("Unable to create global attribute definition with global attribute definition level \"%s\" " +
+                "and global attribute definition name \"%s\" because it already exists.", globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(),
+                globalAttributeDefinitionKey.getGlobalAttributeDefinitionName()), e.getMessage());
         }
+
+        // Verify the external calls.
+        verify(globalAttributeDefinitionDao).getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey);
+        verifyNoMoreInteractions(globalAttributeDefinitionDao);
     }
 
     @Test
-    public void testCheckGlobalAttributeDefinitionEntityExists()
+    public void testValidateGlobalAttributeDefinitionNoExists()
     {
+        // Create a global attribute definition key.
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
 
         // Mock calls to external methods.
         when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(null);
 
-        // Call method under test.
+        // Call the method under test.
         globalAttributeDefinitionDaoHelper.validateGlobalAttributeDefinitionNoExists(globalAttributeDefinitionKey);
 
-        // Verify the interactions.
+        // Verify the external calls.
         verify(globalAttributeDefinitionDao).getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey);
+        verifyNoMoreInteractions(globalAttributeDefinitionDao);
     }
-
 }

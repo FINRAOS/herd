@@ -68,7 +68,7 @@ public class GlobalAttributeDefinitionDaoTestHelper
     public List<GlobalAttributeDefinitionKey> getTestGlobalAttributeDefinitionKeys()
     {
         return Arrays
-            .asList(new GlobalAttributeDefinitionKey(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_1),
+            .asList(new GlobalAttributeDefinitionKey(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME),
                 new GlobalAttributeDefinitionKey(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_2));
     }
 }

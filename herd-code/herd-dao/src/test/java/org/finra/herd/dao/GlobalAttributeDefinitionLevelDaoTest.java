@@ -16,6 +16,7 @@
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
@@ -23,21 +24,24 @@ import org.finra.herd.model.jpa.GlobalAttributeDefinitionLevelEntity;
 
 public class GlobalAttributeDefinitionLevelDaoTest extends AbstractDaoTest
 {
-
     @Test
     public void testGetGlobalAttributeDefinitionLevel()
     {
-        // Create and persist Global Attribute Definition Level Entity.
+        // Create and persist a global attribute definition level entity.
         GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity =
             globalAttributeDefinitionLevelDaoTestHelper.createGlobalAttributeDefinitionLevelEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL);
 
-        // Retrieve the level entity by its code
-        GlobalAttributeDefinitionLevelEntity responseEntity =
-            globalAttributeDefinitionLevelDao.getGlobalAttributeDefinitionLevel(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL);
+        // Retrieve the global attribute definition level entity by its code.
+        assertEquals(globalAttributeDefinitionLevelEntity,
+            globalAttributeDefinitionLevelDao.getGlobalAttributeDefinitionLevel(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL));
 
-        // Validate the returned object.
-        assertEquals(globalAttributeDefinitionLevelEntity, responseEntity);
+        // Test case insensitivity.
+        assertEquals(globalAttributeDefinitionLevelEntity,
+            globalAttributeDefinitionLevelDao.getGlobalAttributeDefinitionLevel(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL.toUpperCase()));
+        assertEquals(globalAttributeDefinitionLevelEntity,
+            globalAttributeDefinitionLevelDao.getGlobalAttributeDefinitionLevel(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL.toLowerCase()));
+
+        // Confirm negative results when using invalid values.
+        assertNull(globalAttributeDefinitionLevelDao.getGlobalAttributeDefinitionLevel(I_DO_NOT_EXIST));
     }
-
-
 }
