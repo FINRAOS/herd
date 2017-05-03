@@ -102,7 +102,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
         {
             AllowedAttributeValueEntity allowedAttributeValueEntity = new AllowedAttributeValueEntity();
             createdAllowedAttributeValueEntities.add(allowedAttributeValueEntity);
-            allowedAttributeValueEntity.setAttributeValueListEntity(attributeValueListEntity);
+            allowedAttributeValueEntity.setAttributeValueList(attributeValueListEntity);
             allowedAttributeValueEntity.setAllowedAttributeValue(allowedAttributeValue);
             allowedAttributeValueDao.saveAndRefresh(allowedAttributeValueEntity);
         }

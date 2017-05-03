@@ -51,7 +51,7 @@ public class AllowedAttributeValueDaoImpl extends AbstractHerdDao implements All
 
         // Join to the other tables we can filter on.
         Join<AllowedAttributeValueEntity, AttributeValueListEntity> attributeValueListEntityJoin =
-            allowedAttributeValueEntityRoot.join(AllowedAttributeValueEntity_.attributeValueListEntity);
+            allowedAttributeValueEntityRoot.join(AllowedAttributeValueEntity_.attributeValueList);
         Join<AttributeValueListEntity, NamespaceEntity> namespaceEntityJoin = attributeValueListEntityJoin.join(AttributeValueListEntity_.namespace);
 
         // Create the standard restrictions (i.e. the standard where clauses).
