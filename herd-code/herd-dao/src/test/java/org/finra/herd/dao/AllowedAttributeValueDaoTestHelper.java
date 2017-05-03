@@ -53,7 +53,7 @@ public class AllowedAttributeValueDaoTestHelper
         for (String allowedAttributeValue : allowedAttributeValues)
         {
             AllowedAttributeValueEntity allowedAttributeValueEntity = new AllowedAttributeValueEntity();
-            allowedAttributeValueEntity.setAttributeValueListEntity(attributeValueListEntity);
+            allowedAttributeValueEntity.setAttributeValueList(attributeValueListEntity);
             allowedAttributeValueEntity.setAllowedAttributeValue(allowedAttributeValue);
             allowedAttributeValueEntities.add(allowedAttributeValueDao.saveAndRefresh(allowedAttributeValueEntity));
         }

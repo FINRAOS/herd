@@ -50,7 +50,7 @@ public class AllowedAttributeValueEntity extends AuditableEntity
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "atrbt_value_list_id", referencedColumnName = "atrbt_value_list_id", nullable = false)
-    private AttributeValueListEntity attributeValueListEntity;
+    private AttributeValueListEntity attributeValueList;
 
     /**
      * The allowed attribute value column.
@@ -68,14 +68,14 @@ public class AllowedAttributeValueEntity extends AuditableEntity
         this.id = id;
     }
 
-    public AttributeValueListEntity getAttributeValueListEntity()
+    public AttributeValueListEntity getAttributeValueList()
     {
-        return attributeValueListEntity;
+        return attributeValueList;
     }
 
-    public void setAttributeValueListEntity(AttributeValueListEntity attributeValueListEntity)
+    public void setAttributeValueList(AttributeValueListEntity attributeValueList)
     {
-        this.attributeValueListEntity = attributeValueListEntity;
+        this.attributeValueList = attributeValueList;
     }
 
     public String getAllowedAttributeValue()

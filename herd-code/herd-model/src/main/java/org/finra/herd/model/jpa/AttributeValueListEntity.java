@@ -53,7 +53,7 @@ public class AttributeValueListEntity extends AuditableEntity
     private NamespaceEntity namespace;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "attributeValueListEntity", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OneToMany(mappedBy = "attributeValueList", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("allowedAttributeValue")
     private Collection<AllowedAttributeValueEntity> allowedAttributeValues;
 

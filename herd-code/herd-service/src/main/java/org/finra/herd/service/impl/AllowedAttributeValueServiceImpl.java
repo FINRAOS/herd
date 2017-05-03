@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.dao.AllowedAttributeValueDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.AllowedAttributeValuesCreateRequest;
@@ -90,7 +91,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
         {
             if (allowedAttributeValueEntityMap.containsKey(allowedAttributeValue))
             {
-                throw new IllegalArgumentException(String
+                throw new AlreadyExistsException(String
                     .format("Allowed attribute value \"%s\" already exists in \"%s\" attribute value list.", allowedAttributeValue,
                         attributeValueListEntity.getAttributeValueListName()));
             }
@@ -102,7 +103,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
         {
             AllowedAttributeValueEntity allowedAttributeValueEntity = new AllowedAttributeValueEntity();
             createdAllowedAttributeValueEntities.add(allowedAttributeValueEntity);
-            allowedAttributeValueEntity.setAttributeValueListEntity(attributeValueListEntity);
+            allowedAttributeValueEntity.setAttributeValueList(attributeValueListEntity);
             allowedAttributeValueEntity.setAllowedAttributeValue(allowedAttributeValue);
             allowedAttributeValueDao.saveAndRefresh(allowedAttributeValueEntity);
         }
