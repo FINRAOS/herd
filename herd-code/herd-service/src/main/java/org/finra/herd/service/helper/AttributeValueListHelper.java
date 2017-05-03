@@ -19,9 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
-import org.finra.herd.model.jpa.AttributeValueListEntity;
-import org.finra.herd.model.jpa.NamespaceEntity;
 
 @Component
 public class AttributeValueListHelper
@@ -29,40 +28,29 @@ public class AttributeValueListHelper
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
-    @Autowired
-    private NamespaceDaoHelper namespaceDaoHelper;
-
     /**
-     * Gets attribute value list entity.
+     * Validates an attribute value list create request.
      *
-     * @param attributeValueListKey the attribute value list key
-     *
-     * @return the attribute value list entity
+     * @param attributeValueListCreateRequest the attribute value list request
      */
-    public AttributeValueListEntity getAttributeValueListEntity(AttributeValueListKey attributeValueListKey)
+    public void validateAttributeValueListCreateRequest(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {
-
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(attributeValueListKey.getNamespace());
-
-        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
-        attributeValueListEntity.setAttributeValueListName(attributeValueListKey.getAttributeValueListName());
-        attributeValueListEntity.setNamespace(namespaceEntity);
-
-        return attributeValueListEntity;
+        Assert.notNull(attributeValueListCreateRequest, "An attribute value list create request must be specified.");
+        validateAttributeValueListKey(attributeValueListCreateRequest.getAttributeValueListKey());
     }
 
     /**
-     * Validates attribute value list key.
+     * Validates an attribute value list key.
      *
      * @param attributeValueListKey the attribute value list key
      */
     public void validateAttributeValueListKey(AttributeValueListKey attributeValueListKey)
     {
         // Validate.
-        Assert.notNull(attributeValueListKey, "A attribute value list key must be specified.");
+        Assert.notNull(attributeValueListKey, "An attribute value list key must be specified.");
         attributeValueListKey
-            .setNamespace(alternateKeyHelper.validateStringParameter("attribute value list namespace code", attributeValueListKey.getNamespace()));
+            .setNamespace(alternateKeyHelper.validateStringParameter("An", "attribute value list namespace code", attributeValueListKey.getNamespace()));
         attributeValueListKey.setAttributeValueListName(
-            alternateKeyHelper.validateStringParameter("attribute value list name", attributeValueListKey.getAttributeValueListName()));
+            alternateKeyHelper.validateStringParameter("An", "attribute value list name", attributeValueListKey.getAttributeValueListName()));
     }
 }

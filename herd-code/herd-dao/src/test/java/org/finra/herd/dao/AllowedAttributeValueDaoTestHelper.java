@@ -17,7 +17,6 @@ package org.finra.herd.dao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +35,11 @@ public class AllowedAttributeValueDaoTestHelper
     @Autowired
     private AttributeValueListDao attributeValueListDao;
 
-
+    /**
+     * Returns a list of test allowed attribute value entities.
+     *
+     * @return the list of allowed attribute value entities
+     */
     public List<AllowedAttributeValueEntity> createAllowedAttributeValueEntities(AttributeValueListKey attributeValueListKey,
         List<String> allowedAttributeValues)
     {
@@ -49,30 +52,12 @@ public class AllowedAttributeValueDaoTestHelper
         List<AllowedAttributeValueEntity> allowedAttributeValueEntities = new ArrayList<>();
         for (String allowedAttributeValue : allowedAttributeValues)
         {
-            allowedAttributeValueEntities
-                .add(allowedAttributeValueDao.saveAndRefresh(createAllowedAttributeValueEntity(attributeValueListEntity, allowedAttributeValue)));
+            AllowedAttributeValueEntity allowedAttributeValueEntity = new AllowedAttributeValueEntity();
+            allowedAttributeValueEntity.setAttributeValueListEntity(attributeValueListEntity);
+            allowedAttributeValueEntity.setAllowedAttributeValue(allowedAttributeValue);
+            allowedAttributeValueEntities.add(allowedAttributeValueDao.saveAndRefresh(allowedAttributeValueEntity));
         }
         return allowedAttributeValueEntities;
-    }
-
-    private AllowedAttributeValueEntity createAllowedAttributeValueEntity(AttributeValueListEntity attributeValueListEntity, String allowedAttributeValue)
-    {
-        AllowedAttributeValueEntity allowedAttributeValueEntity = new AllowedAttributeValueEntity();
-        allowedAttributeValueEntity.setAttributeValueListEntity(attributeValueListEntity);
-        allowedAttributeValueEntity.setAllowedAttributeValue(allowedAttributeValue);
-        return allowedAttributeValueEntity;
-    }
-
-    /**
-     * Returns a sorted list of test allowed attribute values.
-     *
-     * @return the list of allowed attribute values in ascending order
-     */
-    public List<String> getTestSortedAllowedAttributeValues()
-    {
-        List<String> allowedAttributeValues = getTestUnsortedAllowedAttributeValues();
-        Collections.sort(allowedAttributeValues);
-        return allowedAttributeValues;
     }
 
     /**

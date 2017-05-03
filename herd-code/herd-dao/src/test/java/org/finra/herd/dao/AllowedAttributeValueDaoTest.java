@@ -18,7 +18,6 @@ package org.finra.herd.dao;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,27 +36,26 @@ public class AllowedAttributeValueDaoTest extends AbstractDaoTest
     @Test
     public void testGetAllowedAttributeValues()
     {
-
-        // Create attribute value list key
+        // Create attribute value list key.
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
-        List<String> allowedAttributeValueList = Arrays.asList("1234", "4567", "9478", "3489");
+        List<String> allowedAttributeValueList = allowedAttributeValueDaoTestHelper.getTestUnsortedAllowedAttributeValues();
 
-        // Create and persist a attribute value list key entity
+        // Create and persist a attribute value list key entity.
         attributeValueListDaoTestHelper.createAttributeValueListEntity(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        // Create and persist a list of allowed attribute values
+        // Create and persist a list of allowed attribute values.
         allowedAttributeValueDaoTestHelper.createAllowedAttributeValueEntities(attributeValueListKey, allowedAttributeValueList);
 
-        // Get the allowed attribute values for the specified key
+        // Get the allowed attribute values for the specified key.
         List<AllowedAttributeValueEntity> responseEntities = allowedAttributeValueDao.getAllowedAttributeValuesByAttributeValueListKey(attributeValueListKey);
 
-        // Create a list of allowed attribute values
+        // Create a list of allowed attribute values.
         List<String> allowedAttributesResponse = new ArrayList<>();
         responseEntities.forEach((responseEntity) -> {
             allowedAttributesResponse.add(responseEntity.getAllowedAttributeValue());
         });
 
-        // Validate the response is sorted by allowed attribute values
+        // Validate the response is sorted by allowed attribute values.
         Collections.sort(allowedAttributeValueList);
         assertEquals(allowedAttributeValueList, allowedAttributesResponse);
     }

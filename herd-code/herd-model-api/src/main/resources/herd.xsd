@@ -7218,7 +7218,6 @@
       </xs:sequence>
    </xs:complexType>
 
-
    <!-- ***** Global Attribute Definition ***** -->
 
    <xs:element name="globalAttributeDefinition" type="globalAttributeDefinition"/>
@@ -7345,17 +7344,6 @@
          <xs:element name="allowedAttributeValues" type="allowedAttributeValues">
             <xs:annotation>
                <xs:documentation>List of Allowed Attribute Values</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
-   <xs:element name="allowedAttributeValueInformation" type="allowedAttributeValueInformation"/>
-   <xs:complexType name="allowedAttributeValueInformation">
-      <xs:all>
-         <xs:element name="attributeValueListKey" type="attributeValueListKey">
-            <xs:annotation>
-               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

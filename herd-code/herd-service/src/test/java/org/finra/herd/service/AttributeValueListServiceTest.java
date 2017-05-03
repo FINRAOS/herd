@@ -15,17 +15,17 @@
 */
 package org.finra.herd.service;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.times;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,38 +34,30 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.AttributeValueListDao;
-import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
-import org.finra.herd.model.api.xml.Namespace;
-import org.finra.herd.model.api.xml.NamespaceKey;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.service.helper.AttributeValueListDaoHelper;
 import org.finra.herd.service.helper.AttributeValueListHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.NamespaceSecurityHelper;
 import org.finra.herd.service.impl.AttributeValueListServiceImpl;
 
 /**
- * IndexSearchServiceTest
+ * This class tests the functionality of attribute value list service.
  */
 public class AttributeValueListServiceTest extends AbstractServiceTest
 {
-    private static final int ATTRIBUTE_VALUE_LIST_ID = 1009;
-
-    private static final String NAMESPACE = "test_attribute_value_namespace";
-
-    private static final int ONE_TIME = 1;
-
-    private static final int TWO_TIMES = 2;
-
-    private static final String attribute_value_list_name = "test_attribute_value_list_name";
-
     @Mock
     private AttributeValueListDao attributeValueListDao;
+
+    @Mock
+    private AttributeValueListDaoHelper attributeValueListDaoHelper;
 
     @Mock
     private AttributeValueListHelper attributeValueListHelper;
@@ -74,13 +66,10 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
     private AttributeValueListServiceImpl attributeValueListService;
 
     @Mock
-    private NamespaceDao namespaceDao;
-
-    @Mock
     private NamespaceDaoHelper namespaceDaoHelper;
 
     @Mock
-    private NamespaceService namespaceService;
+    private NamespaceSecurityHelper namespaceSecurityHelper;
 
     @Before
     public void before()
@@ -88,209 +77,192 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         MockitoAnnotations.initMocks(this);
     }
 
-    public void createAttributeValueList(String namespaceCd, String attribute_value_list_name)
+    @Test
+    public void createAttributeValueList()
     {
-        //namespace object for testing
-        NamespaceEntity namespaceEntity = new NamespaceEntity();
-        namespaceEntity.setCode(namespaceCd);
-        NamespaceKey namespaceKey = new NamespaceKey(namespaceCd);
-        Namespace namespace = new Namespace(namespaceCd);
+        // Create an attribute value list key.
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        // Create attribute value list request
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(namespaceCd, attribute_value_list_name);
-        AttributeValueListCreateRequest attributeValueListCreateRequest = new AttributeValueListCreateRequest(attributeValueListKey);
+        // Create an attribute value list create request.
+        AttributeValueListCreateRequest request = new AttributeValueListCreateRequest(attributeValueListKey);
+
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = new NamespaceEntity();
+        namespaceEntity.setCode(ATTRIBUTE_VALUE_LIST_NAMESPACE);
+
+        // Create an attribute value list entity.
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(attribute_value_list_name);
-        AttributeValueList attributeValueList = new AttributeValueList(ATTRIBUTE_VALUE_LIST_ID, attributeValueListKey);
+        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
 
-        //Mock the call to namespace service
-        when(namespaceDao.getNamespaceByCd(namespaceCd)).thenReturn(namespaceEntity);
-        when(namespaceDaoHelper.getNamespaceEntity(namespaceCd)).thenReturn(namespaceEntity);
-        when(namespaceService.getNamespace(namespaceKey)).thenReturn(namespace);
+        // Mock calls to external methods.
+        when(namespaceDaoHelper.getNamespaceEntity(ATTRIBUTE_VALUE_LIST_NAMESPACE)).thenReturn(namespaceEntity);
+        when(attributeValueListDao.getAttributeValueListByKey(attributeValueListKey)).thenReturn(null);
+        when(attributeValueListDao.saveAndRefresh(any(AttributeValueListEntity.class))).thenReturn(attributeValueListEntity);
 
-        // Mock the call to the attribute value list service
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey()))
-            .thenReturn(attributeValueListEntity);
-        when(attributeValueListDao.saveAndRefresh(attributeValueListEntity)).thenReturn(attributeValueListEntity);
+        // Call the method under test.
+        AttributeValueList result = attributeValueListService.createAttributeValueList(request);
 
-        // Call the method under test
-        AttributeValueList attributeValueListResult = attributeValueListService.createAttributeValueList(attributeValueListCreateRequest);
+        // Verify the external calls.
+        verify(attributeValueListHelper).validateAttributeValueListCreateRequest(request);
+        verify(namespaceDaoHelper).getNamespaceEntity(ATTRIBUTE_VALUE_LIST_NAMESPACE);
+        verify(attributeValueListDao).getAttributeValueListByKey(attributeValueListKey);
+        verify(attributeValueListDao).saveAndRefresh(any(AttributeValueListEntity.class));
+        verifyNoMoreInteractionsHelper();
 
-        // Verify the method call to indexSearchService.indexSearch()
-        verify(attributeValueListDao, times(ONE_TIME)).saveAndRefresh(attributeValueListEntity);
-
-
-        //validate the attribute value list key is as expected
-        assertEquals(attributeValueListResult.getAttributeValueListKey(), new AttributeValueListKey(namespaceCd, attribute_value_list_name));
-
-        // Validate the returned object.
-        assertThat("Attribute value list response was null.", attributeValueListResult, not(nullValue()));
-        assertThat("Attribute value list response was not an instance of IndexSearchResponse.class.", attributeValueListResult,
-            instanceOf(AttributeValueList.class));
+        // Validate the result.
+        assertEquals(new AttributeValueList(ATTRIBUTE_VALUE_LIST_ID, attributeValueListKey), result);
     }
 
     @Test
-    public void testAttributeValueListDelete()
+    public void createAttributeValueListAlreadyExists()
     {
-        // Create attribute value list request
-        NamespaceEntity namespaceEntity = new NamespaceEntity();
-        namespaceEntity.setCode(null);
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE, attribute_value_list_name);
-        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
-        attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
-        attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(attribute_value_list_name);
+        // Create an attribute value list key.
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
+        // Create an attribute value list create request.
+        AttributeValueListCreateRequest request = new AttributeValueListCreateRequest(attributeValueListKey);
 
-        // Call the method under test
-        AttributeValueListKey attributeValueListKeyResult = attributeValueListService.deleteAttributeValueList(attributeValueListKey);
+        // Mock calls to external methods.
+        when(namespaceDaoHelper.getNamespaceEntity(ATTRIBUTE_VALUE_LIST_NAMESPACE)).thenReturn(new NamespaceEntity());
+        when(attributeValueListDao.getAttributeValueListByKey(attributeValueListKey)).thenReturn(new AttributeValueListEntity());
 
-        // Verify the method call to indexSearchService.indexSearch()
-        verify(attributeValueListDao, times(ONE_TIME)).delete(attributeValueListEntity);
-        verifyNoMoreInteractions(attributeValueListDao);
+        // Try to call the method under test.
+        try
+        {
+            attributeValueListService.createAttributeValueList(request);
+            fail();
+        }
+        catch (AlreadyExistsException e)
+        {
+            assertEquals(String
+                .format("Unable to create attribute value list with name \"%s\" because it already exists for namespace \"%s\".", ATTRIBUTE_VALUE_LIST_NAME,
+                    ATTRIBUTE_VALUE_LIST_NAMESPACE), e.getMessage());
+        }
 
-        //validate the attribute value list key is as expected
-        assertEquals(attributeValueListKeyResult,
-            new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName()));
-
-        // Validate the returned object.
-        assertThat("Attribute value list response was null.", attributeValueListKeyResult, not(nullValue()));
-        assertThat("Attribute value list response was not an instance of IndexSearchResponse.class.", attributeValueListKeyResult,
-            instanceOf(AttributeValueListKey.class));
-    }
-
-    @Test(expected = AlreadyExistsException.class)
-    public void testCreateAttributeValueListDuplicateNamespace()
-    {
-        //namespace object for testing
-        NamespaceEntity namespaceEntity = new NamespaceEntity();
-        namespaceEntity.setCode(null);
-        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
-        Namespace namespace = new Namespace(NAMESPACE);
-
-        // Create attribute value list request
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE, attribute_value_list_name);
-        AttributeValueListCreateRequest attributeValueListCreateRequest = new AttributeValueListCreateRequest(attributeValueListKey);
-        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
-        attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
-        attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(attribute_value_list_name);
-
-        //Mock the call to namespace service
-        when(namespaceDao.getNamespaceByCd(NAMESPACE)).thenReturn(namespaceEntity);
-        when(namespaceDaoHelper.getNamespaceEntity(null)).thenReturn(namespaceEntity);
-        when(namespaceService.getNamespace(namespaceKey)).thenReturn(namespace);
-
-        // Mock the call to the attribute value list service
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey()))
-            .thenReturn(attributeValueListEntity);
-        when(attributeValueListDao.getAttributeValueListByKey(attributeValueListKey)).thenReturn(attributeValueListEntity);
-
-        // Call the method under test
-        attributeValueListService.createAttributeValueList(attributeValueListCreateRequest);
-
+        // Verify the external calls.
+        verify(attributeValueListHelper).validateAttributeValueListCreateRequest(request);
+        verify(namespaceDaoHelper).getNamespaceEntity(ATTRIBUTE_VALUE_LIST_NAMESPACE);
+        verify(attributeValueListDao).getAttributeValueListByKey(attributeValueListKey);
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
-    public void testCreateAttributeValueListHappyPath()
+    public void testDeleteAttributeValueList()
     {
-        createAttributeValueList(NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
-    }
+        // Create an attribute value list key.
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
-    @Test(expected = ObjectNotFoundException.class)
-    public void testCreateAttributeValueListWithoutNamespace()
-    {
-        //namespace object for testing
+        // Create a namespace entity.
         NamespaceEntity namespaceEntity = new NamespaceEntity();
-        namespaceEntity.setCode(null);
-        NamespaceKey namespaceKey = new NamespaceKey(null);
-        Namespace namespace = new Namespace(null);
+        namespaceEntity.setCode(ATTRIBUTE_VALUE_LIST_NAMESPACE);
 
-        // Create attribute value list request
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(null, attribute_value_list_name);
-        AttributeValueListCreateRequest attributeValueListCreateRequest = new AttributeValueListCreateRequest(attributeValueListKey);
+        // Create an attribute value list entity.
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(attribute_value_list_name);
-        AttributeValueList attributeValueList = new AttributeValueList(ATTRIBUTE_VALUE_LIST_ID, attributeValueListKey);
+        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
 
-        //Mock the call to namespace service
-        when(namespaceDao.getNamespaceByCd(null)).thenReturn(null);
-        when(namespaceDaoHelper.getNamespaceEntity(null)).thenReturn(null);
-        when(namespaceService.getNamespace(namespaceKey)).thenReturn(null);
+        // Mock calls to external methods.
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
 
-        // Mock the call to the attribute value list service
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey()))
-            .thenReturn(attributeValueListEntity);
-        when(attributeValueListDao.saveAndRefresh(attributeValueListEntity)).thenReturn(attributeValueListEntity);
-        //when(attributeValueListService.createAttributeValueList(attributeValueListCreateRequest)).thenReturn(attributeValueList);
+        // Call the method under test.
+        AttributeValueList result = attributeValueListService.deleteAttributeValueList(attributeValueListKey);
 
-        // Call the method under test
-        attributeValueListService.createAttributeValueList(attributeValueListCreateRequest);
+        // Verify the external calls.
+        verify(attributeValueListHelper).validateAttributeValueListKey(attributeValueListKey);
+        verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
+        verify(attributeValueListDao).delete(attributeValueListEntity);
+        verifyNoMoreInteractionsHelper();
 
+        // Validate the result.
+        assertEquals(new AttributeValueList(ATTRIBUTE_VALUE_LIST_ID, attributeValueListKey), result);
     }
 
     @Test
     public void testGetAttributeValueList()
     {
-        // Create attribute value list request
-        NamespaceEntity namespaceEntity = new NamespaceEntity();
-        namespaceEntity.setCode(NAMESPACE);
+        // Create an attribute value list key.
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE, attribute_value_list_name);
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = new NamespaceEntity();
+        namespaceEntity.setCode(ATTRIBUTE_VALUE_LIST_NAMESPACE);
+
+        // Create an attribute value list entity.
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(attribute_value_list_name);
+        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
 
-        // Mock the call to the attribute value list service
-        when(attributeValueListDao.getAttributeValueListByKey(attributeValueListKey)).thenReturn(attributeValueListEntity);
+        // Mock calls to external methods.
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
 
-        // Call the method under test
-        AttributeValueList attributeValueListResult = attributeValueListService.getAttributeValueList(attributeValueListKey);
+        // Call the method under test.
+        AttributeValueList result = attributeValueListService.getAttributeValueList(attributeValueListKey);
 
-        // Verify the method call to indexSearchService.indexSearch()
-        verify(attributeValueListDao, times(ONE_TIME)).getAttributeValueListByKey(attributeValueListKey);
-        verifyNoMoreInteractions(attributeValueListDao);
+        // Verify the external calls.
+        verify(attributeValueListHelper).validateAttributeValueListKey(attributeValueListKey);
+        verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
+        verifyNoMoreInteractionsHelper();
 
-        //validate the attribute value list key is as expected
-        assertEquals(attributeValueListResult.getAttributeValueListKey(), attributeValueListKey);
-
-        // Validate the returned object.
-        assertThat("Attribute value list response was null.", attributeValueListResult, not(nullValue()));
-        assertThat("Attribute value list response was not an instance of IndexSearchResponse.class.", attributeValueListResult,
-            instanceOf(AttributeValueList.class));
+        // Validate the result.
+        assertEquals(new AttributeValueList(ATTRIBUTE_VALUE_LIST_ID, attributeValueListKey), result);
     }
 
     @Test
-    public void testGetAttributeValueListKeys()
+    public void testGetAttributeValueLists()
     {
-        // Create attribute value list request
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE, attribute_value_list_name);
-        AttributeValueListKey attributeValueListKeyDuplicate = new AttributeValueListKey(NAMESPACE, attribute_value_list_name);
-        AttributeValueListKeys attributeValueListKeys = new AttributeValueListKeys(Arrays.asList(attributeValueListKey, attributeValueListKeyDuplicate));
+        // Create a set of authorized namespaces.
+        Set<String> authorizedNamespaces = new HashSet<>();
+        authorizedNamespaces.add(NAMESPACE);
 
-        // Mock the call to the attribute value list service
-        when(attributeValueListDao.getAttributeValueListKeys()).thenReturn(attributeValueListKeys);
+        // Create an attribute value list key.
+        List<AttributeValueListKey> attributeValueListKeys =
+            Arrays.asList(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME));
 
-        // Call the method under test
-        AttributeValueListKeys attributeValueListKeysResult = attributeValueListService.getAttributeValueListKeys();
+        // Mock calls to external methods.
+        when(namespaceSecurityHelper.getAuthorizedNamespaces(NamespacePermissionEnum.READ)).thenReturn(authorizedNamespaces);
+        when(attributeValueListDao.getAttributeValueLists(authorizedNamespaces)).thenReturn(attributeValueListKeys);
 
-        // Verify the method call to indexSearchService.indexSearch()
-        verify(attributeValueListDao, times(ONE_TIME)).getAttributeValueListKeys();
-        verifyNoMoreInteractions(attributeValueListDao);
+        // Call the method under test.
+        AttributeValueListKeys result = attributeValueListService.getAttributeValueLists();
 
-        //validate the attribute value list key is as expected
-        assertEquals(attributeValueListKeysResult, attributeValueListKeys);
+        // Verify the external calls.
+        verify(namespaceSecurityHelper).getAuthorizedNamespaces(NamespacePermissionEnum.READ);
+        verify(attributeValueListDao).getAttributeValueLists(authorizedNamespaces);
+        verifyNoMoreInteractionsHelper();
 
-        // Validate the returned object.
-        assertThat("Attribute value list response was null.", attributeValueListKeysResult, not(nullValue()));
-        assertThat("Attribute value list response was not an instance of IndexSearchResponse.class.", attributeValueListKeysResult,
-            instanceOf(AttributeValueListKeys.class));
+        // Validate the result.
+        assertEquals(new AttributeValueListKeys(attributeValueListKeys), result);
     }
 
+    @Test
+    public void testGetAttributeValueListsNoAuthorizedNamespaces()
+    {
+        // Create an empty set of authorized namespaces.
+        Set<String> authorizedNamespaces = new HashSet<>();
+
+        // Mock calls to external methods.
+        when(namespaceSecurityHelper.getAuthorizedNamespaces(NamespacePermissionEnum.READ)).thenReturn(authorizedNamespaces);
+
+        // Call the method under test.
+        AttributeValueListKeys result = attributeValueListService.getAttributeValueLists();
+
+        // Verify the external calls.
+        verify(namespaceSecurityHelper).getAuthorizedNamespaces(NamespacePermissionEnum.READ);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the result.
+        assertEquals(new AttributeValueListKeys(), result);
+    }
+
+    /**
+     * Checks if any of the mocks has any interaction.
+     */
+    private void verifyNoMoreInteractionsHelper()
+    {
+        verifyNoMoreInteractions(attributeValueListDao, attributeValueListDaoHelper, attributeValueListHelper, namespaceDaoHelper, namespaceSecurityHelper);
+    }
 }

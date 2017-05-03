@@ -16,36 +16,30 @@
 
 package org.finra.herd.dao;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.finra.herd.model.api.xml.AttributeValueListKey;
-import org.finra.herd.model.api.xml.AttributeValueListKeys;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 
 public interface AttributeValueListDao extends BaseJpaDao
 {
-
     /**
-     * Gets a attribute value list by its key.
+     * Gets an attribute value list entity by its key.
      *
      * @param attributeValueListKey the attribute value list key (case-insensitive)
      *
-     * @return the attribute value list entity for the specified key
+     * @return the attribute value list entity
      */
     AttributeValueListEntity getAttributeValueListByKey(AttributeValueListKey attributeValueListKey);
 
     /**
-     * Gets a attribute value list by its code.
+     * Gets a list of attribute value list keys per specified list of namespaces. When an empty list of namespaces is passed, the method returns keys for all
+     * attribute value lists registered in the system.
      *
-     * @return the attribute value list keys for the specified display name
-     */
-    AttributeValueListKeys getAttributeValueListKeys();
-
-    /**
-     * Gets an ordered list of attribute value list entities for all attribute value lists defined in the system.
+     * @param namespaces the list of namespaces (case-sensitive)
      *
-     * @return the list of attribute value list entities
+     * @return the list of attribute value list keys
      */
-    List<AttributeValueListEntity> getAttributeValueLists();
-
+    List<AttributeValueListKey> getAttributeValueLists(Collection<String> namespaces);
 }

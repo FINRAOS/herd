@@ -23,14 +23,16 @@ import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
 public interface GlobalAttributeDefinitionDao extends BaseJpaDao
 {
     /**
-     * Gets a list of global attribute definitions
+     * Gets a list of keys for all global attribute definitions registered in the system.
      *
      * @return the global attribute definitions list
      */
     public List<GlobalAttributeDefinitionKey> getAllGlobalAttributeDefinitionKeys();
 
     /**
-     * Gets a global attribute definition based on its key
+     * Gets a global attribute definition based on its key.
+     *
+     * @param globalAttributeDefinitionKey the global attribute definition key
      *
      * @return the global attribute definition
      */

@@ -31,7 +31,7 @@ import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKey;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
- * This class tests functionality within the helper for tag related operations.
+ * This class tests functionality within the helper for global attribute definition related operations.
  */
 public class GlobalAttributeDefinitionHelperTest extends AbstractServiceTest
 {
@@ -50,30 +50,32 @@ public class GlobalAttributeDefinitionHelperTest extends AbstractServiceTest
     @Test
     public void testValidateGlobalAttributeDefinitionKey()
     {
+        // Create a global attribute definition key.
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
 
         // Mock the external calls.
         when(alternateKeyHelper.validateStringParameter("global attribute definition level", GLOBAL_ATTRIBUTE_DEFINITON_LEVEL))
             .thenReturn(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL);
-        when(alternateKeyHelper.validateStringParameter("global attribute definition name", GLOBAL_ATTRIBUTE_DEFINITON_NAME_1))
-            .thenReturn(GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+        when(alternateKeyHelper.validateStringParameter("global attribute definition name", GLOBAL_ATTRIBUTE_DEFINITON_NAME))
+            .thenReturn(GLOBAL_ATTRIBUTE_DEFINITON_NAME);
 
-        // Validate and trim
+        // Call the method under test.
         globalAttributeDefinitionHelper.validateGlobalAttributeDefinitionKey(globalAttributeDefinitionKey);
 
         // Verify the external calls.
         verify(alternateKeyHelper).validateStringParameter("global attribute definition level", GLOBAL_ATTRIBUTE_DEFINITON_LEVEL);
-        verify(alternateKeyHelper).validateStringParameter("global attribute definition name", GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+        verify(alternateKeyHelper).validateStringParameter("global attribute definition name", GLOBAL_ATTRIBUTE_DEFINITON_NAME);
         verifyNoMoreInteractions(alternateKeyHelper);
 
-        // Validate
-        assertEquals(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1), globalAttributeDefinitionKey);
+        // Validate the results.
+        assertEquals(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME), globalAttributeDefinitionKey);
     }
 
     @Test
-    public void testValidateGlobalAttributeDefinitionKeyIsNull()
+    public void testValidateGlobalAttributeDefinitionKeyMissingRequiredParameters()
     {
+        // Try to call the method under test.
         try
         {
             globalAttributeDefinitionHelper.validateGlobalAttributeDefinitionKey(null);
@@ -83,5 +85,8 @@ public class GlobalAttributeDefinitionHelperTest extends AbstractServiceTest
         {
             assertEquals("A global attribute definition key must be specified.", e.getMessage());
         }
+
+        // Verify the external calls.
+        verifyNoMoreInteractions(alternateKeyHelper);
     }
 }

@@ -43,12 +43,11 @@ public class AttributeValueListRestController extends HerdBaseController
     private AttributeValueListService attributeValueListService;
 
     /**
-     * Creates a new attribute value list.
-     * <p>Requires WRITE permission on namespace</p>
+     * Creates a new attribute value list. <p>Requires WRITE permission on namespace</p>
      *
-     * @param request the information needed to create a attribute value list
+     * @param request the information needed to create an attribute value list
      *
-     * @return the newly created attribute value list information
+     * @return the attribute value list information
      */
     @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX, method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_POST)
@@ -58,33 +57,32 @@ public class AttributeValueListRestController extends HerdBaseController
     }
 
     /**
-     * Deletes an existing attribute value list.
-     * <p>Requires WRITE permission on namespace</p>
+     * Deletes an existing attribute value list. <p>Requires WRITE permission on namespace</p>
      *
-     * @param namespace the namespace
-     * @param attributeValueListName the attribute value list name
+     * @param namespace the namespace of the attribute value list
+     * @param attributeValueListName the name of the attribute value list
      *
-     * @return the attribute value list that got deleted
+     * @return the attribute value list information
      */
-    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX +
-        "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}", method = RequestMethod.DELETE)
+    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX + "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}",
+        method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_DELETE)
-    public AttributeValueListKey deleteAttributeValueList(@PathVariable("namespace") String namespace,
+    public AttributeValueList deleteAttributeValueList(@PathVariable("namespace") String namespace,
         @PathVariable("attributeValueListName") String attributeValueListName)
     {
         return attributeValueListService.deleteAttributeValueList(new AttributeValueListKey(namespace, attributeValueListName));
     }
 
     /**
-     * Gets an existing attribute value list.
-     * <p>Requires READ permission on namespace</p>
+     * Gets an existing attribute value list. <p>Requires READ permission on namespace</p>
      *
-     * @param namespace the namespace
+     * @param namespace the namespace of the attribute value list
+     * @param attributeValueListName the name of the attribute value list
      *
      * @return the attribute value list information
      */
-    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX +
-        "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}", method = RequestMethod.GET)
+    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX + "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}",
+        method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_GET)
     public AttributeValueList getAttributeValueList(@PathVariable("namespace") String namespace,
         @PathVariable("attributeValueListName") String attributeValueListName)
@@ -93,8 +91,7 @@ public class AttributeValueListRestController extends HerdBaseController
     }
 
     /**
-     * Gets a list of keys for all existing attribute value lists for a specific attribute value list.
-     * <p>Requires READ permission on namespace</p>
+     * Gets a list of keys for all attribute value lists registered in the system that user has access to. <p>Requires READ permission on namespace</p>
      *
      * @return the list of attribute value list keys
      */
@@ -102,6 +99,6 @@ public class AttributeValueListRestController extends HerdBaseController
     @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_ALL_GET)
     public AttributeValueListKeys getAttributeValueLists()
     {
-        return attributeValueListService.getAttributeValueListKeys();
+        return attributeValueListService.getAttributeValueLists();
     }
 }

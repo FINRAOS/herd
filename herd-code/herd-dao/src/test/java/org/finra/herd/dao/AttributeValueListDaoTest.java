@@ -15,93 +15,69 @@
 */
 package org.finra.herd.dao;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.AttributeValueListKey;
-import org.finra.herd.model.api.xml.AttributeValueListKeys;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 
 public class AttributeValueListDaoTest extends AbstractDaoTest
 {
-
-    @Mock
-    protected AttributeValueListDao attributeValueListDao;
-
-    @Mock
-    protected AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
-
-    @Before
-    public void before()
-    {
-        MockitoAnnotations.initMocks(this);
-    }
-
     @Test
     public void testGetAttributeValueListByKey()
     {
-        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
-        attributeValueListEntity.setNamespace(namespaceDao.getNamespaceByCd(NAMESPACE));
-        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
+        // Create and persist a attribute value list entity.
+        AttributeValueListEntity attributeValueListEntity =
+            attributeValueListDaoTestHelper.createAttributeValueListEntity(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        when(attributeValueListDao.getAttributeValueListByKey(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME)))
-            .thenReturn(attributeValueListEntity);
+        // Retrieve a attribute value list entity.
+        assertEquals(attributeValueListEntity,
+            attributeValueListDao.getAttributeValueListByKey(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME)));
 
-        // Retrieve attribute value list entity.
-        AttributeValueListEntity attributeValueListEntityResult =
-            attributeValueListDao.getAttributeValueListByKey(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME));
+        // Test case insensitivity.
+        assertEquals(attributeValueListEntity, attributeValueListDao
+            .getAttributeValueListByKey(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE.toUpperCase(), ATTRIBUTE_VALUE_LIST_NAME.toUpperCase())));
+        assertEquals(attributeValueListEntity, attributeValueListDao
+            .getAttributeValueListByKey(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE.toLowerCase(), ATTRIBUTE_VALUE_LIST_NAME.toLowerCase())));
 
-        // Validate the results.
-        assertNotNull(attributeValueListEntityResult);
-        assertTrue(attributeValueListEntityResult.getAttributeValueListName().equals(ATTRIBUTE_VALUE_LIST_NAME));
-    }
-
-
-    @Test
-    public void testGetAttributeValueListByKeyInvalidKey()
-    {
-        //return nul entity
-        when(attributeValueListDao.getAttributeValueListByKey(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, "I DON EXIST"))).thenReturn(null);
-
-        // Try to retrieve attribute value list entity using an invalid name.
-        assertNull(attributeValueListDao.getAttributeValueListByKey(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, "I DON EXIST")));
+        // Confirm negative results when using invalid values.
+        assertNull(attributeValueListDao.getAttributeValueListByKey(new AttributeValueListKey(I_DO_NOT_EXIST, ATTRIBUTE_VALUE_LIST_NAME)));
+        assertNull(attributeValueListDao.getAttributeValueListByKey(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, I_DO_NOT_EXIST)));
     }
 
     @Test
     public void testGetAttributeValueListKeys()
     {
-        AttributeValueListKeys attributeValueListKeys = new AttributeValueListKeys(getTestAttributeValueListKeys());
+        // Create several attribute value list keys in random order.
+        List<AttributeValueListKey> attributeValueListKeys = Arrays
+            .asList(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME_2),
+                new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE_2, ATTRIBUTE_VALUE_LIST_NAME_2),
+                new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE_2, ATTRIBUTE_VALUE_LIST_NAME),
+                new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME));
 
-        //return nul entity
-        when(attributeValueListDao.getAttributeValueListKeys()).thenReturn(attributeValueListKeys);
+        // Create and persist attribute value list entities.
+        for (AttributeValueListKey attributeValueListKey : attributeValueListKeys)
+        {
+            attributeValueListDaoTestHelper
+                .createAttributeValueListEntity(attributeValueListKey.getNamespace(), attributeValueListKey.getAttributeValueListName());
+        }
 
-        // Get the list of attribute value lists.
-        AttributeValueListKeys attributeValueListKeysResult = attributeValueListDao.getAttributeValueListKeys();
+        // Retrieve a list of attribute value list keys.
+        assertEquals(Arrays.asList(attributeValueListKeys.get(3), attributeValueListKeys.get(0)),
+            attributeValueListDao.getAttributeValueLists(Arrays.asList(ATTRIBUTE_VALUE_LIST_NAMESPACE)));
 
-        // Validate the results.
-        assertNotNull(attributeValueListKeysResult);
-        assertTrue(attributeValueListKeysResult.getAttributeValueListKeys().containsAll(getTestAttributeValueListKeys()));
-    }
+        // Test case sensitivity.
+        assertEquals(new ArrayList<>(), attributeValueListDao.getAttributeValueLists(Arrays.asList(ATTRIBUTE_VALUE_LIST_NAMESPACE.toUpperCase())));
+        assertEquals(new ArrayList<>(), attributeValueListDao.getAttributeValueLists(Arrays.asList(ATTRIBUTE_VALUE_LIST_NAMESPACE.toLowerCase())));
 
-    /**
-     * Returns a list of test attribute value list keys.
-     *
-     * @return the list of test attribute value list keys
-     */
-    private List<AttributeValueListKey> getTestAttributeValueListKeys()
-    {
-        // Get a list of test file type keys.
-        return Arrays.asList(new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME),
-            new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME + "_DUPLICATE"));
+        // Retrieve the list of keys for all attribute value lists registered in the system.
+        assertEquals(Arrays.asList(attributeValueListKeys.get(3), attributeValueListKeys.get(0), attributeValueListKeys.get(2), attributeValueListKeys.get(1)),
+            attributeValueListDao.getAttributeValueLists(null));
     }
 }
