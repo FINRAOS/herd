@@ -56,7 +56,7 @@ public class AllowedAttributeValueDaoImpl extends AbstractHerdDao implements All
 
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(builder.equal(builder.upper(attributeValueListEntityJoin.get(AttributeValueListEntity_.attributeValueListName)),
+        predicates.add(builder.equal(builder.upper(attributeValueListEntityJoin.get(AttributeValueListEntity_.name)),
             attributeValueListKey.getAttributeValueListName().toUpperCase()));
         predicates.add(builder.equal(builder.upper(namespaceEntityJoin.get(NamespaceEntity_.code)), attributeValueListKey.getNamespace().toUpperCase()));
 

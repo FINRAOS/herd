@@ -53,7 +53,7 @@ public class AttributeValueListDaoTestHelper
         // Create an attribute value list entity.
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(attributeValueListName);
+        attributeValueListEntity.setName(attributeValueListName);
 
         return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
     }

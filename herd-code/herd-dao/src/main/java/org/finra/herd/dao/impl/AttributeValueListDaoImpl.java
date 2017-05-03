@@ -55,7 +55,7 @@ public class AttributeValueListDaoImpl extends AbstractHerdDao implements Attrib
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(builder.equal(builder.upper(namespaceEntityJoin.get(NamespaceEntity_.code)), attributeValueListKey.getNamespace().toUpperCase()));
-        predicates.add(builder.equal(builder.upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)),
+        predicates.add(builder.equal(builder.upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.name)),
             attributeValueListKey.getAttributeValueListName().toUpperCase()));
 
         // Add all clauses to the query.
@@ -90,7 +90,7 @@ public class AttributeValueListDaoImpl extends AbstractHerdDao implements Attrib
         // Order the results by namespace and job name.
         List<Order> orderBy = new ArrayList<>();
         orderBy.add(builder.asc(namespaceEntityJoin.get(NamespaceEntity_.code)));
-        orderBy.add(builder.asc(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)));
+        orderBy.add(builder.asc(attributeValueListEntityRoot.get(AttributeValueListEntity_.name)));
 
         // Add all clauses to the query.
         criteria.select(attributeValueListEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderBy);
@@ -99,8 +99,7 @@ public class AttributeValueListDaoImpl extends AbstractHerdDao implements Attrib
         List<AttributeValueListKey> attributeValueListKeys = new ArrayList<>();
         for (AttributeValueListEntity attributeValueListEntity : entityManager.createQuery(criteria).getResultList())
         {
-            attributeValueListKeys
-                .add(new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName()));
+            attributeValueListKeys.add(new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getName()));
         }
 
         return attributeValueListKeys;

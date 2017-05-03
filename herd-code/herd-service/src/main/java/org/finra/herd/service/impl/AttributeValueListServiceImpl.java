@@ -157,7 +157,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         // Create a new entity.
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(request.getAttributeValueListKey().getAttributeValueListName());
+        attributeValueListEntity.setName(request.getAttributeValueListKey().getAttributeValueListName());
 
         // Persist and return the newly created entity.
         return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
@@ -177,7 +177,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
 
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey();
         attributeValueListKey.setNamespace(attributeValueListEntity.getNamespace().getCode());
-        attributeValueListKey.setAttributeValueListName(attributeValueListEntity.getAttributeValueListName());
+        attributeValueListKey.setAttributeValueListName(attributeValueListEntity.getName());
 
         attributeValueList.setAttributeValueListKey(attributeValueListKey);
         attributeValueList.setId(attributeValueListEntity.getId());

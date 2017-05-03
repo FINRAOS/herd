@@ -89,7 +89,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
+        attributeValueListEntity.setName(ATTRIBUTE_VALUE_LIST_NAME);
         attributeValueListEntity.setAllowedAttributeValues(new ArrayList<>());
 
         // Create allowed attribute value entity.
@@ -133,7 +133,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
+        attributeValueListEntity.setName(ATTRIBUTE_VALUE_LIST_NAME);
         attributeValueListEntity.setAllowedAttributeValues(allowedAttributeValueEntities);
 
         // Create allowed attribute value entity.
@@ -156,7 +156,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         catch (AlreadyExistsException e)
         {
             assertEquals(String.format("Allowed attribute value \"%s\" already exists in \"%s\" attribute value list.", ALLOWED_ATTRIBUTE_VALUE,
-                attributeValueListEntity.getAttributeValueListName()), e.getMessage());
+                attributeValueListEntity.getName()), e.getMessage());
         }
 
         // Verify the external calls.
@@ -224,7 +224,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
+        attributeValueListEntity.setName(ATTRIBUTE_VALUE_LIST_NAME);
         attributeValueListEntity.setAllowedAttributeValues(allowedAttributeValueEntities);
 
         // Create allowed attribute value entity.
@@ -341,7 +341,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
+        attributeValueListEntity.setName(ATTRIBUTE_VALUE_LIST_NAME);
         attributeValueListEntity.setAllowedAttributeValues(new ArrayList<>());
 
         // Create allowed attribute value entity.
@@ -363,7 +363,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Allowed attribute value \"%s\" doesn't exist in \"%s\" attribute value list.", ALLOWED_ATTRIBUTE_VALUE,
-                attributeValueListEntity.getAttributeValueListName()), e.getMessage());
+                attributeValueListEntity.getName()), e.getMessage());
         }
 
         // Verify the external calls.
@@ -387,7 +387,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
+        attributeValueListEntity.setName(ATTRIBUTE_VALUE_LIST_NAME);
         attributeValueListEntity.setAllowedAttributeValues(new ArrayList<>());
 
         // Create allowed attribute value entity.
@@ -425,4 +425,3 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         verifyNoMoreInteractions(allowedAttributeValueDao, attributeValueListDaoHelper, alternateKeyHelper, attributeValueListHelper);
     }
 }
-

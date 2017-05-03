@@ -94,7 +94,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
+        attributeValueListEntity.setName(ATTRIBUTE_VALUE_LIST_NAME);
 
         // Mock calls to external methods.
         when(namespaceDaoHelper.getNamespaceEntity(ATTRIBUTE_VALUE_LIST_NAMESPACE)).thenReturn(namespaceEntity);
@@ -162,7 +162,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
+        attributeValueListEntity.setName(ATTRIBUTE_VALUE_LIST_NAME);
 
         // Mock calls to external methods.
         when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
@@ -194,7 +194,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
         attributeValueListEntity.setId(ATTRIBUTE_VALUE_LIST_ID);
         attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(ATTRIBUTE_VALUE_LIST_NAME);
+        attributeValueListEntity.setName(ATTRIBUTE_VALUE_LIST_NAME);
 
         // Mock calls to external methods.
         when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);

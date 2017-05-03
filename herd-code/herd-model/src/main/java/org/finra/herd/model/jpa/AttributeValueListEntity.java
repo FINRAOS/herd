@@ -36,11 +36,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 @Entity
 public class AttributeValueListEntity extends AuditableEntity
 {
-
     public static final String TABLE_NAME = "atrbt_value_list";
-
-    @Column(name = TABLE_NAME + "_nm")
-    private String attributeValueListName;
 
     @Id
     @Column(name = TABLE_NAME + "_id")
@@ -52,20 +48,13 @@ public class AttributeValueListEntity extends AuditableEntity
     @JoinColumn(name = "name_space_cd", referencedColumnName = "name_space_cd", nullable = false)
     private NamespaceEntity namespace;
 
+    @Column(name = TABLE_NAME + "_nm")
+    private String name;
+
     @JsonManagedReference
     @OneToMany(mappedBy = "attributeValueList", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("allowedAttributeValue")
     private Collection<AllowedAttributeValueEntity> allowedAttributeValues;
-
-    public String getAttributeValueListName()
-    {
-        return attributeValueListName;
-    }
-
-    public void setAttributeValueListName(String attributeValueListName)
-    {
-        this.attributeValueListName = attributeValueListName;
-    }
 
     public Integer getId()
     {
@@ -85,6 +74,16 @@ public class AttributeValueListEntity extends AuditableEntity
     public void setNamespace(NamespaceEntity namespace)
     {
         this.namespace = namespace;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
     }
 
     public Collection<AllowedAttributeValueEntity> getAllowedAttributeValues()

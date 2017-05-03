@@ -47,7 +47,7 @@ import org.finra.herd.service.helper.AttributeValueListDaoHelper;
 import org.finra.herd.service.helper.AttributeValueListHelper;
 
 /**
- * The allowed attribute values service implementation.
+ * The allowed attribute value service implementation.
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
@@ -93,7 +93,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
             {
                 throw new AlreadyExistsException(String
                     .format("Allowed attribute value \"%s\" already exists in \"%s\" attribute value list.", allowedAttributeValue,
-                        attributeValueListEntity.getAttributeValueListName()));
+                        attributeValueListEntity.getName()));
             }
         }
 
@@ -147,7 +147,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
             {
                 throw new ObjectNotFoundException(String
                     .format("Allowed attribute value \"%s\" doesn't exist in \"%s\" attribute value list.", allowedAttributeValue,
-                        attributeValueListEntity.getAttributeValueListName()));
+                        attributeValueListEntity.getName()));
             }
         }
 
@@ -203,14 +203,13 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey();
         allowedAttributeValuesInformation.setAttributeValueListKey(attributeValueListKey);
         attributeValueListKey.setNamespace(attributeValueListEntity.getNamespace().getCode());
-        attributeValueListKey.setAttributeValueListName(attributeValueListEntity.getAttributeValueListName());
+        attributeValueListKey.setAttributeValueListName(attributeValueListEntity.getName());
 
         // Add the allowed attribute values.
         List<String> allowedAttributeValues = new ArrayList<>();
         allowedAttributeValuesInformation.setAllowedAttributeValues(allowedAttributeValues);
 
-        allowedAttributeValueEntities.forEach(allowedAttributeValueEntity ->
-        {
+        allowedAttributeValueEntities.forEach(allowedAttributeValueEntity -> {
             allowedAttributeValues.add(allowedAttributeValueEntity.getAllowedAttributeValue());
         });
 
@@ -228,8 +227,7 @@ public class AllowedAttributeValueServiceImpl implements AllowedAttributeValueSe
     {
         Map<String, AllowedAttributeValueEntity> allowedAttributeValueEntityMap = new HashMap<>();
 
-        allowedAttributeValueEntities.forEach((allowedAttributeValueEntity) ->
-        {
+        allowedAttributeValueEntities.forEach((allowedAttributeValueEntity) -> {
             allowedAttributeValueEntityMap.put(allowedAttributeValueEntity.getAllowedAttributeValue(), allowedAttributeValueEntity);
         });
 
