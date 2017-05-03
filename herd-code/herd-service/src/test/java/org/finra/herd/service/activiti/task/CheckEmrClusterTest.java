@@ -31,6 +31,7 @@ import org.activiti.engine.history.HistoricProcessInstance;
 import org.junit.Test;
 
 import org.finra.herd.dao.impl.MockEmrOperationsImpl;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleet;
 import org.finra.herd.model.api.xml.Job;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.service.AbstractServiceTest;
@@ -179,19 +180,9 @@ public class CheckEmrClusterTest extends AbstractServiceTest
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
 
-        String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
-        String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_id");
-        assertEquals(hiveStepId, emrStepId);
-        String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
-        assertNotNull(emrStepJarLocation);
-
-        String shellStepId = (String) variables.get("addShellStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
-        String activeStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_id");
-        assertEquals(shellStepId, activeStepId);
-        String activeStepJarLocation =
-            (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_jarLocation");
-        assertNotNull(activeStepJarLocation);
-
+        List< EmrClusterInstanceFleet>  emrClusterInstanceFleet = (List< EmrClusterInstanceFleet>) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "instance_fleets");
+        assertNotNull(emrClusterInstanceFleet);
+        assertEquals(emrClusterInstanceFleet.size(), 1);
     }
 
     private List<Parameter> getParameters(boolean isShellStepRunning, String verbose, String retrieveInstanceFleets)
@@ -231,6 +222,11 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         fieldExtension = new FieldExtension();
         fieldExtension.setFieldName("verbose");
         fieldExtension.setExpression("${verbose}");
+        fieldExtensionList.add(fieldExtension);
+
+        fieldExtension = new FieldExtension();
+        fieldExtension.setFieldName("retrieveInstanceFleets");
+        fieldExtension.setExpression("${retrieveInstanceFleets}");
         fieldExtensionList.add(fieldExtension);
 
         return fieldExtensionList;
