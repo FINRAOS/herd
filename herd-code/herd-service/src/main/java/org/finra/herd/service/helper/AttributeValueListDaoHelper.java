@@ -46,7 +46,7 @@ public class AttributeValueListDaoHelper
         if (attributeValueListEntity == null)
         {
             throw new ObjectNotFoundException(String
-                .format("Attribute value list with name \"%s\" doesn't exist for namespace \"%s\"", attributeValueListKey.getAttributeValueListName(),
+                .format("Attribute value list with name \"%s\" doesn't exist for namespace \"%s\".", attributeValueListKey.getAttributeValueListName(),
                     attributeValueListKey.getNamespace()));
         }
 

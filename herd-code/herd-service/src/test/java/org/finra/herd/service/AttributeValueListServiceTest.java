@@ -49,7 +49,7 @@ import org.finra.herd.service.helper.NamespaceSecurityHelper;
 import org.finra.herd.service.impl.AttributeValueListServiceImpl;
 
 /**
- * IndexSearchServiceTest
+ * This class tests the functionality of attribute value list service.
  */
 public class AttributeValueListServiceTest extends AbstractServiceTest
 {
