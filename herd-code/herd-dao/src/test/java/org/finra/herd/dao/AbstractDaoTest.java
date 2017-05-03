@@ -63,6 +63,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ACTIVITI_ID_4 = "UT_Activiti_ID_4_" + RANDOM_SUFFIX;
 
+    public static final String ALLOWED_ATTRIBUTE_VALUE = "UT_ALLOWED_ATTRIBUTE_VALUE" + RANDOM_SUFFIX;
+
     public static final Boolean ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = true;
 
     public static final String ATTRIBUTE_NAME_1_MIXED_CASE = "Attribute Name 1";
@@ -254,8 +256,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer EXPIRATION_IN_DAYS = (int) (Math.random() * Integer.MAX_VALUE);
 
-    public static final String ALLOWED_ATTRIBUTE_VALUE = "UT_Allowed_Attribute_Value_" + RANDOM_SUFFIX;
-
     public static final String FIELD_DISPLAY_NAME = "displayName";
 
     public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
@@ -292,13 +292,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer FOURTH_FORMAT_VERSION = 3;
 
+    public static final Integer GLOBAL_ATTRIBUTE_DEFINITON_ID = (int) (Math.random() * Integer.MAX_VALUE);
+
     public static final String GLOBAL_ATTRIBUTE_DEFINITON_INVALID_LEVEL = "BUS_OBJECT_FORMAT";
 
     public static final String GLOBAL_ATTRIBUTE_DEFINITON_LEVEL = "BUS_OBJCT_FRMT";
 
-    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_1 = "UT_DEF_NAME_1_" + RANDOM_SUFFIX;
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME = "UT_GlobalAttributeDefinitionName_1_" + RANDOM_SUFFIX;
 
-    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_2 = "UT_DEF_NAME_2_" + RANDOM_SUFFIX;
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_2 = "UT_GlobalAttributeDefinitionName_2_" + RANDOM_SUFFIX;
 
     public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
 
@@ -392,6 +394,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NOTIFICATION_NAME_2 = "UT_Ntfcn_Name_2" + RANDOM_SUFFIX;
 
     public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
+
+    public static final List<String> NO_ALLOWED_ATTRIBUTE_VALUES = new ArrayList<>();
 
     public static final Boolean NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = false;
 
@@ -824,16 +828,22 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String USER_TELEPHONE_NUMBER = "UT_User_Telephone_Number_" + RANDOM_SUFFIX;
 
-    public static final List<String> NO_ALLOWED_ATTRIBUTE_VALUES = new ArrayList<>();
-
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
-
 
     // A holding location for a property source.
     // When we remove the property source from the environment, we will place it here as a holding area. Then when we want to add it back into the
     // environment, we will take it from this holding area and put it back in the environment. When the property source is in the environment, we
     // set this holder to null.
     public ReloadablePropertySource propertySourceHoldingLocation;
+
+    @Autowired
+    protected AllowedAttributeValueDaoTestHelper allowedAttributeValueDaoTestHelper;
+
+    @Autowired
+    protected AttributeValueListDao attributeValueListDao;
+
+    @Autowired
+    protected AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
 
     @Autowired
     protected BusinessObjectDataAttributeDao businessObjectDataAttributeDao;
@@ -930,6 +940,18 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected FileTypeDaoTestHelper fileTypeDaoTestHelper;
+
+    @Autowired
+    protected GlobalAttributeDefinitionDao globalAttributeDefinitionDao;
+
+    @Autowired
+    protected GlobalAttributeDefinitionDaoTestHelper globalAttributeDefinitionDaoTestHelper;
+
+    @Autowired
+    protected GlobalAttributeDefinitionLevelDao globalAttributeDefinitionLevelDao;
+
+    @Autowired
+    protected GlobalAttributeDefinitionLevelDaoTestHelper globalAttributeDefinitionLevelDaoTestHelper;
 
     @Autowired
     protected HerdCollectionHelper herdCollectionHelper;
@@ -1115,27 +1137,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected UserNamespaceAuthorizationDaoTestHelper userNamespaceAuthorizationDaoTestHelper;
-
-    @Autowired
-    protected GlobalAttributeDefinitionDao globalAttributeDefinitionDao;
-
-    @Autowired
-    protected GlobalAttributeDefinitionLevelDao globalAttributeDefinitionLevelDao;
-
-    @Autowired
-    protected GlobalAttributeDefinitionDaoTestHelper globalAttributeDefinitionDaoTestHelper;
-
-    @Autowired
-    protected GlobalAttributeDefinitionLevelDaoTestHelper globalAttributeDefinitionLevelDaoTestHelper;
-
-    @Autowired
-    protected AllowedAttributeValueDaoTestHelper allowedAttributeValueDaoTestHelper;
-
-    @Autowired
-    protected AttributeValueListDao attributeValueListDao;
-
-    @Autowired
-    protected AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
 
     /**
      * Modifies the re-loadable property source. Copies all the existing properties and overrides with the properties passed in the map.

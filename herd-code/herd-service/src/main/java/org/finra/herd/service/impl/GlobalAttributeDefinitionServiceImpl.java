@@ -34,21 +34,20 @@ import org.finra.herd.service.helper.GlobalAttributeDefinitionDaoHelper;
 import org.finra.herd.service.helper.GlobalAttributeDefinitionHelper;
 
 /**
- * The global Attribute Definition service implementation.
+ * The global attribute definition service implementation.
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefinitionService
 {
-
     @Autowired
     private GlobalAttributeDefinitionDao globalAttributeDefinitionDao;
 
     @Autowired
-    private GlobalAttributeDefinitionHelper globalAttributeDefinitionHelper;
+    private GlobalAttributeDefinitionDaoHelper globalAttributeDefinitionDaoHelper;
 
     @Autowired
-    private GlobalAttributeDefinitionDaoHelper globalAttributeDefinitionDaoHelper;
+    private GlobalAttributeDefinitionHelper globalAttributeDefinitionHelper;
 
     @Autowired
     private GlobalAttributeDefinitionLevelDao globalAttributeDefinitionLevelDao;

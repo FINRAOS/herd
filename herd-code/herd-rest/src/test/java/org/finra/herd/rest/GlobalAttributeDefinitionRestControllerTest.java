@@ -16,7 +16,6 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -36,7 +35,7 @@ import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKeys;
 import org.finra.herd.service.GlobalAttributeDefinitionService;
 
 /**
- * This class tests the functionality of global attribute definition rest controller
+ * This class tests the functionality of global attribute definition rest controller.
  */
 public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTest
 {
@@ -55,79 +54,76 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
     @Test
     public void testCreateGlobalAttributeDefinition()
     {
+        // Create a global attribute definition key.
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+
+        // Create a global attribute definition create request.
         GlobalAttributeDefinitionCreateRequest request = new GlobalAttributeDefinitionCreateRequest(globalAttributeDefinitionKey);
 
-        //create a global attribute definition
+        // Create a global attribute definition.
         GlobalAttributeDefinition globalAttributeDefinition = new GlobalAttributeDefinition();
-        globalAttributeDefinition.setId(1);
-        globalAttributeDefinition.setGlobalAttributeDefinitionKey(globalAttributeDefinitionKey);
 
-        //mock calls to external method
+        // Mock calls to external methods.
         when(globalAttributeDefinitionService.createGlobalAttributeDefinition(request)).thenReturn(globalAttributeDefinition);
 
-        //call method under  test
+        // Call the method under  test.
         GlobalAttributeDefinition response = globalAttributeDefinitionRestController.createGlobalAttributeDefinition(request);
 
-        //verify
+        // Verify the external calls.
         verify(globalAttributeDefinitionService).createGlobalAttributeDefinition(request);
         verifyNoMoreInteractions(globalAttributeDefinitionService);
 
-        //validate
+        // Validate the response.
         assertEquals(globalAttributeDefinition, response);
     }
 
     @Test
     public void testDeleteGlobalAttributeDefinition()
     {
+        // Create a global attribute definition key.
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
+            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
 
-        //create a global attribute definition
-        GlobalAttributeDefinition globalAttributeDefinition = new GlobalAttributeDefinition();
-        globalAttributeDefinition.setId(1);
-        globalAttributeDefinition.setGlobalAttributeDefinitionKey(globalAttributeDefinitionKey);
+        // Create a global attribute definition.
+        GlobalAttributeDefinition globalAttributeDefinition = new GlobalAttributeDefinition(INTEGER_VALUE, globalAttributeDefinitionKey);
 
-        //mock calls to external method
+        // Mock calls to external methods.
         when(globalAttributeDefinitionService.deleteGlobalAttributeDefinition(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinition);
 
-        //call method under test
-        GlobalAttributeDefinition response = globalAttributeDefinitionRestController
-            .deleteGlobalAttributeDefinition(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(),
-                globalAttributeDefinitionKey.getGlobalAttributeDefinitionName());
+        // Call the method under test.
+        GlobalAttributeDefinition response =
+            globalAttributeDefinitionRestController.deleteGlobalAttributeDefinition(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
 
-        //verify the calls
+        // Verify the external calls.
         verify(globalAttributeDefinitionService).deleteGlobalAttributeDefinition(globalAttributeDefinitionKey);
         verifyNoMoreInteractions(globalAttributeDefinitionService);
 
-        //validate
+        // Validate the response.
         assertEquals(globalAttributeDefinition, response);
     }
 
     @Test
-    public void testGetGlobalAttributeDefinition()
+    public void testGetGlobalAttributeDefinitions()
     {
-        //create the keys
-        GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
-        GlobalAttributeDefinitionKey globalAttributeDefinitionKey1 =
-            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2);
-        GlobalAttributeDefinitionKeys globalAttributeDefinitionKeys =
-            new GlobalAttributeDefinitionKeys(Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
+        // Create a list of global attribute definition keys.
+        GlobalAttributeDefinitionKeys globalAttributeDefinitionKeys = new GlobalAttributeDefinitionKeys(Arrays
+            .asList(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME),
+                new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2)));
 
-        // Mock calls to external methods
+        // Mock calls to external methods.
         when(globalAttributeDefinitionService.getGlobalAttributeDefinitionKeys()).thenReturn(globalAttributeDefinitionKeys);
 
-        //call method under test
+        // Call the method under test.
         GlobalAttributeDefinitionKeys response = globalAttributeDefinitionRestController.getGlobalAttributeDefinitions();
 
-        //verify
+        // Verify the external calls.
         verify(globalAttributeDefinitionService).getGlobalAttributeDefinitionKeys();
         verifyNoMoreInteractions(globalAttributeDefinitionService);
 
-        //validate
-        assertNotNull(response);
-        assertEquals(response.getGlobalAttributeDefinitionKeys(), Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
+        // Validate the response.
+        assertEquals(new GlobalAttributeDefinitionKeys(Arrays
+            .asList(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME),
+                new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2))), response);
     }
 }

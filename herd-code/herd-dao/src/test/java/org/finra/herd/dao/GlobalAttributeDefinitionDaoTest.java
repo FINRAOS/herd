@@ -16,8 +16,7 @@
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -28,39 +27,47 @@ import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
 
 public class GlobalAttributeDefinitionDaoTest extends AbstractDaoTest
 {
-
     @Test
     public void testGetGlobalAttributeDefinitionKeys()
     {
-        // Create and persist Global Attribute Definition entities.
-        globalAttributeDefinitionDaoTestHelper
-            .createGlobalAttributeDefinitionEntity(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
-        globalAttributeDefinitionDaoTestHelper
-            .createGlobalAttributeDefinitionEntity(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_2);
+        // Get a list of global attribute definition keys.
+        List<GlobalAttributeDefinitionKey> globalAttributeDefinitionKeys = globalAttributeDefinitionDaoTestHelper.getTestGlobalAttributeDefinitionKeys();
+
+        // Create and persist global attribute definition entities.
+        for (GlobalAttributeDefinitionKey globalAttributeDefinitionKey : globalAttributeDefinitionKeys)
+        {
+            globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(),
+                globalAttributeDefinitionKey.getGlobalAttributeDefinitionName());
+        }
 
         // Retrieve a list of global attribute definition keys.
-        List<GlobalAttributeDefinitionKey> globalAttributeDefinitionKeys = globalAttributeDefinitionDao.getAllGlobalAttributeDefinitionKeys();
+        List<GlobalAttributeDefinitionKey> result = globalAttributeDefinitionDao.getAllGlobalAttributeDefinitionKeys();
 
         // Validate the returned object.
-        assertNotNull(globalAttributeDefinitionKeys);
-        assertTrue(globalAttributeDefinitionKeys.containsAll(globalAttributeDefinitionDaoTestHelper.getTestGlobalAttributeDefinitionKeys()));
+        assertEquals(globalAttributeDefinitionKeys, result);
     }
 
     @Test
     public void testGetGlobalAttributeDefinitionByKey()
     {
-        // Create and persist Global Attribute Definition entities.
-        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = globalAttributeDefinitionDaoTestHelper
-            .createGlobalAttributeDefinitionEntity(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
-        globalAttributeDefinitionDaoTestHelper
-            .createGlobalAttributeDefinitionEntity(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_2);
+        // Create and persist a global attribute definition entity.
+        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
+            globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
 
-        // Retrieve global attribute definition key.
-        GlobalAttributeDefinitionEntity responseEntity = globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(
-            new GlobalAttributeDefinitionKey(AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, AbstractDaoTest.GLOBAL_ATTRIBUTE_DEFINITON_NAME_1));
+        // Retrieve a global attribute definition entity.
+        assertEquals(globalAttributeDefinitionEntity, globalAttributeDefinitionDao
+            .getGlobalAttributeDefinitionByKey(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME)));
 
-        // Validate the returned object.
-        assertEquals(globalAttributeDefinitionEntity, responseEntity);
+        // Test case insensitivity.
+        assertEquals(globalAttributeDefinitionEntity, globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(
+            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL.toUpperCase(), GLOBAL_ATTRIBUTE_DEFINITON_NAME.toUpperCase())));
+        assertEquals(globalAttributeDefinitionEntity, globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(
+            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL.toLowerCase(), GLOBAL_ATTRIBUTE_DEFINITON_NAME.toLowerCase())));
+
+        // Confirm negative results when using invalid values.
+        assertNull(
+            globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(new GlobalAttributeDefinitionKey(I_DO_NOT_EXIST, GLOBAL_ATTRIBUTE_DEFINITON_NAME)));
+        assertNull(
+            globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, I_DO_NOT_EXIST)));
     }
-
 }
