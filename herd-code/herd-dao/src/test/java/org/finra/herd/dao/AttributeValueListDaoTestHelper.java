@@ -15,14 +15,11 @@
 */
 package org.finra.herd.dao;
 
-import java.util.Arrays;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.api.xml.AttributeValueListKey;
-import org.finra.herd.model.api.xml.AttributeValueListKeys;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
 
 @Component
 public class AttributeValueListDaoTestHelper
@@ -31,36 +28,33 @@ public class AttributeValueListDaoTestHelper
     private AttributeValueListDao attributeValueListDao;
 
     @Autowired
+    private NamespaceDao namespaceDao;
+
+    @Autowired
     private NamespaceDaoTestHelper namespaceDaoTestHelper;
 
     /**
-     * Create attribute value list entity and save it in the database
+     * Creates attribute value list entity and save it in the database.
      *
-     * @param namespace namespace of the attribute value list.
-     * @param attributeValueListName name of the attribute value list
+     * @param namespace the namespace of the attribute value list
+     * @param attributeValueListName the name of the attribute value list
      *
-     * @return Attribute value list entity
+     * @return the attribute value list entity
      */
-
     public AttributeValueListEntity createAttributeValueListEntity(String namespace, String attributeValueListName)
     {
+        // Create a namespace entity if not exists.
+        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(namespace);
+        if (namespaceEntity == null)
+        {
+            namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(namespace);
+        }
+
+        // Create an attribute value list entity.
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
-        attributeValueListEntity.setNamespace(namespaceDaoTestHelper.createNamespaceEntity(namespace));
+        attributeValueListEntity.setNamespace(namespaceEntity);
         attributeValueListEntity.setAttributeValueListName(attributeValueListName);
+
         return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
-    }
-
-    /**
-     * @param namespace
-     * @param attributeValueListName
-     *
-     * @return
-     */
-    public AttributeValueListKeys getTestAttributeValueListKeys(String namespace, String attributeValueListName)
-    {
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(namespace, attributeValueListName);
-        AttributeValueListKey attributeValueListKeyDuplicate = new AttributeValueListKey(namespace, attributeValueListName);
-
-        return new AttributeValueListKeys(Arrays.asList(attributeValueListKey, attributeValueListKeyDuplicate));
     }
 }

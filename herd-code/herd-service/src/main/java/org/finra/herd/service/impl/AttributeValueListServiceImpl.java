@@ -15,8 +15,11 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -25,20 +28,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.dao.AttributeValueListDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.MethodNotAllowedException;
-import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
-import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.AttributeValueListService;
-import org.finra.herd.service.NamespaceService;
 import org.finra.herd.service.helper.AttributeValueListDaoHelper;
 import org.finra.herd.service.helper.AttributeValueListHelper;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceSecurityHelper;
 
 
@@ -59,10 +60,10 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
     private AttributeValueListHelper attributeValueListHelper;
 
     @Autowired
-    private NamespaceSecurityHelper namespaceSecurityHelper;
+    private NamespaceDaoHelper namespaceDaoHelper;
 
     @Autowired
-    private NamespaceService namespaceService;
+    private NamespaceSecurityHelper namespaceSecurityHelper;
 
     @NamespacePermission(fields = "#request.attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
@@ -72,30 +73,94 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         // Validate and trim the request parameters.
         attributeValueListHelper.validateAttributeValueListCreateRequest(request);
 
-        NamespaceKey namespaceKey = new NamespaceKey(request.getAttributeValueListKey().getNamespace());
-        if (namespaceService.getNamespace(namespaceKey) == null)
-        {
-            throw new ObjectNotFoundException(String
-                .format("No namespace available as \"%s\". To create a new attribute value list an existing namespace is required.",
-                    request.getAttributeValueListKey().getNamespace()));
+        // Get the attribute value list key.
+        AttributeValueListKey attributeValueListKey = request.getAttributeValueListKey();
 
-        }
+        // Retrieve the namespace entity and validate it exists.
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(request.getAttributeValueListKey().getNamespace());
 
-        // Validate the attribute value list does not already exist in the database.
-        AttributeValueListEntity attributeValueListEntity = attributeValueListDao.getAttributeValueListByKey(request.getAttributeValueListKey());
-        if (attributeValueListEntity != null)
+        // Validate the attribute value list does not already exist.
+        if (attributeValueListDao.getAttributeValueListByKey(request.getAttributeValueListKey()) != null)
         {
-            throw new AlreadyExistsException(String.format("Unable to create attribute value list with code \"%s\" and \"%s\" because it already exists.",
-                request.getAttributeValueListKey().getNamespace(), request.getAttributeValueListKey().getAttributeValueListName()));
+            throw new AlreadyExistsException(String
+                .format("Unable to create attribute value list with name \"%s\" because it already exists for namespace \"%s\".",
+                    attributeValueListKey.getAttributeValueListName(), attributeValueListKey.getNamespace()));
         }
 
         // Create and persist a new attribute value list entity from the request information.
-        attributeValueListEntity = attributeValueListDaoHelper.getAttributeValueListEntity(request.getAttributeValueListKey());
-
-        attributeValueListEntity = attributeValueListDao.saveAndRefresh(attributeValueListEntity);
+        AttributeValueListEntity attributeValueListEntity = createAttributeValueListEntity(request, namespaceEntity);
 
         // Create and return the attribute value list object from the persisted entity.
-        return createAttributeValueList(attributeValueListEntity);
+        return createAttributeValueListFromEntity(attributeValueListEntity);
+    }
+
+    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public AttributeValueList deleteAttributeValueList(AttributeValueListKey attributeValueListKey)
+    {
+        // Perform validation and trim.
+        attributeValueListHelper.validateAttributeValueListKey(attributeValueListKey);
+
+        // Retrieve and ensure that an attribute value list already exists with the specified key.
+        AttributeValueListEntity attributeValueListEntity = attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey);
+
+        // Delete the attribute value list.
+        attributeValueListDao.delete(attributeValueListEntity);
+
+        // Create and return the attribute value list object from the deleted entity.
+        return createAttributeValueListFromEntity(attributeValueListEntity);
+    }
+
+    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public AttributeValueList getAttributeValueList(AttributeValueListKey attributeValueListKey)
+    {
+        // Perform validation and trim.
+        attributeValueListHelper.validateAttributeValueListKey(attributeValueListKey);
+
+        // Retrieve and ensure that an attribute value list already exists with the specified key.
+        AttributeValueListEntity attributeValueListEntity = attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey);
+
+        // Create and return the attribute value list object from the deleted entity.
+        return createAttributeValueListFromEntity(attributeValueListEntity);
+    }
+
+    @Override
+    public AttributeValueListKeys getAttributeValueLists()
+    {
+        // Get the namespaces which the current user is authorized to READ.
+        Set<String> authorizedNamespaces = namespaceSecurityHelper.getAuthorizedNamespaces(NamespacePermissionEnum.READ);
+
+        // Create an empty list of keys.
+        List<AttributeValueListKey> attributeValueListKeys = new ArrayList<>();
+
+        // Continue the processing only when the list of authorized namespaces is not empty.
+        if (CollectionUtils.isNotEmpty(authorizedNamespaces))
+        {
+            attributeValueListKeys.addAll(attributeValueListDao.getAttributeValueLists(authorizedNamespaces));
+        }
+
+        // Return the list of keys.
+        return new AttributeValueListKeys(attributeValueListKeys);
+    }
+
+    /**
+     * Creates and persists a new attribute value list entity from the request information.
+     *
+     * @param request the request
+     * @param namespaceEntity the namespace
+     *
+     * @return the newly created attribute value list entity
+     */
+    private AttributeValueListEntity createAttributeValueListEntity(AttributeValueListCreateRequest request, NamespaceEntity namespaceEntity)
+    {
+        // Create a new entity.
+        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
+        attributeValueListEntity.setNamespace(namespaceEntity);
+        attributeValueListEntity.setAttributeValueListName(request.getAttributeValueListKey().getAttributeValueListName());
+
+        // Persist and return the newly created entity.
+        return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
     }
 
     /**
@@ -105,7 +170,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
      *
      * @return the attribute value list
      */
-    public AttributeValueList createAttributeValueList(AttributeValueListEntity attributeValueListEntity)
+    private AttributeValueList createAttributeValueListFromEntity(AttributeValueListEntity attributeValueListEntity)
     {
         // Create the attribute value list.
         AttributeValueList attributeValueList = new AttributeValueList();
@@ -118,52 +183,5 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         attributeValueList.setId(attributeValueListEntity.getId());
 
         return attributeValueList;
-    }
-
-    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
-    @Override
-    public AttributeValueListKey deleteAttributeValueList(AttributeValueListKey attributeValueListKey)
-    {
-        // Perform validation and trim.
-        attributeValueListHelper.validateAttributeValueListKey(attributeValueListKey);
-
-        // Retrieve and ensure that a attribute value list already exists with the specified key.
-        AttributeValueListEntity attributeValueListEntity = attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey);
-
-        // Delete the attribute value list.
-        attributeValueListDao.delete(attributeValueListEntity);
-
-        // Create and return the attribute value list object from the deleted entity.
-        return new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName());
-    }
-
-    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.READ)
-    @Override
-    public AttributeValueList getAttributeValueList(AttributeValueListKey attributeValueListKey)
-    {
-        AttributeValueListEntity attributeValueListEntity = attributeValueListDao.getAttributeValueListByKey(attributeValueListKey);
-        return createAttributeValueList(attributeValueListEntity);
-    }
-
-    @Override
-    public AttributeValueListKeys getAttributeValueListKeys()
-    {
-        /*
-         * Get the namespaces which the current user is authorized to READ.
-         * If a specific namespace was requested, and the current user is authorized to read the namespace, include ONLY the requested namespace.
-         * If a specific namespace was requested, but the current user is not authorized to read the namespace, clear all namespaces.
-         * Otherwise, include all authorized namespaces.
-         *
-         * This ensures that only authorized namespaces are queried from the database and that
-         * an unauthorized user cannot determine if he specified an existing namespace or not.
-         */
-        Set<String> authorizedNamespaces = namespaceSecurityHelper.getAuthorizedNamespaces(NamespacePermissionEnum.READ);
-
-        // Continue the processing only when the list of authorized namespaces is not empty.
-        if (authorizedNamespaces.isEmpty())
-        {
-            throw new MethodNotAllowedException(String.format("There are no attribute value list to available in all the namespace allowed to you."));
-        }
-        return attributeValueListDao.getAttributeValueListKeys(authorizedNamespaces);
     }
 }

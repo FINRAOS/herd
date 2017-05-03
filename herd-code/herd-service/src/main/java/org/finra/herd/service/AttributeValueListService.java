@@ -20,19 +20,17 @@ import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
 
-
 /**
  * The attribute value list service.
  */
 public interface AttributeValueListService
 {
-
     /**
      * Creates a new attribute value list.
      *
-     * @param request the information needed to create a attribute value list
+     * @param request the information needed to create an attribute value list
      *
-     * @return the newly created attribute value list
+     * @return the attribute value list information
      */
     AttributeValueList createAttributeValueList(AttributeValueListCreateRequest request);
 
@@ -41,9 +39,9 @@ public interface AttributeValueListService
      *
      * @param attributeValueListKey the attribute value list key
      *
-     * @return the attribute value list key information for the attribute that got deleted
+     * @return the attribute value list information
      */
-    AttributeValueListKey deleteAttributeValueList(AttributeValueListKey attributeValueListKey);
+    AttributeValueList deleteAttributeValueList(AttributeValueListKey attributeValueListKey);
 
     /**
      * Gets an existing attribute value list by key.
@@ -55,9 +53,9 @@ public interface AttributeValueListService
     AttributeValueList getAttributeValueList(AttributeValueListKey attributeValueListKey);
 
     /**
-     * Gets a list of keys for all existing attribute value lists.
+     * Gets a list of keys for all attribute value lists registered in the system that user has access to.
      *
      * @return the list of attribute value list keys
      */
-    AttributeValueListKeys getAttributeValueListKeys();
+    AttributeValueListKeys getAttributeValueLists();
 }
