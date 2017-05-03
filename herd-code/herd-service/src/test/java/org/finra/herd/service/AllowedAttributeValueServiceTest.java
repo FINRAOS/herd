@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -51,11 +52,11 @@ import org.finra.herd.service.impl.AllowedAttributeValueServiceImpl;
  */
 public class AllowedAttributeValueServiceTest extends AbstractServiceTest
 {
-    @Mock
-    private AllowedAttributeValueDao allowedAttributeValueDao;
-
     @InjectMocks
     private AllowedAttributeValueServiceImpl allowedAttributeValueService;
+
+    @Mock
+    private AllowedAttributeValueDao allowedAttributeValueDao;
 
     @Mock
     private AlternateKeyHelper alternateKeyHelper;
@@ -75,7 +76,6 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
     @Test
     public void testCreateAllowedAttributeValues()
     {
-
         // Create attribute value list key.
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
 
@@ -104,10 +104,11 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         AllowedAttributeValuesInformation response = allowedAttributeValueService
             .createAllowedAttributeValues(new AllowedAttributeValuesCreateRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE)));
 
-        // Verify the calls.
+        // Verify the external calls.
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(allowedAttributeValueDao, times(2)).saveAndRefresh(any(AllowedAttributeValueEntity.class));
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
+        verifyNoMoreInteractions(allowedAttributeValueDao, attributeValueListDaoHelper, alternateKeyHelper);
 
         // Validate the response.
         assertEquals(attributeValueListKey, response.getAttributeValueListKey());
@@ -117,7 +118,6 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
     @Test
     public void testCreateAllowedAttributeValuesAlreadyExists()
     {
-
         // Create attribute value list key.
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
 
@@ -143,7 +143,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
         when(alternateKeyHelper.validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE)).thenReturn(ALLOWED_ATTRIBUTE_VALUE);
 
-        // Call method under test.
+        // Try to call method under test.
         try
         {
             allowedAttributeValueService
@@ -155,15 +155,16 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
             assertEquals(String.format("Allowed attribute value \"%s\" already exists in \"%s\" attribute value list.", ALLOWED_ATTRIBUTE_VALUE,
                 attributeValueListEntity.getAttributeValueListName()), e.getMessage());
         }
-
+        // Verify the external calls.
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
+        verifyNoMoreInteractions(attributeValueListDaoHelper, alternateKeyHelper);
     }
 
     @Test
     public void testCreateAllowedAttributeValuesAlreadyMissingRequiredParams()
     {
-
+        // Try to call method under test.
         try
         {
             allowedAttributeValueService.createAllowedAttributeValues(null);
@@ -178,6 +179,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
         AllowedAttributeValuesCreateRequest request = new AllowedAttributeValuesCreateRequest(attributeValueListKey, NO_ALLOWED_ATTRIBUTE_VALUES);
 
+        // Try to call method under test.
         try
         {
             allowedAttributeValueService.createAllowedAttributeValues(request);
@@ -187,29 +189,11 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         {
             assertEquals("At least one allowed attribute value must be specified.", e.getMessage());
         }
-
-        request = new AllowedAttributeValuesCreateRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE, ALLOWED_ATTRIBUTE_VALUE));
-
-        // Mock calls to external methods.
-        when(alternateKeyHelper.validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE)).thenReturn(ALLOWED_ATTRIBUTE_VALUE);
-
-        try
-        {
-            allowedAttributeValueService.createAllowedAttributeValues(request);
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(String.format("Duplicate allowed attribute value \"%s\" found.", ALLOWED_ATTRIBUTE_VALUE), e.getMessage());
-        }
-
-        verify(alternateKeyHelper, times(2)).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
     }
 
     @Test
     public void testDeleteAllowedAttributeValues()
     {
-
         // Create attribute value list key.
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
 
@@ -240,10 +224,11 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         AllowedAttributeValuesInformation response = allowedAttributeValueService
             .deleteAllowedAttributeValues(new AllowedAttributeValuesDeleteRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE)));
 
-        // Verify the calls.
+        // Verify the external calls.
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(allowedAttributeValueDao).saveAndRefresh(any(AllowedAttributeValueEntity.class));
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
+        verifyNoMoreInteractions(allowedAttributeValueDao, attributeValueListDaoHelper, alternateKeyHelper);
 
         // Validate the response.
         assertEquals(attributeValueListKey, response.getAttributeValueListKey());
@@ -251,9 +236,9 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testDeleteAllowedAttributeValuesAlreadyMissingRequiredParams()
+    public void testDeleteAllowedAttributeValuesMissingRequiredParams()
     {
-
+        // Try to call method under test.
         try
         {
             allowedAttributeValueService.deleteAllowedAttributeValues(null);
@@ -268,6 +253,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
         AllowedAttributeValuesDeleteRequest request = new AllowedAttributeValuesDeleteRequest(attributeValueListKey, NO_ALLOWED_ATTRIBUTE_VALUES);
 
+        // Try to call method under test.
         try
         {
             allowedAttributeValueService.deleteAllowedAttributeValues(request);
@@ -277,12 +263,22 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         {
             assertEquals("At least one allowed attribute value must be specified.", e.getMessage());
         }
+    }
 
-        request = new AllowedAttributeValuesDeleteRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE, ALLOWED_ATTRIBUTE_VALUE));
+    @Test
+    public void testDeleteAllowedAttributeValuesDuplicateAttributeValues()
+    {
+        // Create attribute value list key.
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
+
+        // Create the allowed attribute values delete request.
+        AllowedAttributeValuesDeleteRequest request =
+            new AllowedAttributeValuesDeleteRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE, ALLOWED_ATTRIBUTE_VALUE));
 
         // Mock calls to external methods.
         when(alternateKeyHelper.validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE)).thenReturn(ALLOWED_ATTRIBUTE_VALUE);
 
+        // Try to call method under test.
         try
         {
             allowedAttributeValueService.deleteAllowedAttributeValues(request);
@@ -293,13 +289,14 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
             assertEquals(String.format("Duplicate allowed attribute value \"%s\" found.", ALLOWED_ATTRIBUTE_VALUE), e.getMessage());
         }
 
+        // Verify the external calls.
         verify(alternateKeyHelper, times(2)).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
+        verifyNoMoreInteractions(alternateKeyHelper);
     }
 
     @Test
     public void testGetAllowedAttributeValues()
     {
-
         // Create attribute value list key.
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
 
@@ -319,6 +316,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         allowedAttributeValueEntity.setAllowedAttributeValue(ALLOWED_ATTRIBUTE_VALUE);
         allowedAttributeValueEntity.setAttributeValueListEntity(attributeValueListEntity);
 
+        // Create a list of allowed attribute value entities.
         List<AllowedAttributeValueEntity> allowedAttributeValueEntities = new ArrayList<>();
         allowedAttributeValueEntities.add(allowedAttributeValueEntity);
 
@@ -329,9 +327,10 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         // Call method under test.
         AllowedAttributeValuesInformation response = allowedAttributeValueService.getAllowedAttributeValues(attributeValueListKey);
 
-        // Verify the calls.
+        // Verify the external calls.
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(allowedAttributeValueDao).getAllowedAttributeValuesByAttributeValueListKey(attributeValueListKey);
+        verifyNoMoreInteractions(allowedAttributeValueDao, attributeValueListDaoHelper);
 
         // Validate the response.
         assertEquals(attributeValueListKey, response.getAttributeValueListKey());

@@ -254,7 +254,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer EXPIRATION_IN_DAYS = (int) (Math.random() * Integer.MAX_VALUE);
 
-    public static final String ALLOWED_ATTRIBUTE_VALUE = "UT_ALLOWED_ATTRIBUTE_VALUE" + RANDOM_SUFFIX;
+    public static final String ALLOWED_ATTRIBUTE_VALUE = "UT_Allowed_Attribute_Value_" + RANDOM_SUFFIX;
 
     public static final String FIELD_DISPLAY_NAME = "displayName";
 

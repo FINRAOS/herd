@@ -49,7 +49,7 @@ public class AllowedAttributeValueEntity extends AuditableEntity
      */
     @JsonBackReference
     @ManyToOne
-    @JoinColumn(name = "atrbt_value_list_id", referencedColumnName = "atrbt_value_list_id")
+    @JoinColumn(name = "atrbt_value_list_id", referencedColumnName = "atrbt_value_list_id", nullable = false)
     private AttributeValueListEntity attributeValueListEntity;
 
     /**

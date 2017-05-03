@@ -43,22 +43,22 @@ public class AllowedAttributeValueRestControllerTest extends AbstractRestTest
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
         AllowedAttributeValuesCreateRequest request = new AllowedAttributeValuesCreateRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE));
 
-        //Allowed Attribute Values Information
+        // Create the allowed attribute values information.
         AllowedAttributeValuesInformation allowedAttributeValuesInformation = new AllowedAttributeValuesInformation();
         allowedAttributeValuesInformation.setAttributeValueListKey(attributeValueListKey);
         allowedAttributeValuesInformation.setAllowedAttributeValues(Arrays.asList(ALLOWED_ATTRIBUTE_VALUE));
 
-        //mock calls to external method
+        // Mock calls to external method.
         when(allowedAttributeValueService.createAllowedAttributeValues(request)).thenReturn(allowedAttributeValuesInformation);
 
-        //call method under  test
+        // Call the method under test.
         AllowedAttributeValuesInformation response = allowedAttributeValueRestController.createAllowedAttributeValues(request);
 
-        //verify
+        // Verify the external calls.
         verify(allowedAttributeValueService).createAllowedAttributeValues(request);
         verifyNoMoreInteractions(allowedAttributeValueService);
 
-        //validate
+        // Validate the response.
         assertEquals(allowedAttributeValuesInformation, response);
     }
 
@@ -69,22 +69,22 @@ public class AllowedAttributeValueRestControllerTest extends AbstractRestTest
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
         AllowedAttributeValuesDeleteRequest request = new AllowedAttributeValuesDeleteRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE));
 
-        //Allowed Attribute Values Information
+        // Create the allowed attribute values information.
         AllowedAttributeValuesInformation allowedAttributeValuesInformation = new AllowedAttributeValuesInformation();
         allowedAttributeValuesInformation.setAttributeValueListKey(attributeValueListKey);
         allowedAttributeValuesInformation.setAllowedAttributeValues(Arrays.asList(ALLOWED_ATTRIBUTE_VALUE));
 
-        //mock calls to external method
+        // Mock calls to external method.
         when(allowedAttributeValueService.deleteAllowedAttributeValues(request)).thenReturn(allowedAttributeValuesInformation);
 
-        //call method under  test
+        // Call the method under test.
         AllowedAttributeValuesInformation response = allowedAttributeValueRestController.deleteAllowedAttributeValues(request);
 
-        //verify
+        // Verify the external calls.
         verify(allowedAttributeValueService).deleteAllowedAttributeValues(request);
         verifyNoMoreInteractions(allowedAttributeValueService);
 
-        //validate
+        // Validate the response.
         assertEquals(allowedAttributeValuesInformation, response);
     }
 
@@ -94,22 +94,22 @@ public class AllowedAttributeValueRestControllerTest extends AbstractRestTest
         // Create attribute value list key.
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        //Allowed Attribute Values Information
+        // Create the allowed attribute values information.
         AllowedAttributeValuesInformation allowedAttributeValuesInformation = new AllowedAttributeValuesInformation();
         allowedAttributeValuesInformation.setAttributeValueListKey(attributeValueListKey);
         allowedAttributeValuesInformation.setAllowedAttributeValues(Arrays.asList(ALLOWED_ATTRIBUTE_VALUE));
 
-        //mock calls to external method
+        // Mock calls to external method.
         when(allowedAttributeValueService.getAllowedAttributeValues(attributeValueListKey)).thenReturn(allowedAttributeValuesInformation);
 
-        //call method under  test
+        // Call the method under test.
         AllowedAttributeValuesInformation response = allowedAttributeValueRestController.getAllowedAttributeValues(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
 
-        //verify
+        // Verify the external calls.
         verify(allowedAttributeValueService).getAllowedAttributeValues(attributeValueListKey);
         verifyNoMoreInteractions(allowedAttributeValueService);
 
-        //validate
+        // Validate the response.
         assertEquals(allowedAttributeValuesInformation, response);
     }
 }
