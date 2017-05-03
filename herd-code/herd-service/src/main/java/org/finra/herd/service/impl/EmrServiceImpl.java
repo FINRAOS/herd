@@ -124,10 +124,10 @@ public class EmrServiceImpl implements EmrService
     @NamespacePermission(fields = "#emrClusterAlternateKeyDto?.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose, String accountId)
-        throws Exception
+    public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose, String accountId,
+        boolean retrieveInstanceFleets) throws Exception
     {
-        return getClusterImpl(emrClusterAlternateKeyDto, emrClusterId, emrStepId, verbose, accountId);
+        return getClusterImpl(emrClusterAlternateKeyDto, emrClusterId, emrStepId, verbose, accountId, retrieveInstanceFleets);
     }
 
     /**
@@ -138,12 +138,13 @@ public class EmrServiceImpl implements EmrService
      * @param emrStepId the step id of the step to get details
      * @param verbose parameter for whether to return detailed information
      * @param accountId the optional AWS account that EMR cluster is running in
+     * @param retrieveInstanceFleets parameter for whether to retrieve instance fleets
      *
      * @return the EMR Cluster object with details.
      * @throws Exception if an error occurred while getting the cluster
      */
     protected EmrCluster getClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose,
-        String accountId) throws Exception
+        String accountId, boolean retrieveInstanceFleets) throws Exception
     {
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
 
@@ -218,10 +219,12 @@ public class EmrServiceImpl implements EmrService
                 emrCluster.setStep(buildEmrStepFromAwsStep(step, verbose));
             }
 
-            // Get instance fleet
-            ListInstanceFleetsResult listInstanceFleetsResult = emrDao.getListInstanceFleetsResult(emrCluster.getId(), awsParamsDto);
-            emrCluster.setInstanceFleets(emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
-            
+            // Get instance fleet if true
+            if (retrieveInstanceFleets)
+            {
+                ListInstanceFleetsResult listInstanceFleetsResult = emrDao.getListInstanceFleetsResult(emrCluster.getId(), awsParamsDto);
+                emrCluster.setInstanceFleets(emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+            }
         }
         catch (AmazonServiceException ex)
         {

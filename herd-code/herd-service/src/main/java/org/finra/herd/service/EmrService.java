@@ -67,12 +67,13 @@ public interface EmrService
      * @param emrStepId the step id of the step to get details
      * @param verbose parameter for whether to return detailed information
      * @param accountId the optional AWS account that EMR cluster is running in
+     * @param retrieveInstanceFleets parameter for whether to retrieve instance fleets
      *
      * @return the EMR Cluster object with details
      * @throws Exception if there were any errors
      */
-    public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose, String accountId)
-        throws Exception;
+    public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose, String accountId,
+        boolean retrieveInstanceFleets) throws Exception;
 
     /**
      * Terminates the EMR Cluster.
