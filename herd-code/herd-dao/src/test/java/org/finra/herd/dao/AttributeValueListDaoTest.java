@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -80,13 +81,25 @@ public class AttributeValueListDaoTest extends AbstractDaoTest
     @Test
     public void testGetAttributeValueListKeys()
     {
+        /*
+         * Get the namespaces which the current user is authorized to READ.
+         * If a specific namespace was requested, and the current user is authorized to read the namespace, include ONLY the requested namespace.
+         * If a specific namespace was requested, but the current user is not authorized to read the namespace, clear all namespaces.
+         * Otherwise, include all authorized namespaces.
+         *
+         * This ensures that only authorized namespaces are queried from the database and that
+         * an unauthorized user cannot determine if he specified an existing namespace or not.
+         */
+        List<String> authorizedNamespaces = new ArrayList<>();
+        authorizedNamespaces.add("atrbt_value_list_test_namespace");
+
         AttributeValueListKeys attributeValueListKeys = new AttributeValueListKeys(getTestAttributeValueListKeys());
 
         //return nul entity
-        when(attributeValueListDao.getAttributeValueListKeys()).thenReturn(attributeValueListKeys);
+        when(attributeValueListDao.getAttributeValueListKeys(authorizedNamespaces)).thenReturn(attributeValueListKeys);
 
         // Get the list of attribute value lists.
-        AttributeValueListKeys attributeValueListKeysResult = attributeValueListDao.getAttributeValueListKeys();
+        AttributeValueListKeys attributeValueListKeysResult = attributeValueListDao.getAttributeValueListKeys(authorizedNamespaces);
 
         // Validate the results.
         assertNotNull(attributeValueListKeysResult);

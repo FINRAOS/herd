@@ -26,6 +26,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,10 +45,13 @@ import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
 import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceKey;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.service.helper.AttributeValueListDaoHelper;
 import org.finra.herd.service.helper.AttributeValueListHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.NamespaceSecurityHelper;
 import org.finra.herd.service.impl.AttributeValueListServiceImpl;
 
 /**
@@ -68,6 +73,9 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
     private AttributeValueListDao attributeValueListDao;
 
     @Mock
+    private AttributeValueListDaoHelper attributeValueListDaoHelper;
+
+    @Mock
     private AttributeValueListHelper attributeValueListHelper;
 
     @InjectMocks
@@ -78,6 +86,9 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
 
     @Mock
     private NamespaceDaoHelper namespaceDaoHelper;
+
+    @Mock
+    private NamespaceSecurityHelper namespaceSecurityHelper;
 
     @Mock
     private NamespaceService namespaceService;
@@ -111,7 +122,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         when(namespaceService.getNamespace(namespaceKey)).thenReturn(namespace);
 
         // Mock the call to the attribute value list service
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey()))
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey()))
             .thenReturn(attributeValueListEntity);
         when(attributeValueListDao.saveAndRefresh(attributeValueListEntity)).thenReturn(attributeValueListEntity);
 
@@ -143,7 +154,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         attributeValueListEntity.setNamespace(namespaceEntity);
         attributeValueListEntity.setAttributeValueListName(attribute_value_list_name);
 
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
 
         // Call the method under test
         AttributeValueListKey attributeValueListKeyResult = attributeValueListService.deleteAttributeValueList(attributeValueListKey);
@@ -185,7 +196,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         when(namespaceService.getNamespace(namespaceKey)).thenReturn(namespace);
 
         // Mock the call to the attribute value list service
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey()))
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey()))
             .thenReturn(attributeValueListEntity);
         when(attributeValueListDao.getAttributeValueListByKey(attributeValueListKey)).thenReturn(attributeValueListEntity);
 
@@ -224,7 +235,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         when(namespaceService.getNamespace(namespaceKey)).thenReturn(null);
 
         // Mock the call to the attribute value list service
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey()))
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey()))
             .thenReturn(attributeValueListEntity);
         when(attributeValueListDao.saveAndRefresh(attributeValueListEntity)).thenReturn(attributeValueListEntity);
         //when(attributeValueListService.createAttributeValueList(attributeValueListCreateRequest)).thenReturn(attributeValueList);
@@ -274,14 +285,18 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         AttributeValueListKey attributeValueListKeyDuplicate = new AttributeValueListKey(NAMESPACE, attribute_value_list_name);
         AttributeValueListKeys attributeValueListKeys = new AttributeValueListKeys(Arrays.asList(attributeValueListKey, attributeValueListKeyDuplicate));
 
+        Set<String> authorizedNamespaces = new HashSet<>();
+        authorizedNamespaces.add("atrbt_value_list_test_namespace");
+
+        when(namespaceSecurityHelper.getAuthorizedNamespaces(NamespacePermissionEnum.READ)).thenReturn(authorizedNamespaces);
         // Mock the call to the attribute value list service
-        when(attributeValueListDao.getAttributeValueListKeys()).thenReturn(attributeValueListKeys);
+        when(attributeValueListDao.getAttributeValueListKeys(authorizedNamespaces)).thenReturn(attributeValueListKeys);
 
         // Call the method under test
         AttributeValueListKeys attributeValueListKeysResult = attributeValueListService.getAttributeValueListKeys();
 
         // Verify the method call to indexSearchService.indexSearch()
-        verify(attributeValueListDao, times(ONE_TIME)).getAttributeValueListKeys();
+        verify(attributeValueListDao, times(ONE_TIME)).getAttributeValueListKeys(authorizedNamespaces);
         verifyNoMoreInteractions(attributeValueListDao);
 
         //validate the attribute value list key is as expected

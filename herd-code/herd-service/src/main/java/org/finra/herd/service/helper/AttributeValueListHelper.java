@@ -19,9 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
-import org.finra.herd.model.jpa.AttributeValueListEntity;
-import org.finra.herd.model.jpa.NamespaceEntity;
 
 @Component
 public class AttributeValueListHelper
@@ -29,26 +28,15 @@ public class AttributeValueListHelper
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
-    @Autowired
-    private NamespaceDaoHelper namespaceDaoHelper;
-
     /**
-     * Gets attribute value list entity.
+     * Validates attribute value list create request.
      *
-     * @param attributeValueListKey the attribute value list key
-     *
-     * @return the attribute value list entity
+     * @param attributeValueListCreateRequest the attribute value list request
      */
-    public AttributeValueListEntity getAttributeValueListEntity(AttributeValueListKey attributeValueListKey)
+    public void validateAttributeValueListCreateRequest(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {
-
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(attributeValueListKey.getNamespace());
-
-        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
-        attributeValueListEntity.setAttributeValueListName(attributeValueListKey.getAttributeValueListName());
-        attributeValueListEntity.setNamespace(namespaceEntity);
-
-        return attributeValueListEntity;
+        Assert.notNull(attributeValueListCreateRequest, "A Attribute value list create request must be specified.");
+        validateAttributeValueListKey(attributeValueListCreateRequest.getAttributeValueListKey());
     }
 
     /**

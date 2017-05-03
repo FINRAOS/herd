@@ -42,6 +42,7 @@ import org.finra.herd.model.jpa.AllowedAttributeValueEntity;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.helper.AlternateKeyHelper;
+import org.finra.herd.service.helper.AttributeValueListDaoHelper;
 import org.finra.herd.service.helper.AttributeValueListHelper;
 import org.finra.herd.service.impl.AllowedAttributeValueServiceImpl;
 
@@ -50,6 +51,9 @@ import org.finra.herd.service.impl.AllowedAttributeValueServiceImpl;
  */
 public class AllowedAttributeValueServiceTest extends AbstractServiceTest
 {
+    @Mock
+    private AllowedAttributeValueDao allowedAttributeValueDao;
+
     @InjectMocks
     private AllowedAttributeValueServiceImpl allowedAttributeValueService;
 
@@ -57,7 +61,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
     private AlternateKeyHelper alternateKeyHelper;
 
     @Mock
-    private AllowedAttributeValueDao allowedAttributeValueDao;
+    private AttributeValueListDaoHelper attributeValueListDaoHelper;
 
     @Mock
     private AttributeValueListHelper attributeValueListHelper;
@@ -92,7 +96,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         allowedAttributeValueEntity.setAttributeValueListEntity(attributeValueListEntity);
 
         // Mock calls to external method.
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
         when(allowedAttributeValueDao.saveAndRefresh(any(AllowedAttributeValueEntity.class))).thenReturn(allowedAttributeValueEntity);
         when(alternateKeyHelper.validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE)).thenReturn(ALLOWED_ATTRIBUTE_VALUE);
 
@@ -101,7 +105,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
             .createAllowedAttributeValues(new AllowedAttributeValuesCreateRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE)));
 
         // Verify the calls.
-        verify(attributeValueListHelper).getAttributeValueListEntity(attributeValueListKey);
+        verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(allowedAttributeValueDao, times(2)).saveAndRefresh(any(AllowedAttributeValueEntity.class));
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
 
@@ -136,7 +140,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         allowedAttributeValueEntities.add(allowedAttributeValueEntity);
 
         // Mock calls to external method.
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
         when(alternateKeyHelper.validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE)).thenReturn(ALLOWED_ATTRIBUTE_VALUE);
 
         // Call method under test.
@@ -152,7 +156,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
                 attributeValueListEntity.getAttributeValueListName()), e.getMessage());
         }
 
-        verify(attributeValueListHelper).getAttributeValueListEntity(attributeValueListKey);
+        verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
     }
 
@@ -228,7 +232,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         allowedAttributeValueEntities.add(allowedAttributeValueEntity);
 
         // Mock calls to external method.
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
         when(allowedAttributeValueDao.saveAndRefresh(any(AllowedAttributeValueEntity.class))).thenReturn(allowedAttributeValueEntity);
         when(alternateKeyHelper.validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE)).thenReturn(ALLOWED_ATTRIBUTE_VALUE);
 
@@ -237,7 +241,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
             .deleteAllowedAttributeValues(new AllowedAttributeValuesDeleteRequest(attributeValueListKey, Arrays.asList(ALLOWED_ATTRIBUTE_VALUE)));
 
         // Verify the calls.
-        verify(attributeValueListHelper).getAttributeValueListEntity(attributeValueListKey);
+        verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(allowedAttributeValueDao).saveAndRefresh(any(AllowedAttributeValueEntity.class));
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
 
@@ -319,14 +323,14 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
         allowedAttributeValueEntities.add(allowedAttributeValueEntity);
 
         // Mock calls to external method.
-        when(attributeValueListHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
+        when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
         when(allowedAttributeValueDao.getAllowedAttributeValuesByAttributeValueListKey(attributeValueListKey)).thenReturn(allowedAttributeValueEntities);
 
         // Call method under test.
         AllowedAttributeValuesInformation response = allowedAttributeValueService.getAllowedAttributeValues(attributeValueListKey);
 
         // Verify the calls.
-        verify(attributeValueListHelper).getAttributeValueListEntity(attributeValueListKey);
+        verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(allowedAttributeValueDao).getAllowedAttributeValuesByAttributeValueListKey(attributeValueListKey);
 
         // Validate the response.
