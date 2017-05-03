@@ -148,6 +148,7 @@ public class EmrRestController extends HerdBaseController
      * @param emrStepId the step id of the step to get details
      * @param verbose parameter for whether to return detailed information
      * @param accountId the account Id
+     * @param retrieveInstanceFleets parameter for whether to retrieve instance fleets
      *
      * @return the EMR Cluster object with details.
      * @throws Exception if there was an error getting the EMR cluster.
@@ -159,12 +160,14 @@ public class EmrRestController extends HerdBaseController
         @PathVariable("emrClusterName") String emrClusterName, @RequestParam(value = "emrClusterId", required = false) String emrClusterId,
         @RequestParam(value = "emrStepId", required = false) String emrStepId,
         @RequestParam(value = "verbose", required = false, defaultValue = "false") Boolean verbose,
-        @RequestParam(value = "accountId", required = false) String accountId) throws Exception
+        @RequestParam(value = "accountId", required = false) String accountId,
+        @RequestParam(value = "retrieveInstanceFleets", required = false, defaultValue = "false") Boolean retrieveInstanceFleets
+        ) throws Exception
     {
         EmrClusterAlternateKeyDto alternateKey =
             EmrClusterAlternateKeyDto.builder().namespace(namespace).emrClusterDefinitionName(emrClusterDefinitionName).emrClusterName(emrClusterName).build();
 
-        return emrService.getCluster(alternateKey, emrClusterId, emrStepId, verbose, accountId);
+        return emrService.getCluster(alternateKey, emrClusterId, emrStepId, verbose, accountId, retrieveInstanceFleets);
     }
 
     /**

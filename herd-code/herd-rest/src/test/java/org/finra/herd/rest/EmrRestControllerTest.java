@@ -87,7 +87,7 @@ public class EmrRestControllerTest extends AbstractRestTest
 
         EmrCluster emrClusterStatus = emrRestController
             .getEmrCluster(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), emrCluster.getId(),
-                emrShellStep.getId(), false, null);
+                emrShellStep.getId(), false, null, false);
         assertEquals(emrShellStep.getId(), emrClusterStatus.getStep().getId());
 
         // Create a EmrHiveStepAddRequest entry to pass it to RestController
@@ -106,7 +106,7 @@ public class EmrRestControllerTest extends AbstractRestTest
         Assert.notNull(emrHiveStep.getId());
         emrClusterStatus = emrRestController
             .getEmrCluster(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), emrCluster.getId(),
-                emrHiveStep.getId(), false, null);
+                emrHiveStep.getId(), false, null, false);
         assertEquals(emrHiveStep.getId(), emrClusterStatus.getStep().getId());
 
         // Create a EmrPigStepAddRequest entry to pass it to RestController
@@ -126,7 +126,7 @@ public class EmrRestControllerTest extends AbstractRestTest
 
         emrClusterStatus = emrRestController
             .getEmrCluster(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), emrCluster.getId(),
-                emrPigStep.getId(), false, null);
+                emrPigStep.getId(), false, null, false);
         assertEquals(emrPigStep.getId(), emrClusterStatus.getStep().getId());
 
         // Create a EmrHadoopJarStepAddRequest entry to pass it to RestController
@@ -146,7 +146,7 @@ public class EmrRestControllerTest extends AbstractRestTest
 
         emrClusterStatus = emrRestController
             .getEmrCluster(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), emrCluster.getId(),
-                emrHadoopJarStep.getId(), false, defaultAccountId);
+                emrHadoopJarStep.getId(), false, defaultAccountId, false);
         assertEquals(emrHadoopJarStep.getId(), emrClusterStatus.getStep().getId());
     }
 
@@ -189,7 +189,7 @@ public class EmrRestControllerTest extends AbstractRestTest
     @Test(expected = ObjectNotFoundException.class)
     public void testGetEmrCluster() throws Exception
     {
-        emrRestController.getEmrCluster(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "cluster_no_exist", null, null, false, defaultAccountId);
+        emrRestController.getEmrCluster(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "cluster_no_exist", null, null, false, defaultAccountId, false);
     }
 
     @Test

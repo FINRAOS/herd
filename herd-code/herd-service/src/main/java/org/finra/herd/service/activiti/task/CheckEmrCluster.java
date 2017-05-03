@@ -34,6 +34,7 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
  *   <activiti:field name="emrClusterId" stringValue="" />
  *   <activiti:field name="emrStepId" stringValue="" />
  *   <activiti:field name="verbose" stringValue="" />
+ *   <activiti:field name="retrieveInstanceFleets" stringValue="" />
  * </extensionElements>
  * </pre>
  */
@@ -58,6 +59,8 @@ public class CheckEmrCluster extends BaseEmrCluster
 
     private Expression verbose;
 
+    private Expression retrieveInstanceFleets;
+
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
     {
@@ -67,9 +70,11 @@ public class CheckEmrCluster extends BaseEmrCluster
         String emrClusterIdString = activitiHelper.getExpressionVariableAsString(emrClusterId, execution);
         boolean verboseBoolean = activitiHelper.getExpressionVariableAsBoolean(verbose, execution, "verbose", false, false);
         String accountIdString = activitiHelper.getExpressionVariableAsString(accountId, execution);
+        boolean retrieveInstanceFleetsBoolean = activitiHelper.getExpressionVariableAsBoolean(retrieveInstanceFleets, execution, "retrieveInstanceFleets", false, false);
 
         // Gets the EMR cluster details.
-        EmrCluster emrCluster = emrService.getCluster(emrClusterAlternateKeyDto, emrClusterIdString, emrStepIdString, verboseBoolean, accountIdString);
+        EmrCluster emrCluster = emrService
+            .getCluster(emrClusterAlternateKeyDto, emrClusterIdString, emrStepIdString, verboseBoolean, accountIdString, retrieveInstanceFleetsBoolean);
 
         // Set cluster id and status workflow variables based on the result EMR cluster.
         setIdStatusWorkflowVariables(execution, emrCluster);
@@ -110,6 +115,12 @@ public class CheckEmrCluster extends BaseEmrCluster
                     herdStringHelper.buildStringWithDefaultDelimiter(emrCluster.getStep().getScriptArguments()));
                 setTaskWorkflowVariable(execution, "step_continueOnError", emrCluster.getStep().getContinueOnError());
             }
+        }
+
+        // Set the instance fleets variable
+        if (retrieveInstanceFleetsBoolean)
+        {
+            setTaskWorkflowVariable(execution, "instance_fleets", emrCluster.getInstanceFleets());
         }
     }
 }
