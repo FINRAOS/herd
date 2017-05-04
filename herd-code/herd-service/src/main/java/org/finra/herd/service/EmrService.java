@@ -73,7 +73,7 @@ public interface EmrService
      * @throws Exception if there were any errors
      */
     public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose, String accountId,
-        boolean retrieveInstanceFleets) throws Exception;
+        Boolean retrieveInstanceFleets) throws Exception;
 
     /**
      * Terminates the EMR Cluster.

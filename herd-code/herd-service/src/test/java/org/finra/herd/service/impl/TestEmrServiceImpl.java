@@ -74,7 +74,7 @@ public class TestEmrServiceImpl extends EmrServiceImpl
      */
     @Override
     public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, String accountId,
-        boolean retrieveInstanceFleets) throws Exception
+        Boolean retrieveInstanceFleets) throws Exception
     {
         return getClusterImpl(alternateKey, emrClusterId, emrStepId, verbose, null, retrieveInstanceFleets);
     }

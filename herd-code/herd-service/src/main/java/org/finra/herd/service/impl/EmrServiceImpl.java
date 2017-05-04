@@ -27,6 +27,7 @@ import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.Step;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,7 +126,7 @@ public class EmrServiceImpl implements EmrService
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose, String accountId,
-        boolean retrieveInstanceFleets) throws Exception
+        Boolean retrieveInstanceFleets) throws Exception
     {
         return getClusterImpl(emrClusterAlternateKeyDto, emrClusterId, emrStepId, verbose, accountId, retrieveInstanceFleets);
     }
@@ -144,7 +145,7 @@ public class EmrServiceImpl implements EmrService
      * @throws Exception if an error occurred while getting the cluster
      */
     protected EmrCluster getClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose,
-        String accountId, boolean retrieveInstanceFleets) throws Exception
+        String accountId, Boolean retrieveInstanceFleets) throws Exception
     {
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
 
@@ -220,7 +221,7 @@ public class EmrServiceImpl implements EmrService
             }
 
             // Get instance fleet if true
-            if (retrieveInstanceFleets)
+            if (BooleanUtils.isTrue(retrieveInstanceFleets))
             {
                 ListInstanceFleetsResult listInstanceFleetsResult = emrDao.getListInstanceFleetsResult(emrCluster.getId(), awsParamsDto);
                 emrCluster.setInstanceFleets(emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));

@@ -567,7 +567,6 @@ public class EmrHelper extends AwsHelper
                 parameters.add(parameter);
             }
         }
-
         return parameters;
     }
 

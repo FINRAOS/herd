@@ -17,6 +17,7 @@ package org.finra.herd.service.activiti.task;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.EmrCluster;
@@ -70,7 +71,7 @@ public class CheckEmrCluster extends BaseEmrCluster
         String emrClusterIdString = activitiHelper.getExpressionVariableAsString(emrClusterId, execution);
         boolean verboseBoolean = activitiHelper.getExpressionVariableAsBoolean(verbose, execution, "verbose", false, false);
         String accountIdString = activitiHelper.getExpressionVariableAsString(accountId, execution);
-        boolean retrieveInstanceFleetsBoolean =
+        Boolean retrieveInstanceFleetsBoolean =
             activitiHelper.getExpressionVariableAsBoolean(retrieveInstanceFleets, execution, "retrieveInstanceFleets", false, false);
 
         // Gets the EMR cluster details.
@@ -119,7 +120,7 @@ public class CheckEmrCluster extends BaseEmrCluster
         }
 
         // Set the instance fleets variable
-        if (retrieveInstanceFleetsBoolean)
+        if (BooleanUtils.isTrue(retrieveInstanceFleetsBoolean))
         {
             setTaskWorkflowVariable(execution, "instance_fleets", jsonHelper.objectToJson(emrCluster.getInstanceFleets()));
         }
