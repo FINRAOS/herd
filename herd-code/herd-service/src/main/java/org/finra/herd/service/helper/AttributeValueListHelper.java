@@ -48,8 +48,7 @@ public class AttributeValueListHelper
     {
         // Validate.
         Assert.notNull(attributeValueListKey, "An attribute value list key must be specified.");
-        attributeValueListKey
-            .setNamespace(alternateKeyHelper.validateStringParameter("An", "attribute value list namespace code", attributeValueListKey.getNamespace()));
+        attributeValueListKey.setNamespace(alternateKeyHelper.validateStringParameter("namespace", attributeValueListKey.getNamespace()));
         attributeValueListKey.setAttributeValueListName(
             alternateKeyHelper.validateStringParameter("An", "attribute value list name", attributeValueListKey.getAttributeValueListName()));
     }

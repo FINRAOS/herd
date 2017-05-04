@@ -54,15 +54,14 @@ public class AttributeValueListHelperTest extends AbstractServiceTest
         AttributeValueListCreateRequest request = new AttributeValueListCreateRequest(attributeValueListKey);
 
         // Mock calls to external methods.
-        when(alternateKeyHelper.validateStringParameter("An", "attribute value list namespace code", ATTRIBUTE_VALUE_LIST_NAMESPACE))
-            .thenReturn(ATTRIBUTE_VALUE_LIST_NAMESPACE);
+        when(alternateKeyHelper.validateStringParameter("namespace", ATTRIBUTE_VALUE_LIST_NAMESPACE)).thenReturn(ATTRIBUTE_VALUE_LIST_NAMESPACE);
         when(alternateKeyHelper.validateStringParameter("An", "attribute value list name", ATTRIBUTE_VALUE_LIST_NAME)).thenReturn(ATTRIBUTE_VALUE_LIST_NAME);
 
         // Call the method under test.
         attributeValueListHelper.validateAttributeValueListCreateRequest(request);
 
         // Verify the external calls.
-        verify(alternateKeyHelper).validateStringParameter("An", "attribute value list namespace code", ATTRIBUTE_VALUE_LIST_NAMESPACE);
+        verify(alternateKeyHelper).validateStringParameter("namespace", ATTRIBUTE_VALUE_LIST_NAMESPACE);
         verify(alternateKeyHelper).validateStringParameter("An", "attribute value list name", ATTRIBUTE_VALUE_LIST_NAME);
         verifyNoMoreInteractions(alternateKeyHelper);
 
@@ -94,15 +93,14 @@ public class AttributeValueListHelperTest extends AbstractServiceTest
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
         // Mock calls to external methods.
-        when(alternateKeyHelper.validateStringParameter("An", "attribute value list namespace code", ATTRIBUTE_VALUE_LIST_NAMESPACE))
-            .thenReturn(ATTRIBUTE_VALUE_LIST_NAMESPACE);
+        when(alternateKeyHelper.validateStringParameter("namespace", ATTRIBUTE_VALUE_LIST_NAMESPACE)).thenReturn(ATTRIBUTE_VALUE_LIST_NAMESPACE);
         when(alternateKeyHelper.validateStringParameter("An", "attribute value list name", ATTRIBUTE_VALUE_LIST_NAME)).thenReturn(ATTRIBUTE_VALUE_LIST_NAME);
 
         // Call the method under test.
         attributeValueListHelper.validateAttributeValueListKey(attributeValueListKey);
 
         // Verify the external calls.
-        verify(alternateKeyHelper).validateStringParameter("An", "attribute value list namespace code", ATTRIBUTE_VALUE_LIST_NAMESPACE);
+        verify(alternateKeyHelper).validateStringParameter("namespace", ATTRIBUTE_VALUE_LIST_NAMESPACE);
         verify(alternateKeyHelper).validateStringParameter("An", "attribute value list name", ATTRIBUTE_VALUE_LIST_NAME);
         verifyNoMoreInteractions(alternateKeyHelper);
 
