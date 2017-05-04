@@ -31,7 +31,6 @@ import org.activiti.engine.history.HistoricProcessInstance;
 import org.junit.Test;
 
 import org.finra.herd.dao.impl.MockEmrOperationsImpl;
-import org.finra.herd.model.api.xml.EmrClusterInstanceFleet;
 import org.finra.herd.model.api.xml.Job;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.service.AbstractServiceTest;
@@ -179,10 +178,8 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         HistoricProcessInstance hisInstance =
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-
-        List< EmrClusterInstanceFleet>  emrClusterInstanceFleet = (List< EmrClusterInstanceFleet>) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "instance_fleets");
-        assertNotNull(emrClusterInstanceFleet);
-        assertEquals(emrClusterInstanceFleet.size(), 1);
+        String emrClusterInstanceFleetJson = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "instance_fleets");
+        assertNotNull(emrClusterInstanceFleetJson);
     }
 
     private List<Parameter> getParameters(boolean isShellStepRunning, String verbose, String retrieveInstanceFleets)
