@@ -121,7 +121,7 @@ public class CheckEmrCluster extends BaseEmrCluster
         // Set the instance fleets variable
         if (retrieveInstanceFleetsBoolean)
         {
-            setTaskWorkflowVariable(execution, "instance_fleets", emrCluster.getInstanceFleets());
+            setTaskWorkflowVariable(execution, "instance_fleets", jsonHelper.objectToJson(emrCluster.getInstanceFleets()));
         }
     }
 }
