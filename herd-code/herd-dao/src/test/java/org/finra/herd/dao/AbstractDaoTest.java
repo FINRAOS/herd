@@ -27,6 +27,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import com.amazonaws.services.s3.AmazonS3;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -62,6 +63,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ACTIVITI_ID_4 = "UT_Activiti_ID_4_" + RANDOM_SUFFIX;
 
+    public static final String ALLOWED_ATTRIBUTE_VALUE = "UT_ALLOWED_ATTRIBUTE_VALUE" + RANDOM_SUFFIX;
+
     public static final Boolean ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = true;
 
     public static final String ATTRIBUTE_NAME_1_MIXED_CASE = "Attribute Name 1";
@@ -82,13 +85,29 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ATTRIBUTE_VALUE_4 = "Attribute Value 4";
 
+    public static final String ATTRIBUTE_VALUE_LIST = "UT_Attribute_Value_list_1_" + RANDOM_SUFFIX;
+
+    public static final int ATTRIBUTE_VALUE_LIST_ID = 1009;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAME = "UT_Attribute_Value_List_Name_1_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAME_2 = "UT_Attribute_Value_List_Name_2_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE = "UT_Attribute_Value_List_Namespace_1_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE_2 = "UT_Attribute_Value_List_Namespace_2_" + RANDOM_SUFFIX;
+
     public static final String AWS_ACCOUNT_ID = "UT_AwsAccountId_1_" + RANDOM_SUFFIX;
 
     public static final String AWS_ASSUMED_ROLE_ACCESS_KEY = "UT_AwsAssumedRoleAccessKey_1_" + RANDOM_SUFFIX;
 
     public static final String AWS_ASSUMED_ROLE_SECRET_KEY = "UT_AwsAssumedRoleSecretKey_1_" + RANDOM_SUFFIX;
 
+    public static final XMLGregorianCalendar AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
+
     public static final String AWS_ASSUMED_ROLE_SESSION_TOKEN = "UT_AwsAssumedRoleSessionToken_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_KMS_KEY_ID = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
 
     public static final String AWS_REGION = "UT_Region" + RANDOM_SUFFIX;
 
@@ -239,6 +258,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ERROR_MESSAGE = "UT_Error_Message_" + RANDOM_SUFFIX;
 
+    public static final Integer EXPIRATION_IN_DAYS = (int) (Math.random() * Integer.MAX_VALUE);
+
     public static final String FIELD_DISPLAY_NAME = "displayName";
 
     public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
@@ -274,6 +295,16 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer FORMAT_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer FOURTH_FORMAT_VERSION = 3;
+
+    public static final Integer GLOBAL_ATTRIBUTE_DEFINITON_ID = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_INVALID_LEVEL = "BUS_OBJECT_FORMAT";
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_LEVEL = "BUS_OBJCT_FRMT";
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME = "UT_GlobalAttributeDefinitionName_1_" + RANDOM_SUFFIX;
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_2 = "UT_GlobalAttributeDefinitionName_2_" + RANDOM_SUFFIX;
 
     public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
 
@@ -368,6 +399,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
 
+    public static final List<String> NO_ALLOWED_ATTRIBUTE_VALUES = new ArrayList<>();
+
     public static final Boolean NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = false;
 
     public static final List<Attribute> NO_ATTRIBUTES = new ArrayList<>();
@@ -402,6 +435,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
 
+    public static final Integer NO_EXPIRATION_IN_DAYS = null;
+
     public static final String NO_FORMAT_DESCRIPTION = null;
 
     public static final String NO_FORMAT_FILE_TYPE_CODE = null;
@@ -434,6 +469,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_S3_BUCKET_NAME = null;
 
+    public static final AmazonS3 NO_S3_CLIENT = null;
+
     public static final String NO_S3_ENDPOINT = null;
 
     public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
@@ -453,6 +490,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean NO_STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET = false;
 
     public static final List<String> NO_SUBPARTITION_VALUES = new ArrayList<>();
+
+    public static final SchemaColumn[] NO_SUB_PARTITION_KEYS = null;
 
     public static final String NO_TAG_DESCRIPTION = null;
 
@@ -513,15 +552,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String S3_BUCKET_NAME_2 = "UT_S3_Bucket_Name2" + RANDOM_SUFFIX;
 
-    public static final String S3_BUCKET_NAME_GLACIER = "UT_S3_Bucket_Name_Glacier_" + RANDOM_SUFFIX;
-
-    public static final String S3_BUCKET_NAME_ORIGIN = "UT_S3_Bucket_Name_Origin_" + RANDOM_SUFFIX;
-
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
 
     public static final String S3_ENDPOINT = "UT_S3_Endpoint_" + RANDOM_SUFFIX;
 
-    public static final String S3_KEY = "UT_S3_Key_" + RANDOM_SUFFIX;
+    public static final String S3_KEY = "UT_S3_Key_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_KEY_2 = "UT_S3_Key_2_" + RANDOM_SUFFIX;
 
     public static final String S3_KEY_PREFIX = "UT_S3_Key_Prefix_" + RANDOM_SUFFIX;
 
@@ -637,10 +674,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String STORAGE_NAME_4 = "UT_Storage_4_" + RANDOM_SUFFIX;
 
     public static final String STORAGE_NAME_5 = "UT_Storage_5_" + RANDOM_SUFFIX;
-
-    public static final String STORAGE_NAME_GLACIER = "UT_Storage_Glacier_" + RANDOM_SUFFIX;
-
-    public static final String STORAGE_NAME_ORIGIN = "UT_Storage_Origin_" + RANDOM_SUFFIX;
 
     public static final String STORAGE_PLATFORM_CODE = "UT_StoragePlatform_1_" + RANDOM_SUFFIX;
 
@@ -808,6 +841,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public ReloadablePropertySource propertySourceHoldingLocation;
 
     @Autowired
+    protected AllowedAttributeValueDaoTestHelper allowedAttributeValueDaoTestHelper;
+
+    @Autowired
+    protected AttributeValueListDao attributeValueListDao;
+
+    @Autowired
+    protected AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
+
+    @Autowired
     protected BusinessObjectDataAttributeDao businessObjectDataAttributeDao;
 
     @Autowired
@@ -902,6 +944,18 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected FileTypeDaoTestHelper fileTypeDaoTestHelper;
+
+    @Autowired
+    protected GlobalAttributeDefinitionDao globalAttributeDefinitionDao;
+
+    @Autowired
+    protected GlobalAttributeDefinitionDaoTestHelper globalAttributeDefinitionDaoTestHelper;
+
+    @Autowired
+    protected GlobalAttributeDefinitionLevelDao globalAttributeDefinitionLevelDao;
+
+    @Autowired
+    protected GlobalAttributeDefinitionLevelDaoTestHelper globalAttributeDefinitionLevelDaoTestHelper;
 
     @Autowired
     protected HerdCollectionHelper herdCollectionHelper;

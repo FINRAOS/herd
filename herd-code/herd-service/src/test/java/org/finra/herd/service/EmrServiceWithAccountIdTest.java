@@ -245,7 +245,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
             EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
-        EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, AWS_ACCOUNT_ID);
+        EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, AWS_ACCOUNT_ID, false);
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);
@@ -260,7 +260,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         // Terminate the cluster and validate.
         emrService.terminateCluster(emrClusterAlternateKeyDto, true, null, AWS_ACCOUNT_ID);
 
-        emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, AWS_ACCOUNT_ID);
+        emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, AWS_ACCOUNT_ID, false);
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);

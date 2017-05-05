@@ -16,6 +16,7 @@
 package org.finra.herd.dao;
 
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.client.transport.TransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,12 @@ public class TransportClientController
     private ClusterHealthResponseFactory clusterHealthResponseFactory;
 
     /**
+     * The transport client factory used to get a transport client.
+     */
+    @Autowired
+    private TransportClientFactory transportClientFactory;
+
+    /**
      * The control transport client method will check the health of the transport client and the search index. If the search index or transport client are not
      * operating properly the transport client cache will be cleared. When the transport client cache is cleared it will force the next getTransportClient call
      * to reload the transport client.
@@ -58,6 +65,9 @@ public class TransportClientController
     @Scheduled(fixedDelay = 60000)
     public void controlTransportClient()
     {
+        // The number of nodes on the cluster, default to zero in case of transport client connection error.
+        int numberOfNodes = 0;
+
         LOGGER.info("Checking the transport client and search index health.");
 
         try
@@ -67,23 +77,38 @@ public class TransportClientController
 
             // If the cluster health response is null, or if the number of nodes is not greater than zero
             // then clear the transport client cache.
-            if (clusterHealthResponse == null || !(clusterHealthResponse.getNumberOfNodes() > 0))
+            if (clusterHealthResponse != null)
             {
-                LOGGER.warn("The number of search index nodes is not greater than zero.");
+                numberOfNodes = clusterHealthResponse.getNumberOfNodes();
+            }
+        }
+        catch (Exception exception)
+        {
+            LOGGER.warn("Exception caught when getting or using the transport client.", exception);
+        }
+        finally
+        {
+            // If there are no live nodes on the cluster, close and clear the transport client.
+            if (numberOfNodes <= 0)
+            {
+                LOGGER.info("Closing the transport client.");
+
+                // Close existing transport client, this should be done before clearing the cache
+                try
+                {
+                    TransportClient transportClient = transportClientFactory.getTransportClient();
+                    transportClient.close();
+                }
+                catch (Exception exception)
+                {
+                    LOGGER.warn("Failed to close the transport client.");
+                }
+
                 LOGGER.info("Clearing the transport client cache.");
 
                 // Clearing the transport client cache
                 cacheManager.getCache(DaoSpringModuleConfig.TRANSPORT_CLIENT_CACHE_NAME).clear();
             }
-        }
-        catch (Exception exception)
-        {
-            // If we catch an exception then clear the transport client cache.
-            LOGGER.warn("Exception caught when getting or using the transport client.", exception);
-            LOGGER.info("Clearing the transport client cache.");
-
-            // Clearing the transport client cache
-            cacheManager.getCache(DaoSpringModuleConfig.TRANSPORT_CLIENT_CACHE_NAME).clear();
         }
     }
 }

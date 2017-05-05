@@ -855,7 +855,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
             assertEquals(String
                 .format("Found %d registered storage file(s) matching business object data S3 key prefix in the storage that is not equal to the number " +
                     "of storage files (%d) registered with the business object data in that storage. " +
-                    "Storage: {%s}, s3KeyPrefix {%s}, business object data: {%s}", storageFileEntities.size(), 1, STORAGE_NAME, expectedS3KeyPrefix,
+                    "Storage: {%s}, s3KeyPrefix {%s}, business object data: {%s}", storageFileEntities.size(), 1, STORAGE_NAME, expectedS3KeyPrefix + "/",
                     businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKeys.get(0))), e.getMessage());
         }
         finally

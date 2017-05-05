@@ -15,10 +15,10 @@ definitions:
         format: "int32"
       objectLong:
         type: "integer"
-        format: "int32"
+        format: "int64"
       primitiveLong:
         type: "integer"
-        format: "int32"
+        format: "int64"
       bigDecimal:
         type: "number"
       objectBoolean:

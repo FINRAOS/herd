@@ -14,8 +14,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.42.0-SNAPSHOT</version>
+   <version>0.43.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -252,11 +252,6 @@
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
-         </dependency>
-         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>herd-web-assets</artifactId>
-            <version>${project.version}</version>
          </dependency>
          <dependency>
             <groupId>${project.groupId}</groupId>
@@ -1190,6 +1185,7 @@
          <email>aniruddhadas9@gmail.com</email>
          <url>https://github.com/aniruddhadas9</url>
          <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/in/aniruddhadas9</organizationUrl>
          <roles>
             <role>developer</role>
          </roles>

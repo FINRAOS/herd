@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd</artifactId>
-      <version>0.42.0-SNAPSHOT</version>
+      <version>0.43.0-SNAPSHOT</version>
    </parent>
 
    <name>herd code</name>
@@ -320,7 +320,6 @@
       <module>herd-app</module>
       <module>herd-war</module>
       <module>herd-tools</module>
-      <module>herd-web-assets</module>
       <module>herd-sdk</module>
    </modules>
 

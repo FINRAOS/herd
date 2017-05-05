@@ -78,4 +78,15 @@ public class TestUploadDownloadHelperServiceImpl extends UploadDownloadHelperSer
     {
         updateBusinessObjectDataStatusImpl(businessObjectDataKey, businessObjectDataStatus);
     }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
+    @Override
+    public void deleteSourceFileFromS3(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    {
+        deleteSourceFileFromS3Impl(completeUploadSingleParamsDto);
+    }
 }

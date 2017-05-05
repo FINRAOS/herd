@@ -73,10 +73,10 @@ public class TestEmrServiceImpl extends EmrServiceImpl
      * Overwrite the base class method to change transactional attributes.
      */
     @Override
-    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, String accountId)
-        throws Exception
+    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, String accountId,
+        Boolean retrieveInstanceFleets) throws Exception
     {
-        return getClusterImpl(alternateKey, emrClusterId, emrStepId, verbose, null);
+        return getClusterImpl(alternateKey, emrClusterId, emrStepId, verbose, null, retrieveInstanceFleets);
     }
 
     /**

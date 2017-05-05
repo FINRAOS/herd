@@ -1599,7 +1599,7 @@ public class EmrServiceTest extends AbstractServiceTest
             EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
                 EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test_cluster")
                     .build();
-            emrServiceImpl.getCluster(emrClusterAlternateKeyDto, null, null, false, null);
+            emrServiceImpl.getCluster(emrClusterAlternateKeyDto, null, null, false, null, false);
             fail("Should throw a ObjectNotFoundException.");
         }
         catch (ObjectNotFoundException e)
@@ -1647,7 +1647,7 @@ public class EmrServiceTest extends AbstractServiceTest
             EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
-        EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, null);
+        EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, null, false);
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);
@@ -1660,7 +1660,7 @@ public class EmrServiceTest extends AbstractServiceTest
         // Terminate the cluster and validate.
         emrService.terminateCluster(emrClusterAlternateKeyDto, true, null, null);
 
-        emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, null);
+        emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, null, false);
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);
@@ -1669,6 +1669,45 @@ public class EmrServiceTest extends AbstractServiceTest
         assertTrue(emrCluster.getNamespace().equals(emrClusterGet.getNamespace()));
         assertTrue(emrCluster.getEmrClusterDefinitionName().equals(emrClusterGet.getEmrClusterDefinitionName()));
         assertTrue(emrCluster.getEmrClusterName().equals(emrClusterGet.getEmrClusterName()));
+    }
+
+    /**
+     * This method tests the happy path scenario by providing all the parameters
+     */
+    @Test
+    public void testGetEmrClusterByIdWithFleetInstance() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+        emrClusterDefinition.setAmiVersion(MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
+
+        configXml = xmlHelper.objectToXml(emrClusterDefinition);
+
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+
+        // Create a new EMR cluster create request
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        EmrCluster emrCluster = emrService.createCluster(request);
+
+        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .emrClusterName(request.getEmrClusterName()).build();
+
+        EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, null, true);
+
+        // Validate the returned object against the input.
+        assertNotNull(emrCluster);
+        assertNotNull(emrClusterGet);
+        assertTrue(emrCluster.getId().equals(emrClusterGet.getId()));
+        assertTrue(emrCluster.getNamespace().equals(emrClusterGet.getNamespace()));
+        assertTrue(emrCluster.getEmrClusterDefinitionName().equals(emrClusterGet.getEmrClusterDefinitionName()));
+        assertTrue(emrCluster.getEmrClusterName().equals(emrClusterGet.getEmrClusterName()));
+        assertNotNull(emrClusterGet.getInstanceFleets());
+        assertTrue(emrClusterGet.getInstanceFleets().size() == 1);
     }
 
     /**
@@ -1686,7 +1725,7 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
             EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test").build();
 
-        emrService.getCluster(emrClusterAlternateKeyDto, MockAwsOperationsHelper.AMAZON_SERVICE_EXCEPTION, null, true, null);
+        emrService.getCluster(emrClusterAlternateKeyDto, MockAwsOperationsHelper.AMAZON_SERVICE_EXCEPTION, null, true, null, false);
 
         fail("Should throw an AmazonServiceException.");
     }
@@ -1707,7 +1746,7 @@ public class EmrServiceTest extends AbstractServiceTest
             EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName("cluster_does_not_exist").build();
 
-        emrService.getCluster(emrClusterAlternateKeyDto, "cluster_does_not_exist", null, true, null);
+        emrService.getCluster(emrClusterAlternateKeyDto, "cluster_does_not_exist", null, true, null, false);
 
         fail("Should throw an IllegalArgumentException.");
     }
@@ -1742,7 +1781,7 @@ public class EmrServiceTest extends AbstractServiceTest
             EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_2).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
-        emrService.getCluster(emrClusterAlternateKeyDto_2, emrCluster.getId(), null, true, null);
+        emrService.getCluster(emrClusterAlternateKeyDto_2, emrCluster.getId(), null, true, null, false);
 
         fail("Should throw an IllegalArgumentException.");
     }
@@ -1775,7 +1814,7 @@ public class EmrServiceTest extends AbstractServiceTest
             EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
-        EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), stepId, true, null);
+        EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), stepId, true, null, false);
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);
@@ -1788,7 +1827,7 @@ public class EmrServiceTest extends AbstractServiceTest
         assertTrue(stepId.equals(emrClusterGet.getStep().getId()));
 
         // Test the non verbose flow
-        emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), stepId, false, null);
+        emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), stepId, false, null, false);
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);
@@ -1821,7 +1860,7 @@ public class EmrServiceTest extends AbstractServiceTest
             EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
-        EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, null, null, true, null);
+        EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, null, null, true, null, false);
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);

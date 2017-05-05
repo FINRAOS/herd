@@ -35,9 +35,9 @@ public class TestBusinessObjectDataFinalizeRestoreServiceImpl extends BusinessOb
      * This implementation keeps the current transaction context.
      */
     @Override
-    public List<StorageUnitAlternateKeyDto> getGlacierStorageUnitsToRestore(int maxResult)
+    public void finalizeRestore(StorageUnitAlternateKeyDto storageUnitKey)
     {
-        return getGlacierStorageUnitsToRestoreImpl(maxResult);
+        finalizeRestoreImpl(storageUnitKey);
     }
 
     /**
@@ -46,8 +46,8 @@ public class TestBusinessObjectDataFinalizeRestoreServiceImpl extends BusinessOb
      * This implementation keeps the current transaction context.
      */
     @Override
-    public void finalizeRestore(StorageUnitAlternateKeyDto glacierStorageUnitKey)
+    public List<StorageUnitAlternateKeyDto> getS3StorageUnitsToRestore(int maxResult)
     {
-        finalizeRestoreImpl(glacierStorageUnitKey);
+        return getS3StorageUnitsToRestoreImpl(maxResult);
     }
 }

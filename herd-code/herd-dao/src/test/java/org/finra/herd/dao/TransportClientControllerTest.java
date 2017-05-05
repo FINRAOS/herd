@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -53,12 +54,18 @@ public class TransportClientControllerTest
     @Mock
     private ClusterHealthResponseFactory clusterHealthResponseFactory;
 
+    @Mock
+    private TransportClientFactory transportClientFactory;
+
 
     @Before
     public void before()
     {
         MockitoAnnotations.initMocks(this);
         createdMocks = new LinkedList<>();
+        createdMocks.add(cacheManager);
+        createdMocks.add(clusterHealthResponseFactory);
+        createdMocks.add(transportClientFactory);
         final MockingProgress progress = new ThreadSafeMockingProgress();
         progress.setListener(new CollectCreatedMocks(createdMocks));
     }
@@ -90,12 +97,15 @@ public class TransportClientControllerTest
         // Build the mocks
         ClusterHealthResponse clusterHealthResponse = mock(ClusterHealthResponse.class);
         Cache cache = mock(Cache.class);
+        PreBuiltTransportClient preBuiltTransportClient = mock(PreBuiltTransportClient.class);
 
         // Mock the call to external methods
         when(clusterHealthResponseFactory.getClusterHealthResponse())
             .thenReturn(clusterHealthResponse);
         when(clusterHealthResponse.getNumberOfNodes())
             .thenReturn(0);
+        when(transportClientFactory.getTransportClient())
+            .thenReturn(preBuiltTransportClient);
         when(cacheManager.getCache(DaoSpringModuleConfig.TRANSPORT_CLIENT_CACHE_NAME))
             .thenReturn(cache);
 
@@ -105,12 +115,15 @@ public class TransportClientControllerTest
         // Verify the calls to external methods
         verify(clusterHealthResponseFactory).getClusterHealthResponse();
         verify(clusterHealthResponse).getNumberOfNodes();
+        verify(transportClientFactory).getTransportClient();
+        verify(preBuiltTransportClient).close();
+        verify(cacheManager).getCache(DaoSpringModuleConfig.TRANSPORT_CLIENT_CACHE_NAME);
         verify(cache).clear();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
-    public void testControlTransportClientException()
+    public void testControlTransportClientNullTransportClient()
     {
         // Build the mocks
         ClusterHealthResponse clusterHealthResponse = mock(ClusterHealthResponse.class);
@@ -118,7 +131,11 @@ public class TransportClientControllerTest
 
         // Mock the call to external methods
         when(clusterHealthResponseFactory.getClusterHealthResponse())
-            .thenThrow(new IllegalArgumentException());
+            .thenReturn(clusterHealthResponse);
+        when(clusterHealthResponse.getNumberOfNodes())
+            .thenReturn(0);
+        when(transportClientFactory.getTransportClient())
+            .thenReturn(null);
         when(cacheManager.getCache(DaoSpringModuleConfig.TRANSPORT_CLIENT_CACHE_NAME))
             .thenReturn(cache);
 
@@ -127,6 +144,61 @@ public class TransportClientControllerTest
 
         // Verify the calls to external methods
         verify(clusterHealthResponseFactory).getClusterHealthResponse();
+        verify(clusterHealthResponse).getNumberOfNodes();
+        verify(transportClientFactory).getTransportClient();
+        verify(cacheManager).getCache(DaoSpringModuleConfig.TRANSPORT_CLIENT_CACHE_NAME);
+        verify(cache).clear();
+        verifyNoMoreInteractions(createdMocks.toArray());
+    }
+
+    @Test
+    public void testControlTransportClientException()
+    {
+        // Build the mocks
+        Cache cache = mock(Cache.class);
+        PreBuiltTransportClient preBuiltTransportClient = mock(PreBuiltTransportClient.class);
+
+        // Mock the call to external methods
+        when(clusterHealthResponseFactory.getClusterHealthResponse())
+            .thenThrow(new IllegalArgumentException());
+        when(transportClientFactory.getTransportClient())
+            .thenReturn(preBuiltTransportClient);
+        when(cacheManager.getCache(DaoSpringModuleConfig.TRANSPORT_CLIENT_CACHE_NAME))
+            .thenReturn(cache);
+
+        // Call the method under test
+        transportClientController.controlTransportClient();
+
+        // Verify the calls to external methods
+        verify(clusterHealthResponseFactory).getClusterHealthResponse();
+        verify(transportClientFactory).getTransportClient();
+        verify(preBuiltTransportClient).close();
+        verify(cacheManager).getCache(DaoSpringModuleConfig.TRANSPORT_CLIENT_CACHE_NAME);
+        verify(cache).clear();
+        verifyNoMoreInteractions(createdMocks.toArray());
+    }
+
+    @Test
+    public void testControlTransportClientExceptionNullTransportClient()
+    {
+        // Build the mocks
+        Cache cache = mock(Cache.class);
+
+        // Mock the call to external methods
+        when(clusterHealthResponseFactory.getClusterHealthResponse())
+            .thenThrow(new IllegalArgumentException());
+        when(transportClientFactory.getTransportClient())
+            .thenReturn(null);
+        when(cacheManager.getCache(DaoSpringModuleConfig.TRANSPORT_CLIENT_CACHE_NAME))
+            .thenReturn(cache);
+
+        // Call the method under test
+        transportClientController.controlTransportClient();
+
+        // Verify the calls to external methods
+        verify(clusterHealthResponseFactory).getClusterHealthResponse();
+        verify(transportClientFactory).getTransportClient();
+        verify(cacheManager).getCache(DaoSpringModuleConfig.TRANSPORT_CLIENT_CACHE_NAME);
         verify(cache).clear();
         verifyNoMoreInteractions(createdMocks.toArray());
     }

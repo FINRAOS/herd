@@ -5451,6 +5451,16 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="emrClusterInstanceFleets">
+      <xs:sequence>
+         <xs:element name="instanceFleet" type="emrClusterInstanceFleet" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The configuration that defines an instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="emrClusterDefinitionInstanceFleet">
       <xs:all>
          <xs:element name="name" type="xs:string" minOccurs="0">
@@ -5499,6 +5509,339 @@
          <xs:element name="launchSpecifications" type="emrClusterDefinitionLaunchSpecifications" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The launch specification for the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleet">
+      <xs:all>
+         <xs:element name="id" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The unique identifier of the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="name" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The friendly name of the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="instanceFleetType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The node type that the instance fleet hosts. Valid values are MASTER,CORE,and TASK</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="targetOnDemandCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The target capacity of On-Demand units for the instance fleet, which determines how many On-Demand instances to provision. When
+                  the instance fleet launches, Amazon EMR tries to provision On-Demand instances as specified by InstanceTypeConfig. Each instance configuration
+                  has a specified WeightedCapacity. When an On-Demand instance is provisioned, the WeightedCapacity units count toward the target capacity.
+                  Amazon EMR provisions instances until the target capacity is totally fulfilled, even if this results in an overage. For example, if there are
+                  2 units remaining to fulfill capacity, and Amazon EMR can only provision an instance with a WeightedCapacity of 5 units, the instance is
+                  provisioned, and the target capacity is exceeded by 3 units.
+                  NOTE: If not specified or set to 0, only Spot instances are provisioned for the instance fleet using TargetSpotCapacity. At least one of
+                  TargetSpotCapacity and TargetOnDemandCapacity should be greater than 0. For a master instance fleet, only one of TargetSpotCapacity and
+                  TargetOnDemandCapacity can be specified, and its value must be 1.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="targetSpotCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The target capacity of Spot units for the instance fleet, which determines how many Spot instances to provision. When the
+                  instance fleet launches, Amazon EMR tries to provision Spot instances as specified by InstanceTypeConfig. Each instance configuration has a
+                  specified WeightedCapacity. When a Spot instance is provisioned, the WeightedCapacity units count toward the target capacity. Amazon EMR
+                  provisions instances until the target capacity is totally fulfilled, even if this results in an overage. For example, if there are 2 units
+                  remaining to fulfill capacity, and Amazon EMR can only provision an instance with a WeightedCapacity of 5 units, the instance is provisioned,
+                  and the target capacity is exceeded by 3 units.
+                  NOTE: If not specified or set to 0, only On-Demand instances are provisioned for the instance fleet. At least one of TargetSpotCapacity and
+                  TargetOnDemandCapacity should be greater than 0. For a master instance fleet, only one of TargetSpotCapacity and TargetOnDemandCapacity can be
+                  specified, and its value must be 1.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="provisionedOnDemandCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of On-Demand units that have been provisioned for the instance fleet to fulfill TargetOnDemandCapacity.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="provisionedSpotCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of Spot units that have been provisioned for this instance fleet to fulfill TargetSpotCapacity
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="instanceFleetStatus" type="emrClusterInstanceFleetStatus" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The current status of the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="instanceTypeSpecifications" type="emrClusterInstanceTypeSpecifications" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The instance type configurations that define the EC2 instances in the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="launchSpecifications" type="emrClusterInstanceFleetProvisioningSpecifications" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Describes the launch specification for an instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleetStatus">
+      <xs:all>
+         <xs:element name="state" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A code representing the instance fleet status
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="stateChangeReason" type="emrClusterInstanceFleetStateChangeReason" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Provides status change reason details for the instance fleet.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="timeline" type="emrClusterInstanceFleetTimeline" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Provides historical timestamps for the instance fleet, including the time of creation, the time it became ready to run jobs,
+                  and the time of termination.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleetStateChangeReason">
+      <xs:all>
+         <xs:element name="code" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A code corresponding to the reason the state change occurred
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="message" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An explanatory message
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleetTimeline">
+      <xs:all>
+         <xs:element name="creationDateTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The time and date the instance fleet was created
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="endDateTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The time and date the instance fleet terminated
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="readyDateTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The time and date the instance fleet was ready to run jobs
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleetProvisioningSpecifications">
+      <xs:all>
+         <xs:element name="spotSpecification" type="emrClusterSpotProvisioningSpecification" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The launch specification for Spot instances in the fleet, which determines the defined duration and provisioning timeout
+                  behavior
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterSpotProvisioningSpecification">
+      <xs:all>
+         <xs:element name="timeoutDurationMinutes" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The spot provisioning timeout period in minutes
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="timeoutAction" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The action to take when TargetSpotCapacity has not been fulfilled when the TimeoutDurationMinutes has expired
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="blockDurationMinutes" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The defined duration for Spot instances (also known as Spot blocks) in minutes
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceTypeSpecifications">
+      <xs:sequence>
+         <xs:element name="InstanceTypeSpecification" type="emrClusterInstanceTypeSpecification" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The specification for the instance types that comprise an instance fleet
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceTypeSpecification">
+      <xs:all>
+         <xs:element name="instanceType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An EC2 instance type, such as 'm3.xlarge'.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="weightedCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of units that a provisioned instance of this type provides toward fulfilling the target capacities defined in
+                  InstanceFleetConfig
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="bidPrice" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The bid price for each EC2 Spot instance type as defined by InstanceType.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="bidPriceAsPercentageOfOnDemandPrice" type="xs:double" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The bid price, as a percentage of On-Demand price, for each EC2 Spot instance as defined by InstanceType
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="ebsOptimized" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Evaluates to TRUE when the specified InstanceType is EBS-optimized
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="ebsBlockDevices" type="emrClusterEbsBlockDevices" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The configuration of Amazon Elastic Block Storage (EBS) attached to each instance as defined by InstanceType
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="configurations" type="emrClusterInstanceTypeConfigurations" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A configuration classification that applies when provisioning cluster instances, which can include configurations for
+                  applications and software bundled with Amazon EMR
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterEbsBlockDevices">
+      <xs:sequence>
+         <xs:element name="ebsBlockDevice" type="emrClusterEbsBlockDevice" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Configuration of requested EBS block device associated with the instance group
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceTypeConfigurations">
+      <xs:sequence>
+         <xs:element name="configuration" type="emrClusterInstanceTypeConfiguration" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Configuration of requested EBS block device associated with the instance group with count of volumes that will be associated to
+                  every instance
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceTypeConfiguration">
+      <xs:sequence>
+         <xs:element name="classification" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The configuration classification</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="configurations" type="emrClusterInstanceTypeConfigurations" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>List of configurations</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="properties" type="emrClusterConfigurationProperties" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>List of properties</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterConfigurationProperties">
+      <xs:sequence>
+         <xs:element name="property" type="parameter" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A property</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterEbsBlockDevice">
+      <xs:all>
+         <xs:element name="volumeSpecification" type="emrClusterVolumeSpecification" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>EBS volume specifications such as volume type, IOPS, and size (GiB) that will be requested for the EBS volume attached to an
+                  EC2 instance in the cluster
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="device" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The device name that is exposed to the instance, such as /dev/sdh.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="volumesPerInstance" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Number of EBS volumes with a specific volume configuration that will be associated with every instance in the instance group
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterVolumeSpecification">
+      <xs:all>
+         <xs:element name="volumeType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The volume type. Volume types supported are gp2, io1, standard</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="iops" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of I/O operations per second (IOPS) that the volume supports</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="sizeInGB" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The volume size, in gibibytes (GiB). This can be a number from 1 - 1024. If the volume type is EBS-optimized, the minimum value
+                  is 10
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5767,6 +6110,13 @@
          <xs:element name="dryRun" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterCreated" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterDefinition" type="emrClusterDefinition" minOccurs="0"/>
+         <xs:element name="instanceFleets" type="emrClusterInstanceFleets" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Describes the EC2 instances and instance configurations for clusters that use the instance fleet configuration. The instance
+                  fleet configuration is available only in Amazon EMR versions 4.8.0 and later, excluding 5.0.x versions
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -6863,6 +7213,179 @@
             <xs:annotation>
                <xs:documentation>Actual text fragments (partial) which contain the highlighted content
                </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Global Attribute Definition ***** -->
+
+   <xs:element name="globalAttributeDefinition" type="globalAttributeDefinition"/>
+   <xs:complexType name="globalAttributeDefinition">
+      <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>The internal Id that uniquely references a Global Attribute Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="globalAttributeDefinitionKey" type="globalAttributeDefinitionKey">
+            <xs:annotation>
+               <xs:documentation>The global attribute definition unique key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="globalAttributeDefinitionKey" type="globalAttributeDefinitionKey"/>
+   <xs:complexType name="globalAttributeDefinitionKey">
+      <xs:all>
+         <xs:element name="globalAttributeDefinitionLevel" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The global attribute definition level. Only BUS_OBJCT_FRMT is currently supported.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="globalAttributeDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The global attribute definition name to be associated with the level.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="globalAttributeDefinitionCreateRequest" type="globalAttributeDefinitionCreateRequest"/>
+   <xs:complexType name="globalAttributeDefinitionCreateRequest">
+      <xs:all>
+         <xs:element name="globalAttributeDefinitionKey" type="globalAttributeDefinitionKey">
+            <xs:annotation>
+               <xs:documentation>The global attribute definition unique key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="globalAttributeDefinitionKeys" type="globalAttributeDefinitionKeys"/>
+   <xs:complexType name="globalAttributeDefinitionKeys">
+      <xs:sequence>
+         <xs:element name="globalAttributeDefinitionKey" type="globalAttributeDefinitionKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Global Attribute Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Attribute Value List ***** -->
+
+   <xs:element name="attributeValueList" type="attributeValueList"/>
+   <xs:complexType name="attributeValueList">
+      <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>Auto generated ID of the attributeValueList</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for attribute value list information</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="attributeValueListKey" type="attributeValueListKey"/>
+   <xs:complexType name="attributeValueListKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>Namespace of the attribute value list</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="attributeValueListName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>Names of the attribute value list</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="attributeValueListKeys" type="attributeValueListKeys"/>
+   <xs:complexType name="attributeValueListKeys">
+      <xs:sequence>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a attribute value list</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="attributeValueListCreateRequest" type="attributeValueListCreateRequest"/>
+   <xs:complexType name="attributeValueListCreateRequest">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>The attribute value list unique key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+
+   <!-- ***** Allowed Attribute Value ***** -->
+
+   <xs:element name="allowedAttributeValuesCreateRequest" type="allowedAttributeValuesCreateRequest"/>
+   <xs:complexType name="allowedAttributeValuesCreateRequest">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allowedAttributeValues" type="allowedAttributeValues">
+            <xs:annotation>
+               <xs:documentation>List of Allowed Attribute Values</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="allowedAttributeValuesInformation" type="allowedAttributeValuesInformation"/>
+   <xs:complexType name="allowedAttributeValuesInformation">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allowedAttributeValues" type="allowedAttributeValues">
+            <xs:annotation>
+               <xs:documentation>List of Allowed Attribute Values</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="allowedAttributeValuesDeleteRequest" type="allowedAttributeValuesDeleteRequest"/>
+   <xs:complexType name="allowedAttributeValuesDeleteRequest">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allowedAttributeValues" type="allowedAttributeValues">
+            <xs:annotation>
+               <xs:documentation>List of Allowed Attribute Values</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="allowedAttributeValues">
+      <xs:sequence>
+         <xs:element name="allowedAttributeValue" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The Allowed Attribute Value</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>

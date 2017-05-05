@@ -33,6 +33,7 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.dao.ExpectedPartitionValueDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.ExpectedPartitionValueInformation;
 import org.finra.herd.model.api.xml.ExpectedPartitionValueKey;
@@ -97,7 +98,7 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
         {
             if (expectedPartitionValueEntityMap.containsKey(expectedPartitionValue))
             {
-                throw new IllegalArgumentException(String
+                throw new AlreadyExistsException(String
                     .format("Expected partition value \"%s\" already exists in \"%s\" partition key group.", expectedPartitionValue,
                         partitionKeyGroupEntity.getPartitionKeyGroupName()));
             }
