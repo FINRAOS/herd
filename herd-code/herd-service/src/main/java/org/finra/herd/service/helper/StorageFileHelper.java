@@ -202,58 +202,6 @@ public class StorageFileHelper
     }
 
     /**
-     * Returns a map of file paths to the storage files build from the list of storage files with map iteration order matching the original list order.
-     *
-     * @param storageFiles the list of storage files
-     *
-     * @return the map of file paths to storage files
-     */
-    public Map<String, StorageFile> getStorageFilesMapFromStorageFiles(List<StorageFile> storageFiles)
-    {
-        Map<String, StorageFile> result = new LinkedHashMap<>();
-
-        for (StorageFile storageFile : storageFiles)
-        {
-            result.put(storageFile.getFilePath(), storageFile);
-        }
-
-        return result;
-    }
-
-    /**
-     * Get the total size in bytes of all storage files in the specified list.
-     *
-     * @param storageFiles the list of storage files
-     *
-     * @return the total size of storage files in bytes
-     */
-    public long getStorageFilesSizeBytes(Collection<StorageFile> storageFiles)
-    {
-        long storageFilesSizeBytes = 0;
-
-        for (StorageFile storageFile : storageFiles)
-        {
-            storageFilesSizeBytes += storageFile.getFileSizeBytes();
-        }
-
-        return storageFilesSizeBytes;
-    }
-
-    /**
-     * Validates archived S3 files per list of expected storage files.
-     *
-     * @param expectedStorageFiles the list of expected S3 files represented by storage files
-     * @param actualS3Files the list of actual S3 files represented by S3 object summaries
-     * @param storageName the storage name
-     * @param businessObjectDataKey the business object data key
-     */
-    public void validateArchivedS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
-        BusinessObjectDataKey businessObjectDataKey)
-    {
-        validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "archived");
-    }
-
-    /**
      * Validates copied S3 files per list of expected storage files.
      *
      * @param expectedStorageFiles the list of expected S3 files represented by storage files
@@ -344,20 +292,6 @@ public class StorageFileHelper
         BusinessObjectDataKey businessObjectDataKey)
     {
         validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "registered");
-    }
-
-    /**
-     * Validates restored S3 files per list of expected storage files.
-     *
-     * @param expectedStorageFiles the list of expected S3 files represented by storage files
-     * @param actualS3Files the list of actual S3 files represented by S3 object summaries
-     * @param storageName the storage name
-     * @param businessObjectDataKey the business object data key
-     */
-    public void validateRestoredS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
-        BusinessObjectDataKey businessObjectDataKey)
-    {
-        validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "restored");
     }
 
     /**

@@ -154,7 +154,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean ALLOW_MISSING_DATA = true;
 
+    public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
+
     public static final Boolean CREATE_NEW_VERSION = true;
+
+    public static final Boolean DELETE_FILES = true;
 
     public static final String DIRECTORY_PATH = "UT_Directory_Path/Some_Path_1/" + RANDOM_SUFFIX + "/";
 
@@ -195,9 +199,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
 
-    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
-
     public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
+
+    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
 
     public static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
@@ -239,6 +243,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_CREATE_NEW_VERSION = false;
 
+    public static final Boolean NO_DELETE_FILES = false;
+
     public static final DescriptiveBusinessObjectFormat NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT = null;
 
     public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
@@ -246,6 +252,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
     public static final DateTime NO_END_TIME = null;
+
+    public static final Exception NO_EXCEPTION = null;
 
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = false;
 
@@ -397,6 +405,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected TaskService activitiTaskService;
+
+    @Autowired
+    protected AttributeValueListService attributeValueListService;
 
     @Autowired
     protected AwsHelper awsHelper;
@@ -688,6 +699,26 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected XmlHelper xmlHelper;
+
+    /**
+     * Returns S3 key prefix constructed according to the S3 Naming Convention Wiki page.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param dataProviderName the data provider name
+     * @param partitionKey the format partition key
+     * @param subPartitionKeys the list of subpartition keys for the business object data
+     *
+     * @return the S3 key prefix constructed according to the S3 Naming Convention
+     */
+    public static String getExpectedS3KeyPrefix(BusinessObjectDataKey businessObjectDataKey, String dataProviderName, String partitionKey,
+        SchemaColumn[] subPartitionKeys)
+    {
+        return getExpectedS3KeyPrefix(businessObjectDataKey.getNamespace(), dataProviderName, businessObjectDataKey.getBusinessObjectDefinitionName(),
+            businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+            businessObjectDataKey.getBusinessObjectFormatVersion(), partitionKey, businessObjectDataKey.getPartitionValue(), subPartitionKeys,
+            businessObjectDataKey.getSubPartitionValues().toArray(new String[businessObjectDataKey.getSubPartitionValues().size()]),
+            businessObjectDataKey.getBusinessObjectDataVersion());
+    }
 
     /**
      * Returns S3 key prefix constructed according to the S3 Naming Convention Wiki page.

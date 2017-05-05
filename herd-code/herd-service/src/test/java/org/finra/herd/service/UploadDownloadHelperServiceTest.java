@@ -623,6 +623,9 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
             // Try to execute the file move post steps by passing a non-initialized complete upload single parameters DTO.
             uploadDownloadHelperServiceImpl.executeFileMoveAfterSteps(new CompleteUploadSingleParamsDto());
 
+            // Try to delete the source file from S3
+            uploadDownloadHelperServiceImpl.deleteSourceFileFromS3(new CompleteUploadSingleParamsDto());
+
             // Try to update the business object data status for a non-existing business object data.
             try
             {
@@ -637,6 +640,66 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
                     .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                         PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
             }
+        });
+    }
+
+    @Test
+    public void testDeleteSourceFileFromS3()
+    {
+        // Create and persists entities required for testing.
+        // Create source and target business object data entities.
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
+
+        // Put a 1 KB file in S3.
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
+                null), null);
+
+        // Initialize parameters required to delete the S3 source file
+        CompleteUploadSingleParamsDto completeUploadSingleParamsDto =
+            new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity),
+                storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
+                storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
+
+        // Delete the source file from S3
+        uploadDownloadHelperService.deleteSourceFileFromS3(completeUploadSingleParamsDto);
+    }
+
+    @Test
+    public void testDeleteSourceFileFromS3Fails()  throws Exception
+    {
+        // Create and persists entities required for testing.
+        // Create source and target business object data entities.
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
+
+        // Put a 1 KB file in S3.
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
+                null), null);
+        
+        // Make the S3 delete fail by a null aws Params
+        CompleteUploadSingleParamsDto completeUploadSingleParamsDto =
+            new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity), EMPTY_S3_BUCKET_NAME,
+                MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, BusinessObjectDataStatusEntity.UPLOADING,
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
+                EMPTY_S3_BUCKET_NAME, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, BusinessObjectDataStatusEntity.UPLOADING,
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, null);
+
+        // Try to delete the source file from S3
+        executeWithoutLogging(UploadDownloadHelperServiceImpl.class, () -> {
+            uploadDownloadHelperService.deleteSourceFileFromS3(completeUploadSingleParamsDto);
         });
     }
 }

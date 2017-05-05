@@ -24,8 +24,10 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.Step;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,10 +125,10 @@ public class EmrServiceImpl implements EmrService
     @NamespacePermission(fields = "#emrClusterAlternateKeyDto?.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose, String accountId)
-        throws Exception
+    public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose, String accountId,
+        Boolean retrieveInstanceFleets) throws Exception
     {
-        return getClusterImpl(emrClusterAlternateKeyDto, emrClusterId, emrStepId, verbose, accountId);
+        return getClusterImpl(emrClusterAlternateKeyDto, emrClusterId, emrStepId, verbose, accountId, retrieveInstanceFleets);
     }
 
     /**
@@ -137,12 +139,13 @@ public class EmrServiceImpl implements EmrService
      * @param emrStepId the step id of the step to get details
      * @param verbose parameter for whether to return detailed information
      * @param accountId the optional AWS account that EMR cluster is running in
+     * @param retrieveInstanceFleets parameter for whether to retrieve instance fleets
      *
      * @return the EMR Cluster object with details.
      * @throws Exception if an error occurred while getting the cluster
      */
     protected EmrCluster getClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose,
-        String accountId) throws Exception
+        String accountId, Boolean retrieveInstanceFleets) throws Exception
     {
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
 
@@ -215,6 +218,13 @@ public class EmrServiceImpl implements EmrService
                 Step step = emrDao.getClusterStep(emrCluster.getId(), emrStepId.trim(), awsParamsDto);
 
                 emrCluster.setStep(buildEmrStepFromAwsStep(step, verbose));
+            }
+
+            // Get instance fleet if true
+            if (BooleanUtils.isTrue(retrieveInstanceFleets))
+            {
+                ListInstanceFleetsResult listInstanceFleetsResult = emrDao.getListInstanceFleetsResult(emrCluster.getId(), awsParamsDto);
+                emrCluster.setInstanceFleets(emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
             }
         }
         catch (AmazonServiceException ex)

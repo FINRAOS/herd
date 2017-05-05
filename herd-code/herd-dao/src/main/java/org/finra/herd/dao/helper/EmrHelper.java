@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao.helper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -24,8 +25,18 @@ import java.util.UUID;
 import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import com.amazonaws.services.elasticmapreduce.model.Configuration;
+import com.amazonaws.services.elasticmapreduce.model.EbsBlockDevice;
 import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleet;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetProvisioningSpecifications;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetStatus;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetTimeline;
+import com.amazonaws.services.elasticmapreduce.model.InstanceTypeSpecification;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
+import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
+import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +44,21 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.StsDao;
+import org.finra.herd.model.api.xml.EmrClusterEbsBlockDevice;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleet;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetProvisioningSpecifications;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetStateChangeReason;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetStatus;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetTimeline;
+import org.finra.herd.model.api.xml.EmrClusterInstanceTypeConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterInstanceTypeSpecification;
+import org.finra.herd.model.api.xml.EmrClusterSpotProvisioningSpecification;
+import org.finra.herd.model.api.xml.EmrClusterVolumeSpecification;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
+import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.TrustingAccountEntity;
@@ -266,7 +289,7 @@ public class EmrHelper extends AwsHelper
         return emrStatesString.split("\\" + configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER));
     }
 
-    /**
+    /*
      * Updates the AWS parameters DTO with the temporary credentials for the cross-account access.
      *
      * @param awsParamsDto the AWS connection parameters
@@ -286,4 +309,265 @@ public class EmrHelper extends AwsHelper
         awsParamsDto.setAwsSecretKey(credentials.getSecretAccessKey());
         awsParamsDto.setSessionToken(credentials.getSessionToken());
     }
+
+    /**
+     * Returns  EmrClusterInstanceFleet list from AWS call
+     *
+     * @param awsInstanceFleetsResult AWS Instance Fleets result
+     *
+     * @return list of  EmrClusterInstanceFleet
+     */
+    public List<EmrClusterInstanceFleet> buildEmrClusterInstanceFleetFromAwsResult(ListInstanceFleetsResult awsInstanceFleetsResult)
+    {
+        List<EmrClusterInstanceFleet> emrInstanceFleets = null;
+
+        if (awsInstanceFleetsResult != null && !CollectionUtils.isEmpty(awsInstanceFleetsResult.getInstanceFleets()))
+        {
+            emrInstanceFleets = new ArrayList();
+
+            for (InstanceFleet awsInstanceFleet : awsInstanceFleetsResult.getInstanceFleets())
+            {
+                if (awsInstanceFleet != null)
+                {
+                    EmrClusterInstanceFleet emrInstanceFleet = new EmrClusterInstanceFleet();
+                    emrInstanceFleet.setId(awsInstanceFleet.getId());
+                    emrInstanceFleet.setName(awsInstanceFleet.getName());
+                    emrInstanceFleet.setInstanceFleetType(awsInstanceFleet.getInstanceFleetType());
+                    emrInstanceFleet.setTargetOnDemandCapacity(awsInstanceFleet.getTargetOnDemandCapacity());
+                    emrInstanceFleet.setTargetSpotCapacity(awsInstanceFleet.getTargetSpotCapacity());
+                    emrInstanceFleet.setProvisionedOnDemandCapacity(awsInstanceFleet.getProvisionedOnDemandCapacity());
+                    emrInstanceFleet.setProvisionedSpotCapacity(awsInstanceFleet.getProvisionedSpotCapacity());
+                    emrInstanceFleet.setInstanceTypeSpecifications(getInstanceTypeSpecifications(awsInstanceFleet.getInstanceTypeSpecifications()));
+                    emrInstanceFleet.setLaunchSpecifications(getLaunchSpecifications(awsInstanceFleet.getLaunchSpecifications()));
+                    emrInstanceFleet.setInstanceFleetStatus(getEmrClusterInstanceFleetStatus(awsInstanceFleet.getStatus()));
+                    emrInstanceFleets.add(emrInstanceFleet);
+                }
+            }
+        }
+
+        return emrInstanceFleets;
+    }
+
+    /**
+     * Returns EmrClusterInstanceFleetStatus
+     *
+     * @param instanceFleetStatus AWS object
+     *
+     * @return EmrClusterInstanceFleetStatus
+     */
+    protected EmrClusterInstanceFleetStatus getEmrClusterInstanceFleetStatus(InstanceFleetStatus instanceFleetStatus)
+    {
+        EmrClusterInstanceFleetStatus emrClusterInstanceFleetStatus = null;
+        if (instanceFleetStatus != null)
+        {
+            emrClusterInstanceFleetStatus = new EmrClusterInstanceFleetStatus();
+            emrClusterInstanceFleetStatus.setState(instanceFleetStatus.getState());
+
+            if (instanceFleetStatus.getStateChangeReason() != null)
+            {
+                EmrClusterInstanceFleetStateChangeReason emrClusterInstanceFleetStateChangeReason = new EmrClusterInstanceFleetStateChangeReason();
+                emrClusterInstanceFleetStateChangeReason.setCode(instanceFleetStatus.getStateChangeReason().getCode());
+                emrClusterInstanceFleetStateChangeReason.setMessage(instanceFleetStatus.getStateChangeReason().getMessage());
+                emrClusterInstanceFleetStatus.setStateChangeReason(emrClusterInstanceFleetStateChangeReason);
+            }
+            if (instanceFleetStatus.getTimeline() != null)
+            {
+                InstanceFleetTimeline instanceFleetTimeline = instanceFleetStatus.getTimeline();
+                EmrClusterInstanceFleetTimeline emrClusterInstanceFleetTimeline = new EmrClusterInstanceFleetTimeline();
+                emrClusterInstanceFleetTimeline.setCreationDateTime(HerdDateUtils.getXMLGregorianCalendarValue(instanceFleetTimeline.getCreationDateTime()));
+                emrClusterInstanceFleetTimeline.setEndDateTime(HerdDateUtils.getXMLGregorianCalendarValue(instanceFleetTimeline.getEndDateTime()));
+                emrClusterInstanceFleetTimeline.setReadyDateTime(HerdDateUtils.getXMLGregorianCalendarValue(instanceFleetTimeline.getReadyDateTime()));
+                emrClusterInstanceFleetStatus.setTimeline(emrClusterInstanceFleetTimeline);
+            }
+        }
+        return emrClusterInstanceFleetStatus;
+    }
+
+    /**
+     * Returns  EmrClusterInstanceFleetProvisioningSpecifications
+     *
+     * @param instanceFleetProvisioningSpecifications AWS object
+     *
+     * @return EmrClusterInstanceFleetProvisioningSpecifications
+     */
+    protected EmrClusterInstanceFleetProvisioningSpecifications getLaunchSpecifications(
+        InstanceFleetProvisioningSpecifications instanceFleetProvisioningSpecifications)
+    {
+        EmrClusterInstanceFleetProvisioningSpecifications emrClusterDefinitionLaunchSpecifications = null;
+
+        if (instanceFleetProvisioningSpecifications != null)
+        {
+            emrClusterDefinitionLaunchSpecifications = new EmrClusterInstanceFleetProvisioningSpecifications();
+            emrClusterDefinitionLaunchSpecifications.setSpotSpecification(getSpotSpecification(instanceFleetProvisioningSpecifications.getSpotSpecification()));
+        }
+
+        return emrClusterDefinitionLaunchSpecifications;
+    }
+
+    /**
+     * Returns EmrClusterSpotProvisioningSpecification from AWS call
+     *
+     * @param spotProvisioningSpecification AWS object
+     *
+     * @return EmrClusterSpotProvisioningSpecification
+     */
+    protected EmrClusterSpotProvisioningSpecification getSpotSpecification(SpotProvisioningSpecification spotProvisioningSpecification)
+    {
+        EmrClusterSpotProvisioningSpecification emrClusterSpotProvisioningSpecification = null;
+
+        if (spotProvisioningSpecification != null)
+        {
+            emrClusterSpotProvisioningSpecification = new EmrClusterSpotProvisioningSpecification();
+            emrClusterSpotProvisioningSpecification.setTimeoutDurationMinutes(spotProvisioningSpecification.getTimeoutDurationMinutes());
+            emrClusterSpotProvisioningSpecification.setTimeoutAction(spotProvisioningSpecification.getTimeoutAction());
+            emrClusterSpotProvisioningSpecification.setBlockDurationMinutes(spotProvisioningSpecification.getBlockDurationMinutes());
+        }
+
+        return emrClusterSpotProvisioningSpecification;
+    }
+
+    /**
+     * Returns list of EmrClusterEbsBlockDevice
+     *
+     * @param ebsBlockDevices AWS object
+     *
+     * @return list of EmrClusterEbsBlockDevice
+     */
+    protected List<EmrClusterEbsBlockDevice> getEbsBlockDevices(List<EbsBlockDevice> ebsBlockDevices)
+    {
+        List<EmrClusterEbsBlockDevice> emrClusterEbsBlockDevices = null;
+
+        if (!CollectionUtils.isEmpty(ebsBlockDevices))
+        {
+            emrClusterEbsBlockDevices = new ArrayList<>();
+
+            for (EbsBlockDevice ebsBlockDevice : ebsBlockDevices)
+            {
+                if (ebsBlockDevice != null)
+                {
+                    EmrClusterEbsBlockDevice emrClusterEbsBlockDevice = new EmrClusterEbsBlockDevice();
+                    emrClusterEbsBlockDevice.setDevice(ebsBlockDevice.getDevice());
+                    emrClusterEbsBlockDevice.setVolumeSpecification(getVolumeSpecification(ebsBlockDevice.getVolumeSpecification()));
+
+                    emrClusterEbsBlockDevices.add(emrClusterEbsBlockDevice);
+                }
+            }
+        }
+
+        return emrClusterEbsBlockDevices;
+    }
+
+    /**
+     * Returns EmrClusterVolumeSpecification
+     *
+     * @param volumeSpecification AWS object
+     *
+     * @return EmrClusterVolumeSpecification
+     */
+    protected EmrClusterVolumeSpecification getVolumeSpecification(VolumeSpecification volumeSpecification)
+    {
+        EmrClusterVolumeSpecification emrClusterVolumeSpecification = null;
+
+        if (volumeSpecification != null)
+        {
+            emrClusterVolumeSpecification = new EmrClusterVolumeSpecification();
+            emrClusterVolumeSpecification.setVolumeType(volumeSpecification.getVolumeType());
+            emrClusterVolumeSpecification.setIops(volumeSpecification.getIops());
+            emrClusterVolumeSpecification.setSizeInGB(volumeSpecification.getSizeInGB());
+        }
+
+        return emrClusterVolumeSpecification;
+    }
+
+    /**
+     * Returns list of  EmrClusterInstanceTypeSpecification
+     *
+     * @param awsInstanceTypeConfigs AWS object
+     *
+     * @return list of  EmrClusterInstanceTypeSpecification
+     */
+    protected List<EmrClusterInstanceTypeSpecification> getInstanceTypeSpecifications(List<InstanceTypeSpecification> awsInstanceTypeConfigs)
+    {
+        List<EmrClusterInstanceTypeSpecification> emrClusterInstanceTypeSpecifications = null;
+
+        if (!CollectionUtils.isEmpty(awsInstanceTypeConfigs))
+        {
+            emrClusterInstanceTypeSpecifications = new ArrayList<>();
+
+            for (InstanceTypeSpecification awsInstanceTypeConfig : awsInstanceTypeConfigs)
+            {
+                if (awsInstanceTypeConfig != null)
+                {
+                    EmrClusterInstanceTypeSpecification emrClusterInstanceTypeSpecification = new EmrClusterInstanceTypeSpecification();
+                    emrClusterInstanceTypeSpecification.setInstanceType(awsInstanceTypeConfig.getInstanceType());
+                    emrClusterInstanceTypeSpecification.setWeightedCapacity(awsInstanceTypeConfig.getWeightedCapacity());
+                    emrClusterInstanceTypeSpecification.setBidPrice(awsInstanceTypeConfig.getBidPrice());
+                    emrClusterInstanceTypeSpecification.setBidPriceAsPercentageOfOnDemandPrice(awsInstanceTypeConfig.getBidPriceAsPercentageOfOnDemandPrice());
+                    emrClusterInstanceTypeSpecification.setEbsBlockDevices(getEbsBlockDevices(awsInstanceTypeConfig.getEbsBlockDevices()));
+                    emrClusterInstanceTypeSpecification.setEbsOptimized(awsInstanceTypeConfig.getEbsOptimized());
+                    emrClusterInstanceTypeSpecification.setConfigurations(getConfigurations(awsInstanceTypeConfig.getConfigurations()));
+
+                    emrClusterInstanceTypeSpecifications.add(emrClusterInstanceTypeSpecification);
+                }
+            }
+        }
+
+        return emrClusterInstanceTypeSpecifications;
+    }
+
+    /**
+     * Returns list of EmrClusterInstanceTypeConfiguration
+     *
+     * @param configurations AWS configuration object list
+     *
+     * @return list of EmrClusterInstanceTypeConfiguration
+     */
+    protected List<EmrClusterInstanceTypeConfiguration> getConfigurations(List<Configuration> configurations)
+    {
+        List<EmrClusterInstanceTypeConfiguration> emrClusterInstanceTypeConfigurations = null;
+
+        if (!CollectionUtils.isEmpty(configurations))
+        {
+            emrClusterInstanceTypeConfigurations = new ArrayList<>();
+
+            for (Configuration configuration : configurations)
+            {
+                if (configuration != null)
+                {
+                    EmrClusterInstanceTypeConfiguration emrClusterInstanceTypeConfiguration = new EmrClusterInstanceTypeConfiguration();
+                    emrClusterInstanceTypeConfiguration.setClassification(configuration.getClassification());
+                    emrClusterInstanceTypeConfiguration.setConfigurations(getConfigurations(configuration.getConfigurations()));
+                    emrClusterInstanceTypeConfiguration.setProperties(getParameterList(configuration.getProperties()));
+
+                    emrClusterInstanceTypeConfigurations.add(emrClusterInstanceTypeConfiguration);
+                }
+            }
+        }
+
+        return emrClusterInstanceTypeConfigurations;
+    }
+
+    /**
+     * Returns parameter list
+     *
+     * @param properties properties
+     *
+     * @return list of parameters
+     */
+    protected List<Parameter> getParameterList(Map<String, String> properties)
+    {
+        List<Parameter> parameters = null;
+        if (!CollectionUtils.isEmpty(properties))
+        {
+            parameters = new ArrayList<>();
+
+            for (Map.Entry<String, String> entry : properties.entrySet())
+            {
+                Parameter parameter = new Parameter(entry.getKey(), entry.getValue());
+                parameters.add(parameter);
+            }
+        }
+        return parameters;
+    }
+
 }

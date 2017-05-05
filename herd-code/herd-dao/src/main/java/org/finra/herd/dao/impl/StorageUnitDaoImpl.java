@@ -53,38 +53,30 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDao
 {
     @Override
-    public List<StorageUnitEntity> getGlacierStorageUnitsToRestore(int maxResult)
+    public List<StorageUnitEntity> getS3StorageUnitsToRestore(int maxResult)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<StorageUnitEntity> criteria = builder.createQuery(StorageUnitEntity.class);
 
         // The criteria root is the storage unit.
-        Root<StorageUnitEntity> glacierStorageUnitEntity = criteria.from(StorageUnitEntity.class);
-        Root<StorageUnitEntity> originStorageUnitEntity = criteria.from(StorageUnitEntity.class);
+        Root<StorageUnitEntity> storageUnitEntityRoot = criteria.from(StorageUnitEntity.class);
 
         // Join to the other tables we can filter on.
-        Join<StorageUnitEntity, StorageEntity> glacierStorageEntityJoin = glacierStorageUnitEntity.join(StorageUnitEntity_.storage);
-        Join<StorageEntity, StoragePlatformEntity> glacierStoragePlatformEntityJoin = glacierStorageEntityJoin.join(StorageEntity_.storagePlatform);
-        Join<StorageUnitEntity, StorageUnitStatusEntity> glacierStorageUnitStatusEntityJoin = glacierStorageUnitEntity.join(StorageUnitEntity_.status);
-
-        Join<StorageUnitEntity, StorageEntity> originStorageEntityJoin = originStorageUnitEntity.join(StorageUnitEntity_.storage);
-        Join<StorageEntity, StoragePlatformEntity> originStoragePlatformEntityJoin = originStorageEntityJoin.join(StorageEntity_.storagePlatform);
-        Join<StorageUnitEntity, StorageUnitStatusEntity> originStorageUnitStatusEntityJoin = originStorageUnitEntity.join(StorageUnitEntity_.status);
+        Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.storage);
+        Join<StorageEntity, StoragePlatformEntity> storagePlatformEntityJoin = storageEntityJoin.join(StorageEntity_.storagePlatform);
+        Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.status);
 
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(builder.equal(glacierStorageUnitEntity.get(StorageUnitEntity_.parentStorageUnit), originStorageUnitEntity));
-        predicates.add(builder.equal(glacierStoragePlatformEntityJoin.get(StoragePlatformEntity_.name), StoragePlatformEntity.GLACIER));
-        predicates.add(builder.equal(glacierStorageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.ENABLED));
-        predicates.add(builder.equal(originStoragePlatformEntityJoin.get(StoragePlatformEntity_.name), StoragePlatformEntity.S3));
-        predicates.add(builder.equal(originStorageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.RESTORING));
+        predicates.add(builder.equal(storagePlatformEntityJoin.get(StoragePlatformEntity_.name), StoragePlatformEntity.S3));
+        predicates.add(builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.RESTORING));
 
         // Order the results by storage unit updated on timestamp.
-        Order orderBy = builder.asc(originStorageUnitEntity.get(StorageUnitEntity_.updatedOn));
+        Order orderBy = builder.asc(storageUnitEntityRoot.get(StorageUnitEntity_.updatedOn));
 
         // Add the clauses for the query.
-        criteria.select(glacierStorageUnitEntity).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderBy);
+        criteria.select(storageUnitEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderBy);
 
         // Execute the query and return the results.
         return entityManager.createQuery(criteria).setMaxResults(maxResult).getResultList();
@@ -164,6 +156,29 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
     }
 
     @Override
+    public List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey,
+        List<List<String>> partitionFilters, Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames,
+        String storagePlatformType, String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits)
+    {
+        List<StorageUnitEntity> resultStorageUnitEntities = new ArrayList<>();
+
+        // Loop through each chunk of partition filters until we have reached the end of the list.
+        for (int i = 0; i < partitionFilters.size(); i += MAX_PARTITION_FILTERS_PER_REQUEST)
+        {
+            // Get a sub-list for the current chunk of partition filters.
+            List<StorageUnitEntity> storageUnitEntitiesSubset =
+                getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatus,
+                    storageNames, storagePlatformType, excludedStoragePlatformType, selectOnlyAvailableStorageUnits, i,
+                    (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
+
+            // Add the sub-list to the result.
+            resultStorageUnitEntities.addAll(storageUnitEntitiesSubset);
+        }
+
+        return resultStorageUnitEntities;
+    }
+
+    @Override
     public List<StorageUnitEntity> getStorageUnitsByStorageAndBusinessObjectData(StorageEntity storageEntity,
         List<BusinessObjectDataEntity> businessObjectDataEntities)
     {
@@ -216,27 +231,87 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         return entityManager.createQuery(criteria).getResultList();
     }
 
-    @Override
-    public List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey,
-        List<List<String>> partitionFilters, Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames,
-        String storagePlatformType, String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits)
+    /**
+     * Builds a sub-query to select the maximum business object data version.
+     *
+     * @param builder the criteria builder
+     * @param criteria the criteria query
+     * @param businessObjectDefinitionEntity the business object definition entity that appears in the from clause of the main query
+     * @param businessObjectFormatEntity the business object format entity that appears in the from clause of the main query
+     * @param fileTypeEntity the file type entity that appears in the from clause of the main query
+     * @param businessObjectDataEntity the business object data entity that appears in the from clause of the main query
+     * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
+     * the specified business object data status is returned
+     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified. When
+     * business object data version and business object data status both are not specified, the latest data version for each set of partition values will be
+     * used regardless of the status
+     * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
+     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
+     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
+     * the storage platform type is specified
+     * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
+     *
+     * @return the sub-query to select the maximum business object data version
+     */
+    private Subquery<Integer> getMaximumBusinessObjectFormatVersionSubQuery(CriteriaBuilder builder, CriteriaQuery<?> criteria,
+        From<?, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity, From<?, BusinessObjectFormatEntity> businessObjectFormatEntity,
+        From<?, FileTypeEntity> fileTypeEntity, From<?, BusinessObjectDataEntity> businessObjectDataEntity, Integer businessObjectDataVersion,
+        String businessObjectDataStatus, List<String> storageNames, String storagePlatformType, String excludedStoragePlatformType,
+        boolean selectOnlyAvailableStorageUnits)
     {
-        List<StorageUnitEntity> resultStorageUnitEntities = new ArrayList<>();
+        // Business object format version is not specified, so just use the latest available for this set of partition values.
+        Subquery<Integer> subQuery = criteria.subquery(Integer.class);
 
-        // Loop through each chunk of partition filters until we have reached the end of the list.
-        for (int i = 0; i < partitionFilters.size(); i += MAX_PARTITION_FILTERS_PER_REQUEST)
+        // The criteria root is the business object data.
+        Root<BusinessObjectDataEntity> subBusinessObjectDataEntity = subQuery.from(BusinessObjectDataEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntity = subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
+        Join<StorageUnitEntity, StorageEntity> subStorageEntity = subStorageUnitEntity.join(StorageUnitEntity_.storage);
+        Join<StorageEntity, StoragePlatformEntity> subStoragePlatformEntity = subStorageEntity.join(StorageEntity_.storagePlatform);
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntity =
+            subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> subBusinessObjectDefinitionEntity =
+            subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+        Join<BusinessObjectFormatEntity, FileTypeEntity> subBusinessObjectFormatFileTypeEntity =
+            subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
+        Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
+            subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
+        Join<StorageUnitEntity, StorageUnitStatusEntity> subStorageUnitStatusEntity = subStorageUnitEntity.join(StorageUnitEntity_.status);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate subQueryRestriction = builder.equal(subBusinessObjectDefinitionEntity, businessObjectDefinitionEntity);
+        subQueryRestriction = builder.and(subQueryRestriction, builder
+            .equal(subBusinessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage), businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
+        subQueryRestriction = builder.and(subQueryRestriction, builder.equal(subBusinessObjectFormatFileTypeEntity, fileTypeEntity));
+
+        // Create and add standard restrictions on primary and sub-partition values.
+        subQueryRestriction =
+            builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
+
+        // Add restrictions on business object data version and business object data status.
+        Predicate subQueryRestrictionOnBusinessObjectDataVersionAndStatus =
+            getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity, subBusinessObjectDataStatusEntity,
+                businessObjectDataVersion, businessObjectDataStatus);
+        if (subQueryRestrictionOnBusinessObjectDataVersionAndStatus != null)
         {
-            // Get a sub-list for the current chunk of partition filters.
-            List<StorageUnitEntity> storageUnitEntitiesSubset =
-                getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatus,
-                    storageNames, storagePlatformType, excludedStoragePlatformType, selectOnlyAvailableStorageUnits, i,
-                    (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
-
-            // Add the sub-list to the result.
-            resultStorageUnitEntities.addAll(storageUnitEntitiesSubset);
+            subQueryRestriction = builder.and(subQueryRestriction, subQueryRestrictionOnBusinessObjectDataVersionAndStatus);
         }
 
-        return resultStorageUnitEntities;
+        // Create and add a standard restriction on storage.
+        subQueryRestriction = builder.and(subQueryRestriction,
+            getQueryRestrictionOnStorage(builder, subStorageEntity, subStoragePlatformEntity, storageNames, storagePlatformType, excludedStoragePlatformType));
+
+        // If specified, add a restriction on storage unit status availability flag.
+        if (selectOnlyAvailableStorageUnits)
+        {
+            subQueryRestriction = builder.and(subQueryRestriction, builder.isTrue(subStorageUnitStatusEntity.get(StorageUnitStatusEntity_.available)));
+        }
+
+        // Add all of the clauses to the subquery.
+        subQuery.select(builder.max(subBusinessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion))).where(subQueryRestriction);
+
+        return subQuery;
     }
 
     /**
@@ -366,88 +441,5 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         }
 
         return storageUnitEntities;
-    }
-
-    /**
-     * Builds a sub-query to select the maximum business object data version.
-     *
-     * @param builder the criteria builder
-     * @param criteria the criteria query
-     * @param businessObjectDefinitionEntity the business object definition entity that appears in the from clause of the main query
-     * @param businessObjectFormatEntity the business object format entity that appears in the from clause of the main query
-     * @param fileTypeEntity the file type entity that appears in the from clause of the main query
-     * @param businessObjectDataEntity the business object data entity that appears in the from clause of the main query
-     * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
-     * the specified business object data status is returned
-     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified. When
-     * business object data version and business object data status both are not specified, the latest data version for each set of partition values will be
-     * used regardless of the status
-     * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
-     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
-     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
-     * the storage platform type is specified
-     * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
-     *
-     * @return the sub-query to select the maximum business object data version
-     */
-    private Subquery<Integer> getMaximumBusinessObjectFormatVersionSubQuery(CriteriaBuilder builder, CriteriaQuery<?> criteria,
-        From<?, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity, From<?, BusinessObjectFormatEntity> businessObjectFormatEntity,
-        From<?, FileTypeEntity> fileTypeEntity, From<?, BusinessObjectDataEntity> businessObjectDataEntity, Integer businessObjectDataVersion,
-        String businessObjectDataStatus, List<String> storageNames, String storagePlatformType, String excludedStoragePlatformType,
-        boolean selectOnlyAvailableStorageUnits)
-    {
-        // Business object format version is not specified, so just use the latest available for this set of partition values.
-        Subquery<Integer> subQuery = criteria.subquery(Integer.class);
-
-        // The criteria root is the business object data.
-        Root<BusinessObjectDataEntity> subBusinessObjectDataEntity = subQuery.from(BusinessObjectDataEntity.class);
-
-        // Join to the other tables we can filter on.
-        Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntity = subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
-        Join<StorageUnitEntity, StorageEntity> subStorageEntity = subStorageUnitEntity.join(StorageUnitEntity_.storage);
-        Join<StorageEntity, StoragePlatformEntity> subStoragePlatformEntity = subStorageEntity.join(StorageEntity_.storagePlatform);
-        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntity =
-            subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
-        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> subBusinessObjectDefinitionEntity =
-            subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
-        Join<BusinessObjectFormatEntity, FileTypeEntity> subBusinessObjectFormatFileTypeEntity =
-            subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
-        Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
-            subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
-        Join<StorageUnitEntity, StorageUnitStatusEntity> subStorageUnitStatusEntity = subStorageUnitEntity.join(StorageUnitEntity_.status);
-
-        // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate subQueryRestriction = builder.equal(subBusinessObjectDefinitionEntity, businessObjectDefinitionEntity);
-        subQueryRestriction = builder.and(subQueryRestriction, builder
-            .equal(subBusinessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage), businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
-        subQueryRestriction = builder.and(subQueryRestriction, builder.equal(subBusinessObjectFormatFileTypeEntity, fileTypeEntity));
-
-        // Create and add standard restrictions on primary and sub-partition values.
-        subQueryRestriction =
-            builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
-
-        // Add restrictions on business object data version and business object data status.
-        Predicate subQueryRestrictionOnBusinessObjectDataVersionAndStatus =
-            getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity, subBusinessObjectDataStatusEntity,
-                businessObjectDataVersion, businessObjectDataStatus);
-        if (subQueryRestrictionOnBusinessObjectDataVersionAndStatus != null)
-        {
-            subQueryRestriction = builder.and(subQueryRestriction, subQueryRestrictionOnBusinessObjectDataVersionAndStatus);
-        }
-
-        // Create and add a standard restriction on storage.
-        subQueryRestriction = builder.and(subQueryRestriction,
-            getQueryRestrictionOnStorage(builder, subStorageEntity, subStoragePlatformEntity, storageNames, storagePlatformType, excludedStoragePlatformType));
-
-        // If specified, add a restriction on storage unit status availability flag.
-        if (selectOnlyAvailableStorageUnits)
-        {
-            subQueryRestriction = builder.and(subQueryRestriction, builder.isTrue(subStorageUnitStatusEntity.get(StorageUnitStatusEntity_.available)));
-        }
-
-        // Add all of the clauses to the subquery.
-        subQuery.select(builder.max(subBusinessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion))).where(subQueryRestriction);
-
-        return subQuery;
     }
 }

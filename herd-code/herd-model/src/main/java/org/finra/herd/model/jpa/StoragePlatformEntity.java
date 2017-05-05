@@ -38,11 +38,6 @@ public class StoragePlatformEntity extends AuditableEntity
     public static final String S3 = "S3";
 
     /**
-     * The Glacier storage platform.
-     */
-    public static final String GLACIER = "GLACIER";
-
-    /**
      * The name column.
      */
     public static final String COLUMN_NAME = "strge_pltfm_cd";

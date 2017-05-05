@@ -44,6 +44,8 @@ import com.amazonaws.services.elasticmapreduce.model.InstanceTypeConfig;
 import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.MarketType;
@@ -310,6 +312,12 @@ public class EmrDaoImpl implements EmrDao
     public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams)
     {
         emrOperations.terminateEmrCluster(getEmrClient(awsParams), clusterId, overrideTerminationProtection);
+    }
+
+    @Override
+    public ListInstanceFleetsResult getListInstanceFleetsResult(String clusterId, AwsParamsDto awsParams)
+    {
+        return emrOperations.listInstanceFleets(getEmrClient(awsParams), new ListInstanceFleetsRequest().withClusterId(clusterId));
     }
 
     /**

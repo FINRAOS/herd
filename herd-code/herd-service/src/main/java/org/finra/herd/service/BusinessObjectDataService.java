@@ -153,10 +153,11 @@ public interface BusinessObjectDataService
      * Initiates a restore request for a currently archived business object data.
      *
      * @param businessObjectDataKey the business object data key
+     * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
      *
      * @return the business object data information
      */
-    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey);
+    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays);
 
     /**
      * Search business object data based on the request

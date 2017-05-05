@@ -78,14 +78,14 @@ public class BusinessObjectDataFinalizeRestoreJob extends AbstractSystemJob
         int finalizedRestores = 0;
         if (maxBusinessObjectDataInstancesToFinalize > 0)
         {
-            // Get restoring business object data.
+            // Get business object data that is currently being restored.
             List<StorageUnitAlternateKeyDto> storageUnitKeys =
-                businessObjectDataFinalizeRestoreService.getGlacierStorageUnitsToRestore(maxBusinessObjectDataInstancesToFinalize);
+                businessObjectDataFinalizeRestoreService.getS3StorageUnitsToRestore(maxBusinessObjectDataInstancesToFinalize);
 
-            // Log the number of Glacier storage units selected for processing.
-            LOGGER.info("Selected for processing Glacier storage units. systemJobName=\"{}\" storageUnitCount={}", JOB_NAME, storageUnitKeys.size());
+            // Log the number of storage units selected for processing.
+            LOGGER.info("Selected for processing S3 storage units. systemJobName=\"{}\" storageUnitCount={}", JOB_NAME, storageUnitKeys.size());
 
-            // Try to finalize restore for each of the selected Glacier storage units.
+            // Try to finalize restore for each of the selected storage units.
             for (StorageUnitAlternateKeyDto storageUnitKey : storageUnitKeys)
             {
                 try
