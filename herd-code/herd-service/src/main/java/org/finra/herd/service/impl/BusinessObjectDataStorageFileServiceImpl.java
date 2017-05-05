@@ -46,6 +46,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
+import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.BusinessObjectDataStorageFileService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
@@ -134,6 +135,11 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
         // retrieve and validate that the storage unit exists
         StorageUnitEntity storageUnitEntity =
             storageUnitDaoHelper.getStorageUnitEntity(businessObjectDataStorageFilesCreateRequest.getStorageName(), businessObjectDataEntity);
+
+        // Validate the storage unit has an acceptable status for adding new files.
+        Assert.isTrue(StorageUnitStatusEntity.ENABLED.equals(storageUnitEntity.getStatus().getCode()), String
+            .format("Storage unit must be in the ENABLED status. Storage unit status {%s}, business object data {%s}", storageUnitEntity.getStatus().getCode(),
+                businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
 
         StorageEntity storageEntity = storageUnitEntity.getStorage();
 
