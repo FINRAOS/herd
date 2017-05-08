@@ -18,6 +18,8 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.GlobalAttributeDefinitionDao;
 import org.finra.herd.dao.GlobalAttributeDefinitionLevelDao;
+import org.finra.herd.model.api.xml.AttributeValueList;
+import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinition;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKey;
@@ -48,6 +50,10 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
     @InjectMocks
     private GlobalAttributeDefinitionServiceImpl globalAttributeDefinitionService;
 
+    private AttributeValueListKey attributeValueListKeyNull = null;
+
+    private AttributeValueList attributeValueListNull = null;
+
     @Before
     public void before()
     {
@@ -62,7 +68,7 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
             new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
 
         // Create a global attribute definition create request.
-        GlobalAttributeDefinitionCreateRequest request = new GlobalAttributeDefinitionCreateRequest(globalAttributeDefinitionKey);
+        GlobalAttributeDefinitionCreateRequest request = new GlobalAttributeDefinitionCreateRequest(globalAttributeDefinitionKey, attributeValueListKeyNull);
 
         // Create a global attribute definition level entity.
         GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity = new GlobalAttributeDefinitionLevelEntity();
@@ -90,7 +96,7 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
         verifyNoMoreInteractionsHelper();
 
         // Validate the response.
-        assertEquals(new GlobalAttributeDefinition(GLOBAL_ATTRIBUTE_DEFINITON_ID, globalAttributeDefinitionKey), response);
+        assertEquals(new GlobalAttributeDefinition(GLOBAL_ATTRIBUTE_DEFINITON_ID, globalAttributeDefinitionKey, attributeValueListNull), response);
     }
 
     @Test
@@ -119,7 +125,7 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
             new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_INVALID_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
 
         // Create a global attribute definition create request.
-        GlobalAttributeDefinitionCreateRequest request = new GlobalAttributeDefinitionCreateRequest(globalAttributeDefinitionKey);
+        GlobalAttributeDefinitionCreateRequest request = new GlobalAttributeDefinitionCreateRequest(globalAttributeDefinitionKey, attributeValueListKeyNull);
 
         // Try to call the method under test.
         try
@@ -162,7 +168,7 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
         verifyNoMoreInteractionsHelper();
 
         // Validate.
-        assertEquals(new GlobalAttributeDefinition(response.getId(), globalAttributeDefinitionKey), response);
+        assertEquals(new GlobalAttributeDefinition(response.getId(), globalAttributeDefinitionKey, attributeValueListNull), response);
     }
 
     @Test
