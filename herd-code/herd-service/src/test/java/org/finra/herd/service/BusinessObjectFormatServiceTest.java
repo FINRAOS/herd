@@ -31,12 +31,15 @@ import javax.persistence.PersistenceException;
 
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import org.finra.herd.core.Command;
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.dao.GlobalAttributeDefinitionDaoTestHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
@@ -66,12 +69,22 @@ import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
+import org.finra.herd.service.impl.BusinessObjectFormatServiceImpl;
 
 public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 {
     @Autowired
     @Qualifier(value = "businessObjectFormatServiceImpl")
-    private BusinessObjectFormatService businessObjectFormatServiceImpl;
+    private BusinessObjectFormatServiceImpl businessObjectFormatServiceImpl;
+
+    @Autowired
+    private GlobalAttributeDefinitionDaoTestHelper globalAttributeDefinitionDaoTestHelper;
+    
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
 
     /**
      * This method is to get the coverage for the business object format service method that starts the new transaction.
@@ -4174,5 +4187,112 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         {
             assertEquals(errorMessage, ex.getMessage());
         }
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatWithGlobalAttributeMissing()
+    {
+        globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+
+        try
+        {
+            // Create an initial version of a business object format.
+            BusinessObjectFormat businessObjectFormat =
+                businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
+            fail("should throw exception before");
+        }
+        catch (IllegalArgumentException ex){
+           assertEquals(String.format("Global attribute definition %s is not found.", GLOBAL_ATTRIBUTE_DEFINITON_NAME), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatWithGlobalAttributes()
+    {
+        globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+        //create one non-format level global attribute
+        globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL + "_1", GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        attributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME, "test attribute 1"));
+        
+        // Create an initial version of a business object format.
+        BusinessObjectFormat businessObjectFormat =
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+        // Validate the returned object.
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
+                FORMAT_DESCRIPTION, attributes,
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
+                businessObjectFormat);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatWithMissingGlobalAttributes()
+    {
+        globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+        //create one non-format level global attribute
+        globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL + "_1", GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        attributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME, "test attribute 1"));
+
+        // Create an initial version of a business object format.
+        BusinessObjectFormat businessObjectFormat =
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+        
+        // Create a new partition key group for the update request.
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
+
+        try
+        {
+            // Perform an update by changing the description and schema.
+            BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
+                .createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2(),
+                    businessObjectFormatServiceTestHelper.getTestSchema2());
+            BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService
+                .updateBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                    request);
+            fail("should throw exception before");
+        }  catch (IllegalArgumentException ex){
+            assertEquals(String.format("Global attribute definition %s is not found.", GLOBAL_ATTRIBUTE_DEFINITON_NAME), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatWithGlobalAttributes()
+    {
+        globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+        //create one non-format level global attribute
+        globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL + "_1", GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        attributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME, "test attribute 1"));
+
+        // Create an initial version of a business object format.
+        BusinessObjectFormat businessObjectFormat =
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+
+        // Create a new partition key group for the update request.
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
+
+  
+        List<Attribute> newAttributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        newAttributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME, "test attribute 2"));
+
+        // Perform an update by changing the description and schema.
+        BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, newAttributes,
+                businessObjectFormatServiceTestHelper.getTestSchema2());
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService
+            .updateBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                request);
+
+        // Validate the returned object.
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(businessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION_2,
+                newAttributes, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                businessObjectFormatServiceTestHelper.getTestSchema2(), updatedBusinessObjectFormat);
     }
 }

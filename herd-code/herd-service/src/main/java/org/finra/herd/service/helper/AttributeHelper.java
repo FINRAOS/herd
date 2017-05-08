@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.helper;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKey;
+import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKeys;
+import org.finra.herd.model.jpa.GlobalAttributeDefinitionLevelEntity;
+import org.finra.herd.service.GlobalAttributeDefinitionService;
 
 /**
  * A helper class for Attribute related code.
@@ -33,6 +38,9 @@ public class AttributeHelper
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private GlobalAttributeDefinitionService globalAttributeDefinitionService;
 
     /**
      * Validates the attributes.
@@ -44,9 +52,9 @@ public class AttributeHelper
     public void validateAttributes(List<Attribute> attributes) throws IllegalArgumentException
     {
         // Validate attributes if they are specified.
+        Map<String, String> attributeNameValidationMap = new HashMap<>();
         if (!CollectionUtils.isEmpty(attributes))
         {
-            Map<String, String> attributeNameValidationMap = new HashMap<>();
             for (Attribute attribute : attributes)
             {
                 attribute.setName(alternateKeyHelper.validateStringParameter("An", "attribute name", attribute.getName()));
@@ -60,5 +68,34 @@ public class AttributeHelper
                 attributeNameValidationMap.put(validationMapKey, attribute.getValue());
             }
         }
+        //Validate each format level global attribute exists
+        for (String globalAttributeFormat : getGlobalAttributesDefinitionForFormat())
+        {
+            if (!attributeNameValidationMap.containsKey(globalAttributeFormat.toLowerCase()))
+            {
+                throw new IllegalArgumentException(String.format("Global attribute definition %s is not found.", globalAttributeFormat));
+            }
+        }
+    }
+
+    /**
+     * Return all the format level global attribute definitions
+     *
+     * @return global attribute definitions
+     */
+    public List<String> getGlobalAttributesDefinitionForFormat()
+    {
+        List<String> globalAttributeFormats = new ArrayList<>();
+        GlobalAttributeDefinitionKeys globalAttributesDefinitions = globalAttributeDefinitionService.getGlobalAttributeDefinitionKeys();
+        for (GlobalAttributeDefinitionKey globalAttributeDefinitionKey : globalAttributesDefinitions.getGlobalAttributeDefinitionKeys())
+        {
+            if (GlobalAttributeDefinitionLevelEntity.GlobalAttributeDefinitionLevels.BUS_OBJCT_FRMT.name()
+                .equalsIgnoreCase(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel()))
+            {
+                globalAttributeFormats.add(globalAttributeDefinitionKey.getGlobalAttributeDefinitionName());
+            }
+        }
+
+        return globalAttributeFormats;
     }
 }
