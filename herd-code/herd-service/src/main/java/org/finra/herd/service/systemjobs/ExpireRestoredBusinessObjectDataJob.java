@@ -32,23 +32,23 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
-import org.finra.herd.service.BusinessObjectDataFinalizeRestoreService;
+import org.finra.herd.service.ExpireRestoredBusinessObjectDataService;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.ParameterHelper;
 
 /**
- * The business object data finalize restore system job.
+ * The system job that expires restored business object data.
  */
-@Component(BusinessObjectDataFinalizeRestoreJob.JOB_NAME)
+@Component(ExpireRestoredBusinessObjectDataJob.JOB_NAME)
 @DisallowConcurrentExecution
-public class BusinessObjectDataFinalizeRestoreJob extends AbstractSystemJob
+public class ExpireRestoredBusinessObjectDataJob extends AbstractSystemJob
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataFinalizeRestoreJob.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExpireRestoredBusinessObjectDataJob.class);
 
-    public static final String JOB_NAME = "businessObjectDataFinalizeRestore";
+    public static final String JOB_NAME = "expireRestoredBusinessObjectData";
 
     @Autowired
-    private BusinessObjectDataFinalizeRestoreService businessObjectDataFinalizeRestoreService;
+    private ExpireRestoredBusinessObjectDataService expireRestoredBusinessObjectDataService;
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
@@ -66,45 +66,46 @@ public class BusinessObjectDataFinalizeRestoreJob extends AbstractSystemJob
         LOGGER.info("Started system job. systemJobName=\"{}\"", JOB_NAME);
 
         // Get the parameter values.
-        int maxBusinessObjectDataInstancesToFinalize =
-            parameterHelper.getParameterValueAsInteger(parameters, ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES);
+        int maxBusinessObjectDataInstancesToProcess =
+            parameterHelper.getParameterValueAsInteger(parameters, ConfigurationValue.EXPIRE_RESTORED_BDATA_JOB_MAX_BDATA_INSTANCES);
 
         // Log the parameter values.
-        LOGGER.info("systemJobName=\"{}\" {}={}", JOB_NAME, ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES,
-            maxBusinessObjectDataInstancesToFinalize);
+        LOGGER.info("systemJobName=\"{}\" {}={}", JOB_NAME, ConfigurationValue.EXPIRE_RESTORED_BDATA_JOB_MAX_BDATA_INSTANCES,
+            maxBusinessObjectDataInstancesToProcess);
 
         // Continue the processing only if the maximum number of business object data instances
         // that is allowed to be processed in a single run of this system job is greater than zero.
-        int finalizedRestores = 0;
-        if (maxBusinessObjectDataInstancesToFinalize > 0)
+        int processedBusinessObjectDataInstances = 0;
+        if (maxBusinessObjectDataInstancesToProcess > 0)
         {
-            // Get business object data that is currently being restored.
+            // Select restored business object data that is already expired.
             List<StorageUnitAlternateKeyDto> storageUnitKeys =
-                businessObjectDataFinalizeRestoreService.getS3StorageUnitsToRestore(maxBusinessObjectDataInstancesToFinalize);
+                expireRestoredBusinessObjectDataService.getS3StorageUnitsToExpire(maxBusinessObjectDataInstancesToProcess);
 
             // Log the number of storage units selected for processing.
             LOGGER.info("Selected for processing S3 storage units. systemJobName=\"{}\" storageUnitCount={}", JOB_NAME, storageUnitKeys.size());
 
-            // Try to finalize restore for each of the selected storage units.
+            // Try to expire each of the selected storage units.
             for (StorageUnitAlternateKeyDto storageUnitKey : storageUnitKeys)
             {
                 try
                 {
-                    businessObjectDataFinalizeRestoreService.finalizeRestore(storageUnitKey);
-                    finalizedRestores += 1;
+                    expireRestoredBusinessObjectDataService.expireS3StorageUnit(storageUnitKey);
+                    processedBusinessObjectDataInstances += 1;
                 }
                 catch (RuntimeException runtimeException)
                 {
                     // Log the exception.
-                    LOGGER.error("Failed to finalize a business object data restore from the Glacier storage. " +
-                        "systemJobName=\"{}\" storageName=\"{}\" businessObjectDataKey={}", JOB_NAME, storageUnitKey.getStorageName(),
+                    LOGGER.error("Failed to expire a restored business object data. systemJobName=\"{}\" storageName=\"{}\" businessObjectDataKey={}", JOB_NAME,
+                        storageUnitKey.getStorageName(),
                         jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataKeyFromStorageUnitKey(storageUnitKey)), runtimeException);
                 }
             }
         }
 
         // Log the number of finalized restores.
-        LOGGER.info("Finalized restore for business object data instances. systemJobName=\"{}\" businessObjectDataCount={}", JOB_NAME, finalizedRestores);
+        LOGGER.info("Expired restored business object data instances. systemJobName=\"{}\" businessObjectDataCount={}", JOB_NAME,
+            processedBusinessObjectDataInstances);
 
         // Log that the system job is ended.
         LOGGER.info("Completed system job. systemJobName=\"{}\"", JOB_NAME);
@@ -117,7 +118,7 @@ public class BusinessObjectDataFinalizeRestoreJob extends AbstractSystemJob
         if (!CollectionUtils.isEmpty(parameters))
         {
             Assert.isTrue(parameters.size() == 1, String.format("Too many parameters are specified for \"%s\" system job.", JOB_NAME));
-            Assert.isTrue(parameters.get(0).getName().equalsIgnoreCase(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey()),
+            Assert.isTrue(parameters.get(0).getName().equalsIgnoreCase(ConfigurationValue.EXPIRE_RESTORED_BDATA_JOB_MAX_BDATA_INSTANCES.getKey()),
                 String.format("Parameter \"%s\" is not supported by \"%s\" system job.", parameters.get(0).getName(), JOB_NAME));
             parameterHelper.getParameterValueAsInteger(parameters.get(0));
         }
@@ -126,12 +127,12 @@ public class BusinessObjectDataFinalizeRestoreJob extends AbstractSystemJob
     @Override
     public JobDataMap getJobDataMap()
     {
-        return getJobDataMap(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES);
+        return getJobDataMap(ConfigurationValue.EXPIRE_RESTORED_BDATA_JOB_MAX_BDATA_INSTANCES);
     }
 
     @Override
     public String getCronExpression()
     {
-        return configurationHelper.getProperty(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_CRON_EXPRESSION);
+        return configurationHelper.getProperty(ConfigurationValue.EXPIRE_RESTORED_BDATA_JOB_CRON_EXPRESSION);
     }
 }

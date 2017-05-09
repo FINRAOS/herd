@@ -52,36 +52,18 @@ public class StorageUnitDaoTestHelper
     private StorageUnitStatusDaoTestHelper storageUnitStatusDaoTestHelper;
 
     /**
-     * Create and persist business object data entity in "restoring" state.
+     * Creates and persists a new storage unit entity.
      *
+     * @param storageName the storage name
      * @param businessObjectDataKey the business object data key
-     * @param storageName the origin S3 storage name
-     * @param storageUnitStatus the origin S3 storage unit status
+     * @param storageUnitStatus the storage unit status
      *
-     * @return the business object data entity
+     * @return the newly created storage unit entity
      */
-    public BusinessObjectDataEntity createBusinessObjectDataEntityInRestoringState(BusinessObjectDataKey businessObjectDataKey, String storageName,
-        String storageUnitStatus)
+    public StorageUnitEntity createStorageUnitEntity(String storageName, BusinessObjectDataKey businessObjectDataKey, String storageUnitStatus)
     {
-        // Create and persist a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(businessObjectDataKey, AbstractDaoTest.LATEST_VERSION_FLAG_SET, AbstractDaoTest.BDATA_STATUS);
-
-        // Create and persist an S3 storage entity, if not exists.
-        StorageEntity storageEntity = storageDao.getStorageByName(storageName);
-        if (storageEntity == null)
-        {
-            storageEntity = storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3);
-        }
-
-        // Create and persist a storage unit entity.
-        if (storageUnitStatus != null)
-        {
-            createStorageUnitEntity(storageEntity, businessObjectDataEntity, storageUnitStatus, AbstractDaoTest.NO_STORAGE_DIRECTORY_PATH);
-        }
-
-        // Return the business object data entity.
-        return businessObjectDataEntity;
+        return createStorageUnitEntity(storageName, StoragePlatformEntity.S3, businessObjectDataKey, AbstractDaoTest.LATEST_VERSION_FLAG_SET,
+            AbstractDaoTest.BDATA_STATUS, storageUnitStatus, AbstractDaoTest.NO_STORAGE_DIRECTORY_PATH);
     }
 
     /**
@@ -176,7 +158,7 @@ public class StorageUnitDaoTestHelper
     public StorageUnitEntity createStorageUnitEntity(StorageEntity storageEntity, BusinessObjectDataEntity businessObjectDataEntity, String storageUnitStatus,
         String directoryPath)
     {
-        // Create a storage entity, if not exists.
+        // Create a storage unit status entity, if not exists.
         StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDao.getStorageUnitStatusByCode(storageUnitStatus);
         if (storageUnitStatusEntity == null)
         {

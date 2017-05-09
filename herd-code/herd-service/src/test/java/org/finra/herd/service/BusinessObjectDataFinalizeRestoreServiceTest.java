@@ -227,7 +227,7 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
         // Create database entities required for testing.
         for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
         {
-            storageUnitDaoTestHelper.createBusinessObjectDataEntityInRestoringState(businessObjectDataKey, STORAGE_NAME, StorageUnitStatusEntity.RESTORING);
+            storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, StorageUnitStatusEntity.RESTORING);
         }
 
         // Select the RESTORING storage units.
