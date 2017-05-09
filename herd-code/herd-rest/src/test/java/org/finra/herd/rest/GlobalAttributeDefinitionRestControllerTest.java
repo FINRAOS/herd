@@ -134,4 +134,30 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
             .asList(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME),
                 new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2))), response);
     }
+
+    @Test
+    public void testGetGlobalAttributeDefinition()
+    {
+        // Create a global attribute definition key.
+        GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
+            new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+
+        // Create a global attribute definition.
+        GlobalAttributeDefinition globalAttributeDefinition =
+            new GlobalAttributeDefinition(INTEGER_VALUE, globalAttributeDefinitionKey, attributeValueListNull);
+
+        // Mock calls to external methods.
+        when(globalAttributeDefinitionService.getGlobalAttributeDefinition(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinition);
+
+        // Call the method under test.
+        GlobalAttributeDefinition response =
+            globalAttributeDefinitionRestController.getGlobalAttributeDefinition(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+
+        // Verify the external calls.
+        verify(globalAttributeDefinitionService).getGlobalAttributeDefinition(globalAttributeDefinitionKey);
+        verifyNoMoreInteractions(globalAttributeDefinitionService);
+
+        // Validate the response.
+        assertEquals(globalAttributeDefinition, response);
+    }
 }

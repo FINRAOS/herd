@@ -50,6 +50,13 @@ public class GlobalAttributeDefinitionEntity extends AuditableEntity
     private GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevel;
 
     /**
+     * The attribute value list.
+     */
+    @ManyToOne
+    @JoinColumn(name = "atrbt_value_list_id", referencedColumnName = "atrbt_value_list_id", nullable = true)
+    private AttributeValueListEntity attributeValueListEntity;
+
+    /**
      * The  global attribute definition name.
      */
     @Column(name = TABLE_NAME + "_name_tx", nullable = false)
@@ -83,5 +90,15 @@ public class GlobalAttributeDefinitionEntity extends AuditableEntity
     public void setGlobalAttributeDefinitionName(String globalAttributeDefinitionName)
     {
         this.globalAttributeDefinitionName = globalAttributeDefinitionName;
+    }
+    
+    public AttributeValueListEntity getAttributeValueListEntity()
+    {
+        return attributeValueListEntity;
+    }
+
+    public void setAttributeValueListEntity(AttributeValueListEntity attributeValueListEntity)
+    {
+        this.attributeValueListEntity = attributeValueListEntity;
     }
 }

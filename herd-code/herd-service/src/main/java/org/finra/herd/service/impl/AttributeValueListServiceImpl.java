@@ -172,16 +172,6 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
      */
     private AttributeValueList createAttributeValueListFromEntity(AttributeValueListEntity attributeValueListEntity)
     {
-        // Create the attribute value list.
-        AttributeValueList attributeValueList = new AttributeValueList();
-
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey();
-        attributeValueListKey.setNamespace(attributeValueListEntity.getNamespace().getCode());
-        attributeValueListKey.setAttributeValueListName(attributeValueListEntity.getName());
-
-        attributeValueList.setAttributeValueListKey(attributeValueListKey);
-        attributeValueList.setId(attributeValueListEntity.getId());
-
-        return attributeValueList;
+        return attributeValueListDaoHelper.createAttributeValueListFromEntity(attributeValueListEntity);
     }
 }
