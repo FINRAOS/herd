@@ -59,5 +59,4 @@ public interface GlobalAttributeDefinitionService
      * @return the global attribute definition
      */
     public GlobalAttributeDefinition getGlobalAttributeDefinition(GlobalAttributeDefinitionKey globalAttributeDefinitionKey);
-
 }

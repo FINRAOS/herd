@@ -42,6 +42,9 @@ public class AttributeHelper
     @Autowired
     private GlobalAttributeDefinitionService globalAttributeDefinitionService;
 
+    @Autowired
+    private GlobalAttributeDefinitionDaoHelper globalAttributeDefinitionDaoHelper;
+
     /**
      * Validates the attributes.
      *
@@ -68,12 +71,28 @@ public class AttributeHelper
                 attributeNameValidationMap.put(validationMapKey, attribute.getValue());
             }
         }
-        //Validate each format level global attribute exists
-        for (String globalAttributeFormat : getGlobalAttributesDefinitionForFormat())
+        //Validate each format level global attribute exists and attribute value is from allowed list, if the allowed list exists
+        for (GlobalAttributeDefinitionKey globalAttributeFormat : getGlobalAttributesDefinitionForFormat())
         {
-            if (!attributeNameValidationMap.containsKey(globalAttributeFormat.toLowerCase()))
+            String globalAttributeDefinitionNameOriginal = globalAttributeFormat.getGlobalAttributeDefinitionName();
+            String globalAttributeDefinitionName = globalAttributeDefinitionNameOriginal.toLowerCase();
+            if (!attributeNameValidationMap.containsKey(globalAttributeDefinitionName))
             {
-                throw new IllegalArgumentException(String.format("Global attribute definition %s is not found.", globalAttributeFormat));
+                throw new IllegalArgumentException(
+                    String.format("Global attribute definition %s is not found.", globalAttributeDefinitionNameOriginal));
+            }
+            else
+            {
+                List<String> allowedAttributeValues = globalAttributeDefinitionDaoHelper.getAllowedAttributeValues(globalAttributeFormat);
+                if (allowedAttributeValues != null)
+                {
+                    String attributeValue = attributeNameValidationMap.get(globalAttributeDefinitionName);
+                    if (!allowedAttributeValues.contains(attributeValue))
+                    {
+                        throw new IllegalArgumentException(String.format("Global attribute definition %s value %s is  not from allowed attribute values.",
+                            globalAttributeDefinitionNameOriginal, attributeValue));
+                    }
+                }
             }
         }
     }
@@ -81,21 +100,21 @@ public class AttributeHelper
     /**
      * Return all the format level global attribute definitions
      *
-     * @return global attribute definitions
+     * @return global attribute definition keys
      */
-    public List<String> getGlobalAttributesDefinitionForFormat()
+    public List<GlobalAttributeDefinitionKey> getGlobalAttributesDefinitionForFormat()
     {
-        List<String> globalAttributeFormats = new ArrayList<>();
+        List<GlobalAttributeDefinitionKey> globalAttributeDefinitionKeys = new ArrayList<>();
         GlobalAttributeDefinitionKeys globalAttributesDefinitions = globalAttributeDefinitionService.getGlobalAttributeDefinitionKeys();
         for (GlobalAttributeDefinitionKey globalAttributeDefinitionKey : globalAttributesDefinitions.getGlobalAttributeDefinitionKeys())
         {
             if (GlobalAttributeDefinitionLevelEntity.GlobalAttributeDefinitionLevels.BUS_OBJCT_FRMT.name()
                 .equalsIgnoreCase(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel()))
             {
-                globalAttributeFormats.add(globalAttributeDefinitionKey.getGlobalAttributeDefinitionName());
+                globalAttributeDefinitionKeys.add(globalAttributeDefinitionKey);
             }
         }
 
-        return globalAttributeFormats;
+        return globalAttributeDefinitionKeys;
     }
 }
