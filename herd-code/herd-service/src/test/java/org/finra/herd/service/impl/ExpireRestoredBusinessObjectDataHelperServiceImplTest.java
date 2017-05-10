@@ -25,7 +25,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -316,9 +315,6 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImplTest extends Abstr
         // Create a list of storage files.
         List<StorageFile> storageFiles = Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT));
 
-        // Create a list of file paths.
-        List<String> filePaths = Arrays.asList(S3_KEY);
-
         // Mock the external calls.
         when(businessObjectDataHelper.createBusinessObjectDataKeyFromStorageUnitKey(storageUnitKey)).thenReturn(businessObjectDataKey);
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
@@ -326,9 +322,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImplTest extends Abstr
         when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME)).thenReturn(S3_ATTRIBUTE_NAME_BUCKET_NAME);
         when(storageHelper.getStorageAttributeValueByName(S3_ATTRIBUTE_NAME_BUCKET_NAME, storageEntity, true)).thenReturn(S3_BUCKET_NAME);
         when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn(S3_KEY_PREFIX);
-        when(storageFileHelper.createStorageFilesFromEntities(storageFileEntities)).thenReturn(storageFiles);
-        when(businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING);
-        when(storageFileHelper.getFilePathsFromStorageFiles(storageFiles)).thenReturn(filePaths);
+        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey)).thenReturn(storageFiles);
         doAnswer(new Answer<Void>()
         {
             public Void answer(InvocationOnMock invocation)
@@ -352,10 +346,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImplTest extends Abstr
         verify(configurationHelper).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME);
         verify(storageHelper).getStorageAttributeValueByName(S3_ATTRIBUTE_NAME_BUCKET_NAME, storageEntity, true);
         verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
-        verify(storageFileHelper).createStorageFilesFromEntities(storageFileEntities);
-        verify(businessObjectDataHelper).businessObjectDataKeyToString(businessObjectDataKey);
-        verify(storageFileHelper).getFilePathsFromStorageFiles(storageFiles);
-        verify(storageFileHelper).validateStorageFiles(filePaths, S3_KEY_PREFIX, businessObjectDataEntity, STORAGE_NAME);
+        verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey);
         verify(storageFileDaoHelper).validateStorageFilesCount(STORAGE_NAME, businessObjectDataKey, S3_KEY_PREFIX, storageFiles.size());
         verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.EXPIRING, StorageUnitStatusEntity.EXPIRING);
         verify(configurationHelper).getProperty(ConfigurationValue.S3_ENDPOINT);
@@ -365,84 +356,6 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImplTest extends Abstr
         assertEquals(
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, StorageUnitStatusEntity.EXPIRING,
                 StorageUnitStatusEntity.RESTORED, storageFiles, NO_EXCEPTION), result);
-    }
-
-    @Test
-    public void testPrepareToExpireStorageUnitNoRegisteredStorageFiles()
-    {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
-
-        // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey =
-            new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
-
-        // Create a storage entity.
-        StorageEntity storageEntity = new StorageEntity();
-        storageEntity.setName(STORAGE_NAME);
-
-        // Create a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
-
-        // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
-        businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
-
-        // Create a new storage unit status entity.
-        StorageUnitStatusEntity newStorageUnitStatusEntity = new StorageUnitStatusEntity();
-        newStorageUnitStatusEntity.setCode(StorageUnitStatusEntity.EXPIRING);
-
-        // Create an old storage unit status entity.
-        StorageUnitStatusEntity oldStorageUnitStatusEntity = new StorageUnitStatusEntity();
-        oldStorageUnitStatusEntity.setCode(StorageUnitStatusEntity.RESTORED);
-
-        // Create a list of storage file entities.
-        List<StorageFileEntity> storageFileEntities = Arrays.asList(new StorageFileEntity());
-
-        // Create a storage unit entity.
-        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
-        storageUnitEntity.setStorage(storageEntity);
-        storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
-        storageUnitEntity.setStatus(oldStorageUnitStatusEntity);
-        storageUnitEntity.setStorageFiles(storageFileEntities);
-
-        // Create an empty list of storage files.
-        List<StorageFile> storageFiles = new ArrayList<>();
-
-        // Mock the external calls.
-        when(businessObjectDataHelper.createBusinessObjectDataKeyFromStorageUnitKey(storageUnitKey)).thenReturn(businessObjectDataKey);
-        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
-        when(storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity)).thenReturn(storageUnitEntity);
-        when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME)).thenReturn(S3_ATTRIBUTE_NAME_BUCKET_NAME);
-        when(storageHelper.getStorageAttributeValueByName(S3_ATTRIBUTE_NAME_BUCKET_NAME, storageEntity, true)).thenReturn(S3_BUCKET_NAME);
-        when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn(S3_KEY_PREFIX);
-        when(storageFileHelper.createStorageFilesFromEntities(storageFileEntities)).thenReturn(storageFiles);
-        when(businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING);
-
-        // Try to call the method under test.
-        try
-        {
-            expireRestoredBusinessObjectDataHelperServiceImpl.prepareToExpireStorageUnit(storageUnitKey);
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(String.format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}", STORAGE_NAME,
-                BUSINESS_OBJECT_DATA_KEY_AS_STRING), e.getMessage());
-        }
-
-        // Verify the external calls.
-        verify(businessObjectDataHelper).createBusinessObjectDataKeyFromStorageUnitKey(storageUnitKey);
-        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
-        verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
-        verify(configurationHelper).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME);
-        verify(storageHelper).getStorageAttributeValueByName(S3_ATTRIBUTE_NAME_BUCKET_NAME, storageEntity, true);
-        verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
-        verify(storageFileHelper).createStorageFilesFromEntities(storageFileEntities);
-        verify(businessObjectDataHelper).businessObjectDataKeyToString(businessObjectDataKey);
-        verifyNoMoreInteractionsHelper();
     }
 
     /**

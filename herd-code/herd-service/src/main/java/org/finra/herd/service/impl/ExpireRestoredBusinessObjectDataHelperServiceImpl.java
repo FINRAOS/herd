@@ -20,13 +20,11 @@ import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -240,18 +238,8 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
         String s3KeyPrefix =
             s3KeyPrefixHelper.buildS3KeyPrefix(storageUnitEntity.getStorage(), businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
 
-        // Retrieve storage files registered with this business object data in the storage.
-        List<StorageFile> storageFiles = storageFileHelper.createStorageFilesFromEntities(storageUnitEntity.getStorageFiles());
-
-        // Validate that we have storage files registered in the storage.
-        Assert.isTrue(!CollectionUtils.isEmpty(storageFiles), String
-            .format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}", storageName,
-                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-
-        // Validate storage file paths registered with this business object data in the specified storage.
-        storageFileHelper
-            .validateStorageFiles(storageFileHelper.getFilePathsFromStorageFiles(storageFiles), s3KeyPrefix, storageUnitEntity.getBusinessObjectData(),
-                storageName);
+        // Retrieve and validate storage files registered with the storage unit.
+        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.

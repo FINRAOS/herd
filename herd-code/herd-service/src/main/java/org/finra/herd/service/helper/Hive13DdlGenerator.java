@@ -886,8 +886,8 @@ public class Hive13DdlGenerator extends DdlGenerator
 
                 // Validate storage file paths registered with this business object data in the specified storage.
                 // The validation check below is required even if we have no storage files registered.
-                storageFileHelper
-                    .validateStorageFiles(storageFilePaths, s3KeyPrefix, storageUnitEntity.getBusinessObjectData(), storageUnitEntity.getStorage().getName());
+                storageFileHelper.validateStorageFilePaths(storageFilePaths, s3KeyPrefix, storageUnitEntity.getBusinessObjectData(),
+                    storageUnitEntity.getStorage().getName());
 
                 // If there are no storage files registered for this storage unit, we should use the storage directory path value.
                 if (storageFilePaths.isEmpty())
