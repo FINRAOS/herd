@@ -4271,6 +4271,27 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testCreateBusinessObjectFormatWithMissingGlobalAttributesEmptyValue()
+    {
+        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = createGlobalAttributeDefinitionEntityWithAllowedAttributeValues();
+        String invalidAttributeValue = "";
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        attributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME, invalidAttributeValue));
+
+        try
+        {
+            // Create an initial version of a business object format.
+            BusinessObjectFormat businessObjectFormat =
+                businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+            fail("Should throw exception before");
+        }
+        catch (IllegalArgumentException ex){
+            assertEquals(String.format("The business object format has a required attribute \"%s\" which was not specified or has a value which is blank.",
+                GLOBAL_ATTRIBUTE_DEFINITON_NAME), ex.getMessage());
+        }
+    }
+
+    @Test
     public void testUpdateBusinessObjectFormatWithGlobalAttributes()
     {
         globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
@@ -4326,7 +4347,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             assertEquals(String.format("The business object format attribute \"%s\" value \"%s\" is not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME, invalidAttributeValue), ex.getMessage());
         }
     }
-
+    
     @Test
     public void testCreateBusinessObjectFormatWithGlobalAttributesAndAllowedAttributeValuesNegative2()
     {
