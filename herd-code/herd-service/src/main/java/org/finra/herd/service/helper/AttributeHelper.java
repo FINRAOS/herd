@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -49,10 +50,10 @@ public class AttributeHelper
      * Validates the attributes.
      *
      * @param attributes the attributes to validate. Null shouldn't be specified.
-     *
+     * @return the validated attribute map
      * @throws IllegalArgumentException if any invalid attributes were found.
      */
-    public void validateAttributes(List<Attribute> attributes) throws IllegalArgumentException
+    public  Map<String, String> validateAttributes(List<Attribute> attributes) throws IllegalArgumentException
     {
         // Validate attributes if they are specified.
         Map<String, String> attributeNameValidationMap = new HashMap<>();
@@ -71,15 +72,32 @@ public class AttributeHelper
                 attributeNameValidationMap.put(validationMapKey, attribute.getValue());
             }
         }
+
+        return attributeNameValidationMap;
+    }
+
+    /**
+     * Validate format attributes
+     *
+     * @param attributes the attributes
+     * 
+     * @throws IllegalArgumentException  if any invalid attributes were found.
+     */
+    public void validateFormatAttributes(List<Attribute> attributes) throws IllegalArgumentException
+    {
+        Map<String, String> attributeNameValidationMap = validateAttributes(attributes);
+
         //Validate each format level global attribute exists and attribute value is from allowed list, if the allowed list exists
         for (GlobalAttributeDefinitionKey globalAttributeFormat : getGlobalAttributesDefinitionForFormat())
         {
             String globalAttributeDefinitionNameOriginal = globalAttributeFormat.getGlobalAttributeDefinitionName();
             String globalAttributeDefinitionName = globalAttributeDefinitionNameOriginal.toLowerCase();
-            if (!attributeNameValidationMap.containsKey(globalAttributeDefinitionName))
+            if (!attributeNameValidationMap.containsKey(globalAttributeDefinitionName) ||
+                StringUtils.isBlank(attributeNameValidationMap.get(globalAttributeDefinitionName)))
             {
-                throw new IllegalArgumentException(
-                    String.format("Global attribute definition %s is not found.", globalAttributeDefinitionNameOriginal));
+                throw new IllegalArgumentException(String
+                    .format("The business object format has a required attribute \"%s\" which was not specified or has a value which is blank.",
+                        globalAttributeDefinitionNameOriginal));
             }
             else
             {
@@ -89,8 +107,9 @@ public class AttributeHelper
                     String attributeValue = attributeNameValidationMap.get(globalAttributeDefinitionName);
                     if (!allowedAttributeValues.contains(attributeValue))
                     {
-                        throw new IllegalArgumentException(String.format("Global attribute definition %s value %s is  not from allowed attribute values.",
-                            globalAttributeDefinitionNameOriginal, attributeValue));
+                        throw new IllegalArgumentException(String
+                            .format("The business object format attribute \"%s\" value \"%s\" is not from allowed attribute values.",
+                                globalAttributeDefinitionNameOriginal, attributeValue));
                     }
                 }
             }

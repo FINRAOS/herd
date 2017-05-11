@@ -17,6 +17,7 @@ package org.finra.herd.service;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionRequest;
@@ -51,5 +52,7 @@ public interface BusinessObjectFormatService
 
     public BusinessObjectFormat updateBusinessObjectFormatParents(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatParentsUpdateRequest businessObjectFormatParentsUpdateRequest);
-    
+
+    public BusinessObjectFormat updateBusinessObjectFormatAttributes(BusinessObjectFormatKey businessObjectFormatKey,
+        BusinessObjectFormatAttributesUpdateRequest businessObjectFormatAttributesUpdateRequest);
 }

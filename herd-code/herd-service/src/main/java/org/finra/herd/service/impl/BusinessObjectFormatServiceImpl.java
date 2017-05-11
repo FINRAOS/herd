@@ -49,6 +49,7 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionRequest;
@@ -247,7 +248,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
 
         // Validate optional attributes. This is also going to trim the attribute names.
-        attributeHelper.validateAttributes(request.getAttributes());
+        attributeHelper.validateFormatAttributes(request.getAttributes());
 
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
@@ -582,6 +583,26 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
 
+    @Override
+    public BusinessObjectFormat updateBusinessObjectFormatAttributes(BusinessObjectFormatKey businessObjectFormatKey,
+        BusinessObjectFormatAttributesUpdateRequest businessObjectFormatAttributesUpdateRequest)
+    {
+        // Perform validation and trim the alternate key parameters.
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
+
+        Assert.notNull(businessObjectFormatAttributesUpdateRequest, "A business object format attributes update request is required.");
+        List<Attribute> attributes = businessObjectFormatAttributesUpdateRequest.getAttributes();
+        // Validate optional attributes. This is also going to trim the attribute names.
+        attributeHelper.validateFormatAttributes(attributes);
+
+        // Retrieve and ensure that a business object format exists.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+
+        businessObjectFormatDaoHelper.updateBusinessObjectFormatAttributes(businessObjectFormatEntity, attributes);
+        // Create and return the business object format object from the persisted entity.
+        return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
+    }
+
 
     /**
      * Retrieves the DDL to initialize the specified type of the database system (e.g. Hive) by creating a table for the requested business object format.
@@ -703,7 +724,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         request.setPartitionKey(alternateKeyHelper.validateStringParameter("partition key", request.getPartitionKey()));
 
         // Validate attributes.
-        attributeHelper.validateAttributes(request.getAttributes());
+        attributeHelper.validateFormatAttributes(request.getAttributes());
 
         // Validate attribute definitions if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributeDefinitions()))

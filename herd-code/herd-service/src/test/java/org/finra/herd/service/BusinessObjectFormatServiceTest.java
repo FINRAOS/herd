@@ -4209,8 +4209,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
             fail("should throw exception before");
         }
-        catch (IllegalArgumentException ex){
-           assertEquals(String.format("Global attribute definition %s is not found.", GLOBAL_ATTRIBUTE_DEFINITON_NAME), ex.getMessage());
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(String.format("The business object format has a required attribute \"%s\" which was not specified or has a value which is blank.",
+                GLOBAL_ATTRIBUTE_DEFINITON_NAME), ex.getMessage());
         }
     }
 
@@ -4263,7 +4265,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                     request);
             fail("should throw exception before");
         }  catch (IllegalArgumentException ex){
-            assertEquals(String.format("Global attribute definition %s is not found.", GLOBAL_ATTRIBUTE_DEFINITON_NAME), ex.getMessage());
+            assertEquals(String.format("The business object format has a required attribute \"%s\" which was not specified or has a value which is blank.",
+                 GLOBAL_ATTRIBUTE_DEFINITON_NAME), ex.getMessage());
         }
     }
 
@@ -4320,7 +4323,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             fail("Should throw exception before");
         }
         catch (IllegalArgumentException ex){
-            assertEquals(String.format("Global attribute definition %s value %s is  not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME, invalidAttributeValue), ex.getMessage());
+            assertEquals(String.format("The business object format attribute \"%s\" value \"%s\" is not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME, invalidAttributeValue), ex.getMessage());
         }
     }
 
@@ -4343,7 +4346,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             fail("Should throw exception before");
         }
         catch (IllegalArgumentException ex){
-            assertEquals(String.format("Global attribute definition %s value %s is  not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME, ALLOWED_ATTRIBUTE_VALUE.toLowerCase()), ex.getMessage());
+            assertEquals(String.format("The business object format attribute \"%s\" value \"%s\" is not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME, ALLOWED_ATTRIBUTE_VALUE.toLowerCase()), ex.getMessage());
         }
     }
     
