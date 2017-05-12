@@ -121,7 +121,7 @@ public class BusinessObjectFormatDaoHelper
                     attributeEntity.setValue(attribute.getValue());
 
                     // Add this entity to the list of the newly created business object definition attribute entities.
-                    retainedAttributeEntities.add(attributeEntity);
+                    createdAttributeEntities.add(attributeEntity);
                 }
             }
         }

@@ -50,6 +50,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionRequest;
@@ -4387,6 +4388,29 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 FORMAT_DESCRIPTION, attributes,
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
                 businessObjectFormat);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatAttributes()
+    {
+        // Create an initial version of a business object format with format description and schema information.
+        BusinessObjectFormat originalBusinessObjectFormat =
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes2();
+        BusinessObjectFormatAttributesUpdateRequest request = new BusinessObjectFormatAttributesUpdateRequest(attributes);
+
+        // Perform an update by changing the description and schema.
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService
+            .updateBusinessObjectFormatAttributes(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                request);
+
+        // Validate the returned object.
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION,
+                attributes, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
     }
     
     private GlobalAttributeDefinitionEntity createGlobalAttributeDefinitionEntityWithAllowedAttributeValues()

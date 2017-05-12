@@ -583,6 +583,16 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
 
+    /**
+     * Updates a business object format attributes.
+     *
+     * @param businessObjectFormatKey the business object format key
+     * @param businessObjectFormatAttributesUpdateRequest the business object format attributes update request
+     *
+     * @return the updated business object format.
+     */
+    @PublishJmsMessages
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormatAttributes(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatAttributesUpdateRequest businessObjectFormatAttributesUpdateRequest)
@@ -591,6 +601,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
 
         Assert.notNull(businessObjectFormatAttributesUpdateRequest, "A business object format attributes update request is required.");
+        Assert.notNull(businessObjectFormatAttributesUpdateRequest.getAttributes(), "A business object format attributes list is required.");
         List<Attribute> attributes = businessObjectFormatAttributesUpdateRequest.getAttributes();
         // Validate optional attributes. This is also going to trim the attribute names.
         attributeHelper.validateFormatAttributes(attributes);
