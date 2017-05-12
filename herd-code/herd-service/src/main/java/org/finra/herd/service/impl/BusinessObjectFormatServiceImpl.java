@@ -608,8 +608,12 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
-
+        // Update the business object format attributes
         businessObjectFormatDaoHelper.updateBusinessObjectFormatAttributes(businessObjectFormatEntity, attributes);
+
+        // Persist and refresh the entity.
+        businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
+        
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
