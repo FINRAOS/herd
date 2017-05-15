@@ -90,10 +90,10 @@ public class GlobalAttributeDefinitionDaoHelper
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
             globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey);
 
-        if (globalAttributeDefinitionEntity.getAttributeValueListEntity() != null)
+        if (globalAttributeDefinitionEntity.getAttributeValueList() != null)
         {
             allowedAttributeValues = new ArrayList<>();
-            Collection<AllowedAttributeValueEntity> list = globalAttributeDefinitionEntity.getAttributeValueListEntity().getAllowedAttributeValues();
+            Collection<AllowedAttributeValueEntity> list = globalAttributeDefinitionEntity.getAttributeValueList().getAllowedAttributeValues();
             for (AllowedAttributeValueEntity allowedAttributeValueEntity : list)
             {
                 allowedAttributeValues.add(allowedAttributeValueEntity.getAllowedAttributeValue());

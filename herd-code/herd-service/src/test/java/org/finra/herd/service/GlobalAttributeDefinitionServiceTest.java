@@ -214,7 +214,7 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
             globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
         AttributeValueListEntity attributeValueListEntity = attributeValueListDaoTestHelper.createAttributeValueListEntity("namespace_1", "list_1");
-        globalAttributeDefinitionEntity.setAttributeValueListEntity(attributeValueListEntity);
+        globalAttributeDefinitionEntity.setAttributeValueList(attributeValueListEntity);
         
         // Mock calls to external methods.
         when(globalAttributeDefinitionDaoHelper.getGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinitionEntity);

@@ -4427,7 +4427,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         attributeValueListEntity.getAllowedAttributeValues().addAll(allowedAttributeValueEntities);
 
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
-        globalAttributeDefinitionEntity.setAttributeValueListEntity(attributeValueListEntity);
+        globalAttributeDefinitionEntity.setAttributeValueList(attributeValueListEntity);
         
         return globalAttributeDefinitionEntity;
     }

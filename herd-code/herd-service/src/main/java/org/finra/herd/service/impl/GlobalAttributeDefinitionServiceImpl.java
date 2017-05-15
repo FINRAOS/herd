@@ -160,7 +160,7 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
             .setGlobalAttributeDefinitionLevel(globalAttributeDefinitionEntity.getGlobalAttributeDefinitionLevel().getGlobalAttributeDefinitionLevel());
         globalAttributeDefinitionKey.setGlobalAttributeDefinitionName(globalAttributeDefinitionEntity.getGlobalAttributeDefinitionName());
         globalAttributeDefinition.setGlobalAttributeDefinitionKey(globalAttributeDefinitionKey);
-        AttributeValueListEntity attributeValueListEntity = globalAttributeDefinitionEntity.getAttributeValueListEntity();
+        AttributeValueListEntity attributeValueListEntity = globalAttributeDefinitionEntity.getAttributeValueList();
         if (attributeValueListEntity != null)
         {
             globalAttributeDefinition.setAttributeValueList(attributeValueListDaoHelper.createAttributeValueListFromEntity(attributeValueListEntity));
@@ -184,7 +184,7 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = new GlobalAttributeDefinitionEntity();
         globalAttributeDefinitionEntity.setGlobalAttributeDefinitionLevel(globalAttributeDefinitionLevelEntity);
         globalAttributeDefinitionEntity.setGlobalAttributeDefinitionName(globalAttributeDefinitionKey.getGlobalAttributeDefinitionName());
-        globalAttributeDefinitionEntity.setAttributeValueListEntity(attributeValueListEntity);
+        globalAttributeDefinitionEntity.setAttributeValueList(attributeValueListEntity);
         return globalAttributeDefinitionDao.saveAndRefresh(globalAttributeDefinitionEntity);
     }
 }
