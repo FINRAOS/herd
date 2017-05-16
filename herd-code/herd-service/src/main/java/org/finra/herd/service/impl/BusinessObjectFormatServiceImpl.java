@@ -259,7 +259,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Validate optional schema information.  This is also going to trim the relative schema column field values.
         validateBusinessObjectFormatSchema(request.getSchema(), businessObjectFormatEntity.getPartitionKey());
         // Update business object format attributes
-        updateBusinessObjectFormatAttributes(businessObjectFormatEntity, request.getAttributes());
+        updateBusinessObjectFormatAttributesHelper(businessObjectFormatEntity, request.getAttributes());
 
         // Get business object format model object.
         BusinessObjectFormat businessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
@@ -554,7 +554,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
         // Update the business object format attributes
-        updateBusinessObjectFormatAttributes(businessObjectFormatEntity, attributes);
+        updateBusinessObjectFormatAttributesHelper(businessObjectFormatEntity, attributes);
 
         // Persist and refresh the entity.
         businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
@@ -1229,7 +1229,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      * @param businessObjectFormatEntity the business object format entity
      * @param attributes the attributes
      */
-    private void updateBusinessObjectFormatAttributes(BusinessObjectFormatEntity businessObjectFormatEntity, List<Attribute> attributes)
+    private void updateBusinessObjectFormatAttributesHelper(BusinessObjectFormatEntity businessObjectFormatEntity, List<Attribute> attributes)
     {
         // Update the attributes.
         // Load all existing attribute entities in a map with a "lowercase" attribute name as the key for case insensitivity.
