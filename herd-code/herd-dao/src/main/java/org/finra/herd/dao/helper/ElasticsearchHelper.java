@@ -36,6 +36,7 @@ import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchKey;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
+import org.finra.herd.model.dto.FacetTypeEnum;
 import org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
@@ -372,7 +373,7 @@ public class ElasticsearchHelper
             List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
 
             TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
-                new TagTypeIndexSearchResponseDto(tagTypeCodeEntry.getKeyAsString(), tagTypeCodeEntry.getDocCount(), tagIndexSearchResponseDtos);
+                new TagTypeIndexSearchResponseDto(tagTypeCodeEntry.getKeyAsString(), tagTypeCodeEntry.getDocCount(), tagIndexSearchResponseDtos, null);
             tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
             Terms tagTypeDisplayNameAggs = tagTypeCodeEntry.getAggregations().get(TAGTYPE_NAME_AGGREGATION);
@@ -385,7 +386,7 @@ public class ElasticsearchHelper
 
                 for (Terms.Bucket tagCodeEntry : tagCodeAggs.getBuckets())
                 {
-                    tagIndexSearchResponseDto = new TagIndexSearchResponseDto(tagCodeEntry.getKeyAsString(), tagCodeEntry.getDocCount());
+                    tagIndexSearchResponseDto = new TagIndexSearchResponseDto(tagCodeEntry.getKeyAsString(), tagCodeEntry.getDocCount(), null);
                     tagIndexSearchResponseDtos.add(tagIndexSearchResponseDto);
 
                     Terms tagNameAggs = tagCodeEntry.getAggregations().get(TAG_NAME_AGGREGATION);
@@ -446,16 +447,16 @@ public class ElasticsearchHelper
             for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos())
             {
                 long facetCount = tagIndexSearchResponseDto.getCount();
-                Facet tagFacet = new Facet(tagIndexSearchResponseDto.getTagDisplayName(), facetCount, TagIndexSearchResponseDto.getFacetType(),
-                    tagIndexSearchResponseDto.getTagCode(), null);
+                Facet tagFacet =
+                    new Facet(tagIndexSearchResponseDto.getTagDisplayName(), facetCount, FacetTypeEnum.TAG.value(), tagIndexSearchResponseDto.getTagCode(),
+                        null);
                 tagFacets.add(tagFacet);
             }
         }
 
         long facetCount = tagTypeIndexSearchResponseDto.getCount();
-        return new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), facetCount, TagTypeIndexSearchResponseDto.getFacetType(),
-            tagTypeIndexSearchResponseDto.getCode(), tagFacets);
-
+        return new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), facetCount, FacetTypeEnum.TAG_TYPE.value(), tagTypeIndexSearchResponseDto.getCode(),
+            tagFacets);
     }
 
     /**
@@ -508,8 +509,8 @@ public class ElasticsearchHelper
                             if (!foundMatchingTagCode)
                             {
                                 tagFacet.getFacets().add(
-                                    new Facet(tagIndexDto.getTagDisplayName(), tagIndexDto.getCount(), TagIndexSearchResponseDto.getFacetType(),
-                                        tagIndexDto.getTagCode(), null));
+                                    new Facet(tagIndexDto.getTagDisplayName(), tagIndexDto.getCount(), FacetTypeEnum.TAG.value(), tagIndexDto.getTagCode(),
+                                        null));
                             }
                         }
                     }
@@ -521,7 +522,6 @@ public class ElasticsearchHelper
             }
         }
 
-
         if (elasticsearchResponseDto.getResultTypeIndexSearchResponseDtos() != null)
         {
             List<Facet> resultTypeFacets = new ArrayList<>();
@@ -529,7 +529,7 @@ public class ElasticsearchHelper
             for (ResultTypeIndexSearchResponseDto resultTypeIndexSearchResponseDto : elasticsearchResponseDto.getResultTypeIndexSearchResponseDtos())
             {
                 Facet resultTypeFacet = new Facet(resultTypeIndexSearchResponseDto.getResultTypeDisplayName(), resultTypeIndexSearchResponseDto.getCount(),
-                    ResultTypeIndexSearchResponseDto.getFacetType(), resultTypeIndexSearchResponseDto.getResultTypeCode(), null);
+                    FacetTypeEnum.RESULT_TYPE.value(), resultTypeIndexSearchResponseDto.getResultTypeCode(), null);
                 resultTypeFacets.add(resultTypeFacet);
             }
             facets.addAll(resultTypeFacets);

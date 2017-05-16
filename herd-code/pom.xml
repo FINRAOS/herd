@@ -208,6 +208,7 @@
                       deprecated activiti tasks.
                      -->
                   <excludes>
+                     <exclude>com/kscs/util/jaxb/**</exclude>
                      <exclude>org/finra/herd/model/**</exclude>
                      <exclude>org/finra/herd/**/config/**</exclude>
                      <exclude>org/finra/herd/dao/**/*OperationsImpl.class</exclude>

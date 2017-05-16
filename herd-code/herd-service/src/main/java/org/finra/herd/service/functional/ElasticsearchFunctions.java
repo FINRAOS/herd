@@ -649,7 +649,7 @@ public class ElasticsearchFunctions implements SearchFunctions
 
             TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
                 new TagTypeIndexSearchResponseDto(tagTypeCodeEntry.getKeyAsString(),
-                    tagTypeFacetAgg.getBucketByKey(tagTypeCodeEntry.getKeyAsString()).getDocCount(), tagIndexSearchResponseDtos);
+                    tagTypeFacetAgg.getBucketByKey(tagTypeCodeEntry.getKeyAsString()).getDocCount(), tagIndexSearchResponseDtos, null);
             tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
             Terms tagTypeDisplayNameAggs = tagTypeCodeEntry.getAggregations().get(TAGTYPE_NAME_AGGREGATION);
@@ -662,7 +662,7 @@ public class ElasticsearchFunctions implements SearchFunctions
 
                 for (Terms.Bucket tagCodeEntry : tagCodeAggs.getBuckets())
                 {
-                    tagIndexSearchResponseDto = new TagIndexSearchResponseDto(tagCodeEntry.getKeyAsString(), tagCodeEntry.getDocCount());
+                    tagIndexSearchResponseDto = new TagIndexSearchResponseDto(tagCodeEntry.getKeyAsString(), tagCodeEntry.getDocCount(), null);
                     tagIndexSearchResponseDtos.add(tagIndexSearchResponseDto);
 
                     Terms tagNameAggs = tagCodeEntry.getAggregations().get(TAG_NAME_AGGREGATION);

@@ -85,6 +85,16 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="businessObjectDefinitionIndexSearchResponseDto">
+      <xs:sequence>
+         <xs:element name="dataProvider" type="xs:string" minOccurs="0"/>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+         <xs:element name="name" type="xs:string" minOccurs="0"/>
+         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="businessObjectDefinitionSampleFileUpdateDto">
       <xs:sequence>
          <xs:element name="path" type="xs:string" minOccurs="0"/>
@@ -134,6 +144,16 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="elasticsearchResponseDto">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionIndexSearchResponseDtos" type="businessObjectDefinitionIndexSearchResponseDto" minOccurs="0"
+                     maxOccurs="unbounded"/>
+         <xs:element name="tagTypeIndexSearchResponseDtos" type="tagTypeIndexSearchResponseDto" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="nestTagTypeIndexSearchResponseDtos" type="tagTypeIndexSearchResponseDto" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="resultTypeIndexSearchResponseDtos" type="resultTypeIndexSearchResponseDto" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="elasticsearchSettingsDto">
       <xs:sequence>
          <xs:element name="clientTransportAddresses" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
@@ -166,6 +186,14 @@
          </xs:appinfo>
       </xs:annotation>
    </xs:complexType>
+
+   <xs:simpleType name="facetTypeEnum">
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="ResultType"/>
+         <xs:enumeration value="Tag"/>
+         <xs:enumeration value="TagType"/>
+      </xs:restriction>
+   </xs:simpleType>
 
    <xs:complexType name="file">
       <xs:annotation>
@@ -236,6 +264,14 @@
          <xs:element name="regServerPort" type="xs:int" minOccurs="0"/>
          <xs:element name="useSsl" type="xs:boolean" minOccurs="0"/>
          <xs:element name="username" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="resultTypeIndexSearchResponseDto">
+      <xs:sequence>
+         <xs:element name="resultTypeCode" type="xs:string" minOccurs="0"/>
+         <xs:element name="count" type="xs:long"/>
+         <xs:element name="resultTypeDisplayName" type="xs:string" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 
@@ -373,6 +409,23 @@
             <jaxb:class ref="org.finra.herd.model.jpa.StorageUnitNotificationRegistrationEntity"/>
          </xs:appinfo>
       </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="tagIndexSearchResponseDto">
+      <xs:sequence>
+         <xs:element name="tagCode" type="xs:string" minOccurs="0"/>
+         <xs:element name="count" type="xs:long"/>
+         <xs:element name="tagDisplayName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="tagTypeIndexSearchResponseDto">
+      <xs:sequence>
+         <xs:element name="code" type="xs:string" minOccurs="0"/>
+         <xs:element name="count" type="xs:long"/>
+         <xs:element name="tagIndexSearchResponseDtos" type="tagIndexSearchResponseDto" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
    </xs:complexType>
 
 </xs:schema>

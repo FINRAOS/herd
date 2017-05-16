@@ -52,13 +52,16 @@
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataNotificationEventParamsDto"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataNotificationEventParamsDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataRestoreDto"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto"/>
          <Class name="~org.finra.herd.model.dto.CompleteUploadSingleParamsDto"/>
          <Class name="~org.finra.herd.model.dto.DateRangeDto"/>
          <Class name="~org.finra.herd.model.dto.Ec2PriceDto"/>
+         <Class name="~org.finra.herd.model.dto.ElasticsearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.ElasticsearchSettingsDto"/>
          <Class name="~org.finra.herd.model.dto.EmrClusterAlternateKeyDto"/>
          <Class name="~org.finra.herd.model.dto.EmrClusterPriceDto"/>
+         <Class name="~org.finra.herd.model.dto.FacetTypeEnum"/>
          <Class name="~org.finra.herd.model.dto.HivePartitionDto"/>
          <Class name="~org.finra.herd.model.dto.IndexSearchHighlightField"/>
          <Class name="~org.finra.herd.model.dto.IndexSearchHighlightFields"/>
@@ -67,6 +70,7 @@
          <Class name="~org.finra.herd.model.dto.NotificationEventParamsDto"/>
          <Class name="~org.finra.herd.model.dto.ObjectFactory"/>
          <Class name="~org.finra.herd.model.dto.RegServerAccessParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.S3FileCopyRequestParamsDto"/>
          <Class name="~org.finra.herd.model.dto.S3FileCopyRequestParamsDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.S3FileTransferRequestParamsDto"/>
@@ -79,6 +83,8 @@
          <Class name="~org.finra.herd.model.dto.StorageUnitAlternateKeyDto"/>
          <Class name="~org.finra.herd.model.dto.StorageUnitNotificationEventParamsDto"/>
          <Class name="~org.finra.herd.model.dto.StorageUnitNotificationEventParamsDto\$Builder"/>
+         <Class name="~org.finra.herd.model.dto.TagIndexSearchResponseDto"/>
+         <Class name="~org.finra.herd.model.dto.TagTypeIndexSearchResponseDto"/>
       </Or>
    </Match>
 
