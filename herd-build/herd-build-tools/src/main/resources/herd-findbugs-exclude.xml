@@ -44,6 +44,44 @@
       <Package name="~org.finra.herd.model.api.xml.*"/>
    </Match>
 
+   <!-- Exclude the XSD auto-generated DTO classes. -->
+   <!-- Since the package contains both auto-generated and regular classes, we explicitly list all auto-generated classes here. -->
+   <Match>
+      <Or>
+         <Class name="~org.finra.herd.model.dto.AwsParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDataNotificationEventParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDataNotificationEventParamsDto\$Builder"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDataRestoreDto"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto"/>
+         <Class name="~org.finra.herd.model.dto.CompleteUploadSingleParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.DateRangeDto"/>
+         <Class name="~org.finra.herd.model.dto.Ec2PriceDto"/>
+         <Class name="~org.finra.herd.model.dto.ElasticsearchSettingsDto"/>
+         <Class name="~org.finra.herd.model.dto.EmrClusterAlternateKeyDto"/>
+         <Class name="~org.finra.herd.model.dto.EmrClusterPriceDto"/>
+         <Class name="~org.finra.herd.model.dto.HivePartitionDto"/>
+         <Class name="~org.finra.herd.model.dto.IndexSearchHighlightField"/>
+         <Class name="~org.finra.herd.model.dto.IndexSearchHighlightFields"/>
+         <Class name="~org.finra.herd.model.dto.JmsMessage"/>
+         <Class name="~org.finra.herd.model.dto.JobDefinitionAlternateKeyDto"/>
+         <Class name="~org.finra.herd.model.dto.NotificationEventParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.ObjectFactory"/>
+         <Class name="~org.finra.herd.model.dto.RegServerAccessParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.S3FileCopyRequestParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.S3FileCopyRequestParamsDto\$Builder"/>
+         <Class name="~org.finra.herd.model.dto.S3FileTransferRequestParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.S3FileTransferRequestParamsDto\$Builder"/>
+         <Class name="~org.finra.herd.model.dto.S3FileTransferResultsDto"/>
+         <Class name="~org.finra.herd.model.dto.StorageAlternateKeyDto"/>
+         <Class name="~org.finra.herd.model.dto.StoragePolicyPriorityLevel"/>
+         <Class name="~org.finra.herd.model.dto.StoragePolicySelection"/>
+         <Class name="~org.finra.herd.model.dto.StoragePolicyTransitionParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.StorageUnitAlternateKeyDto"/>
+         <Class name="~org.finra.herd.model.dto.StorageUnitNotificationEventParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.StorageUnitNotificationEventParamsDto\$Builder"/>
+      </Or>
+   </Match>
+
    <!-- Exclude the auto-generated herd-sdk classes. -->
    <Match>
       <Package name="~org.finra.herd.sdk.*"/>

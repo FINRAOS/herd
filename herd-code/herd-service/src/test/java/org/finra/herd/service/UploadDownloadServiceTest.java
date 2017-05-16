@@ -811,7 +811,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         {
             // Clean up the S3.
             s3Dao.deleteDirectory(
-                S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3LoadingDockBucketName()).s3KeyPrefix(filePath).build());
+                S3FileTransferRequestParamsDto.builder().withS3BucketName(storageDaoTestHelper.getS3LoadingDockBucketName()).withS3KeyPrefix(filePath).build());
 
             s3Operations.rollback();
         }

@@ -91,8 +91,8 @@ public class UploaderControllerTest extends AbstractUploaderTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setLocalPath(Paths.get(LOCAL_TEMP_PATH_INPUT.toString(), "I_DO_NOT_EXIST").toString());
         RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().regServerHost(WEB_SERVICE_HOSTNAME).regServerPort(WEB_SERVICE_HTTPS_PORT).useSsl(true)
-                .username(WEB_SERVICE_HTTPS_USERNAME).password(WEB_SERVICE_HTTPS_PASSWORD).build();
+            RegServerAccessParamsDto.builder().withRegServerHost(WEB_SERVICE_HOSTNAME).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
+                .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
         try
         {
             uploaderController.performUpload(regServerAccessParamsDto, manifestFile, s3FileTransferRequestParamsDto, false, false, TEST_RETRY_ATTEMPTS,
@@ -122,13 +122,13 @@ public class UploaderControllerTest extends AbstractUploaderTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format(
-                "Unable to register business object data because the latest business object data version is detected in UPLOADING state. " +
+            assertEquals(
+                String.format("Unable to register business object data because the latest business object data version is detected in UPLOADING state. " +
                     "Please use -force option to invalidate the latest business object version and allow upload to proceed. Business object data {" +
                     "namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
                     "businessObjectFormatVersion: 0, businessObjectDataPartitionValue: \"2014-01-31\", businessObjectDataSubPartitionValues: \"\", " +
                     "businessObjectDataVersion: 0}", TEST_NAMESPACE, TEST_BUSINESS_OBJECT_DEFINITION, TEST_BUSINESS_OBJECT_FORMAT_USAGE,
-                TEST_BUSINESS_OBJECT_FORMAT_FILE_TYPE), e.getMessage());
+                    TEST_BUSINESS_OBJECT_FORMAT_FILE_TYPE), e.getMessage());
         }
     }
 
@@ -153,8 +153,8 @@ public class UploaderControllerTest extends AbstractUploaderTest
 
         // Try to upload business object data having duplicate file names.
         RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().regServerHost(WEB_SERVICE_HOSTNAME).regServerPort(WEB_SERVICE_HTTPS_PORT).useSsl(true)
-                .username(WEB_SERVICE_HTTPS_USERNAME).password(WEB_SERVICE_HTTPS_PASSWORD).build();
+            RegServerAccessParamsDto.builder().withRegServerHost(WEB_SERVICE_HOSTNAME).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
+                .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
         uploaderController.performUpload(regServerAccessParamsDto, manifestFile, getTestS3FileTransferRequestParamsDto(), false, false, TEST_RETRY_ATTEMPTS,
             TEST_RETRY_DELAY_SECS);
     }
@@ -179,8 +179,8 @@ public class UploaderControllerTest extends AbstractUploaderTest
 
         // Try to upload business object data with one of the file having name that does not match to incorrect name specified.
         RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().regServerHost(WEB_SERVICE_HOSTNAME).regServerPort(WEB_SERVICE_HTTPS_PORT).useSsl(true)
-                .username(WEB_SERVICE_HTTPS_USERNAME).password(WEB_SERVICE_HTTPS_PASSWORD).build();
+            RegServerAccessParamsDto.builder().withRegServerHost(WEB_SERVICE_HOSTNAME).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
+                .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
         uploaderController.performUpload(regServerAccessParamsDto, manifestFile, getTestS3FileTransferRequestParamsDto(), false, false, TEST_RETRY_ATTEMPTS,
             TEST_RETRY_DELAY_SECS);
     }
@@ -397,8 +397,8 @@ public class UploaderControllerTest extends AbstractUploaderTest
         s3FileTransferRequestParamsDto.setLocalPath(LOCAL_TEMP_PATH_INPUT.toString());
         s3FileTransferRequestParamsDto.setMaxThreads(numOfThreads);
         RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().regServerHost(hostnameToUse).regServerPort(WEB_SERVICE_HTTPS_PORT).useSsl(true)
-                .username(WEB_SERVICE_HTTPS_USERNAME).password(WEB_SERVICE_HTTPS_PASSWORD).build();
+            RegServerAccessParamsDto.builder().withRegServerHost(hostnameToUse).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
+                .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
         uploaderController.performUpload(regServerAccessParamsDto, manifestFile, s3FileTransferRequestParamsDto, createNewVersion, force, TEST_RETRY_ATTEMPTS,
             TEST_RETRY_DELAY_SECS);
     }

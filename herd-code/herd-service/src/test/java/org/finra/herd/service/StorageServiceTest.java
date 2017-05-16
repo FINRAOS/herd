@@ -130,7 +130,7 @@ public class StorageServiceTest extends AbstractServiceTest
 
         // TODO: Update various attributes of the storage update request in the future when there is something to update.
 
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storageCreateRequest.getName()).build();
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageCreateRequest.getName()).build();
         storageService.updateStorage(alternateKey, storageUpdateRequest);
 
         // TODO: Add asserts to ensure fields that were update indeed got updated.
@@ -143,7 +143,7 @@ public class StorageServiceTest extends AbstractServiceTest
         StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
 
         // Try updating a storage that doesn't yet exist which is invalid.
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storageCreateRequest.getName()).build();
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageCreateRequest.getName()).build();
         storageService.updateStorage(alternateKey, new StorageUpdateRequest());
     }
 
@@ -156,7 +156,7 @@ public class StorageServiceTest extends AbstractServiceTest
         Storage storage = storageService.createStorage(storageCreateRequest);
 
         // Retrieve the storage by it's name which is valid.
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storage.getName()).build();
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storage.getName()).build();
         storage = storageService.getStorage(alternateKey);
         assertNotNull(storage);
         assertTrue(storage.getName().equals(name));
@@ -166,7 +166,7 @@ public class StorageServiceTest extends AbstractServiceTest
     public void testGetStorageInvalidName() throws Exception
     {
         // Try getting a storage that doesn't exist which is invalid.
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName("invalid" + getRandomSuffix()).build();
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName("invalid" + getRandomSuffix()).build();
         storageService.getStorage(alternateKey);
     }
 
@@ -179,7 +179,7 @@ public class StorageServiceTest extends AbstractServiceTest
         Storage storage = storageService.createStorage(storageCreateRequest);
 
         // Delete the storage by it's name which is valid.
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storage.getName()).build();
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storage.getName()).build();
         storage = storageService.deleteStorage(alternateKey);
         assertNotNull(storage);
         assertTrue(storage.getName().equals(name));
@@ -192,7 +192,7 @@ public class StorageServiceTest extends AbstractServiceTest
     public void testDeleteStorageInvalidName() throws Exception
     {
         // Delete a storage which doesn't exist.
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(getNewStorageCreateRequest().getName()).build();
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(getNewStorageCreateRequest().getName()).build();
         storageService.deleteStorage(alternateKey);
     }
 
@@ -217,7 +217,7 @@ public class StorageServiceTest extends AbstractServiceTest
             public void execute()
             {
                 // Delete the storage which is invalid because there still exists a storage unit entity that references it.
-                StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storageUnitEntity.getStorage().getName()).build();
+                StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageUnitEntity.getStorage().getName()).build();
                 storageService.deleteStorage(alternateKey);
             }
         });

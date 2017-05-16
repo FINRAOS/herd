@@ -146,16 +146,17 @@ public class UploaderApp extends DataBridgeApp
 
         // Create an instance of S3 file transfer request parameters DTO.
         S3FileTransferRequestParamsDto params =
-            S3FileTransferRequestParamsDto.builder().localPath(argParser.getStringValue(localPathOpt)).useRrs(argParser.getBooleanValue(rrsOpt))
-                .awsAccessKeyId(argParser.getStringValue(s3AccessKeyOpt)).awsSecretKey(argParser.getStringValue(s3SecretKeyOpt))
-                .s3Endpoint(argParser.getStringValue(s3EndpointOpt)).maxThreads(maxThreads).httpProxyHost(argParser.getStringValue(httpProxyHostOpt))
-                .httpProxyPort(httpProxyPort).socketTimeout(argParser.getIntegerValue(socketTimeoutOpt)).build();
+            S3FileTransferRequestParamsDto.builder().withLocalPath(argParser.getStringValue(localPathOpt)).withUseRrs(argParser.getBooleanValue(rrsOpt))
+                .withAwsAccessKeyId(argParser.getStringValue(s3AccessKeyOpt)).withAwsSecretKey(argParser.getStringValue(s3SecretKeyOpt))
+                .withS3Endpoint(argParser.getStringValue(s3EndpointOpt)).withMaxThreads(maxThreads)
+                .withHttpProxyHost(argParser.getStringValue(httpProxyHostOpt)).withHttpProxyPort(httpProxyPort)
+                .withSocketTimeout(argParser.getIntegerValue(socketTimeoutOpt)).build();
 
         // Call the controller with the user specified parameters to perform the upload.
         UploaderController controller = applicationContext.getBean(UploaderController.class);
         RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().regServerHost(regServerHost).regServerPort(regServerPort).useSsl(useSsl)
-                .username(argParser.getStringValue(usernameOpt)).password(argParser.getStringValue(passwordOpt)).build();
+            RegServerAccessParamsDto.builder().withRegServerHost(regServerHost).withRegServerPort(regServerPort).withUseSsl(useSsl)
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt)).build();
         controller.performUpload(regServerAccessParamsDto, argParser.getFileValue(manifestPathOpt), params, argParser.getBooleanValue(createNewVersionOpt),
             argParser.getBooleanValue(forceOpt), maxRetryAttempts, retryDelaySecs);
 

@@ -242,8 +242,8 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         EmrCluster emrCluster = emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName(request.getEmrClusterName()).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName(request.getEmrClusterName()).build();
 
         EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, AWS_ACCOUNT_ID, false);
 
@@ -292,8 +292,8 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         EmrCluster emrCluster = emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName(request.getEmrClusterName()).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName(request.getEmrClusterName()).build();
 
         EmrCluster emrClusterTerminated = emrService.terminateCluster(emrClusterAlternateKeyDto, true, null, null);
 
