@@ -732,7 +732,7 @@ public class S3DaoImpl implements S3Dao
             @Override
             public Transfer performTransfer(TransferManager transferManager)
             {
-                return s3Operations.uploadDirectory(params.getS3BucketName(), params.getS3KeyPrefix(), new File(params.getLocalPath()), params.getRecursive(),
+                return s3Operations.uploadDirectory(params.getS3BucketName(), params.getS3KeyPrefix(), new File(params.getLocalPath()), params.isRecursive(),
                     new ObjectMetadataProvider()
                     {
                         @Override
@@ -1292,7 +1292,7 @@ public class S3DaoImpl implements S3Dao
         }
 
         // If specified, set the metadata to use RRS.
-        if (Boolean.TRUE.equals(params.getUseRrs()))
+        if (Boolean.TRUE.equals(params.isUseRrs()))
         {
             // TODO: For upload File, we can set RRS on the putObjectRequest. For uploadDirectory, this is the only
             // way to do it. However, setHeader() is flagged as For Internal Use Only

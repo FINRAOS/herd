@@ -96,6 +96,7 @@
       <jaxb2.basics.runtime.version>0.10.0</jaxb2.basics.runtime.version>
       <jaxb2.basics.tools.version>0.10.0</jaxb2.basics.tools.version>
       <jaxb2.basics.version>0.10.0</jaxb2.basics.version>
+      <jaxb2.rich.contract.plugin.version>1.18.0</jaxb2.rich.contract.plugin.version>
       <jaxb2.value.constructor.version>3.0</jaxb2.value.constructor.version>
       <maven.assembly.plugin.version>2.6</maven.assembly.plugin.version>
       <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
@@ -952,6 +953,11 @@
                <groupId>org.jvnet.jaxb2_commons</groupId>
                <artifactId>jaxb2-basics-tools</artifactId>
                <version>${jaxb2.basics.tools.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>net.codesup.util</groupId>
+               <artifactId>jaxb2-rich-contract-plugin</artifactId>
+               <version>${jaxb2.rich.contract.plugin.version}</version>
             </plugin>
             <plugin>
                <groupId>org.jvnet.jaxb2_commons</groupId>

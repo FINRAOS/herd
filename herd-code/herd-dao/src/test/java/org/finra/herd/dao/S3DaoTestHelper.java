@@ -45,7 +45,7 @@ public class S3DaoTestHelper
     {
         String s3BucketName = storageDaoTestHelper.getS3ManagedBucketName();
 
-        return S3FileTransferRequestParamsDto.builder().s3BucketName(s3BucketName).s3KeyPrefix(AbstractDaoTest.TEST_S3_KEY_PREFIX).build();
+        return S3FileTransferRequestParamsDto.builder().withS3BucketName(s3BucketName).withS3KeyPrefix(AbstractDaoTest.TEST_S3_KEY_PREFIX).build();
     }
 
     /**

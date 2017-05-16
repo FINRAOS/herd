@@ -96,7 +96,7 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
         // Create S3FileTransferRequestParamsDto to access the S3 bucket.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(s3KeyPrefix + "/").build();
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(s3KeyPrefix + "/").build();
 
         // Create database entities required for testing.
         BusinessObjectDataEntity businessObjectDataEntity =
@@ -156,7 +156,7 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
         // Create S3FileTransferRequestParamsDto to access the S3 bucket.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(s3KeyPrefix + "/").build();
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(s3KeyPrefix + "/").build();
 
         // Create database entities required for testing.
         BusinessObjectDataEntity businessObjectDataEntity =

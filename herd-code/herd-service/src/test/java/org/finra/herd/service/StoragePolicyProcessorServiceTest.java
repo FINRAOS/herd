@@ -65,7 +65,7 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
         // Create S3FileTransferRequestParamsDto to access the source S3 bucket location.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
         S3FileTransferRequestParamsDto sourceS3FileTransferRequestParamsDto =
-            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(s3KeyPrefix + "/").build();
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(s3KeyPrefix + "/").build();
 
         // Create and persist the relative database entities.
         storagePolicyServiceTestHelper

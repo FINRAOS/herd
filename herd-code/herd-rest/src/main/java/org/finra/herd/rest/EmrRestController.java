@@ -161,11 +161,11 @@ public class EmrRestController extends HerdBaseController
         @RequestParam(value = "emrStepId", required = false) String emrStepId,
         @RequestParam(value = "verbose", required = false, defaultValue = "false") Boolean verbose,
         @RequestParam(value = "accountId", required = false) String accountId,
-        @RequestParam(value = "retrieveInstanceFleets", required = false, defaultValue = "false") Boolean retrieveInstanceFleets
-        ) throws Exception
+        @RequestParam(value = "retrieveInstanceFleets", required = false, defaultValue = "false") Boolean retrieveInstanceFleets) throws Exception
     {
         EmrClusterAlternateKeyDto alternateKey =
-            EmrClusterAlternateKeyDto.builder().namespace(namespace).emrClusterDefinitionName(emrClusterDefinitionName).emrClusterName(emrClusterName).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(namespace).withEmrClusterDefinitionName(emrClusterDefinitionName)
+                .withEmrClusterName(emrClusterName).build();
 
         return emrService.getCluster(alternateKey, emrClusterId, emrStepId, verbose, accountId, retrieveInstanceFleets);
     }
@@ -193,7 +193,8 @@ public class EmrRestController extends HerdBaseController
         throws Exception
     {
         EmrClusterAlternateKeyDto alternateKey =
-            EmrClusterAlternateKeyDto.builder().namespace(namespace).emrClusterDefinitionName(emrClusterDefinitionName).emrClusterName(emrClusterName).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(namespace).withEmrClusterDefinitionName(emrClusterDefinitionName)
+                .withEmrClusterName(emrClusterName).build();
 
         return emrService.terminateCluster(alternateKey, overrideTerminationProtection, emrClusterId, accountId);
     }

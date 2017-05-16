@@ -123,9 +123,9 @@ public class S3DaoTest extends AbstractDaoTest
 
         // Delete test files from S3 storage. Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
         for (S3FileTransferRequestParamsDto params : Arrays.asList(s3DaoTestHelper.getTestS3FileTransferRequestParamsDto(),
-            S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3LoadingDockBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
-                .build(),
-            S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3ExternalBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(storageDaoTestHelper.getS3LoadingDockBucketName())
+                .withS3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build(),
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(storageDaoTestHelper.getS3ExternalBucketName()).withS3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
                 .build()))
         {
             if (!s3Dao.listDirectory(params).isEmpty())
@@ -808,7 +808,7 @@ public class S3DaoTest extends AbstractDaoTest
         {
             try
             {
-                s3Dao.deleteDirectory(S3FileTransferRequestParamsDto.builder().s3KeyPrefix(s3KeyPrefix).build());
+                s3Dao.deleteDirectory(S3FileTransferRequestParamsDto.builder().withS3KeyPrefix(s3KeyPrefix).build());
                 fail("Should throw an IllegalArgumentException when S3 key prefix specifies a root directory.");
             }
             catch (IllegalArgumentException e)
@@ -1926,7 +1926,7 @@ public class S3DaoTest extends AbstractDaoTest
         {
             try
             {
-                s3Dao.listDirectory(S3FileTransferRequestParamsDto.builder().s3KeyPrefix(s3KeyPrefix).build());
+                s3Dao.listDirectory(S3FileTransferRequestParamsDto.builder().withS3KeyPrefix(s3KeyPrefix).build());
                 fail("Should throw an IllegalArgumentException when S3 key prefix specifies a root directory.");
             }
             catch (IllegalArgumentException e)
@@ -2101,7 +2101,7 @@ public class S3DaoTest extends AbstractDaoTest
         {
             try
             {
-                s3Dao.listVersions(S3FileTransferRequestParamsDto.builder().s3KeyPrefix(s3KeyPrefix).build());
+                s3Dao.listVersions(S3FileTransferRequestParamsDto.builder().withS3KeyPrefix(s3KeyPrefix).build());
                 fail("Should throw an IllegalArgumentException when S3 key prefix specifies a root directory.");
             }
             catch (IllegalArgumentException e)
