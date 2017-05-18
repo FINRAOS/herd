@@ -6,7 +6,10 @@ import static org.finra.herd.dao.helper.ElasticsearchHelper.TAG_CODE_AGGREGATION
 import static org.finra.herd.dao.helper.ElasticsearchHelper.TAG_NAME_AGGREGATION;
 import static org.finra.herd.dao.helper.ElasticsearchHelper.TAG_TYPE_FACET_AGGS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -17,9 +20,13 @@ import java.util.Set;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.AbstractDaoTest;
@@ -62,16 +69,25 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
     public static final String TAG_CODE_DISPLAY_NAME_2 = "Tag Code DisplayName 2";
 
-    @Autowired
-    ElasticsearchHelper elasticSearchHelper;
+    @InjectMocks
+    private ElasticsearchHelper elasticsearchHelper;
+
+    @Mock
+    private JsonHelper jsonHelper;
+
+    @Before
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
 
     @Test
     public void testGetFacetsResponseWithEmptyResponseDto()
     {
         ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
-        List<Facet> facets = elasticSearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
+        List<Facet> facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
         Assert.isTrue(facets.size() == 0);
-        facets = elasticSearchHelper.getFacetsResponse(elasticsearchResponseDto, true);
+        facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, true);
         Assert.isTrue(facets.size() == 0);
     }
 
@@ -89,7 +105,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         elasticsearchResponseDto.setNestTagTypeIndexSearchResponseDtos(nestTagTypeIndexSearchResponseDtos);
 
-        List<Facet> facets = elasticSearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
+        List<Facet> facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
         List<Facet> expectedFacets = new ArrayList<>();
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, (long) TAG_TYPE_CODE_COUNT, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
@@ -119,7 +135,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         tagTypeIndexSearchResponseDtos.add(tagType3);
         elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(tagTypeIndexSearchResponseDtos);
 
-        List<Facet> facets = elasticSearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
+        List<Facet> facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
         List<Facet> expectedFacets = new ArrayList<>();
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, (long) TAG_TYPE_CODE_COUNT, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
@@ -149,7 +165,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         tagTypeIndexSearchResponseDtos.add(tagType3);
         elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(tagTypeIndexSearchResponseDtos);
 
-        List<Facet> facets = elasticSearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
+        List<Facet> facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
         List<Facet> expectedFacets = new ArrayList<>();
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, (long) TAG_TYPE_CODE_COUNT, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
@@ -180,7 +196,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         tagTypeIndexSearchResponseDtos.add(tagType3);
         elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(tagTypeIndexSearchResponseDtos);
 
-        List<Facet> facets = elasticSearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
+        List<Facet> facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
         List<Facet> expectedFacets = new ArrayList<>();
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, (long) TAG_TYPE_CODE_COUNT, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
@@ -213,7 +229,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         List<ResultTypeIndexSearchResponseDto> expectedList = new ArrayList<>();
         expectedList.add(new ResultTypeIndexSearchResponseDto(TAG_CODE, TAG_COUNT, TAG_CODE));
-        List<ResultTypeIndexSearchResponseDto> resultList = elasticSearchHelper.getResultTypeIndexSearchResponseDto(searchResponse);
+        List<ResultTypeIndexSearchResponseDto> resultList = elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse);
 
         assertEquals(expectedList, resultList);
     }
@@ -223,7 +239,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     {
         Set<String> facetSet = new HashSet<>();
         //it is ok to pass a null search request builder, as empty facet set bypass the processing
-        elasticSearchHelper.addFacetFieldAggregations(facetSet, null);
+        elasticsearchHelper.addFacetFieldAggregations(facetSet, null);
     }
 
     @Test
@@ -267,12 +283,231 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         when(tagNameAggs.getBuckets()).thenReturn(tagNameEntryList);
         when(tagNameEntry.getKeyAsString()).thenReturn(TAG_DISPLAY_NAME);
 
-        List<TagTypeIndexSearchResponseDto> resultList = elasticSearchHelper.getTagTagIndexSearchResponseDto(searchResponse);
+        List<TagTypeIndexSearchResponseDto> resultList = elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse);
         List<TagTypeIndexSearchResponseDto> expectedList = new ArrayList<>();
         List<TagIndexSearchResponseDto> expectedTagList = new ArrayList<>();
         expectedTagList.add(new TagIndexSearchResponseDto(TAG_CODE, TAG_CODE_COUNT, TAG_DISPLAY_NAME));
         expectedList.add(new TagTypeIndexSearchResponseDto(TAG_TYPE_CODE, TAG_TYPE_CODE_COUNT, expectedTagList, TAG_TYPE_DISPLAY_NAME));
 
         assertEquals(expectedList, resultList);
+    }
+
+    @Test
+    public void testGetAggregation()
+    {
+        // Create a mock aggregation.
+        Terms aggregation = mock(Terms.class);
+
+        // Create mock aggregations.
+        Aggregations aggregations = mock(Aggregations.class);
+        when(aggregations.get(AGGREGATION_NAME)).thenReturn(aggregation);
+
+        // Create a mock search response.
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        when(searchResponse.getAggregations()).thenReturn(aggregations);
+
+        // Call the method under test.
+        Terms result = elasticsearchHelper.getAggregation(searchResponse, AGGREGATION_NAME);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the result.
+        assertEquals(aggregation, result);
+    }
+
+    @Test
+    public void testGetAggregationAggregationIsNull()
+    {
+        // Create mock aggregations.
+        Aggregations aggregations = mock(Aggregations.class);
+        when(aggregations.get(AGGREGATION_NAME)).thenReturn(null);
+
+        // Create a mock search response.
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        when(searchResponse.getAggregations()).thenReturn(aggregations);
+
+        // Mock the external calls.
+        when(jsonHelper.objectToJson(searchResponse)).thenReturn(SEARCH_RESPONSE_JSON_STRING);
+
+        // Try to call the method under test.
+        try
+        {
+            elasticsearchHelper.getAggregation(searchResponse, AGGREGATION_NAME);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals("Invalid search result.", e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(jsonHelper).objectToJson(searchResponse);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testGetNestedAggregation()
+    {
+        // Create a mock sub-aggregation.
+        Terms subAggregation = mock(Terms.class);
+
+        // Create mock nested aggregations.
+        Aggregations nestedAggregations = mock(Aggregations.class);
+        when(nestedAggregations.get(SUB_AGGREGATION_NAME)).thenReturn(subAggregation);
+
+        // Create a mock nested aggregation.
+        Nested nestedAggregation = mock(Nested.class);
+        when(nestedAggregation.getAggregations()).thenReturn(nestedAggregations);
+
+        // Create mock search response aggregations.
+        Aggregations searchResponseAggregations = mock(Aggregations.class);
+        when(searchResponseAggregations.get(NESTED_AGGREGATION_NAME)).thenReturn(nestedAggregation);
+
+        // Create a mock search response.
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        when(searchResponse.getAggregations()).thenReturn(searchResponseAggregations);
+
+        // Call the method under test.
+        Terms result = elasticsearchHelper.getNestedAggregation(searchResponse, NESTED_AGGREGATION_NAME, SUB_AGGREGATION_NAME);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the result.
+        assertEquals(subAggregation, result);
+    }
+
+    @Test
+    public void testGetNestedAggregationNestedAggregationIsNull()
+    {
+        // Create mock search response aggregations.
+        Aggregations searchResponseAggregations = mock(Aggregations.class);
+        when(searchResponseAggregations.get(NESTED_AGGREGATION_NAME)).thenReturn(null);
+
+        // Create a mock search response.
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        when(searchResponse.getAggregations()).thenReturn(searchResponseAggregations);
+
+        // Mock the external calls.
+        when(jsonHelper.objectToJson(searchResponse)).thenReturn(SEARCH_RESPONSE_JSON_STRING);
+
+        // Try to call the method under test.
+        try
+        {
+            elasticsearchHelper.getNestedAggregation(searchResponse, NESTED_AGGREGATION_NAME, SUB_AGGREGATION_NAME);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals("Invalid search result.", e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(jsonHelper).objectToJson(searchResponse);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testGetNestedAggregationSubAggregationIsNull()
+    {
+        // Create mock nested aggregations.
+        Aggregations nestedAggregations = mock(Aggregations.class);
+        when(nestedAggregations.get(SUB_AGGREGATION_NAME)).thenReturn(null);
+
+        // Create a mock nested aggregation.
+        Nested nestedAggregation = mock(Nested.class);
+        when(nestedAggregation.getAggregations()).thenReturn(nestedAggregations);
+
+        // Create mock search response aggregations.
+        Aggregations searchResponseAggregations = mock(Aggregations.class);
+        when(searchResponseAggregations.get(NESTED_AGGREGATION_NAME)).thenReturn(nestedAggregation);
+
+        // Create a mock search response.
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        when(searchResponse.getAggregations()).thenReturn(searchResponseAggregations);
+
+        // Mock the external calls.
+        when(jsonHelper.objectToJson(searchResponse)).thenReturn(SEARCH_RESPONSE_JSON_STRING);
+        when(jsonHelper.objectToJson(nestedAggregation)).thenReturn(NESTED_AGGREGATION_JSON_STRING);
+
+        // Try to call the method under test.
+        try
+        {
+            elasticsearchHelper.getNestedAggregation(searchResponse, NESTED_AGGREGATION_NAME, SUB_AGGREGATION_NAME);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals("Invalid search result.", e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(jsonHelper).objectToJson(searchResponse);
+        verify(jsonHelper).objectToJson(nestedAggregation);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testGetAggregationsFromNestedAggregationAggregationsSetIsNull()
+    {
+        // Create a mock search response.
+        SearchResponse searchResponse = mock(SearchResponse.class);
+
+        // Create a mock nested aggregation.
+        Nested nestedAggregation = mock(Nested.class);
+        when(nestedAggregation.getAggregations()).thenReturn(null);
+
+        // Mock the external calls.
+        when(jsonHelper.objectToJson(searchResponse)).thenReturn(SEARCH_RESPONSE_JSON_STRING);
+        when(jsonHelper.objectToJson(nestedAggregation)).thenReturn(NESTED_AGGREGATION_JSON_STRING);
+
+        // Try to call the method under test.
+        try
+        {
+            elasticsearchHelper.getAggregationsFromNestedAggregation(nestedAggregation, searchResponse);
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals("Invalid search result.", e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(jsonHelper).objectToJson(searchResponse);
+        verify(jsonHelper).objectToJson(nestedAggregation);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testGetAggregationsFromSearchResponseAggregationsSetIsNull()
+    {
+        // Create a mock search response.
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        when(searchResponse.getAggregations()).thenReturn(null);
+
+        // Mock the external calls.
+        when(jsonHelper.objectToJson(searchResponse)).thenReturn(SEARCH_RESPONSE_JSON_STRING);
+
+        // Try to call the method under test.
+        try
+        {
+            elasticsearchHelper.getAggregationsFromSearchResponse(searchResponse);
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals("Invalid search result.", e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(jsonHelper).objectToJson(searchResponse);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    /**
+     * Checks if any of the mocks has any interaction.
+     */
+    private void verifyNoMoreInteractionsHelper()
+    {
+        verifyNoMoreInteractions(jsonHelper);
     }
 }

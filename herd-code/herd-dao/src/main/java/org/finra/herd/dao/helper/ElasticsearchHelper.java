@@ -28,8 +28,12 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.ConstantScoreQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.Facet;
@@ -44,6 +48,11 @@ import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 @Component
 public class ElasticsearchHelper
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchHelper.class);
+
+    @Autowired
+    private JsonHelper jsonHelper;
+
     /**
      * Page size
      */
@@ -343,7 +352,7 @@ public class ElasticsearchHelper
     public List<ResultTypeIndexSearchResponseDto> getResultTypeIndexSearchResponseDto(SearchResponse searchResponse)
     {
         List<ResultTypeIndexSearchResponseDto> list = new ArrayList<>();
-        Terms aggregation = searchResponse.getAggregations().get(RESULT_TYPE_AGGS);
+        Terms aggregation = getAggregation(searchResponse, RESULT_TYPE_AGGS);
 
         for (Terms.Bucket resultTypeEntry : aggregation.getBuckets())
         {
@@ -410,7 +419,7 @@ public class ElasticsearchHelper
      */
     public List<TagTypeIndexSearchResponseDto> getTagTagIndexSearchResponseDto(SearchResponse searchResponse)
     {
-        Terms aggregation = searchResponse.getAggregations().get(TAG_TYPE_FACET_AGGS);
+        Terms aggregation = getAggregation(searchResponse, TAG_TYPE_FACET_AGGS);
 
         return getTagTypeIndexSearchResponseDtosFromTerms(aggregation);
     }
@@ -424,11 +433,9 @@ public class ElasticsearchHelper
      */
     public List<TagTypeIndexSearchResponseDto> getNestedTagTagIndexSearchResponseDto(SearchResponse searchResponse)
     {
-        Nested aggregation = searchResponse.getAggregations().get(TAG_FACET_AGGS);
-        Terms tagTypeCodeAgg = aggregation.getAggregations().get(TAGTYPE_CODE_AGGREGATION);
+        Terms tagTypeCodeAgg = getNestedAggregation(searchResponse, TAG_FACET_AGGS, TAGTYPE_CODE_AGGREGATION);
 
         return getTagTypeIndexSearchResponseDtosFromTerms(tagTypeCodeAgg);
-
     }
 
     /**
@@ -536,5 +543,136 @@ public class ElasticsearchHelper
         }
 
         return facets;
+    }
+
+    /**
+     * Returns the aggregation that is associated with the specified name. This method also validates that the retrieved aggregation exists.
+     *
+     * @param searchResponse the response of the search request
+     * @param aggregationName the name of the aggregation
+     *
+     * @return the aggregation
+     */
+    public Terms getAggregation(SearchResponse searchResponse, String aggregationName)
+    {
+        // Retrieve the aggregations from the search response.
+        Aggregations aggregations = getAggregationsFromSearchResponse(searchResponse);
+
+        // Retrieve the specified aggregation.
+        Terms aggregation = aggregations.get(aggregationName);
+
+        // Fail if retrieved aggregation is null.
+        if (aggregation == null)
+        {
+            // Log the error along with the search response contents.
+            LOGGER.error("Failed to retrieve \"{}\" aggregation from the search response. searchResponse={}", aggregationName,
+                jsonHelper.objectToJson(searchResponse));
+
+            // Throw an exception.
+            throw new IllegalStateException("Invalid search result.");
+        }
+
+        return aggregation;
+    }
+
+    /**
+     * Returns the sub-aggregation that is associated with the specified nested aggregation. This method also validates that the retrieved sub-aggregation
+     * exists.
+     *
+     * @param searchResponse the response of the search request
+     * @param nestedAggregationName the name of the nested aggregation
+     * @param subAggregationName the name of the sub-aggregation
+     *
+     * @return the aggregation
+     */
+    public Terms getNestedAggregation(SearchResponse searchResponse, String nestedAggregationName, String subAggregationName)
+    {
+        // Retrieve the aggregations from the search response.
+        Aggregations searchResponseAggregations = getAggregationsFromSearchResponse(searchResponse);
+
+        // Retrieve the nested aggregation.
+        Nested nestedAggregation = searchResponseAggregations.get(nestedAggregationName);
+
+        // Fail if the retrieved nested aggregation is null.
+        if (nestedAggregation == null)
+        {
+            // Log the error along with the search response contents.
+            LOGGER.error("Failed to retrieve \"{}\" nested aggregation from the search response. searchResponse={}", nestedAggregationName,
+                jsonHelper.objectToJson(searchResponse));
+
+            // Throw an exception.
+            throw new IllegalStateException("Invalid search result.");
+        }
+
+        // Retrieve the aggregations from the nested aggregation.
+        Aggregations nestedAggregationAggregations = getAggregationsFromNestedAggregation(nestedAggregation, searchResponse);
+
+        // Retrieve the sub-aggregation.
+        Terms subAggregation = nestedAggregationAggregations.get(subAggregationName);
+
+        // Fail if retrieved sub-aggregation is null.
+        if (subAggregation == null)
+        {
+            // Log the error along with the search response contents.
+            LOGGER.error("Failed to retrieve \"{}\" sub-aggregation from \"{}\" nested aggregation. searchResponse={} nestedAggregation={}", subAggregationName,
+                nestedAggregationName, jsonHelper.objectToJson(searchResponse), jsonHelper.objectToJson(nestedAggregation));
+
+            // Throw an exception.
+            throw new IllegalStateException("Invalid search result.");
+        }
+
+        return subAggregation;
+    }
+
+    /**
+     * Returns a representation of a set of aggregations from the nested aggregation. This method also validates that the retrieved object is not null.
+     *
+     * @param nestedAggregation the nested aggregation
+     * @param searchResponse the response of the search request
+     *
+     * @return the aggregations
+     */
+    protected Aggregations getAggregationsFromNestedAggregation(Nested nestedAggregation, SearchResponse searchResponse)
+    {
+        // Retrieve the aggregations.
+        Aggregations aggregations = nestedAggregation.getAggregations();
+
+        // Fail if the retrieved object is null.
+        if (aggregations == null)
+        {
+            // Log the error along with the nested aggregation contents.
+            LOGGER.error("Failed to retrieve aggregations from the nested aggregation. searchResponse={} nestedAggregation={}",
+                jsonHelper.objectToJson(searchResponse), jsonHelper.objectToJson(nestedAggregation));
+
+            // Throw an exception.
+            throw new IllegalStateException("Invalid search result.");
+        }
+
+        return aggregations;
+    }
+
+    /**
+     * Returns a representation of a set of aggregations from the search response. This method also validates that the retrieved object is not null.
+     *
+     * @param searchResponse the response of the search request
+     *
+     * @return the aggregations
+     */
+    protected Aggregations getAggregationsFromSearchResponse(SearchResponse searchResponse)
+    {
+        // Retrieve the aggregations.
+        Aggregations aggregations = searchResponse.getAggregations();
+
+        // Fail if the retrieved object is null.
+        if (aggregations == null)
+        {
+            // Log the error along with the search response contents.
+            LOGGER.error("Failed to retrieve aggregations from the search response. searchResponse={}", jsonHelper.objectToJson(searchResponse));
+
+            // Throw an exception.
+            throw new IllegalStateException("Invalid search result.");
+        }
+
+        return aggregations;
     }
 }
