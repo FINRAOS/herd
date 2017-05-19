@@ -48,7 +48,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
         // Create S3FileTransferRequestParamsDto to access the S3 bucket.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(S3_BUCKET_NAME + "/" + TEST_S3_KEY_PREFIX + "/").build();
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(S3_BUCKET_NAME + "/" + TEST_S3_KEY_PREFIX + "/").build();
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -108,7 +108,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
         // Create S3FileTransferRequestParamsDto to access the S3 bucket location.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(S3_BUCKET_NAME + "/" + TEST_S3_KEY_PREFIX + "/").build();
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(S3_BUCKET_NAME + "/" + TEST_S3_KEY_PREFIX + "/").build();
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -177,7 +177,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
         // Create S3FileTransferRequestParamsDto to access the S3 bucket.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
         S3FileTransferRequestParamsDto glacierS3FileTransferRequestParamsDto =
-            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(S3_BUCKET_NAME + "/" + TEST_S3_KEY_PREFIX + "/").build();
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(S3_BUCKET_NAME + "/" + TEST_S3_KEY_PREFIX + "/").build();
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =

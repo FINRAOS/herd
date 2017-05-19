@@ -85,7 +85,7 @@ public class UploaderWebClient extends DataBridgeWebClient
         }
         HttpGet httpGet = new HttpGet(uriBuilder.build());
         httpGet.addHeader("Accepts", DEFAULT_ACCEPT);
-        if (regServerAccessParamsDto.getUseSsl())
+        if (regServerAccessParamsDto.isUseSsl())
         {
             httpGet.addHeader(getAuthorizationHeader());
         }
@@ -145,7 +145,7 @@ public class UploaderWebClient extends DataBridgeWebClient
             httpGet.addHeader("Accepts", DEFAULT_ACCEPT);
 
             // If SSL is enabled, set the client authentication header.
-            if (regServerAccessParamsDto.getUseSsl())
+            if (regServerAccessParamsDto.isUseSsl())
             {
                 httpGet.addHeader(getAuthorizationHeader());
             }

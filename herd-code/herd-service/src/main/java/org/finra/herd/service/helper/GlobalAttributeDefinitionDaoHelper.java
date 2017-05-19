@@ -15,6 +15,10 @@
 */
 package org.finra.herd.service.helper;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +26,7 @@ import org.finra.herd.dao.GlobalAttributeDefinitionDao;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKey;
+import org.finra.herd.model.jpa.AllowedAttributeValueEntity;
 import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
 
 @Component
@@ -70,5 +75,31 @@ public class GlobalAttributeDefinitionDaoHelper
                     "global attribute definition name \"%s\" because it already exists.",
                 globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(), globalAttributeDefinitionKey.getGlobalAttributeDefinitionName()));
         }
+    }
+
+    /**
+     * Gets allowed attribute values for the global attribute definition
+     *
+     * @param globalAttributeDefinitionKey the global attribute definition key
+     * 
+     * @return list of allowed attribute values, if the global attribute definition does not have attribute list returns null
+     */
+    public List<String> getAllowedAttributeValues(GlobalAttributeDefinitionKey globalAttributeDefinitionKey)
+    {
+        List<String> allowedAttributeValues = null;
+        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
+            globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey);
+
+        if (globalAttributeDefinitionEntity.getAttributeValueList() != null)
+        {
+            allowedAttributeValues = new ArrayList<>();
+            Collection<AllowedAttributeValueEntity> list = globalAttributeDefinitionEntity.getAttributeValueList().getAllowedAttributeValues();
+            for (AllowedAttributeValueEntity allowedAttributeValueEntity : list)
+            {
+                allowedAttributeValues.add(allowedAttributeValueEntity.getAllowedAttributeValue());
+            }
+        }
+        
+        return allowedAttributeValues;
     }
 }

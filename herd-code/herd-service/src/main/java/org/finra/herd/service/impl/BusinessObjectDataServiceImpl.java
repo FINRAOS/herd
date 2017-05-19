@@ -899,7 +899,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // On failure of the above step, execute the "after" step, and re-throw the exception.
         if (businessObjectDataRestoreDto.getException() != null)
         {
-            // On failure, execute the after step that updates the origin storage unit status to DISABLED.
+            // On failure, execute the after step that updates the storage unit status back to ARCHIVED.
             businessObjectDataInitiateRestoreHelperService.executeInitiateRestoreAfterStep(businessObjectDataRestoreDto);
 
             // Create storage unit notification for the origin storage unit.

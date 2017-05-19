@@ -50,4 +50,13 @@ public interface GlobalAttributeDefinitionService
      * @return the list of retrieved global attribute definition keys
      */
     public GlobalAttributeDefinitionKeys getGlobalAttributeDefinitionKeys();
+
+    /**
+     * Returns a global attribute definition.
+     * 
+     * @param globalAttributeDefinitionKey the global attribute definition key
+     * 
+     * @return the global attribute definition
+     */
+    public GlobalAttributeDefinition getGlobalAttributeDefinition(GlobalAttributeDefinitionKey globalAttributeDefinitionKey);
 }

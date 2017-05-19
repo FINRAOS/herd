@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -172,18 +171,8 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         String s3KeyPrefix = s3KeyPrefixHelper
             .buildS3KeyPrefix(storagePolicyEntity.getStorage(), storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey);
 
-        // Retrieve storage files registered with this business object data in the specified storage.
-        List<StorageFile> storageFiles = storageFileHelper.createStorageFilesFromEntities(storageUnitEntity.getStorageFiles());
-
-        // Validate that we have storage files registered in the storage.
-        Assert.isTrue(!CollectionUtils.isEmpty(storageFiles), String
-            .format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}", storageName,
-                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-
-        // Validate storage file paths registered with this business object data in the specified storage.
-        storageFileHelper
-            .validateStorageFiles(storageFileHelper.getFilePathsFromStorageFiles(storageFiles), s3KeyPrefix, storageUnitEntity.getBusinessObjectData(),
-                storageUnitEntity.getStorage().getName());
+        // Retrieve and validate storage files registered with the storage unit.
+        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.

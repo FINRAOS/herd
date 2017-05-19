@@ -35,6 +35,9 @@ public class AllowedAttributeValueDaoTestHelper
     @Autowired
     private AttributeValueListDao attributeValueListDao;
 
+    @Autowired
+    private AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
+
     /**
      * Returns a list of test allowed attribute value entities.
      *
@@ -46,7 +49,7 @@ public class AllowedAttributeValueDaoTestHelper
         AttributeValueListEntity attributeValueListEntity = attributeValueListDao.getAttributeValueListByKey(attributeValueListKey);
         if (attributeValueListEntity == null)
         {
-            attributeValueListEntity = attributeValueListDao.saveAndRefresh(attributeValueListEntity);
+            attributeValueListEntity = attributeValueListDaoTestHelper.createAttributeValueListEntity(attributeValueListKey.getNamespace(), attributeValueListKey.getAttributeValueListName());
         }
 
         List<AllowedAttributeValueEntity> allowedAttributeValueEntities = new ArrayList<>();

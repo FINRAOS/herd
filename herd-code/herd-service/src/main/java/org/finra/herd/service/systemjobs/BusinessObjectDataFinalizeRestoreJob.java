@@ -37,7 +37,7 @@ import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.ParameterHelper;
 
 /**
- * The business object data finalize restore job.
+ * The business object data finalize restore system job.
  */
 @Component(BusinessObjectDataFinalizeRestoreJob.JOB_NAME)
 @DisallowConcurrentExecution
@@ -97,9 +97,8 @@ public class BusinessObjectDataFinalizeRestoreJob extends AbstractSystemJob
                 {
                     // Log the exception.
                     LOGGER.error("Failed to finalize a business object data restore from the Glacier storage. " +
-                        "systemJobName=\"{}\" storageName=\"{}\" businessObjectDataKey={}", JOB_NAME,
-                        jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataKeyFromStorageUnitKey(storageUnitKey)),
-                        storageUnitKey.getStorageName(), runtimeException);
+                        "systemJobName=\"{}\" storageName=\"{}\" businessObjectDataKey={}", JOB_NAME, storageUnitKey.getStorageName(),
+                        jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataKeyFromStorageUnitKey(storageUnitKey)), runtimeException);
                 }
             }
         }

@@ -113,7 +113,7 @@ public class DownloaderWebClient extends DataBridgeWebClient
         request.addHeader("Accepts", "application/xml");
 
         // If SSL is enabled, set the client authentication header.
-        if (regServerAccessParamsDto.getUseSsl())
+        if (regServerAccessParamsDto.isUseSsl())
         {
             request.addHeader(getAuthorizationHeader());
         }
@@ -156,7 +156,7 @@ public class DownloaderWebClient extends DataBridgeWebClient
         }
         HttpGet httpGet = new HttpGet(uriBuilder.build());
         httpGet.addHeader("Accept", DEFAULT_ACCEPT);
-        if (regServerAccessParamsDto.getUseSsl())
+        if (regServerAccessParamsDto.isUseSsl())
         {
             httpGet.addHeader(getAuthorizationHeader());
         }

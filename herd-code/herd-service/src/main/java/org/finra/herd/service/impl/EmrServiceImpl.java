@@ -637,8 +637,8 @@ public class EmrServiceImpl implements EmrService
      */
     private EmrClusterAlternateKeyDto getEmrClusterAlternateKey(EmrClusterCreateRequest emrClusterCreateRequest)
     {
-        return EmrClusterAlternateKeyDto.builder().namespace(emrClusterCreateRequest.getNamespace())
-            .emrClusterDefinitionName(emrClusterCreateRequest.getEmrClusterDefinitionName()).emrClusterName(emrClusterCreateRequest.getEmrClusterName())
+        return EmrClusterAlternateKeyDto.builder().withNamespace(emrClusterCreateRequest.getNamespace())
+            .withEmrClusterDefinitionName(emrClusterCreateRequest.getEmrClusterDefinitionName()).withEmrClusterName(emrClusterCreateRequest.getEmrClusterName())
             .build();
     }
 

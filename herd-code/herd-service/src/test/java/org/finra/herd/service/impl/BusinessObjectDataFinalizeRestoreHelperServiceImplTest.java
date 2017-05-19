@@ -171,7 +171,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImplTest extends Abst
         updatedS3FileTransferRequestParamsDto.setS3Endpoint(S3_ENDPOINT);
         updatedS3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX + "/");
 
-        // Create a mock S3 object summary for S3 object that does not belong to Glacier storage class.
+        // Create a mock S3 object summary for S3 object that belongs to Glacier storage class.
         S3ObjectSummary glacierS3ObjectSummary = mock(S3ObjectSummary.class);
         when(glacierS3ObjectSummary.getStorageClass()).thenReturn(StorageClass.Glacier.toString());
 

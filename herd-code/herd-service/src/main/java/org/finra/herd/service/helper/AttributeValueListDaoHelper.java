@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.AttributeValueListDao;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 
@@ -51,5 +52,27 @@ public class AttributeValueListDaoHelper
         }
 
         return attributeValueListEntity;
+    }
+
+    /**
+     * Creates the attribute value list from the persisted entity.
+     *
+     * @param attributeValueListEntity the attribute value list entity
+     *
+     * @return the attribute value list
+     */
+    public AttributeValueList createAttributeValueListFromEntity(AttributeValueListEntity attributeValueListEntity)
+    {
+        // Create the attribute value list.
+        AttributeValueList attributeValueList = new AttributeValueList();
+
+        AttributeValueListKey attributeValueListKey = new AttributeValueListKey();
+        attributeValueListKey.setNamespace(attributeValueListEntity.getNamespace().getCode());
+        attributeValueListKey.setAttributeValueListName(attributeValueListEntity.getName());
+
+        attributeValueList.setAttributeValueListKey(attributeValueListKey);
+        attributeValueList.setId(attributeValueListEntity.getId());
+
+        return attributeValueList;
     }
 }
