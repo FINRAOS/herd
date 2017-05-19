@@ -1597,8 +1597,8 @@ public class EmrServiceTest extends AbstractServiceTest
         try
         {
             EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-                EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test_cluster")
-                    .build();
+                EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                    .withEmrClusterName("test_cluster").build();
             emrServiceImpl.getCluster(emrClusterAlternateKeyDto, null, null, false, null, false);
             fail("Should throw a ObjectNotFoundException.");
         }
@@ -1610,8 +1610,8 @@ public class EmrServiceTest extends AbstractServiceTest
         try
         {
             EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-                EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test_cluster")
-                    .build();
+                EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                    .withEmrClusterName("test_cluster").build();
             emrServiceImpl.terminateCluster(emrClusterAlternateKeyDto, false, null, null);
             fail("Should throw a ObjectNotFoundException.");
         }
@@ -1644,8 +1644,8 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrCluster emrCluster = emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName(request.getEmrClusterName()).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName(request.getEmrClusterName()).build();
 
         EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, null, false);
 
@@ -1694,8 +1694,8 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrCluster emrCluster = emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName(request.getEmrClusterName()).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName(request.getEmrClusterName()).build();
 
         EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, null, true);
 
@@ -1723,7 +1723,8 @@ public class EmrServiceTest extends AbstractServiceTest
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test").build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).withEmrClusterName("test")
+                .build();
 
         emrService.getCluster(emrClusterAlternateKeyDto, MockAwsOperationsHelper.AMAZON_SERVICE_EXCEPTION, null, true, null, false);
 
@@ -1743,8 +1744,8 @@ public class EmrServiceTest extends AbstractServiceTest
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName("cluster_does_not_exist").build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName("cluster_does_not_exist").build();
 
         emrService.getCluster(emrClusterAlternateKeyDto, "cluster_does_not_exist", null, true, null, false);
 
@@ -1768,7 +1769,7 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrCluster emrCluster = emrService.createCluster(request);
 
         //        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE)
-        //                .emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName(request.getEmrClusterName()).build();
+        //                .emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).withEmrClusterName(request.getEmrClusterName()).build();
 
 
         // Create the second namespace entity.
@@ -1778,8 +1779,8 @@ public class EmrServiceTest extends AbstractServiceTest
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto_2 =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_2).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName(request.getEmrClusterName()).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE_2).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName(request.getEmrClusterName()).build();
 
         emrService.getCluster(emrClusterAlternateKeyDto_2, emrCluster.getId(), null, true, null, false);
 
@@ -1811,8 +1812,8 @@ public class EmrServiceTest extends AbstractServiceTest
         String stepId = emrShellStep.getId();
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName(request.getEmrClusterName()).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName(request.getEmrClusterName()).build();
 
         EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), stepId, true, null, false);
 
@@ -1857,8 +1858,8 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrCluster emrCluster = emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName(request.getEmrClusterName()).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName(request.getEmrClusterName()).build();
 
         EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, null, null, true, null, false);
 
@@ -1904,8 +1905,8 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrCluster emrCluster = emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName(request.getEmrClusterName()).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName(request.getEmrClusterName()).build();
 
         EmrCluster emrClusterTerminated = emrService.terminateCluster(emrClusterAlternateKeyDto, true, null, null);
 
@@ -1934,8 +1935,8 @@ public class EmrServiceTest extends AbstractServiceTest
         emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName(request.getEmrClusterName()).build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName(request.getEmrClusterName()).build();
 
         emrService.terminateCluster(emrClusterAlternateKeyDto, true, null, null);
     }
@@ -1953,8 +1954,8 @@ public class EmrServiceTest extends AbstractServiceTest
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("cluster_not_found")
-                .build();
+            EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+                .withEmrClusterName("cluster_not_found").build();
 
         emrService.terminateCluster(emrClusterAlternateKeyDto, true, null, null);
     }

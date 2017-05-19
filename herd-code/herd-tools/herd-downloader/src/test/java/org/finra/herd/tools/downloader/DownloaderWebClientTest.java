@@ -83,7 +83,7 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         // validate the results.
         assertEquals(WEB_SERVICE_HOSTNAME, resultRegServerAccessParamsDto.getRegServerHost());
         assertEquals(WEB_SERVICE_HTTPS_PORT, resultRegServerAccessParamsDto.getRegServerPort());
-        assertTrue(resultRegServerAccessParamsDto.getUseSsl());
+        assertTrue(resultRegServerAccessParamsDto.isUseSsl());
         assertEquals(WEB_SERVICE_HTTPS_USERNAME, resultRegServerAccessParamsDto.getUsername());
         assertEquals(WEB_SERVICE_HTTPS_PASSWORD, resultRegServerAccessParamsDto.getPassword());
     }

@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd</artifactId>
-      <version>0.43.0-SNAPSHOT</version>
+      <version>0.44.0-SNAPSHOT</version>
    </parent>
 
    <name>herd code</name>
@@ -208,6 +208,7 @@
                       deprecated activiti tasks.
                      -->
                   <excludes>
+                     <exclude>com/kscs/util/jaxb/**</exclude>
                      <exclude>org/finra/herd/model/**</exclude>
                      <exclude>org/finra/herd/**/config/**</exclude>
                      <exclude>org/finra/herd/dao/**/*OperationsImpl.class</exclude>

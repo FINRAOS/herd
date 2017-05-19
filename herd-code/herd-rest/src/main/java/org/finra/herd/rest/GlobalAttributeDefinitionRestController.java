@@ -91,5 +91,23 @@ public class GlobalAttributeDefinitionRestController
         return globalAttributeDefinitionService.getGlobalAttributeDefinitionKeys();
     }
 
-
+    /**
+     * Get an existing global Attribute Definition.
+     *
+     * @param globalAttributeDefinitionLevel the global Attribute Definition level
+     * @param globalAttributeDefinitionName the global Attribute Definition name
+     *
+     * @return the global Attribute Definition
+     */
+    @RequestMapping(value = GLOBAL_ATTRIBUTE_DEFINITIONS_URI_PREFIX +
+        "/globalAttributeDefinitionLevels/{globalAttributeDefinitionLevel}/globalAttributeDefinitionNames/{globalAttributeDefinitionName}",
+        method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_GLOBAL_ATTRIBUTE_DEFINITIONS_GET)
+    public GlobalAttributeDefinition getGlobalAttributeDefinition(@PathVariable("globalAttributeDefinitionLevel") String globalAttributeDefinitionLevel,
+        @PathVariable("globalAttributeDefinitionName") String globalAttributeDefinitionName)
+    {
+        GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
+            new GlobalAttributeDefinitionKey(globalAttributeDefinitionLevel, globalAttributeDefinitionName);
+        return globalAttributeDefinitionService.getGlobalAttributeDefinition(globalAttributeDefinitionKey);
+    }
 }

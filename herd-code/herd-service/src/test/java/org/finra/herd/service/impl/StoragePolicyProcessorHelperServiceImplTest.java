@@ -323,14 +323,8 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storageUnitEntity.setStorageFiles(storageFileEntities);
         storageUnitEntity.setStatus(storageUnitStatusEntity);
 
-        // Create a storage file path.
-        String storageFilePath = TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE;
-
-        // Create a list of storage file paths.
-        List<String> storageFilePaths = Arrays.asList(storageFilePath);
-
         // Create a list of storage files.
-        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000));
+        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE_1_KB, ROW_COUNT_1000));
 
         // Mock the external calls.
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
@@ -348,9 +342,8 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         when(configurationHelper.getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME))
             .thenReturn(S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
         when(storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity)).thenReturn(storageUnitEntity);
-        when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn(TEST_S3_KEY_PREFIX);
-        when(storageFileHelper.createStorageFilesFromEntities(storageFileEntities)).thenReturn(storageFiles);
-        when(storageFileHelper.getFilePathsFromStorageFiles(storageFiles)).thenReturn(storageFilePaths);
+        when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn(S3_KEY_PREFIX);
+        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey)).thenReturn(storageFiles);
         doAnswer(new Answer<Void>()
         {
             public Void answer(InvocationOnMock invocation)
@@ -379,7 +372,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
         verify(storagePolicyHelper).validateStoragePolicyKey(storagePolicyKey);
         verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
-        verify(businessObjectDataHelper, times(3)).businessObjectDataKeyToString(businessObjectDataKey);
+        verify(businessObjectDataHelper, times(2)).businessObjectDataKeyToString(businessObjectDataKey);
         verify(storagePolicyDaoHelper).getStoragePolicyEntityByKeyAndVersion(storagePolicyKey, STORAGE_POLICY_VERSION);
         verify(storagePolicyHelper, times(2)).storagePolicyKeyAndVersionToString(storagePolicyKey, STORAGE_POLICY_VERSION);
         verify(configurationHelper).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX);
@@ -394,16 +387,14 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(configurationHelper).getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME);
         verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
-        verify(storageFileHelper).createStorageFilesFromEntities(storageFileEntities);
-        verify(storageFileHelper).getFilePathsFromStorageFiles(storageFiles);
-        verify(storageFileHelper).validateStorageFiles(storageFilePaths, TEST_S3_KEY_PREFIX, businessObjectDataEntity, STORAGE_NAME);
-        verify(storageFileDaoHelper).validateStorageFilesCount(STORAGE_NAME, businessObjectDataKey, TEST_S3_KEY_PREFIX, storageFileEntities.size());
+        verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey);
+        verify(storageFileDaoHelper).validateStorageFilesCount(STORAGE_NAME, businessObjectDataKey, S3_KEY_PREFIX, storageFileEntities.size());
         verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ARCHIVING);
         verify(configurationHelper).getProperty(ConfigurationValue.S3_ENDPOINT);
         verifyNoMoreInteractionsHelper();
 
         // Validate the returned object.
-        assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
+        assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX,
             StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
             S3_OBJECT_TAGGER_ROLE_SESSION_NAME), result);
     }

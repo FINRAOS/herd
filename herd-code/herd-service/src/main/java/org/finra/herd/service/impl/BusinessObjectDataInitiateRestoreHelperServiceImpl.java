@@ -329,6 +329,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
         // Retrieve and validate a Glacier storage unit for this business object data.
         StorageUnitEntity storageUnitEntity = getStorageUnit(businessObjectDataEntity);
 
+        // Get the storage name.
+        String storageName = storageUnitEntity.getStorage().getName();
+
         // Validate that S3 storage has S3 bucket name configured.
         // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
         String s3BucketName = storageHelper
@@ -339,21 +342,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
         String s3KeyPrefix =
             s3KeyPrefixHelper.buildS3KeyPrefix(storageUnitEntity.getStorage(), businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
 
-        // Retrieve storage files registered with this business object data in the storage.
-        List<StorageFile> storageFiles = storageFileHelper.createStorageFilesFromEntities(storageUnitEntity.getStorageFiles());
-
-        // Get the storage name.
-        String storageName = storageUnitEntity.getStorage().getName();
-
-        // Validate that we have storage files registered in the storage.
-        Assert.isTrue(!CollectionUtils.isEmpty(storageFiles), String
-            .format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}", storageName,
-                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-
-        // Validate storage file paths registered with this business object data in the specified storage.
-        storageFileHelper
-            .validateStorageFiles(storageFileHelper.getFilePathsFromStorageFiles(storageFiles), s3KeyPrefix, storageUnitEntity.getBusinessObjectData(),
-                storageName);
+        // Retrieve and validate storage files registered with the storage unit.
+        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.

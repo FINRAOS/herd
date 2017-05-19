@@ -20,12 +20,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
@@ -39,41 +41,70 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 public class StorageUnitDaoTest extends AbstractDaoTest
 {
     @Test
+    public void testGetS3StorageUnitsToExpire()
+    {
+        // Create a list of business object data keys.
+        List<BusinessObjectDataKey> businessObjectDataKeys = new ArrayList<>();
+        for (int i = 0; i < 6; i++)
+        {
+            businessObjectDataKeys.add(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Integer.toString(i),
+                    SUBPARTITION_VALUES, DATA_VERSION));
+        }
+
+        // Create database entities required for testing.
+        List<StorageUnitEntity> storageUnitEntities = Arrays
+            .asList(storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(0), StorageUnitStatusEntity.RESTORED),
+                storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(1), StorageUnitStatusEntity.RESTORED),
+                storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(2), StorageUnitStatusEntity.RESTORED),
+                storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(3), StorageUnitStatusEntity.RESTORED),
+                storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(4), STORAGE_UNIT_STATUS), storageUnitDaoTestHelper
+                .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataKeys.get(5), LATEST_VERSION_FLAG_SET, BDATA_STATUS,
+                    StorageUnitStatusEntity.RESTORED, NO_STORAGE_DIRECTORY_PATH));
+
+        // Set restore expiration time values.
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        storageUnitEntities.get(0).setRestoreExpirationOn(null);
+        storageUnitEntities.get(1).setRestoreExpirationOn(HerdDateUtils.addDays(currentTime, 1));
+        storageUnitEntities.get(2).setRestoreExpirationOn(HerdDateUtils.addDays(currentTime, -1));
+        storageUnitEntities.get(3).setRestoreExpirationOn(HerdDateUtils.addDays(currentTime, -2));
+        storageUnitEntities.get(4).setRestoreExpirationOn(HerdDateUtils.addDays(currentTime, -2));
+        storageUnitEntities.get(5).setRestoreExpirationOn(HerdDateUtils.addDays(currentTime, -2));
+
+        // Retrieve the storage units and validate the results. Only two entities are expected to match all select criteria.
+        List<StorageUnitEntity> result = storageUnitDao.getS3StorageUnitsToExpire(MAX_RESULT);
+        assertEquals(Arrays.asList(storageUnitEntities.get(3), storageUnitEntities.get(2)), result);
+
+        // Try to retrieve the storage units with max result limit set to 1. Only a single storage unit entity should get selected.
+        assertEquals(Arrays.asList(storageUnitEntities.get(3)), storageUnitDao.getS3StorageUnitsToExpire(1));
+    }
+
+    @Test
     public void testGetS3StorageUnitsToRestore()
     {
         // Create a list of business object data keys.
-        List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION), new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
-            SUBPARTITION_VALUES, DATA_VERSION),
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3,
-                SUBPARTITION_VALUES, DATA_VERSION),
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_4,
-                SUBPARTITION_VALUES, DATA_VERSION),
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_5,
-                SUBPARTITION_VALUES, DATA_VERSION));
+        List<BusinessObjectDataKey> businessObjectDataKeys = new ArrayList<>();
+        for (int i = 0; i < 4; i++)
+        {
+            businessObjectDataKeys.add(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Integer.toString(i),
+                    SUBPARTITION_VALUES, DATA_VERSION));
+        }
 
-        // Create database entities required for testing. Only the first two Glacier storage unit entities are expected to be selected.
-        List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(storageUnitDaoTestHelper
-            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(0), STORAGE_NAME, StorageUnitStatusEntity.RESTORING),
-            storageUnitDaoTestHelper
-                .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(1), STORAGE_NAME, StorageUnitStatusEntity.RESTORING),
-            storageUnitDaoTestHelper
-                .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(1), STORAGE_NAME, StorageUnitStatusEntity.RESTORED),
-            storageUnitDaoTestHelper.createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(3), STORAGE_NAME, STORAGE_UNIT_STATUS),
-            storageUnitDaoTestHelper.createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(4), STORAGE_NAME, NO_STORAGE_UNIT_STATUS));
+        // Create database entities required for testing.
+        List<StorageUnitEntity> storageUnitEntities = Arrays
+            .asList(storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(0), StorageUnitStatusEntity.RESTORING),
+                storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(1), StorageUnitStatusEntity.RESTORING),
+                storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(2), STORAGE_UNIT_STATUS), storageUnitDaoTestHelper
+                .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataKeys.get(3), LATEST_VERSION_FLAG_SET, BDATA_STATUS,
+                    StorageUnitStatusEntity.RESTORING, NO_STORAGE_DIRECTORY_PATH));
 
-        // Get the list of expected storage unit entities.
-        List<StorageUnitEntity> expectedStorageUnitEntities = Arrays
-            .asList(storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntities.get(0), STORAGE_NAME),
-                storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntities.get(1), STORAGE_NAME));
-
-        // Retrieve the storage units and validate the results.
-        List<StorageUnitEntity> resultStorageUnitEntities = storageUnitDao.getS3StorageUnitsToRestore(MAX_RESULT);
-        assertEquals(expectedStorageUnitEntities.size(), resultStorageUnitEntities.size());
-        assertTrue(resultStorageUnitEntities.contains(expectedStorageUnitEntities.get(0)));
-        assertTrue(resultStorageUnitEntities.contains(expectedStorageUnitEntities.get(1)));
-        assertTrue(resultStorageUnitEntities.get(0).getUpdatedOn().getTime() <= resultStorageUnitEntities.get(1).getUpdatedOn().getTime());
+        // Retrieve the storage units and validate the results. Only the first two storage unit entities are expected to be selected.
+        List<StorageUnitEntity> result = storageUnitDao.getS3StorageUnitsToRestore(MAX_RESULT);
+        assertEquals(2, result.size());
+        assertTrue(result.contains(storageUnitEntities.get(0)));
+        assertTrue(result.contains(storageUnitEntities.get(1)));
+        assertTrue(result.get(0).getUpdatedOn().getTime() <= result.get(1).getUpdatedOn().getTime());
 
         // Try to retrieve the storage units with max result limit set to 1. Only the oldest updated storage unit entity should get selected.
         assertEquals(1, storageUnitDao.getS3StorageUnitsToRestore(1).size());

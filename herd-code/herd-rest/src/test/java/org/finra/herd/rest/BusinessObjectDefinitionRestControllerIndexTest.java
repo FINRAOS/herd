@@ -44,6 +44,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
 import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.dto.FacetTypeEnum;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -139,15 +140,13 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
 
             for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponse.getTagIndexSearchResponseDtos())
             {
-                Facet tagFacet =
-                    new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), TagIndexSearchResponseDto.getFacetType(),
-                        tagIndexSearchResponseDto.getTagCode(), null);
+                Facet tagFacet = new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), FacetTypeEnum.TAG.value(),
+                    tagIndexSearchResponseDto.getTagCode(), null);
                 tagFacets.add(tagFacet);
             }
 
-            tagTypeFacets.add(
-                new Facet(tagTypeIndexSearchResponse.getDisplayName(), tagTypeIndexSearchResponse.getCount(), TagTypeIndexSearchResponseDto.getFacetType(),
-                    tagTypeIndexSearchResponse.getCode(), tagFacets));
+            tagTypeFacets.add(new Facet(tagTypeIndexSearchResponse.getDisplayName(), tagTypeIndexSearchResponse.getCount(), FacetTypeEnum.TAG_TYPE.value(),
+                tagTypeIndexSearchResponse.getCode(), tagFacets));
         }
 
         // Construct business object search response.

@@ -218,7 +218,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     {
         RegServerAccessParamsDto regServerAccessParamsDto = dataBridgeWebClient.getRegServerAccessParamsDto();
 
-        assertEquals(RegServerAccessParamsDto.builder().regServerPort(8080).useSsl(false).build(), regServerAccessParamsDto);
+        assertEquals(RegServerAccessParamsDto.builder().withRegServerPort(8080).withUseSsl(false).build(), regServerAccessParamsDto);
     }
 
     @Test

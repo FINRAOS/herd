@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionRequest;
@@ -228,5 +229,35 @@ public class BusinessObjectFormatRestController extends HerdBaseController
             new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 null);
         return businessObjectFormatService.updateBusinessObjectFormatParents(businessObjectFormatKey, request);
+    }
+
+    /**
+     * Updates an existing business object format attributes by alternate key. <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace code
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param request the information needed to update the business object format attributes
+     *
+     * @return the updated business object format.
+     */
+    @RequestMapping(
+        value = "/businessObjectFormatAttributes/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+            "/businessObjectFormatVersions/{businessObjectFormatVersion}",
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMAT_ATTRIBUTES_PUT)
+    public BusinessObjectFormat updateBusinessObjectFormatAttributes(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @RequestBody BusinessObjectFormatAttributesUpdateRequest request)
+    {
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion);
+        return businessObjectFormatService.updateBusinessObjectFormatAttributes(businessObjectFormatKey, request);
     }
 }

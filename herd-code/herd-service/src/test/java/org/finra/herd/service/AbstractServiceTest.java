@@ -154,6 +154,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean ALLOW_MISSING_DATA = true;
 
+    public static final String ALLOWED_ATTRIBUTE_VALUE = "Attribute_Value_1";
+
+    public static final String ALLOWED_ATTRIBUTE_VALUE_2 = "Attribute_Value_2";
+
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
 
     public static final Boolean CREATE_NEW_VERSION = true;

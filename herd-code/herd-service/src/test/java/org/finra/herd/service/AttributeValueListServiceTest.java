@@ -100,6 +100,8 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         when(namespaceDaoHelper.getNamespaceEntity(ATTRIBUTE_VALUE_LIST_NAMESPACE)).thenReturn(namespaceEntity);
         when(attributeValueListDao.getAttributeValueListByKey(attributeValueListKey)).thenReturn(null);
         when(attributeValueListDao.saveAndRefresh(any(AttributeValueListEntity.class))).thenReturn(attributeValueListEntity);
+        when(attributeValueListDaoHelper.createAttributeValueListFromEntity(attributeValueListEntity)).thenCallRealMethod();
+
 
         // Call the method under test.
         AttributeValueList result = attributeValueListService.createAttributeValueList(request);
@@ -109,6 +111,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         verify(namespaceDaoHelper).getNamespaceEntity(ATTRIBUTE_VALUE_LIST_NAMESPACE);
         verify(attributeValueListDao).getAttributeValueListByKey(attributeValueListKey);
         verify(attributeValueListDao).saveAndRefresh(any(AttributeValueListEntity.class));
+        verify(attributeValueListDaoHelper).createAttributeValueListFromEntity(attributeValueListEntity);
         verifyNoMoreInteractionsHelper();
 
         // Validate the result.
@@ -166,6 +169,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
 
         // Mock calls to external methods.
         when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
+        when(attributeValueListDaoHelper.createAttributeValueListFromEntity(attributeValueListEntity)).thenCallRealMethod();
 
         // Call the method under test.
         AttributeValueList result = attributeValueListService.deleteAttributeValueList(attributeValueListKey);
@@ -174,6 +178,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         verify(attributeValueListHelper).validateAttributeValueListKey(attributeValueListKey);
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
         verify(attributeValueListDao).delete(attributeValueListEntity);
+        verify(attributeValueListDaoHelper).createAttributeValueListFromEntity(attributeValueListEntity);
         verifyNoMoreInteractionsHelper();
 
         // Validate the result.
@@ -198,6 +203,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
 
         // Mock calls to external methods.
         when(attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey)).thenReturn(attributeValueListEntity);
+        when(attributeValueListDaoHelper.createAttributeValueListFromEntity(attributeValueListEntity)).thenCallRealMethod();
 
         // Call the method under test.
         AttributeValueList result = attributeValueListService.getAttributeValueList(attributeValueListKey);
@@ -205,6 +211,7 @@ public class AttributeValueListServiceTest extends AbstractServiceTest
         // Verify the external calls.
         verify(attributeValueListHelper).validateAttributeValueListKey(attributeValueListKey);
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
+        verify(attributeValueListDaoHelper).createAttributeValueListFromEntity(attributeValueListEntity);
         verifyNoMoreInteractionsHelper();
 
         // Validate the result.

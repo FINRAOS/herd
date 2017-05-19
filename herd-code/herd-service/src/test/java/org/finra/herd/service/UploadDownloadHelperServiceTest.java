@@ -55,9 +55,9 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     {
         // Clean up the source and target S3 folders. Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
         for (S3FileTransferRequestParamsDto params : Arrays.asList(
-            S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3LoadingDockBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
-                .build(),
-            S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3ExternalBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(storageDaoTestHelper.getS3LoadingDockBucketName())
+                .withS3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build(),
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(storageDaoTestHelper.getS3ExternalBucketName()).withS3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
                 .build()))
         {
             if (!s3Dao.listDirectory(params).isEmpty())
@@ -673,7 +673,7 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testDeleteSourceFileFromS3Fails()  throws Exception
+    public void testDeleteSourceFileFromS3Fails() throws Exception
     {
         // Create and persists entities required for testing.
         // Create source and target business object data entities.
@@ -688,7 +688,7 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
         s3Operations.putObject(
             new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
                 null), null);
-        
+
         // Make the S3 delete fail by a null aws Params
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto =
             new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity), EMPTY_S3_BUCKET_NAME,
