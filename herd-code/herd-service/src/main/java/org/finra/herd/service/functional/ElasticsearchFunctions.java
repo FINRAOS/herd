@@ -54,7 +54,6 @@ import org.elasticsearch.index.query.WildcardQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
@@ -65,6 +64,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.TransportClientFactory;
+import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
@@ -237,6 +237,9 @@ public class ElasticsearchFunctions implements SearchFunctions
      */
     @Autowired
     private HerdStringHelper herdStringHelper;
+
+    @Autowired
+    private ElasticsearchHelper elasticsearchHelper;
 
     /**
      * The index function will take as arguments indexName, documentType, id, json and add the document to the index.
@@ -636,10 +639,9 @@ public class ElasticsearchFunctions implements SearchFunctions
         // Retrieve the search response
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
 
-        Nested aggregation = searchResponse.getAggregations().get(TAG_FACET_AGGS);
-        Terms tagTypeCodeAgg = aggregation.getAggregations().get(TAGTYPE_CODE_AGGREGATION);
+        Terms tagTypeCodeAgg = elasticsearchHelper.getNestedAggregation(searchResponse, TAG_FACET_AGGS, TAGTYPE_CODE_AGGREGATION);
 
-        Terms tagTypeFacetAgg = searchResponse.getAggregations().get(TAG_TYPE_FACET_AGGS);
+        Terms tagTypeFacetAgg = elasticsearchHelper.getAggregation(searchResponse, TAG_TYPE_FACET_AGGS);
 
         List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = new ArrayList<>();
 
@@ -649,7 +651,7 @@ public class ElasticsearchFunctions implements SearchFunctions
 
             TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
                 new TagTypeIndexSearchResponseDto(tagTypeCodeEntry.getKeyAsString(),
-                    tagTypeFacetAgg.getBucketByKey(tagTypeCodeEntry.getKeyAsString()).getDocCount(), tagIndexSearchResponseDtos);
+                    tagTypeFacetAgg.getBucketByKey(tagTypeCodeEntry.getKeyAsString()).getDocCount(), tagIndexSearchResponseDtos, null);
             tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
             Terms tagTypeDisplayNameAggs = tagTypeCodeEntry.getAggregations().get(TAGTYPE_NAME_AGGREGATION);
@@ -662,7 +664,7 @@ public class ElasticsearchFunctions implements SearchFunctions
 
                 for (Terms.Bucket tagCodeEntry : tagCodeAggs.getBuckets())
                 {
-                    tagIndexSearchResponseDto = new TagIndexSearchResponseDto(tagCodeEntry.getKeyAsString(), tagCodeEntry.getDocCount());
+                    tagIndexSearchResponseDto = new TagIndexSearchResponseDto(tagCodeEntry.getKeyAsString(), tagCodeEntry.getDocCount(), null);
                     tagIndexSearchResponseDtos.add(tagIndexSearchResponseDto);
 
                     Terms tagNameAggs = tagCodeEntry.getAggregations().get(TAG_NAME_AGGREGATION);

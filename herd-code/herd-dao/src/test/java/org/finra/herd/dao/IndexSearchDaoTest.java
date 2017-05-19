@@ -409,8 +409,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         // Create index search request
         final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, searchFilters, facetList, isHitHighlightingEnaled);
 
-        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos =
-            Collections.singletonList(new TagTypeIndexSearchResponseDto("code", 1, Collections.singletonList(new TagIndexSearchResponseDto("tag1", 1))));
+        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = Collections
+            .singletonList(new TagTypeIndexSearchResponseDto("code", 1, Collections.singletonList(new TagIndexSearchResponseDto("tag1", 1, null)), null));
         List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDto =
             Collections.singletonList(new ResultTypeIndexSearchResponseDto("type", 1, null));
 

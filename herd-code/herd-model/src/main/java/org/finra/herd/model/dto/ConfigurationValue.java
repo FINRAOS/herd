@@ -216,6 +216,18 @@ public enum ConfigurationValue
     BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES("business.object.data.finalize.restore.job.max.business.object.data.instances", "1000"),
 
     /**
+     * The cron expression to schedule "businessObjectDataFinalizeRestore" system job. The default is to run this system job every 6 hours every day, starting
+     * at 1 AM.
+     */
+    EXPIRE_RESTORED_BDATA_JOB_CRON_EXPRESSION("expire.restored.business.object.data.job.cron.expression", "0 0 1/6 * * ?"),
+
+    /**
+     * The maximum number of business object data instances with expired restoration interval that can get processed in a single run of this system job. The
+     * default is 1000 business object data instances.
+     */
+    EXPIRE_RESTORED_BDATA_JOB_MAX_BDATA_INSTANCES("expire.restored.business.object.data.job.max.business.object.data.instances", "1000"),
+
+    /**
      * The default value for the expiration time for the business object data restore. The default is 30 days
      */
     BDATA_RESTORE_EXPIRATION_IN_DAYS_DEFAULT("business.object.data.restore.expiration.in.days.default", 30),

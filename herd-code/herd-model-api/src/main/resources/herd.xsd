@@ -1941,7 +1941,19 @@
       </xs:all>
    </xs:complexType>
 
-
+   <xs:element name="businessObjectFormatAttributesUpdateRequest" type="businessObjectFormatAttributesUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatAttributesUpdateRequest">
+      <xs:all>
+         <xs:element name="attributes" type="attributes" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Custom user-defined metadata associated with this Business Object Format. "name" is the attribute name (i.e. the key) and
+                  "value" is the attribute value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+   
    <xs:element name="businessObjectFormat" type="businessObjectFormat"/>
    <xs:complexType name="businessObjectFormat">
       <xs:all>
@@ -7233,6 +7245,11 @@
                <xs:documentation>The global attribute definition unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="attributeValueList" type="attributeValueList" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The attribute value list</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -7258,6 +7275,11 @@
          <xs:element name="globalAttributeDefinitionKey" type="globalAttributeDefinitionKey">
             <xs:annotation>
                <xs:documentation>The global attribute definition unique key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A wrapper for attribute value list information</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

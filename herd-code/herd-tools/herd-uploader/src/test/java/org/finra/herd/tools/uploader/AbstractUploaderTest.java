@@ -29,6 +29,7 @@ import org.finra.herd.tools.common.databridge.AbstractDataBridgeTest;
 public abstract class AbstractUploaderTest extends AbstractDataBridgeTest
 {
     protected static final Integer TEST_RETRY_ATTEMPTS = 2;
+
     protected static final Integer TEST_RETRY_DELAY_SECS = 5;
 
     /**
@@ -59,8 +60,8 @@ public abstract class AbstractUploaderTest extends AbstractDataBridgeTest
 
         // Initialize the uploader web client instance.
         RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().regServerHost(WEB_SERVICE_HOSTNAME).regServerPort(WEB_SERVICE_HTTPS_PORT).useSsl(true)
-                .username(WEB_SERVICE_HTTPS_USERNAME).password(WEB_SERVICE_HTTPS_PASSWORD).build();
+            RegServerAccessParamsDto.builder().withRegServerHost(WEB_SERVICE_HOSTNAME).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
+                .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
         uploaderWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
     }
 }

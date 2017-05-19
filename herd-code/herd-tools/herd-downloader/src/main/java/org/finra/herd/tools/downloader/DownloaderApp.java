@@ -67,17 +67,16 @@ public class DownloaderApp extends DataBridgeApp
         }
 
         // Create an instance of S3 file transfer request parameters DTO.
-        S3FileTransferRequestParamsDto params =
-            S3FileTransferRequestParamsDto.builder().localPath(argParser.getStringValue(localPathOpt)).awsAccessKeyId(argParser.getStringValue(s3AccessKeyOpt))
-                .awsSecretKey(argParser.getStringValue(s3SecretKeyOpt)).s3Endpoint(argParser.getStringValue(s3EndpointOpt)).maxThreads(maxThreads)
-                .httpProxyHost(argParser.getStringValue(httpProxyHostOpt)).httpProxyPort(httpProxyPort)
-                .socketTimeout(argParser.getIntegerValue(socketTimeoutOpt)).build();
+        S3FileTransferRequestParamsDto params = S3FileTransferRequestParamsDto.builder().withLocalPath(argParser.getStringValue(localPathOpt))
+            .withAwsAccessKeyId(argParser.getStringValue(s3AccessKeyOpt)).withAwsSecretKey(argParser.getStringValue(s3SecretKeyOpt))
+            .withS3Endpoint(argParser.getStringValue(s3EndpointOpt)).withMaxThreads(maxThreads).withHttpProxyHost(argParser.getStringValue(httpProxyHostOpt))
+            .withHttpProxyPort(httpProxyPort).withSocketTimeout(argParser.getIntegerValue(socketTimeoutOpt)).build();
 
         // Call the controller with the user specified parameters to perform the download.
         DownloaderController controller = applicationContext.getBean(DownloaderController.class);
         RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().regServerHost(regServerHost).regServerPort(regServerPort).useSsl(useSsl)
-                .username(argParser.getStringValue(usernameOpt)).password(argParser.getStringValue(passwordOpt)).build();
+            RegServerAccessParamsDto.builder().withRegServerHost(regServerHost).withRegServerPort(regServerPort).withUseSsl(useSsl)
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt)).build();
         controller.performDownload(regServerAccessParamsDto, argParser.getFileValue(manifestPathOpt), params);
 
         // No exceptions were returned so return success.

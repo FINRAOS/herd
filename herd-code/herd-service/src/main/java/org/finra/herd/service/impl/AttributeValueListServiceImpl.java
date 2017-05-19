@@ -91,7 +91,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         AttributeValueListEntity attributeValueListEntity = createAttributeValueListEntity(request, namespaceEntity);
 
         // Create and return the attribute value list object from the persisted entity.
-        return createAttributeValueListFromEntity(attributeValueListEntity);
+        return attributeValueListDaoHelper.createAttributeValueListFromEntity(attributeValueListEntity);
     }
 
     @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
@@ -108,7 +108,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         attributeValueListDao.delete(attributeValueListEntity);
 
         // Create and return the attribute value list object from the deleted entity.
-        return createAttributeValueListFromEntity(attributeValueListEntity);
+        return attributeValueListDaoHelper.createAttributeValueListFromEntity(attributeValueListEntity);
     }
 
     @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.READ)
@@ -122,7 +122,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         AttributeValueListEntity attributeValueListEntity = attributeValueListDaoHelper.getAttributeValueListEntity(attributeValueListKey);
 
         // Create and return the attribute value list object from the deleted entity.
-        return createAttributeValueListFromEntity(attributeValueListEntity);
+        return attributeValueListDaoHelper.createAttributeValueListFromEntity(attributeValueListEntity);
     }
 
     @Override
@@ -161,27 +161,5 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
 
         // Persist and return the newly created entity.
         return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
-    }
-
-    /**
-     * Creates the attribute value list from the persisted entity.
-     *
-     * @param attributeValueListEntity the attribute value list entity
-     *
-     * @return the attribute value list
-     */
-    private AttributeValueList createAttributeValueListFromEntity(AttributeValueListEntity attributeValueListEntity)
-    {
-        // Create the attribute value list.
-        AttributeValueList attributeValueList = new AttributeValueList();
-
-        AttributeValueListKey attributeValueListKey = new AttributeValueListKey();
-        attributeValueListKey.setNamespace(attributeValueListEntity.getNamespace().getCode());
-        attributeValueListKey.setAttributeValueListName(attributeValueListEntity.getName());
-
-        attributeValueList.setAttributeValueListKey(attributeValueListKey);
-        attributeValueList.setId(attributeValueListEntity.getId());
-
-        return attributeValueList;
     }
 }

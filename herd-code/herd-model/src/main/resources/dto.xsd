@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<xs:schema version="1.0"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+           jaxb:version="2.0">
+
+   <xs:complexType name="awsParamsDto">
+      <xs:sequence>
+         <xs:element name="awsAccessKeyId" type="xs:string" minOccurs="0"/>
+         <xs:element name="awsSecretKey" type="xs:string" minOccurs="0"/>
+         <xs:element name="sessionToken" type="xs:string" minOccurs="0"/>
+         <xs:element name="httpProxyHost" type="xs:string" minOccurs="0"/>
+         <xs:element name="httpProxyPort" type="xs:int" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectData">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.api.xml.BusinessObjectData"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataKey">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.api.xml.BusinessObjectDataKey"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataNotificationEventParamsDto">
+      <xs:complexContent>
+         <xs:extension base="notificationEventParamsDto">
+            <xs:sequence>
+               <xs:element name="businessObjectDataNotificationRegistration" type="businessObjectDataNotificationRegistrationEntity" minOccurs="0"/>
+               <xs:element name="notificationJobAction" type="notificationJobActionEntity" minOccurs="0"/>
+               <xs:element name="eventType" type="xs:string" minOccurs="0"/>
+               <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0"/>
+               <xs:element name="partitionColumnNames" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+               <xs:element name="partitionValues" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+               <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+               <xs:element name="newBusinessObjectDataStatus" type="xs:string" minOccurs="0"/>
+               <xs:element name="oldBusinessObjectDataStatus" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataNotificationRegistrationEntity">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.jpa.BusinessObjectDataNotificationRegistrationEntity"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataRestoreDto">
+      <xs:sequence>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3Endpoint" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3BucketName" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3KeyPrefix" type="xs:string" minOccurs="0"/>
+         <xs:element name="newStorageUnitStatus" type="xs:string" minOccurs="0"/>
+         <xs:element name="oldStorageUnitStatus" type="xs:string" minOccurs="0"/>
+         <xs:element name="storageFiles" type="storageFile" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="exception" type="exception" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionIndexSearchResponseDto">
+      <xs:sequence>
+         <xs:element name="dataProvider" type="xs:string" minOccurs="0"/>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+         <xs:element name="name" type="xs:string" minOccurs="0"/>
+         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionSampleFileUpdateDto">
+      <xs:sequence>
+         <xs:element name="path" type="xs:string" minOccurs="0"/>
+         <xs:element name="fileName" type="xs:string" minOccurs="0"/>
+         <xs:element name="fileSize" type="xs:long" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="completeUploadSingleParamsDto">
+      <xs:sequence>
+         <xs:element name="sourceBusinessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
+         <xs:element name="sourceBucketName" type="xs:string" minOccurs="0"/>
+         <xs:element name="sourceFilePath" type="xs:string" minOccurs="0"/>
+         <xs:element name="sourceOldStatus" type="xs:string" minOccurs="0"/>
+         <xs:element name="sourceNewStatus" type="xs:string" minOccurs="0"/>
+         <xs:element name="targetBusinessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
+         <xs:element name="targetBucketName" type="xs:string" minOccurs="0"/>
+         <xs:element name="targetFilePath" type="xs:string" minOccurs="0"/>
+         <xs:element name="targetOldStatus" type="xs:string" minOccurs="0"/>
+         <xs:element name="targetNewStatus" type="xs:string" minOccurs="0"/>
+         <xs:element name="kmsKeyId" type="xs:string" minOccurs="0"/>
+         <xs:element name="awsParams" type="awsParamsDto" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="date">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="java.util.Date"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="dateRangeDto">
+      <xs:sequence>
+         <xs:element name="lowerDate" type="date" minOccurs="0"/>
+         <xs:element name="upperDate" type="date" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="ec2PriceDto">
+      <xs:sequence>
+         <xs:element name="instancePrice" type="xs:decimal" minOccurs="0"/>
+         <xs:element name="instanceCount" type="xs:int" minOccurs="0"/>
+         <xs:element name="spotPricing" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="bidPrice" type="xs:decimal" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="elasticsearchResponseDto">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionIndexSearchResponseDtos" type="businessObjectDefinitionIndexSearchResponseDto" minOccurs="0"
+                     maxOccurs="unbounded"/>
+         <xs:element name="tagTypeIndexSearchResponseDtos" type="tagTypeIndexSearchResponseDto" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="nestTagTypeIndexSearchResponseDtos" type="tagTypeIndexSearchResponseDto" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="resultTypeIndexSearchResponseDtos" type="resultTypeIndexSearchResponseDto" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="elasticsearchSettingsDto">
+      <xs:sequence>
+         <xs:element name="clientTransportAddresses" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="clientTransportSniff" type="xs:boolean"/>
+         <xs:element name="elasticSearchCluster" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterAlternateKeyDto">
+      <xs:sequence>
+         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string" minOccurs="0"/>
+         <xs:element name="emrClusterName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterPriceDto">
+      <xs:sequence>
+         <xs:element name="availabilityZone" type="xs:string" minOccurs="0"/>
+         <xs:element name="masterPrice" type="ec2PriceDto" minOccurs="0"/>
+         <xs:element name="corePrice" type="ec2PriceDto" minOccurs="0"/>
+         <xs:element name="taskPrice" type="ec2PriceDto" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="exception">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="java.lang.Exception"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:simpleType name="facetTypeEnum">
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="ResultType"/>
+         <xs:enumeration value="Tag"/>
+         <xs:enumeration value="TagType"/>
+      </xs:restriction>
+   </xs:simpleType>
+
+   <xs:complexType name="file">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="java.io.File"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="herdAWSCredentialsProvider">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.dto.HerdAWSCredentialsProvider"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="hivePartitionDto">
+      <xs:sequence>
+         <xs:element name="path" type="xs:string" minOccurs="0"/>
+         <xs:element name="partitionValues" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="indexSearchHighlightField">
+      <xs:sequence>
+         <xs:element name="fieldName" type="xs:string" minOccurs="0"/>
+         <xs:element name="fragmentSize" type="xs:int" minOccurs="0"/>
+         <xs:element name="matchedFields" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="numOfFragments" type="xs:int" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="indexSearchHighlightFields">
+      <xs:sequence>
+         <xs:element name="highlightFields" type="indexSearchHighlightField" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jmsMessage">
+      <xs:sequence>
+         <xs:element name="jmsQueueName" type="xs:string" minOccurs="0"/>
+         <xs:element name="messageText" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jobDefinitionAlternateKeyDto">
+      <xs:sequence>
+         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+         <xs:element name="jobName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="notificationEventParamsDto" abstract="true"/>
+
+   <xs:complexType name="notificationJobActionEntity">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.jpa.NotificationJobActionEntity"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="regServerAccessParamsDto">
+      <xs:sequence>
+         <xs:element name="password" type="xs:string" minOccurs="0"/>
+         <xs:element name="regServerHost" type="xs:string" minOccurs="0"/>
+         <xs:element name="regServerPort" type="xs:int" minOccurs="0"/>
+         <xs:element name="useSsl" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="username" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="resultTypeIndexSearchResponseDto">
+      <xs:sequence>
+         <xs:element name="resultTypeCode" type="xs:string" minOccurs="0"/>
+         <xs:element name="count" type="xs:long"/>
+         <xs:element name="resultTypeDisplayName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="s3FileCopyRequestParamsDto">
+      <xs:complexContent>
+         <xs:extension base="s3FileTransferRequestParamsDto">
+            <xs:sequence>
+               <xs:element name="sourceBucketName" type="xs:string" minOccurs="0"/>
+               <xs:element name="targetBucketName" type="xs:string" minOccurs="0"/>
+               <xs:element name="sourceObjectKey" type="xs:string" minOccurs="0"/>
+               <xs:element name="targetObjectKey" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="s3FileTransferRequestParamsDto">
+      <xs:complexContent>
+         <xs:extension base="awsParamsDto">
+            <xs:sequence>
+               <xs:element name="s3Endpoint" type="xs:string" minOccurs="0"/>
+               <xs:element name="s3BucketName" type="xs:string" minOccurs="0"/>
+               <xs:element name="s3KeyPrefix" type="xs:string" minOccurs="0"/>
+               <xs:element name="localPath" type="xs:string" minOccurs="0"/>
+               <xs:element name="files" type="file" minOccurs="0" maxOccurs="unbounded"/>
+               <xs:element name="recursive" type="xs:boolean" minOccurs="0"/>
+               <xs:element name="useRrs" type="xs:boolean" minOccurs="0"/>
+               <xs:element name="maxThreads" type="xs:int" minOccurs="0"/>
+               <xs:element name="kmsKeyId" type="xs:string" minOccurs="0"/>
+               <xs:element name="socketTimeout" type="xs:int" minOccurs="0"/>
+               <xs:element name="additionalAwsCredentialsProviders" type="herdAWSCredentialsProvider" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="s3FileTransferResultsDto">
+      <xs:sequence>
+         <xs:element name="totalFilesTransferred" type="xs:long" minOccurs="0"/>
+         <xs:element name="totalBytesTransferred" type="xs:long" minOccurs="0"/>
+         <xs:element name="durationMillis" type="xs:long" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageAlternateKeyDto">
+      <xs:sequence>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageFile">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.api.xml.StorageFile"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="storagePolicyKey">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.api.xml.StoragePolicyKey"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="storagePolicyPriorityLevel">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionIsNull" type="xs:boolean"/>
+         <xs:element name="usageIsNull" type="xs:boolean"/>
+         <xs:element name="fileTypeIsNull" type="xs:boolean"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storagePolicySelection">
+      <xs:sequence>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
+         <xs:element name="storagePolicyKey" type="storagePolicyKey" minOccurs="0"/>
+         <xs:element name="storagePolicyVersion" type="xs:int" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storagePolicyTransitionParamsDto">
+      <xs:sequence>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3Endpoint" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3BucketName" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3KeyPrefix" type="xs:string" minOccurs="0"/>
+         <xs:element name="newStorageUnitStatus" type="xs:string" minOccurs="0"/>
+         <xs:element name="oldStorageUnitStatus" type="xs:string" minOccurs="0"/>
+         <xs:element name="storageFiles" type="storageFile" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="s3ObjectTagKey" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3ObjectTagValue" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3ObjectTaggerRoleArn" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3ObjectTaggerRoleSessionName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnitAlternateKeyDto">
+      <xs:sequence>
+         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValue" type="xs:string" minOccurs="0"/>
+         <xs:element name="subPartitionValues" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnitNotificationEventParamsDto">
+      <xs:complexContent>
+         <xs:extension base="notificationEventParamsDto">
+            <xs:sequence>
+               <xs:element name="storageUnitNotificationRegistration" type="storageUnitNotificationRegistrationEntity" minOccurs="0"/>
+               <xs:element name="notificationJobAction" type="notificationJobActionEntity" minOccurs="0"/>
+               <xs:element name="eventType" type="xs:string" minOccurs="0"/>
+               <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0"/>
+               <xs:element name="partitionColumnNames" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+               <xs:element name="partitionValues" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+               <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+               <xs:element name="newStorageUnitStatus" type="xs:string" minOccurs="0"/>
+               <xs:element name="oldStorageUnitStatus" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnitNotificationRegistrationEntity">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.jpa.StorageUnitNotificationRegistrationEntity"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="tagIndexSearchResponseDto">
+      <xs:sequence>
+         <xs:element name="tagCode" type="xs:string" minOccurs="0"/>
+         <xs:element name="count" type="xs:long"/>
+         <xs:element name="tagDisplayName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="tagTypeIndexSearchResponseDto">
+      <xs:sequence>
+         <xs:element name="code" type="xs:string" minOccurs="0"/>
+         <xs:element name="count" type="xs:long"/>
+         <xs:element name="tagIndexSearchResponseDtos" type="tagIndexSearchResponseDto" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+</xs:schema>

@@ -27,9 +27,12 @@ import org.finra.herd.model.api.xml.GlobalAttributeDefinition;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKey;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKeys;
+import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.GlobalAttributeDefinitionLevelEntity;
 import org.finra.herd.service.GlobalAttributeDefinitionService;
+import org.finra.herd.service.helper.AttributeValueListDaoHelper;
+import org.finra.herd.service.helper.AttributeValueListHelper;
 import org.finra.herd.service.helper.GlobalAttributeDefinitionDaoHelper;
 import org.finra.herd.service.helper.GlobalAttributeDefinitionHelper;
 
@@ -52,6 +55,12 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
     @Autowired
     private GlobalAttributeDefinitionLevelDao globalAttributeDefinitionLevelDao;
 
+    @Autowired
+    private AttributeValueListHelper attributeValueListHelper;
+
+    @Autowired
+    private AttributeValueListDaoHelper attributeValueListDaoHelper;
+
     @Override
     public GlobalAttributeDefinition createGlobalAttributeDefinition(GlobalAttributeDefinitionCreateRequest request)
     {
@@ -65,9 +74,17 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
         GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity =
             globalAttributeDefinitionLevelDao.getGlobalAttributeDefinitionLevel(request.getGlobalAttributeDefinitionKey().getGlobalAttributeDefinitionLevel());
 
+        AttributeValueListEntity attributeValueListEntity = null;
+        //Get the attribute value list if the attribute value key exists
+        if (request.getAttributeValueListKey() != null)
+        {
+            //Get the existing attribute list and ensure it exists
+            attributeValueListEntity = attributeValueListDaoHelper.getAttributeValueListEntity(request.getAttributeValueListKey());
+        }
+
         // Create and persist a new global Attribute Definition entity from the request information.
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
-            createGlobalAttributeDefinitionEntity(request.getGlobalAttributeDefinitionKey(), globalAttributeDefinitionLevelEntity);
+            createGlobalAttributeDefinitionEntity(request.getGlobalAttributeDefinitionKey(), globalAttributeDefinitionLevelEntity, attributeValueListEntity);
 
         // Create and return the global Attribute Definition object from the persisted entity.
         return createGlobalAttributeDefinitionFromEntity(globalAttributeDefinitionEntity);
@@ -96,6 +113,20 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
         return new GlobalAttributeDefinitionKeys(globalAttributeDefinitionDao.getAllGlobalAttributeDefinitionKeys());
     }
 
+    @Override
+    public GlobalAttributeDefinition getGlobalAttributeDefinition(GlobalAttributeDefinitionKey globalAttributeDefinitionKey)
+    {
+        // Perform validation and trim.
+        globalAttributeDefinitionHelper.validateGlobalAttributeDefinitionKey(globalAttributeDefinitionKey);
+
+        // Retrieve and ensure that a global Attribute Definition already exists with the specified key.
+        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
+            globalAttributeDefinitionDaoHelper.getGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey);
+        
+        // Create and return the global Attribute Definition object from the deleted entity.
+        return createGlobalAttributeDefinitionFromEntity(globalAttributeDefinitionEntity);
+    }
+
     /**
      * Validates the global Attribute Definition create request. This method also trims the request parameters. Currently only format level is supported
      *
@@ -113,6 +144,10 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
             throw new IllegalArgumentException(String.format("Global attribute definition with level \"%s\" is not supported.",
                 request.getGlobalAttributeDefinitionKey().getGlobalAttributeDefinitionLevel()));
         }
+        if (request.getAttributeValueListKey() != null)
+        {
+            attributeValueListHelper.validateAttributeValueListKey(request.getAttributeValueListKey());
+        }
     }
 
     private GlobalAttributeDefinition createGlobalAttributeDefinitionFromEntity(GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity)
@@ -125,6 +160,12 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
             .setGlobalAttributeDefinitionLevel(globalAttributeDefinitionEntity.getGlobalAttributeDefinitionLevel().getGlobalAttributeDefinitionLevel());
         globalAttributeDefinitionKey.setGlobalAttributeDefinitionName(globalAttributeDefinitionEntity.getGlobalAttributeDefinitionName());
         globalAttributeDefinition.setGlobalAttributeDefinitionKey(globalAttributeDefinitionKey);
+        AttributeValueListEntity attributeValueListEntity = globalAttributeDefinitionEntity.getAttributeValueList();
+        if (attributeValueListEntity != null)
+        {
+            globalAttributeDefinition.setAttributeValueList(attributeValueListDaoHelper.createAttributeValueListFromEntity(attributeValueListEntity));
+        }
+
         return globalAttributeDefinition;
     }
 
@@ -133,15 +174,17 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
      *
      * @param globalAttributeDefinitionKey the global Attribute Definition key
      * @param globalAttributeDefinitionLevelEntity the global attribute definition level entity
+     * @param attributeValueListEntity the attribute list entity (optional)
      *
      * @return the newly created global Attribute Definition entity
      */
     private GlobalAttributeDefinitionEntity createGlobalAttributeDefinitionEntity(GlobalAttributeDefinitionKey globalAttributeDefinitionKey,
-        GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity)
+        GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity, AttributeValueListEntity attributeValueListEntity)
     {
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = new GlobalAttributeDefinitionEntity();
         globalAttributeDefinitionEntity.setGlobalAttributeDefinitionLevel(globalAttributeDefinitionLevelEntity);
         globalAttributeDefinitionEntity.setGlobalAttributeDefinitionName(globalAttributeDefinitionKey.getGlobalAttributeDefinitionName());
+        globalAttributeDefinitionEntity.setAttributeValueList(attributeValueListEntity);
         return globalAttributeDefinitionDao.saveAndRefresh(globalAttributeDefinitionEntity);
     }
 }

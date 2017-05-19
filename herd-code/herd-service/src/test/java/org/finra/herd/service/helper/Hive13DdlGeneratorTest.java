@@ -69,7 +69,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         // Single level partitioning.
         autoDiscoverableSubPartitionColumns = new ArrayList<>();
         storageFilePaths = getStorageFilePaths(Arrays.asList("/file1.dat", "/file2.dat"));
-        expectedHivePartitions = Arrays.asList(HivePartitionDto.builder().path("").partitionValues(Arrays.asList(PARTITION_VALUE)).build());
+        expectedHivePartitions = Arrays.asList(HivePartitionDto.builder().withPath("").withPartitionValues(Arrays.asList(PARTITION_VALUE)).build());
         resultHivePartitions = hive13DdlGenerator
             .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity,
                 STORAGE_NAME);
@@ -79,8 +79,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
         storageFilePaths = getStorageFilePaths(Arrays.asList("/COLUMN1=111/COLUMN2=222/file.dat", "/column1=aa/column2=bb/"));
         expectedHivePartitions = Arrays
-            .asList(HivePartitionDto.builder().path("/COLUMN1=111/COLUMN2=222").partitionValues(Arrays.asList(PARTITION_VALUE, "111", "222")).build(),
-                HivePartitionDto.builder().path("/column1=aa/column2=bb").partitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
+            .asList(HivePartitionDto.builder().withPath("/COLUMN1=111/COLUMN2=222").withPartitionValues(Arrays.asList(PARTITION_VALUE, "111", "222")).build(),
+                HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
         resultHivePartitions = hive13DdlGenerator
             .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity,
                 STORAGE_NAME);

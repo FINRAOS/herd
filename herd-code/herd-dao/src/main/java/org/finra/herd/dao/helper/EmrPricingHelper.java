@@ -286,7 +286,7 @@ public class EmrPricingHelper extends AwsHelper
     private BigDecimal getSpotBidPrice(Ec2PriceDto ec2Price)
     {
         BigDecimal bidPrice = null;
-        if (ec2Price.getIsSpot())
+        if (ec2Price.isSpotPricing())
         {
             bidPrice = ec2Price.getBidPrice();
         }
@@ -468,7 +468,7 @@ public class EmrPricingHelper extends AwsHelper
         if (spotBidPrice != null)
         {
             bestPrice = new Ec2PriceDto();
-            bestPrice.setIsSpot(true);
+            bestPrice.setSpotPricing(true);
             bestPrice.setInstancePrice(spotPrice);
             bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
             bestPrice.setBidPrice(spotBidPrice);
@@ -477,7 +477,7 @@ public class EmrPricingHelper extends AwsHelper
         else if (maxSearchPrice == null)
         {
             bestPrice = new Ec2PriceDto();
-            bestPrice.setIsSpot(false);
+            bestPrice.setSpotPricing(false);
             bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
             bestPrice.setInstancePrice(onDemandPrice);
         }
@@ -486,7 +486,7 @@ public class EmrPricingHelper extends AwsHelper
         {
             // Default to on-demand
             bestPrice = new Ec2PriceDto();
-            bestPrice.setIsSpot(false);
+            bestPrice.setSpotPricing(false);
             bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
             bestPrice.setInstancePrice(onDemandPrice);
 
@@ -507,7 +507,7 @@ public class EmrPricingHelper extends AwsHelper
             // Should I use spot?
             if (isSpotBelowMax && isSpotBelowOnDemand && (isThresholdBelowOnDemand || !isOnDemandBelowMax))
             {
-                bestPrice.setIsSpot(true);
+                bestPrice.setSpotPricing(true);
                 bestPrice.setInstancePrice(spotPrice);
                 bestPrice.setBidPrice(maxSearchPrice);
             }

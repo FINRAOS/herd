@@ -63,6 +63,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ACTIVITI_ID_4 = "UT_Activiti_ID_4_" + RANDOM_SUFFIX;
 
+    public static final String AGGREGATION_NAME = "UT_AggregationName_" + RANDOM_SUFFIX;
+
     public static final String ALLOWED_ATTRIBUTE_VALUE = "UT_ALLOWED_ATTRIBUTE_VALUE" + RANDOM_SUFFIX;
 
     public static final Boolean ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = true;
@@ -91,11 +93,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ATTRIBUTE_VALUE_LIST_NAME = "UT_Attribute_Value_List_Name_1_" + RANDOM_SUFFIX;
 
-    public static final String ATTRIBUTE_VALUE_LIST_NAME_2 = "UT_Attribute_Value_List_Name_2_" + RANDOM_SUFFIX;
-
     public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE = "UT_Attribute_Value_List_Namespace_1_" + RANDOM_SUFFIX;
 
     public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE_2 = "UT_Attribute_Value_List_Namespace_2_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAME_2 = "UT_Attribute_Value_List_Name_2_" + RANDOM_SUFFIX;
 
     public static final String AWS_ACCOUNT_ID = "UT_AwsAccountId_1_" + RANDOM_SUFFIX;
 
@@ -389,6 +391,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NAMESPACE_CODE = "UT_NamespaceCode_1_" + RANDOM_SUFFIX;
 
+    public static final String NESTED_AGGREGATION_JSON_STRING = "UT_NestedAggregationJsonString_" + RANDOM_SUFFIX;
+
+    public static final String NESTED_AGGREGATION_NAME = "UT_NestedAggregationName_" + RANDOM_SUFFIX;
+
     public static final String NOTIFICATION_EVENT_TYPE = "UT_Ntfcn_Event" + RANDOM_SUFFIX;
 
     public static final String NOTIFICATION_EVENT_TYPE_2 = "UT_Ntfcn_Event_2" + RANDOM_SUFFIX;
@@ -532,10 +538,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String PARTITION_VALUE_3 = "UT_2015-08-20" + RANDOM_SUFFIX;
 
-    public static final String PARTITION_VALUE_4 = "UT_2016-04-11" + RANDOM_SUFFIX;
-
-    public static final String PARTITION_VALUE_5 = "UT_2016-06-20" + RANDOM_SUFFIX;
-
     public static final Boolean PUBLISH_ATTRIBUTE = true;
 
     public static final String REASON = "UT_Reason_1_" + RANDOM_SUFFIX;
@@ -616,6 +618,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SEARCH_INDEX_TYPE = "UT_SearchIndexType_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_TYPE_2 = "UT_SearchIndexType_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_RESPONSE_JSON_STRING = "UT_SearchResponseJsonString_" + RANDOM_SUFFIX;
 
     public static final int SEARCH_RESULT_SIZE = 200;
 
@@ -720,6 +724,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> SUBPARTITION_VALUES_2 =
         Arrays.asList("Ee" + RANDOM_SUFFIX, "Ff" + RANDOM_SUFFIX, "Gg" + RANDOM_SUFFIX, "Hh" + RANDOM_SUFFIX);
+
+    public static final String SUB_AGGREGATION_NAME = "UT_SubAggregationName_" + RANDOM_SUFFIX;
 
     public static final String SUB_PARTITION_VALUE_1 = "UT_SubPartition_1_" + RANDOM_SUFFIX;
 

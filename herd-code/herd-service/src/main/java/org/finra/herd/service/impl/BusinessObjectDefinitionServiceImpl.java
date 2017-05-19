@@ -75,6 +75,7 @@ import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
+import org.finra.herd.model.dto.FacetTypeEnum;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
@@ -306,8 +307,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
-        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity ->
-        {
+        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -572,14 +572,14 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
                 for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos())
                 {
-                    Facet tagFacet =
-                        new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), TagIndexSearchResponseDto.getFacetType(),
-                            tagIndexSearchResponseDto.getTagCode(), null);
+                    Facet tagFacet = new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), FacetTypeEnum.TAG.value(),
+                        tagIndexSearchResponseDto.getTagCode(), null);
                     tagFacets.add(tagFacet);
                 }
 
-                tagTypeFacets.add(new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), tagTypeIndexSearchResponseDto.getCount(),
-                    TagTypeIndexSearchResponseDto.getFacetType(), tagTypeIndexSearchResponseDto.getCode(), tagFacets));
+                tagTypeFacets.add(
+                    new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), tagTypeIndexSearchResponseDto.getCount(), FacetTypeEnum.TAG_TYPE.value(),
+                        tagTypeIndexSearchResponseDto.getCode(), tagFacets));
             }
         }
 
@@ -1082,8 +1082,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         Map<String, String> businessObjectDefinitionJSONMap = new HashMap<>();
 
-        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity ->
-        {
+        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -1116,13 +1115,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         BusinessObjectDefinition definition = new BusinessObjectDefinition();
 
         //populate namespace and business object definition name fields by default
-        definition.setNamespace(businessObjectDefinitionIndexSearchResponseDto.getNamespace().getCode());
+        definition.setNamespace(businessObjectDefinitionIndexSearchResponseDto.getNamespace());
         definition.setBusinessObjectDefinitionName(businessObjectDefinitionIndexSearchResponseDto.getName());
 
         //decorate object with only the required fields
         if (fields.contains(DATA_PROVIDER_NAME_FIELD))
         {
-            definition.setDataProviderName(businessObjectDefinitionIndexSearchResponseDto.getDataProvider().getName());
+            definition.setDataProviderName(businessObjectDefinitionIndexSearchResponseDto.getDataProvider());
         }
 
         if (fields.contains(SHORT_DESCRIPTION_FIELD))

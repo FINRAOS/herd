@@ -199,8 +199,8 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
 
         // Perform the download.
         RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().regServerHost(WEB_SERVICE_HOSTNAME).regServerPort(WEB_SERVICE_HTTPS_PORT).useSsl(true)
-                .username(WEB_SERVICE_HTTPS_USERNAME).password(WEB_SERVICE_HTTPS_PASSWORD).build();
+            RegServerAccessParamsDto.builder().withRegServerHost(WEB_SERVICE_HOSTNAME).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
+                .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
         downloaderController.performDownload(regServerAccessParamsDto, downloaderInputManifestFile, s3FileTransferRequestParamsDto);
     }
 
@@ -231,8 +231,8 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         s3FileTransferRequestParamsDto.setLocalPath(localPath);
         s3FileTransferRequestParamsDto.setMaxThreads(numOfThreads);
         RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().regServerHost(hostnameToUse).regServerPort(WEB_SERVICE_HTTPS_PORT).useSsl(true)
-                .username(WEB_SERVICE_HTTPS_USERNAME).password(WEB_SERVICE_HTTPS_PASSWORD).build();
+            RegServerAccessParamsDto.builder().withRegServerHost(hostnameToUse).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
+                .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
         downloaderController.performDownload(regServerAccessParamsDto, downloaderInputManifestFile, s3FileTransferRequestParamsDto);
     }
 

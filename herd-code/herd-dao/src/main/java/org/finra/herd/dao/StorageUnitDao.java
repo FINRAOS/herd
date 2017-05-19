@@ -25,6 +25,16 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 public interface StorageUnitDao extends BaseJpaDao
 {
     /**
+     * Retrieves a list of storage units that belong to S3 storage, have RESTORED status, and ready to be expired. The returned list is ordered by the
+     * "restoreExpirationOn" timestamp of the S3 storage units, starting with an S3 storage unit that is ready to be expired the longest.
+     *
+     * @param maxResult the maximum number of results to retrieve
+     *
+     * @return the list of storage unit entities
+     */
+    public List<StorageUnitEntity> getS3StorageUnitsToExpire(int maxResult);
+
+    /**
      * Retrieves a list of storage units that belong to S3 storage and have the relative S3 storage unit in RESTORING state. The returned list is ordered by the
      * "updated on" timestamp of the S3 storage units, starting with an S3 storage unit that has the RESTORING status the longest.
      *

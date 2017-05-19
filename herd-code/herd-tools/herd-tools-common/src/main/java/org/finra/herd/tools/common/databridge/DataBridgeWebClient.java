@@ -166,7 +166,7 @@ public abstract class DataBridgeWebClient
             post.addHeader("Accepts", DEFAULT_ACCEPT);
 
             // If SSL is enabled, set the client authentication header.
-            if (regServerAccessParamsDto.getUseSsl())
+            if (regServerAccessParamsDto.isUseSsl())
             {
                 post.addHeader(getAuthorizationHeader());
             }
@@ -235,7 +235,7 @@ public abstract class DataBridgeWebClient
             request.addHeader("Accepts", DEFAULT_ACCEPT);
 
             // If SSL is enabled, set the client authentication header.
-            if (regServerAccessParamsDto.getUseSsl())
+            if (regServerAccessParamsDto.isUseSsl())
             {
                 request.addHeader(getAuthorizationHeader());
             }
@@ -332,7 +332,7 @@ public abstract class DataBridgeWebClient
             post.addHeader("Accepts", DEFAULT_ACCEPT);
 
             // If SSL is enabled, set the client authentication header.
-            if (regServerAccessParamsDto.getUseSsl())
+            if (regServerAccessParamsDto.isUseSsl())
             {
                 post.addHeader(getAuthorizationHeader());
             }
@@ -403,7 +403,7 @@ public abstract class DataBridgeWebClient
             HttpPut httpPut = new HttpPut(uriBuilder.build());
             httpPut.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);
             httpPut.addHeader("Accepts", DEFAULT_ACCEPT);
-            if (regServerAccessParamsDto.getUseSsl())
+            if (regServerAccessParamsDto.isUseSsl())
             {
                 httpPut.addHeader(getAuthorizationHeader());
             }
@@ -536,7 +536,7 @@ public abstract class DataBridgeWebClient
             request.addHeader("Accepts", DEFAULT_ACCEPT);
 
             // If SSL is enabled, set the client authentication header.
-            if (regServerAccessParamsDto.getUseSsl())
+            if (regServerAccessParamsDto.isUseSsl())
             {
                 request.addHeader(getAuthorizationHeader());
             }
@@ -558,7 +558,7 @@ public abstract class DataBridgeWebClient
      */
     protected String getUriScheme()
     {
-        return regServerAccessParamsDto.getUseSsl() ? "https" : "http";
+        return regServerAccessParamsDto.isUseSsl() ? "https" : "http";
     }
 
     /**
