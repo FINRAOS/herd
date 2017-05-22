@@ -263,7 +263,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         }
 
         // Log the actual elasticsearch query when debug is enabled
-        LOGGER.debug("indexSearchRequest={}", searchRequestBuilder.toString());
+        LOGGER.info("indexSearchRequest={}", searchRequestBuilder.toString());
 
         // Retrieve the indexSearch response
         final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
