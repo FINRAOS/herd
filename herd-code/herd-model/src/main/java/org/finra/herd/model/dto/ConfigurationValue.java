@@ -180,7 +180,7 @@ public enum ConfigurationValue
     /**
      * The cron expression to schedule "ec2OnDemandPricingUpdate" system job.  Default is to run the system job at 06:00 on Sunday.
      */
-    EC2_ON_DEMAND_PRICING_UPDATE_JOB_CRON_EXPRESSION("ec2.on.demand.pricing.update.job.cron.expression", "0 0 6 * * ?"),
+    EC2_ON_DEMAND_PRICING_UPDATE_JOB_CRON_EXPRESSION("ec2.on.demand.pricing.update.job.cron.expression", "0 0 6 ? * SUN"),
 
     /**
      * The URL of the Amazon EC2 pricing list in JSON format. Default is set to the URL specified by Amazon.
