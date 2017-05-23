@@ -30,6 +30,7 @@ import java.util.List;
 
 import com.google.common.base.Objects;
 import org.apache.commons.io.IOUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -57,6 +58,13 @@ import org.finra.herd.service.EmrService;
 public class EmrRestControllerTest extends AbstractRestTest
 {
     private String defaultAccountId = null;
+
+    @Before
+    public void createDatabaseEntities()
+    {
+        // Create EC2 on-demand pricing entities required for testing.
+        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
+    }
 
     /**
      * This test is to get unit test coverage for the rest method. Real unit tests are covered in Service layer EmrServiceTest

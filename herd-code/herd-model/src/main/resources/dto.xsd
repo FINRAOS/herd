@@ -135,6 +135,21 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="ec2OnDemandPricing">
+      <xs:sequence>
+         <xs:element name="ec2OnDemandPricingKey" type="ec2OnDemandPricingKey" minOccurs="0"/>
+         <xs:element name="pricePerHour" type="xs:decimal" minOccurs="0"/>
+         <xs:element name="sku" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="ec2OnDemandPricingKey">
+      <xs:sequence>
+         <xs:element name="regionName" type="xs:string" minOccurs="0"/>
+         <xs:element name="instanceType" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="ec2PriceDto">
       <xs:sequence>
          <xs:element name="instancePrice" type="xs:decimal" minOccurs="0"/>

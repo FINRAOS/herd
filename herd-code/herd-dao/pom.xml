@@ -204,6 +204,12 @@
          <artifactId>jcredstash</artifactId>
       </dependency>
 
+      <!-- A simple Java toolkit for JSON -->
+      <dependency>
+         <groupId>com.googlecode.json-simple</groupId>
+         <artifactId>json-simple</artifactId>
+      </dependency>
+
    </dependencies>
 
 </project>

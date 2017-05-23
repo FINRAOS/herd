@@ -152,11 +152,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH = "classpath:org/finra/herd/service/testHerdUserTaskWorkflow.bpmn20.xml";
 
-    public static final Boolean ALLOW_MISSING_DATA = true;
-
     public static final String ALLOWED_ATTRIBUTE_VALUE = "Attribute_Value_1";
 
     public static final String ALLOWED_ATTRIBUTE_VALUE_2 = "Attribute_Value_2";
+
+    public static final Boolean ALLOW_MISSING_DATA = true;
 
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
 
@@ -169,6 +169,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String DIRECTORY_PATH_2 = "UT_Directory_Path/Some_Path_2/" + RANDOM_SUFFIX + "/";
 
     public static final Boolean DISCOVER_STORAGE_FILES = true;
+
+    public static final String EC2_PRICING_LIST_URL = "UT_Ec2PricingListUrl_" + RANDOM_SUFFIX;
 
     public static final String END_PARTITION_VALUE = "2014-04-08";
 
@@ -296,6 +298,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final XMLGregorianCalendar NO_SEARCH_INDEX_STATISTICS_CREATION_DATE = null;
 
     public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
+
+    public static final String NO_SKU = null;
 
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;
 

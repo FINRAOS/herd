@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 
 import com.amazonaws.AmazonServiceException;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -58,6 +59,13 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
     @Autowired
     private EmrPricingHelper emrPricingHelper;
+
+    @Before
+    public void createDatabaseEntities()
+    {
+        // Create EC2 on-demand pricing entities required for testing.
+        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
+    }
 
     /**
      * Tests algorithmic cases:

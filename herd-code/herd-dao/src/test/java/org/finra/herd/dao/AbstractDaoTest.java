@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,7 +112,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AWS_KMS_KEY_ID = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
 
-    public static final String AWS_REGION = "UT_Region" + RANDOM_SUFFIX;
+    public static final String AWS_REGION_NAME = "UT_AwsRegionName_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME_2 = "UT_AwsRegionName_2_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME_3 = "UT_AwsRegionName_3_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME_4 = "UT_AwsRegionName_4_" + RANDOM_SUFFIX;
 
     public static final String AWS_ROLE_ARN = "UT_AwsRoleArn" + RANDOM_SUFFIX;
 
@@ -234,7 +241,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
 
-    public static final String EC2_INSTANCE_TYPE = "UT_Ec2InstanceType" + RANDOM_SUFFIX;
+    public static final String EC2_INSTANCE_TYPE = "UT_Ec2InstanceType_1_" + RANDOM_SUFFIX;
+
+    public static final String EC2_INSTANCE_TYPE_2 = "UT_Ec2InstanceType_2_" + RANDOM_SUFFIX;
+
+    public static final String EC2_INSTANCE_TYPE_3 = "UT_Ec2InstanceType_3_" + RANDOM_SUFFIX;
+
+    public static final String EC2_INSTANCE_TYPE_4 = "UT_Ec2InstanceType_4_" + RANDOM_SUFFIX;
 
     public static final String EC2_SECURITY_GROUP_1 = "UT_Ec2SecurityGroup1" + RANDOM_SUFFIX;
 
@@ -311,6 +324,16 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
 
     public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
+
+    public static final BigDecimal HOURLY_PRICE = new BigDecimal(Math.random() * Integer.MAX_VALUE);
+
+    public static final BigDecimal HOURLY_PRICE_2 = new BigDecimal(Math.random() * Integer.MAX_VALUE);
+
+    public static final BigDecimal HOURLY_PRICE_3 = new BigDecimal(Math.random() * Integer.MAX_VALUE);
+
+    public static final BigDecimal HOURLY_PRICE_4 = new BigDecimal(Math.random() * Integer.MAX_VALUE);
+
+    public static final BigDecimal HOURLY_PRICE_5 = new BigDecimal(Math.random() * Integer.MAX_VALUE);
 
     public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
 
@@ -928,6 +951,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected Ec2Dao ec2Dao;
 
     @Autowired
+    protected Ec2OnDemandPricingDao ec2OnDemandPricingDao;
+
+    @Autowired
+    protected Ec2OnDemandPricingDaoTestHelper ec2OnDemandPricingDaoTestHelper;
+
+    @Autowired
     protected EmrClusterDefinitionDao emrClusterDefinitionDao;
 
     @Autowired
@@ -1010,15 +1039,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected NotificationRegistrationStatusDao notificationRegistrationStatusDao;
 
     @Autowired
-    protected OnDemandPriceDao onDemandPriceDao;
-
-    @Autowired
     protected PartitionKeyGroupDao partitionKeyGroupDao;
 
     @Autowired
     protected PartitionKeyGroupDaoTestHelper partitionKeyGroupDaoTestHelper;
 
-    // Provide easy access to the S3 DAO for all test methods.
     @Autowired
     protected S3Dao s3Dao;
 
