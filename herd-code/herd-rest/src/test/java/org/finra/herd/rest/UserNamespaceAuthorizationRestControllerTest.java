@@ -16,13 +16,17 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorization;
@@ -30,30 +34,47 @@ import org.finra.herd.model.api.xml.UserNamespaceAuthorizationCreateRequest;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationUpdateRequest;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizations;
-import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
+import org.finra.herd.service.UserNamespaceAuthorizationService;
 
 /**
  * This class tests various functionality within the user namespace authorization REST controller.
  */
 public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTest
 {
+    @Mock
+    private UserNamespaceAuthorizationService userNamespaceAuthorizationService;
+
+    @InjectMocks
+    private UserNamespaceAuthorizationRestController userNamespaceAuthorizationRestController;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testCreateUserNamespaceAuthorization()
     {
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
-        // Create and persist the relative database entities.
-        namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
+        UserNamespaceAuthorizationCreateRequest request = new UserNamespaceAuthorizationCreateRequest(key,
+            Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
 
-        // Create a user namespace authorization.
-        UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationRestController.createUserNamespaceAuthorization(
-            new UserNamespaceAuthorizationCreateRequest(key,
-                Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT)));
+        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(100, key, SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Mock calls to external method.
+        when(userNamespaceAuthorizationService.createUserNamespaceAuthorization(request)).thenReturn(userNamespaceAuthorization);
+
+        UserNamespaceAuthorization response = userNamespaceAuthorizationRestController.createUserNamespaceAuthorization(request);
+
+        // Verify the external calls.
+        verify(userNamespaceAuthorizationService).createUserNamespaceAuthorization(request);
+        verifyNoMoreInteractions(userNamespaceAuthorizationService);
 
         // Validate the returned object.
-        assertEquals(new UserNamespaceAuthorization(resultUserNamespaceAuthorization.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS),
-            resultUserNamespaceAuthorization);
+        assertEquals(userNamespaceAuthorization, response);
     }
 
     @Test
@@ -62,18 +83,24 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         // Create a user namespace authorization key
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
-        // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper
-            .createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
+        UserNamespaceAuthorization userNamespaceAuthorization =
+            new UserNamespaceAuthorization(100, key, Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
+
+        UserNamespaceAuthorizationUpdateRequest request =
+            new UserNamespaceAuthorizationUpdateRequest(Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
+        // Mock calls to external method.
+        when(userNamespaceAuthorizationService.updateUserNamespaceAuthorization(key, request)).thenReturn(userNamespaceAuthorization);
 
         // Update a user namespace authorization.
-        UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationRestController
-            .updateUserNamespaceAuthorization(key.getUserId(), key.getNamespace(),
-                new UserNamespaceAuthorizationUpdateRequest(Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT)));
+        UserNamespaceAuthorization resultUserNamespaceAuthorization =
+            userNamespaceAuthorizationRestController.updateUserNamespaceAuthorization(key.getUserId(), key.getNamespace(), request);
+
+        // Verify the external calls.
+        verify(userNamespaceAuthorizationService).updateUserNamespaceAuthorization(key, request);
+        verifyNoMoreInteractions(userNamespaceAuthorizationService);
 
         // Validate the returned object.
-        assertEquals(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key,
-            Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT)), resultUserNamespaceAuthorization);
+        assertEquals(userNamespaceAuthorization, resultUserNamespaceAuthorization);
     }
 
     @Test
@@ -82,17 +109,20 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         // Create a user namespace authorization key
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
-        // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
-            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(100, key, SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        when(userNamespaceAuthorizationService.getUserNamespaceAuthorization(key)).thenReturn(userNamespaceAuthorization);
 
         // Get a user namespace authorization.
         UserNamespaceAuthorization resultUserNamespaceAuthorization =
             userNamespaceAuthorizationRestController.getUserNamespaceAuthorization(key.getUserId(), key.getNamespace());
 
+        // Verify the external calls.
+        verify(userNamespaceAuthorizationService).getUserNamespaceAuthorization(key);
+        verifyNoMoreInteractions(userNamespaceAuthorizationService);
+
         // Validate the returned object.
-        assertEquals(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS),
-            resultUserNamespaceAuthorization);
+        assertEquals(userNamespaceAuthorization, resultUserNamespaceAuthorization);
     }
 
     @Test
@@ -101,80 +131,57 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         // Create a user namespace authorization key
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
-        // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
-            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(100, key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
-        // Validate that this user namespace authorization exists.
-        assertNotNull(userNamespaceAuthorizationDao.getUserNamespaceAuthorizationByKey(key));
+        when(userNamespaceAuthorizationService.deleteUserNamespaceAuthorization(key)).thenReturn(userNamespaceAuthorization);
 
         // Delete this user namespace authorization.
         UserNamespaceAuthorization deletedUserNamespaceAuthorization =
             userNamespaceAuthorizationRestController.deleteUserNamespaceAuthorization(key.getUserId(), key.getNamespace());
 
-        // Validate the returned object.
-        assertEquals(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS),
-            deletedUserNamespaceAuthorization);
+        // Verify the external calls.
+        verify(userNamespaceAuthorizationService).deleteUserNamespaceAuthorization(key);
+        verifyNoMoreInteractions(userNamespaceAuthorizationService);
 
-        // Ensure that this user namespace authorization is no longer there.
-        assertNull(userNamespaceAuthorizationDao.getUserNamespaceAuthorizationByKey(key));
+        // Validate the returned object.
+        assertEquals(userNamespaceAuthorization, deletedUserNamespaceAuthorization);
     }
 
     @Test
     public void testGetUserNamespaceAuthorizationsByUserId() throws Exception
     {
-        // Create user namespace authorization keys. The keys are listed out of order to validate the order by logic.
-        List<UserNamespaceAuthorizationKey> keys = Arrays
-            .asList(new UserNamespaceAuthorizationKey(USER_ID_2, NAMESPACE_2), new UserNamespaceAuthorizationKey(USER_ID_2, NAMESPACE),
-                new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE_2), new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE));
+        UserNamespaceAuthorizations userNamespaceAuthorizations = new UserNamespaceAuthorizations();
 
-        // Create and persist the relative database entities.
-        for (UserNamespaceAuthorizationKey key : keys)
-        {
-            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
-        }
+        when(userNamespaceAuthorizationService.getUserNamespaceAuthorizationsByUserId(USER_ID)).thenReturn(userNamespaceAuthorizations);
 
         // Get user namespace authorizations for the specified user id.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
             userNamespaceAuthorizationRestController.getUserNamespaceAuthorizationsByUserId(USER_ID);
 
+        // Verify the external calls.
+        verify(userNamespaceAuthorizationService).getUserNamespaceAuthorizationsByUserId(USER_ID);
+        verifyNoMoreInteractions(userNamespaceAuthorizationService);
+
         // Validate the returned object.
-        assertNotNull(resultUserNamespaceAuthorizations);
-        assertNotNull(resultUserNamespaceAuthorizations.getUserNamespaceAuthorizations());
-        assertEquals(2, resultUserNamespaceAuthorizations.getUserNamespaceAuthorizations().size());
-        assertEquals(new UserNamespaceAuthorizations(Arrays.asList(
-            new UserNamespaceAuthorization(resultUserNamespaceAuthorizations.getUserNamespaceAuthorizations().get(0).getId(), keys.get(3),
-                SUPPORTED_NAMESPACE_PERMISSIONS),
-            new UserNamespaceAuthorization(resultUserNamespaceAuthorizations.getUserNamespaceAuthorizations().get(1).getId(), keys.get(2),
-                SUPPORTED_NAMESPACE_PERMISSIONS))), resultUserNamespaceAuthorizations);
+        assertEquals(resultUserNamespaceAuthorizations, userNamespaceAuthorizations);
     }
 
     @Test
     public void testGetUserNamespaceAuthorizationsByNamespace() throws Exception
     {
-        // Create user namespace authorization keys. The keys are listed out of order to validate the order by logic.
-        List<UserNamespaceAuthorizationKey> keys = Arrays
-            .asList(new UserNamespaceAuthorizationKey(USER_ID_2, NAMESPACE_2), new UserNamespaceAuthorizationKey(USER_ID_2, NAMESPACE),
-                new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE_2), new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE));
+        UserNamespaceAuthorizations userNamespaceAuthorizations = new UserNamespaceAuthorizations();
 
-        // Create and persist the relative database entities.
-        for (UserNamespaceAuthorizationKey key : keys)
-        {
-            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
-        }
+        when(userNamespaceAuthorizationService.getUserNamespaceAuthorizationsByNamespace(USER_ID)).thenReturn(userNamespaceAuthorizations);
 
-        // Get user namespace authorizations for the specified namespace.
+        // Get user namespace authorizations for the specified user id.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
-            userNamespaceAuthorizationRestController.getUserNamespaceAuthorizationsByNamespace(NAMESPACE);
+            userNamespaceAuthorizationRestController.getUserNamespaceAuthorizationsByNamespace(USER_ID);
+
+        // Verify the external calls.
+        verify(userNamespaceAuthorizationService).getUserNamespaceAuthorizationsByNamespace(USER_ID);
+        verifyNoMoreInteractions(userNamespaceAuthorizationService);
 
         // Validate the returned object.
-        assertNotNull(resultUserNamespaceAuthorizations);
-        assertNotNull(resultUserNamespaceAuthorizations.getUserNamespaceAuthorizations());
-        assertEquals(2, resultUserNamespaceAuthorizations.getUserNamespaceAuthorizations().size());
-        assertEquals(new UserNamespaceAuthorizations(Arrays.asList(
-            new UserNamespaceAuthorization(resultUserNamespaceAuthorizations.getUserNamespaceAuthorizations().get(0).getId(), keys.get(3),
-                SUPPORTED_NAMESPACE_PERMISSIONS),
-            new UserNamespaceAuthorization(resultUserNamespaceAuthorizations.getUserNamespaceAuthorizations().get(1).getId(), keys.get(1),
-                SUPPORTED_NAMESPACE_PERMISSIONS))), resultUserNamespaceAuthorizations);
+        assertEquals(resultUserNamespaceAuthorizations, userNamespaceAuthorizations);
     }
 }

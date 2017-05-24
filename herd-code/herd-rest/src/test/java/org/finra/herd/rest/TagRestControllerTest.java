@@ -16,15 +16,23 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Sets;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.model.api.xml.Tag;
@@ -37,8 +45,7 @@ import org.finra.herd.model.api.xml.TagSearchKey;
 import org.finra.herd.model.api.xml.TagSearchRequest;
 import org.finra.herd.model.api.xml.TagSearchResponse;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
-import org.finra.herd.model.jpa.TagEntity;
-import org.finra.herd.model.jpa.TagTypeEntity;
+import org.finra.herd.service.TagService;
 import org.finra.herd.service.impl.TagServiceImpl;
 
 /**
@@ -46,26 +53,36 @@ import org.finra.herd.service.impl.TagServiceImpl;
  */
 public class TagRestControllerTest extends AbstractRestTest
 {
+    @Mock
+    private TagService tagService;
+
+    @InjectMocks
+    private TagRestController tagRestController;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testCreateTag()
     {
-        // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
-
-        // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
+        TagCreateRequest request = new TagCreateRequest(tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, NO_PARENT_TAG_KEY);
 
+        Tag tag = getNewTag(tagKey);
+
+        when(tagService.createTag(request)).thenReturn(tag);
         // Create a tag.
-        Tag tag = tagRestController.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, NO_PARENT_TAG_KEY));
+        Tag resultTag = tagRestController.createTag(request);
 
-        // Get the tag entity.
-        TagEntity tagEntity = tagDao.getTagByKey(tagKey);
-        assertNotNull(tagEntity);
+        // Verify the external calls.
+        verify(tagService).createTag(request);
+        verifyNoMoreInteractions(tagService);
 
-        // Validate the response object.
-        assertEquals(
-            new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tagEntity.getCreatedBy(), tagEntity.getUpdatedBy(),
-                HerdDateUtils.getXMLGregorianCalendarValue(tagEntity.getUpdatedOn()), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), tag);
+        // Validate the returned object.
+        assertEquals(tag, resultTag);
     }
 
     @Test
@@ -74,84 +91,88 @@ public class TagRestControllerTest extends AbstractRestTest
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
 
-        // Create and persist a tag entity.
-        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        Tag tag = getNewTag(tagKey);
 
-        // Validate that this tag exists.
-        TagEntity tagEntity = tagDao.getTagByKey(tagKey);
-        assertNotNull(tagEntity);
-
+        when(tagService.deleteTag(tagKey)).thenReturn(tag);
         // Delete this tag.
         Tag deletedTag = tagRestController.deleteTag(TAG_TYPE, TAG_CODE);
 
-        // Validate the returned object.
-        assertEquals(new Tag(tagEntity.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, tagEntity.getCreatedBy(), tagEntity.getUpdatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(tagEntity.getUpdatedOn()), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), deletedTag);
+        // Verify the external calls.
+        verify(tagService).deleteTag(tagKey);
+        verifyNoMoreInteractions(tagService);
 
-        // Ensure that this tag is no longer there.
-        assertNull(tagDao.getTagByKey(tagKey));
+        // Validate the returned object.
+        assertEquals(tag, deletedTag);
     }
 
     @Test
     public void testGetTag()
     {
-        // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
+        Tag tag = getNewTag(tagKey);
+
+        when(tagService.getTag(tagKey)).thenReturn(tag);
 
         // Retrieve the tag.
         Tag resultTag = tagRestController.getTag(TAG_TYPE, TAG_CODE);
 
+        // Verify the external calls.
+        verify(tagService).getTag(tagKey);
+        verifyNoMoreInteractions(tagService);
+
         // Validate the returned object.
-        assertEquals(
-            new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tagEntity.getCreatedBy(), tagEntity.getUpdatedBy(),
-                HerdDateUtils.getXMLGregorianCalendarValue(tagEntity.getUpdatedOn()), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), resultTag);
+        assertEquals(tag, resultTag);
     }
 
     @Test
     public void testGetTags()
     {
-        // Create and persist tag entities.
-        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_TYPE_DISPLAY_NAME, DESCRIPTION);
-        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, DESCRIPTION);
-
-        // Retrieve a list of tag keys.
-        TagListResponse resultTagKeys = tagRestController.getTags(TAG_TYPE, NO_PARENT_TAG_CODE);
-
-        // Retrieve a list of tag keys using uppercase input parameters.
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
         List<TagChild> tagChildren = new ArrayList<>();
         tagChildren.add(new TagChild(new TagKey(TAG_TYPE, TAG_CODE), false));
         tagChildren.add(new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2), false));
 
+        TagListResponse tagListResponse = new TagListResponse();
+        tagListResponse.setTagChildren(tagChildren);
+
+        when(tagService.getTags(TAG_TYPE, TAG_CODE)).thenReturn(tagListResponse);
+        // Retrieve the tag.
+        TagListResponse resultTagKeys = tagRestController.getTags(TAG_TYPE, TAG_CODE);
+
+        // Verify the external calls.
+        verify(tagService).getTags(TAG_TYPE, TAG_CODE);
+        verifyNoMoreInteractions(tagService);
+
         // Validate the returned object.
-        assertNotNull(resultTagKeys);
-        assertEquals(tagChildren, resultTagKeys.getTagChildren());
+        assertEquals(tagListResponse, resultTagKeys);
+        ;
     }
 
     @Test
     public void testSearchTags()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
-
-        // Create a root tag entity for the tag type.
-        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-
-        // Create two children for the root tag with tag display name in reverse order.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, rootTagEntity);
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, rootTagEntity);
-
-        // Search the tags.
-        TagSearchResponse tagSearchResponse = tagRestController.searchTags(
-            new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, TAG_CODE, NO_IS_PARENT_TAG_NULL_FLAG))))),
-            Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD, TagServiceImpl.DESCRIPTION_FIELD, TagServiceImpl.PARENT_TAG_KEY_FIELD,
-                TagServiceImpl.HAS_CHILDREN_FIELD));
-
-        // Validate the returned object.
-        assertEquals(new TagSearchResponse(Arrays.asList(
+        TagSearchResponse tagSearchResponse = new TagSearchResponse(Arrays.asList(
             new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
                 new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
             new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
-                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN))), tagSearchResponse);
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN)));
+
+        Set<String> searchFields = Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD, TagServiceImpl.DESCRIPTION_FIELD, TagServiceImpl.PARENT_TAG_KEY_FIELD,
+            TagServiceImpl.HAS_CHILDREN_FIELD);
+        TagSearchRequest tagSearchRequest =
+            new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, TAG_CODE, NO_IS_PARENT_TAG_NULL_FLAG)))));
+
+        when(tagService.searchTags(tagSearchRequest, searchFields)).thenReturn(tagSearchResponse);
+
+        // Search the tags.
+        TagSearchResponse resultTagSearchResponse = tagRestController.searchTags(tagSearchRequest, searchFields);
+
+        // Verify the external calls.
+        verify(tagService).searchTags(tagSearchRequest, searchFields);
+        verifyNoMoreInteractions(tagService);
+
+        // Validate the returned object.
+        assertEquals(tagSearchResponse, resultTagSearchResponse);
     }
 
     @Test
@@ -159,21 +180,36 @@ public class TagRestControllerTest extends AbstractRestTest
     {
         // Create a parent tag key.
         TagKey parentTagKey = new TagKey(TAG_TYPE, TAG_CODE);
-
-        // Create a parent tag entity.
-        tagDaoTestHelper.createTagEntity(parentTagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        TagUpdateRequest request = new TagUpdateRequest(TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, parentTagKey);
 
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE_2);
+        Tag tag = getNewTag(tagKey);
 
-        // Create and persist a tag entity without a parent tag.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagKey, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2);
-
+        when(tagService.updateTag(tagKey, request)).thenReturn(tag);
         // Update the tag.
-        Tag updatedTag = tagRestController.updateTag(TAG_TYPE, TAG_CODE_2, new TagUpdateRequest(TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, parentTagKey));
+        Tag updatedTag = tagRestController.updateTag(TAG_TYPE, TAG_CODE_2, request);
+
+        // Verify the external calls.
+        verify(tagService).updateTag(tagKey, request);
+        verifyNoMoreInteractions(tagService);
 
         // Validate the returned object.
-        assertEquals(new Tag(tagEntity.getId(), tagKey, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, tagEntity.getCreatedBy(), tagEntity.getUpdatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(tagEntity.getUpdatedOn()), parentTagKey, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
+        assertEquals(tag, updatedTag);
+        ;
+    }
+
+    private Tag getNewTag(TagKey tagKey)
+    {
+        Calendar cal = Calendar.getInstance();
+        Date createdTime = cal.getTime();
+        Date updatedTime = cal.getTime();
+        String createdBy = "some test";
+        String updatedBy = "some test 2";
+
+        Tag tag = new Tag(100, tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, createdBy, updatedBy, HerdDateUtils.getXMLGregorianCalendarValue(createdTime),
+            NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG);
+
+        return tag;
     }
 }

@@ -16,14 +16,19 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
 import javax.servlet.ServletRequest;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
@@ -34,35 +39,54 @@ import org.finra.herd.model.api.xml.StorageUnitNotificationRegistrationKeys;
 import org.finra.herd.model.api.xml.StorageUnitNotificationRegistrationUpdateRequest;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
-import org.finra.herd.model.jpa.StorageUnitNotificationRegistrationEntity;
+import org.finra.herd.service.StorageUnitNotificationRegistrationService;
 
 /**
  * This class tests various functionality within the storage unit notification registration REST controller.
  */
 public class StorageUnitNotificationRegistrationRestControllerTest extends AbstractRestTest
 {
+    @Mock
+    private StorageUnitNotificationRegistrationService storageUnitNotificationRegistrationService;
+
+    @InjectMocks
+    private StorageUnitNotificationRegistrationRestController storageUnitNotificationRegistrationRestController;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testCreateStorageUnitNotificationRegistration()
     {
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
-        // Create and persist the relative database entities.
-        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
-
-        // Create a business object data notification.
-        StorageUnitNotificationRegistration resultStorageUnitNotificationRegistration = storageUnitNotificationRegistrationRestController
-            .createStorageUnitNotificationRegistration(new StorageUnitNotificationRegistrationCreateRequest(notificationRegistrationKey,
-                NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
-                new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                    STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
-                NotificationRegistrationStatusEntity.ENABLED));
-
-        // Validate the returned object.
-        assertEquals(new StorageUnitNotificationRegistration(resultStorageUnitNotificationRegistration.getId(), notificationRegistrationKey,
+        StorageUnitNotificationRegistrationCreateRequest request = new StorageUnitNotificationRegistrationCreateRequest(notificationRegistrationKey,
             NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
             new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
                 STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
-            NotificationRegistrationStatusEntity.ENABLED), resultStorageUnitNotificationRegistration);
+            NotificationRegistrationStatusEntity.ENABLED);
+
+        StorageUnitNotificationRegistration storageUnitNotificationRegistration = new StorageUnitNotificationRegistration(100, notificationRegistrationKey,
+            NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
+            new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
+                STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
+            NotificationRegistrationStatusEntity.ENABLED);
+
+        when(storageUnitNotificationRegistrationService.createStorageUnitNotificationRegistration(request)).thenReturn(storageUnitNotificationRegistration);
+
+        // Create a business object data notification.
+        StorageUnitNotificationRegistration resultStorageUnitNotificationRegistration =
+            storageUnitNotificationRegistrationRestController.createStorageUnitNotificationRegistration(request);
+
+        // Verify the external calls.
+        verify(storageUnitNotificationRegistrationService).createStorageUnitNotificationRegistration(request);
+        verifyNoMoreInteractions(storageUnitNotificationRegistrationService);
+
+        // Validate the returned object.
+        assertEquals(storageUnitNotificationRegistration, resultStorageUnitNotificationRegistration);
     }
 
     @Test
@@ -70,29 +94,26 @@ public class StorageUnitNotificationRegistrationRestControllerTest extends Abstr
     {
         NotificationRegistrationKey storageUnitNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
-        // Create and persist a business object data notification registration entity.
-        StorageUnitNotificationRegistrationEntity storageUnitNotificationRegistrationEntity = notificationRegistrationDaoTestHelper
-            .createStorageUnitNotificationRegistrationEntity(storageUnitNotificationRegistrationKey,
-                NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2,
-                notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
+        StorageUnitNotificationRegistration storageUnitNotificationRegistration =
+            new StorageUnitNotificationRegistration(100, storageUnitNotificationRegistrationKey,
+                NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
+                new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
+                    STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
+                NotificationRegistrationStatusEntity.ENABLED);
 
-        // Validate that this business object data notification exists.
-        assertNotNull(storageUnitNotificationRegistrationDao.getStorageUnitNotificationRegistrationByAltKey(storageUnitNotificationRegistrationKey));
+        when(storageUnitNotificationRegistrationService.deleteStorageUnitNotificationRegistration(storageUnitNotificationRegistrationKey))
+            .thenReturn(storageUnitNotificationRegistration);
 
         // Delete this business object data notification.
         StorageUnitNotificationRegistration deletedStorageUnitNotificationRegistration =
             storageUnitNotificationRegistrationRestController.deleteStorageUnitNotification(NAMESPACE, NOTIFICATION_NAME);
 
-        // Validate the returned object.
-        assertEquals(new StorageUnitNotificationRegistration(storageUnitNotificationRegistrationEntity.getId(), storageUnitNotificationRegistrationKey,
-            NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
-            new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
-            NotificationRegistrationStatusEntity.ENABLED), deletedStorageUnitNotificationRegistration);
+        // Verify the external calls.
+        verify(storageUnitNotificationRegistrationService).deleteStorageUnitNotificationRegistration(storageUnitNotificationRegistrationKey);
+        verifyNoMoreInteractions(storageUnitNotificationRegistrationService);
 
-        // Ensure that this business object data notification is no longer there.
-        assertNull(storageUnitNotificationRegistrationDao.getStorageUnitNotificationRegistrationByAltKey(storageUnitNotificationRegistrationKey));
+        // Validate the returned object.
+        assertEquals(storageUnitNotificationRegistration, deletedStorageUnitNotificationRegistration);
     }
 
     @Test
@@ -100,44 +121,49 @@ public class StorageUnitNotificationRegistrationRestControllerTest extends Abstr
     {
         NotificationRegistrationKey storageUnitNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
-        // Create and persist a business object data notification registration entity.
-        StorageUnitNotificationRegistrationEntity storageUnitNotificationRegistrationEntity = notificationRegistrationDaoTestHelper
-            .createStorageUnitNotificationRegistrationEntity(storageUnitNotificationRegistrationKey,
-                NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2,
-                notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
+        StorageUnitNotificationRegistration storageUnitNotificationRegistration =
+            new StorageUnitNotificationRegistration(100, storageUnitNotificationRegistrationKey,
+                NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
+                new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
+                    STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
+                NotificationRegistrationStatusEntity.ENABLED);
+
+        when(storageUnitNotificationRegistrationService.getStorageUnitNotificationRegistration(storageUnitNotificationRegistrationKey))
+            .thenReturn(storageUnitNotificationRegistration);
 
         // Retrieve the business object data notification.
         StorageUnitNotificationRegistration resultStorageUnitNotificationRegistration =
             storageUnitNotificationRegistrationRestController.getStorageUnitNotificationRegistration(NAMESPACE, NOTIFICATION_NAME);
 
+        // Verify the external calls.
+        verify(storageUnitNotificationRegistrationService).getStorageUnitNotificationRegistration(storageUnitNotificationRegistrationKey);
+        verifyNoMoreInteractions(storageUnitNotificationRegistrationService);
+
         // Validate the returned object.
-        assertEquals(new StorageUnitNotificationRegistration(storageUnitNotificationRegistrationEntity.getId(), storageUnitNotificationRegistrationKey,
-            NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
-            new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
-            NotificationRegistrationStatusEntity.ENABLED), resultStorageUnitNotificationRegistration);
+        assertEquals(storageUnitNotificationRegistration, resultStorageUnitNotificationRegistration);
     }
 
     @Test
     public void testGetStorageUnitNotificationRegistrationsByNamespace()
     {
-        // Create and persist business object data notification entities.
-        for (NotificationRegistrationKey storageUnitNotificationRegistrationKey : notificationRegistrationDaoTestHelper.getTestNotificationRegistrationKeys())
-        {
-            notificationRegistrationDaoTestHelper.createStorageUnitNotificationRegistrationEntity(storageUnitNotificationRegistrationKey,
-                NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2,
-                notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
-        }
+
+        StorageUnitNotificationRegistrationKeys storageUnitNotificationRegistrationKeys =
+            new StorageUnitNotificationRegistrationKeys(notificationRegistrationDaoTestHelper.getExpectedNotificationRegistrationKeys());
+
+        when(storageUnitNotificationRegistrationService.getStorageUnitNotificationRegistrationsByNamespace(NAMESPACE))
+            .thenReturn(storageUnitNotificationRegistrationKeys);
+
 
         // Retrieve a list of business object data notification registration keys.
         StorageUnitNotificationRegistrationKeys resultStorageUnitNotificationRegistrationKeys =
             storageUnitNotificationRegistrationRestController.getStorageUnitNotificationRegistrationsByNamespace(NAMESPACE);
 
+        // Verify the external calls.
+        verify(storageUnitNotificationRegistrationService).getStorageUnitNotificationRegistrationsByNamespace(NAMESPACE);
+        verifyNoMoreInteractions(storageUnitNotificationRegistrationService);
+
         // Validate the returned object.
-        assertEquals(notificationRegistrationDaoTestHelper.getExpectedNotificationRegistrationKeys(),
-            resultStorageUnitNotificationRegistrationKeys.getStorageUnitNotificationRegistrationKeys());
+        assertEquals(storageUnitNotificationRegistrationKeys, resultStorageUnitNotificationRegistrationKeys);
     }
 
     @Test
@@ -146,19 +172,26 @@ public class StorageUnitNotificationRegistrationRestControllerTest extends Abstr
         // Create a business object data notification registration key.
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
-        // Create and persist a business object data notification registration entity.
-        notificationRegistrationDaoTestHelper.createStorageUnitNotificationRegistrationEntity(notificationRegistrationKey,
-            NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2, notificationRegistrationDaoTestHelper.getTestJobActions(),
-            NotificationRegistrationStatusEntity.ENABLED);
+        StorageUnitNotificationRegistrationKeys storageUnitNotificationRegistrationKeys =
+            new StorageUnitNotificationRegistrationKeys(Arrays.asList(notificationRegistrationKey));
+
+        StorageUnitNotificationFilter storageUnitNotificationFilter =
+            new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, null, null, null);
+
+        when(storageUnitNotificationRegistrationService.getStorageUnitNotificationRegistrationsByNotificationFilter(storageUnitNotificationFilter))
+            .thenReturn(storageUnitNotificationRegistrationKeys);
 
         // Retrieve a list of business object data notification registration keys.
         StorageUnitNotificationRegistrationKeys resultStorageUnitNotificationRegistrationKeys = storageUnitNotificationRegistrationRestController
             .getStorageUnitNotificationRegistrationsByNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 getServletRequestWithNotificationFilterParameters());
 
+        // Verify the external calls.
+        verify(storageUnitNotificationRegistrationService).getStorageUnitNotificationRegistrationsByNotificationFilter(storageUnitNotificationFilter);
+        verifyNoMoreInteractions(storageUnitNotificationRegistrationService);
+
         // Validate the returned object.
-        assertEquals(new StorageUnitNotificationRegistrationKeys(Arrays.asList(notificationRegistrationKey)), resultStorageUnitNotificationRegistrationKeys);
+        assertEquals(storageUnitNotificationRegistrationKeys, resultStorageUnitNotificationRegistrationKeys);
     }
 
     @Test
@@ -166,55 +199,59 @@ public class StorageUnitNotificationRegistrationRestControllerTest extends Abstr
     {
         // Create a business object data notification registration key.
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
+        StorageUnitNotificationRegistrationKeys storageUnitNotificationRegistrationKeys =
+            new StorageUnitNotificationRegistrationKeys(Arrays.asList(notificationRegistrationKey));
 
-        // Create and persist a business object data notification registration entity.
-        notificationRegistrationDaoTestHelper.createStorageUnitNotificationRegistrationEntity(notificationRegistrationKey,
-            NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2, notificationRegistrationDaoTestHelper.getTestJobActions(),
-            NotificationRegistrationStatusEntity.ENABLED);
+        StorageUnitNotificationFilter storageUnitNotificationFilter =
+            new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, null, null, null, null);
+
+        when(storageUnitNotificationRegistrationService.getStorageUnitNotificationRegistrationsByNotificationFilter(storageUnitNotificationFilter))
+            .thenReturn(storageUnitNotificationRegistrationKeys);
 
         // Retrieve a list of business object data notification registration keys by not specifying optional parameters.
         StorageUnitNotificationRegistrationKeys resultStorageUnitNotificationRegistrationKeys = storageUnitNotificationRegistrationRestController
             .getStorageUnitNotificationRegistrationsByNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE,
                 getServletRequestWithNotificationFilterParameters());
-
+        // Verify the external calls.
+        verify(storageUnitNotificationRegistrationService).getStorageUnitNotificationRegistrationsByNotificationFilter(storageUnitNotificationFilter);
+        verifyNoMoreInteractions(storageUnitNotificationRegistrationService);
         // Validate the returned object.
-        assertEquals(new StorageUnitNotificationRegistrationKeys(Arrays.asList(notificationRegistrationKey)), resultStorageUnitNotificationRegistrationKeys);
+        assertEquals(storageUnitNotificationRegistrationKeys, resultStorageUnitNotificationRegistrationKeys);
     }
 
     @Test
     public void testUpdateStorageUnitNotificationRegistration()
     {
-        NotificationRegistrationKey storageUnitNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
+        NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
-        // Create database entities required for testing.
-        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
-            .asList(NOTIFICATION_EVENT_TYPE, NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
-                NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()), BDEF_NAMESPACE_2, BDEF_NAME_2,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
-            Arrays.asList(STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2, STORAGE_UNIT_STATUS_3, STORAGE_UNIT_STATUS_4),
-            notificationRegistrationDaoTestHelper.getTestJobActions2());
-
-        // Create and persist a business object data notification registration entity.
-        notificationRegistrationDaoTestHelper
-            .createStorageUnitNotificationRegistrationEntity(storageUnitNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2,
-                notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
-
-        // Update the business object data notification registration.
-        StorageUnitNotificationRegistration resultStorageUnitNotificationRegistration = storageUnitNotificationRegistrationRestController
-            .updateStorageUnitNotificationRegistration(NAMESPACE, NOTIFICATION_NAME,
-                new StorageUnitNotificationRegistrationUpdateRequest(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
-                    new StorageUnitNotificationFilter(BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2,
-                        STORAGE_NAME_2, STORAGE_UNIT_STATUS_3, STORAGE_UNIT_STATUS_4), notificationRegistrationDaoTestHelper.getTestJobActions2(),
-                    NotificationRegistrationStatusEntity.DISABLED));
-
-        // Validate the returned object.
-        assertEquals(new StorageUnitNotificationRegistration(resultStorageUnitNotificationRegistration.getId(), storageUnitNotificationRegistrationKey,
+        StorageUnitNotificationRegistration storageUnitNotificationRegistration = new StorageUnitNotificationRegistration(100, notificationRegistrationKey,
             NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
             new StorageUnitNotificationFilter(BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2,
                 STORAGE_UNIT_STATUS_3, STORAGE_UNIT_STATUS_4), notificationRegistrationDaoTestHelper.getTestJobActions2(),
-            NotificationRegistrationStatusEntity.DISABLED), resultStorageUnitNotificationRegistration);
+            NotificationRegistrationStatusEntity.DISABLED);
+
+
+        StorageUnitNotificationRegistrationUpdateRequest request =
+            new StorageUnitNotificationRegistrationUpdateRequest(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
+                new StorageUnitNotificationFilter(BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2,
+                    STORAGE_UNIT_STATUS_3, STORAGE_UNIT_STATUS_4), notificationRegistrationDaoTestHelper.getTestJobActions2(),
+                NotificationRegistrationStatusEntity.DISABLED);
+
+        when(storageUnitNotificationRegistrationService.updateStorageUnitNotificationRegistration(notificationRegistrationKey, request))
+            .thenReturn(storageUnitNotificationRegistration);
+
+
+        // Update the business object data notification registration.
+        StorageUnitNotificationRegistration resultStorageUnitNotificationRegistration =
+            storageUnitNotificationRegistrationRestController.updateStorageUnitNotificationRegistration(NAMESPACE, NOTIFICATION_NAME, request);
+
+        // Verify the external calls.
+        verify(storageUnitNotificationRegistrationService).updateStorageUnitNotificationRegistration(notificationRegistrationKey, request);
+        verifyNoMoreInteractions(storageUnitNotificationRegistrationService);
+
+        // Validate the returned object.
+        assertEquals(storageUnitNotificationRegistration, resultStorageUnitNotificationRegistration);
+
     }
 
     /**
