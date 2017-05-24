@@ -33,6 +33,8 @@ public class JsonHelper
      *
      * @param jsonObject the JSON object that contains the key value
      * @param key the key name
+     * @param classType the class to cast the result to
+     * @param <T> the return type
      *
      * @return the key value
      */
