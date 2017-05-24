@@ -16,7 +16,12 @@
 package org.finra.herd.dao.helper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import java.io.IOException;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,13 +36,35 @@ public class JsonHelperTest extends AbstractDaoTest
     private JsonHelper jsonHelper;
 
     @Test
-    public void testObjectToJson() throws Exception
+    public void testGetKeyValue() throws Exception
+    {
+        // Create a JSON object with one key value pair.
+        JSONParser jsonParser = new JSONParser();
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(String.format("{\"%s\" : \"%s\"}", KEY, VALUE));
+
+        // Get and validate the key value.
+        assertEquals(VALUE, jsonHelper.getKeyValue(jsonObject, KEY, String.class));
+
+        // Try to get a value for a non-existing key.
+        try
+        {
+            jsonHelper.getKeyValue(jsonObject, I_DO_NOT_EXIST, String.class);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Failed to get \"%s\" key value from JSON object.", I_DO_NOT_EXIST), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testObjectToJson()
     {
         assertEquals(String.format("\"%s\"", STRING_VALUE), jsonHelper.objectToJson(STRING_VALUE));
     }
 
     @Test
-    public void testUnmarshallJsonToObject() throws Exception
+    public void testUnmarshallJsonToObject() throws IOException
     {
         assertEquals(STRING_VALUE, jsonHelper.unmarshallJsonToObject(String.class, String.format("\"%s\"", STRING_VALUE)));
     }
