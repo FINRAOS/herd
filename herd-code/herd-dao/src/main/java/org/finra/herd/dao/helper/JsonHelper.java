@@ -16,15 +16,10 @@
 package org.finra.herd.dao.helper;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.net.URL;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -41,16 +36,16 @@ public class JsonHelper
      *
      * @return the key value
      */
-    public Object getKeyValue(JSONObject jsonObject, String key)
+    public <T> T getKeyValue(JSONObject jsonObject, Object key, Class<T> classType)
     {
         Object result = jsonObject.get(key);
 
         if (result == null)
         {
-            throw new IllegalArgumentException(String.format("Failed to get \"%s\" key value from JSON object.", key));
+            throw new IllegalArgumentException(String.format("Failed to get \"%s\" key value from JSON object.", key.toString()));
         }
 
-        return result;
+        return classType.cast(jsonObject.get(key));
     }
 
     /**
@@ -77,41 +72,6 @@ public class JsonHelper
         }
 
         return stringWriter.toString();
-    }
-
-    /**
-     * Reads JSON from a specified URL.
-     *
-     * @param url the url
-     *
-     * @return the JSON object
-     */
-    public JSONObject parseJsonObjectFromUrl(String url)
-    {
-        try
-        {
-            // Open an input stream as per specified URL.
-            InputStream inputStream = new URL(url).openStream();
-
-            try
-            {
-                // Parse the JSON object from the input stream.
-                JSONParser jsonParser = new JSONParser();
-                return (JSONObject) jsonParser.parse(new InputStreamReader(inputStream, "UTF-8"));
-            }
-            catch (ParseException e)
-            {
-                throw new IllegalArgumentException(String.format("Failed to parse JSON object from the URL: url=\"%s\"", url), e);
-            }
-            finally
-            {
-                inputStream.close();
-            }
-        }
-        catch (IOException e)
-        {
-            throw new IllegalArgumentException(String.format("Failed to read JSON from the URL: url=\"%s\"", url), e);
-        }
     }
 
     /**

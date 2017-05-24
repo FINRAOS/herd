@@ -25,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,6 +39,7 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.Ec2OnDemandPricingDao;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.dao.helper.UrlHelper;
 import org.finra.herd.model.dto.Ec2OnDemandPricing;
 import org.finra.herd.model.dto.Ec2OnDemandPricingKey;
 import org.finra.herd.model.jpa.Ec2OnDemandPricingEntity;
@@ -56,6 +58,9 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
 
     @Mock
     private JsonHelper jsonHelper;
+
+    @Mock
+    private UrlHelper urlHelper;
 
     @Before
     public void before()
@@ -167,40 +172,44 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         JSONObject pricePerUnit = mock(JSONObject.class);
 
         // Mock the external calls.
-        when(jsonHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
-        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS)).thenReturn(products);
-        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY)).thenReturn(product);
-        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU)).thenReturn(SKU);
-        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES)).thenReturn(attributes);
-        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_TERMS)).thenReturn(terms);
-        when(jsonHelper.getKeyValue(terms, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ON_DEMAND)).thenReturn(onDemand);
-        when(jsonHelper.getKeyValue(onDemand, SKU)).thenReturn(onDemandSkuInformation);
-        when(jsonHelper.getKeyValue(onDemandSkuInformation, SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX)).thenReturn(pricingWrapper);
-        when(jsonHelper.getKeyValue(pricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_DIMENSIONS)).thenReturn(priceDimensions);
+        when(urlHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
+        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS, JSONObject.class)).thenReturn(products);
+        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY, JSONObject.class)).thenReturn(product);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU, String.class)).thenReturn(SKU);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES, JSONObject.class)).thenReturn(attributes);
+        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_TERMS, JSONObject.class)).thenReturn(terms);
+        when(jsonHelper.getKeyValue(terms, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ON_DEMAND, JSONObject.class)).thenReturn(onDemand);
+        when(jsonHelper.getKeyValue(onDemand, SKU, JSONObject.class)).thenReturn(onDemandSkuInformation);
+        when(jsonHelper.getKeyValue(onDemandSkuInformation, SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX, JSONObject.class))
+            .thenReturn(pricingWrapper);
+        when(jsonHelper.getKeyValue(pricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_DIMENSIONS, JSONObject.class))
+            .thenReturn(priceDimensions);
         when(jsonHelper.getKeyValue(priceDimensions,
-            SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX + Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX))
-            .thenReturn(innerPricingWrapper);
-        when(jsonHelper.getKeyValue(innerPricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_PER_UNIT)).thenReturn(pricePerUnit);
-        when(jsonHelper.getKeyValue(pricePerUnit, Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_PER_UNIT_WRAPPER)).thenReturn(HOURLY_PRICE);
+            SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX + Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX,
+            JSONObject.class)).thenReturn(innerPricingWrapper);
+        when(jsonHelper.getKeyValue(innerPricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_PER_UNIT, JSONObject.class))
+            .thenReturn(pricePerUnit);
+        when(jsonHelper.getKeyValue(pricePerUnit, Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_PER_UNIT_WRAPPER, BigDecimal.class)).thenReturn(HOURLY_PRICE);
 
         // Call the method under test.
         List<Ec2OnDemandPricing> result = ec2OnDemandPricingUpdateServiceImpl.getEc2OnDemandPricing(EC2_PRICING_LIST_URL);
 
         // Verify the external calls.
-        verify(jsonHelper).parseJsonObjectFromUrl(EC2_PRICING_LIST_URL);
-        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS);
-        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY);
-        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU);
-        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES);
-        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_TERMS);
-        verify(jsonHelper).getKeyValue(terms, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ON_DEMAND);
-        verify(jsonHelper).getKeyValue(onDemand, SKU);
-        verify(jsonHelper).getKeyValue(onDemandSkuInformation, SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX);
-        verify(jsonHelper).getKeyValue(pricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_DIMENSIONS);
+        verify(urlHelper).parseJsonObjectFromUrl(EC2_PRICING_LIST_URL);
+        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS, JSONObject.class);
+        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY, JSONObject.class);
+        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU, String.class);
+        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES, JSONObject.class);
+        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_TERMS, JSONObject.class);
+        verify(jsonHelper).getKeyValue(terms, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ON_DEMAND, JSONObject.class);
+        verify(jsonHelper).getKeyValue(onDemand, SKU, JSONObject.class);
+        verify(jsonHelper).getKeyValue(onDemandSkuInformation, SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX, JSONObject.class);
+        verify(jsonHelper).getKeyValue(pricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_DIMENSIONS, JSONObject.class);
         verify(jsonHelper).getKeyValue(priceDimensions,
-            SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX + Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX);
-        verify(jsonHelper).getKeyValue(innerPricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_PER_UNIT);
-        verify(jsonHelper).getKeyValue(pricePerUnit, Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_PER_UNIT_WRAPPER);
+            SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX + Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX,
+            JSONObject.class);
+        verify(jsonHelper).getKeyValue(innerPricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_PER_UNIT, JSONObject.class);
+        verify(jsonHelper).getKeyValue(pricePerUnit, Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_PER_UNIT_WRAPPER, BigDecimal.class);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -225,12 +234,12 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_USAGE_TYPE)).thenReturn("BoxUsage");
 
         // Mock the external calls.
-        when(jsonHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
-        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS)).thenReturn(products);
-        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY)).thenReturn(product);
-        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY_2)).thenReturn(product);
-        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU)).thenReturn(SKU);
-        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES)).thenReturn(attributes);
+        when(urlHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
+        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS, JSONObject.class)).thenReturn(products);
+        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY, JSONObject.class)).thenReturn(product);
+        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY_2, JSONObject.class)).thenReturn(product);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU, String.class)).thenReturn(SKU);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES, JSONObject.class)).thenReturn(attributes);
 
         // Try to call the method under test.
         try
@@ -246,12 +255,12 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         }
 
         // Verify the external calls.
-        verify(jsonHelper).parseJsonObjectFromUrl(EC2_PRICING_LIST_URL);
-        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS);
-        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY);
-        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY_2);
-        verify(jsonHelper, times(2)).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU);
-        verify(jsonHelper, times(2)).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES);
+        verify(urlHelper).parseJsonObjectFromUrl(EC2_PRICING_LIST_URL);
+        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS, JSONObject.class);
+        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY, JSONObject.class);
+        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY_2, JSONObject.class);
+        verify(jsonHelper, times(2)).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU, String.class);
+        verify(jsonHelper, times(2)).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES, JSONObject.class);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -273,21 +282,21 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_USAGE_TYPE)).thenReturn("BoxUsage");
 
         // Mock the external calls.
-        when(jsonHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
-        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS)).thenReturn(products);
-        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY)).thenReturn(product);
-        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU)).thenReturn(SKU);
-        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES)).thenReturn(attributes);
+        when(urlHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
+        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS, JSONObject.class)).thenReturn(products);
+        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY, JSONObject.class)).thenReturn(product);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU, String.class)).thenReturn(SKU);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES, JSONObject.class)).thenReturn(attributes);
 
         // Call the method under test.
         List<Ec2OnDemandPricing> result = ec2OnDemandPricingUpdateServiceImpl.getEc2OnDemandPricing(EC2_PRICING_LIST_URL);
 
         // Verify the external calls.
-        verify(jsonHelper).parseJsonObjectFromUrl(EC2_PRICING_LIST_URL);
-        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS);
-        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY);
-        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU);
-        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES);
+        verify(urlHelper).parseJsonObjectFromUrl(EC2_PRICING_LIST_URL);
+        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS, JSONObject.class);
+        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY, JSONObject.class);
+        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU, String.class);
+        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES, JSONObject.class);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -342,6 +351,6 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(ec2OnDemandPricingDao, jsonHelper);
+        verifyNoMoreInteractions(ec2OnDemandPricingDao, jsonHelper, urlHelper);
     }
 }

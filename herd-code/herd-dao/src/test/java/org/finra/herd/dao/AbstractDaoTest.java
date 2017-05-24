@@ -377,6 +377,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String JSON_STRING = "UT_JsonString_" + RANDOM_SUFFIX;
 
+    public static final String KEY = "UT_Key_" + RANDOM_SUFFIX;
+
     public static final Boolean LATEST_VERSION_FLAG_SET = true;
 
     public static final String LOCAL_FILE = "foo.dat";
@@ -862,6 +864,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String USER_JOB_TITLE = "UT_User_Job_Title_" + RANDOM_SUFFIX;
 
     public static final String USER_TELEPHONE_NUMBER = "UT_User_Telephone_Number_" + RANDOM_SUFFIX;
+
+    public static final String VALUE = "UT_Value_" + RANDOM_SUFFIX;
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 

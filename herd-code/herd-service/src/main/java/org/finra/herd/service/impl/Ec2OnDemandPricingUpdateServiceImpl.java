@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.dao.Ec2OnDemandPricingDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.dao.helper.UrlHelper;
 import org.finra.herd.model.dto.Ec2OnDemandPricing;
 import org.finra.herd.model.dto.Ec2OnDemandPricingKey;
 import org.finra.herd.model.jpa.Ec2OnDemandPricingEntity;
@@ -90,6 +91,9 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
     @Autowired
     private JsonHelper jsonHelper;
 
+    @Autowired
+    private UrlHelper urlHelper;
+
     /**
      * {@inheritDoc}
      * <p/>
@@ -103,10 +107,10 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
         List<Ec2OnDemandPricing> ec2OnDemandPricingEntries = new ArrayList<>();
 
         // Get JSON object from the specified URL.
-        JSONObject jsonObject = jsonHelper.parseJsonObjectFromUrl(ec2PricingListUrl);
+        JSONObject jsonObject = urlHelper.parseJsonObjectFromUrl(ec2PricingListUrl);
 
         // Get products from the JSON object.
-        JSONObject products = (JSONObject) jsonHelper.getKeyValue(jsonObject, JSON_KEY_NAME_PRODUCTS);
+        JSONObject products = jsonHelper.getKeyValue(jsonObject, JSON_KEY_NAME_PRODUCTS, JSONObject.class);
 
         // Create a set to validate uniqueness of EC2 on-demand pricing keys.
         Set<Ec2OnDemandPricingKey> uniqueEc2OnDemandPricingKeys = new HashSet<>();
@@ -114,9 +118,9 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
         // Process all products.
         for (Object key : products.keySet())
         {
-            JSONObject current = (JSONObject) jsonHelper.getKeyValue(products, (String) key);
-            String sku = jsonHelper.getKeyValue(current, JSON_KEY_NAME_SKU).toString();
-            JSONObject attributes = (JSONObject) jsonHelper.getKeyValue(current, JSON_KEY_NAME_ATTRIBUTES);
+            JSONObject current = jsonHelper.getKeyValue(products, key, JSONObject.class);
+            String sku = jsonHelper.getKeyValue(current, JSON_KEY_NAME_SKU, String.class);
+            JSONObject attributes = jsonHelper.getKeyValue(current, JSON_KEY_NAME_ATTRIBUTES, JSONObject.class);
 
             Object location = attributes.get(JSON_ATTRIBUTE_NAME_LOCATION);
             Object operatingSystem = attributes.get(JSON_ATTRIBUTE_NAME_OPERATING_SYSTEM);
@@ -150,23 +154,22 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
         if (CollectionUtils.isNotEmpty(ec2OnDemandPricingEntries))
         {
             // Get terms from the JSON object.
-            JSONObject terms = (JSONObject) jsonHelper.getKeyValue(jsonObject, JSON_KEY_NAME_TERMS);
+            JSONObject terms = jsonHelper.getKeyValue(jsonObject, JSON_KEY_NAME_TERMS, JSONObject.class);
 
             // Get on-demand information from the terms.
-            JSONObject onDemand = (JSONObject) jsonHelper.getKeyValue(terms, JSON_KEY_NAME_ON_DEMAND);
+            JSONObject onDemand = jsonHelper.getKeyValue(terms, JSON_KEY_NAME_ON_DEMAND, JSONObject.class);
 
             // Populate pricing information.
             for (Ec2OnDemandPricing ec2OnDemandPricing : ec2OnDemandPricingEntries)
             {
                 String sku = ec2OnDemandPricing.getSku();
-                JSONObject current = (JSONObject) jsonHelper.getKeyValue(onDemand, sku);
-                JSONObject pricingWrapper = (JSONObject) jsonHelper.getKeyValue(current, sku + JSON_SKU_WRAPPER_SUFFIX);
-                JSONObject priceDimensions = (JSONObject) jsonHelper.getKeyValue(pricingWrapper, JSON_KEY_NAME_PRICE_DIMENSIONS);
+                JSONObject current = jsonHelper.getKeyValue(onDemand, sku, JSONObject.class);
+                JSONObject pricingWrapper = jsonHelper.getKeyValue(current, sku + JSON_SKU_WRAPPER_SUFFIX, JSONObject.class);
+                JSONObject priceDimensions = jsonHelper.getKeyValue(pricingWrapper, JSON_KEY_NAME_PRICE_DIMENSIONS, JSONObject.class);
                 JSONObject innerPricingWrapper =
-                    (JSONObject) jsonHelper.getKeyValue(priceDimensions, sku + JSON_SKU_WRAPPER_SUFFIX + JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX);
-                JSONObject pricePerUnit = (JSONObject) jsonHelper.getKeyValue(innerPricingWrapper, JSON_KEY_NAME_PRICE_PER_UNIT);
-                String pricePerUnitValue = jsonHelper.getKeyValue(pricePerUnit, JSON_PRICE_PER_UNIT_WRAPPER).toString();
-                ec2OnDemandPricing.setPricePerHour(new BigDecimal(pricePerUnitValue));
+                    jsonHelper.getKeyValue(priceDimensions, sku + JSON_SKU_WRAPPER_SUFFIX + JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX, JSONObject.class);
+                JSONObject pricePerUnit = jsonHelper.getKeyValue(innerPricingWrapper, JSON_KEY_NAME_PRICE_PER_UNIT, JSONObject.class);
+                ec2OnDemandPricing.setPricePerHour(jsonHelper.getKeyValue(pricePerUnit, JSON_PRICE_PER_UNIT_WRAPPER, BigDecimal.class));
             }
         }
 
