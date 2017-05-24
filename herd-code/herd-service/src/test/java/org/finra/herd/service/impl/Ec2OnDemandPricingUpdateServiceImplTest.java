@@ -16,7 +16,10 @@
 package org.finra.herd.service.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -25,6 +28,8 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.collect.Sets;
+import org.json.simple.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -56,6 +61,237 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
     public void before()
     {
         MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testConvertLocationToRegionName()
+    {
+        // Call the method under test and validate the results.
+        assertEquals("us-east-1", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("US East (N. Virginia)"));
+        assertEquals("us-east-2", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("US East (Ohio)"));
+        assertEquals("us-west-1", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("US West (N. California)"));
+        assertEquals("us-west-2", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("US West (Oregon)"));
+        assertEquals("ca-central-1", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("Canada (Central)"));
+        assertEquals("ap-south-1", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("Asia Pacific (Mumbai)"));
+        assertEquals("ap-northeast-2", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("Asia Pacific (Seoul)"));
+        assertEquals("ap-southeast-1", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("Asia Pacific (Singapore)"));
+        assertEquals("ap-southeast-2", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("Asia Pacific (Sydney)"));
+        assertEquals("ap-northeast-1", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("Asia Pacific (Tokyo)"));
+        assertEquals("eu-central-1", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("EU (Frankfurt)"));
+        assertEquals("eu-west-1", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("EU (Ireland)"));
+        assertEquals("eu-west-2", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("EU (London)"));
+        assertEquals("sa-east-1", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("South America (Sao Paulo)"));
+        assertEquals("us-gov-west-1", ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName("AWS GovCloud (US)"));
+        assertEquals(AWS_REGION_NAME, ec2OnDemandPricingUpdateServiceImpl.convertLocationToRegionName(AWS_REGION_NAME));
+    }
+
+    @Test
+    public void testCreateEc2OnDemandPricingEntry()
+    {
+        // Positive tests.
+        assertEquals(new Ec2OnDemandPricing(new Ec2OnDemandPricingKey(AWS_REGION_NAME, EC2_INSTANCE_TYPE), NO_HOURLY_PRICE, SKU),
+            ec2OnDemandPricingUpdateServiceImpl
+                .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM,
+                    EC2_INSTANCE_TYPE, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+        assertEquals(new Ec2OnDemandPricing(new Ec2OnDemandPricingKey(AWS_REGION_NAME, EC2_INSTANCE_TYPE), NO_HOURLY_PRICE, SKU),
+            ec2OnDemandPricingUpdateServiceImpl
+                .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM,
+                    EC2_INSTANCE_TYPE, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, RANDOM_SUFFIX + "-BoxUsage" + RANDOM_SUFFIX));
+
+        // Missing required input parameters passed as nulls.
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, null, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, null, EC2_INSTANCE_TYPE, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY,
+                "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, null,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                null, "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, null));
+
+        // Missing required input parameters passed as empty strings.
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, BLANK_TEXT, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl.createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, BLANK_TEXT, EC2_INSTANCE_TYPE,
+            Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, BLANK_TEXT,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                BLANK_TEXT, "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, BLANK_TEXT));
+
+        // Invalid input parameters.
+        assertNull(ec2OnDemandPricingUpdateServiceImpl.createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, STRING_VALUE, EC2_INSTANCE_TYPE,
+            Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                STRING_VALUE, "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, STRING_VALUE));
+    }
+
+    @Test
+    public void testGetEc2OnDemandPricing()
+    {
+        // Create mock JSON objects.
+        JSONObject jsonObject = mock(JSONObject.class);
+        JSONObject products = mock(JSONObject.class);
+        when(products.keySet()).thenReturn(Sets.newHashSet(EC2_PRODUCT_KEY));
+        JSONObject product = mock(JSONObject.class);
+        JSONObject attributes = mock(JSONObject.class);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_LOCATION)).thenReturn(AWS_REGION_NAME);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_OPERATING_SYSTEM))
+            .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_INSTANCE_TYPE)).thenReturn(EC2_INSTANCE_TYPE);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_TENANCY))
+            .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_USAGE_TYPE)).thenReturn("BoxUsage");
+        JSONObject terms = mock(JSONObject.class);
+        JSONObject onDemand = mock(JSONObject.class);
+        JSONObject onDemandSkuInformation = mock(JSONObject.class);
+        JSONObject pricingWrapper = mock(JSONObject.class);
+        JSONObject priceDimensions = mock(JSONObject.class);
+        JSONObject innerPricingWrapper = mock(JSONObject.class);
+        JSONObject pricePerUnit = mock(JSONObject.class);
+
+        // Mock the external calls.
+        when(jsonHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
+        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS)).thenReturn(products);
+        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY)).thenReturn(product);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU)).thenReturn(SKU);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES)).thenReturn(attributes);
+        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_TERMS)).thenReturn(terms);
+        when(jsonHelper.getKeyValue(terms, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ON_DEMAND)).thenReturn(onDemand);
+        when(jsonHelper.getKeyValue(onDemand, SKU)).thenReturn(onDemandSkuInformation);
+        when(jsonHelper.getKeyValue(onDemandSkuInformation, SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX)).thenReturn(pricingWrapper);
+        when(jsonHelper.getKeyValue(pricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_DIMENSIONS)).thenReturn(priceDimensions);
+        when(jsonHelper.getKeyValue(priceDimensions,
+            SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX + Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX))
+            .thenReturn(innerPricingWrapper);
+        when(jsonHelper.getKeyValue(innerPricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_PER_UNIT)).thenReturn(pricePerUnit);
+        when(jsonHelper.getKeyValue(pricePerUnit, Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_PER_UNIT_WRAPPER)).thenReturn(HOURLY_PRICE);
+
+        // Call the method under test.
+        List<Ec2OnDemandPricing> result = ec2OnDemandPricingUpdateServiceImpl.getEc2OnDemandPricing(EC2_PRICING_LIST_URL);
+
+        // Verify the external calls.
+        verify(jsonHelper).parseJsonObjectFromUrl(EC2_PRICING_LIST_URL);
+        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS);
+        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY);
+        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU);
+        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES);
+        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_TERMS);
+        verify(jsonHelper).getKeyValue(terms, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ON_DEMAND);
+        verify(jsonHelper).getKeyValue(onDemand, SKU);
+        verify(jsonHelper).getKeyValue(onDemandSkuInformation, SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX);
+        verify(jsonHelper).getKeyValue(pricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_DIMENSIONS);
+        verify(jsonHelper).getKeyValue(priceDimensions,
+            SKU + Ec2OnDemandPricingUpdateServiceImpl.JSON_SKU_WRAPPER_SUFFIX + Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX);
+        verify(jsonHelper).getKeyValue(innerPricingWrapper, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRICE_PER_UNIT);
+        verify(jsonHelper).getKeyValue(pricePerUnit, Ec2OnDemandPricingUpdateServiceImpl.JSON_PRICE_PER_UNIT_WRAPPER);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(Arrays.asList(new Ec2OnDemandPricing(new Ec2OnDemandPricingKey(AWS_REGION_NAME, EC2_INSTANCE_TYPE), HOURLY_PRICE, SKU)), result);
+    }
+
+    @Test
+    public void testGetEc2OnDemandPricingDuplicateEc2OnDemandPricingKeys()
+    {
+        // Create mock JSON objects.
+        JSONObject jsonObject = mock(JSONObject.class);
+        JSONObject products = mock(JSONObject.class);
+        when(products.keySet()).thenReturn(Sets.newHashSet(EC2_PRODUCT_KEY, EC2_PRODUCT_KEY_2));
+        JSONObject product = mock(JSONObject.class);
+        JSONObject attributes = mock(JSONObject.class);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_LOCATION)).thenReturn(AWS_REGION_NAME);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_OPERATING_SYSTEM))
+            .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_INSTANCE_TYPE)).thenReturn(EC2_INSTANCE_TYPE);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_TENANCY))
+            .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_USAGE_TYPE)).thenReturn("BoxUsage");
+
+        // Mock the external calls.
+        when(jsonHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
+        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS)).thenReturn(products);
+        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY)).thenReturn(product);
+        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY_2)).thenReturn(product);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU)).thenReturn(SKU);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES)).thenReturn(attributes);
+
+        // Try to call the method under test.
+        try
+        {
+            ec2OnDemandPricingUpdateServiceImpl.getEc2OnDemandPricing(EC2_PRICING_LIST_URL);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Found duplicate EC2 on-demand pricing entry for \"%s\" AWS region and \"%s\" EC2 instance type.", AWS_REGION_NAME, EC2_INSTANCE_TYPE),
+                e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(jsonHelper).parseJsonObjectFromUrl(EC2_PRICING_LIST_URL);
+        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS);
+        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY);
+        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY_2);
+        verify(jsonHelper, times(2)).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU);
+        verify(jsonHelper, times(2)).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testGetEc2OnDemandPricingNoEc2OnDemandPricingEntriesCreated()
+    {
+        // Create mock JSON objects.
+        JSONObject jsonObject = mock(JSONObject.class);
+        JSONObject products = mock(JSONObject.class);
+        when(products.keySet()).thenReturn(Sets.newHashSet(EC2_PRODUCT_KEY));
+        JSONObject product = mock(JSONObject.class);
+        JSONObject attributes = mock(JSONObject.class);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_LOCATION)).thenReturn(null);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_OPERATING_SYSTEM))
+            .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_INSTANCE_TYPE)).thenReturn(EC2_INSTANCE_TYPE);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_TENANCY))
+            .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY);
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_USAGE_TYPE)).thenReturn("BoxUsage");
+
+        // Mock the external calls.
+        when(jsonHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
+        when(jsonHelper.getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS)).thenReturn(products);
+        when(jsonHelper.getKeyValue(products, EC2_PRODUCT_KEY)).thenReturn(product);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU)).thenReturn(SKU);
+        when(jsonHelper.getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES)).thenReturn(attributes);
+
+        // Call the method under test.
+        List<Ec2OnDemandPricing> result = ec2OnDemandPricingUpdateServiceImpl.getEc2OnDemandPricing(EC2_PRICING_LIST_URL);
+
+        // Verify the external calls.
+        verify(jsonHelper).parseJsonObjectFromUrl(EC2_PRICING_LIST_URL);
+        verify(jsonHelper).getKeyValue(jsonObject, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_PRODUCTS);
+        verify(jsonHelper).getKeyValue(products, EC2_PRODUCT_KEY);
+        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_SKU);
+        verify(jsonHelper).getKeyValue(product, Ec2OnDemandPricingUpdateServiceImpl.JSON_KEY_NAME_ATTRIBUTES);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(0, result.size());
     }
 
     @Test

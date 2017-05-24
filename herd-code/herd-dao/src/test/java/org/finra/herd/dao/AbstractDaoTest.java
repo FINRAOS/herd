@@ -474,6 +474,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer NO_FORMAT_VERSION = null;
 
+    public static final BigDecimal NO_HOURLY_PRICE = null;
+
     public static final Boolean NO_IS_PARENT_TAG_NULL_FLAG = null;
 
     public static final String NO_JOB_NAME = null;

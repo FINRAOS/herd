@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -123,17 +124,14 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
             Object tenancy = attributes.get(JSON_ATTRIBUTE_NAME_TENANCY);
             Object usageType = attributes.get(JSON_ATTRIBUTE_NAME_USAGE_TYPE);
 
-            // The extra check for usage type is added below to exclude any dedicated/reserved hosts that are marked as having "Shared" tenancy by mistake.
-            if (location != null && operatingSystem != null && instanceType != null && tenancy != null && usageType != null &&
-                StringUtils.isNotBlank(location.toString()) &&
-                operatingSystem.toString().equalsIgnoreCase(JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM) &&
-                StringUtils.isNotBlank(instanceType.toString()) &&
-                tenancy.toString().equalsIgnoreCase(JSON_ATTRIBUTE_VALUE_TENANCY) &&
-                (usageType.toString().startsWith("BoxUsage") || usageType.toString().contains("-BoxUsage")))
+            // Validate the parameters and create an EC2 on-demand pricing entry.
+            Ec2OnDemandPricing ec2OnDemandPricing = createEc2OnDemandPricingEntry(sku, location, operatingSystem, instanceType, tenancy, usageType);
+
+            // Check if this EC2 on-demand pricing entry got created (the relative parameters passed validation checks).
+            if (ec2OnDemandPricing != null)
             {
-                // Create an EC2 on-demand pricing key.
-                Ec2OnDemandPricingKey ec2OnDemandPricingKey =
-                    new Ec2OnDemandPricingKey(convertLocationToRegionName(location.toString()), instanceType.toString());
+                // Get the EC2 on-demand pricing key.
+                Ec2OnDemandPricingKey ec2OnDemandPricingKey = ec2OnDemandPricing.getEc2OnDemandPricingKey();
 
                 // Validate that this key is unique.
                 if (!uniqueEc2OnDemandPricingKeys.add(ec2OnDemandPricingKey))
@@ -143,29 +141,33 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
                             ec2OnDemandPricingKey.getRegionName(), ec2OnDemandPricingKey.getInstanceType()));
                 }
 
-                // Create a new EC2 on-demand pricing entry and add it to the result list.
-                ec2OnDemandPricingEntries.add(new Ec2OnDemandPricing(ec2OnDemandPricingKey, null, sku));
+                // Add this EC2 on-demand pricing entry to the result list.
+                ec2OnDemandPricingEntries.add(ec2OnDemandPricing);
             }
         }
 
-        // Get terms from the JSON object.
-        JSONObject terms = (JSONObject) jsonHelper.getKeyValue(jsonObject, JSON_KEY_NAME_TERMS);
-
-        // Get on-demand information from the terms.
-        JSONObject onDemand = (JSONObject) jsonHelper.getKeyValue(terms, JSON_KEY_NAME_ON_DEMAND);
-
-        // Populate pricing information.
-        for (Ec2OnDemandPricing ec2OnDemandPricing : ec2OnDemandPricingEntries)
+        // Continue the processing only when the result list is not empty.
+        if (CollectionUtils.isNotEmpty(ec2OnDemandPricingEntries))
         {
-            String sku = ec2OnDemandPricing.getSku();
-            JSONObject current = (JSONObject) jsonHelper.getKeyValue(onDemand, sku);
-            JSONObject pricingWrapper = (JSONObject) jsonHelper.getKeyValue(current, sku + JSON_SKU_WRAPPER_SUFFIX);
-            JSONObject priceDimensions = (JSONObject) jsonHelper.getKeyValue(pricingWrapper, JSON_KEY_NAME_PRICE_DIMENSIONS);
-            JSONObject innerPricingWrapper =
-                (JSONObject) jsonHelper.getKeyValue(priceDimensions, sku + JSON_SKU_WRAPPER_SUFFIX + JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX);
-            JSONObject pricePerUnit = (JSONObject) jsonHelper.getKeyValue(innerPricingWrapper, JSON_KEY_NAME_PRICE_PER_UNIT);
-            String pricePerUnitValue = jsonHelper.getKeyValue(pricePerUnit, JSON_PRICE_PER_UNIT_WRAPPER).toString();
-            ec2OnDemandPricing.setPricePerHour(new BigDecimal(pricePerUnitValue));
+            // Get terms from the JSON object.
+            JSONObject terms = (JSONObject) jsonHelper.getKeyValue(jsonObject, JSON_KEY_NAME_TERMS);
+
+            // Get on-demand information from the terms.
+            JSONObject onDemand = (JSONObject) jsonHelper.getKeyValue(terms, JSON_KEY_NAME_ON_DEMAND);
+
+            // Populate pricing information.
+            for (Ec2OnDemandPricing ec2OnDemandPricing : ec2OnDemandPricingEntries)
+            {
+                String sku = ec2OnDemandPricing.getSku();
+                JSONObject current = (JSONObject) jsonHelper.getKeyValue(onDemand, sku);
+                JSONObject pricingWrapper = (JSONObject) jsonHelper.getKeyValue(current, sku + JSON_SKU_WRAPPER_SUFFIX);
+                JSONObject priceDimensions = (JSONObject) jsonHelper.getKeyValue(pricingWrapper, JSON_KEY_NAME_PRICE_DIMENSIONS);
+                JSONObject innerPricingWrapper =
+                    (JSONObject) jsonHelper.getKeyValue(priceDimensions, sku + JSON_SKU_WRAPPER_SUFFIX + JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX);
+                JSONObject pricePerUnit = (JSONObject) jsonHelper.getKeyValue(innerPricingWrapper, JSON_KEY_NAME_PRICE_PER_UNIT);
+                String pricePerUnitValue = jsonHelper.getKeyValue(pricePerUnit, JSON_PRICE_PER_UNIT_WRAPPER).toString();
+                ec2OnDemandPricing.setPricePerHour(new BigDecimal(pricePerUnitValue));
+            }
         }
 
         return ec2OnDemandPricingEntries;
@@ -328,5 +330,36 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
         }
 
         return region;
+    }
+
+    /**
+     * Creates an EC2 on-demand pricing entry per specified parameters. This method returns null if input parameters fail validation.
+     *
+     * @param sku the SKU of the AWS product offering
+     * @param location the AWS location information, maybe null
+     * @param operatingSystem the operation system, maybe null
+     * @param instanceType the EC2 instance type, maybe null
+     * @param tenancy the EC2 tenancy, maybe null
+     * @param usageType the usage type, maybe null
+     *
+     * @return the EC2 on-demand pricing or null if input parameters fail validation
+     */
+    protected Ec2OnDemandPricing createEc2OnDemandPricingEntry(String sku, Object location, Object operatingSystem, Object instanceType, Object tenancy,
+        Object usageType)
+    {
+        Ec2OnDemandPricing result = null;
+
+        // The extra check for usage type is added below to exclude any dedicated/reserved hosts that are marked as having "Shared" tenancy by mistake.
+        if (location != null && operatingSystem != null && instanceType != null && tenancy != null && usageType != null &&
+            StringUtils.isNotBlank(location.toString()) &&
+            operatingSystem.toString().equalsIgnoreCase(JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM) &&
+            StringUtils.isNotBlank(instanceType.toString()) &&
+            tenancy.toString().equalsIgnoreCase(JSON_ATTRIBUTE_VALUE_TENANCY) &&
+            (usageType.toString().startsWith("BoxUsage") || usageType.toString().contains("-BoxUsage")))
+        {
+            result = new Ec2OnDemandPricing(new Ec2OnDemandPricingKey(convertLocationToRegionName(location.toString()), instanceType.toString()), null, sku);
+        }
+
+        return result;
     }
 }

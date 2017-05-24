@@ -172,6 +172,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String EC2_PRICING_LIST_URL = "UT_Ec2PricingListUrl_" + RANDOM_SUFFIX;
 
+    public static final String EC2_PRODUCT_KEY = "UT_EC2_ProductKey_1_" + RANDOM_SUFFIX;
+
+    public static final String EC2_PRODUCT_KEY_2 = "UT_EC2_ProductKey_2_" + RANDOM_SUFFIX;
+
     public static final String END_PARTITION_VALUE = "2014-04-08";
 
     public static final String ERROR_MESSAGE = "UT_ErrorMessage_" + RANDOM_SUFFIX;
@@ -355,6 +359,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      * The length of a business object definition short description
      */
     public static final int SHORT_DESCRIPTION_LENGTH = 300;
+
+    public static final String SKU = "UT_SKU_Value_" + RANDOM_SUFFIX;
 
     public static final String SQS_QUEUE_NAME = "UT_Sqs_Queue_Name_" + RANDOM_SUFFIX;
 
