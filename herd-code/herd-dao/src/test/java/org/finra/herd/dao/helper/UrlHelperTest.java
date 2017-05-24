@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.dao.AbstractDaoTest;
+import org.finra.herd.dao.impl.MockUrlOperationsImpl;
 
 /**
  * This class tests functionality within the UrlHelper class.
@@ -33,14 +34,33 @@ public class UrlHelperTest extends AbstractDaoTest
     @Test
     public void testParseJsonObjectFromUrl()
     {
-        // Try to read JSON object from an invalid URL.
+        assertEquals(MockUrlOperationsImpl.MOCK_JSON_STRING, urlHelper.parseJsonObjectFromUrl(MockUrlOperationsImpl.MOCK_URL_VALID).toJSONString());
+    }
+
+    @Test
+    public void testParseJsonObjectFromUrlJsonParseException()
+    {
         try
         {
-            urlHelper.parseJsonObjectFromUrl(I_DO_NOT_EXIST);
+            urlHelper.parseJsonObjectFromUrl(MockUrlOperationsImpl.MOCK_URL_JSON_PARSE_EXCEPTION);
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Failed to read JSON from the URL: url=\"%s\"", I_DO_NOT_EXIST), e.getMessage());
+            assertEquals(String.format("Failed to parse JSON object from the URL: url=\"%s\"", MockUrlOperationsImpl.MOCK_URL_JSON_PARSE_EXCEPTION),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testParseJsonObjectFromUrlMalformedURLException()
+    {
+        try
+        {
+            urlHelper.parseJsonObjectFromUrl(MockUrlOperationsImpl.MOCK_URL_MALFORMED_URL_EXCEPTION);
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Failed to read JSON from the URL: url=\"%s\"", MockUrlOperationsImpl.MOCK_URL_MALFORMED_URL_EXCEPTION), e.getMessage());
         }
     }
 }

@@ -19,11 +19,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import org.finra.herd.dao.UrlOperations;
 
 /**
  * A helper class for URL functionality.
@@ -31,6 +35,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class UrlHelper
 {
+    @Autowired
+    private UrlOperations urlOperations;
+
     /**
      * Reads JSON from a specified URL.
      *
@@ -43,13 +50,13 @@ public class UrlHelper
         try
         {
             // Open an input stream as per specified URL.
-            InputStream inputStream = new URL(url).openStream();
+            InputStream inputStream = urlOperations.openStream(new URL(url));
 
             try
             {
                 // Parse the JSON object from the input stream.
                 JSONParser jsonParser = new JSONParser();
-                return (JSONObject) jsonParser.parse(new InputStreamReader(inputStream, "UTF-8"));
+                return (JSONObject) jsonParser.parse(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             }
             catch (ParseException e)
             {

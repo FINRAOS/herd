@@ -37,6 +37,7 @@ import org.finra.herd.dao.Log4jOverridableConfigurer;
 import org.finra.herd.dao.S3Operations;
 import org.finra.herd.dao.SqsOperations;
 import org.finra.herd.dao.StsOperations;
+import org.finra.herd.dao.UrlOperations;
 import org.finra.herd.dao.impl.MockEc2OperationsImpl;
 import org.finra.herd.dao.impl.MockEmrOperationsImpl;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
@@ -46,6 +47,7 @@ import org.finra.herd.dao.impl.MockLdapOperations;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.dao.impl.MockSqsOperationsImpl;
 import org.finra.herd.dao.impl.MockStsOperationsImpl;
+import org.finra.herd.dao.impl.MockUrlOperationsImpl;
 
 /**
  * DAO environment test specific Spring module configuration.
@@ -199,5 +201,11 @@ public class DaoEnvTestSpringModuleConfig
     public EmrDao emrDao()
     {
         return new EmrDaoImplTest();
+    }
+
+    @Bean
+    public UrlOperations urlOperations()
+    {
+        return new MockUrlOperationsImpl();
     }
 }
