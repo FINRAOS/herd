@@ -55,6 +55,7 @@
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto"/>
          <Class name="~org.finra.herd.model.dto.CompleteUploadSingleParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.DataProvider"/>
          <Class name="~org.finra.herd.model.dto.DateRangeDto"/>
          <Class name="~org.finra.herd.model.dto.Ec2PriceDto"/>
          <Class name="~org.finra.herd.model.dto.ElasticsearchResponseDto"/>
@@ -67,6 +68,7 @@
          <Class name="~org.finra.herd.model.dto.IndexSearchHighlightFields"/>
          <Class name="~org.finra.herd.model.dto.JmsMessage"/>
          <Class name="~org.finra.herd.model.dto.JobDefinitionAlternateKeyDto"/>
+         <Class name="~org.finra.herd.model.dto.Namespace"/>
          <Class name="~org.finra.herd.model.dto.NotificationEventParamsDto"/>
          <Class name="~org.finra.herd.model.dto.ObjectFactory"/>
          <Class name="~org.finra.herd.model.dto.RegServerAccessParamsDto"/>
