@@ -15,13 +15,19 @@
 */
 package org.finra.herd.rest;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Storage;
@@ -29,26 +35,46 @@ import org.finra.herd.model.api.xml.StorageCreateRequest;
 import org.finra.herd.model.api.xml.StorageKey;
 import org.finra.herd.model.api.xml.StorageKeys;
 import org.finra.herd.model.api.xml.StorageUpdateRequest;
+import org.finra.herd.model.dto.StorageAlternateKeyDto;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
+import org.finra.herd.service.StorageService;
 
 /**
  * This class tests various functionality within the storage REST controller.
  */
 public class StorageRestControllerTest extends AbstractRestTest
 {
+    @Mock
+    private StorageService storageService;
+
+    @InjectMocks
+    private StorageRestController storageRestController;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testCreateStorage() throws Exception
     {
         // Create and persist a valid storage.
         StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
+        Storage storage = new Storage();
+        storage.setName(storageCreateRequest.getName());
+        storage.setAttributes(storageCreateRequest.getAttributes());
 
-        Storage storage = storageRestController.createStorage(storageCreateRequest);
+        when(storageService.createStorage(storageCreateRequest)).thenReturn(storage);
 
-        assertNotNull(storage);
-        assertTrue(storage.getName().equals(storageCreateRequest.getName()));
+        Storage resultStorage = storageRestController.createStorage(storageCreateRequest);
 
-        // Check if result list of attributes matches to the list from the create request.
-        businessObjectDefinitionServiceTestHelper.validateAttributes(storageCreateRequest.getAttributes(), storage.getAttributes());
+        // Verify the external calls.
+        verify(storageService).createStorage(storageCreateRequest);
+        verifyNoMoreInteractions(storageService);
+
+        // Validate the returned object.
+        assertEquals(storage, resultStorage);
     }
 
     @Test
@@ -56,16 +82,24 @@ public class StorageRestControllerTest extends AbstractRestTest
     {
         // Create a valid storage.
         StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        storageRestController.createStorage(storageCreateRequest);
+        Storage storage = new Storage();
+        String storageName = storageCreateRequest.getName();
+        storage.setName(storageName);
+        storage.setAttributes(storageCreateRequest.getAttributes());
 
         // Update the storage platform which is valid.
         StorageUpdateRequest storageUpdateRequest = new StorageUpdateRequest();
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
+        when(storageService.updateStorage(alternateKey, storageUpdateRequest)).thenReturn(storage);
 
-        // TODO: Update various attributes of the storage update request in the future when there is something to update.
+        Storage resultStorage = storageRestController.updateStorage(storageCreateRequest.getName(), storageUpdateRequest);
 
-        storageRestController.updateStorage(storageCreateRequest.getName(), storageUpdateRequest);
+        // Verify the external calls.
+        verify(storageService).updateStorage(alternateKey, storageUpdateRequest);
+        verifyNoMoreInteractions(storageService);
 
-        // TODO: Add asserts to ensure fields that were update indeed got updated.
+        // Validate the returned object.
+        assertEquals(storage, resultStorage);
     }
 
     @Test
@@ -73,13 +107,22 @@ public class StorageRestControllerTest extends AbstractRestTest
     {
         // Create and persist a valid storage.
         StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        String name = storageCreateRequest.getName();
-        Storage storage = storageRestController.createStorage(storageCreateRequest);
+        Storage storage = new Storage();
+        String storageName = storageCreateRequest.getName();
+        storage.setName(storageName);
+        storage.setAttributes(storageCreateRequest.getAttributes());
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
+
+        when(storageService.getStorage(alternateKey)).thenReturn(storage);
 
         // Retrieve the storage by it's name which is valid.
-        storage = storageRestController.getStorage(storage.getName());
-        assertNotNull(storage);
-        assertTrue(storage.getName().equals(name));
+        Storage resultStorage = storageRestController.getStorage(storageName);
+        // Verify the external calls.
+        verify(storageService).getStorage(alternateKey);
+        verifyNoMoreInteractions(storageService);
+
+        // Validate the returned object.
+        assertEquals(storage, resultStorage);
     }
 
     @Test(expected = ObjectNotFoundException.class)
@@ -87,16 +130,19 @@ public class StorageRestControllerTest extends AbstractRestTest
     {
         // Create and persist a valid storage.
         StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        String name = storageCreateRequest.getName();
-        Storage storage = storageRestController.createStorage(storageCreateRequest);
+        Storage storage = new Storage();
+        String storageName = storageCreateRequest.getName();
+        storage.setName(storageName);
+        storage.setAttributes(storageCreateRequest.getAttributes());
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
+        ObjectNotFoundException exception = new ObjectNotFoundException("object not found");
 
-        // Delete the storage by it's name which is valid.
-        storage = storageRestController.deleteStorage(storage.getName());
-        assertNotNull(storage);
-        assertTrue(storage.getName().equals(name));
+        when(storageService.deleteStorage(alternateKey)).thenThrow(exception);
 
-        // Retrieve the storage by it's name and verify that it doesn't exist.
-        storageRestController.getStorage(storage.getName());
+        storageRestController.deleteStorage(storageName);
+        // Verify the external calls.
+        verify(storageService).deleteStorage(alternateKey);
+        verifyNoMoreInteractions(storageService);
     }
 
     @Test
@@ -104,24 +150,17 @@ public class StorageRestControllerTest extends AbstractRestTest
     {
         // Get a list of test storage keys.
         List<StorageKey> testStorageKeys = Arrays.asList(new StorageKey(STORAGE_NAME), new StorageKey(STORAGE_NAME_2));
+        StorageKeys storageKeys = new StorageKeys(testStorageKeys);
 
-        // Create and persist storage entities.
-        for (StorageKey key : testStorageKeys)
-        {
-            storageDaoTestHelper.createStorageEntity(key.getStorageName());
-        }
-
+        when(storageService.getStorages()).thenReturn(storageKeys);
         // Retrieve a list of storage keys.
         StorageKeys resultStorageKeys = storageRestController.getStorages();
 
+        // Verify the external calls.
+        verify(storageService).getStorages();
+        verifyNoMoreInteractions(storageService);
         // Validate the returned object.
-        assertNotNull(resultStorageKeys);
-        assertNotNull(resultStorageKeys.getStorageKeys());
-        assertTrue(resultStorageKeys.getStorageKeys().size() >= testStorageKeys.size());
-        for (StorageKey key : testStorageKeys)
-        {
-            assertTrue(resultStorageKeys.getStorageKeys().contains(key));
-        }
+        assertEquals(storageKeys, resultStorageKeys);
     }
 
     /**

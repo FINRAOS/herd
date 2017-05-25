@@ -15,77 +15,116 @@
 */
 package org.finra.herd.rest;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.PartitionKeyGroup;
+import org.finra.herd.model.api.xml.PartitionKeyGroupCreateRequest;
+import org.finra.herd.model.api.xml.PartitionKeyGroupKey;
 import org.finra.herd.model.api.xml.PartitionKeyGroupKeys;
+import org.finra.herd.service.PartitionKeyGroupService;
 
 /**
  * This class tests various functionality within the partition key group REST controller.
  */
 public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
 {
+    @Mock
+    private PartitionKeyGroupService partitionKeyGroupService;
+
+    @InjectMocks
+    private PartitionKeyGroupRestController partitionKeyGroupRestController;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testCreatePartitionKeyGroup()
     {
         // Create a partition key group.
-        PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupRestController
-            .createPartitionKeyGroup(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupCreateRequest(PARTITION_KEY_GROUP));
+        PartitionKeyGroup partitionKeyGroup = new PartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
+        PartitionKeyGroupCreateRequest request = partitionKeyGroupServiceTestHelper.createPartitionKeyGroupCreateRequest(PARTITION_KEY_GROUP);
+        when(partitionKeyGroupService.createPartitionKeyGroup(request)).thenReturn(partitionKeyGroup);
+        PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupRestController.createPartitionKeyGroup(request);
 
         // Validate the returned object.
         partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
+        // Verify the external calls.
+        verify(partitionKeyGroupService).createPartitionKeyGroup(request);
+        verifyNoMoreInteractions(partitionKeyGroupService);
+        // Validate the returned object.
+        assertEquals(partitionKeyGroup, resultPartitionKeyGroup);
     }
 
     @Test
     public void testGetPartitionKeyGroup()
     {
-        // Create and persist a partition key group entity.
-        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroup partitionKeyGroup = new PartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
+        PartitionKeyGroupKey partitionKeyGroupKey = new PartitionKeyGroupKey(PARTITION_KEY_GROUP);
+
+        when(partitionKeyGroupService.getPartitionKeyGroup(partitionKeyGroupKey)).thenReturn(partitionKeyGroup);
 
         // Retrieve the partition key group.
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupRestController.getPartitionKeyGroup(PARTITION_KEY_GROUP);
 
+        // Verify the external calls.
+        verify(partitionKeyGroupService).getPartitionKeyGroup(partitionKeyGroupKey);
+        verifyNoMoreInteractions(partitionKeyGroupService);
         // Validate the returned object.
-        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
+        assertEquals(partitionKeyGroup, resultPartitionKeyGroup);
     }
 
     @Test
     public void testDeletePartitionKeyGroup()
     {
-        // Create and persist a partition key group entity.
-        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroup partitionKeyGroup = new PartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
+        PartitionKeyGroupKey partitionKeyGroupKey = new PartitionKeyGroupKey(PARTITION_KEY_GROUP);
 
-        // Validate that this partition key group exists.
-        partitionKeyGroupRestController.getPartitionKeyGroup(PARTITION_KEY_GROUP);
+        when(partitionKeyGroupService.deletePartitionKeyGroup(partitionKeyGroupKey)).thenReturn(partitionKeyGroup);
 
         // Delete this partition key group.
         PartitionKeyGroup deletedPartitionKeyGroup = partitionKeyGroupRestController.deletePartitionKeyGroup(PARTITION_KEY_GROUP);
-
+        // Verify the external calls.
+        verify(partitionKeyGroupService).deletePartitionKeyGroup(partitionKeyGroupKey);
+        verifyNoMoreInteractions(partitionKeyGroupService);
         // Validate the returned object.
-        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
-
-        // Ensure that this partition key group is no longer there.
-        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertEquals(partitionKeyGroup, deletedPartitionKeyGroup);
     }
 
     @Test
     public void testGetPartitionKeyGroups()
     {
-        // Create and persist two partition key group entities.
-        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
-        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
-
+        PartitionKeyGroupKeys partitionKeyGroupKeys =
+            new PartitionKeyGroupKeys(Arrays.asList(new PartitionKeyGroupKey(PARTITION_KEY_GROUP), new PartitionKeyGroupKey(PARTITION_KEY_GROUP_2)));
+        when(partitionKeyGroupService.getPartitionKeyGroups()).thenReturn(partitionKeyGroupKeys);
         // Get the list of partition key groups.
-        PartitionKeyGroupKeys partitionKeyGroupKeys = partitionKeyGroupRestController.getPartitionKeyGroups();
+        PartitionKeyGroupKeys resultPartitionKeyGroupKeys = partitionKeyGroupRestController.getPartitionKeyGroups();
 
         // Validate the returned object.
-        assertTrue(partitionKeyGroupKeys.getPartitionKeyGroupKeys().size() >= 2);
-        assertTrue(
-            partitionKeyGroupKeys.getPartitionKeyGroupKeys().contains(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
-        assertTrue(
-            partitionKeyGroupKeys.getPartitionKeyGroupKeys().contains(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP_2)));
+        assertTrue(resultPartitionKeyGroupKeys.getPartitionKeyGroupKeys().size() >= 2);
+        assertTrue(resultPartitionKeyGroupKeys.getPartitionKeyGroupKeys()
+            .contains(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertTrue(resultPartitionKeyGroupKeys.getPartitionKeyGroupKeys()
+            .contains(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP_2)));
+
+        // Verify the external calls.
+        verify(partitionKeyGroupService).getPartitionKeyGroups();
+        verifyNoMoreInteractions(partitionKeyGroupService);
+        // Validate the returned object.
+        assertEquals(partitionKeyGroupKeys, resultPartitionKeyGroupKeys);
     }
 }
