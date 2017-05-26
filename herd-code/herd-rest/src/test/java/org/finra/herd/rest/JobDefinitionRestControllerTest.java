@@ -16,36 +16,63 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.EndEvent;
 import org.activiti.bpmn.model.Process;
 import org.activiti.bpmn.model.SequenceFlow;
 import org.activiti.bpmn.model.StartEvent;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.JobDefinition;
 import org.finra.herd.model.api.xml.JobDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.JobDefinitionUpdateRequest;
+import org.finra.herd.service.JobDefinitionService;
 
 /**
  * This class tests various functionality within the job definition REST controller.
  */
 public class JobDefinitionRestControllerTest extends AbstractRestTest
 {
+    @Mock
+    private JobDefinitionService jobDefinitionService;
+
+    @InjectMocks
+    private JobDefinitionRestController jobDefinitionRestController;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testCreateJobDefinition() throws Exception
     {
         String namespace = NAMESPACE;
         String jobName = JOB_NAME;
         String activitiJobXml = getActivitiJobXml(namespace, jobName);
-        namespaceDaoTestHelper.createNamespaceEntity(namespace);
-        JobDefinition jobDefinition =
+        JobDefinitionCreateRequest request = new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null);
+
+        JobDefinition jobDefinition = getJobDefinition(NAMESPACE, JOB_NAME);
+
+        when(jobDefinitionService.createJobDefinition(request, true)).thenReturn(jobDefinition);
+
+        JobDefinition resultJobDefinition =
             jobDefinitionRestController.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null));
-        assertNotNull(jobDefinition);
-        assertEquals(namespace, jobDefinition.getNamespace());
-        assertEquals(jobName, jobDefinition.getJobName());
+
+        // Verify the external calls.
+        verify(jobDefinitionService).createJobDefinition(request, true);
+        verifyNoMoreInteractions(jobDefinitionService);
+        // Validate the returned object.
+        assertEquals(jobDefinition, resultJobDefinition);
     }
 
     @Test
@@ -53,13 +80,15 @@ public class JobDefinitionRestControllerTest extends AbstractRestTest
     {
         String namespace = NAMESPACE;
         String jobName = JOB_NAME;
-        String activitiJobXml = getActivitiJobXml(namespace, jobName);
-        namespaceDaoTestHelper.createNamespaceEntity(namespace);
-        jobDefinitionRestController.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null));
-        JobDefinition jobDefinition = jobDefinitionRestController.getJobDefinition(namespace, jobName);
-        assertNotNull(jobDefinition);
-        assertEquals(namespace, jobDefinition.getNamespace());
-        assertEquals(jobName, jobDefinition.getJobName());
+        JobDefinition jobDefinition = getJobDefinition(NAMESPACE, JOB_NAME);
+        when(jobDefinitionService.getJobDefinition(namespace, jobName)).thenReturn(jobDefinition);
+
+        JobDefinition resultJobDefinition = jobDefinitionRestController.getJobDefinition(namespace, jobName);
+        // Verify the external calls.
+        verify(jobDefinitionService).getJobDefinition(namespace, jobName);
+        verifyNoMoreInteractions(jobDefinitionService);
+        // Validate the returned object.
+        assertEquals(jobDefinition, resultJobDefinition);
     }
 
     @Test
@@ -67,15 +96,18 @@ public class JobDefinitionRestControllerTest extends AbstractRestTest
     {
         String namespace = NAMESPACE;
         String jobName = JOB_NAME;
-        String activitiJobXml = getActivitiJobXml(namespace, jobName);
-        namespaceDaoTestHelper.createNamespaceEntity(namespace);
-        jobDefinitionRestController.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null));
+        String activitiJobXml = getActivitiJobXml(NAMESPACE, JOB_NAME);
+        JobDefinitionUpdateRequest request = new JobDefinitionUpdateRequest(null, activitiJobXml, null, null);
+        JobDefinition jobDefinition = getJobDefinition(NAMESPACE, JOB_NAME);
 
-        JobDefinition jobDefinition =
+        when(jobDefinitionService.updateJobDefinition(namespace, jobName, request, true)).thenReturn(jobDefinition);
+        JobDefinition resultJobDefinition =
             jobDefinitionRestController.updateJobDefinition(namespace, jobName, new JobDefinitionUpdateRequest(null, activitiJobXml, null, null));
-        assertNotNull(jobDefinition);
-        assertEquals(namespace, jobDefinition.getNamespace());
-        assertEquals(jobName, jobDefinition.getJobName());
+        // Verify the external calls.
+        verify(jobDefinitionService).updateJobDefinition(namespace, jobName, request, true);
+        verifyNoMoreInteractions(jobDefinitionService);
+        // Validate the returned object.
+        assertEquals(jobDefinition, resultJobDefinition);
     }
 
     private String getActivitiJobXml(String namespace, String jobName)
@@ -96,5 +128,16 @@ public class JobDefinitionRestControllerTest extends AbstractRestTest
         process.addFlowElement(new SequenceFlow("start", "end"));
         bpmnModel.addProcess(process);
         return getActivitiXmlFromBpmnModel(bpmnModel);
+    }
+
+    private JobDefinition getJobDefinition(String namespace, String jobName)
+    {
+        String activitiJobXml = getActivitiJobXml(namespace, jobName);
+        JobDefinition jobDefinition = new JobDefinition();
+        jobDefinition.setActivitiJobXml(activitiJobXml);
+        jobDefinition.setJobName(JOB_NAME);
+        jobDefinition.setJobName(NAMESPACE);
+
+        return jobDefinition;
     }
 }
