@@ -59,7 +59,9 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.DataProvider;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
+import org.finra.herd.model.dto.Namespace;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
@@ -129,14 +131,12 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         // Mock the call to external methods
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionEntityList);
         when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
-        when(searchFunctions.getValidateFunction()).thenReturn((indexName, documentType, id, json) ->
-        {
+        when(searchFunctions.getValidateFunction()).thenReturn((indexName, documentType, id, json) -> {
         });
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(searchFunctions.getIdsInIndexFunction()).thenReturn((indexName, documentType) -> businessObjectDefinitionEntityIdList);
-        when(searchFunctions.getDeleteDocumentByIdFunction()).thenReturn((indexName, documentType, id) ->
-        {
+        when(searchFunctions.getDeleteDocumentByIdFunction()).thenReturn((indexName, documentType, id) -> {
         });
 
         // Call the method under test
@@ -453,9 +453,11 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME), BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME,
+                new Namespace(NAMESPACE));
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME_2), BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2,
+                new Namespace(NAMESPACE));
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
 
@@ -486,8 +488,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(1).getBusinessObjectDefinitionName(), is(BDEF_NAME_2));
 
         // Verify the calls to external methods
-        verify(configurationHelper, times(2))
-            .getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        verify(configurationHelper, times(2)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagHelper).validateTagKey(tagKey);
@@ -528,9 +529,11 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME), BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME,
+                new Namespace(NAMESPACE));
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME_2), BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2,
+                new Namespace(NAMESPACE));
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
 
@@ -723,9 +726,11 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME), BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME,
+                new Namespace(NAMESPACE));
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME_2), BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2,
+                new Namespace(NAMESPACE));
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
 
@@ -810,9 +815,11 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME), BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME,
+                new Namespace(NAMESPACE));
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME_2), BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2,
+                new Namespace(NAMESPACE));
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
 
@@ -893,9 +900,11 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME), BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME,
+                new Namespace(NAMESPACE));
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME_2), BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2,
+                new Namespace(NAMESPACE));
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
 
@@ -975,7 +984,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verifyNoMoreInteractions(tagDaoHelper, searchFunctions, configurationHelper, tagHelper);
     }
 
-
     private void indexSearchBusinessObjectDefinitionsFacetFields(List<String> facetFields)
     {
         // Create a new business object definition search filter list with the new business object definition search key list
@@ -990,9 +998,11 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME), BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME,
+                new Namespace(NAMESPACE));
         BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider(DATA_PROVIDER_NAME_2), BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2,
+                new Namespace(NAMESPACE));
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
 
@@ -1066,8 +1076,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
-        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
@@ -1105,8 +1114,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(jsonHelper.objectToJson(any())).thenReturn("");
-        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
@@ -1144,8 +1152,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
-        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
@@ -1183,8 +1190,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(jsonHelper.objectToJson(any())).thenReturn("");
-        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
@@ -1220,8 +1226,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(searchFunctions.getDeleteIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getDeleteIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
