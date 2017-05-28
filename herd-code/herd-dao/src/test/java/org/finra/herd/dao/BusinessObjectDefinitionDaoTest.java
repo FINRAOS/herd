@@ -106,12 +106,13 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
             ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(new ArrayList<>())));
 
         // Create and persist root tag entity.
-        TagEntity parentTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION, null);
+        TagEntity parentTagEntity =
+            tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, null);
 
         // Create two children for the root tag.
-        List<TagEntity> tagEntities = Arrays
-            .asList(parentTagEntity, tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_3, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION, parentTagEntity),
-                tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_4, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION, parentTagEntity));
+        List<TagEntity> tagEntities = Arrays.asList(parentTagEntity,
+            tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_3, TAG_DISPLAY_NAME_4, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, parentTagEntity),
+            tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_4, TAG_DISPLAY_NAME_3, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, parentTagEntity));
 
         // Create and persist two business object definition tag entities for the child tag entities.
         for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)

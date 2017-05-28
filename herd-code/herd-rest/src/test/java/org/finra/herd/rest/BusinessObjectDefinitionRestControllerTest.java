@@ -243,12 +243,15 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a root tag entity for the tag type.
-        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION);
 
         // Create two children for the root tag.
-        TagEntity childTagEntity1 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, rootTagEntity);
-        TagEntity childTagEntity2 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, rootTagEntity);
-        TagEntity childTagEntity3 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4, rootTagEntity);
+        TagEntity childTagEntity1 =
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER_2, TAG_DESCRIPTION_2, rootTagEntity);
+        TagEntity childTagEntity2 =
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_SEARCH_SCORE_MULTIPLIER_3, TAG_DESCRIPTION_3, rootTagEntity);
+        TagEntity childTagEntity3 =
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_SEARCH_SCORE_MULTIPLIER_4, TAG_DESCRIPTION_4, rootTagEntity);
 
         // Create association between business object definition and tag.
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), childTagEntity1);

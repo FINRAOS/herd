@@ -15,6 +15,8 @@
 */
 package org.finra.herd.dao;
 
+import java.math.BigDecimal;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -52,6 +54,21 @@ public class TagDaoTestHelper
     /**
      * Creates and persists a new tag entity.
      *
+     * @param tagKey the tag key
+     * @param tagDisplayName the tag display name
+     * @param tagSearchScoreMultiplier the tag's search score multiplier
+     * @param tagDescription the description of the tag
+     *
+     * @return the newly created tag entity
+     */
+    public TagEntity createTagEntity(TagKey tagKey, String tagDisplayName, BigDecimal tagSearchScoreMultiplier, String tagDescription)
+    {
+        return createTagEntity(tagKey.getTagTypeCode(), tagKey.getTagCode(), tagDisplayName, tagSearchScoreMultiplier, tagDescription, null);
+    }
+
+    /**
+     * Creates and persists a new tag entity.
+     *
      * @param tagType the tag type
      * @param tagCode the tag code
      * @param tagDisplayName the tag display name
@@ -61,7 +78,23 @@ public class TagDaoTestHelper
      */
     public TagEntity createTagEntity(String tagType, String tagCode, String tagDisplayName, String tagDescription)
     {
-        return createTagEntity(tagType, tagCode, tagDisplayName, tagDescription, null);
+        return createTagEntity(tagType, tagCode, tagDisplayName, null, tagDescription, null);
+    }
+
+    /**
+     * Creates and persists a new tag entity.
+     *
+     * @param tagType the tag type
+     * @param tagCode the tag code
+     * @param tagDisplayName the tag display name
+     * @param tagSearchScoreMultiplier the tag's search score multiplier
+     * @param tagDescription the description of the tag
+     *
+     * @return the newly created tag entity
+     */
+    public TagEntity createTagEntity(String tagType, String tagCode, String tagDisplayName, BigDecimal tagSearchScoreMultiplier, String tagDescription)
+    {
+        return createTagEntity(tagType, tagCode, tagDisplayName, tagSearchScoreMultiplier, tagDescription, null);
     }
 
     /**
@@ -69,14 +102,16 @@ public class TagDaoTestHelper
      *
      * @param tagKey the tag key
      * @param tagDisplayName the tag display name
+     * @param tagSearchScoreMultiplier the tag's search score multiplier
      * @param tagDescription the description of the tag
      * @param parentTagEntity the parent tag entity
      *
      * @return the newly created tag entity
      */
-    public TagEntity createTagEntity(TagKey tagKey, String tagDisplayName, String tagDescription, TagEntity parentTagEntity)
+    public TagEntity createTagEntity(TagKey tagKey, String tagDisplayName, BigDecimal tagSearchScoreMultiplier, String tagDescription,
+        TagEntity parentTagEntity)
     {
-        return createTagEntity(tagKey.getTagTypeCode(), tagKey.getTagCode(), tagDisplayName, tagDescription, parentTagEntity);
+        return createTagEntity(tagKey.getTagTypeCode(), tagKey.getTagCode(), tagDisplayName, tagSearchScoreMultiplier, tagDescription, parentTagEntity);
     }
 
     /**
@@ -85,12 +120,14 @@ public class TagDaoTestHelper
      * @param tagType the tag type entity
      * @param tagCode the tag code
      * @param tagDisplayName the tag display name
+     * @param tagSearchScoreMultiplier the tag's search score multiplier
      * @param tagDescription the description of the tag
      * @param parentTagEntity the parent tag entity
      *
      * @return the newly created tag entity
      */
-    public TagEntity createTagEntity(String tagType, String tagCode, String tagDisplayName, String tagDescription, TagEntity parentTagEntity)
+    public TagEntity createTagEntity(String tagType, String tagCode, String tagDisplayName, BigDecimal tagSearchScoreMultiplier, String tagDescription,
+        TagEntity parentTagEntity)
     {
         // Create a tag type entity if needed.
         TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(new TagTypeKey(tagType));
@@ -100,7 +137,7 @@ public class TagDaoTestHelper
                 .createTagTypeEntity(tagType, AbstractDaoTest.TAG_TYPE_DISPLAY_NAME, AbstractDaoTest.TAG_TYPE_ORDER, AbstractDaoTest.TAG_TYPE_DESCRIPTION);
         }
 
-        return createTagEntity(tagTypeEntity, tagCode, tagDisplayName, tagDescription, parentTagEntity);
+        return createTagEntity(tagTypeEntity, tagCode, tagDisplayName, tagSearchScoreMultiplier, tagDescription, parentTagEntity);
     }
 
     /**
@@ -115,7 +152,7 @@ public class TagDaoTestHelper
      */
     public TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String tagDisplayName, String tagDescription)
     {
-        return createTagEntity(tagTypeEntity, tagCode, tagDisplayName, tagDescription, null);
+        return createTagEntity(tagTypeEntity, tagCode, tagDisplayName, null, tagDescription, null);
     }
 
     /**
@@ -124,18 +161,38 @@ public class TagDaoTestHelper
      * @param tagTypeEntity the tag type entity
      * @param tagCode the tag code
      * @param tagDisplayName the tag display name
+     * @param tagSearchScoreMultiplier the tag's search score multiplier
+     * @param tagDescription the description of the tag
+     *
+     * @return the newly created tag entity
+     */
+    public TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String tagDisplayName, BigDecimal tagSearchScoreMultiplier,
+        String tagDescription)
+    {
+        return createTagEntity(tagTypeEntity, tagCode, tagDisplayName, null, tagDescription, null);
+    }
+
+    /**
+     * Creates and persists a new tag entity.
+     *
+     * @param tagTypeEntity the tag type entity
+     * @param tagCode the tag code
+     * @param tagDisplayName the tag display name
+     * @param tagSearchScoreMultiplier the tag's search score multiplier
      * @param tagDescription the description of the tag
      * @param parentTagEntity the parent tag entity
      *
      * @return the newly created tag entity
      */
-    public TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String tagDisplayName, String tagDescription, TagEntity parentTagEntity)
+    public TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String tagDisplayName, BigDecimal tagSearchScoreMultiplier,
+        String tagDescription, TagEntity parentTagEntity)
     {
         TagEntity tagEntity = new TagEntity();
 
         tagEntity.setTagType(tagTypeEntity);
         tagEntity.setTagCode(tagCode);
         tagEntity.setDisplayName(tagDisplayName);
+        tagEntity.setSearchScoreMultiplier(tagSearchScoreMultiplier);
         tagEntity.setDescription(tagDescription);
         tagEntity.setParentTagEntity(parentTagEntity);
 
