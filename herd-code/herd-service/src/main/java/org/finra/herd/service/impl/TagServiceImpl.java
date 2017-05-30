@@ -19,6 +19,7 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_DELETE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -94,6 +95,9 @@ public class TagServiceImpl implements TagService, SearchableService
 
     // Constant to hold the parent tag key field option for the search response.
     public final static String PARENT_TAG_KEY_FIELD = "parentTagKey".toLowerCase();
+
+    // Constant to hold the search score multiplier option for the search response.
+    public final static String SEARCH_SCORE_MULTIPLIER_FIELD = "searchScoreMultiplier".toLowerCase();
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
@@ -254,7 +258,7 @@ public class TagServiceImpl implements TagService, SearchableService
     @Override
     public Set<String> getValidSearchResponseFields()
     {
-        return ImmutableSet.of(DISPLAY_NAME_FIELD, DESCRIPTION_FIELD, PARENT_TAG_KEY_FIELD, HAS_CHILDREN_FIELD);
+        return ImmutableSet.of(DISPLAY_NAME_FIELD, SEARCH_SCORE_MULTIPLIER_FIELD, DESCRIPTION_FIELD, PARENT_TAG_KEY_FIELD, HAS_CHILDREN_FIELD);
     }
 
     @Override
@@ -292,8 +296,8 @@ public class TagServiceImpl implements TagService, SearchableService
         List<Tag> tags = new ArrayList<>();
         for (TagEntity tagEntity : tagEntities)
         {
-            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), false, fields.contains(DESCRIPTION_FIELD), false, false, false,
-                fields.contains(PARENT_TAG_KEY_FIELD), fields.contains(HAS_CHILDREN_FIELD)));
+            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), fields.contains(SEARCH_SCORE_MULTIPLIER_FIELD),
+                fields.contains(DESCRIPTION_FIELD), false, false, false, fields.contains(PARENT_TAG_KEY_FIELD), fields.contains(HAS_CHILDREN_FIELD)));
         }
 
         // Build and return the tag search response.
@@ -557,6 +561,22 @@ public class TagServiceImpl implements TagService, SearchableService
         }
 
         request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
+
+        validateTagSearchScoreMultiplier(request.getSearchScoreMultiplier());
+    }
+
+    /**
+     * Validate an optional tag's search score multiplier value.
+     *
+     * @param searchScoreMultiplier the tag's search score multiplier value
+     */
+    private void validateTagSearchScoreMultiplier(BigDecimal searchScoreMultiplier)
+    {
+        if (searchScoreMultiplier != null && searchScoreMultiplier.compareTo(BigDecimal.ZERO) == -1)
+        {
+            throw new IllegalArgumentException(
+                String.format("The searchScoreMultiplier can not have a negative value. searchScoreMultiplier=%s", searchScoreMultiplier.toPlainString()));
+        }
     }
 
     /**
@@ -614,6 +634,8 @@ public class TagServiceImpl implements TagService, SearchableService
         }
 
         request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
+
+        validateTagSearchScoreMultiplier(request.getSearchScoreMultiplier());
     }
 
     @Override

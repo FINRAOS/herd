@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -131,6 +132,20 @@ public class TagServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals("Tag type code in parent tag key must match the tag type code in the request.", e.getMessage());
+        }
+
+        // Try to create a tag with a negative search score multiplier value.
+        try
+        {
+            tagService.createTag(
+                new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER.multiply(BigDecimal.valueOf(-1)),
+                    TAG_DESCRIPTION, NO_PARENT_TAG_KEY));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("The searchScoreMultiplier can not have a negative value. searchScoreMultiplier=%s",
+                TAG_SEARCH_SCORE_MULTIPLIER.multiply(BigDecimal.valueOf(-1))), e.getMessage());
         }
     }
 
@@ -856,14 +871,14 @@ public class TagServiceTest extends AbstractServiceTest
         // Search the tags.
         TagSearchResponse tagSearchResponse = tagService.searchTags(
             new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, TAG_CODE, NO_IS_PARENT_TAG_NULL_FLAG))))),
-            Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD, TagServiceImpl.DESCRIPTION_FIELD, TagServiceImpl.PARENT_TAG_KEY_FIELD,
-                TagServiceImpl.HAS_CHILDREN_FIELD));
+            Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD, TagServiceImpl.SEARCH_SCORE_MULTIPLIER_FIELD, TagServiceImpl.DESCRIPTION_FIELD,
+                TagServiceImpl.PARENT_TAG_KEY_FIELD, TagServiceImpl.HAS_CHILDREN_FIELD));
 
         // Validate the returned object.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, NO_TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER_3, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID,
                 NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, NO_TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_SEARCH_SCORE_MULTIPLIER_2, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID,
                 NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN))), tagSearchResponse);
     }
 
@@ -942,14 +957,15 @@ public class TagServiceTest extends AbstractServiceTest
         // Search the tags using lower case input parameters.
         TagSearchResponse tagSearchResponse = tagService.searchTags(new TagSearchRequest(
             Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase(), NO_IS_PARENT_TAG_NULL_FLAG))))),
-            Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD.toLowerCase(), TagServiceImpl.DESCRIPTION_FIELD.toLowerCase(),
-                TagServiceImpl.PARENT_TAG_KEY_FIELD.toLowerCase(), TagServiceImpl.HAS_CHILDREN_FIELD.toLowerCase()));
+            Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD.toLowerCase(), TagServiceImpl.SEARCH_SCORE_MULTIPLIER_FIELD.toLowerCase(),
+                TagServiceImpl.DESCRIPTION_FIELD.toLowerCase(), TagServiceImpl.PARENT_TAG_KEY_FIELD.toLowerCase(),
+                TagServiceImpl.HAS_CHILDREN_FIELD.toLowerCase()));
 
         // Validate the returned object.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, NO_TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER_3, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID,
                 NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, NO_TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_SEARCH_SCORE_MULTIPLIER_2, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID,
                 NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN))), tagSearchResponse);
     }
 
@@ -1001,6 +1017,17 @@ public class TagServiceTest extends AbstractServiceTest
                 NO_UPDATED_TIME, NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
             new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
             Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD)));
+
+        // Search tags without specifying optional parameters except for the search score multiplier option.
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID,
+                NO_UPDATED_TIME, NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER_3, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID,
+                NO_UPDATED_TIME, NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER_2, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID,
+                NO_UPDATED_TIME, NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
+            new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
+            Sets.newHashSet(TagServiceImpl.SEARCH_SCORE_MULTIPLIER_FIELD)));
 
         // Search tags without specifying optional parameters except for the description field option.
         assertEquals(new TagSearchResponse(Arrays.asList(
@@ -1097,14 +1124,15 @@ public class TagServiceTest extends AbstractServiceTest
         // Search the tags by using input parameters with leading and trailing empty spaces.
         TagSearchResponse tagSearchResponse = tagService.searchTags(new TagSearchRequest(
             Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(addWhitespace(TAG_TYPE), addWhitespace(TAG_CODE), NO_IS_PARENT_TAG_NULL_FLAG))))),
-            Sets.newHashSet(addWhitespace(TagServiceImpl.DISPLAY_NAME_FIELD), addWhitespace(TagServiceImpl.DESCRIPTION_FIELD),
-                addWhitespace(TagServiceImpl.PARENT_TAG_KEY_FIELD), addWhitespace(TagServiceImpl.HAS_CHILDREN_FIELD)));
+            Sets.newHashSet(addWhitespace(TagServiceImpl.DISPLAY_NAME_FIELD), addWhitespace(TagServiceImpl.SEARCH_SCORE_MULTIPLIER_FIELD),
+                addWhitespace(TagServiceImpl.DESCRIPTION_FIELD), addWhitespace(TagServiceImpl.PARENT_TAG_KEY_FIELD),
+                addWhitespace(TagServiceImpl.HAS_CHILDREN_FIELD)));
 
         // Validate the returned object.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, NO_TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER_3, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID,
                 NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, NO_TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_SEARCH_SCORE_MULTIPLIER_2, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID,
                 NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN))), tagSearchResponse);
     }
 
@@ -1117,14 +1145,15 @@ public class TagServiceTest extends AbstractServiceTest
         // Search the tags using upper case input parameters.
         TagSearchResponse tagSearchResponse = tagService.searchTags(new TagSearchRequest(
             Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase(), NO_IS_PARENT_TAG_NULL_FLAG))))),
-            Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD.toUpperCase(), TagServiceImpl.DESCRIPTION_FIELD.toUpperCase(),
-                TagServiceImpl.PARENT_TAG_KEY_FIELD.toUpperCase(), TagServiceImpl.HAS_CHILDREN_FIELD.toUpperCase()));
+            Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD.toUpperCase(), TagServiceImpl.SEARCH_SCORE_MULTIPLIER_FIELD.toUpperCase(),
+                TagServiceImpl.DESCRIPTION_FIELD.toUpperCase(), TagServiceImpl.PARENT_TAG_KEY_FIELD.toUpperCase(),
+                TagServiceImpl.HAS_CHILDREN_FIELD.toUpperCase()));
 
         // Validate the returned object.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, NO_TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER_3, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID,
                 NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, NO_TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_SEARCH_SCORE_MULTIPLIER_2, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID,
                 NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN))), tagSearchResponse);
     }
 
@@ -1231,6 +1260,20 @@ public class TagServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals("Tag type code in parent tag key must match the tag type code in the request.", e.getMessage());
+        }
+
+        // Try to update a tag using a negative search score multiplier value.
+        try
+        {
+            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE),
+                new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER_2.multiply(BigDecimal.valueOf(-1)), TAG_DESCRIPTION_2,
+                    new TagKey(TAG_TYPE, TAG_CODE_2)));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("The searchScoreMultiplier can not have a negative value. searchScoreMultiplier=%s",
+                TAG_SEARCH_SCORE_MULTIPLIER_2.multiply(BigDecimal.valueOf(-1))), e.getMessage());
         }
     }
 

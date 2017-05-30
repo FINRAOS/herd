@@ -169,7 +169,7 @@ public class TagDaoTestHelper
     public TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String tagDisplayName, BigDecimal tagSearchScoreMultiplier,
         String tagDescription)
     {
-        return createTagEntity(tagTypeEntity, tagCode, tagDisplayName, null, tagDescription, null);
+        return createTagEntity(tagTypeEntity, tagCode, tagDisplayName, tagSearchScoreMultiplier, tagDescription, null);
     }
 
     /**
