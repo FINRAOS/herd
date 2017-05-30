@@ -631,6 +631,11 @@
                <xs:documentation>The tag's name in plain text for human readability</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="searchScoreMultiplier" type="xs:decimal" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional tag's search score multiplier. Search score multiplier is numeric and can be a decimal</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional description</xs:documentation>
@@ -650,6 +655,11 @@
          <xs:element name="displayName" type="xs:string">
             <xs:annotation>
                <xs:documentation>The tag's name in plain text for human readability</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchScoreMultiplier" type="xs:decimal" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional tag's search score multiplier. Search score multiplier is numeric and can be a decimal</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
@@ -681,6 +691,11 @@
          <xs:element name="displayName" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag's name in plain text for human readability</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchScoreMultiplier" type="xs:decimal" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional tag's search score multiplier. Search score multiplier is numeric and can be a decimal</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
@@ -1953,7 +1968,7 @@
          </xs:element>
       </xs:all>
    </xs:complexType>
-   
+
    <xs:element name="businessObjectFormat" type="businessObjectFormat"/>
    <xs:complexType name="businessObjectFormat">
       <xs:all>
@@ -7179,9 +7194,9 @@
    </xs:element>
    <xs:complexType name="highlight">
       <xs:all>
-         <xs:element name="fields" type="fields" />
+         <xs:element name="fields" type="fields"/>
       </xs:all>
-   </xs:complexType >
+   </xs:complexType>
 
    <xs:element name="fields" type="fields">
       <xs:annotation>

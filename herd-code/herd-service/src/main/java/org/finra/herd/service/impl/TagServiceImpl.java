@@ -292,7 +292,7 @@ public class TagServiceImpl implements TagService, SearchableService
         List<Tag> tags = new ArrayList<>();
         for (TagEntity tagEntity : tagEntities)
         {
-            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), fields.contains(DESCRIPTION_FIELD), false, false, false,
+            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), false, fields.contains(DESCRIPTION_FIELD), false, false, false,
                 fields.contains(PARENT_TAG_KEY_FIELD), fields.contains(HAS_CHILDREN_FIELD)));
         }
 
@@ -406,6 +406,7 @@ public class TagServiceImpl implements TagService, SearchableService
         tagEntity.setTagType(tagTypeEntity);
         tagEntity.setTagCode(request.getTagKey().getTagCode());
         tagEntity.setDisplayName(request.getDisplayName());
+        tagEntity.setSearchScoreMultiplier(request.getSearchScoreMultiplier());
         tagEntity.setDescription(request.getDescription());
         tagEntity.setParentTagEntity(parentTagEntity);
 
@@ -421,7 +422,7 @@ public class TagServiceImpl implements TagService, SearchableService
      */
     private Tag createTagFromEntity(TagEntity tagEntity)
     {
-        return createTagFromEntity(tagEntity, true, true, true, true, true, true, true, false);
+        return createTagFromEntity(tagEntity, true, true, true, true, true, true, true, true, false);
     }
 
     /**
@@ -430,6 +431,7 @@ public class TagServiceImpl implements TagService, SearchableService
      * @param tagEntity the tag entity
      * @param includeId specifies to include the display name field
      * @param includeDisplayName specifies to include the display name field
+     * @param includeSearchScoreMultiplier specifies to include the search score multiplier
      * @param includeDescription specifies to include the description field
      * @param includeUserId specifies to include the user id of the user who created this tag
      * @param includeLastUpdatedByUserId specifies to include the user id of the user who last updated this tag
@@ -439,8 +441,9 @@ public class TagServiceImpl implements TagService, SearchableService
      *
      * @return the tag
      */
-    private Tag createTagFromEntity(TagEntity tagEntity, boolean includeId, boolean includeDisplayName, boolean includeDescription, boolean includeUserId,
-        boolean includeLastUpdatedByUserId, boolean includeUpdatedTime, boolean includeParentTagKey, boolean includeHasChildren)
+    private Tag createTagFromEntity(TagEntity tagEntity, boolean includeId, boolean includeDisplayName, boolean includeSearchScoreMultiplier,
+        boolean includeDescription, boolean includeUserId, boolean includeLastUpdatedByUserId, boolean includeUpdatedTime, boolean includeParentTagKey,
+        boolean includeHasChildren)
     {
         Tag tag = new Tag();
 
@@ -454,6 +457,11 @@ public class TagServiceImpl implements TagService, SearchableService
         if (includeDisplayName)
         {
             tag.setDisplayName(tagEntity.getDisplayName());
+        }
+
+        if (includeSearchScoreMultiplier)
+        {
+            tag.setSearchScoreMultiplier(tagEntity.getSearchScoreMultiplier());
         }
 
         if (includeDescription)
@@ -526,6 +534,7 @@ public class TagServiceImpl implements TagService, SearchableService
     private void updateTagEntity(TagEntity tagEntity, TagUpdateRequest request, TagEntity parentTagEntity)
     {
         tagEntity.setDisplayName(request.getDisplayName());
+        tagEntity.setSearchScoreMultiplier(request.getSearchScoreMultiplier());
         tagEntity.setDescription(request.getDescription());
         tagEntity.setParentTagEntity(parentTagEntity);
         tagDao.saveAndRefresh(tagEntity);
@@ -724,6 +733,4 @@ public class TagServiceImpl implements TagService, SearchableService
 
         return isValid;
     }
-    
-    
 }

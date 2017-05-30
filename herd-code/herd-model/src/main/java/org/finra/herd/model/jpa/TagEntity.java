@@ -15,6 +15,7 @@
 */
 package org.finra.herd.model.jpa;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 
@@ -69,24 +70,30 @@ public class TagEntity extends AuditableEntity
     /**
      * The tag's display name.
      */
-    @Column(name = "dsply_name_tx", nullable = true)
+    @Column(name = "dsply_name_tx")
     private String displayName;
+
+    /**
+     * The tag's search score multiplier.
+     */
+    @Column(name = "srch_score_mltpr")
+    private BigDecimal searchScoreMultiplier;
 
     /**
      * The tag description column
      */
-    @Column(name = "desc_tx", nullable = true)
+    @Column(name = "desc_tx")
     private String description;
 
     // This is the parent
-    @JsonBackReference(value="childrenTagEntities-parentTagEntity")
+    @JsonBackReference(value = "childrenTagEntities-parentTagEntity")
     @JoinTable(name = "tag_prnt", joinColumns = {@JoinColumn(name = TABLE_NAME + "_id", referencedColumnName = TABLE_NAME + "_id")},
         inverseJoinColumns = {@JoinColumn(name = "prnt_tag_id", referencedColumnName = TABLE_NAME + "_id")})
     @ManyToOne
     private TagEntity parentTagEntity;
 
     // These are the children.
-    @JsonManagedReference(value="childrenTagEntities-parentTagEntity")
+    @JsonManagedReference(value = "childrenTagEntities-parentTagEntity")
     @OneToMany(mappedBy = "parentTagEntity")
     private List<TagEntity> childrenTagEntities;
 
@@ -133,6 +140,16 @@ public class TagEntity extends AuditableEntity
     public void setDisplayName(String displayName)
     {
         this.displayName = displayName;
+    }
+
+    public BigDecimal getSearchScoreMultiplier()
+    {
+        return searchScoreMultiplier;
+    }
+
+    public void setSearchScoreMultiplier(BigDecimal searchScoreMultiplier)
+    {
+        this.searchScoreMultiplier = searchScoreMultiplier;
     }
 
     public String getDescription()

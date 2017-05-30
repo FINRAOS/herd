@@ -799,13 +799,13 @@ public class BusinessObjectDefinitionTagServiceTest extends AbstractServiceTest
         TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Create two children for the root tag with tag display name in reverse order.
-        List<TagEntity> childrenTagEntities = Arrays
-            .asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION, rootTagEntity),
-                tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION, rootTagEntity));
+        List<TagEntity> childrenTagEntities = Arrays.asList(
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_3, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, rootTagEntity),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, rootTagEntity));
 
         // Create one grandchild of the root tag.
-        TagEntity grandchildTagEntity =
-            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION, childrenTagEntities.get(0));
+        TagEntity grandchildTagEntity = tagDaoTestHelper
+            .createTagEntity(tagTypeEntity, TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, childrenTagEntities.get(0));
 
         // Create four business object definition entities (one for each tag nesting level used in this test) with display names in reverse order.
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Arrays.asList(businessObjectDefinitionDaoTestHelper
