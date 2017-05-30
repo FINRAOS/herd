@@ -16,48 +16,77 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.CustomDdl;
+import org.finra.herd.model.api.xml.CustomDdlCreateRequest;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.CustomDdlKeys;
-import org.finra.herd.model.jpa.CustomDdlEntity;
+import org.finra.herd.model.api.xml.CustomDdlUpdateRequest;
+import org.finra.herd.service.CustomDdlService;
 
 /**
  * This class tests various functionality within the custom DDL REST controller.
  */
 public class CustomDdlRestControllerTest extends AbstractRestTest
 {
+    @Mock
+    private CustomDdlService customDdlService;
+
+    @InjectMocks
+    private CustomDdlRestController customDdlRestController;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testCreateCustomDdl()
     {
-        // Create and persist a business object format entity.
-        businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY);
+        CustomDdlCreateRequest request = customDdlServiceTestHelper
+            .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
+
+        CustomDdl customDdl =
+            new CustomDdl(100, new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME), TEST_DDL);
+
+        when(customDdlService.createCustomDdl(request)).thenReturn(customDdl);
 
         // Create a custom DDL.
-        CustomDdl resultCustomDdl = customDdlRestController.createCustomDdl(customDdlServiceTestHelper
-            .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
+        CustomDdl resultCustomDdl = customDdlRestController.createCustomDdl(request);
 
         // Validate the returned object.
         customDdlServiceTestHelper
             .validateCustomDdl(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
                 resultCustomDdl);
+
+        // Verify the external calls.
+        verify(customDdlService).createCustomDdl(request);
+        verifyNoMoreInteractions(customDdlService);
+        // Validate the returned object.
+        assertEquals(customDdl, resultCustomDdl);
     }
 
     @Test
     public void testGetCustomDdl()
     {
-        // Create and persist a custom DDL entity.
-        CustomDdlEntity customDdlEntity = customDdlDaoTestHelper
-            .createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
+        CustomDdl customDdl =
+            new CustomDdl(100, new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME), TEST_DDL);
+        CustomDdlKey customDdlKey = new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
+
+        when(customDdlService.getCustomDdl(customDdlKey)).thenReturn(customDdl);
 
         // Retrieve the custom DDL.
         CustomDdl resultCustomDdl =
@@ -65,76 +94,80 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
 
         // Validate the returned object.
         customDdlServiceTestHelper
-            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+            .validateCustomDdl(resultCustomDdl.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
                 TEST_DDL, resultCustomDdl);
+
+        // Verify the external calls.
+        verify(customDdlService).getCustomDdl(customDdlKey);
+        verifyNoMoreInteractions(customDdlService);
+        // Validate the returned object.
+        assertEquals(customDdl, resultCustomDdl);
     }
 
     @Test
     public void testGetCustomDdls()
     {
-        // List of test custom DDL names.
-        List<String> testCustomDdlNames = Arrays.asList(CUSTOM_DDL_NAME, CUSTOM_DDL_NAME_2);
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
 
-        // Create and persist a custom DDL entities.
-        for (String customDdlName : testCustomDdlNames)
-        {
-            customDdlDaoTestHelper
-                .createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, customDdlName, TEST_DDL);
-        }
+        CustomDdlKeys customDdlKeys =
+            new CustomDdlKeys(Arrays.asList(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, "ddl")));
 
+        when(customDdlService.getCustomDdls(businessObjectFormatKey)).thenReturn(customDdlKeys);
         // Retrieve a list of custom DDL keys.
         CustomDdlKeys resultCustomDdlKeys =
             customDdlRestController.getCustomDdls(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
 
+        // Verify the external calls.
+        verify(customDdlService).getCustomDdls(businessObjectFormatKey);
+        verifyNoMoreInteractions(customDdlService);
         // Validate the returned object.
-        assertNotNull(resultCustomDdlKeys);
-        assertEquals(testCustomDdlNames.size(), resultCustomDdlKeys.getCustomDdlKeys().size());
-        for (int i = 0; i < testCustomDdlNames.size(); i++)
-        {
-            assertEquals(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, testCustomDdlNames.get(i)),
-                resultCustomDdlKeys.getCustomDdlKeys().get(i));
-        }
+        assertEquals(customDdlKeys, resultCustomDdlKeys);
     }
 
     @Test
     public void testUpdateCustomDdl()
     {
-        // Create and persist a custom DDL entity.
-        CustomDdlEntity customDdlEntity = customDdlDaoTestHelper
-            .createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
+        CustomDdlUpdateRequest request = customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL_2);
 
+        CustomDdlKey customDdlKey = new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
+
+        CustomDdl customDdl =
+            new CustomDdl(100, new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME), TEST_DDL_2);
+
+        when(customDdlService.updateCustomDdl(customDdlKey, request)).thenReturn(customDdl);
         // Update the custom DDL.
-        CustomDdl updatedCustomDdl = customDdlRestController
-            .updateCustomDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
-                customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL_2));
+        CustomDdl updatedCustomDdl =
+            customDdlRestController.updateCustomDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, request);
 
+        // Verify the external calls.
+        verify(customDdlService).updateCustomDdl(customDdlKey, request);
+        verifyNoMoreInteractions(customDdlService);
         // Validate the returned object.
-        customDdlServiceTestHelper
-            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
-                TEST_DDL_2, updatedCustomDdl);
+        assertEquals(customDdl, updatedCustomDdl);
     }
 
     @Test
     public void testDeleteCustomDdl()
     {
-        // Create and persist a custom DDL entity.
-        CustomDdlEntity customDdlEntity = customDdlDaoTestHelper
-            .createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
-
-        // Validate that this custom DDL exists.
         CustomDdlKey customDdlKey = new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
-        assertNotNull(customDdlDao.getCustomDdlByKey(customDdlKey));
 
+        CustomDdl customDdl = new CustomDdl(100, customDdlKey, TEST_DDL);
+
+        when(customDdlService.deleteCustomDdl(customDdlKey)).thenReturn(customDdl);
         // Delete this custom DDL.
         CustomDdl deletedCustomDdl =
             customDdlRestController.deleteCustomDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
 
         // Validate the returned object.
         customDdlServiceTestHelper
-            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
-                TEST_DDL, deletedCustomDdl);
+            .validateCustomDdl(customDdl.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
+                deletedCustomDdl);
 
-        // Ensure that this custom DDL is no longer there.
-        assertNull(customDdlDao.getCustomDdlByKey(customDdlKey));
+        // Verify the external calls.
+        verify(customDdlService).deleteCustomDdl(customDdlKey);
+        verifyNoMoreInteractions(customDdlService);
+        // Validate the returned object.
+        assertEquals(customDdl, deletedCustomDdl);
     }
 }
