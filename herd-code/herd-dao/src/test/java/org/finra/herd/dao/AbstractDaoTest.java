@@ -337,7 +337,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
 
-    public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * Integer.MAX_VALUE);
+    public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 

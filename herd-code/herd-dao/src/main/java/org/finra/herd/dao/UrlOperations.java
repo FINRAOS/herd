@@ -17,6 +17,7 @@ package org.finra.herd.dao;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Proxy;
 import java.net.URL;
 
 /**
@@ -28,9 +29,10 @@ public interface UrlOperations
      * Opens a connection to the specified URL and returns an input stream for reading from that connection.
      *
      * @param url the URL object
+     * @param proxy the the Proxy through which this connection will be made
      *
      * @return an input stream for reading from the URL connection
      * @throws IOException if an I/O exception occurs
      */
-    public InputStream openStream(URL url) throws IOException;
+    public InputStream openStream(URL url, Proxy proxy) throws IOException;
 }
