@@ -16,29 +16,41 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.NamespaceAuthorization;
 import org.finra.herd.model.api.xml.UserAuthorizations;
-import org.finra.herd.model.dto.ApplicationUser;
-import org.finra.herd.model.dto.SecurityUserWrapper;
+import org.finra.herd.service.CurrentUserService;
 
 /**
  * This class tests various functionality within the current user REST controller.
  */
 public class CurrentUserRestControllerTest extends AbstractRestTest
 {
+    @Mock
+    private CurrentUserService currentUserService;
+
+    @InjectMocks
+    private CurrentUserRestController currentUserRestController;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+    
     @Test
     public void testGetCurrentUser() throws Exception
     {
@@ -47,70 +59,17 @@ public class CurrentUserRestControllerTest extends AbstractRestTest
         namespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE, SUPPORTED_NAMESPACE_PERMISSIONS));
         namespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_2, SUPPORTED_NAMESPACE_PERMISSIONS));
 
-        // Override the security context to return an application user populated with test values.
-        Authentication originalAuthentication = SecurityContextHolder.getContext().getAuthentication();
-        try
-        {
-            SecurityContextHolder.getContext().setAuthentication(new Authentication()
-            {
-                @Override
-                public String getName()
-                {
-                    return null;
-                }
+        UserAuthorizations userAuthorizations = new UserAuthorizations();
+        userAuthorizations.setNamespaceAuthorizations(new ArrayList(namespaceAuthorizations));
+        
+        when(currentUserService.getCurrentUser()).thenReturn(userAuthorizations);
+        // Get the current user information.
+        UserAuthorizations resultUserAuthorizations = currentUserRestController.getCurrentUser();
 
-                @Override
-                public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException
-                {
-                }
-
-                @Override
-                public boolean isAuthenticated()
-                {
-                    return false;
-                }
-
-                @Override
-                public Object getPrincipal()
-                {
-                    List<GrantedAuthority> authorities = Collections.emptyList();
-
-                    ApplicationUser applicationUser = new ApplicationUser(this.getClass());
-                    applicationUser.setUserId(USER_ID);
-                    applicationUser.setNamespaceAuthorizations(namespaceAuthorizations);
-
-                    return new SecurityUserWrapper(USER_ID, STRING_VALUE, true, true, true, true, authorities, applicationUser);
-                }
-
-                @Override
-                public Object getDetails()
-                {
-                    return null;
-                }
-
-                @Override
-                public Object getCredentials()
-                {
-                    return null;
-                }
-
-                @Override
-                public Collection<? extends GrantedAuthority> getAuthorities()
-                {
-                    return null;
-                }
-            });
-
-            // Get the current user information.
-            UserAuthorizations userAuthorizations = currentUserRestController.getCurrentUser();
-
-            // Validate the response object.
-            assertEquals(new UserAuthorizations(USER_ID, new ArrayList<>(namespaceAuthorizations)), userAuthorizations);
-        }
-        finally
-        {
-            // Restore the original authentication.
-            SecurityContextHolder.getContext().setAuthentication(originalAuthentication);
-        }
+        // Verify the external calls.
+        verify(currentUserService).getCurrentUser();
+        verifyNoMoreInteractions(currentUserService);
+        // Validate the returned object.
+        assertEquals(userAuthorizations, resultUserAuthorizations);
     }
 }
