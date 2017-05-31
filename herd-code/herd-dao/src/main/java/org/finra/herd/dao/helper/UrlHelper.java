@@ -18,16 +18,21 @@ package org.finra.herd.dao.helper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.UrlOperations;
+import org.finra.herd.model.dto.ConfigurationValue;
 
 /**
  * A helper class for URL functionality.
@@ -35,6 +40,9 @@ import org.finra.herd.dao.UrlOperations;
 @Component
 public class UrlHelper
 {
+    @Autowired
+    private ConfigurationHelper configurationHelper;
+
     @Autowired
     private UrlOperations urlOperations;
 
@@ -49,8 +57,21 @@ public class UrlHelper
     {
         try
         {
+            // Get proxy information.
+            Proxy proxy;
+            String httpProxyHost = configurationHelper.getProperty(ConfigurationValue.HTTP_PROXY_HOST);
+            Integer httpProxyPort = configurationHelper.getProperty(ConfigurationValue.HTTP_PROXY_PORT, Integer.class);
+            if (StringUtils.isNotBlank(httpProxyHost) && httpProxyPort != null)
+            {
+                proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(httpProxyHost, httpProxyPort));
+            }
+            else
+            {
+                proxy = Proxy.NO_PROXY;
+            }
+
             // Open an input stream as per specified URL.
-            InputStream inputStream = urlOperations.openStream(new URL(url));
+            InputStream inputStream = urlOperations.openStream(new URL(url), proxy);
 
             try
             {

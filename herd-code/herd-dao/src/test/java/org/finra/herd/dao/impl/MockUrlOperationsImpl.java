@@ -18,6 +18,7 @@ package org.finra.herd.dao.impl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Proxy;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
@@ -37,7 +38,7 @@ public class MockUrlOperationsImpl implements UrlOperations
     public static final String MOCK_URL_VALID = "http://mock.url.valid";
 
     @Override
-    public InputStream openStream(URL url) throws IOException
+    public InputStream openStream(URL url, Proxy proxy) throws IOException
     {
         String urlRepresentation = url.toString();
 

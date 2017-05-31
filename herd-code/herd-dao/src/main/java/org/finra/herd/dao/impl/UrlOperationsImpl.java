@@ -17,6 +17,7 @@ package org.finra.herd.dao.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Proxy;
 import java.net.URL;
 
 import org.finra.herd.dao.UrlOperations;
@@ -24,8 +25,8 @@ import org.finra.herd.dao.UrlOperations;
 public class UrlOperationsImpl implements UrlOperations
 {
     @Override
-    public InputStream openStream(URL url) throws IOException
+    public InputStream openStream(URL url, Proxy proxy) throws IOException
     {
-        return url.openStream();
+        return url.openConnection(proxy).getInputStream();
     }
 }

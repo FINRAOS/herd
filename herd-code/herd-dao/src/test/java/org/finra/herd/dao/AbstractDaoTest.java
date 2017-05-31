@@ -325,19 +325,19 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
 
-    public static final BigDecimal HOURLY_PRICE = new BigDecimal(Math.random() * Integer.MAX_VALUE);
+    public static final BigDecimal HOURLY_PRICE = getRandomBigDecimal();
 
-    public static final BigDecimal HOURLY_PRICE_2 = new BigDecimal(Math.random() * Integer.MAX_VALUE);
+    public static final BigDecimal HOURLY_PRICE_2 = getRandomBigDecimal();
 
-    public static final BigDecimal HOURLY_PRICE_3 = new BigDecimal(Math.random() * Integer.MAX_VALUE);
+    public static final BigDecimal HOURLY_PRICE_3 = getRandomBigDecimal();
 
-    public static final BigDecimal HOURLY_PRICE_4 = new BigDecimal(Math.random() * Integer.MAX_VALUE);
+    public static final BigDecimal HOURLY_PRICE_4 = getRandomBigDecimal();
 
-    public static final BigDecimal HOURLY_PRICE_5 = new BigDecimal(Math.random() * Integer.MAX_VALUE);
+    public static final BigDecimal HOURLY_PRICE_5 = getRandomBigDecimal();
 
     public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
 
-    public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * Integer.MAX_VALUE);
+    public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 
@@ -531,6 +531,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_TAG_DISPLAY_NAME = null;
 
     public static final Boolean NO_TAG_HAS_CHILDREN_FLAG = null;
+
+    public static final BigDecimal NO_TAG_SEARCH_SCORE_MULTIPLIER = null;
 
     public static final String NO_TAG_TYPE_DESCRIPTION = null;
 
@@ -798,6 +800,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean TAG_HAS_CHILDREN = true;
 
     public static final Boolean TAG_HAS_NO_CHILDREN = false;
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER = getRandomBigDecimal();
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_2 = getRandomBigDecimal();
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_3 = getRandomBigDecimal();
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_4 = getRandomBigDecimal();
 
     public static final String TAG_INDEX = "tag";
 

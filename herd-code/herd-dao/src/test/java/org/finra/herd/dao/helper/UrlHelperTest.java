@@ -17,11 +17,15 @@ package org.finra.herd.dao.helper;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.impl.MockUrlOperationsImpl;
+import org.finra.herd.model.dto.ConfigurationValue;
 
 /**
  * This class tests functionality within the UrlHelper class.
@@ -61,6 +65,45 @@ public class UrlHelperTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Failed to read JSON from the URL: url=\"%s\"", MockUrlOperationsImpl.MOCK_URL_MALFORMED_URL_EXCEPTION), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testParseJsonObjectFromUrlWithProxySettings() throws Exception
+    {
+        // Override the configuration to specify proxy settings.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.HTTP_PROXY_HOST.getKey(), HTTP_PROXY_HOST);
+        overrideMap.put(ConfigurationValue.HTTP_PROXY_PORT.getKey(), HTTP_PROXY_PORT);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            assertEquals(MockUrlOperationsImpl.MOCK_JSON_STRING, urlHelper.parseJsonObjectFromUrl(MockUrlOperationsImpl.MOCK_URL_VALID).toJSONString());
+        }
+        finally
+        {
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testParseJsonObjectFromUrlWithProxySettingsNoProxyPort() throws Exception
+    {
+        // Override the configuration to specify proxy settings without proxy port.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.HTTP_PROXY_HOST.getKey(), HTTP_PROXY_HOST);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            assertEquals(MockUrlOperationsImpl.MOCK_JSON_STRING, urlHelper.parseJsonObjectFromUrl(MockUrlOperationsImpl.MOCK_URL_VALID).toJSONString());
+        }
+        finally
+        {
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
         }
     }
 }

@@ -53,11 +53,11 @@ import org.finra.herd.service.impl.TagServiceImpl;
  */
 public class TagRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private TagService tagService;
-
     @InjectMocks
     private TagRestController tagRestController;
+
+    @Mock
+    private TagService tagService;
 
     @Before()
     public void before()
@@ -69,7 +69,7 @@ public class TagRestControllerTest extends AbstractRestTest
     public void testCreateTag()
     {
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
-        TagCreateRequest request = new TagCreateRequest(tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, NO_PARENT_TAG_KEY);
+        TagCreateRequest request = new TagCreateRequest(tagKey, TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, NO_PARENT_TAG_KEY);
 
         Tag tag = getNewTag(tagKey);
 
@@ -127,7 +127,6 @@ public class TagRestControllerTest extends AbstractRestTest
     @Test
     public void testGetTags()
     {
-        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
         List<TagChild> tagChildren = new ArrayList<>();
         tagChildren.add(new TagChild(new TagKey(TAG_TYPE, TAG_CODE), false));
         tagChildren.add(new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2), false));
@@ -152,10 +151,10 @@ public class TagRestControllerTest extends AbstractRestTest
     public void testSearchTags()
     {
         TagSearchResponse tagSearchResponse = new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
-                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
-                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN)));
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER_3, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID,
+                NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_SEARCH_SCORE_MULTIPLIER_2, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID,
+                NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN)));
 
         Set<String> searchFields = Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD, TagServiceImpl.DESCRIPTION_FIELD, TagServiceImpl.PARENT_TAG_KEY_FIELD,
             TagServiceImpl.HAS_CHILDREN_FIELD);
@@ -180,7 +179,7 @@ public class TagRestControllerTest extends AbstractRestTest
     {
         // Create a parent tag key.
         TagKey parentTagKey = new TagKey(TAG_TYPE, TAG_CODE);
-        TagUpdateRequest request = new TagUpdateRequest(TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, parentTagKey);
+        TagUpdateRequest request = new TagUpdateRequest(TAG_DISPLAY_NAME_3, TAG_SEARCH_SCORE_MULTIPLIER_3, TAG_DESCRIPTION_3, parentTagKey);
 
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE_2);
@@ -203,12 +202,11 @@ public class TagRestControllerTest extends AbstractRestTest
     {
         Calendar cal = Calendar.getInstance();
         Date createdTime = cal.getTime();
-        Date updatedTime = cal.getTime();
         String createdBy = "some test";
         String updatedBy = "some test 2";
 
-        Tag tag = new Tag(100, tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, createdBy, updatedBy, HerdDateUtils.getXMLGregorianCalendarValue(createdTime),
-            NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG);
+        Tag tag = new Tag(100, tagKey, TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, createdBy, updatedBy,
+            HerdDateUtils.getXMLGregorianCalendarValue(createdTime), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG);
 
         return tag;
     }
