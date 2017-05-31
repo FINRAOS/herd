@@ -169,7 +169,17 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
                 JSONObject innerPricingWrapper =
                     jsonHelper.getKeyValue(priceDimensions, sku + JSON_SKU_WRAPPER_SUFFIX + JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX, JSONObject.class);
                 JSONObject pricePerUnit = jsonHelper.getKeyValue(innerPricingWrapper, JSON_KEY_NAME_PRICE_PER_UNIT, JSONObject.class);
-                ec2OnDemandPricing.setPricePerHour(jsonHelper.getKeyValue(pricePerUnit, JSON_PRICE_PER_UNIT_WRAPPER, BigDecimal.class));
+                String pricePerUnitValue = jsonHelper.getKeyValue(pricePerUnit, JSON_PRICE_PER_UNIT_WRAPPER, String.class);
+
+                try
+                {
+                    ec2OnDemandPricing.setPricePerHour(new BigDecimal(pricePerUnitValue));
+                }
+                catch (NumberFormatException e)
+                {
+                    throw new IllegalArgumentException(String.format("Failed to convert \"%s\" value to %s.", pricePerUnitValue, BigDecimal.class.getName()),
+                        e);
+                }
             }
         }
 

@@ -47,7 +47,14 @@ public class JsonHelper
             throw new IllegalArgumentException(String.format("Failed to get \"%s\" key value from JSON object.", key.toString()));
         }
 
-        return classType.cast(jsonObject.get(key));
+        try
+        {
+            return classType.cast(result);
+        }
+        catch (ClassCastException e)
+        {
+            throw new IllegalArgumentException(String.format("Failed to cast \"%s\" key value to %s.", result.toString(), classType.getName()), e);
+        }
     }
 
     /**

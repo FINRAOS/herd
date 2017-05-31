@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -54,6 +55,17 @@ public class JsonHelperTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Failed to get \"%s\" key value from JSON object.", I_DO_NOT_EXIST), e.getMessage());
+        }
+
+        // Try to get a value that cannot be cast to the specified class type.
+        try
+        {
+            jsonHelper.getKeyValue(jsonObject, KEY, BigDecimal.class);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Failed to cast \"%s\" key value to %s.", VALUE, BigDecimal.class.getName()), e.getMessage());
         }
     }
 
