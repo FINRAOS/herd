@@ -213,6 +213,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
 
+    public static final Integer ID = (int) (Math.random() * Integer.MAX_VALUE);
+
     public static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
     public static final Boolean INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY = true;
