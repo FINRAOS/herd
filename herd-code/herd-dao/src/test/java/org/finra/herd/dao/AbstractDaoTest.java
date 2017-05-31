@@ -420,13 +420,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NESTED_AGGREGATION_NAME = "UT_NestedAggregationName_" + RANDOM_SUFFIX;
 
-    public static final String NOTIFICATION_EVENT_TYPE = "UT_Ntfcn_Event" + RANDOM_SUFFIX;
+    public static final String NOTIFICATION_EVENT_TYPE = "UT_NotificationEventType_1_" + RANDOM_SUFFIX;
 
-    public static final String NOTIFICATION_EVENT_TYPE_2 = "UT_Ntfcn_Event_2" + RANDOM_SUFFIX;
+    public static final String NOTIFICATION_EVENT_TYPE_2 = "UT_NotificationEventType_2_" + RANDOM_SUFFIX;
 
     public static final String NOTIFICATION_NAME = "UT_Ntfcn_Name" + RANDOM_SUFFIX;
 
     public static final String NOTIFICATION_NAME_2 = "UT_Ntfcn_Name_2" + RANDOM_SUFFIX;
+
+    public static final String NOTIFICATION_REGISTRATION_STATUS = "UT_NotificationRegistrationStatus_1_" + RANDOM_SUFFIX;
 
     public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
 
@@ -801,6 +803,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean TAG_HAS_NO_CHILDREN = false;
 
+    public static final String TAG_INDEX = "tag";
+
+    public static final float TAG_INDEX_BOOST = 1000f;
+
     public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER = getRandomBigDecimal();
 
     public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_2 = getRandomBigDecimal();
@@ -808,10 +814,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_3 = getRandomBigDecimal();
 
     public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_4 = getRandomBigDecimal();
-
-    public static final String TAG_INDEX = "tag";
-
-    public static final float TAG_INDEX_BOOST = 1000f;
 
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
