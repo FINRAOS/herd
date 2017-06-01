@@ -120,7 +120,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         when(businessObjectDefinitionService.deleteBusinessObjectDefinition(businessObjectDefinitionKey)).thenReturn(businessObjectDefinition);
 
         // Call the method under test.
-        BusinessObjectDefinition result = businessObjectDefinitionRestController.deleteBusinessObjectDefinition(NAMESPACE, BDEF_NAME);
+        BusinessObjectDefinition result = businessObjectDefinitionRestController.deleteBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME);
 
         // Verify the external calls.
         verify(businessObjectDefinitionService).deleteBusinessObjectDefinition(businessObjectDefinitionKey);
