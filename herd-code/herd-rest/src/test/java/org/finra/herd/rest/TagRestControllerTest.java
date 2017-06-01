@@ -205,7 +205,7 @@ public class TagRestControllerTest extends AbstractRestTest
         String createdBy = "some test";
         String updatedBy = "some test 2";
 
-        Tag tag = new Tag(100, tagKey, TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, createdBy, updatedBy,
+        Tag tag = new Tag(ID, tagKey, TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, createdBy, updatedBy,
             HerdDateUtils.getXMLGregorianCalendarValue(createdTime), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG);
 
         return tag;

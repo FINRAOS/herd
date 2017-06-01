@@ -75,7 +75,7 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
 
         // Create an initial version of a business object format.
         BusinessObjectFormat businessObjectFormat =
-            new BusinessObjectFormat(100, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, true, PARTITION_KEY, FORMAT_DESCRIPTION,
+            new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, true, PARTITION_KEY, FORMAT_DESCRIPTION,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
                 businessObjectFormatServiceTestHelper.getTestSchema(), null, null);
 
@@ -93,7 +93,7 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
     public void testUpdateBusinessObjectFormat()
     {
         BusinessObjectFormat businessObjectFormat =
-            new BusinessObjectFormat(100, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 1, true, PARTITION_KEY, FORMAT_DESCRIPTION_2,
+            new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 1, true, PARTITION_KEY, FORMAT_DESCRIPTION_2,
                 NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema2(),
                 null, null);
 
@@ -120,7 +120,7 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
     public void testGetBusinessObjectFormat()
     {
         BusinessObjectFormat businessObjectFormat =
-            new BusinessObjectFormat(100, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, true, PARTITION_KEY,
+            new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, true, PARTITION_KEY,
                 FORMAT_DESCRIPTION, NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
                 businessObjectFormatServiceTestHelper.getTestSchema(), null, null);
 
@@ -144,7 +144,7 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
     public void testDeleteBusinessObjectFormat() throws Exception
     {
         BusinessObjectFormat businessObjectFormat =
-            new BusinessObjectFormat(100, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, true, PARTITION_KEY,
+            new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, true, PARTITION_KEY,
                 FORMAT_DESCRIPTION, NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
                 businessObjectFormatServiceTestHelper.getTestSchema(), null, null);
 

@@ -69,7 +69,7 @@ public class StorageUnitNotificationRegistrationRestControllerTest extends Abstr
                 STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
             NotificationRegistrationStatusEntity.ENABLED);
 
-        StorageUnitNotificationRegistration storageUnitNotificationRegistration = new StorageUnitNotificationRegistration(100, notificationRegistrationKey,
+        StorageUnitNotificationRegistration storageUnitNotificationRegistration = new StorageUnitNotificationRegistration(ID, notificationRegistrationKey,
             NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
             new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
                 STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
@@ -95,7 +95,7 @@ public class StorageUnitNotificationRegistrationRestControllerTest extends Abstr
         NotificationRegistrationKey storageUnitNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         StorageUnitNotificationRegistration storageUnitNotificationRegistration =
-            new StorageUnitNotificationRegistration(100, storageUnitNotificationRegistrationKey,
+            new StorageUnitNotificationRegistration(ID, storageUnitNotificationRegistrationKey,
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
                 new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
                     STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
@@ -122,7 +122,7 @@ public class StorageUnitNotificationRegistrationRestControllerTest extends Abstr
         NotificationRegistrationKey storageUnitNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         StorageUnitNotificationRegistration storageUnitNotificationRegistration =
-            new StorageUnitNotificationRegistration(100, storageUnitNotificationRegistrationKey,
+            new StorageUnitNotificationRegistration(ID, storageUnitNotificationRegistrationKey,
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
                 new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
                     STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
@@ -224,7 +224,7 @@ public class StorageUnitNotificationRegistrationRestControllerTest extends Abstr
     {
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
-        StorageUnitNotificationRegistration storageUnitNotificationRegistration = new StorageUnitNotificationRegistration(100, notificationRegistrationKey,
+        StorageUnitNotificationRegistration storageUnitNotificationRegistration = new StorageUnitNotificationRegistration(ID, notificationRegistrationKey,
             NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
             new StorageUnitNotificationFilter(BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2,
                 STORAGE_UNIT_STATUS_3, STORAGE_UNIT_STATUS_4), notificationRegistrationDaoTestHelper.getTestJobActions2(),

@@ -67,7 +67,7 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
             new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
         BusinessObjectDefinitionColumn businessObjectDefinitionColumn =
-            new BusinessObjectDefinitionColumn(100, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
+            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
         BusinessObjectDefinitionColumnCreateRequest businessObjectDefinitionColumnCreateRequest =
             new BusinessObjectDefinitionColumnCreateRequest(businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
 
@@ -90,7 +90,7 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
             new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
         BusinessObjectDefinitionColumn businessObjectDefinitionColumn =
-            new BusinessObjectDefinitionColumn(100, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
+            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
 
         when(businessObjectDefinitionColumnService.deleteBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey))
             .thenReturn(businessObjectDefinitionColumn);
@@ -110,7 +110,7 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
             new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
         BusinessObjectDefinitionColumn businessObjectDefinitionColumn =
-            new BusinessObjectDefinitionColumn(100, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
+            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
 
         when(businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey))
             .thenReturn(businessObjectDefinitionColumn);
@@ -187,7 +187,7 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
         BusinessObjectDefinitionColumnUpdateRequest request = new BusinessObjectDefinitionColumnUpdateRequest(BDEF_COLUMN_DESCRIPTION_2);
 
         BusinessObjectDefinitionColumn businessObjectDefinitionColumn =
-            new BusinessObjectDefinitionColumn(100, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
+            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
 
         when(businessObjectDefinitionColumnService.updateBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey, request))
             .thenReturn(businessObjectDefinitionColumn);

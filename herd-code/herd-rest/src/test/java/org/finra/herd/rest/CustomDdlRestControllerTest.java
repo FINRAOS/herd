@@ -60,7 +60,7 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
             .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
 
         CustomDdl customDdl =
-            new CustomDdl(100, new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME), TEST_DDL);
+            new CustomDdl(ID, new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME), TEST_DDL);
 
         when(customDdlService.createCustomDdl(request)).thenReturn(customDdl);
 
@@ -83,7 +83,7 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
     public void testGetCustomDdl()
     {
         CustomDdl customDdl =
-            new CustomDdl(100, new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME), TEST_DDL);
+            new CustomDdl(ID, new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME), TEST_DDL);
         CustomDdlKey customDdlKey = new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
 
         when(customDdlService.getCustomDdl(customDdlKey)).thenReturn(customDdl);
@@ -133,7 +133,7 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
         CustomDdlKey customDdlKey = new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
 
         CustomDdl customDdl =
-            new CustomDdl(100, new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME), TEST_DDL_2);
+            new CustomDdl(ID, new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME), TEST_DDL_2);
 
         when(customDdlService.updateCustomDdl(customDdlKey, request)).thenReturn(customDdl);
         // Update the custom DDL.
@@ -152,7 +152,7 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
     {
         CustomDdlKey customDdlKey = new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
 
-        CustomDdl customDdl = new CustomDdl(100, customDdlKey, TEST_DDL);
+        CustomDdl customDdl = new CustomDdl(ID, customDdlKey, TEST_DDL);
 
         when(customDdlService.deleteCustomDdl(customDdlKey)).thenReturn(customDdl);
         // Delete this custom DDL.

@@ -63,7 +63,7 @@ public class BusinessObjectDefinitionTagRestControllerTest extends AbstractRestT
         // Create a business object definition tag key.
         BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey =
             new BusinessObjectDefinitionTagKey(businessObjectDefinitionKey, new TagKey(TAG_TYPE, TAG_CODE));
-        BusinessObjectDefinitionTag businessObjectDefinitionTag = new BusinessObjectDefinitionTag(100, businessObjectDefinitionTagKey);
+        BusinessObjectDefinitionTag businessObjectDefinitionTag = new BusinessObjectDefinitionTag(ID, businessObjectDefinitionTagKey);
 
         BusinessObjectDefinitionTagCreateRequest request = new BusinessObjectDefinitionTagCreateRequest(businessObjectDefinitionTagKey);
 
@@ -86,7 +86,7 @@ public class BusinessObjectDefinitionTagRestControllerTest extends AbstractRestT
         BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey =
             new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new TagKey(TAG_TYPE, TAG_CODE));
 
-        BusinessObjectDefinitionTag businessObjectDefinitionTag = new BusinessObjectDefinitionTag(100, businessObjectDefinitionTagKey);
+        BusinessObjectDefinitionTag businessObjectDefinitionTag = new BusinessObjectDefinitionTag(ID, businessObjectDefinitionTagKey);
 
         when(businessObjectDefinitionTagService.deleteBusinessObjectDefinitionTag(businessObjectDefinitionTagKey)).thenReturn(businessObjectDefinitionTag);
 

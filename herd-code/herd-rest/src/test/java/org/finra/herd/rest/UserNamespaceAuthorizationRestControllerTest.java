@@ -62,7 +62,7 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         UserNamespaceAuthorizationCreateRequest request = new UserNamespaceAuthorizationCreateRequest(key,
             Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
 
-        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(100, key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(ID, key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Mock calls to external method.
         when(userNamespaceAuthorizationService.createUserNamespaceAuthorization(request)).thenReturn(userNamespaceAuthorization);
@@ -84,7 +84,7 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         UserNamespaceAuthorization userNamespaceAuthorization =
-            new UserNamespaceAuthorization(100, key, Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
+            new UserNamespaceAuthorization(ID, key, Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
 
         UserNamespaceAuthorizationUpdateRequest request =
             new UserNamespaceAuthorizationUpdateRequest(Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
@@ -109,7 +109,7 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         // Create a user namespace authorization key
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
-        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(100, key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(ID, key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         when(userNamespaceAuthorizationService.getUserNamespaceAuthorization(key)).thenReturn(userNamespaceAuthorization);
 
@@ -131,7 +131,7 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         // Create a user namespace authorization key
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
-        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(100, key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(ID, key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         when(userNamespaceAuthorizationService.deleteUserNamespaceAuthorization(key)).thenReturn(userNamespaceAuthorization);
 

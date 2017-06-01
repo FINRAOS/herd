@@ -61,7 +61,7 @@ public class BusinessObjectDefinitionSubjectMatterExpertRestControllerTest exten
 
         BusinessObjectDefinitionSubjectMatterExpertCreateRequest request = new BusinessObjectDefinitionSubjectMatterExpertCreateRequest(key);
 
-        BusinessObjectDefinitionSubjectMatterExpert businessObjectDefinitionSubjectMatterExpert = new BusinessObjectDefinitionSubjectMatterExpert(100, key);
+        BusinessObjectDefinitionSubjectMatterExpert businessObjectDefinitionSubjectMatterExpert = new BusinessObjectDefinitionSubjectMatterExpert(ID, key);
 
         when(businessObjectDefinitionSubjectMatterExpertService.createBusinessObjectDefinitionSubjectMatterExpert(request))
             .thenReturn(businessObjectDefinitionSubjectMatterExpert);
@@ -82,7 +82,7 @@ public class BusinessObjectDefinitionSubjectMatterExpertRestControllerTest exten
         // Create a business object definition subject matter expert key.
         BusinessObjectDefinitionSubjectMatterExpertKey key = new BusinessObjectDefinitionSubjectMatterExpertKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
 
-        BusinessObjectDefinitionSubjectMatterExpert businessObjectDefinitionSubjectMatterExpert = new BusinessObjectDefinitionSubjectMatterExpert(100, key);
+        BusinessObjectDefinitionSubjectMatterExpert businessObjectDefinitionSubjectMatterExpert = new BusinessObjectDefinitionSubjectMatterExpert(ID, key);
 
         when(businessObjectDefinitionSubjectMatterExpertService.deleteBusinessObjectDefinitionSubjectMatterExpert(key))
             .thenReturn(businessObjectDefinitionSubjectMatterExpert);
