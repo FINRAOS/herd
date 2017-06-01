@@ -34,12 +34,6 @@ public abstract class AbstractRestTest extends AbstractUiTest
     @Autowired
     protected HerdRestController herdRestController;
 
-    @Autowired
-    protected UploadDownloadRestController uploadDownloadRestController;
-
-    @Autowired
-    protected UserNamespaceAuthorizationRestController userNamespaceAuthorizationRestController;
-
     /**
      * Returns a DelimitedFieldValues instance initiated with the list values.
      *

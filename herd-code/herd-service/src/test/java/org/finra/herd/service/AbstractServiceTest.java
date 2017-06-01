@@ -237,6 +237,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Integer ID = (int) (Math.random() * Integer.MAX_VALUE);
 
+    public static final Integer ID_2 = (int) (Math.random() * Integer.MAX_VALUE);
+
     public static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
     public static final Boolean INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY = true;
@@ -420,6 +422,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String TEST_SQS_ENVIRONMENT = "testEnvironment";
 
     public static final String TEST_SQS_MESSAGE_CORRELATION_ID = "testCorrelationId";
+
+    public static final String UUID = "UT_Uuid_" + RANDOM_SUFFIX;
 
     public static final Boolean VERBOSE = true;
 

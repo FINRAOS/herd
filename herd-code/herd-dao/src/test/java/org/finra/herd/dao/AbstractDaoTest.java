@@ -114,6 +114,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AWS_KMS_KEY_ID = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
 
+    public static final String AWS_PRE_SIGNED_URL = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
+
     public static final String AWS_REGION_NAME = "UT_AwsRegionName_1_" + RANDOM_SUFFIX;
 
     public static final String AWS_REGION_NAME_2 = "UT_AwsRegionName_2_" + RANDOM_SUFFIX;
@@ -230,6 +232,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String DATA_PROVIDER_NAME_2 = "UT_DataProvider_2_" + RANDOM_SUFFIX;
 
     public static final Integer DATA_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final Integer DATA_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final String DESCRIPTION = "UT_Description_1_" + RANDOM_SUFFIX;
 
