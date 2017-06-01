@@ -39,6 +39,9 @@ public class HerdRestControllerAdviceTest extends AbstractRestTest
     @Autowired
     private HerdRestControllerAdvice restControllerAdvice;
 
+    @Autowired
+    protected HerdRestController herdRestController;
+    
     @Test
     public void testIsLoggingEnabled() throws Exception
     {

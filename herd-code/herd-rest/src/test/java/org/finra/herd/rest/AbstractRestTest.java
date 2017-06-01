@@ -17,7 +17,6 @@ package org.finra.herd.rest;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 
@@ -31,9 +30,6 @@ import org.finra.herd.ui.AbstractUiTest;
 @WebAppConfiguration
 public abstract class AbstractRestTest extends AbstractUiTest
 {
-    @Autowired
-    protected HerdRestController herdRestController;
-
     /**
      * Returns a DelimitedFieldValues instance initiated with the list values.
      *
