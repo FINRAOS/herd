@@ -756,7 +756,7 @@ public enum ConfigurationValue
     /**
      * The elasticsearch search rest client port number
      */
-    ELASTICSEARCH_REST_CLIENT_PORT("elasticsearch.rest.client.port", "9200"),
+    ELASTICSEARCH_REST_CLIENT_PORT("elasticsearch.rest.client.port", 9200),
 
     /**
      * The elasticsearch search rest client scheme

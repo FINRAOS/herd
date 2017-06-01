@@ -15,6 +15,8 @@
 */
 package org.finra.herd.dao;
 
+import static org.finra.herd.dao.helper.ElasticsearchHelper.DISPLAY_NAME_SOURCE;
+import static org.finra.herd.dao.helper.ElasticsearchHelper.TAG_TYPE_FACET_AGGS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -38,16 +40,18 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import org.apache.commons.collections4.CollectionUtils;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import io.searchbox.core.SearchResult;
+import io.searchbox.core.search.aggregation.MetricAggregation;
+import io.searchbox.core.search.aggregation.TermsAggregation;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.SearchShardTarget;
-import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.junit.Before;
@@ -61,6 +65,7 @@ import org.mockito.internal.progress.ThreadSafeMockingProgress;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
+import org.finra.herd.dao.helper.JestClientHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.IndexSearchDaoImpl;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
@@ -96,10 +101,10 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     private ConfigurationHelper configurationHelper;
 
     @Mock
-    private TransportClientFactory transportClientFactory;
+    private ElasticsearchHelper elasticsearchHelper;
 
     @Mock
-    private ElasticsearchHelper elasticsearchHelper;
+    private JestClientHelper jestClientHelper;
 
     @Mock
     private JsonHelper jsonHelper;
@@ -118,7 +123,15 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(DISPLAY_NAME_FIELD, SHORT_DESCRIPTION_FIELD);
-        testIndexSearch(fields, null, null, HIT_HIGHLIGHTING_DISABLED);
+        testIndexSearch(fields, null, null, HIT_HIGHLIGHTING_DISABLED, false);
+    }
+
+    @Test
+    public void indexSearchTestWithExceptions() throws IOException
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = Sets.newHashSet(DISPLAY_NAME_FIELD, SHORT_DESCRIPTION_FIELD);
+        testIndexSearch(fields, null, null, HIT_HIGHLIGHTING_DISABLED, true);
     }
 
     @Test
@@ -126,7 +139,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
-        testIndexSearch(fields, null, null, HIT_HIGHLIGHTING_DISABLED);
+        testIndexSearch(fields, null, null, HIT_HIGHLIGHTING_DISABLED, false);
     }
 
     @Test
@@ -135,7 +148,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
         //tag and result set facet
-        testIndexSearch(fields, null, Arrays.asList(ElasticsearchHelper.RESULT_TYPE_FACET, ElasticsearchHelper.TAG_FACET), HIT_HIGHLIGHTING_DISABLED);
+        testIndexSearch(fields, null, Arrays.asList(ElasticsearchHelper.RESULT_TYPE_FACET, ElasticsearchHelper.TAG_FACET), HIT_HIGHLIGHTING_DISABLED, false);
     }
 
     @Test
@@ -145,7 +158,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         final Set<String> fields = new HashSet<>();
 
         //tag facet only
-        testIndexSearch(fields, null, Collections.singletonList(ElasticsearchHelper.TAG_FACET), HIT_HIGHLIGHTING_DISABLED);
+        testIndexSearch(fields, null, Collections.singletonList(ElasticsearchHelper.TAG_FACET), HIT_HIGHLIGHTING_DISABLED, false);
     }
 
     @Test
@@ -155,7 +168,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         final Set<String> fields = new HashSet<>();
 
         //result type facet only
-        testIndexSearch(fields, null, Collections.singletonList(ElasticsearchHelper.RESULT_TYPE_FACET), HIT_HIGHLIGHTING_DISABLED);
+        testIndexSearch(fields, null, Collections.singletonList(ElasticsearchHelper.RESULT_TYPE_FACET), HIT_HIGHLIGHTING_DISABLED, false);
     }
 
     @Test
@@ -168,7 +181,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         List<IndexSearchFilter> searchFilters = new ArrayList<>();
 
         //result type facet only
-        testIndexSearch(fields, searchFilters, null, HIT_HIGHLIGHTING_DISABLED);
+        testIndexSearch(fields, searchFilters, null, HIT_HIGHLIGHTING_DISABLED, false);
     }
 
     @Test
@@ -193,7 +206,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         //result type facet only
-        testIndexSearch(fields, indexSearchFilters, null, HIT_HIGHLIGHTING_DISABLED);
+        testIndexSearch(fields, indexSearchFilters, null, HIT_HIGHLIGHTING_DISABLED, false);
     }
 
     @Test
@@ -218,7 +231,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         //result type facet only
-        testIndexSearch(fields, indexSearchFilters, null, HIT_HIGHLIGHTING_DISABLED);
+        testIndexSearch(fields, indexSearchFilters, null, HIT_HIGHLIGHTING_DISABLED, false);
     }
 
     @Test
@@ -246,7 +259,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         //result type facet only
-        testIndexSearch(fields, indexSearchFilters, null, HIT_HIGHLIGHTING_DISABLED);
+        testIndexSearch(fields, indexSearchFilters, null, HIT_HIGHLIGHTING_DISABLED, false);
     }
 
     @Test
@@ -274,7 +287,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         //result type facet only
-        testIndexSearch(fields, indexSearchFilters, null, HIT_HIGHLIGHTING_DISABLED);
+        testIndexSearch(fields, indexSearchFilters, null, HIT_HIGHLIGHTING_DISABLED, false);
     }
 
     @Test
@@ -302,7 +315,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         //result type facet only
-        testIndexSearch(fields, indexSearchFilters, null, HIT_HIGHLIGHTING_ENABLED);
+        testIndexSearch(fields, indexSearchFilters, null, HIT_HIGHLIGHTING_ENABLED, false);
     }
 
     @Test
@@ -311,11 +324,11 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
 
-        testIndexSearch(fields, null, null, HIT_HIGHLIGHTING_ENABLED);
+        testIndexSearch(fields, null, null, HIT_HIGHLIGHTING_ENABLED, false);
     }
 
-    private void testIndexSearch(Set<String> fields, List<IndexSearchFilter> searchFilters, List<String> facetList, boolean isHitHighlightingEnaled)
-        throws IOException
+    private void testIndexSearch(Set<String> fields, List<IndexSearchFilter> searchFilters, List<String> facetList, boolean isHitHighlightingEnabled,
+        boolean testExceptions) throws IOException
     {
         // Build the mocks
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
@@ -325,8 +338,6 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         SearchRequestBuilder searchRequestBuilderWithTagIndexBoost = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithSorting = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithHighlighting = mock(SearchRequestBuilder.class);
-
-        TransportClient transportClient = mock(TransportClient.class);
 
         SearchResponse searchResponse = mock(SearchResponse.class);
         SearchHits searchHits = mock(SearchHits.class);
@@ -347,7 +358,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         @SuppressWarnings("unchecked")
         ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
 
-        final String highlighFieldsConfigValue =
+        final String highlightFieldsConfigValue =
             "{\"highlightFields\":[{\"fieldName\":\"displayName\",\"fragmentSize\":100,\"matchedFields\":[\"displayName\",\"displayName.stemmed\",\"displayName.ngrams\"],\"numOfFragments\":5}]}";
 
         // Mock the call to external methods
@@ -357,20 +368,34 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED)).thenReturn("{\"displayName\":\"1.0\"}");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS)).thenReturn("<hlt class=\"highlight\">");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS)).thenReturn("</hlt>");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS)).thenReturn(highlighFieldsConfigValue);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS)).thenReturn(highlightFieldsConfigValue);
 
         Map<String, String> fieldsBoostMap = new HashMap<>();
         fieldsBoostMap.put("displayName", "1.0");
-        when(jsonHelper.unmarshallJsonToObject(Map.class, "{\"displayName\":\"1.0\"}")).thenReturn(fieldsBoostMap);
+
+        if (testExceptions)
+        {
+            when(jsonHelper.unmarshallJsonToObject(Map.class, "{\"displayName\":\"1.0\"}")).thenThrow(new IOException());
+        }
+        else
+        {
+            when(jsonHelper.unmarshallJsonToObject(Map.class, "{\"displayName\":\"1.0\"}")).thenReturn(fieldsBoostMap);
+        }
 
         IndexSearchHighlightField indexSearchHighlightField =
             new IndexSearchHighlightField("displayName", 100, Arrays.asList("displayName", "displayName.stemmed", "displayName.ngrams"), 5);
 
         IndexSearchHighlightFields highlightFields = new IndexSearchHighlightFields(Collections.singletonList(indexSearchHighlightField));
 
-        when(jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlighFieldsConfigValue)).thenReturn(highlightFields);
-        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
-        when(transportClient.prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX)).thenReturn(searchRequestBuilder);
+        if (testExceptions)
+        {
+            when(jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsConfigValue)).thenThrow(new IOException());
+        }
+        else
+        {
+            when(jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsConfigValue)).thenReturn(highlightFields);
+        }
+
         when(searchRequestBuilder.setSource(any())).thenReturn(searchRequestBuilderWithSource);
         when(searchRequestBuilderWithSource.setSize(SEARCH_RESULT_SIZE)).thenReturn(searchRequestBuilderWithSize);
         when(searchRequestBuilderWithSize.addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST))
@@ -407,7 +432,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(searchHit2.getHighlightFields()).thenReturn(highlightFieldMap);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, searchFilters, facetList, isHitHighlightingEnaled);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, searchFilters, facetList, isHitHighlightingEnabled);
 
         List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = Collections
             .singletonList(new TagTypeIndexSearchResponseDto("code", 1, Collections.singletonList(new TagIndexSearchResponseDto("tag1", 1, null)), null));
@@ -418,98 +443,78 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);
         when(elasticsearchHelper.getFacetsResponse(any(ElasticsearchResponseDto.class), any(Boolean.class))).thenCallRealMethod();
         when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(List.class))).thenCallRealMethod();
-        when(elasticsearchHelper.addFacetFieldAggregations(any(Set.class), any(SearchRequestBuilder.class))).thenCallRealMethod();
+        when(elasticsearchHelper.addFacetFieldAggregations(any(Set.class), any(SearchRequestBuilder.class))).thenReturn(searchRequestBuilder);
+
+        SearchResult searchResult = mock(SearchResult.class);
+        when(jestClientHelper.searchExecute(any())).thenReturn(searchResult);
+
+        List<SearchResult.Hit<Map, Void>> searchHitList = new ArrayList<>();
+        Gson gson = new Gson();
+        Map<String, Object> map = new HashMap<>();
+        map.put(DISPLAY_NAME_SOURCE, "Display Name");
+        Map<String, Object> codeMap = new HashMap<>();
+        codeMap.put(CODE, "Code");
+        map.put(TAG_TYPE, codeMap);
+        map.put(NAMESPACE, codeMap);
+        JsonElement element = gson.toJsonTree(map);
+        List<String> highlightList = new ArrayList<>();
+        highlightList.add("Highlight 1");
+        Map<String, List<String>> highlightMap = new HashMap<>();
+        highlightMap.put("field", highlightList);
+
+        SearchResult.Hit<Map, Void> hit1 =
+            new SearchResult(gson).new Hit(HashMap.class, element, HashMap.class, null, highlightMap, null, TAG_INDEX, TAG_INDEX, "type", 1.0);
+        SearchResult.Hit<Map, Void> hit2 =
+            new SearchResult(gson).new Hit(HashMap.class, element, HashMap.class, null, highlightMap, null, BUSINESS_OBJECT_DEFINITION_INDEX,
+                BUSINESS_OBJECT_DEFINITION_INDEX, "type", 2.0);
+        searchHitList.add(hit1);
+        searchHitList.add(hit2);
+
+        when(searchResult.getHits(Map.class)).thenReturn(searchHitList);
+        when(searchResult.getTotal()).thenReturn(200);
+
+        MetricAggregation metricAggregation = mock(MetricAggregation.class);
+        TermsAggregation termsAggregation = mock(TermsAggregation.class);
+        when(searchResult.getAggregations()).thenReturn(metricAggregation);
+        when(metricAggregation.getTermsAggregation(TAG_TYPE_FACET_AGGS)).thenReturn(termsAggregation);
+        List<TermsAggregation.Entry> buckets = new ArrayList<>();
+        TermsAggregation.Entry entry1 = mock(TermsAggregation.Entry.class);
+        TermsAggregation.Entry entry2 = mock(TermsAggregation.Entry.class);
+        buckets.add(entry1);
+        buckets.add(entry2);
+        when(termsAggregation.getBuckets()).thenReturn(buckets);
 
         // Call the method under test
         IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields);
         List<IndexSearchResult> indexSearchResults = indexSearchResponse.getIndexSearchResults();
 
         assertThat("Index search results list is null.", indexSearchResults, not(nullValue()));
-        assertThat(indexSearchResults.size(), is(2));
         assertThat(indexSearchResponse.getTotalIndexSearchResults(), is(200L));
-
-        int facetSize = 0;
-
-        if (facetList != null && facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
-        {
-            facetSize++;
-        }
-        if (facetList != null && facetList.contains(ElasticsearchHelper.TAG_FACET))
-        {
-            facetSize++;
-        }
-        assertThat(indexSearchResponse.getFacets() != null ? indexSearchResponse.getFacets().size() : 0, is(facetSize));
 
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
-        verify(transportClient, times(1)).prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX);
-        verify(searchRequestBuilder, times(1)).setSource(any());
-
-        if (CollectionUtils.isNotEmpty(facetList))
-        {
-            verifyFacetInvocations(searchRequestBuilder, facetList);
-        }
 
         if (indexSearchRequest.isEnableHitHighlighting() != null)
         {
-            verifyHitHighlightingInteractions(searchRequestBuilder, indexSearchRequest.isEnableHitHighlighting(), searchHitArray, highlightField);
+            verifyHitHighlightingInteractions(searchRequestBuilder, indexSearchRequest.isEnableHitHighlighting());
         }
 
-        verify(searchRequestBuilderWithSource, times(1)).setSize(SEARCH_RESULT_SIZE);
-        verify(searchRequestBuilderWithSize, times(1)).addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST);
-        verify(searchRequestBuilderWithBusinessObjectDefinitionIndexBoost, times(1)).addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST);
-        verify(searchRequestBuilderWithTagIndexBoost, times(1)).addSort(any());
-        verify(searchRequestBuilder, times(1)).execute();
-        verify(listenableActionFuture, times(1)).actionGet();
-        verify(searchResponse, times(1)).getHits();
-        verify(searchHits, times(1)).hits();
-        verify(searchHit1, times(1)).sourceAsMap();
-        verify(searchHit2, times(1)).sourceAsMap();
-        verify(searchHit1, times(1)).getShard();
-        verify(searchHit2, times(1)).getShard();
-        verify(searchShardTarget1, times(1)).getIndex();
-        verify(searchShardTarget2, times(1)).getIndex();
-        verify(searchHits, times(1)).getTotalHits();
+        verify(jestClientHelper).searchExecute(any());
+        verify(searchResult).getTotal();
+        verify(searchResult).getHits(Map.class);
         verifyNoMoreInteractions(createdMocks.toArray());
     }
 
-    private void verifyFacetInvocations(SearchRequestBuilder searchRequestBuilder, List<String> facetList)
-    {
-        if (facetList.contains(ElasticsearchHelper.TAG_FACET) && !facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
-        {
-            verify(searchRequestBuilder, times(2)).addAggregation(any(AggregationBuilder.class));
-        }
-        else if (!facetList.contains(ElasticsearchHelper.TAG_FACET) && facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
-        {
-            verify(searchRequestBuilder, times(1)).addAggregation(any(AggregationBuilder.class));
-        }
-        else if (facetList.contains(ElasticsearchHelper.TAG_FACET) && facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
-        {
-            verify(searchRequestBuilder, times(3)).addAggregation(any(AggregationBuilder.class));
-        }
-    }
-
-    private void verifyHitHighlightingInteractions(SearchRequestBuilder searchRequestBuilder, boolean isHitHighlightingEnabled, SearchHit[] searchHitArray,
-        HighlightField highlightField) throws IOException
+    private void verifyHitHighlightingInteractions(SearchRequestBuilder searchRequestBuilder, boolean isHitHighlightingEnabled) throws IOException
     {
         if (isHitHighlightingEnabled)
         {
-            // verify that highlighting is enabled on the elasticsearch query
-            verify(searchRequestBuilder, times(1)).highlighter(any(HighlightBuilder.class));
-
             // verify interactions with the helpers which is required to fetch highlighting config
             verify(jsonHelper, times(3)).unmarshallJsonToObject(any(), any(String.class));
             verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
             verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
             verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS);
-
-            // verify interactions to extract highlighting information from the search hits
-            for (SearchHit searchHit : searchHitArray)
-            {
-                verify(searchHit, times(2)).getHighlightFields();
-            }
-            verify(highlightField, times(2)).getFragments();
         }
         else
         {
@@ -520,13 +525,6 @@ public class IndexSearchDaoTest extends AbstractDaoTest
             verify(configurationHelper, times(0)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
             verify(configurationHelper, times(0)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
             verify(configurationHelper, times(0)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS);
-
-            // verify no interactions with search hits to extract highlighting information
-            for (SearchHit searchHit : searchHitArray)
-            {
-                verify(searchHit, times(0)).getHighlightFields();
-            }
-            verify(highlightField, times(0)).getFragments();
         }
     }
 }
