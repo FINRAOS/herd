@@ -218,6 +218,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CORRELATION_DATA_3 = "UT_Correlation_Data_3" + RANDOM_SUFFIX;
 
+    public static final String CREATED_BY = "UT_CreatedBy_" + RANDOM_SUFFIX;
+
     public static final XMLGregorianCalendar CREATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String CUSTOM_DDL_NAME = "UT_CustomDdl" + RANDOM_SUFFIX;
@@ -684,6 +686,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SESSION_NAME = "UT_SessionName" + RANDOM_SUFFIX;
 
+    public static final String SHORT_DESCRIPTION = "UT_ShortDescription" + RANDOM_SUFFIX;
+
     public static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
 
     public static final String SINGLE_QUOTE = "'";
@@ -868,6 +872,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> UNSORTED_PARTITION_VALUES =
         Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
+
+    public static final String UPDATED_BY = "UT_UpdatedBy_" + RANDOM_SUFFIX;
 
     public static final XMLGregorianCalendar UPDATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 

@@ -43,35 +43,18 @@ import org.finra.herd.service.StoragePlatformService;
  */
 public class StoragePlatformRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private StoragePlatformService storagePlatformService;
+    private static Logger logger = LoggerFactory.getLogger(StoragePlatformRestControllerTest.class);
 
     @InjectMocks
     private StoragePlatformRestController storagePlatformRestController;
+
+    @Mock
+    private StoragePlatformService storagePlatformService;
 
     @Before()
     public void before()
     {
         MockitoAnnotations.initMocks(this);
-    }
-
-    private static Logger logger = LoggerFactory.getLogger(StoragePlatformRestControllerTest.class);
-
-    @Test
-    public void testGetStoragePlatforms() throws Exception
-    {
-        StoragePlatforms storagePlatforms = new StoragePlatforms(Arrays.asList(new StoragePlatform()));
-        when(storagePlatformService.getStoragePlatforms()).thenReturn(storagePlatforms);
-        StoragePlatforms resultStoragePlatforms = storagePlatformRestController.getStoragePlatforms();
-        assertNotNull(storagePlatforms);
-        logger.info("Total number of storage platforms: " + storagePlatforms.getStoragePlatforms().size());
-        assertTrue(storagePlatforms.getStoragePlatforms().size() >= 1); // We should have at least 1 row of reference data present (i.e. S3).
-
-        // Verify the external calls.
-        verify(storagePlatformService).getStoragePlatforms();
-        verifyNoMoreInteractions(storagePlatformService);
-        // Validate the returned object.
-        assertEquals(storagePlatforms, resultStoragePlatforms);
     }
 
     @Test
@@ -97,5 +80,22 @@ public class StoragePlatformRestControllerTest extends AbstractRestTest
         String platform = "invalid" + getRandomSuffix();
         when(storagePlatformService.getStoragePlatform(platform)).thenThrow(exception);
         storagePlatformRestController.getStoragePlatform(platform);
+    }
+
+    @Test
+    public void testGetStoragePlatforms() throws Exception
+    {
+        StoragePlatforms storagePlatforms = new StoragePlatforms(Arrays.asList(new StoragePlatform()));
+        when(storagePlatformService.getStoragePlatforms()).thenReturn(storagePlatforms);
+        StoragePlatforms resultStoragePlatforms = storagePlatformRestController.getStoragePlatforms();
+        assertNotNull(storagePlatforms);
+        logger.info("Total number of storage platforms: " + storagePlatforms.getStoragePlatforms().size());
+        assertTrue(storagePlatforms.getStoragePlatforms().size() >= 1); // We should have at least 1 row of reference data present (i.e. S3).
+
+        // Verify the external calls.
+        verify(storagePlatformService).getStoragePlatforms();
+        verifyNoMoreInteractions(storagePlatformService);
+        // Validate the returned object.
+        assertEquals(storagePlatforms, resultStoragePlatforms);
     }
 }

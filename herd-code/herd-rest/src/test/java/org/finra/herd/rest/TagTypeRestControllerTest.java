@@ -45,11 +45,11 @@ import org.finra.herd.service.impl.TagTypeServiceImpl;
  */
 public class TagTypeRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private TagTypeService tagTypeService;
-
     @InjectMocks
     private TagTypeRestController tagTypeRestController;
+
+    @Mock
+    private TagTypeService tagTypeService;
 
     @Before()
     public void before()

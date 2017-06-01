@@ -39,18 +39,18 @@ import org.finra.herd.service.CurrentUserService;
  */
 public class CurrentUserRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private CurrentUserService currentUserService;
-
     @InjectMocks
     private CurrentUserRestController currentUserRestController;
+
+    @Mock
+    private CurrentUserService currentUserService;
 
     @Before()
     public void before()
     {
         MockitoAnnotations.initMocks(this);
     }
-    
+
     @Test
     public void testGetCurrentUser() throws Exception
     {
@@ -61,7 +61,7 @@ public class CurrentUserRestControllerTest extends AbstractRestTest
 
         UserAuthorizations userAuthorizations = new UserAuthorizations();
         userAuthorizations.setNamespaceAuthorizations(new ArrayList(namespaceAuthorizations));
-        
+
         when(currentUserService.getCurrentUser()).thenReturn(userAuthorizations);
         // Get the current user information.
         UserAuthorizations resultUserAuthorizations = currentUserRestController.getCurrentUser();

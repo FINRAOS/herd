@@ -41,11 +41,11 @@ import org.finra.herd.service.JobDefinitionService;
  */
 public class JobDefinitionRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private JobDefinitionService jobDefinitionService;
-
     @InjectMocks
     private JobDefinitionRestController jobDefinitionRestController;
+
+    @Mock
+    private JobDefinitionService jobDefinitionService;
 
     @Before()
     public void before()

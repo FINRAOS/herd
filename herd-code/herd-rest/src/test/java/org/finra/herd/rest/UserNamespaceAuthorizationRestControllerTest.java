@@ -41,11 +41,11 @@ import org.finra.herd.service.UserNamespaceAuthorizationService;
  */
 public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private UserNamespaceAuthorizationService userNamespaceAuthorizationService;
-
     @InjectMocks
     private UserNamespaceAuthorizationRestController userNamespaceAuthorizationRestController;
+
+    @Mock
+    private UserNamespaceAuthorizationService userNamespaceAuthorizationService;
 
     @Before()
     public void before()
@@ -78,29 +78,25 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
     }
 
     @Test
-    public void testUpdateUserNamespaceAuthorization()
+    public void testDeleteUserNamespaceAuthorization()
     {
         // Create a user namespace authorization key
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
-        UserNamespaceAuthorization userNamespaceAuthorization =
-            new UserNamespaceAuthorization(ID, key, Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
+        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(ID, key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
-        UserNamespaceAuthorizationUpdateRequest request =
-            new UserNamespaceAuthorizationUpdateRequest(Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
-        // Mock calls to external method.
-        when(userNamespaceAuthorizationService.updateUserNamespaceAuthorization(key, request)).thenReturn(userNamespaceAuthorization);
+        when(userNamespaceAuthorizationService.deleteUserNamespaceAuthorization(key)).thenReturn(userNamespaceAuthorization);
 
-        // Update a user namespace authorization.
-        UserNamespaceAuthorization resultUserNamespaceAuthorization =
-            userNamespaceAuthorizationRestController.updateUserNamespaceAuthorization(key.getUserId(), key.getNamespace(), request);
+        // Delete this user namespace authorization.
+        UserNamespaceAuthorization deletedUserNamespaceAuthorization =
+            userNamespaceAuthorizationRestController.deleteUserNamespaceAuthorization(key.getUserId(), key.getNamespace());
 
         // Verify the external calls.
-        verify(userNamespaceAuthorizationService).updateUserNamespaceAuthorization(key, request);
+        verify(userNamespaceAuthorizationService).deleteUserNamespaceAuthorization(key);
         verifyNoMoreInteractions(userNamespaceAuthorizationService);
 
         // Validate the returned object.
-        assertEquals(userNamespaceAuthorization, resultUserNamespaceAuthorization);
+        assertEquals(userNamespaceAuthorization, deletedUserNamespaceAuthorization);
     }
 
     @Test
@@ -126,25 +122,22 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
     }
 
     @Test
-    public void testDeleteUserNamespaceAuthorization()
+    public void testGetUserNamespaceAuthorizationsByNamespace() throws Exception
     {
-        // Create a user namespace authorization key
-        UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
+        UserNamespaceAuthorizations userNamespaceAuthorizations = new UserNamespaceAuthorizations();
 
-        UserNamespaceAuthorization userNamespaceAuthorization = new UserNamespaceAuthorization(ID, key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        when(userNamespaceAuthorizationService.getUserNamespaceAuthorizationsByNamespace(USER_ID)).thenReturn(userNamespaceAuthorizations);
 
-        when(userNamespaceAuthorizationService.deleteUserNamespaceAuthorization(key)).thenReturn(userNamespaceAuthorization);
-
-        // Delete this user namespace authorization.
-        UserNamespaceAuthorization deletedUserNamespaceAuthorization =
-            userNamespaceAuthorizationRestController.deleteUserNamespaceAuthorization(key.getUserId(), key.getNamespace());
+        // Get user namespace authorizations for the specified user id.
+        UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
+            userNamespaceAuthorizationRestController.getUserNamespaceAuthorizationsByNamespace(USER_ID);
 
         // Verify the external calls.
-        verify(userNamespaceAuthorizationService).deleteUserNamespaceAuthorization(key);
+        verify(userNamespaceAuthorizationService).getUserNamespaceAuthorizationsByNamespace(USER_ID);
         verifyNoMoreInteractions(userNamespaceAuthorizationService);
 
         // Validate the returned object.
-        assertEquals(userNamespaceAuthorization, deletedUserNamespaceAuthorization);
+        assertEquals(resultUserNamespaceAuthorizations, userNamespaceAuthorizations);
     }
 
     @Test
@@ -167,21 +160,28 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
     }
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByNamespace() throws Exception
+    public void testUpdateUserNamespaceAuthorization()
     {
-        UserNamespaceAuthorizations userNamespaceAuthorizations = new UserNamespaceAuthorizations();
+        // Create a user namespace authorization key
+        UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
-        when(userNamespaceAuthorizationService.getUserNamespaceAuthorizationsByNamespace(USER_ID)).thenReturn(userNamespaceAuthorizations);
+        UserNamespaceAuthorization userNamespaceAuthorization =
+            new UserNamespaceAuthorization(ID, key, Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
 
-        // Get user namespace authorizations for the specified user id.
-        UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
-            userNamespaceAuthorizationRestController.getUserNamespaceAuthorizationsByNamespace(USER_ID);
+        UserNamespaceAuthorizationUpdateRequest request =
+            new UserNamespaceAuthorizationUpdateRequest(Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
+        // Mock calls to external method.
+        when(userNamespaceAuthorizationService.updateUserNamespaceAuthorization(key, request)).thenReturn(userNamespaceAuthorization);
+
+        // Update a user namespace authorization.
+        UserNamespaceAuthorization resultUserNamespaceAuthorization =
+            userNamespaceAuthorizationRestController.updateUserNamespaceAuthorization(key.getUserId(), key.getNamespace(), request);
 
         // Verify the external calls.
-        verify(userNamespaceAuthorizationService).getUserNamespaceAuthorizationsByNamespace(USER_ID);
+        verify(userNamespaceAuthorizationService).updateUserNamespaceAuthorization(key, request);
         verifyNoMoreInteractions(userNamespaceAuthorizationService);
 
         // Validate the returned object.
-        assertEquals(resultUserNamespaceAuthorizations, userNamespaceAuthorizations);
+        assertEquals(userNamespaceAuthorization, resultUserNamespaceAuthorization);
     }
 }

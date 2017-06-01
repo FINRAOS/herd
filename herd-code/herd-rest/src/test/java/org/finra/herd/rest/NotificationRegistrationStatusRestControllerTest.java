@@ -34,11 +34,11 @@ import org.finra.herd.service.NotificationRegistrationStatusService;
 
 public class NotificationRegistrationStatusRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private NotificationRegistrationStatusService notificationRegistrationStatusService;
-
     @InjectMocks
     private NotificationRegistrationStatusRestController notificationRegistrationStatusRestController;
+
+    @Mock
+    private NotificationRegistrationStatusService notificationRegistrationStatusService;
 
     @Before()
     public void before()
@@ -66,5 +66,4 @@ public class NotificationRegistrationStatusRestControllerTest extends AbstractRe
         // Validate the returned object.
         assertEquals(response, resultResponse);
     }
-
 }

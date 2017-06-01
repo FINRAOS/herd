@@ -39,11 +39,11 @@ import org.finra.herd.service.NamespaceService;
  */
 public class NamespaceRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private NamespaceService namespaceService;
-
     @InjectMocks
     private NamespaceRestController namespaceRestController;
+
+    @Mock
+    private NamespaceService namespaceService;
 
     @Before()
     public void before()
@@ -68,6 +68,23 @@ public class NamespaceRestControllerTest extends AbstractRestTest
         verifyNoMoreInteractions(namespaceService);
         // Validate the returned object.
         assertEquals(namespace, resultNamespace);
+    }
+
+    @Test
+    public void testDeleteNamespace() throws Exception
+    {
+        Namespace namespace = new Namespace(NAMESPACE);
+
+        when(namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE))).thenReturn(namespace);
+
+        // Delete this namespace.
+        Namespace deletedNamespace = namespaceRestController.deleteNamespace(NAMESPACE);
+
+        // Verify the external calls.
+        verify(namespaceService).deleteNamespace(new NamespaceKey(NAMESPACE));
+        verifyNoMoreInteractions(namespaceService);
+        // Validate the returned object.
+        assertEquals(namespace, deletedNamespace);
     }
 
     @Test
@@ -100,22 +117,5 @@ public class NamespaceRestControllerTest extends AbstractRestTest
         verifyNoMoreInteractions(namespaceService);
         // Validate the returned object.
         assertEquals(namespaceKeys, resultNamespaceKeys);
-    }
-
-    @Test
-    public void testDeleteNamespace() throws Exception
-    {
-        Namespace namespace = new Namespace(NAMESPACE);
-
-        when(namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE))).thenReturn(namespace);
-
-        // Delete this namespace.
-        Namespace deletedNamespace = namespaceRestController.deleteNamespace(NAMESPACE);
-
-        // Verify the external calls.
-        verify(namespaceService).deleteNamespace(new NamespaceKey(NAMESPACE));
-        verifyNoMoreInteractions(namespaceService);
-        // Validate the returned object.
-        assertEquals(namespace, deletedNamespace);
     }
 }

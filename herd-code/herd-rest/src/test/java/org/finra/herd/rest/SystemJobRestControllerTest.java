@@ -42,11 +42,11 @@ import org.finra.herd.service.systemjobs.StoragePolicySelectorJob;
  */
 public class SystemJobRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private SystemJobService systemJobService;
-
     @InjectMocks
     private SystemJobRestController systemJobRestController;
+
+    @Mock
+    private SystemJobService systemJobService;
 
     @Before()
     public void before()

@@ -38,11 +38,11 @@ import org.finra.herd.service.FileTypeService;
  */
 public class FileTypeRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private FileTypeService fileTypeService;
-
     @InjectMocks
     private FileTypeRestController fileTypeRestController;
+
+    @Mock
+    private FileTypeService fileTypeService;
 
     @Before()
     public void before()

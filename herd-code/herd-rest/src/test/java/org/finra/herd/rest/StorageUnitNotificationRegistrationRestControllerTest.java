@@ -46,11 +46,11 @@ import org.finra.herd.service.StorageUnitNotificationRegistrationService;
  */
 public class StorageUnitNotificationRegistrationRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private StorageUnitNotificationRegistrationService storageUnitNotificationRegistrationService;
-
     @InjectMocks
     private StorageUnitNotificationRegistrationRestController storageUnitNotificationRegistrationRestController;
+
+    @Mock
+    private StorageUnitNotificationRegistrationService storageUnitNotificationRegistrationService;
 
     @Before()
     public void before()
