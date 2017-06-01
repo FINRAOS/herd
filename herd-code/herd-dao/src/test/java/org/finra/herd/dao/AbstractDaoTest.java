@@ -23,12 +23,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.amazonaws.services.s3.AmazonS3;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -111,6 +113,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String AWS_ASSUMED_ROLE_SESSION_TOKEN = "UT_AwsAssumedRoleSessionToken_1_" + RANDOM_SUFFIX;
 
     public static final String AWS_KMS_KEY_ID = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
+
+    public static final String AWS_PRE_SIGNED_URL = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
 
     public static final String AWS_REGION_NAME = "UT_AwsRegionName_1_" + RANDOM_SUFFIX;
 
@@ -228,6 +232,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String DATA_PROVIDER_NAME_2 = "UT_DataProvider_2_" + RANDOM_SUFFIX;
 
     public static final Integer DATA_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final Integer DATA_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final String DESCRIPTION = "UT_Description_1_" + RANDOM_SUFFIX;
 
@@ -363,6 +369,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String JOB_DESCRIPTION = "UT_JobDescription" + RANDOM_SUFFIX;
 
+    public static final String JOB_ID = "UT_JobId_" + RANDOM_SUFFIX;
+
     public static final String JOB_NAME = "UT_Job" + RANDOM_SUFFIX;
 
     public static final String JOB_NAMESPACE = "UT_Job_Namespace" + RANDOM_SUFFIX;
@@ -374,6 +382,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String JOB_NAME_2 = "UT_Job_2" + RANDOM_SUFFIX;
 
     public static final String JOB_NAME_3 = "UT_Job_3" + RANDOM_SUFFIX;
+
+    public static final String JOB_RECEIVE_TASK_ID = "UT_JobReceiveTaskId_" + RANDOM_SUFFIX;
 
     public static final String JSON_STRING = "UT_JsonString_" + RANDOM_SUFFIX;
 
@@ -1190,6 +1200,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected UserNamespaceAuthorizationDaoTestHelper userNamespaceAuthorizationDaoTestHelper;
+
+    /**
+     * Returns a random timestamp.
+     */
+    public static DateTime getRandomDateTime()
+    {
+        return new DateTime(new Random().nextLong()).withMillisOfSecond(0);
+    }
 
     /**
      * Modifies the re-loadable property source. Copies all the existing properties and overrides with the properties passed in the map.

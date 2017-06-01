@@ -16,199 +16,261 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.dao.impl.MockStsOperationsImpl;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
-import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.api.xml.File;
+import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFileInitiationRequest;
 import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFileInitiationResponse;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
+import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
-import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
-import org.finra.herd.model.jpa.StorageEntity;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity;
+import org.finra.herd.service.NotificationEventService;
+import org.finra.herd.service.UploadDownloadService;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 
 /**
- * This class tests various functionality within the custom DDL REST controller.
+ * This class tests various functionality within the upload download REST controller.
  */
 public class UploadDownloadRestControllerTest extends AbstractRestTest
 {
-    @Test
-    public void testInitiateUploadSingle()
+    @Mock
+    private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Mock
+    private NotificationEventService notificationEventService;
+
+    @InjectMocks
+    private UploadDownloadRestController uploadDownloadRestController;
+
+    @Mock
+    private UploadDownloadService uploadDownloadService;
+
+    @Before
+    public void before()
     {
-        // Create database entities required for testing.
-        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
+        MockitoAnnotations.initMocks(this);
+    }
 
-        // Initiate a file upload.
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse =
-            uploadDownloadRestController.initiateUploadSingle(uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest());
+    @Test
+    public void testExtendUploadSingleCredentials()
+    {
+        // Create a response.
+        UploadSingleCredentialExtensionResponse response =
+            new UploadSingleCredentialExtensionResponse(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN,
+                AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME);
 
-        // Validate the returned object.
-        uploadDownloadServiceTestHelper
-            .validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes(), FILE_NAME,
-                FILE_SIZE_1_KB, null, resultUploadSingleInitiationResponse);
+        // Mock the external calls.
+        when(uploadDownloadService
+            .extendUploadSingleCredentials(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION))
+            .thenReturn(response);
+
+        // Call the method under test.
+        UploadSingleCredentialExtensionResponse result = uploadDownloadRestController
+            .extendUploadSingleCredentials(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION);
+
+        // Verify the external calls.
+        verify(uploadDownloadService)
+            .extendUploadSingleCredentials(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(response, result);
     }
 
     @Test
     public void testInitiateDownloadSingle()
     {
-        // Create the upload data.
-        UploadSingleInitiationResponse uploadSingleInitiationResponse =
-            uploadDownloadServiceTestHelper.createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
 
-        // Initiate the download against the uploaded data (i.e. the target business object data).
-        DownloadSingleInitiationResponse downloadSingleInitiationResponse = initiateDownload(uploadSingleInitiationResponse.getTargetBusinessObjectData());
+        // Create a response.
+        DownloadSingleInitiationResponse response =
+            new DownloadSingleInitiationResponse(businessObjectData, AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN,
+                AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME, AWS_PRE_SIGNED_URL);
 
-        // Validate the download initiation response.
-        uploadDownloadServiceTestHelper.validateDownloadSingleInitiationResponse(uploadSingleInitiationResponse, downloadSingleInitiationResponse);
+        // Mock the external calls.
+        when(uploadDownloadService
+            .initiateDownloadSingle(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION))
+            .thenReturn(response);
+
+        // Call the method under test.
+        DownloadSingleInitiationResponse result = uploadDownloadRestController
+            .initiateDownloadSingle(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION);
+
+        // Verify the external calls.
+        verify(uploadDownloadService)
+            .initiateDownloadSingle(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(response, result);
     }
 
     @Test
-    public void testExtendUploadSingleCredentials() throws InterruptedException
+    public void testInitiateDownloadSingleSampleFile()
     {
-        // Create source and target business object formats database entities which are required to initiate an upload.
-        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
+        // Create a business object definition sample data file key.
+        BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey =
+            new BusinessObjectDefinitionSampleDataFileKey(BDEF_NAMESPACE, BDEF_NAME, DIRECTORY_PATH, FILE_NAME);
 
-        // Initiate a file upload.
-        UploadSingleInitiationResponse uploadSingleInitiationResponse =
-            uploadDownloadRestController.initiateUploadSingle(uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest());
+        // Create a request.
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest request =
+            new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(businessObjectDefinitionSampleDataFileKey);
 
-        // Sleep a short amount of time to ensure the extended credentials don't return the same expiration as the initial credentials.
-        Thread.sleep(10);
+        // Create a response.
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse response =
+            new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse(businessObjectDefinitionSampleDataFileKey, S3_BUCKET_NAME,
+                AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME,
+                AWS_PRE_SIGNED_URL);
 
-        // Initiate the download against the uploaded data (i.e. the target business object data).
-        UploadSingleCredentialExtensionResponse uploadSingleCredentialExtensionResponse =
-            extendUploadSingleCredentials(uploadSingleInitiationResponse.getSourceBusinessObjectData());
+        // Mock the external calls.
+        when(uploadDownloadService.initiateDownloadSingleSampleFile(request)).thenReturn(response);
 
-        // Validate the returned object.
-        assertNotNull(uploadSingleCredentialExtensionResponse.getAwsAccessKey());
-        assertNotNull(uploadSingleCredentialExtensionResponse.getAwsSecretKey());
-        assertNotNull(uploadSingleCredentialExtensionResponse.getAwsSessionToken());
-        assertNotNull(uploadSingleCredentialExtensionResponse.getAwsSessionExpirationTime());
-        assertNotNull(uploadSingleInitiationResponse.getAwsSessionExpirationTime());
+        // Call the method under test.
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse result = uploadDownloadRestController.initiateDownloadSingleSampleFile(request);
 
-        // Ensure the extended credentials are greater than the original set of credentials.
-        // We are displaying the values in case there is a problem because this test was acting flaky.
-        if (uploadSingleCredentialExtensionResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis() <=
-            uploadSingleInitiationResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis())
-        {
-            fail("Initial expiration time \"" + uploadSingleInitiationResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis() +
-                "\" is not > extended expiration time \"" +
-                uploadSingleCredentialExtensionResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis() + "\".");
-        }
+        // Verify the external calls.
+        verify(uploadDownloadService).initiateDownloadSingleSampleFile(request);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(response, result);
+    }
+
+    @Test
+    public void testInitiateUploadSampleFile()
+    {
+        // Create a business object data key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
+
+        // Create a request.
+        UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request =
+            new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest(businessObjectDefinitionKey);
+
+        // Create a response.
+        UploadBusinessObjectDefinitionSampleDataFileInitiationResponse response =
+            new UploadBusinessObjectDefinitionSampleDataFileInitiationResponse(businessObjectDefinitionKey, S3_BUCKET_NAME, S3_ENDPOINT, S3_KEY_PREFIX,
+                AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME);
+
+        // Mock the external calls.
+        when(uploadDownloadService.initiateUploadSampleFile(request)).thenReturn(response);
+
+        // Call the method under test.
+        UploadBusinessObjectDefinitionSampleDataFileInitiationResponse result = uploadDownloadRestController.initiateUploadSampleFile(request);
+
+        // Verify the external calls.
+        verify(uploadDownloadService).initiateUploadSampleFile(request);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(response, result);
+    }
+
+    @Test
+    public void testInitiateUploadSingle()
+    {
+        // Create business object format keys.
+        BusinessObjectFormatKey sourceBusinessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+        BusinessObjectFormatKey targetBusinessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2);
+
+        // Create a file object.
+        File file = new File(LOCAL_FILE, FILE_SIZE);
+
+        // Create a request.
+        UploadSingleInitiationRequest request = new UploadSingleInitiationRequest(sourceBusinessObjectFormatKey, targetBusinessObjectFormatKey,
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)), file, STORAGE_NAME);
+
+        // Create business object data keys.
+        BusinessObjectDataKey sourceBusinessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+        BusinessObjectDataKey targetBusinessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES_2, DATA_VERSION_2);
+
+        // Create a business object data objects.
+        BusinessObjectData sourceBusinessObjectData = new BusinessObjectData();
+        sourceBusinessObjectData.setId(ID);
+        sourceBusinessObjectData.setStatus(BDATA_STATUS);
+        sourceBusinessObjectData.setStorageUnits(Arrays.asList(
+            new StorageUnit(new Storage(STORAGE_NAME, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES), NO_STORAGE_DIRECTORY, NO_STORAGE_FILES, STORAGE_UNIT_STATUS)));
+        BusinessObjectData targetBusinessObjectData = new BusinessObjectData();
+        targetBusinessObjectData.setId(ID_2);
+        targetBusinessObjectData.setStatus(BDATA_STATUS_2);
+        targetBusinessObjectData.setStorageUnits(Arrays.asList(
+            new StorageUnit(new Storage(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES), NO_STORAGE_DIRECTORY, NO_STORAGE_FILES, STORAGE_UNIT_STATUS_2)));
+
+        // Create a response.
+        UploadSingleInitiationResponse response =
+            new UploadSingleInitiationResponse(sourceBusinessObjectData, targetBusinessObjectData, file, UUID, AWS_ASSUMED_ROLE_ACCESS_KEY,
+                AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME, AWS_KMS_KEY_ID, STORAGE_NAME);
+
+        // Mock the external calls.
+        when(uploadDownloadService.initiateUploadSingle(request)).thenReturn(response);
+        when(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectData)).thenReturn(sourceBusinessObjectDataKey);
+        when(businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectData)).thenReturn(targetBusinessObjectDataKey);
+
+        // Call the method under test.
+        UploadSingleInitiationResponse result = uploadDownloadRestController.initiateUploadSingle(request);
+
+        // Verify the external calls.
+        verify(uploadDownloadService).initiateUploadSingle(request);
+        verify(businessObjectDataHelper).getBusinessObjectDataKey(sourceBusinessObjectData);
+        verify(businessObjectDataHelper).getBusinessObjectDataKey(targetBusinessObjectData);
+        verify(notificationEventService)
+            .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, sourceBusinessObjectDataKey,
+                BDATA_STATUS, null);
+        verify(notificationEventService)
+            .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG, sourceBusinessObjectDataKey,
+                BDATA_STATUS, null);
+        verify(notificationEventService)
+            .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, sourceBusinessObjectDataKey,
+                STORAGE_NAME, STORAGE_UNIT_STATUS, null);
+        verify(notificationEventService)
+            .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, targetBusinessObjectDataKey,
+                BDATA_STATUS_2, null);
+        verify(notificationEventService)
+            .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG, targetBusinessObjectDataKey,
+                BDATA_STATUS_2, null);
+        verify(notificationEventService)
+            .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, targetBusinessObjectDataKey,
+                STORAGE_NAME_2, STORAGE_UNIT_STATUS_2, null);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(response, result);
     }
 
     /**
-     * Initiates a download using the specified business object data.
-     *
-     * @param businessObjectData the business object data.
-     *
-     * @return the download single initiation response.
+     * Checks if any of the mocks has any interaction.
      */
-    private DownloadSingleInitiationResponse initiateDownload(BusinessObjectData businessObjectData)
+    private void verifyNoMoreInteractionsHelper()
     {
-        return uploadDownloadRestController.initiateDownloadSingle(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
-            businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
-            businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(), businessObjectData.getVersion());
-    }
-
-    /**
-     * Extends the credentials of an in-progress upload.
-     *
-     * @param businessObjectData the business object data for the in-progress upload.
-     *
-     * @return the upload single credential extension response.
-     */
-    private UploadSingleCredentialExtensionResponse extendUploadSingleCredentials(BusinessObjectData businessObjectData)
-    {
-        return uploadDownloadRestController
-            .extendUploadSingleCredentials(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
-                businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
-                businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(), businessObjectData.getVersion());
-    }
-    
-    @Test
-    public void testDownloadSampleDataFile()
-    {
-        // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
-                .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
-                        businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles());
-
-        List<SampleDataFile> sampleFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
-
-        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(STORAGE_NAME);
-        storageEntity.getAttributes().add(
-                storageDaoTestHelper
-                        .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
-                                "testBucketName"));
-
-        storageEntity.getAttributes().add(
-                storageDaoTestHelper
-                        .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN),
-                                "downloadRole"));
-
-        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
-                new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest();
-        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
-        sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
-        sampleDataFileKey.setNamespace(NAMESPACE);
-        sampleDataFileKey.setDirectoryPath(sampleFileList.get(0).getDirectoryPath());
-        sampleDataFileKey.setFileName(sampleFileList.get(0).getFileName());
-
-        downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKey);
-
-        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse downloadResponse =
-                uploadDownloadRestController.initiateDownloadSingleSampleFile(downloadRequest);
-
-        assertEquals(downloadResponse.getBusinessObjectDefinitionSampleDataFileKey(), sampleDataFileKey);
-        assertNotNull(downloadResponse.getAwsAccessKey());
-        assertNotNull(downloadResponse.getAwsSecretKey());
-        assertNotNull(downloadResponse.getAwsSessionExpirationTime());
-        assertNotNull(downloadResponse.getAwsSessionToken());
-        assertNotNull(downloadResponse.getPreSignedUrl());
-    }
-    
-    @Test
-    public void testUploadSampleDataFile()
-    {
-        String s3_velocity_template = "$namespace/$businessObjectDefinitionName";
-        
-        // Create a test storage.
-        storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
-            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN), UPLOADER_ROLE_ARN),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), s3_velocity_template)));
-
-        // Create and persist a business object definition entity with sample data files.
-        businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes());
-        
-        UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request = new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest();
-        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        request.setBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-
-        UploadBusinessObjectDefinitionSampleDataFileInitiationResponse response = uploadDownloadRestController.initiateUploadSampleFile(request);
-        assertEquals(response.getBusinessObjectDefinitionKey(), businessObjectDefinitionKey);
-        assertEquals(response.getAwsS3BucketName(), S3_BUCKET_NAME);
-        assertEquals(response.getAwsAccessKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY);
-        assertEquals(response.getAwsSecretKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY);
-        assertEquals(response.getAwsSessionToken(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN);
+        verifyNoMoreInteractions(businessObjectDataHelper, notificationEventService, uploadDownloadService);
     }
 }
