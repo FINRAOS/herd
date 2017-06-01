@@ -158,7 +158,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean ALLOW_MISSING_DATA = true;
 
+    public static final String AWS_SECURITY_GROUP_ID = "UT_AwsSecurityGroupId_" + RANDOM_SUFFIX;
+
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
+
+    public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
 
@@ -170,11 +174,27 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean DISCOVER_STORAGE_FILES = true;
 
+    public static final Boolean DRY_RUN = true;
+
     public static final String EC2_PRICING_LIST_URL = "UT_Ec2PricingListUrl_" + RANDOM_SUFFIX;
 
     public static final String EC2_PRODUCT_KEY = "UT_EC2_ProductKey_1_" + RANDOM_SUFFIX;
 
     public static final String EC2_PRODUCT_KEY_2 = "UT_EC2_ProductKey_2_" + RANDOM_SUFFIX;
+
+    public static final String EMR_CLUSTER_ID = "UT_EMR_Cluster_ID_" + RANDOM_SUFFIX;
+
+    public static final Boolean EMR_CLUSTER_VERBOSE_FLAG = true;
+
+    public static final String EMR_STEP_ID = "UT_EMR_Step_ID_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_JAR_LOCATION = "UT_EMR_Step_JAR_Location_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_MAIN_CLASS = "UT_EMR_Step_MainClass_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_NAME = "UT_EMR_Step_Name_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_SCRIPT_LOCATION = "UT_EMR_Step_Script_Location_" + RANDOM_SUFFIX;
 
     public static final String END_PARTITION_VALUE = "2014-04-08";
 
@@ -323,11 +343,15 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String NO_USER_ID = null;
 
+    public static final Boolean OVERRIDE_TERMINATION_PROTECTION = true;
+
     public static final List<String> PROCESS_DATE_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-08");
 
     public static final List<String> PROCESS_DATE_NOT_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-04", "2014-04-07");
 
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
+
+    public static final Boolean RETRIEVE_INSTANCE_FLEETS = true;
 
     public static final Long ROW_COUNT = (long) (Math.random() * Long.MAX_VALUE);
 
