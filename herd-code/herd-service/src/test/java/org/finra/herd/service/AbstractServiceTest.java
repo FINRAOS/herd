@@ -198,6 +198,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String END_PARTITION_VALUE = "2014-04-08";
 
+    public static final DateTime END_TIME = getRandomDateTime();
+
     public static final String ERROR_MESSAGE = "UT_ErrorMessage_" + RANDOM_SUFFIX;
 
     public static final int EXPECTED_UUID_SIZE = 36;
@@ -392,6 +394,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String START_PARTITION_VALUE = "2014-04-02";
 
+    public static final DateTime START_TIME = getRandomDateTime();
+
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
 
     public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
@@ -416,6 +420,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String TEST_SQS_ENVIRONMENT = "testEnvironment";
 
     public static final String TEST_SQS_MESSAGE_CORRELATION_ID = "testCorrelationId";
+
+    public static final Boolean VERBOSE = true;
 
     public static final String ZERO_COLUMN_SIZE = "0";
 
