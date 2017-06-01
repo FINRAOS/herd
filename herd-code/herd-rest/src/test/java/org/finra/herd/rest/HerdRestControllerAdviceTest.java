@@ -18,16 +18,24 @@ package org.finra.herd.rest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.times;
+import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.ServletRequestDataBinder;
 
 import org.finra.herd.core.Command;
 import org.finra.herd.model.MethodNotAllowedException;
+import org.finra.herd.model.api.xml.ErrorInformation;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.ConfigurationEntity;
-import org.finra.herd.model.api.xml.ErrorInformation;
 import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
 
 /**
@@ -41,7 +49,7 @@ public class HerdRestControllerAdviceTest extends AbstractRestTest
 
     @Autowired
     protected HerdRestController herdRestController;
-    
+
     @Test
     public void testIsLoggingEnabled() throws Exception
     {
@@ -88,5 +96,16 @@ public class HerdRestControllerAdviceTest extends AbstractRestTest
         {
             assertEquals("The requested method is not allowed.", ex.getMessage());
         }
+    }
+
+    @Test
+    public void testInitBinder()
+    {
+        ServletRequestDataBinder binder = mock(ServletRequestDataBinder.class);
+        HttpServletRequest request = null;
+        doNothing().when(binder).registerCustomEditor(any(), any());
+        restControllerAdvice.initBinder(request, binder);
+        verify(binder, times(2)).registerCustomEditor(any(), any());
+        verifyNoMoreInteractions(binder);
     }
 }
