@@ -227,7 +227,7 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
 
         // Create a response.
         UploadSingleInitiationResponse response =
-            new UploadSingleInitiationResponse(sourceBusinessObjectData, targetBusinessObjectData, file, UUID, AWS_ASSUMED_ROLE_ACCESS_KEY,
+            new UploadSingleInitiationResponse(sourceBusinessObjectData, targetBusinessObjectData, file, UUID_VALUE, AWS_ASSUMED_ROLE_ACCESS_KEY,
                 AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME, AWS_KMS_KEY_ID, STORAGE_NAME);
 
         // Mock the external calls.

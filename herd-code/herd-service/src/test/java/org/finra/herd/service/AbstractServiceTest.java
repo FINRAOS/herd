@@ -423,7 +423,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String TEST_SQS_MESSAGE_CORRELATION_ID = "testCorrelationId";
 
-    public static final String UUID = "UT_Uuid_" + RANDOM_SUFFIX;
+    public static final String UUID_VALUE = "UT_UUID_Value_" + RANDOM_SUFFIX;
 
     public static final Boolean VERBOSE = true;
 
