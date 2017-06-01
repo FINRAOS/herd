@@ -49,11 +49,11 @@ import org.finra.herd.service.BusinessObjectDefinitionColumnService;
  */
 public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private BusinessObjectDefinitionColumnService businessObjectDefinitionColumnService;
-
     @InjectMocks
     private BusinessObjectDefinitionColumnRestController businessObjectDefinitionColumnRestController;
+
+    @Mock
+    private BusinessObjectDefinitionColumnService businessObjectDefinitionColumnService;
 
     @Before()
     public void before()
@@ -160,7 +160,7 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
 
         BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = new BusinessObjectDefinitionColumnSearchResponse(Arrays
             .asList(new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), COLUMN_NAME,
-                    BDEF_COLUMN_DESCRIPTION),
+                BDEF_COLUMN_DESCRIPTION),
                 new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), COLUMN_NAME_2,
                     BDEF_COLUMN_DESCRIPTION_2)));
 

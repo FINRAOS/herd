@@ -58,13 +58,13 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
 
     private static final String INDEX_SEARCH_RESULT_TYPE_TAG = "tagIndex";
 
+    private static final List<IndexSearchFilter> NO_SEARCH_FILTERS = null;
+
     private static final int ONE_TIME = 1;
 
     private static final String SEARCH_TERM = "Search Term";
 
     private static final int TOTAL_INDEX_SEARCH_RESULTS = 500;
-
-    private static final List<IndexSearchFilter> NO_SEARCH_FILTERS = null;
 
     @InjectMocks
     private IndexSearchRestController indexSearchRestController;
@@ -76,6 +76,61 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
     public void before()
     {
         MockitoAnnotations.initMocks(this);
+    }
+
+    public void testIndexSearch(List<IndexSearchFilter> indexSearchFilters, List<String> facetFields)
+    {
+        // Create index search request
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, facetFields, false);
+
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Create a new index search result key and populate it with a tag key
+        final IndexSearchResultKey indexSearchResultKeyTag = new IndexSearchResultKey(new TagKey(TAG_TYPE, TAG_CODE), null);
+
+        // Create a new index search result key and populate it with a tag key
+        final IndexSearchResultKey indexSearchResultKeyBusinessObjectDefinition =
+            new IndexSearchResultKey(null, new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
+
+        // Create a new index search results
+        final IndexSearchResult indexSearchResultTag =
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
+        final IndexSearchResult indexSearchResultBusinessObjectDefinition =
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
+                BDEF_SHORT_DESCRIPTION, null);
+
+        // Create a list to contain the index search results
+        final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
+        indexSearchResults.add(indexSearchResultTag);
+        indexSearchResults.add(indexSearchResultBusinessObjectDefinition);
+
+        List<Facet> facets = new ArrayList<>();
+        if (facetFields != null)
+        {
+            facets.add(new Facet("facet1", new Long(1), "type 1", "id", null));
+            facets.add(new Facet("facet2", new Long(2), "type 2", "id2", null));
+        }
+
+        // Construct an index search response
+        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
+
+        // Mock the call to the index search service
+        //Mockito.doReturn(indexSearchResponse).when(indexSearchService.indexSearch(indexSearchRequest, fields));
+
+        when(indexSearchService.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+
+        // Call the method under test
+        IndexSearchResponse indexSearchResponseFromRestCall = indexSearchRestController.indexSearch(fields, indexSearchRequest);
+
+        // Verify the method call to indexSearchService.indexSearch()
+        verify(indexSearchService, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
+        verifyNoMoreInteractions(indexSearchService);
+
+        // Validate the returned object.
+        assertThat("Index search response was null.", indexSearchResponseFromRestCall, not(nullValue()));
+        assertThat("Index search response was not correct.", indexSearchResponseFromRestCall, is(indexSearchResponse));
+        assertThat("Index search response was not an instance of IndexSearchResponse.class.", indexSearchResponse, instanceOf(IndexSearchResponse.class));
     }
 
     @Test
@@ -138,61 +193,6 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
         List<String> facetFields = Arrays.asList("ResultType", "Tag");
 
         testIndexSearch(indexSearchFilters, facetFields);
-    }
-
-    public void testIndexSearch(List<IndexSearchFilter> indexSearchFilters, List<String> facetFields)
-    {
-        // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, facetFields, false);
-
-        // Create a new fields set that will be used when testing the index search method
-        final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
-
-        // Create a new index search result key and populate it with a tag key
-        final IndexSearchResultKey indexSearchResultKeyTag = new IndexSearchResultKey(new TagKey(TAG_TYPE, TAG_CODE), null);
-
-        // Create a new index search result key and populate it with a tag key
-        final IndexSearchResultKey indexSearchResultKeyBusinessObjectDefinition =
-            new IndexSearchResultKey(null, new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
-
-        // Create a new index search results
-        final IndexSearchResult indexSearchResultTag =
-            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
-        final IndexSearchResult indexSearchResultBusinessObjectDefinition =
-            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
-                BDEF_SHORT_DESCRIPTION, null);
-
-        // Create a list to contain the index search results
-        final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
-        indexSearchResults.add(indexSearchResultTag);
-        indexSearchResults.add(indexSearchResultBusinessObjectDefinition);
-
-        List<Facet> facets = new ArrayList<>();
-        if (facetFields != null)
-        {
-            facets.add(new Facet("facet1", new Long(1), "type 1", "id", null));
-            facets.add(new Facet("facet2", new Long(2), "type 2", "id2", null));
-        }
-
-        // Construct an index search response
-        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
-
-        // Mock the call to the index search service
-        //Mockito.doReturn(indexSearchResponse).when(indexSearchService.indexSearch(indexSearchRequest, fields));
-
-        when(indexSearchService.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
-
-        // Call the method under test
-        IndexSearchResponse indexSearchResponseFromRestCall = indexSearchRestController.indexSearch(fields, indexSearchRequest);
-
-        // Verify the method call to indexSearchService.indexSearch()
-        verify(indexSearchService, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
-        verifyNoMoreInteractions(indexSearchService);
-
-        // Validate the returned object.
-        assertThat("Index search response was null.", indexSearchResponseFromRestCall, not(nullValue()));
-        assertThat("Index search response was not correct.", indexSearchResponseFromRestCall, is(indexSearchResponse));
-        assertThat("Index search response was not an instance of IndexSearchResponse.class.", indexSearchResponse, instanceOf(IndexSearchResponse.class));
     }
 
 }

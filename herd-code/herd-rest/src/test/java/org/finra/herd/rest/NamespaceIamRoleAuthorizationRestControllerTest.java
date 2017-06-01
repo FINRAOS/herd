@@ -51,6 +51,21 @@ public class NamespaceIamRoleAuthorizationRestControllerTest
     }
 
     /**
+     * Asserts that deleteNamespaceIamRoleAuthorization() calls service with correct parameters, and returns whatever the service returns.
+     */
+    @Test
+    public void deleteNamespaceIamRoleAuthorizationAssertCallsService()
+    {
+        String expectedNamespace = "namespace";
+        NamespaceIamRoleAuthorization expectedResult = new NamespaceIamRoleAuthorization();
+        when(namespaceIamRoleAuthorizationService.deleteNamespaceIamRoleAuthorization(any())).thenReturn(expectedResult);
+        NamespaceIamRoleAuthorization actualResult = namespaceIamRoleAuthorizationRestController.deleteNamespaceIamRoleAuthorization(expectedNamespace);
+        verify(namespaceIamRoleAuthorizationService).deleteNamespaceIamRoleAuthorization(expectedNamespace);
+        verifyNoMoreInteractions(namespaceIamRoleAuthorizationService);
+        assertEquals(expectedResult, actualResult);
+    }
+
+    /**
      * Asserts that getNamespaceIamRoleAuthorization() calls service with correct parameters, and returns whatever the service returns.
      */
     @Test
@@ -89,24 +104,9 @@ public class NamespaceIamRoleAuthorizationRestControllerTest
         NamespaceIamRoleAuthorizationUpdateRequest expectedRequest = new NamespaceIamRoleAuthorizationUpdateRequest();
         NamespaceIamRoleAuthorization expectedResult = new NamespaceIamRoleAuthorization();
         when(namespaceIamRoleAuthorizationService.updateNamespaceIamRoleAuthorization(any(), any())).thenReturn(expectedResult);
-        NamespaceIamRoleAuthorization actualResult = namespaceIamRoleAuthorizationRestController.updateNamespaceIamRoleAuthorization(expectedNamespace,
-            expectedRequest);
+        NamespaceIamRoleAuthorization actualResult =
+            namespaceIamRoleAuthorizationRestController.updateNamespaceIamRoleAuthorization(expectedNamespace, expectedRequest);
         verify(namespaceIamRoleAuthorizationService).updateNamespaceIamRoleAuthorization(expectedNamespace, expectedRequest);
-        verifyNoMoreInteractions(namespaceIamRoleAuthorizationService);
-        assertEquals(expectedResult, actualResult);
-    }
-
-    /**
-     * Asserts that deleteNamespaceIamRoleAuthorization() calls service with correct parameters, and returns whatever the service returns.
-     */
-    @Test
-    public void deleteNamespaceIamRoleAuthorizationAssertCallsService()
-    {
-        String expectedNamespace = "namespace";
-        NamespaceIamRoleAuthorization expectedResult = new NamespaceIamRoleAuthorization();
-        when(namespaceIamRoleAuthorizationService.deleteNamespaceIamRoleAuthorization(any())).thenReturn(expectedResult);
-        NamespaceIamRoleAuthorization actualResult = namespaceIamRoleAuthorizationRestController.deleteNamespaceIamRoleAuthorization(expectedNamespace);
-        verify(namespaceIamRoleAuthorizationService).deleteNamespaceIamRoleAuthorization(expectedNamespace);
         verifyNoMoreInteractions(namespaceIamRoleAuthorizationService);
         assertEquals(expectedResult, actualResult);
     }

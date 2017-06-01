@@ -42,11 +42,11 @@ import org.finra.herd.service.BusinessObjectDefinitionTagService;
  */
 public class BusinessObjectDefinitionTagRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private BusinessObjectDefinitionTagService businessObjectDefinitionTagService;
-
     @InjectMocks
     private BusinessObjectDefinitionTagRestController businessObjectDefinitionTagRestController;
+
+    @Mock
+    private BusinessObjectDefinitionTagService businessObjectDefinitionTagService;
 
     @Before()
     public void before()

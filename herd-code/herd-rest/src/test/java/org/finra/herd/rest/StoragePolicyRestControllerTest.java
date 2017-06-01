@@ -41,11 +41,11 @@ import org.finra.herd.service.StoragePolicyService;
  */
 public class StoragePolicyRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private StoragePolicyService storagePolicyService;
-
     @InjectMocks
     private StoragePolicyRestController storagePolicyRestController;
+
+    @Mock
+    private StoragePolicyService storagePolicyService;
 
     @Before()
     public void before()

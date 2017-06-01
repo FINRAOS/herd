@@ -28,7 +28,7 @@ public class DelimitedFieldValuesEditorTest extends AbstractRestTest
 {
     @Autowired
     DelimitedFieldValuesEditor delimitedFieldValuesEditor;
-    
+
     @Test
     public void testSetAsText()
     {
@@ -36,12 +36,12 @@ public class DelimitedFieldValuesEditorTest extends AbstractRestTest
         String[] expectedValues = {"TEST1", "TEST|2", "TEST3"};
 
         delimitedFieldValuesEditor.setAsText(StringUtils.join(values, "|"));
-        
+
         DelimitedFieldValues delimitedFieldValues = (DelimitedFieldValues) delimitedFieldValuesEditor.getValue();
-        
+
         assertEquals(StringUtils.join(values, "|"), delimitedFieldValues.getDelimitedValues());
-        
-        for(int i = 0; i < values.length; i++)
+
+        for (int i = 0; i < values.length; i++)
         {
             assertEquals(expectedValues[i], delimitedFieldValues.getValues().get(i));
         }

@@ -42,14 +42,14 @@ import org.finra.herd.service.NotificationEventService;
  */
 public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
 {
+    @InjectMocks
+    private BusinessObjectDataStatusRestController businessObjectDataStatusRestController;
+
     @Mock
     private BusinessObjectDataStatusService businessObjectDataStatusService;
 
     @Mock
     private NotificationEventService notificationEventService;
-
-    @InjectMocks
-    private BusinessObjectDataStatusRestController businessObjectDataStatusRestController;
 
     @Before()
     public void before()

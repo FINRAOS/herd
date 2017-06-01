@@ -41,11 +41,11 @@ import org.finra.herd.service.CustomDdlService;
  */
 public class CustomDdlRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private CustomDdlService customDdlService;
-
     @InjectMocks
     private CustomDdlRestController customDdlRestController;
+
+    @Mock
+    private CustomDdlService customDdlService;
 
     @Before()
     public void before()
@@ -77,6 +77,30 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
         verifyNoMoreInteractions(customDdlService);
         // Validate the returned object.
         assertEquals(customDdl, resultCustomDdl);
+    }
+
+    @Test
+    public void testDeleteCustomDdl()
+    {
+        CustomDdlKey customDdlKey = new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
+
+        CustomDdl customDdl = new CustomDdl(ID, customDdlKey, TEST_DDL);
+
+        when(customDdlService.deleteCustomDdl(customDdlKey)).thenReturn(customDdl);
+        // Delete this custom DDL.
+        CustomDdl deletedCustomDdl =
+            customDdlRestController.deleteCustomDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
+
+        // Validate the returned object.
+        customDdlServiceTestHelper
+            .validateCustomDdl(customDdl.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
+                deletedCustomDdl);
+
+        // Verify the external calls.
+        verify(customDdlService).deleteCustomDdl(customDdlKey);
+        verifyNoMoreInteractions(customDdlService);
+        // Validate the returned object.
+        assertEquals(customDdl, deletedCustomDdl);
     }
 
     @Test
@@ -145,29 +169,5 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
         verifyNoMoreInteractions(customDdlService);
         // Validate the returned object.
         assertEquals(customDdl, updatedCustomDdl);
-    }
-
-    @Test
-    public void testDeleteCustomDdl()
-    {
-        CustomDdlKey customDdlKey = new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
-
-        CustomDdl customDdl = new CustomDdl(ID, customDdlKey, TEST_DDL);
-
-        when(customDdlService.deleteCustomDdl(customDdlKey)).thenReturn(customDdl);
-        // Delete this custom DDL.
-        CustomDdl deletedCustomDdl =
-            customDdlRestController.deleteCustomDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
-
-        // Validate the returned object.
-        customDdlServiceTestHelper
-            .validateCustomDdl(customDdl.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
-                deletedCustomDdl);
-
-        // Verify the external calls.
-        verify(customDdlService).deleteCustomDdl(customDdlKey);
-        verifyNoMoreInteractions(customDdlService);
-        // Validate the returned object.
-        assertEquals(customDdl, deletedCustomDdl);
     }
 }

@@ -40,11 +40,11 @@ import org.finra.herd.service.PartitionKeyGroupService;
  */
 public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private PartitionKeyGroupService partitionKeyGroupService;
-
     @InjectMocks
     private PartitionKeyGroupRestController partitionKeyGroupRestController;
+
+    @Mock
+    private PartitionKeyGroupService partitionKeyGroupService;
 
     @Before()
     public void before()
@@ -71,6 +71,23 @@ public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
     }
 
     @Test
+    public void testDeletePartitionKeyGroup()
+    {
+        PartitionKeyGroup partitionKeyGroup = new PartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
+        PartitionKeyGroupKey partitionKeyGroupKey = new PartitionKeyGroupKey(PARTITION_KEY_GROUP);
+
+        when(partitionKeyGroupService.deletePartitionKeyGroup(partitionKeyGroupKey)).thenReturn(partitionKeyGroup);
+
+        // Delete this partition key group.
+        PartitionKeyGroup deletedPartitionKeyGroup = partitionKeyGroupRestController.deletePartitionKeyGroup(PARTITION_KEY_GROUP);
+        // Verify the external calls.
+        verify(partitionKeyGroupService).deletePartitionKeyGroup(partitionKeyGroupKey);
+        verifyNoMoreInteractions(partitionKeyGroupService);
+        // Validate the returned object.
+        assertEquals(partitionKeyGroup, deletedPartitionKeyGroup);
+    }
+
+    @Test
     public void testGetPartitionKeyGroup()
     {
         PartitionKeyGroup partitionKeyGroup = new PartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
@@ -86,23 +103,6 @@ public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
         verifyNoMoreInteractions(partitionKeyGroupService);
         // Validate the returned object.
         assertEquals(partitionKeyGroup, resultPartitionKeyGroup);
-    }
-
-    @Test
-    public void testDeletePartitionKeyGroup()
-    {
-        PartitionKeyGroup partitionKeyGroup = new PartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
-        PartitionKeyGroupKey partitionKeyGroupKey = new PartitionKeyGroupKey(PARTITION_KEY_GROUP);
-
-        when(partitionKeyGroupService.deletePartitionKeyGroup(partitionKeyGroupKey)).thenReturn(partitionKeyGroup);
-
-        // Delete this partition key group.
-        PartitionKeyGroup deletedPartitionKeyGroup = partitionKeyGroupRestController.deletePartitionKeyGroup(PARTITION_KEY_GROUP);
-        // Verify the external calls.
-        verify(partitionKeyGroupService).deletePartitionKeyGroup(partitionKeyGroupKey);
-        verifyNoMoreInteractions(partitionKeyGroupService);
-        // Validate the returned object.
-        assertEquals(partitionKeyGroup, deletedPartitionKeyGroup);
     }
 
     @Test

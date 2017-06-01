@@ -16,9 +16,9 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,11 +36,11 @@ import org.finra.herd.service.SubjectMatterExpertService;
  */
 public class SubjectMatterExpertRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private SubjectMatterExpertService subjectMatterExpertService;
-
     @InjectMocks
     private SubjectMatterExpertRestController subjectMatterExpertRestController;
+
+    @Mock
+    private SubjectMatterExpertService subjectMatterExpertService;
 
     @Before()
     public void before()

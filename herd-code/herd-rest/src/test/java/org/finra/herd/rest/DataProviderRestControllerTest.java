@@ -39,11 +39,11 @@ import org.finra.herd.service.DataProviderService;
  */
 public class DataProviderRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private DataProviderService dataProviderService;
-
     @InjectMocks
     private DataProviderRestController dataProviderRestController;
+
+    @Mock
+    private DataProviderService dataProviderService;
 
     @Before()
     public void before()
@@ -72,23 +72,6 @@ public class DataProviderRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testGetDataProvider() throws Exception
-    {
-        DataProvider dataProvider = new DataProvider(DATA_PROVIDER_NAME);
-        DataProviderKey dataProviderKey = new DataProviderKey(DATA_PROVIDER_NAME);
-        when(dataProviderService.getDataProvider(dataProviderKey)).thenReturn(dataProvider);
-
-        // Retrieve the data provider.
-        DataProvider resultDataProvider = dataProviderRestController.getDataProvider(DATA_PROVIDER_NAME);
-
-        // Verify the external calls.
-        verify(dataProviderService).getDataProvider(dataProviderKey);
-        verifyNoMoreInteractions(dataProviderService);
-        // Validate the returned object.
-        assertEquals(dataProvider, resultDataProvider);
-    }
-
-    @Test
     public void testDeleteDataProvider() throws Exception
     {
         // Create a data provider key.
@@ -104,6 +87,23 @@ public class DataProviderRestControllerTest extends AbstractRestTest
         verifyNoMoreInteractions(dataProviderService);
         // Validate the returned object.
         assertEquals(dataProvider, deletedDataProvider);
+    }
+
+    @Test
+    public void testGetDataProvider() throws Exception
+    {
+        DataProvider dataProvider = new DataProvider(DATA_PROVIDER_NAME);
+        DataProviderKey dataProviderKey = new DataProviderKey(DATA_PROVIDER_NAME);
+        when(dataProviderService.getDataProvider(dataProviderKey)).thenReturn(dataProvider);
+
+        // Retrieve the data provider.
+        DataProvider resultDataProvider = dataProviderRestController.getDataProvider(DATA_PROVIDER_NAME);
+
+        // Verify the external calls.
+        verify(dataProviderService).getDataProvider(dataProviderKey);
+        verifyNoMoreInteractions(dataProviderService);
+        // Validate the returned object.
+        assertEquals(dataProvider, resultDataProvider);
     }
 
     @Test

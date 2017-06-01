@@ -35,18 +35,18 @@ import org.finra.herd.service.BusinessObjectDataStorageFileService;
  */
 public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private BusinessObjectDataStorageFileService businessObjectDataStorageFileService;
-
     @InjectMocks
     private BusinessObjectDataStorageFileRestController businessObjectDataStorageFileRestController;
+
+    @Mock
+    private BusinessObjectDataStorageFileService businessObjectDataStorageFileService;
 
     @Before()
     public void before()
     {
         MockitoAnnotations.initMocks(this);
     }
-    
+
     @Test
     public void testCreateBusinessObjectDataStorageFiles()
     {
@@ -54,8 +54,7 @@ public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRes
 
         BusinessObjectDataStorageFilesCreateRequest request =
             new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION, STORAGE_NAME, null,
-                NO_DISCOVER_STORAGE_FILES);
+                null, DATA_VERSION, STORAGE_NAME, null, NO_DISCOVER_STORAGE_FILES);
 
         when(businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request)).thenReturn(response);
         BusinessObjectDataStorageFilesCreateResponse resultResponse = businessObjectDataStorageFileRestController.createBusinessObjectDataStorageFiles(request);

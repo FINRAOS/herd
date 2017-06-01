@@ -41,11 +41,11 @@ import org.finra.herd.service.BusinessObjectDefinitionSubjectMatterExpertService
  */
 public class BusinessObjectDefinitionSubjectMatterExpertRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private BusinessObjectDefinitionSubjectMatterExpertService businessObjectDefinitionSubjectMatterExpertService;
-
     @InjectMocks
     private BusinessObjectDefinitionSubjectMatterExpertRestController businessObjectDefinitionSubjectMatterExpertRestController;
+
+    @Mock
+    private BusinessObjectDefinitionSubjectMatterExpertService businessObjectDefinitionSubjectMatterExpertService;
 
     @Before()
     public void before()
