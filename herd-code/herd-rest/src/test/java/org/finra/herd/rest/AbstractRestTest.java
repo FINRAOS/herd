@@ -17,7 +17,6 @@ package org.finra.herd.rest;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 
@@ -31,108 +30,6 @@ import org.finra.herd.ui.AbstractUiTest;
 @WebAppConfiguration
 public abstract class AbstractRestTest extends AbstractUiTest
 {
-    @Autowired
-    protected BusinessObjectDataAttributeRestController businessObjectDataAttributeRestController;
-
-    @Autowired
-    protected BusinessObjectDataNotificationRegistrationRestController businessObjectDataNotificationRegistrationRestController;
-
-    @Autowired
-    protected BusinessObjectDataRestController businessObjectDataRestController;
-
-    @Autowired
-    protected BusinessObjectDataStatusRestController businessObjectDataStatusRestController;
-
-    @Autowired
-    protected BusinessObjectDataStorageFileRestController businessObjectDataStorageFileRestController;
-
-    @Autowired
-    protected BusinessObjectDefinitionColumnRestController businessObjectDefinitionColumnRestController;
-
-    @Autowired
-    protected BusinessObjectDefinitionRestController businessObjectDefinitionRestController;
-
-    @Autowired
-    protected BusinessObjectDefinitionSubjectMatterExpertRestController businessObjectDefinitionSubjectMatterExpertRestController;
-
-    @Autowired
-    protected BusinessObjectDefinitionTagRestController businessObjectDefinitionTagRestController;
-
-    @Autowired
-    protected BusinessObjectFormatRestController businessObjectFormatRestController;
-
-    @Autowired
-    protected CurrentUserRestController currentUserRestController;
-
-    @Autowired
-    protected CustomDdlRestController customDdlRestController;
-
-    @Autowired
-    protected DataProviderRestController dataProviderRestController;
-
-    @Autowired
-    protected EmrClusterDefinitionRestController emrClusterDefinitionRestController;
-
-    @Autowired
-    protected EmrRestController emrRestController;
-
-    @Autowired
-    protected ExpectedPartitionValueRestController expectedPartitionValueRestController;
-
-    @Autowired
-    protected FileTypeRestController fileTypeRestController;
-
-    @Autowired
-    protected HerdRestController herdRestController;
-
-    @Autowired
-    protected JobDefinitionRestController jobDefinitionRestController;
-
-    @Autowired
-    protected JobRestController jobRestController;
-
-    @Autowired
-    protected NamespaceRestController namespaceRestController;
-
-    @Autowired
-    protected NotificationRegistrationStatusRestController notificationRegistrationStatusRestController;
-
-    @Autowired
-    protected PartitionKeyGroupRestController partitionKeyGroupRestController;
-
-    @Autowired
-    protected StoragePlatformRestController storagePlatformRestController;
-
-    @Autowired
-    protected StoragePolicyRestController storagePolicyRestController;
-
-    @Autowired
-    protected StorageRestController storageRestController;
-
-    @Autowired
-    protected StorageUnitNotificationRegistrationRestController storageUnitNotificationRegistrationRestController;
-
-    @Autowired
-    protected SubjectMatterExpertRestController subjectMatterExpertRestController;
-
-    @Autowired
-    protected SystemJobRestController systemJobRestController;
-
-    @Autowired
-    protected TagRestController tagRestController;
-
-    @Autowired
-    protected TagTypeRestController tagTypeRestController;
-
-    @Autowired
-    protected AttributeValueListRestController attributeValueListRestController;
-
-    @Autowired
-    protected UploadDownloadRestController uploadDownloadRestController;
-
-    @Autowired
-    protected UserNamespaceAuthorizationRestController userNamespaceAuthorizationRestController;
-
     /**
      * Returns a DelimitedFieldValues instance initiated with the list values.
      *

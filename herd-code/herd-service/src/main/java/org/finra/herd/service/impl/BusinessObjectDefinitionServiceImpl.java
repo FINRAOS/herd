@@ -1115,13 +1115,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         BusinessObjectDefinition definition = new BusinessObjectDefinition();
 
         //populate namespace and business object definition name fields by default
-        definition.setNamespace(businessObjectDefinitionIndexSearchResponseDto.getNamespace());
+        definition.setNamespace(businessObjectDefinitionIndexSearchResponseDto.getNamespace().getCode());
         definition.setBusinessObjectDefinitionName(businessObjectDefinitionIndexSearchResponseDto.getName());
 
         //decorate object with only the required fields
         if (fields.contains(DATA_PROVIDER_NAME_FIELD))
         {
-            definition.setDataProviderName(businessObjectDefinitionIndexSearchResponseDto.getDataProvider());
+            definition.setDataProviderName(businessObjectDefinitionIndexSearchResponseDto.getDataProvider().getName());
         }
 
         if (fields.contains(SHORT_DESCRIPTION_FIELD))

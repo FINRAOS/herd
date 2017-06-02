@@ -16,34 +16,54 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-/*
- * Test the DelimitedFieldValuesEditor class.
- */
+import org.finra.herd.dao.helper.HerdStringHelper;
+
 public class DelimitedFieldValuesEditorTest extends AbstractRestTest
 {
-    @Autowired
-    DelimitedFieldValuesEditor delimitedFieldValuesEditor;
-    
+    @InjectMocks
+    private DelimitedFieldValuesEditor delimitedFieldValuesEditor;
+
+    @Mock
+    private HerdStringHelper herdStringHelper;
+
+    @Before
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testSetAsText()
     {
-        String[] values = {"TEST1", "TEST\\|2", "TEST3"};
-        String[] expectedValues = {"TEST1", "TEST|2", "TEST3"};
+        // Create a list of string values.
+        List<String> values = Arrays.asList(STRING_VALUE_2);
 
-        delimitedFieldValuesEditor.setAsText(StringUtils.join(values, "|"));
-        
-        DelimitedFieldValues delimitedFieldValues = (DelimitedFieldValues) delimitedFieldValuesEditor.getValue();
-        
-        assertEquals(StringUtils.join(values, "|"), delimitedFieldValues.getDelimitedValues());
-        
-        for(int i = 0; i < values.length; i++)
-        {
-            assertEquals(expectedValues[i], delimitedFieldValues.getValues().get(i));
-        }
+        // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(STRING_VALUE)).thenReturn(values);
+
+        // Call the method under test.
+        delimitedFieldValuesEditor.setAsText(STRING_VALUE);
+
+        // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(STRING_VALUE);
+        verifyNoMoreInteractions(herdStringHelper);
+
+        // Validate the results.
+        DelimitedFieldValues result = (DelimitedFieldValues) delimitedFieldValuesEditor.getValue();
+        assertEquals(STRING_VALUE, result.getDelimitedValues());
+        assertEquals(values, result.getValues());
     }
 }

@@ -89,12 +89,6 @@ insert into STRGE_PLCY_STTS_CD_LK (STRGE_PLCY_STTS_CD, STRGE_PLCY_STTS_DS, CREAT
 -- Security for JUnits (e.g. SecurityUserWrapperTest)
 insert into SCRTY_FN_LK (SCRTY_FN_CD, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USER_ID) values ('FN_BUSINESS_OBJECT_DEFINITIONS_POST', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
 
--- EC2 On-demand prices
-insert into EC2_OD_PRCNG_LK (EC2_OD_PRCNG_ID, RGN_NM, INSTC_TYPE, HRLY_PR, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USER_ID) values (1, 'REGION_1', 'INSTANCE_TYPE_1', '1.00', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
-insert into EC2_OD_PRCNG_LK (EC2_OD_PRCNG_ID, RGN_NM, INSTC_TYPE, HRLY_PR, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USER_ID) values (2, 'REGION_1', 'INSTANCE_TYPE_2', '1.00', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
-insert into EC2_OD_PRCNG_LK (EC2_OD_PRCNG_ID, RGN_NM, INSTC_TYPE, HRLY_PR, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USER_ID) values (3, 'REGION_1', 'INSTANCE_TYPE_3', '1.00', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
-insert into EC2_OD_PRCNG_LK (EC2_OD_PRCNG_ID, RGN_NM, INSTC_TYPE, HRLY_PR, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USER_ID) values (4, 'REGION_2', 'INSTANCE_TYPE_1', '0.50', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
-
 -- Notification Registration Status
 insert into ntfcn_rgstn_stts_cd_lk (ntfcn_rgstn_stts_cd, ntfcn_rgstn_stts_ds, creat_ts, creat_user_id, updt_ts, updt_user_id) values ('ENABLED', 'Enabled', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
 insert into ntfcn_rgstn_stts_cd_lk (ntfcn_rgstn_stts_cd, ntfcn_rgstn_stts_ds, creat_ts, creat_user_id, updt_ts, updt_user_id) values ('DISABLED', 'Disabled', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');

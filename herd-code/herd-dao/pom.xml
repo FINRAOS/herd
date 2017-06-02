@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.44.0-SNAPSHOT</version>
+      <version>0.45.0-SNAPSHOT</version>
    </parent>
 
    <name>herd dao</name>
@@ -202,6 +202,12 @@
       <dependency>
          <groupId>co.wrisk.jcredstash</groupId>
          <artifactId>jcredstash</artifactId>
+      </dependency>
+
+      <!-- A simple Java toolkit for JSON -->
+      <dependency>
+         <groupId>com.googlecode.json-simple</groupId>
+         <artifactId>json-simple</artifactId>
       </dependency>
 
    </dependencies>

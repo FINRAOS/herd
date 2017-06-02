@@ -17,20 +17,20 @@ package org.finra.herd.rest;
 
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Sets;
-import org.jsoup.Jsoup;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.core.HerdDateUtils;
-import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
@@ -42,10 +42,11 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
+import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.TagKey;
-import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
-import org.finra.herd.model.jpa.TagEntity;
-import org.finra.herd.model.jpa.TagTypeEntity;
+import org.finra.herd.service.BusinessObjectDefinitionService;
 
 /**
  * This class tests various functionality within the business object definition REST controller.
@@ -55,227 +56,251 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     // Constant to hold the data provider name option for the business object definition search
     public static final String FIELD_DATA_PROVIDER_NAME = "dataProviderName";
 
-    // Constant to hold the short description option for the business object definition search
-    public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
-
     // Constant to hold the display name option for the business object definition search
     public static final String FIELD_DISPLAY_NAME = "displayName";
 
-    @Test
-    public void testCreateBusinessObjectDefinition() throws Exception
-    {
-        // Create and persist database entities required for testing.
-        businessObjectDefinitionServiceTestHelper.createDatabaseEntitiesForBusinessObjectDefinitionTesting();
+    // Constant to hold the short description option for the business object definition search
+    public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
 
+    @InjectMocks
+    private BusinessObjectDefinitionRestController businessObjectDefinitionRestController;
+
+    @Mock
+    private BusinessObjectDefinitionService businessObjectDefinitionService;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testCreateBusinessObjectDefinition()
+    {
         // Create a business object definition.
         BusinessObjectDefinitionCreateRequest request =
-            new BusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes());
-        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionRestController.createBusinessObjectDefinition(request);
+            new BusinessObjectDefinitionCreateRequest(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)));
 
-        // Get the business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
-        assertNotNull(businessObjectDefinitionEntity);
+        // Create a business object definition.
+        BusinessObjectDefinition businessObjectDefinition =
+            new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+
+        // Mock the external calls.
+        when(businessObjectDefinitionService.createBusinessObjectDefinition(request)).thenReturn(businessObjectDefinition);
+
+        // Call the method under test.
+        BusinessObjectDefinition result = businessObjectDefinitionRestController.createBusinessObjectDefinition(request);
+
+        // Verify the external calls.
+        verify(businessObjectDefinitionService).createBusinessObjectDefinition(request);
+        verifyNoMoreInteractions(businessObjectDefinitionService);
 
         // Validate the returned object.
-        assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), resultBusinessObjectDefinition);
-
-        // Validate that the newly created entity uses system username for the relative auditable fields.
-        assertEquals(resultBusinessObjectDefinition.getId(), businessObjectDefinitionEntity.getId());
-        assertEquals(HerdDaoSecurityHelper.SYSTEM_USER, businessObjectDefinitionEntity.getCreatedBy());
-        assertEquals(HerdDaoSecurityHelper.SYSTEM_USER, businessObjectDefinitionEntity.getUpdatedBy());
+        assertEquals(businessObjectDefinition, result);
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinition() throws Exception
+    public void testDeleteBusinessObjectDefinition()
     {
-        // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+        // Create a business object definition key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
 
-        // Perform an update by changing the description and updating the attributes.
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME,
-            new BusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
+        // Create a business object definition.
+        BusinessObjectDefinition businessObjectDefinition =
+            new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+
+        // Mock the external calls.
+        when(businessObjectDefinitionService.deleteBusinessObjectDefinition(businessObjectDefinitionKey)).thenReturn(businessObjectDefinition);
+
+        // Call the method under test.
+        BusinessObjectDefinition result = businessObjectDefinitionRestController.deleteBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME);
+
+        // Verify the external calls.
+        verify(businessObjectDefinitionService).deleteBusinessObjectDefinition(businessObjectDefinitionKey);
+        verifyNoMoreInteractions(businessObjectDefinitionService);
 
         // Validate the returned object.
-        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2(),
-            NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
-            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())),
-            updatedBusinessObjectDefinition);
+        assertEquals(businessObjectDefinition, result);
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionMissingOptionalParametersPassedAsWhitespace()
+    public void testGetBusinessObjectDefinition()
     {
-        // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+        // Create a business object definition key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
 
-        // Perform an update without specifying any of the optional parameters (passing whitespace characters).
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME,
-            new BusinessObjectDefinitionUpdateRequest(BLANK_TEXT, BLANK_TEXT,
-                Collections.singletonList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT))));
+        // Create a business object definition.
+        BusinessObjectDefinition businessObjectDefinition =
+            new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
 
-        // Validate the returned object.
-        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT,
-            NO_BDEF_SHORT_DESCRIPTION, EMPTY_STRING, Collections.singletonList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT)),
-            NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
-            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())),
-            updatedBusinessObjectDefinition);
+        // Mock the external calls.
+        when(businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey)).thenReturn(businessObjectDefinition);
+
+        // Call the method under test.
+        BusinessObjectDefinition result = businessObjectDefinitionRestController.getBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME);
+
+        // Verify the external calls.
+        verify(businessObjectDefinitionService).getBusinessObjectDefinition(businessObjectDefinitionKey);
+        verifyNoMoreInteractions(businessObjectDefinitionService);
+
+        // Validate the results.
+        assertEquals(businessObjectDefinition, result);
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionMissingOptionalParametersPassedAsNulls()
+    public void testGetBusinessObjectDefinitions()
     {
-        // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+        // Create business object definition keys.
+        BusinessObjectDefinitionKeys businessObjectDefinitionKeys =
+            new BusinessObjectDefinitionKeys(Arrays.asList(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME)));
 
-        // Perform an update without specifying any of the optional parameters (passing null values).
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME,
-            new BusinessObjectDefinitionUpdateRequest(null, null, Collections.singletonList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null))));
+        // Mock the external calls.
+        when(businessObjectDefinitionService.getBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionKeys);
 
-        // Validate the returned object.
-        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, null,
-            Collections.singletonList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), updatedBusinessObjectDefinition);
+        // Call the method under test.
+        BusinessObjectDefinitionKeys result = businessObjectDefinitionRestController.getBusinessObjectDefinitions();
+
+        // Verify the external calls.
+        verify(businessObjectDefinitionService).getBusinessObjectDefinitions();
+        verifyNoMoreInteractions(businessObjectDefinitionService);
+
+        // Validate the results.
+        assertEquals(businessObjectDefinitionKeys, result);
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInformation() throws Exception
+    public void testGetBusinessObjectDefinitionsByNamespace()
     {
-        // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, NO_ATTRIBUTES);
+        // Create business object definition keys.
+        BusinessObjectDefinitionKeys businessObjectDefinitionKeys =
+            new BusinessObjectDefinitionKeys(Arrays.asList(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME)));
 
-        // Perform an update by changing the description and updating the attributes.
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController
-            .updateBusinessObjectDefinitionDescriptiveInformation(NAMESPACE, BDEF_NAME,
-                new BusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
-                    NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST));
+        // Mock the external calls.
+        when(businessObjectDefinitionService.getBusinessObjectDefinitions(BDEF_NAMESPACE)).thenReturn(businessObjectDefinitionKeys);
 
-        // Validate the returned object.
-        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), updatedBusinessObjectDefinition);
-    }
+        // Call the method under test.
+        BusinessObjectDefinitionKeys resultKeys = businessObjectDefinitionRestController.getBusinessObjectDefinitions(BDEF_NAMESPACE);
 
-    @Test
-    public void testGetBusinessObjectDefinition() throws Exception
-    {
-        // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles());
+        // Verify the external calls.
+        verify(businessObjectDefinitionService).getBusinessObjectDefinitions(BDEF_NAMESPACE);
+        verifyNoMoreInteractions(businessObjectDefinitionService);
 
-        // Retrieve the business object definition.
-        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionRestController.getBusinessObjectDefinition(NAMESPACE, BDEF_NAME);
-
-        // Validate the returned object.
-        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles(), businessObjectDefinitionEntity.getCreatedBy(),
-            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())),
-            resultBusinessObjectDefinition);
-    }
-
-    @Test
-    public void testGetBusinessObjectDefinitions() throws Exception
-    {
-        // Create and persist business object definition entities.
-        for (BusinessObjectDefinitionKey key : businessObjectDefinitionDaoTestHelper.getTestBusinessObjectDefinitionKeys())
-        {
-            businessObjectDefinitionDaoTestHelper
-                .createBusinessObjectDefinitionEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                    NO_BDEF_SHORT_DESCRIPTION, NO_ATTRIBUTES);
-        }
-
-        // Retrieve a list of business object definition keys for the specified namespace.
-        BusinessObjectDefinitionKeys resultKeys = businessObjectDefinitionRestController.getBusinessObjectDefinitions(NAMESPACE);
-
-        // Validate the returned object.
-        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeysForNamespace(), resultKeys.getBusinessObjectDefinitionKeys());
-    }
-
-    @Test
-    public void testDeleteBusinessObjectDefinition() throws Exception
-    {
-        // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes());
-
-        // Validate that this business object definition exists.
-        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        assertNotNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
-
-        // Delete this business object definition.
-        BusinessObjectDefinition deletedBusinessObjectDefinition = businessObjectDefinitionRestController.deleteBusinessObjectDefinition(NAMESPACE, BDEF_NAME);
-
-        // Validate the returned object.
-        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), deletedBusinessObjectDefinition);
-
-        // Ensure that this business object definition is no longer there.
-        assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
+        // Validate the results.
+        assertEquals(businessObjectDefinitionKeys, resultKeys);
     }
 
     @Test
     public void testSearchBusinessObjectDefinition()
     {
-        // Create and retrieve a list of business object definition entities.
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
-            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+        // Create a business object definition search request.
+        BusinessObjectDefinitionSearchRequest request = new BusinessObjectDefinitionSearchRequest(Arrays.asList(
+            new BusinessObjectDefinitionSearchFilter(EXCLUSION_SEARCH_FILTER,
+                Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY)))));
 
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+        // Create a business object definition.
+        BusinessObjectDefinition businessObjectDefinition =
+            new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
 
-        // Create a root tag entity for the tag type.
-        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        // Create a business object definition search response.
+        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse =
+            new BusinessObjectDefinitionSearchResponse(Arrays.asList(businessObjectDefinition));
 
-        // Create two children for the root tag.
-        TagEntity childTagEntity1 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, rootTagEntity);
-        TagEntity childTagEntity2 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, rootTagEntity);
-        TagEntity childTagEntity3 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4, rootTagEntity);
+        // Create a set of search optional fields.
+        Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
 
-        // Create association between business object definition and tag.
-        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), childTagEntity1);
-        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), childTagEntity2);
-        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(2), childTagEntity3);
+        // Mock the external calls.
+        when(businessObjectDefinitionService.searchBusinessObjectDefinitions(request, fields)).thenReturn(businessObjectDefinitionSearchResponse);
 
-        List<BusinessObjectDefinition> actualBusinessObjectDefinitions = new ArrayList<>();
-        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
-        {
-            String toParse = businessObjectDefinitionEntity.getDescription() != null ? businessObjectDefinitionEntity.getDescription() : "";
-            actualBusinessObjectDefinitions.add(
-                new BusinessObjectDefinition(null, businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(),
-                    businessObjectDefinitionEntity.getDataProvider().getName(), NO_BDEF_DESCRIPTION, Jsoup.parseBodyFragment(toParse).body().text(), null, null,
-                    null, null, null, null, null));
-        }
+        // Call the method under test.
+        BusinessObjectDefinitionSearchResponse result =
+            businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController.searchBusinessObjectDefinitions(fields, request);
 
-        // Tests with tag filter.
-        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController
-            .searchBusinessObjectDefinitions(Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION),
-                new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(false,
-                    Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))));
-        assertEquals(actualBusinessObjectDefinitions, businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions());
+        // Verify the external calls.
+        verify(businessObjectDefinitionService).searchBusinessObjectDefinitions(request, fields);
+        verifyNoMoreInteractions(businessObjectDefinitionService);
 
-        // Tests without tag filter.
-        businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController
-            .searchBusinessObjectDefinitions(Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION),
-                new BusinessObjectDefinitionSearchRequest());
-        assertEquals(actualBusinessObjectDefinitions, businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions());
+        // Validate the results.
+        assertEquals(businessObjectDefinitionSearchResponse, result);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinition()
+    {
+        // Create a business object definition key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
+
+        // Create a business object definition update request.
+        BusinessObjectDefinitionUpdateRequest businessObjectDefinitionUpdateRequest =
+            new BusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_2)));
+
+        // Create a business object definition.
+        BusinessObjectDefinition businessObjectDefinition =
+            new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+
+        // Mock the external calls.
+        when(businessObjectDefinitionService.updateBusinessObjectDefinition(businessObjectDefinitionKey, businessObjectDefinitionUpdateRequest))
+            .thenReturn(businessObjectDefinition);
+
+        // Call the method under test.
+        BusinessObjectDefinition result =
+            businessObjectDefinitionRestController.updateBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME, businessObjectDefinitionUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDefinitionService).updateBusinessObjectDefinition(businessObjectDefinitionKey, businessObjectDefinitionUpdateRequest);
+        verifyNoMoreInteractions(businessObjectDefinitionService);
+
+        // Validate the results.
+        assertEquals(businessObjectDefinition, result);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformation()
+    {
+        // Create a business object definition key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
+
+        // Create a business object definition descriptive information update request.
+        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request =
+            new BusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                new DescriptiveBusinessObjectFormatUpdateRequest(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE));
+
+        // Create a business object definition.
+        BusinessObjectDefinition businessObjectDefinition =
+            new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+
+        // Mock the external calls.
+        when(businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInformation(businessObjectDefinitionKey, request))
+            .thenReturn(businessObjectDefinition);
+
+        // Call the method under test.
+        BusinessObjectDefinition result =
+            businessObjectDefinitionRestController.updateBusinessObjectDefinitionDescriptiveInformation(BDEF_NAMESPACE, BDEF_NAME, request);
+
+        // Verify the external calls.
+        verify(businessObjectDefinitionService).updateBusinessObjectDefinitionDescriptiveInformation(businessObjectDefinitionKey, request);
+        verifyNoMoreInteractions(businessObjectDefinitionService);
+
+        // Validate the results.
+        assertEquals(businessObjectDefinition, result);
     }
 }

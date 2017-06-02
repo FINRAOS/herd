@@ -16,15 +16,23 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.SystemJobRunRequest;
 import org.finra.herd.model.api.xml.SystemJobRunResponse;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.service.SystemJobService;
 import org.finra.herd.service.systemjobs.FileUploadCleanupJob;
 import org.finra.herd.service.systemjobs.JmsPublishingJob;
 import org.finra.herd.service.systemjobs.StoragePolicySelectorJob;
@@ -34,6 +42,18 @@ import org.finra.herd.service.systemjobs.StoragePolicySelectorJob;
  */
 public class SystemJobRestControllerTest extends AbstractRestTest
 {
+    @InjectMocks
+    private SystemJobRestController systemJobRestController;
+
+    @Mock
+    private SystemJobService systemJobService;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testRunSystemJobFileUploadCleanup() throws Exception
     {
@@ -41,13 +61,20 @@ public class SystemJobRestControllerTest extends AbstractRestTest
         SystemJobRunRequest systemJobRunRequest = new SystemJobRunRequest(FileUploadCleanupJob.JOB_NAME,
             Arrays.asList(new Parameter(ConfigurationValue.FILE_UPLOAD_CLEANUP_JOB_THRESHOLD_MINUTES.getKey(), String.valueOf(INTEGER_VALUE))));
 
+        SystemJobRunResponse systemJobRunResponse = new SystemJobRunResponse(FileUploadCleanupJob.JOB_NAME,
+            Arrays.asList(new Parameter(ConfigurationValue.FILE_UPLOAD_CLEANUP_JOB_THRESHOLD_MINUTES.getKey(), String.valueOf(INTEGER_VALUE))));
+
+        when(systemJobService.runSystemJob(systemJobRunRequest)).thenReturn(systemJobRunResponse);
+
         // Request to run the system job.
         SystemJobRunResponse resultSystemJobRunResponse = systemJobRestController.runSystemJob(systemJobRunRequest);
 
+        // Verify the external calls.
+        verify(systemJobService).runSystemJob(systemJobRunRequest);
+        verifyNoMoreInteractions(systemJobService);
+
         // Validate the returned object.
-        assertEquals(new SystemJobRunResponse(FileUploadCleanupJob.JOB_NAME,
-            Arrays.asList(new Parameter(ConfigurationValue.FILE_UPLOAD_CLEANUP_JOB_THRESHOLD_MINUTES.getKey(), String.valueOf(INTEGER_VALUE)))),
-            resultSystemJobRunResponse);
+        assertEquals(systemJobRunResponse, resultSystemJobRunResponse);
     }
 
     @Test
@@ -55,12 +82,19 @@ public class SystemJobRestControllerTest extends AbstractRestTest
     {
         // Create the system job run request.
         SystemJobRunRequest systemJobRunRequest = new SystemJobRunRequest(JmsPublishingJob.JOB_NAME, null);
+        SystemJobRunResponse systemJobRunResponse = new SystemJobRunResponse(JmsPublishingJob.JOB_NAME, null);
+
+        when(systemJobService.runSystemJob(systemJobRunRequest)).thenReturn(systemJobRunResponse);
 
         // Request to run the system job.
         SystemJobRunResponse resultSystemJobRunResponse = systemJobRestController.runSystemJob(systemJobRunRequest);
 
+        // Verify the external calls.
+        verify(systemJobService).runSystemJob(systemJobRunRequest);
+        verifyNoMoreInteractions(systemJobService);
+
         // Validate the returned object.
-        assertEquals(new SystemJobRunResponse(JmsPublishingJob.JOB_NAME, null), resultSystemJobRunResponse);
+        assertEquals(systemJobRunResponse, resultSystemJobRunResponse);
     }
 
     @Test
@@ -69,13 +103,18 @@ public class SystemJobRestControllerTest extends AbstractRestTest
         // Create the system job run request.
         SystemJobRunRequest systemJobRunRequest = new SystemJobRunRequest(StoragePolicySelectorJob.JOB_NAME,
             Arrays.asList(new Parameter(ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES.getKey(), String.valueOf(INTEGER_VALUE))));
+        SystemJobRunResponse systemJobRunResponse = new SystemJobRunResponse(StoragePolicySelectorJob.JOB_NAME,
+            Arrays.asList(new Parameter(ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES.getKey(), String.valueOf(INTEGER_VALUE))));
 
+        when(systemJobService.runSystemJob(systemJobRunRequest)).thenReturn(systemJobRunResponse);
         // Request to run the system job.
         SystemJobRunResponse resultSystemJobRunResponse = systemJobRestController.runSystemJob(systemJobRunRequest);
 
+        // Verify the external calls.
+        verify(systemJobService).runSystemJob(systemJobRunRequest);
+        verifyNoMoreInteractions(systemJobService);
+
         // Validate the returned object.
-        assertEquals(new SystemJobRunResponse(StoragePolicySelectorJob.JOB_NAME,
-            Arrays.asList(new Parameter(ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES.getKey(), String.valueOf(INTEGER_VALUE)))),
-            resultSystemJobRunResponse);
+        assertEquals(systemJobRunResponse, resultSystemJobRunResponse);
     }
 }

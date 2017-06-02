@@ -41,16 +41,15 @@ import org.finra.herd.service.GlobalAttributeDefinitionService;
  */
 public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private GlobalAttributeDefinitionService globalAttributeDefinitionService;
+    private AttributeValueListKey attributeValueListKeyNull = null;
+
+    private AttributeValueList attributeValueListNull = null;
 
     @InjectMocks
     private GlobalAttributeDefinitionRestController globalAttributeDefinitionRestController;
 
-
-    private AttributeValueListKey attributeValueListKeyNull = null;
-
-    private AttributeValueList attributeValueListNull = null;
+    @Mock
+    private GlobalAttributeDefinitionService globalAttributeDefinitionService;
 
     @Before()
     public void before()
@@ -112,30 +111,6 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
     }
 
     @Test
-    public void testGetGlobalAttributeDefinitions()
-    {
-        // Create a list of global attribute definition keys.
-        GlobalAttributeDefinitionKeys globalAttributeDefinitionKeys = new GlobalAttributeDefinitionKeys(Arrays
-            .asList(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME),
-                new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2)));
-
-        // Mock calls to external methods.
-        when(globalAttributeDefinitionService.getGlobalAttributeDefinitionKeys()).thenReturn(globalAttributeDefinitionKeys);
-
-        // Call the method under test.
-        GlobalAttributeDefinitionKeys response = globalAttributeDefinitionRestController.getGlobalAttributeDefinitions();
-
-        // Verify the external calls.
-        verify(globalAttributeDefinitionService).getGlobalAttributeDefinitionKeys();
-        verifyNoMoreInteractions(globalAttributeDefinitionService);
-
-        // Validate the response.
-        assertEquals(new GlobalAttributeDefinitionKeys(Arrays
-            .asList(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME),
-                new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2))), response);
-    }
-
-    @Test
     public void testGetGlobalAttributeDefinition()
     {
         // Create a global attribute definition key.
@@ -159,5 +134,29 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
 
         // Validate the response.
         assertEquals(globalAttributeDefinition, response);
+    }
+
+    @Test
+    public void testGetGlobalAttributeDefinitions()
+    {
+        // Create a list of global attribute definition keys.
+        GlobalAttributeDefinitionKeys globalAttributeDefinitionKeys = new GlobalAttributeDefinitionKeys(Arrays
+            .asList(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME),
+                new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2)));
+
+        // Mock calls to external methods.
+        when(globalAttributeDefinitionService.getGlobalAttributeDefinitionKeys()).thenReturn(globalAttributeDefinitionKeys);
+
+        // Call the method under test.
+        GlobalAttributeDefinitionKeys response = globalAttributeDefinitionRestController.getGlobalAttributeDefinitions();
+
+        // Verify the external calls.
+        verify(globalAttributeDefinitionService).getGlobalAttributeDefinitionKeys();
+        verifyNoMoreInteractions(globalAttributeDefinitionService);
+
+        // Validate the response.
+        assertEquals(new GlobalAttributeDefinitionKeys(Arrays
+            .asList(new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME),
+                new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2))), response);
     }
 }

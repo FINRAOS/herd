@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,12 +23,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.amazonaws.services.s3.AmazonS3;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -111,7 +114,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AWS_KMS_KEY_ID = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
 
-    public static final String AWS_REGION = "UT_Region" + RANDOM_SUFFIX;
+    public static final String AWS_PRE_SIGNED_URL = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME = "UT_AwsRegionName_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME_2 = "UT_AwsRegionName_2_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME_3 = "UT_AwsRegionName_3_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME_4 = "UT_AwsRegionName_4_" + RANDOM_SUFFIX;
 
     public static final String AWS_ROLE_ARN = "UT_AwsRoleArn" + RANDOM_SUFFIX;
 
@@ -207,6 +218,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CORRELATION_DATA_3 = "UT_Correlation_Data_3" + RANDOM_SUFFIX;
 
+    public static final String CREATED_BY = "UT_CreatedBy_" + RANDOM_SUFFIX;
+
     public static final XMLGregorianCalendar CREATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String CUSTOM_DDL_NAME = "UT_CustomDdl" + RANDOM_SUFFIX;
@@ -222,6 +235,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer DATA_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
 
+    public static final Integer DATA_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
+
     public static final String DESCRIPTION = "UT_Description_1_" + RANDOM_SUFFIX;
 
     public static final String DESCRIPTION_2 = "UT_Description_2_" + RANDOM_SUFFIX;
@@ -234,7 +249,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
 
-    public static final String EC2_INSTANCE_TYPE = "UT_Ec2InstanceType" + RANDOM_SUFFIX;
+    public static final String EC2_INSTANCE_TYPE = "UT_Ec2InstanceType_1_" + RANDOM_SUFFIX;
+
+    public static final String EC2_INSTANCE_TYPE_2 = "UT_Ec2InstanceType_2_" + RANDOM_SUFFIX;
+
+    public static final String EC2_INSTANCE_TYPE_3 = "UT_Ec2InstanceType_3_" + RANDOM_SUFFIX;
+
+    public static final String EC2_INSTANCE_TYPE_4 = "UT_Ec2InstanceType_4_" + RANDOM_SUFFIX;
 
     public static final String EC2_SECURITY_GROUP_1 = "UT_Ec2SecurityGroup1" + RANDOM_SUFFIX;
 
@@ -312,9 +333,19 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
 
+    public static final BigDecimal HOURLY_PRICE = getRandomBigDecimal();
+
+    public static final BigDecimal HOURLY_PRICE_2 = getRandomBigDecimal();
+
+    public static final BigDecimal HOURLY_PRICE_3 = getRandomBigDecimal();
+
+    public static final BigDecimal HOURLY_PRICE_4 = getRandomBigDecimal();
+
+    public static final BigDecimal HOURLY_PRICE_5 = getRandomBigDecimal();
+
     public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
 
-    public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * Integer.MAX_VALUE);
+    public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 
@@ -340,6 +371,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String JOB_DESCRIPTION = "UT_JobDescription" + RANDOM_SUFFIX;
 
+    public static final String JOB_ID = "UT_JobId_" + RANDOM_SUFFIX;
+
     public static final String JOB_NAME = "UT_Job" + RANDOM_SUFFIX;
 
     public static final String JOB_NAMESPACE = "UT_Job_Namespace" + RANDOM_SUFFIX;
@@ -352,7 +385,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String JOB_NAME_3 = "UT_Job_3" + RANDOM_SUFFIX;
 
+    public static final String JOB_RECEIVE_TASK_ID = "UT_JobReceiveTaskId_" + RANDOM_SUFFIX;
+
     public static final String JSON_STRING = "UT_JsonString_" + RANDOM_SUFFIX;
+
+    public static final String KEY = "UT_Key_" + RANDOM_SUFFIX;
 
     public static final Boolean LATEST_VERSION_FLAG_SET = true;
 
@@ -395,13 +432,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NESTED_AGGREGATION_NAME = "UT_NestedAggregationName_" + RANDOM_SUFFIX;
 
-    public static final String NOTIFICATION_EVENT_TYPE = "UT_Ntfcn_Event" + RANDOM_SUFFIX;
+    public static final String NOTIFICATION_EVENT_TYPE = "UT_NotificationEventType_1_" + RANDOM_SUFFIX;
 
-    public static final String NOTIFICATION_EVENT_TYPE_2 = "UT_Ntfcn_Event_2" + RANDOM_SUFFIX;
+    public static final String NOTIFICATION_EVENT_TYPE_2 = "UT_NotificationEventType_2_" + RANDOM_SUFFIX;
 
     public static final String NOTIFICATION_NAME = "UT_Ntfcn_Name" + RANDOM_SUFFIX;
 
     public static final String NOTIFICATION_NAME_2 = "UT_Ntfcn_Name_2" + RANDOM_SUFFIX;
+
+    public static final String NOTIFICATION_REGISTRATION_STATUS = "UT_NotificationRegistrationStatus_1_" + RANDOM_SUFFIX;
 
     public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
 
@@ -450,6 +489,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_FORMAT_USAGE_CODE = null;
 
     public static final Integer NO_FORMAT_VERSION = null;
+
+    public static final BigDecimal NO_HOURLY_PRICE = null;
 
     public static final Boolean NO_IS_PARENT_TAG_NULL_FLAG = null;
 
@@ -504,6 +545,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_TAG_DISPLAY_NAME = null;
 
     public static final Boolean NO_TAG_HAS_CHILDREN_FLAG = null;
+
+    public static final BigDecimal NO_TAG_SEARCH_SCORE_MULTIPLIER = null;
 
     public static final String NO_TAG_TYPE_DESCRIPTION = null;
 
@@ -643,6 +686,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SESSION_NAME = "UT_SessionName" + RANDOM_SUFFIX;
 
+    public static final String SHORT_DESCRIPTION = "UT_ShortDescription" + RANDOM_SUFFIX;
+
     public static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
 
     public static final String SINGLE_QUOTE = "'";
@@ -776,6 +821,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final float TAG_INDEX_BOOST = 1000f;
 
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER = getRandomBigDecimal();
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_2 = getRandomBigDecimal();
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_3 = getRandomBigDecimal();
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_4 = getRandomBigDecimal();
+
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
@@ -820,6 +873,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<String> UNSORTED_PARTITION_VALUES =
         Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
 
+    public static final String UPDATED_BY = "UT_UpdatedBy_" + RANDOM_SUFFIX;
+
     public static final XMLGregorianCalendar UPDATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
@@ -837,6 +892,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String USER_JOB_TITLE = "UT_User_Job_Title_" + RANDOM_SUFFIX;
 
     public static final String USER_TELEPHONE_NUMBER = "UT_User_Telephone_Number_" + RANDOM_SUFFIX;
+
+    public static final String VALUE = "UT_Value_" + RANDOM_SUFFIX;
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 
@@ -928,6 +985,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected Ec2Dao ec2Dao;
 
     @Autowired
+    protected Ec2OnDemandPricingDao ec2OnDemandPricingDao;
+
+    @Autowired
+    protected Ec2OnDemandPricingDaoTestHelper ec2OnDemandPricingDaoTestHelper;
+
+    @Autowired
     protected EmrClusterDefinitionDao emrClusterDefinitionDao;
 
     @Autowired
@@ -1010,15 +1073,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected NotificationRegistrationStatusDao notificationRegistrationStatusDao;
 
     @Autowired
-    protected OnDemandPriceDao onDemandPriceDao;
-
-    @Autowired
     protected PartitionKeyGroupDao partitionKeyGroupDao;
 
     @Autowired
     protected PartitionKeyGroupDaoTestHelper partitionKeyGroupDaoTestHelper;
 
-    // Provide easy access to the S3 DAO for all test methods.
     @Autowired
     protected S3Dao s3Dao;
 
@@ -1147,6 +1206,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected UserNamespaceAuthorizationDaoTestHelper userNamespaceAuthorizationDaoTestHelper;
+
+    /**
+     * Returns a random timestamp.
+     */
+    public static DateTime getRandomDateTime()
+    {
+        return new DateTime(new Random().nextLong()).withMillisOfSecond(0);
+    }
 
     /**
      * Modifies the re-loadable property source. Copies all the existing properties and overrides with the properties passed in the map.

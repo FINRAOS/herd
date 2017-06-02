@@ -24,11 +24,11 @@ import org.finra.herd.service.AllowedAttributeValueService;
  */
 public class AllowedAttributeValueRestControllerTest extends AbstractRestTest
 {
-    @Mock
-    private AllowedAttributeValueService allowedAttributeValueService;
-
     @InjectMocks
     private AllowedAttributeValueRestController allowedAttributeValueRestController;
+
+    @Mock
+    private AllowedAttributeValueService allowedAttributeValueService;
 
     @Before()
     public void before()

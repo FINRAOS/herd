@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.simple.JSONObject;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,6 +28,35 @@ import org.springframework.stereotype.Component;
 @Component
 public class JsonHelper
 {
+    /**
+     * Gets key value from the specified JSON object. The method throws an exception, when specified key does not exist.
+     *
+     * @param jsonObject the JSON object that contains the key value
+     * @param key the key name
+     * @param classType the class to cast the result to
+     * @param <T> the return type
+     *
+     * @return the key value
+     */
+    public <T> T getKeyValue(JSONObject jsonObject, Object key, Class<T> classType)
+    {
+        Object result = jsonObject.get(key);
+
+        if (result == null)
+        {
+            throw new IllegalArgumentException(String.format("Failed to get \"%s\" key value from JSON object.", key.toString()));
+        }
+
+        try
+        {
+            return classType.cast(result);
+        }
+        catch (ClassCastException e)
+        {
+            throw new IllegalArgumentException(String.format("Failed to cast \"%s\" key value to %s.", result.toString(), classType.getName()), e);
+        }
+    }
+
     /**
      * Serializes any Java value as JSON output.
      *
