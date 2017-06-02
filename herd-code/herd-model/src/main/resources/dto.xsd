@@ -85,13 +85,14 @@
       </xs:sequence>
    </xs:complexType>
 
+   <!-- This object is used to parse Elasticsearch responses. Do not modify this DTO unless there are changes done to the relative Elasticsearch index. -->
    <xs:complexType name="businessObjectDefinitionIndexSearchResponseDto">
       <xs:sequence>
-         <xs:element name="dataProvider" type="xs:string" minOccurs="0"/>
+         <xs:element name="dataProvider" type="dataProvider" minOccurs="0"/>
          <xs:element name="description" type="xs:string" minOccurs="0"/>
          <xs:element name="displayName" type="xs:string" minOccurs="0"/>
          <xs:element name="name" type="xs:string" minOccurs="0"/>
-         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+         <xs:element name="namespace" type="namespace" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 
@@ -120,6 +121,12 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="dataProvider">
+      <xs:sequence>
+         <xs:element name="name" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="date">
       <xs:annotation>
          <xs:appinfo>
@@ -132,6 +139,21 @@
       <xs:sequence>
          <xs:element name="lowerDate" type="date" minOccurs="0"/>
          <xs:element name="upperDate" type="date" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="ec2OnDemandPricing">
+      <xs:sequence>
+         <xs:element name="ec2OnDemandPricingKey" type="ec2OnDemandPricingKey" minOccurs="0"/>
+         <xs:element name="pricePerHour" type="xs:decimal" minOccurs="0"/>
+         <xs:element name="sku" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="ec2OnDemandPricingKey">
+      <xs:sequence>
+         <xs:element name="regionName" type="xs:string" minOccurs="0"/>
+         <xs:element name="instanceType" type="xs:string" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 
@@ -244,6 +266,12 @@
       <xs:sequence>
          <xs:element name="namespace" type="xs:string" minOccurs="0"/>
          <xs:element name="jobName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="namespace">
+      <xs:sequence>
+         <xs:element name="code" type="xs:string" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 

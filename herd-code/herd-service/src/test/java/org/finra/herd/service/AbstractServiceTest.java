@@ -152,13 +152,17 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH = "classpath:org/finra/herd/service/testHerdUserTaskWorkflow.bpmn20.xml";
 
-    public static final Boolean ALLOW_MISSING_DATA = true;
-
     public static final String ALLOWED_ATTRIBUTE_VALUE = "Attribute_Value_1";
 
     public static final String ALLOWED_ATTRIBUTE_VALUE_2 = "Attribute_Value_2";
 
+    public static final Boolean ALLOW_MISSING_DATA = true;
+
+    public static final String AWS_SECURITY_GROUP_ID = "UT_AwsSecurityGroupId_" + RANDOM_SUFFIX;
+
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
+
+    public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
 
@@ -170,9 +174,35 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean DISCOVER_STORAGE_FILES = true;
 
+    public static final Boolean DRY_RUN = true;
+
+    public static final String EC2_PRICING_LIST_URL = "UT_Ec2PricingListUrl_" + RANDOM_SUFFIX;
+
+    public static final String EC2_PRODUCT_KEY = "UT_EC2_ProductKey_1_" + RANDOM_SUFFIX;
+
+    public static final String EC2_PRODUCT_KEY_2 = "UT_EC2_ProductKey_2_" + RANDOM_SUFFIX;
+
+    public static final String EMR_CLUSTER_ID = "UT_EMR_Cluster_ID_" + RANDOM_SUFFIX;
+
+    public static final Boolean EMR_CLUSTER_VERBOSE_FLAG = true;
+
+    public static final String EMR_STEP_ID = "UT_EMR_Step_ID_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_JAR_LOCATION = "UT_EMR_Step_JAR_Location_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_MAIN_CLASS = "UT_EMR_Step_MainClass_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_NAME = "UT_EMR_Step_Name_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_SCRIPT_LOCATION = "UT_EMR_Step_Script_Location_" + RANDOM_SUFFIX;
+
     public static final String END_PARTITION_VALUE = "2014-04-08";
 
+    public static final DateTime END_TIME = getRandomDateTime();
+
     public static final String ERROR_MESSAGE = "UT_ErrorMessage_" + RANDOM_SUFFIX;
+
+    public static final Boolean EXCLUSION_SEARCH_FILTER = true;
 
     public static final int EXPECTED_UUID_SIZE = 36;
 
@@ -206,6 +236,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
 
     public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
+
+    public static final Integer ID = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final Integer ID_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
@@ -297,6 +331,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
 
+    public static final String NO_SKU = null;
+
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;
 
     public static final DateTime NO_START_TIME = null;
@@ -313,11 +349,15 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String NO_USER_ID = null;
 
+    public static final Boolean OVERRIDE_TERMINATION_PROTECTION = true;
+
     public static final List<String> PROCESS_DATE_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-08");
 
     public static final List<String> PROCESS_DATE_NOT_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-04", "2014-04-07");
 
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
+
+    public static final Boolean RETRIEVE_INSTANCE_FLEETS = true;
 
     public static final Long ROW_COUNT = (long) (Math.random() * Long.MAX_VALUE);
 
@@ -352,9 +392,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     public static final int SHORT_DESCRIPTION_LENGTH = 300;
 
+    public static final String SKU = "UT_SKU_Value_" + RANDOM_SUFFIX;
+
     public static final String SQS_QUEUE_NAME = "UT_Sqs_Queue_Name_" + RANDOM_SUFFIX;
 
     public static final String START_PARTITION_VALUE = "2014-04-02";
+
+    public static final DateTime START_TIME = getRandomDateTime();
 
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
 
@@ -380,6 +424,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String TEST_SQS_ENVIRONMENT = "testEnvironment";
 
     public static final String TEST_SQS_MESSAGE_CORRELATION_ID = "testCorrelationId";
+
+    public static final String UUID_VALUE = "UT_UUID_Value_" + RANDOM_SUFFIX;
+
+    public static final Boolean VERBOSE = true;
 
     public static final String ZERO_COLUMN_SIZE = "0";
 

@@ -15,18 +15,24 @@
 */
 package org.finra.herd.dao;
 
-import org.finra.herd.model.jpa.OnDemandPriceEntity;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Proxy;
+import java.net.URL;
 
-public interface OnDemandPriceDao extends BaseJpaDao
+/**
+ * URL operations service.
+ */
+public interface UrlOperations
 {
     /**
-     * Returns the on-demand price with the specified region and instance type. Returns {@code null} if no on-demand price is found. Throws an exception when
-     * more than 1 on-demand price is found.
+     * Opens a connection to the specified URL and returns an input stream for reading from that connection.
      *
-     * @param region The on-demand price's region.
-     * @param instanceType The on-demand price's instance type.
+     * @param url the URL object
+     * @param proxy the the Proxy through which this connection will be made
      *
-     * @return The on-demand price.
+     * @return an input stream for reading from the URL connection
+     * @throws IOException if an I/O exception occurs
      */
-    public OnDemandPriceEntity getOnDemandPrice(String region, String instanceType);
+    public InputStream openStream(URL url, Proxy proxy) throws IOException;
 }

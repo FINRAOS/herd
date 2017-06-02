@@ -20,16 +20,24 @@ import static org.junit.Assert.assertNull;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
 
 /*
  * Test the DateTimeEditor class.
  */
 public class DateTimeEditorTest extends AbstractRestTest
 {
-    @Autowired
+    @InjectMocks
     DateTimeEditor dateTimeEditor;
+
+    @Before
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
 
     @Test
     public void testSetAsText()

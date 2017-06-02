@@ -16,30 +16,54 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.api.xml.NotificationRegistrationStatusUpdateRequest;
 import org.finra.herd.model.api.xml.NotificationRegistrationStatusUpdateResponse;
 import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
+import org.finra.herd.service.NotificationRegistrationStatusService;
 
 public class NotificationRegistrationStatusRestControllerTest extends AbstractRestTest
 {
+    @InjectMocks
+    private NotificationRegistrationStatusRestController notificationRegistrationStatusRestController;
+
+    @Mock
+    private NotificationRegistrationStatusService notificationRegistrationStatusService;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testUpdateNotificationRegistrationStatusAssertSuccess()
     {
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
-        notificationRegistrationDaoTestHelper
-            .createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
-                notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
+        NotificationRegistrationStatusUpdateRequest request = new NotificationRegistrationStatusUpdateRequest(NotificationRegistrationStatusEntity.DISABLED);
+        NotificationRegistrationStatusUpdateResponse response =
+            new NotificationRegistrationStatusUpdateResponse(notificationRegistrationKey, NotificationRegistrationStatusEntity.DISABLED);
 
-        NotificationRegistrationStatusUpdateResponse response = notificationRegistrationStatusRestController
-            .updateNotificationRegistrationStatus(NAMESPACE, NOTIFICATION_NAME,
-                new NotificationRegistrationStatusUpdateRequest(NotificationRegistrationStatusEntity.DISABLED));
+        when(notificationRegistrationStatusService.updateNotificationRegistrationStatus(NAMESPACE, NOTIFICATION_NAME, request)).thenReturn(response);
 
-        assertEquals(new NotificationRegistrationStatusUpdateResponse(notificationRegistrationKey, NotificationRegistrationStatusEntity.DISABLED), response);
+        NotificationRegistrationStatusUpdateResponse resultResponse =
+            notificationRegistrationStatusRestController.updateNotificationRegistrationStatus(NAMESPACE, NOTIFICATION_NAME, request);
+
+        // Verify the external calls.
+        verify(notificationRegistrationStatusService).updateNotificationRegistrationStatus(NAMESPACE, NOTIFICATION_NAME, request);
+        verifyNoMoreInteractions(notificationRegistrationStatusService);
+        // Validate the returned object.
+        assertEquals(response, resultResponse);
     }
 }

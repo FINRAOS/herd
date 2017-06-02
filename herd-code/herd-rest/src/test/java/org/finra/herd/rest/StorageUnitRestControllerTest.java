@@ -54,36 +54,6 @@ public class StorageUnitRestControllerTest
     }
 
     @Test
-    public void getStorageUnitUploadCredential()
-    {
-        String namespace = "namespace";
-        String businessObjectDefinitionName = "businessObjectDefinitionName";
-        String businessObjectFormatUsage = "businessObjectFormatUsage";
-        String businessObjectFormatFileType = "businessObjectFormatFileType";
-        Integer businessObjectFormatVersion = 1234;
-        String partitionValue = "partitionValue";
-        Integer businessObjectDataVersion = 2345;
-        String storageName = "storageName";
-        DelimitedFieldValues subPartitionValues = new DelimitedFieldValues();
-        subPartitionValues.setValues(Arrays.asList("a", "b", "c", "d"));
-
-        StorageUnitUploadCredential expectedResult = new StorageUnitUploadCredential();
-
-        when(storageUnitService.getStorageUnitUploadCredential(any(), any(), any())).thenReturn(expectedResult);
-
-        StorageUnitUploadCredential actualResult = storageUnitRestController
-            .getStorageUnitUploadCredential(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, businessObjectDataVersion, storageName, subPartitionValues);
-
-        verify(storageUnitService).getStorageUnitUploadCredential(
-            businessObjectDataKeyEq(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, businessObjectDataVersion, subPartitionValues), isNull(Boolean.class), eq(storageName));
-        verifyNoMoreInteractions(storageUnitService);
-
-        assertEquals(expectedResult, actualResult);
-    }
-
-    @Test
     public void getStorageUnitDownloadCredential()
     {
         String namespace = "namespace";
@@ -108,6 +78,36 @@ public class StorageUnitRestControllerTest
         verify(storageUnitService).getStorageUnitDownloadCredential(
             businessObjectDataKeyEq(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, businessObjectDataVersion, subPartitionValues), eq(storageName));
+        verifyNoMoreInteractions(storageUnitService);
+
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void getStorageUnitUploadCredential()
+    {
+        String namespace = "namespace";
+        String businessObjectDefinitionName = "businessObjectDefinitionName";
+        String businessObjectFormatUsage = "businessObjectFormatUsage";
+        String businessObjectFormatFileType = "businessObjectFormatFileType";
+        Integer businessObjectFormatVersion = 1234;
+        String partitionValue = "partitionValue";
+        Integer businessObjectDataVersion = 2345;
+        String storageName = "storageName";
+        DelimitedFieldValues subPartitionValues = new DelimitedFieldValues();
+        subPartitionValues.setValues(Arrays.asList("a", "b", "c", "d"));
+
+        StorageUnitUploadCredential expectedResult = new StorageUnitUploadCredential();
+
+        when(storageUnitService.getStorageUnitUploadCredential(any(), any(), any())).thenReturn(expectedResult);
+
+        StorageUnitUploadCredential actualResult = storageUnitRestController
+            .getStorageUnitUploadCredential(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, businessObjectDataVersion, storageName, subPartitionValues);
+
+        verify(storageUnitService).getStorageUnitUploadCredential(
+            businessObjectDataKeyEq(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, businessObjectDataVersion, subPartitionValues), isNull(Boolean.class), eq(storageName));
         verifyNoMoreInteractions(storageUnitService);
 
         assertEquals(expectedResult, actualResult);

@@ -19,6 +19,7 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_DELETE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -94,6 +95,9 @@ public class TagServiceImpl implements TagService, SearchableService
 
     // Constant to hold the parent tag key field option for the search response.
     public final static String PARENT_TAG_KEY_FIELD = "parentTagKey".toLowerCase();
+
+    // Constant to hold the search score multiplier option for the search response.
+    public final static String SEARCH_SCORE_MULTIPLIER_FIELD = "searchScoreMultiplier".toLowerCase();
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
@@ -254,7 +258,7 @@ public class TagServiceImpl implements TagService, SearchableService
     @Override
     public Set<String> getValidSearchResponseFields()
     {
-        return ImmutableSet.of(DISPLAY_NAME_FIELD, DESCRIPTION_FIELD, PARENT_TAG_KEY_FIELD, HAS_CHILDREN_FIELD);
+        return ImmutableSet.of(DISPLAY_NAME_FIELD, SEARCH_SCORE_MULTIPLIER_FIELD, DESCRIPTION_FIELD, PARENT_TAG_KEY_FIELD, HAS_CHILDREN_FIELD);
     }
 
     @Override
@@ -292,8 +296,8 @@ public class TagServiceImpl implements TagService, SearchableService
         List<Tag> tags = new ArrayList<>();
         for (TagEntity tagEntity : tagEntities)
         {
-            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), fields.contains(DESCRIPTION_FIELD), false, false, false,
-                fields.contains(PARENT_TAG_KEY_FIELD), fields.contains(HAS_CHILDREN_FIELD)));
+            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), fields.contains(SEARCH_SCORE_MULTIPLIER_FIELD),
+                fields.contains(DESCRIPTION_FIELD), false, false, false, fields.contains(PARENT_TAG_KEY_FIELD), fields.contains(HAS_CHILDREN_FIELD)));
         }
 
         // Build and return the tag search response.
@@ -406,6 +410,7 @@ public class TagServiceImpl implements TagService, SearchableService
         tagEntity.setTagType(tagTypeEntity);
         tagEntity.setTagCode(request.getTagKey().getTagCode());
         tagEntity.setDisplayName(request.getDisplayName());
+        tagEntity.setSearchScoreMultiplier(request.getSearchScoreMultiplier());
         tagEntity.setDescription(request.getDescription());
         tagEntity.setParentTagEntity(parentTagEntity);
 
@@ -421,7 +426,7 @@ public class TagServiceImpl implements TagService, SearchableService
      */
     private Tag createTagFromEntity(TagEntity tagEntity)
     {
-        return createTagFromEntity(tagEntity, true, true, true, true, true, true, true, false);
+        return createTagFromEntity(tagEntity, true, true, true, true, true, true, true, true, false);
     }
 
     /**
@@ -430,6 +435,7 @@ public class TagServiceImpl implements TagService, SearchableService
      * @param tagEntity the tag entity
      * @param includeId specifies to include the display name field
      * @param includeDisplayName specifies to include the display name field
+     * @param includeSearchScoreMultiplier specifies to include the search score multiplier
      * @param includeDescription specifies to include the description field
      * @param includeUserId specifies to include the user id of the user who created this tag
      * @param includeLastUpdatedByUserId specifies to include the user id of the user who last updated this tag
@@ -439,8 +445,9 @@ public class TagServiceImpl implements TagService, SearchableService
      *
      * @return the tag
      */
-    private Tag createTagFromEntity(TagEntity tagEntity, boolean includeId, boolean includeDisplayName, boolean includeDescription, boolean includeUserId,
-        boolean includeLastUpdatedByUserId, boolean includeUpdatedTime, boolean includeParentTagKey, boolean includeHasChildren)
+    private Tag createTagFromEntity(TagEntity tagEntity, boolean includeId, boolean includeDisplayName, boolean includeSearchScoreMultiplier,
+        boolean includeDescription, boolean includeUserId, boolean includeLastUpdatedByUserId, boolean includeUpdatedTime, boolean includeParentTagKey,
+        boolean includeHasChildren)
     {
         Tag tag = new Tag();
 
@@ -454,6 +461,11 @@ public class TagServiceImpl implements TagService, SearchableService
         if (includeDisplayName)
         {
             tag.setDisplayName(tagEntity.getDisplayName());
+        }
+
+        if (includeSearchScoreMultiplier)
+        {
+            tag.setSearchScoreMultiplier(tagEntity.getSearchScoreMultiplier());
         }
 
         if (includeDescription)
@@ -526,6 +538,7 @@ public class TagServiceImpl implements TagService, SearchableService
     private void updateTagEntity(TagEntity tagEntity, TagUpdateRequest request, TagEntity parentTagEntity)
     {
         tagEntity.setDisplayName(request.getDisplayName());
+        tagEntity.setSearchScoreMultiplier(request.getSearchScoreMultiplier());
         tagEntity.setDescription(request.getDescription());
         tagEntity.setParentTagEntity(parentTagEntity);
         tagDao.saveAndRefresh(tagEntity);
@@ -548,6 +561,22 @@ public class TagServiceImpl implements TagService, SearchableService
         }
 
         request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
+
+        validateTagSearchScoreMultiplier(request.getSearchScoreMultiplier());
+    }
+
+    /**
+     * Validate an optional tag's search score multiplier value.
+     *
+     * @param searchScoreMultiplier the tag's search score multiplier value
+     */
+    private void validateTagSearchScoreMultiplier(BigDecimal searchScoreMultiplier)
+    {
+        if (searchScoreMultiplier != null && searchScoreMultiplier.compareTo(BigDecimal.ZERO) == -1)
+        {
+            throw new IllegalArgumentException(
+                String.format("The searchScoreMultiplier can not have a negative value. searchScoreMultiplier=%s", searchScoreMultiplier.toPlainString()));
+        }
     }
 
     /**
@@ -605,6 +634,8 @@ public class TagServiceImpl implements TagService, SearchableService
         }
 
         request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
+
+        validateTagSearchScoreMultiplier(request.getSearchScoreMultiplier());
     }
 
     @Override
@@ -724,6 +755,4 @@ public class TagServiceImpl implements TagService, SearchableService
 
         return isValid;
     }
-    
-    
 }

@@ -16,416 +16,656 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttribute;
+import org.finra.herd.model.api.xml.BusinessObjectDataAttributeCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributeKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributeKeys;
-import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
-import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.api.xml.BusinessObjectDataAttributeUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.service.BusinessObjectDataAttributeService;
 
 /**
  * This class tests various functionality within the business object data attribute REST controller.
  */
 public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestTest
 {
+    @InjectMocks
+    private BusinessObjectDataAttributeRestController businessObjectDataAttributeRestController;
+
+    @Mock
+    private BusinessObjectDataAttributeService businessObjectDataAttributeService;
+
+    @Before
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testCreateBusinessObjectDataAttribute()
     {
-        // Create and persist a business object data entity.
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Create a business object data create request.
+        BusinessObjectDataAttributeCreateRequest businessObjectDataAttributeCreateRequest =
+            new BusinessObjectDataAttributeCreateRequest(businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
 
         // Create a business object data attribute.
-        BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController.createBusinessObjectDataAttribute(
-            businessObjectDataAttributeServiceTestHelper
-                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
 
-        // Validate the returned object.
-        businessObjectDataAttributeServiceTestHelper
-            .validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1, resultBusinessObjectDataAttribute);
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeCreateRequest))
+            .thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result =
+            businessObjectDataAttributeRestController.createBusinessObjectDataAttribute(businessObjectDataAttributeCreateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).createBusinessObjectDataAttribute(businessObjectDataAttributeCreateRequest);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
     }
 
     @Test
-    public void testGetBusinessObjectDataAttribute()
+    public void testDeleteBusinessObjectDataAttributeSubPartitionValuesCount0()
     {
-        // Create and persist a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
-            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
 
-        // Retrieve the business object data attribute.
-        BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-            .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.deleteBusinessObjectDataAttribute(businessObjectDataAttributeKey)).thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .deleteBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).deleteBusinessObjectDataAttribute(businessObjectDataAttributeKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
+    }
+
+    @Test
+    public void testDeleteBusinessObjectDataAttributeSubPartitionValuesCount1()
+    {
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.deleteBusinessObjectDataAttribute(businessObjectDataAttributeKey)).thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .deleteBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).deleteBusinessObjectDataAttribute(businessObjectDataAttributeKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
+    }
+
+    @Test
+    public void testDeleteBusinessObjectDataAttributeSubPartitionValuesCount2()
+    {
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.deleteBusinessObjectDataAttribute(businessObjectDataAttributeKey)).thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .deleteBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).deleteBusinessObjectDataAttribute(businessObjectDataAttributeKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
+    }
+
+    @Test
+    public void testDeleteBusinessObjectDataAttributeSubPartitionValuesCount3()
+    {
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.deleteBusinessObjectDataAttribute(businessObjectDataAttributeKey)).thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .deleteBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).deleteBusinessObjectDataAttribute(businessObjectDataAttributeKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
+    }
+
+    @Test
+    public void testDeleteBusinessObjectDataAttributeSubPartitionValuesCount4()
+    {
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3)), DATA_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.deleteBusinessObjectDataAttribute(businessObjectDataAttributeKey)).thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .deleteBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION,
                 ATTRIBUTE_NAME_1_MIXED_CASE);
 
-        // Validate the returned object.
-        businessObjectDataAttributeServiceTestHelper
-            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
-                resultBusinessObjectDataAttribute);
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).deleteBusinessObjectDataAttribute(businessObjectDataAttributeKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
     }
 
     @Test
-    public void testGetBusinessObjectDataAttributeMissingOptionalParameters()
+    public void testGetBusinessObjectDataAttributeSubPartitionValuesCount0()
     {
-        // Test if we can retrieve an attribute for the business object data with any allowed number of subpartition values (from 0 to MAX_SUBPARTITIONS).
-        for (int i = 0; i <= BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
-        {
-            // Build a list of subpartition values.
-            List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
 
-            // Create and persist an attribute for the business object data with the relative number of subpartition values.
-            BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
-                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
 
-            // Retrieve the attribute of the business object data using the relative endpoint.
-            BusinessObjectDataAttribute resultBusinessObjectDataAttribute = null;
-            switch (i)
-            {
-                case 0:
-                    resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
-                    break;
-                case 1:
-                    resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
-                    break;
-                case 2:
-                    resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), subPartitionValues.get(1), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
-                    break;
-                case 3:
-                    resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
-                    break;
-                case 4:
-                    resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), subPartitionValues.get(3), DATA_VERSION,
-                            ATTRIBUTE_NAME_1_MIXED_CASE);
-                    break;
-            }
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.getBusinessObjectDataAttribute(businessObjectDataAttributeKey)).thenReturn(businessObjectDataAttribute);
 
-            // Validate the returned object.
-            businessObjectDataAttributeServiceTestHelper
-                .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                    FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
-                    resultBusinessObjectDataAttribute);
-        }
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .getBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).getBusinessObjectDataAttribute(businessObjectDataAttributeKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
     }
 
     @Test
-    public void testGetBusinessObjectDataAttributes()
+    public void testGetBusinessObjectDataAttributeSubPartitionValuesCount1()
     {
-        // List of test business object data attribute names.
-        List<String> testBusinessObjectDataAttributeNames = Arrays.asList(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_NAME_2_MIXED_CASE);
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
 
-        // Create and persist a business object data attribute entities.
-        for (String businessObjectDataAttributeName : testBusinessObjectDataAttributeNames)
-        {
-            businessObjectDataAttributeDaoTestHelper
-                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, businessObjectDataAttributeName, ATTRIBUTE_VALUE_1);
-        }
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
 
-        // Retrieve a list of business object data attribute keys.
-        BusinessObjectDataAttributeKeys resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-            .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.getBusinessObjectDataAttribute(businessObjectDataAttributeKey)).thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .getBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).getBusinessObjectDataAttribute(businessObjectDataAttributeKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAttributeSubPartitionValuesCount2()
+    {
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.getBusinessObjectDataAttribute(businessObjectDataAttributeKey)).thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .getBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).getBusinessObjectDataAttribute(businessObjectDataAttributeKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAttributeSubPartitionValuesCount3()
+    {
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.getBusinessObjectDataAttribute(businessObjectDataAttributeKey)).thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .getBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).getBusinessObjectDataAttribute(businessObjectDataAttributeKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAttributeSubPartitionValuesCount4()
+    {
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3)), DATA_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.getBusinessObjectDataAttribute(businessObjectDataAttributeKey)).thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .getBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).getBusinessObjectDataAttribute(businessObjectDataAttributeKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAttributesSubPartitionValuesCount0()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create a business object data attribute keys.
+        BusinessObjectDataAttributeKeys businessObjectDataAttributeKeys = new BusinessObjectDataAttributeKeys(Arrays.asList(
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE)));
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.getBusinessObjectDataAttributes(businessObjectDataKey)).thenReturn(businessObjectDataAttributeKeys);
+
+        // Call the method under test.
+        BusinessObjectDataAttributeKeys result = businessObjectDataAttributeRestController
+            .getBusinessObjectDataAttributes(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                DATA_VERSION);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).getBusinessObjectDataAttributes(businessObjectDataKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttributeKeys, result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAttributesSubPartitionValuesCount1()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0)), DATA_VERSION);
+
+        // Create a business object data attribute keys.
+        BusinessObjectDataAttributeKeys businessObjectDataAttributeKeys = new BusinessObjectDataAttributeKeys(Arrays.asList(
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE)));
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.getBusinessObjectDataAttributes(businessObjectDataKey)).thenReturn(businessObjectDataAttributeKeys);
+
+        // Call the method under test.
+        BusinessObjectDataAttributeKeys result = businessObjectDataAttributeRestController
+            .getBusinessObjectDataAttributes(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), DATA_VERSION);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).getBusinessObjectDataAttributes(businessObjectDataKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttributeKeys, result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAttributesSubPartitionValuesCount2()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1)), DATA_VERSION);
+
+        // Create a business object data attribute keys.
+        BusinessObjectDataAttributeKeys businessObjectDataAttributeKeys = new BusinessObjectDataAttributeKeys(Arrays.asList(
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE)));
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.getBusinessObjectDataAttributes(businessObjectDataKey)).thenReturn(businessObjectDataAttributeKeys);
+
+        // Call the method under test.
+        BusinessObjectDataAttributeKeys result = businessObjectDataAttributeRestController
+            .getBusinessObjectDataAttributes(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), DATA_VERSION);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).getBusinessObjectDataAttributes(businessObjectDataKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttributeKeys, result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAttributesSubPartitionValuesCount3()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION);
+
+        // Create a business object data attribute keys.
+        BusinessObjectDataAttributeKeys businessObjectDataAttributeKeys = new BusinessObjectDataAttributeKeys(Arrays.asList(
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE)));
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.getBusinessObjectDataAttributes(businessObjectDataKey)).thenReturn(businessObjectDataAttributeKeys);
+
+        // Call the method under test.
+        BusinessObjectDataAttributeKeys result = businessObjectDataAttributeRestController
+            .getBusinessObjectDataAttributes(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), DATA_VERSION);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).getBusinessObjectDataAttributes(businessObjectDataKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttributeKeys, result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAttributesSubPartitionValuesCount4()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3)), DATA_VERSION);
+
+        // Create a business object data attribute keys.
+        BusinessObjectDataAttributeKeys businessObjectDataAttributeKeys = new BusinessObjectDataAttributeKeys(Arrays.asList(
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE)));
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.getBusinessObjectDataAttributes(businessObjectDataKey)).thenReturn(businessObjectDataAttributeKeys);
+
+        // Call the method under test.
+        BusinessObjectDataAttributeKeys result = businessObjectDataAttributeRestController
+            .getBusinessObjectDataAttributes(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION);
 
-        // Validate the returned object.
-        assertNotNull(resultBusinessObjectDataAttributeKeys);
-        assertEquals(testBusinessObjectDataAttributeNames.size(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().size());
-        for (int i = 0; i < testBusinessObjectDataAttributeNames.size(); i++)
-        {
-            businessObjectDataAttributeServiceTestHelper
-                .validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, testBusinessObjectDataAttributeNames.get(i),
-                    resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(i));
-        }
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).getBusinessObjectDataAttributes(businessObjectDataKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttributeKeys, result);
     }
 
     @Test
-    public void testGetBusinessObjectDataAttributesMissingOptionalParameters()
+    public void testUpdateBusinessObjectDataAttributeSubPartitionValuesCount0()
     {
-        // List of test business object data attribute names.
-        List<String> testBusinessObjectDataAttributeNames = Arrays.asList(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_NAME_2_MIXED_CASE);
+        // Create a business object data update request.
+        BusinessObjectDataAttributeUpdateRequest businessObjectDataAttributeUpdateRequest = new BusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1);
 
-        // Test if we can retrieve a list of attribute keys for the business object data
-        // with any allowed number of subpartition values (from 0 to MAX_SUBPARTITIONS).
-        for (int i = 0; i <= BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
-        {
-            // Build a list of subpartition values.
-            List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
 
-            // Create and persist business object data attribute entities with the relative number of subpartition values.
-            for (String businessObjectDataAttributeName : testBusinessObjectDataAttributeNames)
-            {
-                businessObjectDataAttributeDaoTestHelper
-                    .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                        subPartitionValues, DATA_VERSION, businessObjectDataAttributeName, ATTRIBUTE_VALUE_1);
-            }
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
 
-            // Retrieve the list of attribute keys for the business object data using the relative endpoint.
-            BusinessObjectDataAttributeKeys resultBusinessObjectDataAttributeKeys = null;
-            switch (i)
-            {
-                case 0:
-                    resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            DATA_VERSION);
-                    break;
-                case 1:
-                    resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            SUBPARTITION_VALUES.get(0), DATA_VERSION);
-                    break;
-                case 2:
-                    resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), DATA_VERSION);
-                    break;
-                case 3:
-                    resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), DATA_VERSION);
-                    break;
-                case 4:
-                    resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION);
-                    break;
-            }
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.updateBusinessObjectDataAttribute(businessObjectDataAttributeKey, businessObjectDataAttributeUpdateRequest))
+            .thenReturn(businessObjectDataAttribute);
 
-            // Validate the returned object.
-            assertNotNull(resultBusinessObjectDataAttributeKeys);
-            assertEquals(testBusinessObjectDataAttributeNames.size(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().size());
-            for (int j = 0; j < testBusinessObjectDataAttributeNames.size(); j++)
-            {
-                businessObjectDataAttributeServiceTestHelper
-                    .validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                        subPartitionValues, DATA_VERSION, testBusinessObjectDataAttributeNames.get(j),
-                        resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(j));
-            }
-        }
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .updateBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, businessObjectDataAttributeUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).updateBusinessObjectDataAttribute(businessObjectDataAttributeKey, businessObjectDataAttributeUpdateRequest);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
     }
 
     @Test
-    public void testUpdateBusinessObjectDataAttribute()
+    public void testUpdateBusinessObjectDataAttributeSubPartitionValuesCount1()
     {
-        // Create and persist a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
-            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        // Create a business object data update request.
+        BusinessObjectDataAttributeUpdateRequest businessObjectDataAttributeUpdateRequest = new BusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1);
 
-        // Update the business object data attribute.
-        BusinessObjectDataAttribute updatedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-            .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION,
-                ATTRIBUTE_NAME_1_MIXED_CASE, businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
 
-        // Validate the returned object.
-        businessObjectDataAttributeServiceTestHelper
-            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_2,
-                updatedBusinessObjectDataAttribute);
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.updateBusinessObjectDataAttribute(businessObjectDataAttributeKey, businessObjectDataAttributeUpdateRequest))
+            .thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .updateBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, businessObjectDataAttributeUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).updateBusinessObjectDataAttribute(businessObjectDataAttributeKey, businessObjectDataAttributeUpdateRequest);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
     }
 
     @Test
-    public void testUpdateBusinessObjectDataAttributeMissingOptionalParameters()
+    public void testUpdateBusinessObjectDataAttributeSubPartitionValuesCount2()
     {
-        // Test if we can update an attribute for the business object data with any allowed number of subpartition values (from 0 to MAX_SUBPARTITIONS).
-        for (int i = 0; i <= BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
-        {
-            // Build a list of subpartition values.
-            List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
+        // Create a business object data update request.
+        BusinessObjectDataAttributeUpdateRequest businessObjectDataAttributeUpdateRequest = new BusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1);
 
-            // Create and persist an attribute for the business object data with the relative number of subpartition values.
-            BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
-                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
 
-            // Update the attribute of the business object data using the relative endpoint.
-            BusinessObjectDataAttribute resultBusinessObjectDataAttribute = null;
-            switch (i)
-            {
-                case 0:
-                    resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE,
-                            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
-                    break;
-                case 1:
-                    resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE,
-                            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
-                    break;
-                case 2:
-                    resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), subPartitionValues.get(1), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE,
-                            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
-                    break;
-                case 3:
-                    resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE,
-                            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
-                    break;
-                case 4:
-                    resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), subPartitionValues.get(3), DATA_VERSION,
-                            ATTRIBUTE_NAME_1_MIXED_CASE,
-                            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
-                    break;
-            }
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
 
-            // Validate the returned object.
-            businessObjectDataAttributeServiceTestHelper
-                .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                    FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_2,
-                    resultBusinessObjectDataAttribute);
-        }
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.updateBusinessObjectDataAttribute(businessObjectDataAttributeKey, businessObjectDataAttributeUpdateRequest))
+            .thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .updateBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, businessObjectDataAttributeUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).updateBusinessObjectDataAttribute(businessObjectDataAttributeKey, businessObjectDataAttributeUpdateRequest);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
     }
 
     @Test
-    public void testDeleteBusinessObjectDataAttribute()
+    public void testUpdateBusinessObjectDataAttributeSubPartitionValuesCount3()
     {
-        // Create and persist a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
-            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        // Create a business object data update request.
+        BusinessObjectDataAttributeUpdateRequest businessObjectDataAttributeUpdateRequest = new BusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1);
 
-        // Validate that this business object data attribute exists.
-        businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(
-            new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
 
-        // Delete this business object data attribute.
-        BusinessObjectDataAttribute deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-            .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION,
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
+
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.updateBusinessObjectDataAttribute(businessObjectDataAttributeKey, businessObjectDataAttributeUpdateRequest))
+            .thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .updateBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE,
+                businessObjectDataAttributeUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).updateBusinessObjectDataAttribute(businessObjectDataAttributeKey, businessObjectDataAttributeUpdateRequest);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataAttributeSubPartitionValuesCount4()
+    {
+        // Create a business object data update request.
+        BusinessObjectDataAttributeUpdateRequest businessObjectDataAttributeUpdateRequest = new BusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1);
+
+        // Create a business object data attribute key.
+        BusinessObjectDataAttributeKey businessObjectDataAttributeKey =
+            new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3)), DATA_VERSION,
                 ATTRIBUTE_NAME_1_MIXED_CASE);
 
-        // Validate the returned object.
-        businessObjectDataAttributeServiceTestHelper
-            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
-                deletedBusinessObjectDataAttribute);
+        // Create a business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute(ID, businessObjectDataAttributeKey, ATTRIBUTE_VALUE_1);
 
-        // Ensure that this business object data attribute is no longer there.
-        try
-        {
-            businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(
-                new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
-            fail("Should throw an ObjectNotFoundException when business object data attribute does not exist.");
-        }
-        catch (ObjectNotFoundException e)
-        {
-            assertEquals(
-                String.format("Attribute with name \"%s\" does not exist for business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
-                    "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, " +
-                    "businessObjectDataPartitionValue: \"%s\", businessObjectDataSubPartitionValues: \"%s,%s,%s,%s\", businessObjectDataVersion: %d}.",
-                    ATTRIBUTE_NAME_1_MIXED_CASE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION),
-                e.getMessage());
-        }
+        // Mock the external calls.
+        when(businessObjectDataAttributeService.updateBusinessObjectDataAttribute(businessObjectDataAttributeKey, businessObjectDataAttributeUpdateRequest))
+            .thenReturn(businessObjectDataAttribute);
+
+        // Call the method under test.
+        BusinessObjectDataAttribute result = businessObjectDataAttributeRestController
+            .updateBusinessObjectDataAttribute(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE, businessObjectDataAttributeUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataAttributeService).updateBusinessObjectDataAttribute(businessObjectDataAttributeKey, businessObjectDataAttributeUpdateRequest);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataAttribute, result);
     }
 
-    @Test
-    public void testDeleteBusinessObjectDataAttributeMissingOptionalParameters()
+    /**
+     * Checks if any of the mocks has any interaction.
+     */
+    private void verifyNoMoreInteractionsHelper()
     {
-        // Test if we can delete an attribute for the business object data with any allowed number of subpartition values (from 0 to MAX_SUBPARTITIONS).
-        for (int i = 0; i <= BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
-        {
-            // Build a list of subpartition values.
-            List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
-
-            // Create and persist a business object data attribute entity with the relative number of subpartition values.
-            BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
-                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
-
-            // Validate that this business object data attribute exists.
-            businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(
-                new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
-
-            // Delete this business object data attribute using the relative endpoint.
-            BusinessObjectDataAttribute deletedBusinessObjectDataAttribute = null;
-            switch (i)
-            {
-                case 0:
-                    deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
-                    break;
-                case 1:
-                    deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
-                    break;
-                case 2:
-                    deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), subPartitionValues.get(1), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
-                    break;
-                case 3:
-                    deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
-                    break;
-                case 4:
-                    deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), subPartitionValues.get(3), DATA_VERSION,
-                            ATTRIBUTE_NAME_1_MIXED_CASE);
-                    break;
-            }
-
-            // Validate the returned object.
-            businessObjectDataAttributeServiceTestHelper
-                .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                    FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
-                    deletedBusinessObjectDataAttribute);
-
-            // Ensure that this business object data attribute is no longer there.
-            try
-            {
-                businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(
-                    new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                        subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
-                fail("Should throw an ObjectNotFoundException when business object data attribute does not exist.");
-            }
-            catch (ObjectNotFoundException e)
-            {
-                assertEquals(String.format("Attribute with name \"%s\" does not exist for business object data {namespace: \"%s\", " +
-                    "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
-                    "businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", businessObjectDataSubPartitionValues: \"%s\", " +
-                    "businessObjectDataVersion: %d}.", ATTRIBUTE_NAME_1_MIXED_CASE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                    FORMAT_VERSION, PARTITION_VALUE, StringUtils.join(subPartitionValues, ","), DATA_VERSION), e.getMessage());
-            }
-        }
+        verifyNoMoreInteractions(businessObjectDataAttributeService);
     }
 }

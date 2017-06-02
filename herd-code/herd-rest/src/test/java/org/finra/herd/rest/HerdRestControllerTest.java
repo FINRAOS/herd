@@ -15,14 +15,17 @@
 */
 package org.finra.herd.rest;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.BuildInformation;
 
@@ -31,45 +34,54 @@ import org.finra.herd.model.api.xml.BuildInformation;
  */
 public class HerdRestControllerTest extends AbstractRestTest
 {
-    private static Logger logger = LoggerFactory.getLogger(HerdRestControllerTest.class);
+    @Mock
+    private BuildInformation buildInformation;
 
-    @Test
-    public void testGetBuildInfo() throws Exception
+    @InjectMocks
+    private HerdRestController herdRestController;
+
+    @Before
+    public void before()
     {
-        // Get the build information and ensure it is valid.
-        BuildInformation buildInformation = herdRestController.getBuildInfo();
-        assertNotNull(buildInformation);
-        assertNotNull(buildInformation.getBuildDate());
-        logger.info(buildInformation.toString());
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void testValidateNoDuplicateQueryStringParams() throws Exception
+    public void testGetBuildInfo()
     {
+        // Call the method under test.
+        BuildInformation result = herdRestController.getBuildInfo();
+
+        // Validate the results.
+        assertEquals(buildInformation, result);
+    }
+
+    @Test
+    public void testValidateNoDuplicateQueryStringParams()
+    {
+        // Create a map of parameters.
+        Map<String, String[]> parameters = new HashMap<>();
+
         // Add a key with a single value which is allowed.
-        Map<String, String[]> parameterMap = new HashMap<>();
-        String[] singleValue = new String[1];
-        singleValue[0] = "testValue"; // Single Value
-        parameterMap.put("testKey1", singleValue);
+        parameters.put(ATTRIBUTE_NAME_1_MIXED_CASE, new String[] {ATTRIBUTE_VALUE_1});
 
-        // Add a key with 2 values which which isn't normally allowed, but is not a problem because we aren't looking for it in the validate method below.
-        String[] multipleValues = new String[2];
-        multipleValues[0] = "testValue1";
-        multipleValues[1] = "testValue2";
-        parameterMap.put("testKey2", multipleValues);
+        // Add a key with two values which isn't allowed.
+        parameters.put(ATTRIBUTE_NAME_2_MIXED_CASE, new String[] {ATTRIBUTE_VALUE_2, ATTRIBUTE_VALUE_3});
 
-        // Validate the query string parameters, but only for "testKey1" and not "testKey2".
-        herdRestController.validateNoDuplicateQueryStringParams(parameterMap, "testKey1");
-    }
+        // Validate the query string parameters for the first key.
+        herdRestController.validateNoDuplicateQueryStringParams(parameters, ATTRIBUTE_NAME_1_MIXED_CASE);
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testValidateNoDuplicateQueryStringParamsWithException() throws Exception
-    {
-        Map<String, String[]> parameterMap = new HashMap<>();
-        String[] values = new String[2];
-        values[0] = "testValue1"; // Duplicate Values which aren't allowed.
-        values[1] = "testValue2";
-        parameterMap.put("testKey", values);
-        herdRestController.validateNoDuplicateQueryStringParams(parameterMap, "testKey");
+        // Try to validate the query string parameters for the second key that has multiple values.
+        try
+        {
+            herdRestController.validateNoDuplicateQueryStringParams(parameters, ATTRIBUTE_NAME_2_MIXED_CASE);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Found 2 occurrences of query string parameter \"%s\", but 1 expected. Values found: \"%s, %s\".", ATTRIBUTE_NAME_2_MIXED_CASE,
+                    ATTRIBUTE_VALUE_2, ATTRIBUTE_VALUE_3), e.getMessage());
+        }
     }
 }

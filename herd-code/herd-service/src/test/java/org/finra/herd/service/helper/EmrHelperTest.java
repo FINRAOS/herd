@@ -82,11 +82,15 @@ public class EmrHelperTest extends AbstractServiceTest
     @Test
     public void testEmrAddStepsAllTypesNegativeTestCase() throws Exception
     {
-        // Create the namespace entity.
+        // Create a namespace entity.
         NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
+        // Create an EMR cluster definition entity.
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+
+        // Create EC2 on-demand pricing entities.
+        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         EmrCluster emrCluster = emrService.createCluster(request);
