@@ -29,14 +29,14 @@ import org.finra.herd.dao.helper.HerdStringHelper;
 public class DelimitedFieldValuesEditor extends PropertyEditorSupport
 {
     @Autowired
-    private HerdStringHelper daoHelper;
+    private HerdStringHelper herdStringHelper;
 
     @Override
     public void setAsText(String text) throws IllegalArgumentException
     {
         DelimitedFieldValues delimitedFieldValues = new DelimitedFieldValues();
         delimitedFieldValues.setDelimitedValues(text);
-        delimitedFieldValues.setValues(daoHelper.splitStringWithDefaultDelimiterEscaped(text));
+        delimitedFieldValues.setValues(herdStringHelper.splitStringWithDefaultDelimiterEscaped(text));
         setValue(delimitedFieldValues);
     }
 }
