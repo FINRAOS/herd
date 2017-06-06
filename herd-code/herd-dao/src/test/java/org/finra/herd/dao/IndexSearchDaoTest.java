@@ -373,11 +373,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(transportClient.prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX)).thenReturn(searchRequestBuilder);
         when(searchRequestBuilder.setSource(any())).thenReturn(searchRequestBuilderWithSource);
         when(searchRequestBuilderWithSource.setSize(SEARCH_RESULT_SIZE)).thenReturn(searchRequestBuilderWithSize);
-        when(searchRequestBuilderWithSize.addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST))
-            .thenReturn(searchRequestBuilderWithBusinessObjectDefinitionIndexBoost);
-        when(searchRequestBuilderWithBusinessObjectDefinitionIndexBoost.addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST))
-            .thenReturn(searchRequestBuilderWithTagIndexBoost);
-        when(searchRequestBuilderWithTagIndexBoost.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
+        when(searchRequestBuilderWithSize.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
         when(searchRequestBuilderWithSorting.highlighter(any(HighlightBuilder.class))).thenReturn(searchRequestBuilderWithHighlighting);
 
         when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
@@ -457,9 +453,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         }
 
         verify(searchRequestBuilderWithSource, times(1)).setSize(SEARCH_RESULT_SIZE);
-        verify(searchRequestBuilderWithSize, times(1)).addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST);
-        verify(searchRequestBuilderWithBusinessObjectDefinitionIndexBoost, times(1)).addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST);
-        verify(searchRequestBuilderWithTagIndexBoost, times(1)).addSort(any());
+        verify(searchRequestBuilderWithSize, times(1)).addSort(any());
         verify(searchRequestBuilder, times(1)).execute();
         verify(listenableActionFuture, times(1)).actionGet();
         verify(searchResponse, times(1)).getHits();

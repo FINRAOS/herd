@@ -86,11 +86,6 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
 
     /**
-     * The boost amount for the business object definition index
-     */
-    private static final float BUSINESS_OBJECT_DEFINITION_INDEX_BOOST = 1f;
-
-    /**
      * String to select the tag type code and namespace code
      */
     private static final String CODE = "code";
@@ -159,11 +154,6 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      * The tag index
      */
     private static final String TAG_INDEX = "tag";
-
-    /**
-     * The boost amount for the tag index
-     */
-    private static final float TAG_INDEX_BOOST = 1000f;
 
     /**
      * String to select the tag type
@@ -239,10 +229,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         // Create a indexSearch request builder
         final TransportClient transportClient = transportClientFactory.getTransportClient();
         SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX);
-        searchRequestBuilder.setSource(searchSourceBuilder).setSize(SEARCH_RESULT_SIZE)
-            .addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST).addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST)
-            .addSort(SortBuilders.scoreSort());
-
+        searchRequestBuilder.setSource(searchSourceBuilder).setSize(SEARCH_RESULT_SIZE).addSort(SortBuilders.scoreSort());
+        
         String preTag = null;
         String postTag = null;
 
