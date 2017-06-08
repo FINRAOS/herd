@@ -321,8 +321,6 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithSource = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
-        SearchRequestBuilder searchRequestBuilderWithBusinessObjectDefinitionIndexBoost = mock(SearchRequestBuilder.class);
-        SearchRequestBuilder searchRequestBuilderWithTagIndexBoost = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithSorting = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithHighlighting = mock(SearchRequestBuilder.class);
 
