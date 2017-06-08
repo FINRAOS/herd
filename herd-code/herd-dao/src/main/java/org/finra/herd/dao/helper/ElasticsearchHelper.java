@@ -548,6 +548,52 @@ public class ElasticsearchHelper
         return tagTypeIndexSearchResponseDtos;
     }
 
+    private List<TagTypeIndexSearchResponseDto> searchResponseIntoFacetInformation(final SearchRequestBuilder searchRequestBuilder)
+    {
+
+        // Retrieve the search response
+        SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+
+        Terms tagTypeCodeAgg = getNestedAggregation(searchResponse, TAG_FACET_AGGS, TAGTYPE_CODE_AGGREGATION);
+
+        Terms tagTypeFacetAgg = getAggregation(searchResponse, TAG_TYPE_FACET_AGGS);
+
+        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = new ArrayList<>();
+
+        for (Terms.Bucket tagTypeCodeEntry : tagTypeCodeAgg.getBuckets())
+        {
+            List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
+
+            TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
+                new TagTypeIndexSearchResponseDto(tagTypeCodeEntry.getKeyAsString(),
+                    tagTypeFacetAgg.getBucketByKey(tagTypeCodeEntry.getKeyAsString()).getDocCount(), tagIndexSearchResponseDtos, null);
+            tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
+
+            Terms tagTypeDisplayNameAggs = tagTypeCodeEntry.getAggregations().get(TAGTYPE_NAME_AGGREGATION);
+            for (Terms.Bucket tagTypeDisplayNameEntry : tagTypeDisplayNameAggs.getBuckets())
+            {
+                tagTypeIndexSearchResponseDto.setDisplayName(tagTypeDisplayNameEntry.getKeyAsString());
+
+                Terms tagCodeAggs = tagTypeDisplayNameEntry.getAggregations().get(TAG_CODE_AGGREGATION);
+                TagIndexSearchResponseDto tagIndexSearchResponseDto;
+
+                for (Terms.Bucket tagCodeEntry : tagCodeAggs.getBuckets())
+                {
+                    tagIndexSearchResponseDto = new TagIndexSearchResponseDto(tagCodeEntry.getKeyAsString(), tagCodeEntry.getDocCount(), null);
+                    tagIndexSearchResponseDtos.add(tagIndexSearchResponseDto);
+
+                    Terms tagNameAggs = tagCodeEntry.getAggregations().get(TAG_NAME_AGGREGATION);
+                    for (Terms.Bucket tagNameEntry : tagNameAggs.getBuckets())
+                    {
+                        tagIndexSearchResponseDto.setTagDisplayName(tagNameEntry.getKeyAsString());
+                    }
+                }
+            }
+        }
+
+        return tagTypeIndexSearchResponseDtos;
+    }
+
     /**
      * create tag index search response facet
      *

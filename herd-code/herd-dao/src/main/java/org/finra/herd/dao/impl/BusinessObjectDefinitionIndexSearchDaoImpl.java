@@ -10,6 +10,7 @@ import java.util.Set;
 
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
+import io.searchbox.params.Parameters;
 import org.apache.commons.collections4.CollectionUtils;
 import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -370,6 +371,10 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
     {
         // Retrieve the search response
         final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString());
+
+        searchBuilder.setParameter(Parameters.SIZE, ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        searchBuilder.setParameter(Parameters.SCROLL, new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+
         SearchResult searchResult = jestClientHelper.searchExecute(searchBuilder.build());
         List<SearchResult.Hit<Map, Void>> searchHitList = searchResult.getHits(Map.class);
 
