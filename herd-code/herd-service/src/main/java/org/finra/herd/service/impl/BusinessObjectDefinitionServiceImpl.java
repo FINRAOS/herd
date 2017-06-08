@@ -51,7 +51,7 @@ import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
@@ -166,7 +166,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     private static final String TAG_FACET_FIELD = "tag";
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectDefinition createBusinessObjectDefinition(BusinessObjectDefinitionCreateRequest request)
@@ -334,7 +334,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
@@ -358,7 +358,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
@@ -421,7 +421,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
@@ -993,7 +993,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto)

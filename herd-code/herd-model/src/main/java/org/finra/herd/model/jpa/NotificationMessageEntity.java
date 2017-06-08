@@ -19,20 +19,19 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 /**
- * An instance of JMS message.
+ * A notification message.
  */
-@Table(name = JmsMessageEntity.TABLE_NAME)
+@Table(name = NotificationMessageEntity.TABLE_NAME)
 @Entity
-public class JmsMessageEntity extends AuditableEntity
+public class NotificationMessageEntity extends AuditableEntity
 {
-    /**
-     * The table name.
-     */
-    public static final String TABLE_NAME = "jms_msg";
+    public static final String TABLE_NAME = "ntfcn_msg";
 
     @Id
     @Column(name = TABLE_NAME + "_id")
@@ -40,15 +39,13 @@ public class JmsMessageEntity extends AuditableEntity
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
-    /**
-     * The JMS queue name column.
-     */
-    @Column(name = "jms_queue_nm", nullable = false)
-    private String jmsQueueName;
+    @ManyToOne
+    @JoinColumn(name = "msg_type_cd", referencedColumnName = "msg_type_cd", nullable = false)
+    private MessageTypeEntity messageType;
 
-    /**
-     * The message text column.
-     */
+    @Column(name = "msg_dstnt", nullable = false)
+    private String messageDestination;
+
     @Column(name = "msg_tx")
     private String messageText;
 
@@ -62,14 +59,24 @@ public class JmsMessageEntity extends AuditableEntity
         this.id = id;
     }
 
-    public String getJmsQueueName()
+    public MessageTypeEntity getMessageType()
     {
-        return jmsQueueName;
+        return messageType;
     }
 
-    public void setJmsQueueName(String jmsQueueName)
+    public void setMessageType(MessageTypeEntity messageType)
     {
-        this.jmsQueueName = jmsQueueName;
+        this.messageType = messageType;
+    }
+
+    public String getMessageDestination()
+    {
+        return messageDestination;
+    }
+
+    public void setMessageDestination(String messageDestination)
+    {
+        this.messageDestination = messageDestination;
     }
 
     public String getMessageText()

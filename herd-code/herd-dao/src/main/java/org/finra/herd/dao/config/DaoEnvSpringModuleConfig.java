@@ -31,6 +31,7 @@ import org.finra.herd.dao.JdbcOperations;
 import org.finra.herd.dao.KmsOperations;
 import org.finra.herd.dao.LdapOperations;
 import org.finra.herd.dao.S3Operations;
+import org.finra.herd.dao.SnsOperations;
 import org.finra.herd.dao.SqsOperations;
 import org.finra.herd.dao.StsOperations;
 import org.finra.herd.dao.UrlOperations;
@@ -41,6 +42,7 @@ import org.finra.herd.dao.impl.JdbcOperationsImpl;
 import org.finra.herd.dao.impl.KmsOperationsImpl;
 import org.finra.herd.dao.impl.LdapOperationsImpl;
 import org.finra.herd.dao.impl.S3OperationsImpl;
+import org.finra.herd.dao.impl.SnsOperationsImpl;
 import org.finra.herd.dao.impl.SqsOperationsImpl;
 import org.finra.herd.dao.impl.StsOperationsImpl;
 import org.finra.herd.dao.impl.UrlOperationsImpl;
@@ -104,6 +106,12 @@ public class DaoEnvSpringModuleConfig
     public SqsOperations sqsOperations()
     {
         return new SqsOperationsImpl();
+    }
+
+    @Bean
+    public SnsOperations snsOperations()
+    {
+        return new SnsOperationsImpl();
     }
 
     @Bean

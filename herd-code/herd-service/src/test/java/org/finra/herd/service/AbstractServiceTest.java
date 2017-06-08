@@ -15,6 +15,8 @@
  */
 package org.finra.herd.service;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -71,6 +73,7 @@ import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.service.activiti.ActivitiHelper;
 import org.finra.herd.service.activiti.task.ExecuteJdbcTestHelper;
 import org.finra.herd.service.config.ServiceTestSpringModuleConfig;
@@ -89,6 +92,7 @@ import org.finra.herd.service.helper.Hive13DdlGenerator;
 import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
 import org.finra.herd.service.helper.JobDefinitionHelper;
 import org.finra.herd.service.helper.NotificationActionFactory;
+import org.finra.herd.service.helper.NotificationMessageBuilder;
 import org.finra.herd.service.helper.NotificationRegistrationDaoHelper;
 import org.finra.herd.service.helper.NotificationRegistrationStatusDaoHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
@@ -96,7 +100,6 @@ import org.finra.herd.service.helper.S3PropertiesLocationHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.SearchIndexStatusDaoHelper;
 import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
-import org.finra.herd.service.helper.SqsMessageBuilder;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
@@ -159,6 +162,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean ALLOW_MISSING_DATA = true;
 
     public static final String AWS_SECURITY_GROUP_ID = "UT_AwsSecurityGroupId_" + RANDOM_SUFFIX;
+
+    public static final String AWS_SQS_QUEUE_NAME = "AWS_SQS_QUEUE_NAME";
 
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
 
@@ -230,6 +235,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Long FILE_SIZE = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final Long FILE_SIZE_2 = (long) (Math.random() * Long.MAX_VALUE);
+
+    public static final String HERD_OUTGOING_QUEUE = "HERD_OUTGOING_QUEUE";
 
     public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
 
@@ -393,8 +400,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final int SHORT_DESCRIPTION_LENGTH = 300;
 
     public static final String SKU = "UT_SKU_Value_" + RANDOM_SUFFIX;
-
-    public static final String SQS_QUEUE_NAME = "UT_Sqs_Queue_Name_" + RANDOM_SUFFIX;
 
     public static final String START_PARTITION_VALUE = "2014-04-02";
 
@@ -597,9 +602,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected JdbcService jdbcService;
 
     @Autowired
-    protected JmsPublishingService jmsPublishingService;
-
-    @Autowired
     protected JobDefinitionHelper jobDefinitionHelper;
 
     @Autowired
@@ -618,6 +620,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected JsonHelper jsonHelper;
 
     @Autowired
+    protected MessageNotificationEventService messageNotificationEventService;
+
+    @Autowired
     protected NamespaceService namespaceService;
 
     @Autowired
@@ -628,6 +633,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected NotificationEventService notificationEventService;
+
+    @Autowired
+    protected NotificationMessagePublishingService notificationMessagePublishingService;
 
     @Autowired
     protected NotificationRegistrationDaoHelper notificationRegistrationDaoHelper;
@@ -666,10 +674,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
 
     @Autowired
-    protected SqsMessageBuilder sqsMessageBuilder;
-
-    @Autowired
-    protected SqsNotificationEventService sqsNotificationEventService;
+    protected NotificationMessageBuilder sqsMessageBuilder;
 
     @Autowired
     protected StorageDaoHelper storageDaoHelper;
@@ -1037,18 +1042,28 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     /**
      * Validates that the specified system monitor response message is valid. If not, an exception will be thrown.
      *
-     * @param systemMonitorResponseMessage the system monitor response message.
+     * @param expectedMessageType the expected message type
+     * @param expectedMessageDestination the expected message destination
+     * @param notificationMessage the system monitor response message
      */
-    protected void validateSystemMonitorResponse(String systemMonitorResponseMessage)
+    protected void validateSystemMonitorResponseNotificationMessage(String expectedMessageType, String expectedMessageDestination,
+        NotificationMessage notificationMessage)
     {
-        // Validate the message.
+        assertNotNull(notificationMessage);
+
+        assertEquals(expectedMessageType, notificationMessage.getMessageType());
+        assertEquals(expectedMessageDestination, notificationMessage.getMessageDestination());
+
+        String messageText = notificationMessage.getMessageText();
+
+        // Validate the message text.
         assertTrue("Correlation Id \"" + TEST_SQS_MESSAGE_CORRELATION_ID + "\" expected, but not found.",
-            systemMonitorResponseMessage.contains("<correlation-id>" + TEST_SQS_MESSAGE_CORRELATION_ID + "</correlation-id>"));
+            messageText.contains("<correlation-id>" + TEST_SQS_MESSAGE_CORRELATION_ID + "</correlation-id>"));
         assertTrue("Context Message Type \"" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "\" expected, but not found.",
-            systemMonitorResponseMessage.contains("<context-message-type>" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "</context-message-type>"));
+            messageText.contains("<context-message-type>" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "</context-message-type>"));
 
         // Note that we don't response with the environment that was specified in the request message. Instead, we respond with the environment configured
         // in our configuration table.
-        assertTrue("Environment \"Development\" expected, but not found.", systemMonitorResponseMessage.contains("<environment>Development</environment>"));
+        assertTrue("Environment \"Development\" expected, but not found.", messageText.contains("<environment>Development</environment>"));
     }
 }

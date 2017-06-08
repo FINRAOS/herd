@@ -17,12 +17,15 @@ package org.finra.herd.service.helper;
 
 import java.util.List;
 
+import javax.xml.bind.JAXBException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.ConfigurationDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.MethodNotAllowedException;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.ConfigurationEntity;
@@ -38,6 +41,9 @@ public class ConfigurationDaoHelper
 
     @Autowired
     private HerdStringHelper herdStringHelper;
+
+    @Autowired
+    private XmlHelper xmlHelper;
 
     /**
      * Checks if the method name is not allowed against the configuration.
@@ -66,6 +72,7 @@ public class ConfigurationDaoHelper
      * Method used to return character large object configuration values
      *
      * @param configurationKey the configuration key used to obtain the CLOB
+     *
      * @return String clob
      */
     public String getClobProperty(String configurationKey)
@@ -78,5 +85,37 @@ public class ConfigurationDaoHelper
         }
 
         return clob;
+    }
+
+    /**
+     * Returns JAXB object unmarshalled from the specified character large object configuration value.
+     *
+     * @param classType the class type of JAXB element
+     * @param configurationKey the configuration key used to obtain the CLOB
+     * @param <T> the class type.
+     *
+     * @return the JAXB object or null if specified value is not configured
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getXmlClobPropertyAndUnmarshallToObject(Class<T> classType, String configurationKey)
+    {
+        String xml = getClobProperty(configurationKey);
+
+        if (StringUtils.isNotBlank(xml))
+        {
+            try
+            {
+                return xmlHelper.unmarshallXmlToObject(classType, xml);
+            }
+            catch (JAXBException e)
+            {
+                throw new IllegalStateException(String.format("Failed to unmarshall \"%s\" configuration value to %s.", configurationKey, classType.getName()),
+                    e);
+            }
+        }
+        else
+        {
+            return null;
+        }
     }
 }

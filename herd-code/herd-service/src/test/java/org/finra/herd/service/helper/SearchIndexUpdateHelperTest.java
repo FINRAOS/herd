@@ -53,7 +53,7 @@ public class SearchIndexUpdateHelperTest
     private ConfigurationHelper configurationHelper;
 
     @Mock
-    private JmsMessageInMemoryQueue jmsMessageInMemoryQueue;
+    private NotificationMessageInMemoryQueue jmsMessageInMemoryQueue;
 
     @Mock
     private JsonHelper jsonHelper;
@@ -272,8 +272,7 @@ public class SearchIndexUpdateHelperTest
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
         when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn("MESSAGE TEXT");
@@ -301,8 +300,7 @@ public class SearchIndexUpdateHelperTest
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
         when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn("MESSAGE TEXT");
@@ -339,8 +337,7 @@ public class SearchIndexUpdateHelperTest
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
         when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn("");
@@ -369,8 +366,7 @@ public class SearchIndexUpdateHelperTest
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
         when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn("MESSAGE TEXT");
@@ -400,8 +396,7 @@ public class SearchIndexUpdateHelperTest
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
         when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn("MESSAGE TEXT");
@@ -440,8 +435,7 @@ public class SearchIndexUpdateHelperTest
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
         when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn("");

@@ -17,25 +17,25 @@ package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
 
-import com.amazonaws.services.sqs.model.SendMessageResult;
+import com.amazonaws.services.sns.model.PublishResult;
 import org.junit.Test;
 
 import org.finra.herd.model.dto.AwsParamsDto;
 
 /**
- * This class tests the functionality of DAO for Amazon AWS SQS.
+ * This class tests the functionality of DAO for Amazon AWS SNS.
  */
-public class SqsDaoTest extends AbstractDaoTest
+public class SnsDaoTest extends AbstractDaoTest
 {
     @Test
-    public void testSendMessage()
+    public void testPublish()
     {
-        // Send an SQS message using proxy.
-        assertEquals(new SendMessageResult().withMessageId(MESSAGE_ID), sqsDao
-            .sendMessage(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT), AWS_SQS_QUEUE_NAME,
+        // Publish an SNS message using proxy.
+        assertEquals(new PublishResult().withMessageId(MESSAGE_ID), snsDao
+            .publish(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT), AWS_SNS_TOPIC_ARN,
                 MESSAGE_TEXT));
 
-        // Send an SQS message without proxy.
-        assertEquals(new SendMessageResult().withMessageId(MESSAGE_ID), sqsDao.sendMessage(new AwsParamsDto(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT));
+        // Publish an SNS message without proxy.
+        assertEquals(new PublishResult().withMessageId(MESSAGE_ID), snsDao.publish(new AwsParamsDto(), AWS_SNS_TOPIC_ARN, MESSAGE_TEXT));
     }
 }

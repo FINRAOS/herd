@@ -15,22 +15,22 @@
 */
 package org.finra.herd.dao;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.SendMessageResult;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.PublishResult;
 
 /**
- * A service for AWS SQS operations.
+ * A service for AWS SNS operations.
  */
-public interface SqsOperations
+public interface SnsOperations
 {
     /**
-     * Delivers a message to the specified queue.
+     * Sends a message to all of a topic's subscribed endpoints.
      *
-     * @param queueName the name of the Amazon SQS queue to which a message is sent
+     * @param topicArn the topic to publish the message to
      * @param messageText the text of the message
-     * @param amazonSQS the client for accessing AWS SQS
+     * @param amazonSNS the client for accessing AWS SNS
      *
-     * @return the result the send message operation returned by the service
+     * @return the result of the publish operation returned by the service
      */
-    public SendMessageResult sendMessage(String queueName, String messageText, AmazonSQS amazonSQS);
+    public PublishResult publish(String topicArn, String messageText, AmazonSNS amazonSNS);
 }

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailability;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionRequest;
@@ -76,7 +76,7 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      * <p/>
      * This implementation keeps the current transaction context.
      */
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest request)
     {
@@ -123,7 +123,7 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      * <p/>
      * This implementation keeps the current transaction context.
      */
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectData(
         BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)

@@ -15,22 +15,14 @@
 */
 package org.finra.herd.dao;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.SendMessageResult;
+import org.finra.herd.model.jpa.NotificationMessageEntity;
 
-/**
- * A service for AWS SQS operations.
- */
-public interface SqsOperations
+public interface NotificationMessageDao extends BaseJpaDao
 {
     /**
-     * Delivers a message to the specified queue.
+     * Selects the oldest notification message (a message with the lowest sequence generated id) from the queue.
      *
-     * @param queueName the name of the Amazon SQS queue to which a message is sent
-     * @param messageText the text of the message
-     * @param amazonSQS the client for accessing AWS SQS
-     *
-     * @return the result the send message operation returned by the service
+     * @return the notification message
      */
-    public SendMessageResult sendMessage(String queueName, String messageText, AmazonSQS amazonSQS);
+    public NotificationMessageEntity getOldestNotificationMessage();
 }

@@ -15,30 +15,30 @@
 */
 package org.finra.herd.dao.impl;
 
-import com.amazonaws.services.sqs.model.SendMessageResult;
+import com.amazonaws.services.sns.model.PublishResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.AwsClientFactory;
-import org.finra.herd.dao.SqsDao;
-import org.finra.herd.dao.SqsOperations;
+import org.finra.herd.dao.SnsDao;
+import org.finra.herd.dao.SnsOperations;
 import org.finra.herd.model.dto.AwsParamsDto;
 
 /**
- * The SQS DAO implementation.
+ * The SNS DAO implementation.
  */
 @Repository
-public class SqsDaoImpl implements SqsDao
+public class SnsDaoImpl implements SnsDao
 {
     @Autowired
     private AwsClientFactory awsClientFactory;
 
     @Autowired
-    private SqsOperations sqsOperations;
+    private SnsOperations snsOperations;
 
     @Override
-    public SendMessageResult sendMessage(AwsParamsDto awsParamsDto, String queueName, String messageText)
+    public PublishResult publish(AwsParamsDto awsParamsDto, String topicArn, String messageText)
     {
-        return sqsOperations.sendMessage(queueName, messageText, awsClientFactory.getAmazonSQSClient(awsParamsDto));
+        return snsOperations.publish(topicArn, messageText, awsClientFactory.getAmazonSNSClient(awsParamsDto));
     }
 }

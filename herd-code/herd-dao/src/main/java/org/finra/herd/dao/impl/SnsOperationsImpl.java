@@ -13,20 +13,18 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.model.annotation;
+package org.finra.herd.dao.impl;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.PublishResult;
 
-/**
- * Annotation to indicate that the method is producing JMS messages that needs to be published by the advice.
- */
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface PublishJmsMessages
+import org.finra.herd.dao.SnsOperations;
+
+public class SnsOperationsImpl implements SnsOperations
 {
+    @Override
+    public PublishResult publish(String topicArn, String messageText, AmazonSNS amazonSNS)
+    {
+        return amazonSNS.publish(topicArn, messageText);
+    }
 }

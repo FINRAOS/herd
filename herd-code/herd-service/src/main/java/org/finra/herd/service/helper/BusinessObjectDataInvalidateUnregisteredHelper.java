@@ -43,7 +43,7 @@ import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
-import org.finra.herd.service.SqsNotificationEventService;
+import org.finra.herd.service.MessageNotificationEventService;
 
 @Component
 public class BusinessObjectDataInvalidateUnregisteredHelper
@@ -72,7 +72,7 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
     private S3KeyPrefixHelper s3KeyPrefixHelper;
 
     @Autowired
-    private SqsNotificationEventService sqsNotificationEventService;
+    private MessageNotificationEventService sqsNotificationEventService;
 
     @Autowired
     private StorageDaoHelper storageDaoHelper;

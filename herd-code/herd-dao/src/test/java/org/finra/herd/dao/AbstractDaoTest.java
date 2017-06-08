@@ -106,11 +106,17 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AWS_ASSUMED_ROLE_ACCESS_KEY = "UT_AwsAssumedRoleAccessKey_1_" + RANDOM_SUFFIX;
 
+    public static final String AWS_ASSUMED_ROLE_ACCESS_KEY_2 = "UT_AwsAssumedRoleAccessKey_2_" + RANDOM_SUFFIX;
+
     public static final String AWS_ASSUMED_ROLE_SECRET_KEY = "UT_AwsAssumedRoleSecretKey_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_ASSUMED_ROLE_SECRET_KEY_2 = "UT_AwsAssumedRoleSecretKey_2_" + RANDOM_SUFFIX;
 
     public static final XMLGregorianCalendar AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String AWS_ASSUMED_ROLE_SESSION_TOKEN = "UT_AwsAssumedRoleSessionToken_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_ASSUMED_ROLE_SESSION_TOKEN_2 = "UT_AwsAssumedRoleSessionToken_2_" + RANDOM_SUFFIX;
 
     public static final String AWS_KMS_KEY_ID = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
 
@@ -125,6 +131,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String AWS_REGION_NAME_4 = "UT_AwsRegionName_4_" + RANDOM_SUFFIX;
 
     public static final String AWS_ROLE_ARN = "UT_AwsRoleArn" + RANDOM_SUFFIX;
+
+    public static final String AWS_SNS_TOPIC_ARN = "UT_AWS_SNS_Topic_ARN_" + RANDOM_SUFFIX;
+
+    public static final String AWS_SQS_QUEUE_NAME = "UT_AWS_SQS_Queue_Name_" + RANDOM_SUFFIX;
 
     public static final String BACKSLASH = "\\";
 
@@ -343,9 +353,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final BigDecimal HOURLY_PRICE_5 = getRandomBigDecimal();
 
-    public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
+    public static final String HTTP_PROXY_HOST = "UT_HttpProxyHost_1_" + RANDOM_SUFFIX;
+
+    public static final String HTTP_PROXY_HOST_2 = "UT_HttpProxyHost_2_" + RANDOM_SUFFIX;
 
     public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * (Short.MAX_VALUE << 1));
+
+    public static final Integer HTTP_PROXY_PORT_2 = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 
@@ -364,10 +378,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer INVALID_FORMAT_VERSION = -1 * FORMAT_VERSION;
 
     public static final String I_DO_NOT_EXIST = "I_DO_NOT_EXIST";
-
-    public static final String JMS_QUEUE_NAME = "UT_JmsQueueName" + RANDOM_SUFFIX;
-
-    public static final String JMS_QUEUE_NAME_2 = "UT_JmsQueueName_2" + RANDOM_SUFFIX;
 
     public static final String JOB_DESCRIPTION = "UT_JobDescription" + RANDOM_SUFFIX;
 
@@ -409,9 +419,21 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer MAX_RESULTS_1 = 1;
 
+    public static final String MESSAGE_DESTINATION = "UT_MessageDestination_1_" + RANDOM_SUFFIX;
+
+    public static final String MESSAGE_DESTINATION_2 = "UT_MessageDestination_2_" + RANDOM_SUFFIX;
+
+    public static final String MESSAGE_ID = "UT_Message_ID_" + RANDOM_SUFFIX;
+
     public static final String MESSAGE_TEXT = "UT_Message_Text" + RANDOM_SUFFIX;
 
     public static final String MESSAGE_TEXT_2 = "UT_Message_Text_2" + RANDOM_SUFFIX;
+
+    public static final String MESSAGE_TYPE = "UT_MessageType_1_" + RANDOM_SUFFIX;
+
+    public static final String MESSAGE_TYPE_2 = "UT_MessageType_2_" + RANDOM_SUFFIX;
+
+    public static final String MESSAGE_VELOCITY_TEMPLATE = "UT_MessageVelocityTemplate_" + RANDOM_SUFFIX;
 
     public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_INTERSECTION = Collections.unmodifiableList(Arrays.asList("2014-04-08"));
 
@@ -451,6 +473,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<Attribute> NO_ATTRIBUTES = new ArrayList<>();
 
     public static final List<AttributeDefinition> NO_ATTRIBUTE_DEFINITIONS = new ArrayList<>();
+
+    public static final String NO_AWS_ACCESS_KEY = null;
+
+    public static final String NO_AWS_SECRET_KEY = null;
 
     public static final String NO_BDATA_STATUS = null;
 
@@ -502,6 +528,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer NO_MAX_RESULTS = null;
 
+    public static final String NO_MESSAGE_DESTINATION = null;
+
+    public static final String NO_MESSAGE_TYPE = null;
+
+    public static final String NO_MESSAGE_VELOCITY_TEMPLATE = null;
+
     public static final String NO_NAMESPACE = null;
 
     public static final String NO_PARENT_TAG_CODE = null;
@@ -525,6 +557,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Schema NO_SCHEMA = null;
 
     public static final Boolean NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS = false;
+
+    public static final String NO_SESSION_TOKEN = null;
 
     public static final String NO_STORAGE_DIRECTORY_PATH = null;
 
@@ -1040,12 +1074,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected JdbcDao jdbcDao;
 
     @Autowired
-    protected JmsMessageDao jmsMessageDao;
-
-    @Autowired
-    protected JmsMessageDaoTestHelper jmsMessageDaoTestHelper;
-
-    @Autowired
     protected JobDefinitionDao jobDefinitionDao;
 
     @Autowired
@@ -1055,6 +1083,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected KmsDao kmsDao;
 
     @Autowired
+    protected MessageTypeDao messageTypeDao;
+
+    @Autowired
+    protected MessageTypeDaoTestHelper messageTypeDaoTestHelper;
+
+    @Autowired
     protected NamespaceDao namespaceDao;
 
     @Autowired
@@ -1062,6 +1096,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected NotificationEventTypeDao notificationEventTypeDao;
+
+    @Autowired
+    protected NotificationMessageDao notificationMessageDao;
+
+    @Autowired
+    protected NotificationMessageDaoTestHelper notificationMessageDaoTestHelper;
 
     @Autowired
     protected NotificationRegistrationDao notificationRegistrationDao;
@@ -1113,6 +1153,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected SecurityFunctionDao securityFunctionDao;
+
+    @Autowired
+    protected SnsDao snsDao;
 
     @Autowired
     protected SqsDao sqsDao;

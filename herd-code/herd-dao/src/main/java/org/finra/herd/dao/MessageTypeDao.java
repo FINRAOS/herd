@@ -15,22 +15,16 @@
 */
 package org.finra.herd.dao;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.SendMessageResult;
+import org.finra.herd.model.jpa.MessageTypeEntity;
 
-/**
- * A service for AWS SQS operations.
- */
-public interface SqsOperations
+public interface MessageTypeDao extends BaseJpaDao
 {
     /**
-     * Delivers a message to the specified queue.
+     * Returns a message type by its code.
      *
-     * @param queueName the name of the Amazon SQS queue to which a message is sent
-     * @param messageText the text of the message
-     * @param amazonSQS the client for accessing AWS SQS
+     * @param code the message type code
      *
-     * @return the result the send message operation returned by the service
+     * @return the message type entity
      */
-    public SendMessageResult sendMessage(String queueName, String messageText, AmazonSQS amazonSQS);
+    public MessageTypeEntity getMessageTypeByCode(String code);
 }
