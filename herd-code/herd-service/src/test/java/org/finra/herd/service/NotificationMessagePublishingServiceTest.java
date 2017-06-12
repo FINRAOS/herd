@@ -55,6 +55,37 @@ public class NotificationMessagePublishingServiceTest extends AbstractServiceTes
 
         // Publish the notification message from the database queue.
         assertTrue(notificationMessagePublishingServiceImpl.publishOldestNotificationMessageFromDatabaseQueue());
+
+        // Publish notification message directly - not from the database queue.
+        notificationMessagePublishingServiceImpl
+            .publishNotificationMessage(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT));
+    }
+
+    @Test
+    public void testPublishNotificationMessage()
+    {
+        // Publish a notification message with SQS message type.
+        notificationMessagePublishingService
+            .publishNotificationMessage(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT));
+
+        // Publish a notification message with SNS message type.
+        notificationMessagePublishingService
+            .publishNotificationMessage(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SNS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT));
+    }
+
+    @Test
+    public void testPublishNotificationMessageInvalidMessageType()
+    {
+        // Try to publish notification message with an invalid message type.
+        try
+        {
+            notificationMessagePublishingService.publishNotificationMessage(new NotificationMessage(I_DO_NOT_EXIST, MESSAGE_DESTINATION, MESSAGE_TEXT));
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message type \"%s\" is not supported.", I_DO_NOT_EXIST), e.getMessage());
+        }
     }
 
     @Test
@@ -63,9 +94,10 @@ public class NotificationMessagePublishingServiceTest extends AbstractServiceTes
         // Create a notification message and add it to the database queue.
         notificationMessageDaoTestHelper.createNotificationMessageEntity(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT);
 
-        // Validate the results by ensuring there is only 1 message that got published (i.e. true for the first publish call and false for the second one since
-        // only one messaged is queued).
+        // Publish the notification message from the database queue.
         assertTrue(notificationMessagePublishingService.publishOldestNotificationMessageFromDatabaseQueue());
+
+        // Confirm that the database queue is empty now by trying to publish the next notification message from the queue.
         assertFalse(notificationMessagePublishingService.publishOldestNotificationMessageFromDatabaseQueue());
     }
 

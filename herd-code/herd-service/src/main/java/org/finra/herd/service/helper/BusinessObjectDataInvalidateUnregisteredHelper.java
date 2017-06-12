@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -179,9 +180,9 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
         businessObjectDataKey.setBusinessObjectFormatVersion(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatVersion());
         businessObjectDataKey.setPartitionValue(businessObjectDataInvalidateUnregisteredRequest.getPartitionValue());
         businessObjectDataKey.setSubPartitionValues(businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues());
-        if (businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues() == null)
+        if (CollectionUtils.isEmpty(businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues()))
         {
-            businessObjectDataKey.setSubPartitionValues(new ArrayList<String>());
+            businessObjectDataKey.setSubPartitionValues(new ArrayList<>());
         }
         return businessObjectDataKey;
     }
@@ -431,7 +432,7 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
         businessObjectDataInvalidateUnregisteredRequest.setPartitionValue(businessObjectDataInvalidateUnregisteredRequest.getPartitionValue().trim());
         businessObjectDataInvalidateUnregisteredRequest.setStorageName(businessObjectDataInvalidateUnregisteredRequest.getStorageName().trim());
         List<String> subPartitionValues = businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues();
-        if (subPartitionValues != null)
+        if (CollectionUtils.isNotEmpty(subPartitionValues))
         {
             for (int i = 0; i < subPartitionValues.size(); i++)
             {
@@ -463,7 +464,7 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
             "The business object format version must be greater than or equal to 0");
         Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getPartitionValue()), "The partition value is required");
         Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getStorageName()), "The storage name is required");
-        if (businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues() != null)
+        if (CollectionUtils.isNotEmpty(businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues()))
         {
             for (int i = 0; i < businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues().size(); i++)
             {

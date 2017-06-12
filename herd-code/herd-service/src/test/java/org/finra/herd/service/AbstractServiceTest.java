@@ -91,6 +91,7 @@ import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
 import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
 import org.finra.herd.service.helper.JobDefinitionHelper;
+import org.finra.herd.service.helper.MessageTypeDaoHelper;
 import org.finra.herd.service.helper.NotificationActionFactory;
 import org.finra.herd.service.helper.NotificationMessageBuilder;
 import org.finra.herd.service.helper.NotificationRegistrationDaoHelper;
@@ -257,6 +258,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean INCLUDE_DROP_TABLE_STATEMENT = true;
 
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
+
+    public static final String METHOD_NAME = "UT_MethodName_1_" + RANDOM_SUFFIX;
+
+    public static final String METHOD_NAME_2 = "UT_MethodName_2_" + RANDOM_SUFFIX;
 
     public static final String NEGATIVE_COLUMN_SIZE = "-1" + RANDOM_SUFFIX;
 
@@ -621,6 +626,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected MessageNotificationEventService messageNotificationEventService;
+
+    @Autowired
+    protected MessageTypeDaoHelper messageTypeDaoHelper;
 
     @Autowired
     protected NamespaceService namespaceService;

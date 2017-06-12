@@ -17,6 +17,7 @@ package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Collection;
@@ -36,9 +37,11 @@ import org.springframework.security.core.userdetails.User;
 
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.NotificationMessageDefinitions;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.ConfigurationEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
@@ -57,6 +60,35 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
     public void testBuildBusinessObjectDataStatusChangeMessages()
     {
         testBuildBusinessObjectDataStatusChangeMessages(SUBPARTITION_VALUES, HerdDaoSecurityHelper.SYSTEM_USER);
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesNoNotificationMessageDefinitions() throws Exception
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Get the configuration key.
+        String configurationKey = ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey();
+
+        // Override configuration, so there will be no notification message definitions configured in the system.
+        ConfigurationEntity configurationEntity = configurationDao.getConfigurationByKey(configurationKey);
+        configurationEntity.setValueClob(null);
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Trigger the notification and validate the results.
+        assertTrue(messageNotificationEventService.processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2)
+            .isEmpty());
+
+        // Override configuration, so there will be an empty list of notification message definitions configured in the system.
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions()));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Trigger the notification and validate the results.
+        assertTrue(messageNotificationEventService.processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2)
+            .isEmpty());
     }
 
     /**

@@ -15,36 +15,51 @@
 */
 package org.finra.herd.service.advice;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 
+import com.amazonaws.AmazonServiceException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.LogLevel;
-import org.finra.herd.dao.impl.MockSqsOperationsImpl;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.MessageTypeEntity;
-import org.finra.herd.model.jpa.NotificationMessageEntity;
 import org.finra.herd.service.AbstractServiceTest;
 import org.finra.herd.service.helper.NotificationMessageInMemoryQueue;
+import org.finra.herd.service.impl.NotificationMessagePublishingServiceImpl;
 
 public class PublishNotificationMessagesAdviceTest extends AbstractServiceTest
 {
-    @Autowired
+    @Mock
     private NotificationMessageInMemoryQueue notificationMessageInMemoryQueue;
 
-    @Autowired
+    @Mock
+    private NotificationMessagePublishingServiceImpl notificationMessagePublishingService;
+
+    @InjectMocks
     private PublishNotificationMessagesAdvice publishNotificationMessagesAdvice;
+
+    @Before
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
 
     @Test
     public void testPublishNotificationMessages() throws Throwable
@@ -52,89 +67,174 @@ public class PublishNotificationMessagesAdviceTest extends AbstractServiceTest
         // Create a notification message.
         NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT);
 
-        // Clean up "in-memory" JMS message queue.
+        // Mock a join point of the method call.
+        ProceedingJoinPoint joinPoint = getMockedProceedingJoinPoint("testPublishNotificationMessages");
+
+        // Mock the external calls.
+        doCallRealMethod().when(notificationMessageInMemoryQueue).clear();
+        doCallRealMethod().when(notificationMessageInMemoryQueue).add(notificationMessage);
+        when(notificationMessageInMemoryQueue.isEmpty()).thenCallRealMethod();
+        doCallRealMethod().when(notificationMessageInMemoryQueue).remove();
+
+        // Clear the queue.
         notificationMessageInMemoryQueue.clear();
 
-        // Validate that "in-memory" JMS message queue is empty.
-        assertTrue(notificationMessageInMemoryQueue.isEmpty());
-
-        // Add JMS message to the "in-memory" queue for publishing.
+        // Add the notification message to the queue.
         notificationMessageInMemoryQueue.add(notificationMessage);
 
-        // Validate that "in-memory" JMS message queue now has one element.
-        assertEquals(1, notificationMessageInMemoryQueue.size());
+        // Validate that the queue is not empty now.
+        assertFalse(notificationMessageInMemoryQueue.isEmpty());
 
-        // Validate that the JMS message database queue is empty.
-        assertNull(notificationMessageDao.getOldestNotificationMessage());
+        // Call the method under test.
+        publishNotificationMessagesAdvice.publishNotificationMessages(joinPoint);
+
+        // Verify the external calls.
+        verify(notificationMessageInMemoryQueue, times(2)).clear();
+        verify(notificationMessageInMemoryQueue).add(notificationMessage);
+        verify(notificationMessageInMemoryQueue, times(3)).isEmpty();
+        verify(notificationMessageInMemoryQueue).remove();
+        verify(notificationMessagePublishingService).publishNotificationMessage(notificationMessage);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertTrue(notificationMessageInMemoryQueue.isEmpty());
+    }
+
+    @Test
+    public void testPublishNotificationMessagesAmazonServiceException() throws Throwable
+    {
+        // Create a notification message.
+        NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT);
 
         // Mock a join point of the method call.
         ProceedingJoinPoint joinPoint = getMockedProceedingJoinPoint("testPublishNotificationMessages");
 
-        // Publish JMS messages stored in the queue.
+        // Mock the external calls.
+        doCallRealMethod().when(notificationMessageInMemoryQueue).clear();
+        doCallRealMethod().when(notificationMessageInMemoryQueue).add(notificationMessage);
+        when(notificationMessageInMemoryQueue.isEmpty()).thenCallRealMethod();
+        doCallRealMethod().when(notificationMessageInMemoryQueue).remove();
+        doThrow(new AmazonServiceException(ERROR_MESSAGE)).when(notificationMessagePublishingService).publishNotificationMessage(notificationMessage);
+
+        // Clear the queue.
+        notificationMessageInMemoryQueue.clear();
+
+        // Add the notification message to the queue.
+        notificationMessageInMemoryQueue.add(notificationMessage);
+
+        // Validate that the queue is not empty now.
+        assertFalse(notificationMessageInMemoryQueue.isEmpty());
+
+        // Call the method under test.
         publishNotificationMessagesAdvice.publishNotificationMessages(joinPoint);
 
-        // Validate that "in-memory" JMS message queue is now empty.
-        assertTrue(notificationMessageInMemoryQueue.isEmpty());
+        // Verify the external calls.
+        verify(notificationMessageInMemoryQueue, times(2)).clear();
+        verify(notificationMessageInMemoryQueue).add(notificationMessage);
+        verify(notificationMessageInMemoryQueue, times(3)).isEmpty();
+        verify(notificationMessageInMemoryQueue).remove();
+        verify(notificationMessagePublishingService).publishNotificationMessage(notificationMessage);
+        verify(notificationMessagePublishingService).addNotificationMessageToDatabaseQueue(notificationMessage);
+        verifyNoMoreInteractionsHelper();
 
-        // Validate that the JMS message database queue is still empty.
-        assertNull(notificationMessageDao.getOldestNotificationMessage());
+        // Validate the results.
+        assertTrue(notificationMessageInMemoryQueue.isEmpty());
     }
 
     @Test
-    public void testPublishNotificationMessagesAwsServiceException() throws Throwable
+    public void testPublishNotificationMessagesDatabaseException() throws Throwable
     {
-        // Create a JMS message with a mocked SQS queue name that causes an AWS service exception when trying to post a SQS message.
-        NotificationMessage notificationMessage =
-            new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME, MESSAGE_TEXT);
-
-        // Clean up "in-memory" JMS message queue.
-        notificationMessageInMemoryQueue.clear();
-
-        // Validate that "in-memory" JMS message queue is empty.
-        assertTrue(notificationMessageInMemoryQueue.isEmpty());
-
-        // Add JMS message to the "in-memory" queue for publishing.
-        notificationMessageInMemoryQueue.add(notificationMessage);
-
-        // Validate that "in-memory" JMS message queue now has one element.
-        assertEquals(1, notificationMessageInMemoryQueue.size());
-
-        // Validate that the JMS message database queue is empty.
-        assertNull(notificationMessageDao.getOldestNotificationMessage());
+        // Create a notification message.
+        NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT);
 
         // Mock a join point of the method call.
-        ProceedingJoinPoint joinPoint = getMockedProceedingJoinPoint("testPublishNotificationMessagesAwsServiceException");
+        ProceedingJoinPoint joinPoint = getMockedProceedingJoinPoint("testPublishNotificationMessages");
 
-        // Try to publish JMS message stored in the "in-memory" queue when specified SQS queue is not valid.
+        // Mock the external calls.
+        doCallRealMethod().when(notificationMessageInMemoryQueue).clear();
+        doCallRealMethod().when(notificationMessageInMemoryQueue).add(notificationMessage);
+        when(notificationMessageInMemoryQueue.isEmpty()).thenCallRealMethod();
+        doCallRealMethod().when(notificationMessageInMemoryQueue).remove();
+        doThrow(new AmazonServiceException(ERROR_MESSAGE)).when(notificationMessagePublishingService).publishNotificationMessage(notificationMessage);
+        doThrow(new RuntimeException(ERROR_MESSAGE)).when(notificationMessagePublishingService).addNotificationMessageToDatabaseQueue(notificationMessage);
+
+        // Clear the queue.
+        notificationMessageInMemoryQueue.clear();
+
+        // Add the notification message to the queue.
+        notificationMessageInMemoryQueue.add(notificationMessage);
+
+        // Validate that the queue is not empty now.
+        assertFalse(notificationMessageInMemoryQueue.isEmpty());
+
+        // Call the method under test.
         publishNotificationMessagesAdvice.publishNotificationMessages(joinPoint);
 
-        // Validate that "in-memory" JMS message queue is now empty.
-        assertTrue(notificationMessageInMemoryQueue.isEmpty());
+        // Verify the external calls.
+        verify(notificationMessageInMemoryQueue, times(2)).clear();
+        verify(notificationMessageInMemoryQueue).add(notificationMessage);
+        verify(notificationMessageInMemoryQueue, times(3)).isEmpty();
+        verify(notificationMessageInMemoryQueue).remove();
+        verify(notificationMessagePublishingService).publishNotificationMessage(notificationMessage);
+        verify(notificationMessagePublishingService).addNotificationMessageToDatabaseQueue(notificationMessage);
+        verifyNoMoreInteractionsHelper();
 
-        // Check that the test JMS message is now queued in the database queue.
-        NotificationMessageEntity notificationMessageEntity = notificationMessageDao.getOldestNotificationMessage();
-        assertNotNull(notificationMessageEntity);
-        assertEquals(MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME, notificationMessageEntity.getMessageDestination());
-        assertEquals(MESSAGE_TEXT, notificationMessageEntity.getMessageText());
+        // Validate the results.
+        assertTrue(notificationMessageInMemoryQueue.isEmpty());
     }
 
     @Test
     public void testPublishNotificationMessagesDebugEnabled() throws Throwable
     {
-        LogLevel originalLevel = getLogLevel(PublishNotificationMessagesAdvice.class);
+        // Save the current log level.
+        LogLevel originalLogLevel = getLogLevel(PublishNotificationMessagesAdvice.class);
 
         try
         {
-            // Set the logger level to debug.
+            // Set the log level to debug.
             setLogLevel(PublishNotificationMessagesAdvice.class, LogLevel.DEBUG);
 
-            // Execute the happy path unit test with DEBUG logging level enabled.
-            testPublishNotificationMessages();
+            // Create a notification message.
+            NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT);
+
+            // Mock a join point of the method call.
+            ProceedingJoinPoint joinPoint = getMockedProceedingJoinPoint("testPublishNotificationMessages");
+
+            // Mock the external calls.
+            doCallRealMethod().when(notificationMessageInMemoryQueue).clear();
+            doCallRealMethod().when(notificationMessageInMemoryQueue).add(notificationMessage);
+            when(notificationMessageInMemoryQueue.size()).thenCallRealMethod();
+            when(notificationMessageInMemoryQueue.isEmpty()).thenCallRealMethod();
+            doCallRealMethod().when(notificationMessageInMemoryQueue).remove();
+
+            // Clear the queue.
+            notificationMessageInMemoryQueue.clear();
+
+            // Add the notification message to the queue.
+            notificationMessageInMemoryQueue.add(notificationMessage);
+
+            // Validate that the queue is not empty now.
+            assertFalse(notificationMessageInMemoryQueue.isEmpty());
+
+            // Call the method under test.
+            publishNotificationMessagesAdvice.publishNotificationMessages(joinPoint);
+
+            // Verify the external calls.
+            verify(notificationMessageInMemoryQueue, times(2)).clear();
+            verify(notificationMessageInMemoryQueue).add(notificationMessage);
+            verify(notificationMessageInMemoryQueue).size();
+            verify(notificationMessageInMemoryQueue, times(3)).isEmpty();
+            verify(notificationMessageInMemoryQueue).remove();
+            verify(notificationMessagePublishingService).publishNotificationMessage(notificationMessage);
+            verifyNoMoreInteractionsHelper();
+
+            // Validate the results.
+            assertTrue(notificationMessageInMemoryQueue.isEmpty());
         }
         finally
         {
-            // Restore logger level to the original value.
-            setLogLevel(PublishNotificationMessagesAdvice.class, originalLevel);
+            // Restore log level to the original value.
+            setLogLevel(PublishNotificationMessagesAdvice.class, originalLogLevel);
         }
     }
 
@@ -164,5 +264,13 @@ public class PublishNotificationMessagesAdviceTest extends AbstractServiceTest
     @PublishNotificationMessages
     private void mockMethod()
     {
+    }
+
+    /**
+     * Checks if any of the mocks has any interaction.
+     */
+    private void verifyNoMoreInteractionsHelper()
+    {
+        verifyNoMoreInteractions(notificationMessageInMemoryQueue, notificationMessagePublishingService);
     }
 }
