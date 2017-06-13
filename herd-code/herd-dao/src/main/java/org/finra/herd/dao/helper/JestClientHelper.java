@@ -2,8 +2,10 @@ package org.finra.herd.dao.helper;
 
 import java.io.IOException;
 
+import io.searchbox.client.JestResult;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
+import io.searchbox.core.SearchScroll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,5 +46,24 @@ public class JestClientHelper
 
         return searchResult;
     }
+
+    public JestResult searchScrollExecute(final SearchScroll searchScroll)
+    {
+        final JestResult searchResult;
+        try
+        {
+            searchResult =
+                jestClientFactory.getJestClient().execute(searchScroll);
+        }
+        catch (final IOException ioException)
+        {
+            LOGGER.error("Failed to execute JEST client search.", ioException);
+            throw new RuntimeException(ioException);
+        }
+
+        return searchResult;
+    }
+
+
 
 }

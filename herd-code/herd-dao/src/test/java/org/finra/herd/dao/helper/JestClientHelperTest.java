@@ -15,8 +15,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import io.searchbox.client.JestClient;
+import io.searchbox.client.JestResult;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
+import io.searchbox.core.SearchScroll;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -92,6 +94,28 @@ public class JestClientHelperTest
             // Validate
             assertThat(runtimeException, is(instanceOf(RuntimeException.class)));
         }
+
+        // Verify
+        verify(jestClientFactory).getJestClient();
+        verify(jestClient).execute(search);
+        verifyNoMoreInteractions(createdMocks.toArray());
+    }
+
+    @Test
+    public void testSearchExecuteScroll() throws Exception
+    {
+        // Mock
+        SearchScroll search = mock(SearchScroll.class);
+        JestResult searchResult = mock(JestResult.class);
+        JestClient jestClient = mock(JestClient.class);
+        when(jestClientFactory.getJestClient()).thenReturn(jestClient);
+        when(jestClient.execute(search)).thenReturn(searchResult);
+
+        // Test
+        JestResult result = jestClientHelper.searchScrollExecute(search);
+
+        // Validate
+        assertThat(result, is(not(nullValue())));
 
         // Verify
         verify(jestClientFactory).getJestClient();

@@ -8,14 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.searchbox.client.JestResult;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
+import io.searchbox.core.SearchScroll;
 import io.searchbox.params.Parameters;
 import org.apache.commons.collections4.CollectionUtils;
 import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchScrollAction;
-import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.ConstantScoreQueryBuilder;
@@ -51,7 +51,7 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
     /**
      * Page size
      */
-    public static final int ELASTIC_SEARCH_SCROLL_PAGE_SIZE = 5;
+    public static final int ELASTIC_SEARCH_SCROLL_PAGE_SIZE = 100;
 
     /**
      * Scroll keep alive in milliseconds
@@ -188,6 +188,8 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
      */
     public static final String BDEF_NAME_FIELD = "name.keyword";
 
+    private static final String SCROLL_ID = "_scroll_id";
+
     /**
      * The configuration helper used to retrieve configuration values
      */
@@ -211,7 +213,7 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
 
     @Autowired
     private JestClientHelper jestClientHelper;
-    
+
     @Override
     public ElasticsearchResponseDto searchBusinessObjectDefinitionsByTags(String indexName, String documentType,
         List<Map<SearchFilterType, List<TagEntity>>> nestedTagEntityMaps, Set<String> facetFieldsList)
@@ -319,7 +321,7 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
 
         elasticsearchResponseDto
             .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
-        
+
         return elasticsearchResponseDto;
     }
 
@@ -328,7 +330,7 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
     {
 
         LOGGER.info("Elasticsearch get all business object definition documents from index, indexName={} and documentType={}.", indexName, documentType);
-        
+
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder
             .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
@@ -340,8 +342,8 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
         searchRequestBuilder.setIndices(indexName);
 
         searchRequestBuilder.setTypes(documentType)
-            .setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
-            .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
+           // .setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
+            //.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
             .setSource(searchSourceBuilder)
 
             // Set sort options.
@@ -365,6 +367,7 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
      * @param searchRequestBuilder the the search request to scroll through
      *
      * @return list of business object definition entities
+     * @throws Exception
      */
     private List<BusinessObjectDefinitionIndexSearchResponseDto> scrollSearchResultsIntoBusinessObjectDefinitionDto(
         final SearchRequestBuilder searchRequestBuilder)
@@ -373,41 +376,22 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
         final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString());
 
         searchBuilder.setParameter(Parameters.SIZE, ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
-        searchBuilder.setParameter(Parameters.SCROLL, new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        searchBuilder.setParameter(Parameters.SCROLL, new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME).toString());
 
-        SearchResult searchResult = jestClientHelper.searchExecute(searchBuilder.build());
-        List<SearchResult.Hit<Map, Void>> searchHitList = searchResult.getHits(Map.class);
+        JestResult jestResult = jestClientHelper.searchExecute(searchBuilder.build());
 
-        // Create an array list for storing the BusinessObjectDefinitionEntities
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
+        List<BusinessObjectDefinitionIndexSearchResponseDto> resultList =
+                jestResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class);
 
-        // While there are hits available, page through the results and add them to the id list
-        while (searchHitList.size() != 0)
+        while (resultList.size() != 0)
         {
-            for (SearchResult.Hit<Map, Void>  searchHit : searchHitList)
-            {
-                try
-                {
-                    // Get the source map from the indexSearch hit
-                    @SuppressWarnings("unchecked")
-                    Map sourceMap = searchHit.source;
-                    String jsonInString = jsonHelper.objectToJson(sourceMap);
-                    //businessObjectDefinitionIndexSearchResponseDtoList.add(dto);
-                     businessObjectDefinitionIndexSearchResponseDtoList
-                       .add(jsonHelper.unmarshallJsonToObject(BusinessObjectDefinitionIndexSearchResponseDto.class, jsonInString));
-                }
-                catch (Exception ioException)
-                {
-                    LOGGER.warn("Could not convert JSON document id={} into BusinessObjectDefinition object. ", searchHit.id, ioException);
-                }
-            }
-
-            String scrollId = searchResult.getJsonObject().get("_scroll_id").getAsString();
-            
-            SearchScrollRequestBuilder searchScrollRequestBuilder = new SearchScrollRequestBuilder(new ElasticsearchClientImpl(), SearchScrollAction.INSTANCE, scrollId);
-            searchScrollRequestBuilder.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
-            searchResult = jestClientHelper.searchExecute(searchBuilder.build());
-            searchHitList = searchResult.getHits(Map.class);
+            businessObjectDefinitionIndexSearchResponseDtoList.addAll(resultList);
+            String scrollId = jestResult.getJsonObject().get(SCROLL_ID).getAsString();
+            SearchScroll scroll = new SearchScroll.Builder(scrollId, new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME).toString()).build();
+            jestResult = jestClientHelper.searchScrollExecute(scroll);
+            resultList =
+                    jestResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class);
         }
 
         return businessObjectDefinitionIndexSearchResponseDtoList;
@@ -438,7 +422,7 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
         // Retrieve the search response
         final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString());
         SearchResult searchResult = jestClientHelper.searchExecute(searchBuilder.build());
-        return elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResult);
+        return elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResult);
     }
 
     /**
