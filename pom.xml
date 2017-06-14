@@ -90,6 +90,7 @@
       <elasticsearch.version>5.1.1</elasticsearch.version>
       <search-guard-ssl.version>5.1.1-19</search-guard-ssl.version>
       <jcredstash.version>0.0.3</jcredstash.version>
+      <jest.version>2.4.0</jest.version>
 
       <!-- Third Party Plugin Dependencies -->
       <jaxb.xew.plugin.version>1.6</jaxb.xew.plugin.version>
@@ -835,6 +836,11 @@
             <groupId>co.wrisk.jcredstash</groupId>
             <artifactId>jcredstash</artifactId>
             <version>${jcredstash.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>io.searchbox</groupId>
+            <artifactId>jest</artifactId>
+            <version>${jest.version}</version>
          </dependency>
          <dependency>
             <!-- jsoup HTML parser library @ http://jsoup.org/ -->

@@ -24,6 +24,8 @@ import net.sf.ehcache.config.CacheConfiguration;
 import org.apache.commons.configuration.ConfigurationConverter;
 import org.apache.commons.configuration.DatabaseConfiguration;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,6 +106,32 @@ public class DaoSpringModuleConfig implements CachingConfigurer
      * The transport client cache name.
      */
     public static final String TRANSPORT_CLIENT_CACHE_NAME = "transport_client_cache";
+
+    /**
+     * A get method for building and retrieving an Elasticsearch RestClient object.
+     *
+     * @return the RestClient object used to connect to Elasticsearch
+     */
+    @Bean
+    public RestClient getRestClient()
+    {
+        // The Elasticsearch REST client that will be configured and returned.
+        RestClient restClient;
+
+        // Retrieve the configuration values used for setting up an Elasticsearch REST client.
+        final String hostname = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
+        final int port = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
+        final String scheme = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
+
+        LOGGER.info("Elasticsearch hostname={}", hostname);
+        LOGGER.info("Elasticsearch port={}", port);
+        LOGGER.info("Elasticsearch scheme={}", scheme);
+
+        // Build the RestClient object
+        restClient = RestClient.builder(new HttpHost(hostname, port, scheme)).build();
+
+        return restClient;
+    }
 
     /**
      * The JPA entity manager factory.

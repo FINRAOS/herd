@@ -760,6 +760,31 @@ public enum ConfigurationValue
     ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH("elasticsearch.search.guard.keystore.path", "/path/to/keystore.jks"),
 
     /**
+     * The elasticsearch search rest client hostname
+     */
+    ELASTICSEARCH_REST_CLIENT_HOSTNAME("elasticsearch.rest.client.hostname", "localhost"),
+
+    /**
+     * The elasticsearch search rest client port number
+     */
+    ELASTICSEARCH_REST_CLIENT_PORT("elasticsearch.rest.client.port", 9200),
+
+    /**
+     * The elasticsearch search rest client scheme
+     */
+    ELASTICSEARCH_REST_CLIENT_SCHEME("elasticsearch.rest.client.scheme", "http"),
+
+    /*
+     * The elasticsearch search rest client user name
+     */
+    ELASTICSEARCH_REST_CLIENT_USERNAME("elasticsearch.rest.client.username",  null),
+
+    /*
+     * The elasticsearch search rest client user credential name
+     */
+    ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname",  null),
+
+    /**
      * The elasticsearch search guard truststore file path
      */
     ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH("elasticsearch.search.guard.truststore.path", "/path/to/truststore.jks"),

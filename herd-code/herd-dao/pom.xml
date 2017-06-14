@@ -192,6 +192,10 @@
          <artifactId>transport</artifactId>
       </dependency>
       <dependency>
+         <groupId>io.searchbox</groupId>
+         <artifactId>jest</artifactId>
+      </dependency>
+      <dependency>
          <groupId>com.floragunn</groupId>
          <artifactId>search-guard-ssl</artifactId>
       </dependency>
