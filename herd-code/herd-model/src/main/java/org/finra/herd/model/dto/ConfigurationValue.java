@@ -763,6 +763,16 @@ public enum ConfigurationValue
      */
     ELASTICSEARCH_REST_CLIENT_SCHEME("elasticsearch.rest.client.scheme", "http"),
 
+    /*
+     * The elasticsearch search rest client user name
+     */
+    ELASTICSEARCH_REST_CLIENT_USERNAME("elasticsearch.rest.client.username",  null),
+
+    /*
+     * The elasticsearch search rest client user credential name
+     */
+    ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname",  null),
+
     /**
      * The elasticsearch search guard truststore file path
      */
