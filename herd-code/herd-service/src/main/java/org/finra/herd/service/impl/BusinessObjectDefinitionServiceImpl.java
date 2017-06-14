@@ -48,6 +48,8 @@ import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.BusinessObjectDefinitionIndexSearchDao;
+import org.finra.herd.dao.SearchFilterType;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
@@ -90,7 +92,6 @@ import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.SearchableService;
-import org.finra.herd.service.functional.SearchFilterType;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
@@ -103,6 +104,7 @@ import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
+
 
 /**
  * The business object definition service implementation.
@@ -154,6 +156,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionIndexSearchDao businessObjectDefinitionIndexSearchDao;
 
     // Constant to hold the data provider name option for the business object definition search
     private static final String DATA_PROVIDER_NAME_FIELD = "dataprovidername";
@@ -535,14 +540,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
             // Use the tag type entities lists to search in the search index for business object definitions
             elasticsearchResponseDto =
-                searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntitiesPerSearchFilter, facetFields);
+                businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags(indexName, documentType, tagEntitiesPerSearchFilter, facetFields);
         }
         else
         {
             // Else get all of the business object definitions
-            elasticsearchResponseDto = searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType, facetFields);
+            elasticsearchResponseDto =  businessObjectDefinitionIndexSearchDao.findAllBusinessObjectDefinitions(indexName, documentType, facetFields);
         }
-
 
         // Create a list to hold the business object definitions that will be returned as part of the search response
         List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();

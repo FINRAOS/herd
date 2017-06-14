@@ -18,8 +18,10 @@ package org.finra.herd.dao.helper;
 import java.io.IOException;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.searchbox.client.JestResult;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
+import io.searchbox.core.SearchScroll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,4 +64,27 @@ public class JestClientHelper
         return searchResult;
     }
 
+    /**
+     * Method to use the JEST client to search against Elasticsearch.
+     *
+     * @param searchScroll search scroll request
+     *
+     * @return a jest search result
+     */
+    public JestResult searchScrollExecute(final SearchScroll searchScroll)
+    {
+        JestResult searchResult;
+        try
+        {
+            searchResult =
+                jestClientFactory.getJestClient().execute(searchScroll);
+        }
+        catch (final IOException ioException)
+        {
+            LOGGER.error("Failed to execute JEST client search.", ioException);
+            throw new RuntimeException(ioException); //NOPMD
+        }
+
+        return searchResult;
+    }
 }
