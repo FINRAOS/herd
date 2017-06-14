@@ -59,8 +59,7 @@ public class JestClientFactory
         final String scheme = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
         final String serverUri = String.format("%s://%s:%d", scheme, hostname, port);
         final String userName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
-        final String credentialName =
-            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME); //"DATAMGT.es.dev.DM_ADMIN";
+        final String credentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
         final String password;
         try
         {
