@@ -23,31 +23,31 @@ import javax.persistence.criteria.Root;
 
 import org.springframework.stereotype.Repository;
 
-import org.finra.herd.dao.JmsMessageDao;
-import org.finra.herd.model.jpa.JmsMessageEntity;
-import org.finra.herd.model.jpa.JmsMessageEntity_;
+import org.finra.herd.dao.NotificationMessageDao;
+import org.finra.herd.model.jpa.NotificationMessageEntity;
+import org.finra.herd.model.jpa.NotificationMessageEntity_;
 
 @Repository
-public class JmsMessageDaoImpl extends AbstractHerdDao implements JmsMessageDao
+public class NotificationMessageDaoImpl extends AbstractHerdDao implements NotificationMessageDao
 {
     @Override
-    public JmsMessageEntity getOldestJmsMessage()
+    public NotificationMessageEntity getOldestNotificationMessage()
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<JmsMessageEntity> criteria = builder.createQuery(JmsMessageEntity.class);
+        CriteriaQuery<NotificationMessageEntity> criteria = builder.createQuery(NotificationMessageEntity.class);
 
-        // The criteria root is the jms message.
-        Root<JmsMessageEntity> jmsMessageEntity = criteria.from(JmsMessageEntity.class);
+        // The criteria root is the notification message.
+        Root<NotificationMessageEntity> notificationMessageEntity = criteria.from(NotificationMessageEntity.class);
 
         // Add the select clause.
-        criteria.select(jmsMessageEntity);
+        criteria.select(notificationMessageEntity);
 
-        // Add the order by clause, since we want to return only the oldest JMS message (a message with the smallest sequence generated id).
-        criteria.orderBy(builder.asc(jmsMessageEntity.get(JmsMessageEntity_.id)));
+        // Add the order by clause, since we want to return only the oldest notification message (a message with the smallest sequence generated id).
+        criteria.orderBy(builder.asc(notificationMessageEntity.get(NotificationMessageEntity_.id)));
 
-        // Execute the query and ask it to return only the first row.
-        List<JmsMessageEntity> resultList = entityManager.createQuery(criteria).setMaxResults(1).getResultList();
+        // Execute the query and ask it to return only the first record.
+        List<NotificationMessageEntity> resultList = entityManager.createQuery(criteria).setMaxResults(1).getResultList();
 
         // Return the result.
         return resultList.size() > 0 ? resultList.get(0) : null;

@@ -17,7 +17,7 @@ ALTER TABLE EMR_CLSTR_DFNTN ALTER COLUMN CNFGN_CL CLOB;
 ALTER TABLE CSTM_DDL ALTER COLUMN DDL_CL CLOB;
 ALTER TABLE EMR_CLSTR_CRTN_LOG ALTER COLUMN EMR_CLSTR_DFNTN_CL CLOB;
 ALTER TABLE EMR_CLSTR_DFNTN ALTER COLUMN CNFGN_CL CLOB;
-ALTER TABLE JMS_MSG ALTER COLUMN MSG_TX CLOB;
+ALTER TABLE NTFCN_MSG ALTER COLUMN MSG_TX CLOB;
 
 -- Add a constraint to ensure each row in "Business Object Data Parents" is unique. This is needed for a JUnit that ensures duplicate parents aren't allowed.
 ALTER TABLE BUS_OBJCT_DATA_PRNT ADD CONSTRAINT BUS_OBJCT_DATA_PRNT_PK PRIMARY KEY (BUS_OBJCT_DATA_ID, PRNT_BUS_OBJCT_DATA_ID);
@@ -92,3 +92,7 @@ insert into SCRTY_FN_LK (SCRTY_FN_CD, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USE
 -- Notification Registration Status
 insert into ntfcn_rgstn_stts_cd_lk (ntfcn_rgstn_stts_cd, ntfcn_rgstn_stts_ds, creat_ts, creat_user_id, updt_ts, updt_user_id) values ('ENABLED', 'Enabled', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
 insert into ntfcn_rgstn_stts_cd_lk (ntfcn_rgstn_stts_cd, ntfcn_rgstn_stts_ds, creat_ts, creat_user_id, updt_ts, updt_user_id) values ('DISABLED', 'Disabled', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
+
+-- Message Type
+insert into msg_type_cd_lk (msg_type_cd, creat_ts, creat_user_id, updt_ts, updt_user_id) values ('SQS', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
+insert into msg_type_cd_lk (msg_type_cd, creat_ts, creat_user_id, updt_ts, updt_user_id) values ('SNS', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');

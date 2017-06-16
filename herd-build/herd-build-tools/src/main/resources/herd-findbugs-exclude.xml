@@ -68,10 +68,10 @@
          <Class name="~org.finra.herd.model.dto.HivePartitionDto"/>
          <Class name="~org.finra.herd.model.dto.IndexSearchHighlightField"/>
          <Class name="~org.finra.herd.model.dto.IndexSearchHighlightFields"/>
-         <Class name="~org.finra.herd.model.dto.JmsMessage"/>
          <Class name="~org.finra.herd.model.dto.JobDefinitionAlternateKeyDto"/>
          <Class name="~org.finra.herd.model.dto.Namespace"/>
          <Class name="~org.finra.herd.model.dto.NotificationEventParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.NotificationMessage"/>
          <Class name="~org.finra.herd.model.dto.ObjectFactory"/>
          <Class name="~org.finra.herd.model.dto.RegServerAccessParamsDto"/>
          <Class name="~org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto"/>

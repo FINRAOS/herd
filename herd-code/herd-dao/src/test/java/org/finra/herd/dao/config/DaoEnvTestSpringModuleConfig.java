@@ -35,6 +35,7 @@ import org.finra.herd.dao.KmsOperations;
 import org.finra.herd.dao.LdapOperations;
 import org.finra.herd.dao.Log4jOverridableConfigurer;
 import org.finra.herd.dao.S3Operations;
+import org.finra.herd.dao.SnsOperations;
 import org.finra.herd.dao.SqsOperations;
 import org.finra.herd.dao.StsOperations;
 import org.finra.herd.dao.UrlOperations;
@@ -45,6 +46,7 @@ import org.finra.herd.dao.impl.MockJdbcOperations;
 import org.finra.herd.dao.impl.MockKmsOperationsImpl;
 import org.finra.herd.dao.impl.MockLdapOperations;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
+import org.finra.herd.dao.impl.MockSnsOperationsImpl;
 import org.finra.herd.dao.impl.MockSqsOperationsImpl;
 import org.finra.herd.dao.impl.MockStsOperationsImpl;
 import org.finra.herd.dao.impl.MockUrlOperationsImpl;
@@ -165,6 +167,12 @@ public class DaoEnvTestSpringModuleConfig
     public SqsOperations sqsOperations()
     {
         return new MockSqsOperationsImpl();
+    }
+
+    @Bean
+    public SnsOperations snsOperations()
+    {
+        return new MockSnsOperationsImpl();
     }
 
     @Bean

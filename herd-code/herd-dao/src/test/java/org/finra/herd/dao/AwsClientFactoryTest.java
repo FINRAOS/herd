@@ -1,10 +1,13 @@
 package org.finra.herd.dao;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sqs.AmazonSQS;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -21,158 +24,152 @@ public class AwsClientFactoryTest extends AbstractDaoTest
     private CacheManager cacheManager;
 
     @Test
-    public void getEC2ClientCachingClear() throws Exception
+    public void testGetAmazonSNSClient()
     {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
+        assertNotNull(
+            awsClientFactory.getAmazonSNSClient(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT)));
+    }
 
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
+    @Test
+    public void testGetAmazonSNSClientCacheHitMiss()
+    {
+        // Create an AWS parameters DTO that contains proxy information.
+        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
 
-        AmazonEC2Client ec2Client = awsClientFactory.getEc2Client(awsParamsDto);
+        // Get an Amazon SNS client.
+        AmazonSNS amazonSNS = awsClientFactory.getAmazonSNSClient(awsParamsDto);
 
-        // Clear the cache and retrieve the functions again.
+        // Confirm a cache hit.
+        assertEquals(amazonSNS,
+            awsClientFactory.getAmazonSNSClient(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT)));
+
+        // Confirm a cache miss due to http proxy information.
+        assertNotEquals(amazonSNS, awsClientFactory
+            .getAmazonSNSClient(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST_2, HTTP_PROXY_PORT_2)));
+
+        // Clear the cache.
         cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
 
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost(httpProxyHost);
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
-
-        AmazonEC2Client ec2Client2 = awsClientFactory.getEc2Client(awsParamsDto2);
-
-        assertNotEquals(ec2Client, ec2Client2);
+        // Confirm a cache miss due to cleared cache.
+        assertNotEquals(amazonSNS, awsClientFactory.getAmazonSNSClient(awsParamsDto));
     }
 
     @Test
-    public void getEC2ClientCachingHit() throws Exception
+    public void testGetAmazonSQSClient()
     {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
-
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
-
-        AmazonEC2Client amazonEC2Client = awsClientFactory.getEc2Client(awsParamsDto);
-
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost(httpProxyHost);
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
-
-        AmazonEC2Client amazonEC2Client2 = awsClientFactory.getEc2Client(awsParamsDto2);
-
-        assertTrue(amazonEC2Client == amazonEC2Client2);
+        assertNotNull(
+            awsClientFactory.getAmazonSQSClient(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT)));
     }
 
     @Test
-    public void getEC2ClientCachingHitMiss() throws Exception
+    public void testGetAmazonSQSClientCacheHitMiss()
     {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
+        // Create an AWS parameters DTO that contains proxy information.
+        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
 
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
+        // Get an Amazon SQS client.
+        AmazonSQS amazonSQS = awsClientFactory.getAmazonSQSClient(awsParamsDto);
 
-        AmazonEC2Client amazonEC2Client = awsClientFactory.getEc2Client(awsParamsDto);
+        // Confirm a cache hit.
+        assertEquals(amazonSQS,
+            awsClientFactory.getAmazonSQSClient(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT)));
 
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost("anotherone");
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
+        // Confirm a cache miss due to http proxy information.
+        assertNotEquals(amazonSQS, awsClientFactory
+            .getAmazonSQSClient(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST_2, HTTP_PROXY_PORT_2)));
 
-        AmazonEC2Client amazonEC2Client2 = awsClientFactory.getEc2Client(awsParamsDto2);
-
-        assertTrue(amazonEC2Client != amazonEC2Client2);
-    }
-
-    @Test
-    public void getEmrClientCachingClear() throws Exception
-    {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
-
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
-
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
-
-        // Clear the cache and retrieve the functions again.
+        // Clear the cache.
         cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
 
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost(httpProxyHost);
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
-
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
-
-        assertNotEquals(amazonElasticMapReduceClient, amazonElasticMapReduceClient2);
+        // Confirm a cache miss due to cleared cache.
+        assertNotEquals(amazonSQS, awsClientFactory.getAmazonSQSClient(awsParamsDto));
     }
 
     @Test
-    public void getEmrClientCachingHit() throws Exception
+    public void testGetEc2Client()
     {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
-
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
-
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
-
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost(httpProxyHost);
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
-
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
-
-        assertTrue(amazonElasticMapReduceClient == amazonElasticMapReduceClient2);
+        assertNotNull(awsClientFactory.getEc2Client(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT)));
     }
 
     @Test
-    public void getEmrClientCachingMissDueToAwsCredentials() throws Exception
+    public void testGetEc2ClientCacheHitMiss()
     {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
+        // Create an AWS parameters DTO that contains both AWS credentials and proxy information.
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
 
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
+        // Get an Amazon EC2 client.
+        AmazonEC2Client amazonEC2Client = awsClientFactory.getEc2Client(awsParamsDto);
 
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
+        // Confirm a cache hit.
+        assertEquals(amazonEC2Client, awsClientFactory.getEc2Client(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT)));
 
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost(httpProxyHost);
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
-        awsParamsDto2.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        awsParamsDto2.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        awsParamsDto2.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+        // Confirm a cache miss due to AWS credentials.
+        assertNotEquals(amazonEC2Client, awsClientFactory.getEc2Client(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY_2, AWS_ASSUMED_ROLE_SECRET_KEY_2, AWS_ASSUMED_ROLE_SESSION_TOKEN_2, HTTP_PROXY_HOST,
+                HTTP_PROXY_PORT)));
 
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
+        // Confirm a cache miss due to http proxy information.
+        assertNotEquals(amazonEC2Client, awsClientFactory.getEc2Client(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST_2, HTTP_PROXY_PORT_2)));
 
-        assertTrue(amazonElasticMapReduceClient != amazonElasticMapReduceClient2);
+        // Clear the cache.
+        cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
+
+        // Confirm a cache miss due to cleared cache.
+        assertNotEquals(amazonEC2Client, awsClientFactory.getEc2Client(awsParamsDto));
     }
 
     @Test
-    public void getEmrClientCachingMissDueToHttpProxySettings() throws Exception
+    public void testGetEc2ClientNoAwsCredentials()
     {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
+        assertNotNull(
+            awsClientFactory.getEc2Client(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT)));
+    }
 
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
+    @Test
+    public void testGetEmrClient()
+    {
+        assertNotNull(awsClientFactory.getEmrClient(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT)));
+    }
 
+    @Test
+    public void testGetEmrClientCacheHitMiss()
+    {
+        // Create an AWS parameters DTO that contains both AWS credentials and proxy information.
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+
+        // Get an Amazon EMR client.
         AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
 
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost("anotherone");
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
+        // Confirm a cache hit.
+        assertEquals(amazonElasticMapReduceClient, awsClientFactory.getEmrClient(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT)));
 
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
+        // Confirm a cache miss due to AWS credentials.
+        assertNotEquals(amazonElasticMapReduceClient, awsClientFactory.getEmrClient(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY_2, AWS_ASSUMED_ROLE_SECRET_KEY_2, AWS_ASSUMED_ROLE_SESSION_TOKEN_2, HTTP_PROXY_HOST,
+                HTTP_PROXY_PORT)));
 
-        assertTrue(amazonElasticMapReduceClient != amazonElasticMapReduceClient2);
+        // Confirm a cache miss due to http proxy information.
+        assertNotEquals(amazonElasticMapReduceClient, awsClientFactory.getEmrClient(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST_2, HTTP_PROXY_PORT_2)));
+
+        // Clear the cache.
+        cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
+
+        // Confirm a cache miss due to cleared cache.
+        assertNotEquals(amazonElasticMapReduceClient, awsClientFactory.getEmrClient(awsParamsDto));
+    }
+
+    @Test
+    public void testGetEmrClientNoAwsCredentials()
+    {
+        assertNotNull(
+            awsClientFactory.getEmrClient(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT)));
     }
 }

@@ -42,7 +42,7 @@ import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -148,7 +148,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     @Autowired
     private UploadDownloadHelperService uploadDownloadHelperService;
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @NamespacePermission(fields = {"#uploadSingleInitiationRequest?.sourceBusinessObjectFormatKey?.namespace",
         "#uploadSingleInitiationRequest?.targetBusinessObjectFormatKey?.namespace"}, permissions = NamespacePermissionEnum.WRITE)
     @Override

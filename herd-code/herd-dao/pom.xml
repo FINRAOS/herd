@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.45.0-SNAPSHOT</version>
+      <version>0.46.0-SNAPSHOT</version>
    </parent>
 
    <name>herd dao</name>
@@ -190,6 +190,10 @@
       <dependency>
          <groupId>org.elasticsearch.client</groupId>
          <artifactId>transport</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>io.searchbox</groupId>
+         <artifactId>jest</artifactId>
       </dependency>
       <dependency>
          <groupId>com.floragunn</groupId>

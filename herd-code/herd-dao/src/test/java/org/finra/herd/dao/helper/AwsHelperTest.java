@@ -83,4 +83,16 @@ public class AwsHelperTest extends AbstractDaoTest
             }
         }
     }
+
+    @Test
+    public void testGetTransferRateInKilobytesPerSecond()
+    {
+        assertEquals(Double.valueOf(0.1), awsHelper.getTransferRateInKilobytesPerSecond(10L, 100L));
+    }
+
+    @Test
+    public void testGetTransferRateInMegabitsPerSecond()
+    {
+        assertEquals(Double.valueOf(0.8), awsHelper.getTransferRateInMegabitsPerSecond(1000L, 10L));
+    }
 }

@@ -24,7 +24,7 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusInformation;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
@@ -108,7 +108,7 @@ public class BusinessObjectDataStatusServiceImpl implements BusinessObjectDataSt
      * <p/>
      * This implementation starts a new transaction.
      */
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)

@@ -1,11 +1,18 @@
 package org.finra.herd.dao.helper;
 
 import static org.finra.herd.dao.helper.ElasticsearchHelper.RESULT_TYPE_AGGS;
+import static org.finra.herd.dao.helper.ElasticsearchHelper.RESULT_TYPE_FACET;
+import static org.finra.herd.dao.helper.ElasticsearchHelper.TAGTYPE_CODE_AGGREGATION;
 import static org.finra.herd.dao.helper.ElasticsearchHelper.TAGTYPE_NAME_AGGREGATION;
 import static org.finra.herd.dao.helper.ElasticsearchHelper.TAG_CODE_AGGREGATION;
+import static org.finra.herd.dao.helper.ElasticsearchHelper.TAG_FACET;
+import static org.finra.herd.dao.helper.ElasticsearchHelper.TAG_FACET_AGGS;
 import static org.finra.herd.dao.helper.ElasticsearchHelper.TAG_NAME_AGGREGATION;
 import static org.finra.herd.dao.helper.ElasticsearchHelper.TAG_TYPE_FACET_AGGS;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -18,7 +25,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gson.JsonObject;
+import io.searchbox.core.SearchResult;
+import io.searchbox.core.search.aggregation.MetricAggregation;
+import io.searchbox.core.search.aggregation.SumAggregation;
+import io.searchbox.core.search.aggregation.TermsAggregation;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
@@ -31,6 +45,10 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.model.api.xml.Facet;
+import org.finra.herd.model.api.xml.IndexSearchFilter;
+import org.finra.herd.model.api.xml.IndexSearchKey;
+import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
+import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.FacetTypeEnum;
 import org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto;
@@ -39,6 +57,8 @@ import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 
 public class ElasticSearchHelperTest extends AbstractDaoTest
 {
+    public static final String INDEX_SEARCH_RESULT_TYPE = "Index Search Result Type 1";
+
     public static final String TAG_TYPE_CODE = "Tag Type Code 1";
 
     public static final String TAG_TYPE_CODE_2 = "Tag Type Code 2";
@@ -79,6 +99,96 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     public void before()
     {
         MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testGetNestedTagTagIndexSearchResponseDto()
+    {
+        SearchResult searchResult = mock(SearchResult.class);
+        MetricAggregation metricAggregation = mock(MetricAggregation.class);
+        SumAggregation tagFacetAggregation = mock(SumAggregation.class);
+        TermsAggregation tagTypeCodesAggregation = mock(TermsAggregation.class);
+
+        when(searchResult.getAggregations()).thenReturn(metricAggregation);
+        when(metricAggregation.getSumAggregation(TAG_FACET_AGGS)).thenReturn(tagFacetAggregation);
+        when(tagFacetAggregation.getTermsAggregation(TAGTYPE_CODE_AGGREGATION)).thenReturn(tagTypeCodesAggregation);
+
+        List<TagTypeIndexSearchResponseDto> result = elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResult);
+        assertThat("Result is null.", result, is(notNullValue()));
+    }
+
+    @Test
+    public void testGetTagTagIndexSearchResponseDtoSearchResult()
+    {
+        SearchResult searchResult = mock(SearchResult.class);
+        MetricAggregation metricAggregation = mock(MetricAggregation.class);
+        TermsAggregation termsAggregation = mock(TermsAggregation.class);
+
+        when(searchResult.getAggregations()).thenReturn(metricAggregation);
+        when(metricAggregation.getTermsAggregation(TAG_TYPE_FACET_AGGS)).thenReturn(termsAggregation);
+
+        List<TagTypeIndexSearchResponseDto> result = elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResult);
+        assertThat("Result is null.", result, is(notNullValue()));
+    }
+
+    @Test
+    public void testGetResultTypeIndexSearchResponseDtoSearchResult()
+    {
+        SearchResult searchResult = mock(SearchResult.class);
+        MetricAggregation metricAggregation = mock(MetricAggregation.class);
+        TermsAggregation termsAggregation = mock(TermsAggregation.class);
+        List<TermsAggregation.Entry> buckets = new ArrayList<>();
+        buckets.add(new TermsAggregation("TermAggregation", new JsonObject()).new Entry(new JsonObject(), "key", new Long(1)));
+
+        when(searchResult.getAggregations()).thenReturn(metricAggregation);
+        when(metricAggregation.getTermsAggregation(RESULT_TYPE_AGGS)).thenReturn(termsAggregation);
+        when(termsAggregation.getBuckets()).thenReturn(buckets);
+
+        List<ResultTypeIndexSearchResponseDto> result = elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResult);
+        assertThat("Result is null.", result, is(notNullValue()));
+    }
+
+    @Test
+    public void testAddIndexSearchFilterBooleanClause()
+    {
+        TagKey tagKey = new TagKey();
+        tagKey.setTagCode(TAG_CODE);
+        tagKey.setTagTypeCode(TAG_TYPE_CODE);
+
+        IndexSearchResultTypeKey indexSearchResultTypeKey = new IndexSearchResultTypeKey();
+        indexSearchResultTypeKey.setIndexSearchResultType(INDEX_SEARCH_RESULT_TYPE);
+
+        List<IndexSearchKey> indexSearchKeys = new ArrayList<>();
+        IndexSearchKey indexSearchKey = new IndexSearchKey();
+        indexSearchKey.setTagKey(tagKey);
+        indexSearchKey.setIndexSearchResultTypeKey(indexSearchResultTypeKey);
+        indexSearchKeys.add(indexSearchKey);
+
+        List<IndexSearchFilter> indexSearchFilters = new ArrayList<>();
+        IndexSearchFilter indexSearchFilter1 = new IndexSearchFilter();
+        indexSearchFilter1.setIsExclusionSearchFilter(true);
+        indexSearchFilter1.setIndexSearchKeys(indexSearchKeys);
+
+        IndexSearchFilter indexSearchFilter2 = new IndexSearchFilter();
+        indexSearchFilter2.setIsExclusionSearchFilter(false);
+        indexSearchFilter2.setIndexSearchKeys(indexSearchKeys);
+
+        indexSearchFilters.add(indexSearchFilter1);
+        indexSearchFilters.add(indexSearchFilter2);
+        BoolQueryBuilder result = elasticsearchHelper.addIndexSearchFilterBooleanClause(indexSearchFilters);
+        assertThat("Result is null.", result, is(notNullValue()));
+    }
+
+
+    @Test
+    public void testAddFacetFieldAggregationsWithFacetFields()
+    {
+        Set<String> facetFieldsList = new HashSet<>();
+        facetFieldsList.add(TAG_FACET);
+        facetFieldsList.add(RESULT_TYPE_FACET);
+        SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder result = elasticsearchHelper.addFacetFieldAggregations(facetFieldsList, searchRequestBuilder);
+        assertThat("Result is null.", result, is(notNullValue()));
     }
 
     @Test

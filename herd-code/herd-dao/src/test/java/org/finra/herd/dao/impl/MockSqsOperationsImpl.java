@@ -16,8 +16,10 @@
 package org.finra.herd.dao.impl;
 
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.ClientConfiguration;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 
+import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.SqsOperations;
 
 /**
@@ -28,7 +30,7 @@ public class MockSqsOperationsImpl implements SqsOperations
     public static final String MOCK_SQS_QUEUE_NOT_FOUND_NAME = "mock_sqs_queue_not_found_name";
 
     @Override
-    public void sendSqsTextMessage(ClientConfiguration client, String queueName, String messageText)
+    public SendMessageResult sendMessage(String queueName, String messageText, AmazonSQS amazonSQS)
     {
         // Throw a throttling exception for a specific queue name for testing purposes.
         if (queueName.equals(MockAwsOperationsHelper.AMAZON_THROTTLING_EXCEPTION))
@@ -45,5 +47,6 @@ public class MockSqsOperationsImpl implements SqsOperations
         }
 
         // Nothing else to do in the normal case since our unit tests aren't reading messages once they have been published.
+        return new SendMessageResult().withMessageId(AbstractDaoTest.MESSAGE_ID);
     }
 }

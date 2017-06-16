@@ -59,7 +59,13 @@ insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.notification.sqs.
    </payload>
 </datamgt:monitor>');
 
-insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.notification.sqs.business.object.data.status.change.velocity.template', '<?xml version="1.1" encoding="UTF-8"?>
+insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_CL) values ('herd.notification.business.object.data.status.change.message.definitions',
+'<?xml version="1.1" encoding="UTF-8"?>
+<notificationMessageDefinitions>
+   <notificationMessageDefinition>
+      <messageType>SQS</messageType>
+      <messageDestination>AWS_SQS_QUEUE_NAME</messageDestination>
+      <messageVelocityTemplate><![CDATA[<?xml version="1.1" encoding="UTF-8"?>
 <datamgt:TestApplicationEvent xmlns:datamgt="http://testDomain/testApplication/testApplication-event">
    <header>
       <producer>
@@ -114,7 +120,9 @@ insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.notification.sqs.
       <triggered-by-username>$username</triggered-by-username>
       <transmission-id>$uuid</transmission-id>
    </soa-audit>
-</datamgt:TestApplicationEvent>');
+</datamgt:TestApplicationEvent>]]></messageVelocityTemplate>
+   </notificationMessageDefinition>
+</notificationMessageDefinitions>');
 
 -- KooZRDgwRgdfsTP+60l+nQ== ("test")
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('emr.default.service.iam.role.name', 'KooZRDgwRgdfsTP+60l+nQ==');

@@ -20,12 +20,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.model.dto.JmsMessage;
+import org.finra.herd.model.dto.NotificationMessage;
 
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 @Primary
-public class TestJmsPublishingServiceImpl extends JmsPublishingServiceImpl
+public class TestNotificationMessagePublishingServiceImpl extends NotificationMessagePublishingServiceImpl
 {
     /**
      * {@inheritDoc}
@@ -33,9 +33,9 @@ public class TestJmsPublishingServiceImpl extends JmsPublishingServiceImpl
      * This implementation keeps the current transaction context.
      */
     @Override
-    public JmsMessage addJmsMessageToDatabaseQueue(String jmsQueueName, String messageText)
+    public void addNotificationMessageToDatabaseQueue(NotificationMessage notificationMessage)
     {
-        return addJmsMessageToDatabaseQueueImpl(jmsQueueName, messageText);
+        addNotificationMessageToDatabaseQueueImpl(notificationMessage);
     }
 
     /**
@@ -44,8 +44,19 @@ public class TestJmsPublishingServiceImpl extends JmsPublishingServiceImpl
      * This implementation keeps the current transaction context.
      */
     @Override
-    public boolean publishOldestJmsMessageFromDatabaseQueue()
+    public void publishNotificationMessage(NotificationMessage notificationMessage)
     {
-        return publishOldestJmsMessageFromDatabaseQueueImpl();
+        publishNotificationMessageImpl(notificationMessage);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public boolean publishOldestNotificationMessageFromDatabaseQueue()
+    {
+        return publishOldestNotificationMessageFromDatabaseQueueImpl();
     }
 }

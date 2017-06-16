@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusInformation;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
@@ -50,7 +50,7 @@ public class TestBusinessObjectDataStatusServiceImpl extends BusinessObjectDataS
      * <p/>
      * This implementation keeps the current transaction context.
      */
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey,
         BusinessObjectDataStatusUpdateRequest request)
