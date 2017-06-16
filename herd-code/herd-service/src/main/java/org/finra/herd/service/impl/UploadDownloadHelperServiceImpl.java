@@ -36,7 +36,7 @@ import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JsonHelper;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.CompleteUploadSingleParamsDto;
@@ -106,7 +106,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
     @Autowired
     private StorageUnitDaoHelper storageUnitDaoHelper;
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void prepareForFileMove(String objectKey, CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
@@ -296,7 +296,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         completeUploadSingleParamsDto.setTargetNewStatus(targetStatus);
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void executeFileMoveAfterSteps(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
@@ -415,7 +415,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         }
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)

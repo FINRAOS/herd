@@ -18,32 +18,35 @@ package org.finra.herd.service.helper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.dao.JmsMessageDao;
-import org.finra.herd.model.jpa.JmsMessageEntity;
+import org.finra.herd.dao.MessageTypeDao;
+import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.jpa.MessageTypeEntity;
 
 /**
- * Helper for JMS message related operations which require DAO.
+ * Helper for message type operations which require DAO.
  */
 @Component
-public class JmsMessageDaoHelper
+public class MessageTypeDaoHelper
 {
     @Autowired
-    private JmsMessageDao jmsMessageDao;
+    private MessageTypeDao messageTypeDao;
 
     /**
-     * Adds the JMS message to the database queue.
+     * Gets a message type entity by its code and ensure it exists.
      *
-     * @param jmsQueueName the JMS queue name
-     * @param messageText the message text
+     * @param code the message type code (case insensitive)
      *
-     * @return the JMS message entity
+     * @return the message type entity
      */
-    public JmsMessageEntity addJmsMessageToDatabaseQueue(String jmsQueueName, String messageText)
+    public MessageTypeEntity getMessageTypeEntity(String code)
     {
-        JmsMessageEntity jmsMessageEntity = new JmsMessageEntity();
-        jmsMessageEntity.setJmsQueueName(jmsQueueName);
-        jmsMessageEntity.setMessageText(messageText);
+        MessageTypeEntity messageTypeEntity = messageTypeDao.getMessageTypeByCode(code);
 
-        return jmsMessageDao.saveAndRefresh(jmsMessageEntity);
+        if (messageTypeEntity == null)
+        {
+            throw new ObjectNotFoundException(String.format("Message type with code \"%s\" doesn't exist.", code));
+        }
+
+        return messageTypeEntity;
     }
 }

@@ -51,6 +51,7 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.BusinessObjectDefinitionIndexSearchDao;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchResponse;
@@ -106,6 +107,9 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
     @Mock
     private TagHelper tagHelper;
 
+    @Mock
+    private BusinessObjectDefinitionIndexSearchDao businessObjectDefinitionIndexSearchDao;
+
     @Before
     public void before()
     {
@@ -131,12 +135,14 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         // Mock the call to external methods
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionEntityList);
         when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
-        when(searchFunctions.getValidateFunction()).thenReturn((indexName, documentType, id, json) -> {
+        when(searchFunctions.getValidateFunction()).thenReturn((indexName, documentType, id, json) ->
+        {
         });
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(searchFunctions.getIdsInIndexFunction()).thenReturn((indexName, documentType) -> businessObjectDefinitionEntityIdList);
-        when(searchFunctions.getDeleteDocumentByIdFunction()).thenReturn((indexName, documentType, id) -> {
+        when(searchFunctions.getDeleteDocumentByIdFunction()).thenReturn((indexName, documentType, id) ->
+        {
         });
 
         // Call the method under test
@@ -471,8 +477,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
         when(tagDaoHelper.getTagChildrenEntities(tagEntity)).thenReturn(tagChildrenEntityList);
-        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
-            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> elasticsearchResponseDto);
+
+        when(businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags(any(), any(), any(), any())).thenReturn(elasticsearchResponseDto);
 
         // Call the method under test
         BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
@@ -494,8 +500,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(tagHelper).validateTagKey(tagKey);
         verify(tagDaoHelper).getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
         verify(tagDaoHelper).getTagChildrenEntities(tagEntity);
-        verify(searchFunctions).getSearchBusinessObjectDefinitionsByTagsFunction();
-        verifyNoMoreInteractions(tagDaoHelper, searchFunctions, configurationHelper, tagHelper);
+        verify(businessObjectDefinitionIndexSearchDao).searchBusinessObjectDefinitionsByTags(any(), any(), any(), any());
+        verifyNoMoreInteractions(tagDaoHelper, businessObjectDefinitionIndexSearchDao, configurationHelper, tagHelper);
     }
 
     @Test
@@ -546,8 +552,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
-        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
-            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> elasticsearchResponseDto);
+        when(businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags(any(), any(), any(), any())).thenReturn(elasticsearchResponseDto);
 
         // Call the method under test
         BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
@@ -568,8 +573,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagHelper).validateTagKey(tagKey);
         verify(tagDaoHelper).getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
-        verify(searchFunctions).getSearchBusinessObjectDefinitionsByTagsFunction();
-        verifyNoMoreInteractions(tagDaoHelper, searchFunctions, configurationHelper, tagHelper);
+        verify(businessObjectDefinitionIndexSearchDao).searchBusinessObjectDefinitionsByTags(any(), any(), any(), any());
+        verifyNoMoreInteractions(tagDaoHelper, businessObjectDefinitionIndexSearchDao, configurationHelper, tagHelper);
     }
 
     @Test
@@ -624,8 +629,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .thenReturn(SHORT_DESCRIPTION_LENGTH);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
-            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> new ElasticsearchResponseDto());
+        when(businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags(any(), any(), any(), any()))
+            .thenReturn(new ElasticsearchResponseDto());
 
         // Call the method under test
         BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
@@ -663,8 +668,9 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .thenReturn(SHORT_DESCRIPTION_LENGTH);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
-            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> new ElasticsearchResponseDto());
+        when(businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags(any(), any(), any(), any()))
+            .thenReturn(new ElasticsearchResponseDto());
+
 
         // Call the method under test
         BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
@@ -745,8 +751,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
         when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKeyTwo.getTagKey())).thenReturn(tagEntityTwo);
         when(tagDaoHelper.getTagChildrenEntities(tagEntity)).thenReturn(tagChildrenEntityList);
-        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
-            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> elasticsearchResponseDto);
+
+        when(businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags(any(), any(), any(), any())).thenReturn(elasticsearchResponseDto);
 
         // Call the method under test
         BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
@@ -771,8 +777,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(tagDaoHelper).getTagEntity(businessObjectDefinitionSearchKeyTwo.getTagKey());
         verify(tagDaoHelper).getTagChildrenEntities(tagEntity);
         verify(tagDaoHelper).getTagChildrenEntities(tagEntityTwo);
-        verify(searchFunctions).getSearchBusinessObjectDefinitionsByTagsFunction();
-        verifyNoMoreInteractions(tagDaoHelper, searchFunctions, configurationHelper, tagHelper);
+        verify(businessObjectDefinitionIndexSearchDao).searchBusinessObjectDefinitionsByTags(any(), any(), any(), any());
+        verifyNoMoreInteractions(tagDaoHelper, businessObjectDefinitionIndexSearchDao, configurationHelper, tagHelper);
     }
 
     @Test
@@ -833,8 +839,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
         when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKeyTwo.getTagKey())).thenReturn(tagEntityTwo);
-        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
-            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> elasticsearchResponseDto);
+
+        when(businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags(any(), any(), any(), any())).thenReturn(elasticsearchResponseDto);
 
         // Call the method under test
         BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
@@ -857,8 +863,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(tagHelper).validateTagKey(businessObjectDefinitionSearchKeyTwo.getTagKey());
         verify(tagDaoHelper).getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
         verify(tagDaoHelper).getTagEntity(businessObjectDefinitionSearchKeyTwo.getTagKey());
-        verify(searchFunctions).getSearchBusinessObjectDefinitionsByTagsFunction();
-        verifyNoMoreInteractions(tagDaoHelper, searchFunctions, configurationHelper, tagHelper);
+        verify(businessObjectDefinitionIndexSearchDao).searchBusinessObjectDefinitionsByTags(any(), any(), any(), any());
+        verifyNoMoreInteractions(tagDaoHelper, businessObjectDefinitionIndexSearchDao, configurationHelper, tagHelper);
     }
 
     @Test
@@ -918,8 +924,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
         when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKeyTwo.getTagKey())).thenReturn(tagEntityTwo);
-        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
-            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> elasticsearchResponseDto);
+        when(businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags(any(), any(), any(), any())).thenReturn(elasticsearchResponseDto);
 
         // Call the method under test
         BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
@@ -942,8 +947,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(tagHelper).validateTagKey(businessObjectDefinitionSearchKeyTwo.getTagKey());
         verify(tagDaoHelper).getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
         verify(tagDaoHelper).getTagEntity(businessObjectDefinitionSearchKeyTwo.getTagKey());
-        verify(searchFunctions).getSearchBusinessObjectDefinitionsByTagsFunction();
-        verifyNoMoreInteractions(tagDaoHelper, searchFunctions, configurationHelper, tagHelper);
+        verify(businessObjectDefinitionIndexSearchDao).searchBusinessObjectDefinitionsByTags(any(), any(), any(), any());
+        verifyNoMoreInteractions(tagDaoHelper, businessObjectDefinitionIndexSearchDao, configurationHelper, tagHelper);
     }
 
     @Test
@@ -1023,6 +1028,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .thenReturn(SHORT_DESCRIPTION_LENGTH);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+
+        when(businessObjectDefinitionIndexSearchDao.findAllBusinessObjectDefinitions(any(), any(), any())).thenReturn(elasticsearchResponseDto);
         when(searchFunctions.getFindAllBusinessObjectDefinitionsFunction()).thenReturn((indexName, documentType, facetFieldList) -> elasticsearchResponseDto);
 
         // Call the method under test
@@ -1049,8 +1056,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(searchFunctions).getFindAllBusinessObjectDefinitionsFunction();
-        verifyNoMoreInteractions(tagDaoHelper, searchFunctions, configurationHelper, tagHelper);
+        verify(businessObjectDefinitionIndexSearchDao).findAllBusinessObjectDefinitions(any(), any(), any());
+        verifyNoMoreInteractions(tagDaoHelper, businessObjectDefinitionIndexSearchDao, configurationHelper, tagHelper);
     }
 
     @Test
@@ -1076,7 +1083,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
-        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
+        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
+        {
         });
 
         // Call the method under test
@@ -1114,7 +1122,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(jsonHelper.objectToJson(any())).thenReturn("");
-        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
+        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
+        {
         });
 
         // Call the method under test
@@ -1152,7 +1161,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
-        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
+        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
+        {
         });
 
         // Call the method under test
@@ -1190,7 +1200,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(jsonHelper.objectToJson(any())).thenReturn("");
-        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
+        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
+        {
         });
 
         // Call the method under test
@@ -1226,7 +1237,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(searchFunctions.getDeleteIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
+        when(searchFunctions.getDeleteIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
+        {
         });
 
         // Call the method under test

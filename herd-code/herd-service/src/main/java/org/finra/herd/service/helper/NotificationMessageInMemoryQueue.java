@@ -20,31 +20,31 @@ import java.util.Queue;
 
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.dto.JmsMessage;
+import org.finra.herd.model.dto.NotificationMessage;
 
 /**
- * An in-memory JMS message queue.
+ * An in-memory notification message queue.
  */
 @Component
-public class JmsMessageInMemoryQueue
+public class NotificationMessageInMemoryQueue
 {
-    private static final ThreadLocal<Queue<JmsMessage>> QUEUE = new ThreadLocal<Queue<JmsMessage>>()
+    private static final ThreadLocal<Queue<NotificationMessage>> QUEUE = new ThreadLocal<Queue<NotificationMessage>>()
     {
         @Override
-        protected Queue<JmsMessage> initialValue()
+        protected Queue<NotificationMessage> initialValue()
         {
             return new LinkedList<>();
         }
     };
 
     /**
-     * Adds a JMS message to the queue.
+     * Adds a notification message to the queue.
      *
-     * @param jmsMessage the JMS message to be added
+     * @param notificationMessage the notification message to be added
      */
-    public void add(JmsMessage jmsMessage)
+    public void add(NotificationMessage notificationMessage)
     {
-        QUEUE.get().add(jmsMessage);
+        QUEUE.get().add(notificationMessage);
     }
 
     /**
@@ -66,12 +66,12 @@ public class JmsMessageInMemoryQueue
     }
 
     /**
-     * Removes a JMS message from the head of the queue.
+     * Removes a notification message from the head of the queue.
      *
-     * @return the JMS message removed from the head of the queue
+     * @return the notification message removed from the head of the queue
      * @throws java.util.NoSuchElementException if the queue is empty
      */
-    public JmsMessage remove()
+    public NotificationMessage remove()
     {
         return QUEUE.get().remove();
     }

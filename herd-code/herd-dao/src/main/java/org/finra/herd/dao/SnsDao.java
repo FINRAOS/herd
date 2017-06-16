@@ -15,14 +15,23 @@
 */
 package org.finra.herd.dao;
 
-import org.finra.herd.model.jpa.JmsMessageEntity;
+import com.amazonaws.services.sns.model.PublishResult;
 
-public interface JmsMessageDao extends BaseJpaDao
+import org.finra.herd.model.dto.AwsParamsDto;
+
+/**
+ * A DAO for Amazon AWS SNS.
+ */
+public interface SnsDao
 {
     /**
-     * Selects the oldest JMS message (a message with the lowest sequence generated id) from the queue.
+     * Sends a message to all of a topic's subscribed endpoints.
      *
-     * @return the JMS message
+     * @param awsParamsDto the AWS related parameters that contain optional proxy information
+     * @param topicArn the topic to publish the message to
+     * @param messageText the text of the message
+     *
+     * @return the result of the publish operation returned by the service
      */
-    public JmsMessageEntity getOldestJmsMessage();
+    public PublishResult publish(AwsParamsDto awsParamsDto, String topicArn, String messageText);
 }

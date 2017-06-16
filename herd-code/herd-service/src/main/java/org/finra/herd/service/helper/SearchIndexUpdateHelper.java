@@ -30,9 +30,10 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.JmsMessage;
+import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
 
 /**
@@ -47,10 +48,10 @@ public class SearchIndexUpdateHelper
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private JmsMessageInMemoryQueue jmsMessageInMemoryQueue;
+    private JsonHelper jsonHelper;
 
     @Autowired
-    private JsonHelper jsonHelper;
+    private NotificationMessageInMemoryQueue notificationMessageInMemoryQueue;
 
     /**
      * Modify a business object definition
@@ -147,7 +148,7 @@ public class SearchIndexUpdateHelper
             else
             {
                 // Add the JMS message to the "in-memory" JMS message queue to be published by the advice.
-                jmsMessageInMemoryQueue.add(new JmsMessage(getSqsQueueName(), messageText));
+                notificationMessageInMemoryQueue.add(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), getSqsQueueName(), messageText));
             }
         }
     }

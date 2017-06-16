@@ -51,7 +51,7 @@ public class ConfigurationEntity
     @Column(name = COLUMN_KEY, length = 100, nullable = false)
     private String key;
 
-    @Column(name = COLUMN_VALUE, length = 512, nullable = false)
+    @Column(name = COLUMN_VALUE, length = 512)
     private String value;
 
     @Column(name = COLUMN_VALUE_CLOB)

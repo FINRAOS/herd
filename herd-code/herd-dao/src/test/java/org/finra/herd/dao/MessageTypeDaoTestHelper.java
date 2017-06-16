@@ -18,27 +18,25 @@ package org.finra.herd.dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.jpa.JmsMessageEntity;
+import org.finra.herd.model.jpa.MessageTypeEntity;
 
 @Component
-public class JmsMessageDaoTestHelper
+public class MessageTypeDaoTestHelper
 {
     @Autowired
-    private JmsMessageDao jmsMessageDao;
+    private MessageTypeDao messageTypeDao;
 
     /**
-     * Creates and persists a new JMS message entity.
+     * Creates and persists a new message type entity.
      *
-     * @param jmsQueueName the JMS queue name
-     * @param messageText the message text
+     * @param code the code of the message type
      *
-     * @return the newly created JMS message entity
+     * @return the newly created message type entity
      */
-    public JmsMessageEntity createJmsMessageEntity(String jmsQueueName, String messageText)
+    public MessageTypeEntity createMessageTypeEntity(String code)
     {
-        JmsMessageEntity jmsMessageEntity = new JmsMessageEntity();
-        jmsMessageEntity.setJmsQueueName(jmsQueueName);
-        jmsMessageEntity.setMessageText(messageText);
-        return jmsMessageDao.saveAndRefresh(jmsMessageEntity);
+        MessageTypeEntity storageUnitTypeEntity = new MessageTypeEntity();
+        storageUnitTypeEntity.setCode(code);
+        return messageTypeDao.saveAndRefresh(storageUnitTypeEntity);
     }
 }

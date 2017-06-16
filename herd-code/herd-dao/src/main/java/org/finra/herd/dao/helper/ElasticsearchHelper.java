@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import io.searchbox.core.SearchResult;
+import io.searchbox.core.search.aggregation.MetricAggregation;
+import io.searchbox.core.search.aggregation.TermsAggregation;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -367,6 +370,34 @@ public class ElasticsearchHelper
     }
 
     /**
+     * Creates result type facet response dto
+     *
+     * @param searchResult search result
+     *
+     * @return result type facet response dto list
+     */
+    public List<ResultTypeIndexSearchResponseDto> getResultTypeIndexSearchResponseDto(SearchResult searchResult)
+    {
+        MetricAggregation metricAggregation = searchResult.getAggregations();
+        TermsAggregation resultTypeAggregation = metricAggregation.getTermsAggregation(RESULT_TYPE_AGGS);
+
+        List<TermsAggregation.Entry> buckets = resultTypeAggregation.getBuckets();
+
+        List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDtos = new ArrayList<>();
+
+        for (TermsAggregation.Entry entry : buckets)
+        {
+            ResultTypeIndexSearchResponseDto dto = new ResultTypeIndexSearchResponseDto();
+            dto.setResultTypeCode(entry.getKeyAsString());
+            dto.setResultTypeDisplayName(entry.getKeyAsString());
+            dto.setCount(entry.getCount());
+            resultTypeIndexSearchResponseDtos.add(dto);
+        }
+
+        return resultTypeIndexSearchResponseDtos;
+    }
+
+    /**
      * get Tag Type index response
      *
      * @param aggregation aggregation
@@ -425,6 +456,20 @@ public class ElasticsearchHelper
     }
 
     /**
+     * get tag index search response dto
+     *
+     * @param searchResult elastic search result
+     *
+     * @return list of tag type index search response dto
+     */
+    public List<TagTypeIndexSearchResponseDto> getTagTagIndexSearchResponseDto(SearchResult searchResult)
+    {
+        MetricAggregation metricAggregation = searchResult.getAggregations();
+        TermsAggregation tagTypeFacetAggregation = metricAggregation.getTermsAggregation(TAG_TYPE_FACET_AGGS);
+        return getTagTypeIndexSearchResponseDtosFromTermsAggregation(tagTypeFacetAggregation);
+    }
+
+    /**
      * create tag tag index response dto
      *
      * @param searchResponse search response
@@ -436,6 +481,71 @@ public class ElasticsearchHelper
         Terms tagTypeCodeAgg = getNestedAggregation(searchResponse, TAG_FACET_AGGS, TAGTYPE_CODE_AGGREGATION);
 
         return getTagTypeIndexSearchResponseDtosFromTerms(tagTypeCodeAgg);
+    }
+
+    /**
+     * create tag tag index response dto
+     *
+     * @param searchResult search result
+     *
+     * @return tag type index search response dto list
+     */
+    public List<TagTypeIndexSearchResponseDto> getNestedTagTagIndexSearchResponseDto(SearchResult searchResult)
+    {
+        MetricAggregation metricAggregation = searchResult.getAggregations();
+        MetricAggregation tagFacetAggregation = metricAggregation.getSumAggregation(TAG_FACET_AGGS);
+        TermsAggregation tagTypeCodesAggregation = tagFacetAggregation.getTermsAggregation(TAGTYPE_CODE_AGGREGATION);
+        return getTagTypeIndexSearchResponseDtosFromTermsAggregation(tagTypeCodesAggregation);
+    }
+
+    /**
+     * get Tag Type index response
+     *
+     * @param termsAggregation termsAggregation
+     *
+     * @return list of tag type index search dto
+     */
+    private List<TagTypeIndexSearchResponseDto> getTagTypeIndexSearchResponseDtosFromTermsAggregation(TermsAggregation termsAggregation)
+    {
+        List<TermsAggregation.Entry> bucketsL0 = termsAggregation.getBuckets();
+
+        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = new ArrayList<>();
+
+        for (TermsAggregation.Entry entryL1 : bucketsL0)
+        {
+            List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
+
+            TermsAggregation termsAggregationL1 = entryL1.getTermsAggregation(TAGTYPE_NAME_AGGREGATION);
+            List<TermsAggregation.Entry> bucketsL1 = termsAggregationL1.getBuckets();
+
+            TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
+                new TagTypeIndexSearchResponseDto(entryL1.getKeyAsString(), entryL1.getCount(), tagIndexSearchResponseDtos, null);
+            tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
+
+            for (TermsAggregation.Entry entryL2 : bucketsL1)
+            {
+                tagTypeIndexSearchResponseDto.setDisplayName(entryL2.getKeyAsString());
+                TermsAggregation entryTermsAggregation = entryL2.getTermsAggregation(TAG_CODE_AGGREGATION);
+                List<TermsAggregation.Entry> bucketsL2 = entryTermsAggregation.getBuckets();
+
+                for (TermsAggregation.Entry entryL3 : bucketsL2)
+                {
+                    TagIndexSearchResponseDto tagIndexSearchResponseDto = new TagIndexSearchResponseDto(entryL3.getKeyAsString(), entryL3.getCount(), null);
+                    tagIndexSearchResponseDtos.add(tagIndexSearchResponseDto);
+                    TermsAggregation entryEntryTermsAggregation = entryL3.getTermsAggregation(TAG_NAME_AGGREGATION);
+
+                    List<TermsAggregation.Entry> bucketsL3 = entryEntryTermsAggregation.getBuckets();
+
+                    for (TermsAggregation.Entry entryL4 : bucketsL3)
+                    {
+                        tagIndexSearchResponseDto.setTagDisplayName(entryL4.getKeyAsString());
+                    }
+                }
+            }
+
+        }
+
+        return tagTypeIndexSearchResponseDtos;
     }
 
     /**

@@ -48,7 +48,7 @@ import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagCreateRequest;
@@ -126,7 +126,7 @@ public class TagServiceImpl implements TagService, SearchableService
     @Autowired
     private TagTypeDaoHelper tagTypeDaoHelper;
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public Tag createTag(TagCreateRequest request)
     {
@@ -169,7 +169,7 @@ public class TagServiceImpl implements TagService, SearchableService
         return createTagFromEntity(tagEntity);
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public Tag deleteTag(TagKey tagKey)
     {
@@ -336,7 +336,7 @@ public class TagServiceImpl implements TagService, SearchableService
         }
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public Tag updateTag(TagKey tagKey, TagUpdateRequest tagUpdateRequest)
     {

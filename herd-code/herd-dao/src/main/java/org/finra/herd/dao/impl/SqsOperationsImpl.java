@@ -15,27 +15,24 @@
 */
 package org.finra.herd.dao.impl;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.services.sqs.AmazonSQSClient;
-import com.amazonaws.services.sqs.model.GetQueueUrlResult;
+import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 
 import org.finra.herd.dao.SqsOperations;
 
 public class SqsOperationsImpl implements SqsOperations
 {
     @Override
-    public void sendSqsTextMessage(ClientConfiguration clientConfiguration, String queueName, String messageText)
+    public SendMessageResult sendMessage(String queueName, String messageText, AmazonSQS amazonSQS)
     {
         try
         {
-            AmazonSQSClient amazonSQSClient = new AmazonSQSClient(clientConfiguration);
-            GetQueueUrlResult queueUrlResult = amazonSQSClient.getQueueUrl(queueName);
-            amazonSQSClient.sendMessage(queueUrlResult.getQueueUrl(), messageText);
+            return amazonSQS.sendMessage(amazonSQS.getQueueUrl(queueName).getQueueUrl(), messageText);
         }
-        catch (QueueDoesNotExistException ex)
+        catch (QueueDoesNotExistException e)
         {
-            throw new IllegalStateException(String.format("AWS SQS queue with \"%s\" name not found.", queueName), ex);
+            throw new IllegalStateException(String.format("AWS SQS queue with \"%s\" name not found.", queueName), e);
         }
     }
 }

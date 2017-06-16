@@ -30,48 +30,32 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.service.JmsPublishingService;
+import org.finra.herd.service.NotificationMessagePublishingService;
 
 /**
- * The JMS publishing job.
+ * The notification message publishing job.
  */
 @Component(JmsPublishingJob.JOB_NAME)
 @DisallowConcurrentExecution
 public class JmsPublishingJob extends AbstractSystemJob
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(JmsPublishingJob.class);
-
     public static final String JOB_NAME = "jmsPublishing";
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JmsPublishingJob.class);
+
     @Autowired
-    private JmsPublishingService jmsPublishingService;
+    private NotificationMessagePublishingService notificationMessagePublishingService;
 
     @Override
-    protected void executeInternal(JobExecutionContext context) throws JobExecutionException
+    public String getCronExpression()
     {
-        // Log that the system job is started.
-        LOGGER.info("Started system job. systemJobName=\"{}\"", JOB_NAME);
+        return configurationHelper.getProperty(ConfigurationValue.JMS_PUBLISHING_JOB_CRON_EXPRESSION);
+    }
 
-        // Publish JMS messages stored in the database queue.
-        int publishedJmsMessagesCount = 0;
-        try
-        {
-            while (jmsPublishingService.publishOldestJmsMessageFromDatabaseQueue())
-            {
-                publishedJmsMessagesCount++;
-            }
-        }
-        catch (Exception e)
-        {
-            // Log the exception.
-            LOGGER.error("Failed to publish a JMS message. systemJobName=\"{}\"", JOB_NAME, e);
-        }
-
-        // Log the number of JMS messages successfully published.
-        LOGGER.info("Published JMS messages. systemJobName=\"{}\" jmsMessageCount={}", JOB_NAME, publishedJmsMessagesCount);
-
-        // Log that the system job is ended.
-        LOGGER.info("Completed system job. systemJobName=\"{}\"", JOB_NAME);
+    @Override
+    public JobDataMap getJobDataMap()
+    {
+        return getJobDataMapWithoutParameters();
     }
 
     @Override
@@ -82,14 +66,30 @@ public class JmsPublishingJob extends AbstractSystemJob
     }
 
     @Override
-    public JobDataMap getJobDataMap()
+    protected void executeInternal(JobExecutionContext context) throws JobExecutionException
     {
-        return getJobDataMapWithoutParameters();
-    }
+        // Log that the system job is started.
+        LOGGER.info("Started system job. systemJobName=\"{}\"", JOB_NAME);
 
-    @Override
-    public String getCronExpression()
-    {
-        return configurationHelper.getProperty(ConfigurationValue.JMS_PUBLISHING_JOB_CRON_EXPRESSION);
+        // Publish all notification messages stored in the database queue.
+        int count = 0;
+        try
+        {
+            while (notificationMessagePublishingService.publishOldestNotificationMessageFromDatabaseQueue())
+            {
+                count++;
+            }
+        }
+        catch (Exception e)
+        {
+            // Log the exception.
+            LOGGER.error("Failed to publish a notification message. systemJobName=\"{}\"", JOB_NAME, e);
+        }
+
+        // Log the number of notification messages successfully published.
+        LOGGER.info("Published {} notification messages. systemJobName=\"{}\"", Integer.toString(count), JOB_NAME);
+
+        // Log that the system job is ended.
+        LOGGER.info("Completed system job. systemJobName=\"{}\"", JOB_NAME);
     }
 }

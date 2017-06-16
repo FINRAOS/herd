@@ -36,7 +36,7 @@ import org.finra.herd.dao.SchemaColumnDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumn;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
@@ -95,7 +95,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionColumn createBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnCreateRequest request)
     {
@@ -129,13 +129,13 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             if (businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat() == null)
             {
                 throw new ObjectNotFoundException(String.format("Unable to create business object definition column because there are no format schema " +
-                        "columns with name \"%s\" for the business object definition {%s}.", request.getSchemaColumnName(),
+                    "columns with name \"%s\" for the business object definition {%s}.", request.getSchemaColumnName(),
                     businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
             }
             else
             {
                 throw new ObjectNotFoundException(String.format("Unable to create business object definition column because there are no format schema " +
-                        "columns with name \"%s\" in the descriptive business object format for the business object definition {%s}.",
+                    "columns with name \"%s\" in the descriptive business object format for the business object definition {%s}.",
                     request.getSchemaColumnName(), businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
             }
         }
@@ -172,7 +172,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionColumn deleteBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey)
     {
@@ -273,7 +273,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             .collect(Collectors.toList()));
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionColumn updateBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey,
         BusinessObjectDefinitionColumnUpdateRequest request)

@@ -15,11 +15,11 @@
 */
 package org.finra.herd.dao.impl;
 
-import com.amazonaws.ClientConfiguration;
-import org.apache.commons.lang3.StringUtils;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.SqsDao;
 import org.finra.herd.dao.SqsOperations;
 import org.finra.herd.model.dto.AwsParamsDto;
@@ -31,28 +31,14 @@ import org.finra.herd.model.dto.AwsParamsDto;
 public class SqsDaoImpl implements SqsDao
 {
     @Autowired
+    private AwsClientFactory awsClientFactory;
+
+    @Autowired
     private SqsOperations sqsOperations;
 
-    /**
-     * Sends a text message to the specified AWS SQS queue.
-     */
     @Override
-    public void sendSqsTextMessage(AwsParamsDto awsParamsDto, String queueName, String messageText)
+    public SendMessageResult sendMessage(AwsParamsDto awsParamsDto, String queueName, String messageText)
     {
-        // Create the connection factory based on the specified proxy configuration.
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-
-        // Only set the proxy hostname and/or port if they're configured.
-        if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()))
-        {
-            clientConfiguration.setProxyHost(awsParamsDto.getHttpProxyHost());
-        }
-        if (awsParamsDto.getHttpProxyPort() != null)
-        {
-            clientConfiguration.setProxyPort(awsParamsDto.getHttpProxyPort());
-        }
-
-        // Send the message.
-        sqsOperations.sendSqsTextMessage(clientConfiguration, queueName, messageText);
+        return sqsOperations.sendMessage(queueName, messageText, awsClientFactory.getAmazonSQSClient(awsParamsDto));
     }
 }

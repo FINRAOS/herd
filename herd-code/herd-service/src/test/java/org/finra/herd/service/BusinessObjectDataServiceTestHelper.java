@@ -83,6 +83,7 @@ import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -2301,71 +2302,82 @@ public class BusinessObjectDataServiceTestHelper
     }
 
     /**
-     * Validates that the business object data status change message is valid.
+     * Validates a business object data status change notification message.
      *
-     * @param message the message to be validated.
-     * @param businessObjectDataKey the business object data key.
-     * @param businessObjectDataId the business object data Id.
-     * @param username the username.
-     * @param newBusinessObjectDataStatus the new business object data status.
-     * @param oldBusinessObjectDataStatus the old business object data status.
-     * @param businessObjectDataAttributes the list of business object data attributes.
+     * @param expectedMessageType the expected message type
+     * @param expectedMessageDestination the expected message destination
+     * @param expectedBusinessObjectDataKey the expected business object data key
+     * @param expectedBusinessObjectDataId the expected business object data id
+     * @param expectedUsername the expected username
+     * @param expectedNewBusinessObjectDataStatus the expected new business object data status
+     * @param expectedOldBusinessObjectDataStatus the expected old business object data status
+     * @param expectedBusinessObjectDataAttributes the expected list of business object data attributes
+     * @param notificationMessage the notification message to be validated
      */
-    public void validateBusinessObjectDataStatusChangeMessage(String message, BusinessObjectDataKey businessObjectDataKey, Integer businessObjectDataId,
-        String username, String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus, List<Attribute> businessObjectDataAttributes)
+    public void validateBusinessObjectDataStatusChangeMessage(String expectedMessageType, String expectedMessageDestination,
+        BusinessObjectDataKey expectedBusinessObjectDataKey, Integer expectedBusinessObjectDataId, String expectedUsername,
+        String expectedNewBusinessObjectDataStatus, String expectedOldBusinessObjectDataStatus, List<Attribute> expectedBusinessObjectDataAttributes,
+        NotificationMessage notificationMessage)
     {
-        validateXmlFieldPresent(message, "correlation-id", "BusinessObjectData_" + businessObjectDataId);
-        validateXmlFieldPresent(message, "triggered-by-username", username);
-        validateXmlFieldPresent(message, "context-message-type", "testDomain/testApplication/BusinessObjectDataStatusChanged");
-        validateXmlFieldPresent(message, "newBusinessObjectDataStatus", newBusinessObjectDataStatus);
+        assertNotNull(notificationMessage);
 
-        if (oldBusinessObjectDataStatus == null)
+        assertEquals(expectedMessageType, notificationMessage.getMessageType());
+        assertEquals(expectedMessageDestination, notificationMessage.getMessageDestination());
+
+        String messageText = notificationMessage.getMessageText();
+
+        validateXmlFieldPresent(messageText, "correlation-id", "BusinessObjectData_" + expectedBusinessObjectDataId);
+        validateXmlFieldPresent(messageText, "triggered-by-username", expectedUsername);
+        validateXmlFieldPresent(messageText, "context-message-type", "testDomain/testApplication/BusinessObjectDataStatusChanged");
+        validateXmlFieldPresent(messageText, "newBusinessObjectDataStatus", expectedNewBusinessObjectDataStatus);
+
+        if (expectedOldBusinessObjectDataStatus == null)
         {
-            validateXmlFieldNotPresent(message, "oldBusinessObjectDataStatus");
+            validateXmlFieldNotPresent(messageText, "oldBusinessObjectDataStatus");
         }
         else
         {
-            validateXmlFieldPresent(message, "oldBusinessObjectDataStatus", oldBusinessObjectDataStatus);
+            validateXmlFieldPresent(messageText, "oldBusinessObjectDataStatus", expectedOldBusinessObjectDataStatus);
         }
 
-        validateXmlFieldPresent(message, "namespace", businessObjectDataKey.getNamespace());
-        validateXmlFieldPresent(message, "businessObjectDefinitionName", businessObjectDataKey.getBusinessObjectDefinitionName());
-        validateXmlFieldPresent(message, "businessObjectFormatUsage", businessObjectDataKey.getBusinessObjectFormatUsage());
-        validateXmlFieldPresent(message, "businessObjectFormatFileType", businessObjectDataKey.getBusinessObjectFormatFileType());
-        validateXmlFieldPresent(message, "businessObjectFormatVersion", businessObjectDataKey.getBusinessObjectFormatVersion());
-        validateXmlFieldPresent(message, "partitionValue", businessObjectDataKey.getPartitionValue());
+        validateXmlFieldPresent(messageText, "namespace", expectedBusinessObjectDataKey.getNamespace());
+        validateXmlFieldPresent(messageText, "businessObjectDefinitionName", expectedBusinessObjectDataKey.getBusinessObjectDefinitionName());
+        validateXmlFieldPresent(messageText, "businessObjectFormatUsage", expectedBusinessObjectDataKey.getBusinessObjectFormatUsage());
+        validateXmlFieldPresent(messageText, "businessObjectFormatFileType", expectedBusinessObjectDataKey.getBusinessObjectFormatFileType());
+        validateXmlFieldPresent(messageText, "businessObjectFormatVersion", expectedBusinessObjectDataKey.getBusinessObjectFormatVersion());
+        validateXmlFieldPresent(messageText, "partitionValue", expectedBusinessObjectDataKey.getPartitionValue());
 
-        if (CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()))
+        if (CollectionUtils.isEmpty(expectedBusinessObjectDataKey.getSubPartitionValues()))
         {
-            validateXmlFieldNotPresent(message, "subPartitionValues");
+            validateXmlFieldNotPresent(messageText, "subPartitionValues");
         }
         else
         {
-            validateXmlFieldPresent(message, "subPartitionValues");
+            validateXmlFieldPresent(messageText, "subPartitionValues");
         }
 
-        for (String subPartitionValue : businessObjectDataKey.getSubPartitionValues())
+        for (String subPartitionValue : expectedBusinessObjectDataKey.getSubPartitionValues())
         {
-            validateXmlFieldPresent(message, "partitionValue", subPartitionValue);
+            validateXmlFieldPresent(messageText, "partitionValue", subPartitionValue);
         }
 
-        if (CollectionUtils.isEmpty(businessObjectDataAttributes))
+        if (CollectionUtils.isEmpty(expectedBusinessObjectDataAttributes))
         {
-            validateXmlFieldNotPresent(message, "attributes");
+            validateXmlFieldNotPresent(messageText, "attributes");
         }
         else
         {
-            validateXmlFieldPresent(message, "attributes");
+            validateXmlFieldPresent(messageText, "attributes");
         }
 
-        for (Attribute attribute : businessObjectDataAttributes)
+        for (Attribute attribute : expectedBusinessObjectDataAttributes)
         {
             // Validate each expected "<attribute>" XML tag. Please note that null attribute value is expected to be published as an empty string.
-            validateXmlFieldPresent(message, "attribute", "name", attribute.getName(),
+            validateXmlFieldPresent(messageText, "attribute", "name", attribute.getName(),
                 attribute.getValue() == null ? AbstractServiceTest.EMPTY_STRING : attribute.getValue());
         }
 
-        validateXmlFieldPresent(message, "businessObjectDataVersion", businessObjectDataKey.getBusinessObjectDataVersion());
+        validateXmlFieldPresent(messageText, "businessObjectDataVersion", expectedBusinessObjectDataKey.getBusinessObjectDataVersion());
     }
 
     /**

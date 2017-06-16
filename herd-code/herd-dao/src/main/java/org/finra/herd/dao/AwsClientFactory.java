@@ -19,69 +19,65 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClient;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.model.dto.AwsParamsDto;
 
 @Component
 public class AwsClientFactory
 {
     @Autowired
-    private RetryPolicyFactory retryPolicyFactory;
+    private AwsHelper awsHelper;
 
     /**
-     * Create the EMR client with the given proxy and access key details.
+     * Creates a client for accessing Amazon SNS.
      *
-     * @param awsParamsDto AWS related parameters for access/secret keys and proxy details.
+     * @param awsParamsDto the AWS related parameters DTO that includes optional proxy information
      *
-     * @return the AmazonElasticMapReduceClient object.
+     * @return the Amazon SNS client
      */
     @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
-    public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
+    public AmazonSNS getAmazonSNSClient(AwsParamsDto awsParamsDto)
     {
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
-
-        // Create an EMR client with HTTP proxy information.
-        if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()) && awsParamsDto.getHttpProxyPort() != null)
-        {
-            clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
-        }
-
-        // If specified, use the AWS credentials passed in.
-        if (StringUtils.isNotBlank(awsParamsDto.getAwsAccessKeyId()))
-        {
-            return new AmazonElasticMapReduceClient(
-                new BasicSessionCredentials(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken()),
-                clientConfiguration);
-        }
-        // Otherwise, use the default AWS credentials provider chain.
-        else
-        {
-            return new AmazonElasticMapReduceClient(clientConfiguration);
-        }
+        // Construct and return a new client to invoke service methods on Amazon SNS using default credentials provider chain.
+        return new AmazonSNSClient(awsHelper.getClientConfiguration(awsParamsDto));
     }
 
     /**
-     * Create the EC2 client with the given proxy and access key details This is the main AmazonEC2Client object
+     * Creates a client for accessing Amazon SQS.
      *
-     * @param awsParamsDto AWS related parameters for access/secret keys and proxy details
+     * @param awsParamsDto the AWS related parameters DTO that includes optional proxy information
      *
-     * @return the AmazonEC2Client object
+     * @return the Amazon SQS client
+     */
+    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
+    public AmazonSQS getAmazonSQSClient(AwsParamsDto awsParamsDto)
+    {
+        // Construct and return a new client to invoke service methods on Amazon SQS using default credentials provider chain.
+        return new AmazonSQSClient(awsHelper.getClientConfiguration(awsParamsDto));
+    }
+
+    /**
+     * Creates a client for accessing Amazon EC2 service.
+     *
+     * @param awsParamsDto the AWS related parameters DTO that includes optional AWS credentials and proxy information
+     *
+     * @return the Amazon EC2 client
      */
     @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public AmazonEC2Client getEc2Client(AwsParamsDto awsParamsDto)
     {
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
-
-        // Create an EC2 client with HTTP proxy information.
-        if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()) && awsParamsDto.getHttpProxyPort() != null)
-        {
-            clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
-        }
+        // Get client configuration.
+        ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsParamsDto);
 
         // If specified, use the AWS credentials passed in.
         if (StringUtils.isNotBlank(awsParamsDto.getAwsAccessKeyId()))
@@ -94,6 +90,33 @@ public class AwsClientFactory
         else
         {
             return new AmazonEC2Client(clientConfiguration);
+        }
+    }
+
+    /**
+     * Creates a client for accessing Amazon EMR service.
+     *
+     * @param awsParamsDto the AWS related parameters DTO that includes optional AWS credentials and proxy information
+     *
+     * @return the Amazon EMR client
+     */
+    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
+    public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
+    {
+        // Get client configuration.
+        ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsParamsDto);
+
+        // If specified, use the AWS credentials passed in.
+        if (StringUtils.isNotBlank(awsParamsDto.getAwsAccessKeyId()))
+        {
+            return new AmazonElasticMapReduceClient(
+                new BasicSessionCredentials(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken()),
+                clientConfiguration);
+        }
+        // Otherwise, use the default AWS credentials provider chain.
+        else
+        {
+            return new AmazonElasticMapReduceClient(clientConfiguration);
         }
     }
 }

@@ -180,7 +180,7 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelper
         try
         {
             messageText = jsonHelper.objectToJson(storagePolicySelection);
-            sqsDao.sendSqsTextMessage(awsParamsDto, sqsQueueName, messageText);
+            sqsDao.sendMessage(awsParamsDto, sqsQueueName, messageText);
         }
         catch (RuntimeException e)
         {

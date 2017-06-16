@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 
@@ -35,9 +36,11 @@ public class AwsHelper
     @Autowired
     protected ConfigurationHelper configurationHelper;
 
-    // herdHelper to access helper methods
     @Autowired
     protected HerdStringHelper herdStringHelper;
+
+    @Autowired
+    protected RetryPolicyFactory retryPolicyFactory;
 
     /**
      * Constructs awsParamsDto with AWS parameters.
@@ -46,12 +49,12 @@ public class AwsHelper
      */
     public AwsParamsDto getAwsParamsDto()
     {
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-
         // Get HTTP proxy configuration settings.
         String httpProxyHost = configurationHelper.getProperty(ConfigurationValue.HTTP_PROXY_HOST);
         Integer httpProxyPort = configurationHelper.getProperty(ConfigurationValue.HTTP_PROXY_PORT, Integer.class);
 
+        // Create an AWS parameters DTO.
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
         awsParamsDto.setHttpProxyHost(httpProxyHost);
         awsParamsDto.setHttpProxyPort(httpProxyPort);
 
@@ -59,24 +62,23 @@ public class AwsHelper
     }
 
     /**
-     * Returns client configuration options that might contain proxy settings set per specified AWS parameters DTO.
+     * Creates a client configuration object that contains client configuration options such as proxy settings and max retry attempts.
      *
-     * @param awsParamsDto the AWS params DTO object
+     * @param awsParamsDto the AWS related parameters that contain optional proxy information
      *
-     * @return the client configuration options
+     * @return the client configuration object
      */
     public ClientConfiguration getClientConfiguration(AwsParamsDto awsParamsDto)
     {
-        ClientConfiguration clientConfiguration;
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
 
-        // Only set the proxy hostname and port if they're both configured.
+        // Set a retry policy.
+        clientConfiguration.withRetryPolicy(retryPolicyFactory.getRetryPolicy());
+
+        // If the proxy hostname and port both are configured, set the HTTP proxy information.
         if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()) && awsParamsDto.getHttpProxyPort() != null)
         {
-            clientConfiguration = new ClientConfiguration().withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
-        }
-        else
-        {
-            clientConfiguration = new ClientConfiguration();
+            clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
         }
 
         return clientConfiguration;

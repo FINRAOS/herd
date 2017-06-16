@@ -543,11 +543,11 @@ public enum ConfigurationValue
     HERD_NOTIFICATION_SQS_SYS_MONITOR_RESPONSE_VELOCITY_TEMPLATE("herd.notification.sqs.sys.monitor.response.velocity.template", null),
 
     /**
-     * The velocity template to use when generate the business object data status change message. There is no default value which will cause no message to be
-     * sent.
+     * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
+     * NotificationMessageDefinitions} to use when generating notification messages for a business object data status change event. There is no default value
+     * which will cause no messages to be sent.
      */
-    HERD_NOTIFICATION_SQS_BUSINESS_OBJECT_DATA_STATUS_CHANGE_VELOCITY_TEMPLATE("herd.notification.sqs.business.object.data.status.change.velocity.template",
-        null),
+    HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS("herd.notification.business.object.data.status.change.message.definitions", null),
 
     /**
      * The cache time to live in seconds defined in net.sf.ehcache.config.CacheConfiguration.
@@ -758,6 +758,31 @@ public enum ConfigurationValue
      * The elasticsearch search guard keystore path
      */
     ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH("elasticsearch.search.guard.keystore.path", "/path/to/keystore.jks"),
+
+    /**
+     * The elasticsearch search rest client hostname
+     */
+    ELASTICSEARCH_REST_CLIENT_HOSTNAME("elasticsearch.rest.client.hostname", "localhost"),
+
+    /**
+     * The elasticsearch search rest client port number
+     */
+    ELASTICSEARCH_REST_CLIENT_PORT("elasticsearch.rest.client.port", 9200),
+
+    /**
+     * The elasticsearch search rest client scheme
+     */
+    ELASTICSEARCH_REST_CLIENT_SCHEME("elasticsearch.rest.client.scheme", "http"),
+
+    /*
+     * The elasticsearch search rest client user name
+     */
+    ELASTICSEARCH_REST_CLIENT_USERNAME("elasticsearch.rest.client.username",  null),
+
+    /*
+     * The elasticsearch search rest client user credential name
+     */
+    ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname",  null),
 
     /**
      * The elasticsearch search guard truststore file path

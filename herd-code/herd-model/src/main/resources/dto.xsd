@@ -255,13 +255,6 @@
       </xs:sequence>
    </xs:complexType>
 
-   <xs:complexType name="jmsMessage">
-      <xs:sequence>
-         <xs:element name="jmsQueueName" type="xs:string" minOccurs="0"/>
-         <xs:element name="messageText" type="xs:string" minOccurs="0"/>
-      </xs:sequence>
-   </xs:complexType>
-
    <xs:complexType name="jobDefinitionAlternateKeyDto">
       <xs:sequence>
          <xs:element name="namespace" type="xs:string" minOccurs="0"/>
@@ -283,6 +276,14 @@
             <jaxb:class ref="org.finra.herd.model.jpa.NotificationJobActionEntity"/>
          </xs:appinfo>
       </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="notificationMessage">
+      <xs:sequence>
+         <xs:element name="messageType" type="xs:string" minOccurs="0"/>
+         <xs:element name="messageDestination" type="xs:string" minOccurs="0"/>
+         <xs:element name="messageText" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
    </xs:complexType>
 
    <xs:complexType name="regServerAccessParamsDto">
