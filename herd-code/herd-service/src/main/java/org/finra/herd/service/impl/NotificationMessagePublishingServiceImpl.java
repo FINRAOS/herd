@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.impl;
 
+import com.amazonaws.services.sns.model.PublishResult;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,7 @@ import org.finra.herd.dao.SnsDao;
 import org.finra.herd.dao.SqsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.AwsHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.model.jpa.NotificationMessageEntity;
@@ -44,6 +47,9 @@ public class NotificationMessagePublishingServiceImpl implements NotificationMes
 
     @Autowired
     private AwsHelper awsHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     @Autowired
     private MessageTypeDaoHelper messageTypeDaoHelper;
@@ -123,20 +129,30 @@ public class NotificationMessagePublishingServiceImpl implements NotificationMes
             // Send notification message to the specified destination.
             if (notificationMessage.getMessageType().equals(MessageTypeEntity.MessageEventTypes.SQS.name()))
             {
-                sqsDao.sendMessage(awsHelper.getAwsParamsDto(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText());
+                // Publish the message using SQS.
+                SendMessageResult sendMessageResult =
+                    sqsDao.sendMessage(awsHelper.getAwsParamsDto(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText());
+
+                // Log response and the message information.
+                LOGGER.info("Published {} notification message. messageDestination=\"{}\" messageText={} sendMessageResult={}",
+                    notificationMessage.getMessageType(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText(),
+                    jsonHelper.objectToJson(sendMessageResult));
             }
             else if (notificationMessage.getMessageType().equals(MessageTypeEntity.MessageEventTypes.SNS.name()))
             {
-                snsDao.publish(awsHelper.getAwsParamsDto(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText());
+                // Publish the message using SNS.
+                PublishResult publishResult =
+                    snsDao.publish(awsHelper.getAwsParamsDto(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText());
+
+                // Log response and the message information.
+                LOGGER
+                    .info("Published {} notification message. messageDestination=\"{}\" messageText={} publishResult={}", notificationMessage.getMessageType(),
+                        notificationMessage.getMessageDestination(), notificationMessage.getMessageText(), jsonHelper.objectToJson(publishResult));
             }
             else
             {
                 throw new IllegalStateException(String.format("Notification message type \"%s\" is not supported.", notificationMessage.getMessageType()));
             }
-
-            // Log the message information.
-            LOGGER.info("Published {} notification message. messageDestination=\"{}\" messageText={}", notificationMessage.getMessageType(),
-                notificationMessage.getMessageDestination(), notificationMessage.getMessageText());
         }
         catch (RuntimeException e)
         {
