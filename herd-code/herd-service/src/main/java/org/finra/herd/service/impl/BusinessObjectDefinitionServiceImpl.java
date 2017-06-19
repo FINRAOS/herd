@@ -114,9 +114,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionServiceImpl.class);
 
     /**
-     * The size of the chunks to use when updating search index documents based on a list of ids
+     * The size of the chunks to use when updating search index documents based on a list of ids.
      */
-    private static final int UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE = 50;
+    public static final int UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE = 100;
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
