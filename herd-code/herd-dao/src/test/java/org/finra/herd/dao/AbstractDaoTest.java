@@ -46,6 +46,8 @@ import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.DataProviderKey;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
@@ -186,6 +188,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BDEF_SHORT_DESCRIPTION_2 = "UT_BusinessObjectDefinition_ShortDescription_2_" + RANDOM_SUFFIX;
 
+    public static final BigDecimal BID_PRICE = getRandomBigDecimal();
+
     public static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
 
     public static final float BUSINESS_OBJECT_DEFINITION_INDEX_BOOST = 1f;
@@ -257,6 +261,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
 
+    public static final Boolean EBS_OPTIMIZED = true;
+
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
 
     public static final String EC2_INSTANCE_TYPE = "UT_Ec2InstanceType_1_" + RANDOM_SUFFIX;
@@ -279,11 +285,17 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_CLUSTER_DEFINITION_NAME_2 = "UT_EMR_CLUSTER_DFN_2" + RANDOM_SUFFIX;
 
+    public static final EmrClusterDefinitionVolumeSpecification NO_EMR_CLUSTER_DEFINITION_VOLUME_SPECIFICATION = null;
+
     public static final String EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH = "classpath:testEmrClusterDefinitionMinimal.xml";
 
     public static final String EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH = "classpath:testEmrClusterDefinition.xml";
 
+    public static final String EMR_CLUSTER_ID = "UT_EMR_ClusterId_" + RANDOM_SUFFIX;
+
     public static final String EMR_CLUSTER_NAME = "UT_EMR_CLUSTER" + RANDOM_SUFFIX;
+
+    public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
 
     public static final String ENVIRONMENT_NAME = "TEST";
 
@@ -369,6 +381,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INITIAL_VERSION = 0;
 
+    public static final Integer INSTANCE_COUNT = getRandomInteger();
+
     public static final Integer INTEGER_VALUE = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer INTEGER_VALUE_2 = (int) (Math.random() * Integer.MAX_VALUE);
@@ -376,6 +390,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer INVALID_DATA_VERSION = -1 * DATA_VERSION;
 
     public static final Integer INVALID_FORMAT_VERSION = -1 * FORMAT_VERSION;
+
+    public static final String INVALID_VALUE = "UT_InvalidValue_" + RANDOM_SUFFIX;
+
+    public static final Integer IOPS = getRandomInteger();
 
     public static final String I_DO_NOT_EXIST = "I_DO_NOT_EXIST";
 
@@ -410,6 +428,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<String> LOCAL_FILES_SUBSET = Arrays.asList("Foo2.dat", "FOO3.DAT", "folder/foo2.dat");
 
     public static final Long LONG_VALUE = (long) (Math.random() * Long.MAX_VALUE);
+
+    public static final String MARKER = "UT_Marker_" + RANDOM_SUFFIX;
 
     public static final Integer MAX_COLUMNS = 10;
 
@@ -494,6 +514,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_BDEF_SHORT_DESCRIPTION = null;
 
+    public static final BigDecimal NO_BID_PRICE = null;
+
     public static final String NO_COLUMN_NAME = null;
 
     public static final XMLGregorianCalendar NO_CREATED_ON = null;
@@ -503,6 +525,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_CUSTOM_DDL_NAME = null;
 
     public static final Integer NO_DATA_VERSION = null;
+
+    public static final EmrClusterDefinitionEbsConfiguration NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION = null;
 
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
 
@@ -517,6 +541,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer NO_FORMAT_VERSION = null;
 
     public static final BigDecimal NO_HOURLY_PRICE = null;
+
+    public static final BigDecimal NO_INSTANCE_MAX_SEARCH_PRICE = null;
+
+    public static final BigDecimal NO_INSTANCE_ON_DEMAND_THRESHOLD = null;
+
+    public static final BigDecimal NO_INSTANCE_SPOT_PRICE = null;
 
     public static final Boolean NO_IS_PARENT_TAG_NULL_FLAG = null;
 
@@ -726,6 +756,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SINGLE_QUOTE = "'";
 
+    public static final Integer SIZE_IN_GB = getRandomInteger();
+
     public static final List<String> SORTED_LOCAL_FILES =
         Arrays.asList("FOO3.DAT", "Foo2.dat", "folder/foo1.dat", "folder/foo2.dat", "folder/foo3.dat", "foo1.dat");
 
@@ -928,6 +960,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String USER_TELEPHONE_NUMBER = "UT_User_Telephone_Number_" + RANDOM_SUFFIX;
 
     public static final String VALUE = "UT_Value_" + RANDOM_SUFFIX;
+
+    public static final Integer VOLUMES_PER_INSTANCE = getRandomInteger();
+
+    public static final String VOLUME_TYPE = "UT_VolumeType_" + RANDOM_SUFFIX;
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 
