@@ -39,6 +39,9 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
+import org.elasticsearch.index.query.functionscore.ScriptScoreFunctionBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -167,6 +170,13 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private static final String TAG_TYPE_CODE_SOURCE = "tagType.code";
 
     /**
+     * Source string for the business object definition tags
+     */
+    private static final String BDEF_TAGS_SOURCE = "businessObjectDefinitionTags";
+
+    private static final String BDEF_TAGS_SEARCH_SCORE_MULTIPLIER = "tagSearchScoreMultiplier";
+
+    /**
      * The configuration helper used to retrieve configuration values
      */
     @Autowired
@@ -214,15 +224,26 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             queryBuilder = disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder);
         }
 
+        // Script for tag search score multiplier
+        String inlineScript = "_score * params.['_source']." + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER;
+
+        // Set the script
+        ScriptScoreFunctionBuilder scoreFunction = ScoreFunctionBuilders.scriptFunction(inlineScript);
+
+        // Create function score query builder
+        FunctionScoreQueryBuilder functionScoreQueryBuilder = new FunctionScoreQueryBuilder(queryBuilder, scoreFunction);
+
         // The fields in the search indexes to return
-        final String[] searchSources = {NAME_SOURCE, NAMESPACE_CODE_SOURCE, TAG_CODE_SOURCE, TAG_TYPE_CODE_SOURCE, DISPLAY_NAME_SOURCE, DESCRIPTION_SOURCE};
+        final String[] searchSources =
+            {NAME_SOURCE, NAMESPACE_CODE_SOURCE, TAG_CODE_SOURCE, TAG_TYPE_CODE_SOURCE, DISPLAY_NAME_SOURCE, DESCRIPTION_SOURCE, BDEF_TAGS_SOURCE,
+                BDEF_TAGS_SEARCH_SCORE_MULTIPLIER};
 
         // Create a new indexSearch source builder
         final SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
         // Fetch only the required fields
         searchSourceBuilder.fetchSource(searchSources, null);
-        searchSourceBuilder.query(queryBuilder);
+        searchSourceBuilder.query(functionScoreQueryBuilder);
 
         // Create a indexSearch request builder
         SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(new ElasticsearchClientImpl(), SearchAction.INSTANCE);

@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,7 +41,9 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionTagEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
@@ -192,5 +195,51 @@ public class BusinessObjectDefinitionHelperTest extends AbstractServiceTest
         {
             assertEquals("A business object definition key must be specified.", e.getMessage());
         }
+    }
+
+    @Test
+    public void testProcessTagSearchScoreMultiplier()
+    {
+
+        // Create a business object definition entity
+        final BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes2());
+
+        // Create two tag entities
+        TagEntity tagEntity1 = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION, null);
+        TagEntity tagEntity2 = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER_NULL, TAG_DESCRIPTION, null);
+
+        // Assocaite tag entities with business object definition entity
+        List<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTagEntities = Arrays
+            .asList(businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntity, tagEntity1),
+                businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntity, tagEntity2));
+        businessObjectDefinitionEntity.setBusinessObjectDefinitionTags(businessObjectDefinitionTagEntities);
+
+        // Call the method under test
+        businessObjectDefinitionHelper.processTagSearchScoreMultiplier(businessObjectDefinitionEntity);
+
+        // Validate the result
+        assertEquals(businessObjectDefinitionEntity.getTagSearchScoreMultiplier(), TAG_SEARCH_SCORE_MULTIPLIER);
+    }
+
+    @Test
+    public void testProcessTagSearchScoreMultiplierTagsEmpty()
+    {
+
+        // Create a business object definition entity
+        final BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes2());
+
+        // Associate business object definition entity with no tag entities
+        List<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTagEntities = new ArrayList<>();
+        businessObjectDefinitionEntity.setBusinessObjectDefinitionTags(businessObjectDefinitionTagEntities);
+
+        // Call the method under test
+        businessObjectDefinitionHelper.processTagSearchScoreMultiplier(businessObjectDefinitionEntity);
+
+        // Validate the search score multiplier
+        assertEquals(businessObjectDefinitionEntity.getTagSearchScoreMultiplier(), new BigDecimal(1.0));
     }
 }

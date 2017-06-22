@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.helper;
 
+import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +30,7 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionTagEntity;
 import org.finra.herd.service.functional.QuadConsumer;
 
 /**
@@ -130,7 +133,7 @@ public class BusinessObjectDefinitionHelper
     public String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
         String jsonString = "";
-
+        processTagSearchScoreMultiplier(businessObjectDefinitionEntity);
         try
         {
             // Convert the business object definition entity to a JSON string.
@@ -143,5 +146,30 @@ public class BusinessObjectDefinitionHelper
         }
 
         return jsonString;
+    }
+
+    public void processTagSearchScoreMultiplier(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    {
+        // Process the tags search score multiplier. Multiply all the tags search score.
+        BigDecimal totalSearchScoreMultiplier = new BigDecimal(1.0);
+        Iterator<BusinessObjectDefinitionTagEntity> iterator = businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().iterator();
+        while (iterator.hasNext())
+        {
+            BigDecimal currentTagSearchScoreMultiplier = iterator.next().getTag().getSearchScoreMultiplier();
+            if (currentTagSearchScoreMultiplier == null)
+            {
+                currentTagSearchScoreMultiplier = new BigDecimal(1.0);
+            }
+            totalSearchScoreMultiplier = totalSearchScoreMultiplier.multiply(currentTagSearchScoreMultiplier);
+        }
+        // If the result is zero set to default value 1
+        if (businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size() > 0)
+        {
+            businessObjectDefinitionEntity.setTagSearchScoreMultiplier(totalSearchScoreMultiplier);
+        }
+        else
+        {
+            businessObjectDefinitionEntity.setTagSearchScoreMultiplier(new BigDecimal(1.0));
+        }
     }
 }

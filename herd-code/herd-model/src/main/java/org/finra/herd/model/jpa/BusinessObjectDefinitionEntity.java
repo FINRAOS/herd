@@ -15,6 +15,7 @@
 */
 package org.finra.herd.model.jpa;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 
 import javax.persistence.CascadeType;
@@ -28,6 +29,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -102,6 +104,19 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("user_id")
     private Collection<BusinessObjectDefinitionSubjectMatterExpertEntity> subjectMatterExperts;
+
+    @Transient
+    private BigDecimal tagSearchScoreMultiplier;
+
+    public BigDecimal getTagSearchScoreMultiplier()
+    {
+        return tagSearchScoreMultiplier;
+    }
+
+    public void setTagSearchScoreMultiplier(BigDecimal tagSearchScoreMultiplier)
+    {
+        this.tagSearchScoreMultiplier = tagSearchScoreMultiplier;
+    }
 
     public Integer getId()
     {

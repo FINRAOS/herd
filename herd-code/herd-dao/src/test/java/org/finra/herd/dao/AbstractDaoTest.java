@@ -863,6 +863,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_4 = getRandomBigDecimal();
 
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_NULL = null;
+
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
