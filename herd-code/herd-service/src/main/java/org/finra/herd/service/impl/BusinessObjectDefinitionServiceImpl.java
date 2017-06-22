@@ -115,6 +115,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionServiceImpl.class);
 
+    /**
+     * The size of the chunks to use when updating search index documents based on a list of ids.
+     */
+    public static final int UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE = 100;
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -1052,26 +1057,39 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         String modificationType = searchIndexUpdateDto.getModificationType();
         List<Integer> ids = searchIndexUpdateDto.getBusinessObjectDefinitionIds();
 
-        // Switch on the type of CRUD modification to be done
-        switch (modificationType)
+        // Start at index 0
+        int fromIndex = 0;
+
+        // Process documents until the ids are all updated
+        while (fromIndex < ids.size())
         {
-            case SEARCH_INDEX_UPDATE_TYPE_CREATE:
-                // Create a search index document
-                searchFunctions.getCreateIndexDocumentsFunction().accept(indexName, documentType,
-                    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
-                break;
-            case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
-                // Update a search index document
-                searchFunctions.getUpdateIndexDocumentsFunction().accept(indexName, documentType,
-                    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
-                break;
-            case SEARCH_INDEX_UPDATE_TYPE_DELETE:
-                // Delete a search index document
-                searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
-                break;
-            default:
-                LOGGER.warn("Unknown modification type received.");
-                break;
+            // Process based on a document chunk size, if the id.size is greater than the chunk size then use the chunk size
+            int toIndex = ids.size() > fromIndex + UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE ? fromIndex + UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE : ids.size();
+
+            // Switch on the type of CRUD modification to be done
+            switch (modificationType)
+            {
+                case SEARCH_INDEX_UPDATE_TYPE_CREATE:
+                    // Create a search index document
+                    searchFunctions.getCreateIndexDocumentsFunction().accept(indexName, documentType, convertBusinessObjectDefinitionEntityListToJSONStringMap(
+                        businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids.subList(fromIndex, toIndex))));
+                    break;
+                case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
+                    // Update a search index document
+                    searchFunctions.getUpdateIndexDocumentsFunction().accept(indexName, documentType, convertBusinessObjectDefinitionEntityListToJSONStringMap(
+                        businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids.subList(fromIndex, toIndex))));
+                    break;
+                case SEARCH_INDEX_UPDATE_TYPE_DELETE:
+                    // Delete a search index document
+                    searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
+                    break;
+                default:
+                    LOGGER.warn("Unknown modification type received.");
+                    break;
+            }
+
+            // Set the from index to the toIndex
+            fromIndex = toIndex;
         }
     }
 
