@@ -503,7 +503,9 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
-        InstanceDefinition coreInstanceDefinition = new InstanceDefinition(0, "m1.medium", null, null, null);
+        InstanceDefinition coreInstanceDefinition =
+            new InstanceDefinition(0, "m1.medium", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD);
         request.getEmrClusterDefinition().getInstanceDefinitions().setCoreInstances(coreInstanceDefinition);
 
         // Create an EMR cluster definition.
@@ -524,7 +526,9 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
-        InstanceDefinition coreInstanceDefinition = new InstanceDefinition(-1, "m1.medium", null, null, null);
+        InstanceDefinition coreInstanceDefinition =
+            new InstanceDefinition(-1, "m1.medium", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD);
         request.getEmrClusterDefinition().getInstanceDefinitions().setCoreInstances(coreInstanceDefinition);
 
         // Create an EMR cluster definition.
