@@ -5422,6 +5422,11 @@
       <xs:all>
          <xs:element name="instanceCount" type="xs:int"/>
          <xs:element name="instanceType" type="xs:string"/>
+         <xs:element name="ebsConfiguration" type="emrClusterDefinitionEbsConfiguration" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The EBS configurations that will be attached to each EC2 instance in the instance group</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="instanceSpotPrice" type="xs:decimal" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The instance bid price, in USD. If not specified, uses on-demand</xs:documentation>
@@ -5449,6 +5454,11 @@
       <xs:all>
          <xs:element name="instanceCount" type="xs:int"/>
          <xs:element name="instanceType" type="xs:string"/>
+         <xs:element name="ebsConfiguration" type="emrClusterDefinitionEbsConfiguration" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The EBS configurations that will be attached to each EC2 instance in the instance group</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="instanceSpotPrice" type="xs:decimal" minOccurs="0"/>
          <xs:element name="instanceMaxSearchPrice" type="xs:decimal" minOccurs="0">
             <xs:annotation>
