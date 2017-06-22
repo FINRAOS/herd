@@ -494,6 +494,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_BDEF_SHORT_DESCRIPTION = null;
 
+    public static final List<SchemaColumn> NO_COLUMNS = null;
+
     public static final String NO_COLUMN_NAME = null;
 
     public static final XMLGregorianCalendar NO_CREATED_ON = null;
