@@ -49,6 +49,7 @@ import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectDefinitionIndexSearchDao;
+import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.SearchFilterType;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
@@ -142,8 +143,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Autowired
     private ConfigurationHelper configurationHelper;
 
+    //@Autowired
+    //private SearchFunctions searchFunctions;
     @Autowired
-    private SearchFunctions searchFunctions;
+    private IndexFunctionsDao indexFunctionsDao;
 
     @Autowired
     private TagHelper tagHelper;
@@ -216,7 +219,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Simple count validation, index size should equal entity list size
-        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
+        final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName, documentType);
+            //searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
         final long businessObjectDefinitionDatabaseTableSize = businessObjectDefinitionDao.getCountOfAllBusinessObjectDefinitions();
         if (businessObjectDefinitionDatabaseTableSize != indexSize)
         {
@@ -268,12 +272,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Validate all Business Object Definitions
         businessObjectDefinitionHelper.executeFunctionForBusinessObjectDefinitionEntities(indexName, documentType, businessObjectDefinitionEntityList,
-            searchFunctions.getValidateFunction());
+            indexFunctionsDao::validateDocumentIndex);
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
         // can call "get" to see if any exceptions were thrown.
         return new AsyncResult<>(null);
     }
+
 
     /**
      * Method to remove business object definitions in the index that don't exist in the database
@@ -291,13 +296,15 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             .forEach(businessObjectDefinitionEntity -> databaseBusinessObjectDefinitionIdList.add(businessObjectDefinitionEntity.getId().toString()));
 
         // Get a list of business object definition ids in the search index
-        List<String> indexDocumentBusinessObjectDefinitionIdList = searchFunctions.getIdsInIndexFunction().apply(indexName, documentType);
+        List<String> indexDocumentBusinessObjectDefinitionIdList = indexFunctionsDao.getIdsInIndex(indexName, documentType);
+            //searchFunctions.getIdsInIndexFunction().apply(indexName, documentType);
 
         // Remove the database ids from the index ids
         indexDocumentBusinessObjectDefinitionIdList.removeAll(databaseBusinessObjectDefinitionIdList);
 
         // If there are any ids left in the index list they need to be removed
-        indexDocumentBusinessObjectDefinitionIdList.forEach(id -> searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
+        indexDocumentBusinessObjectDefinitionIdList.forEach(id -> indexFunctionsDao.deleteDocumentById(indexName, documentType, id));
+            //searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
     }
 
     /**
@@ -323,7 +330,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             // Convert the business object definition entity to a JSON string
             final String jsonString = businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
 
-            return searchFunctions.getIsValidFunction().test(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+            return indexFunctionsDao.isValidDocumentIndex(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+            //return searchFunctions.getIsValidFunction().test(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
         };
 
         boolean isValid = true;
@@ -1057,17 +1065,22 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         {
             case SEARCH_INDEX_UPDATE_TYPE_CREATE:
                 // Create a search index document
-                searchFunctions.getCreateIndexDocumentsFunction().accept(indexName, documentType,
-                    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
+                //searchFunctions.getCreateIndexDocumentsFunction().accept(indexName, documentType,
+                //    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
+                indexFunctionsDao.createIndexDocuments(indexName, documentType,
+                      convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
                 // Update a search index document
-                searchFunctions.getUpdateIndexDocumentsFunction().accept(indexName, documentType,
-                    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
+                //searchFunctions.getUpdateIndexDocumentsFunction().accept(indexName, documentType,
+                //    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
+                indexFunctionsDao.updateIndexDocuments(indexName, documentType,
+                      convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_DELETE:
                 // Delete a search index document
-                searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
+                //searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
+                indexFunctionsDao.deleteIndexDocuments(indexName, documentType, ids);
                 break;
             default:
                 LOGGER.warn("Unknown modification type received.");
