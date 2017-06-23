@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.helper;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -130,7 +132,7 @@ public class BusinessObjectDefinitionHelper
     public String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
         String jsonString = "";
-
+        processTagSearchScoreMultiplier(businessObjectDefinitionEntity);
         try
         {
             // Convert the business object definition entity to a JSON string.
@@ -143,5 +145,15 @@ public class BusinessObjectDefinitionHelper
         }
 
         return jsonString;
+    }
+
+    public void processTagSearchScoreMultiplier(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    {
+        // Process the tags search score multiplier. Multiply all the tags search score.
+        BigDecimal totalSearchScoreMultiplier =
+            businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().stream().filter(item -> item.getTag().getSearchScoreMultiplier() != null)
+                .reduce(BigDecimal.ONE, (bd, item) -> bd.multiply(item.getTag().getSearchScoreMultiplier()), BigDecimal::multiply)
+                .setScale(3, RoundingMode.HALF_UP);
+        businessObjectDefinitionEntity.setTagSearchScoreMultiplier(totalSearchScoreMultiplier);
     }
 }
