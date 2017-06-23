@@ -174,6 +174,9 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      */
     private static final String BDEF_TAGS_SOURCE = "businessObjectDefinitionTags";
 
+    /**
+     * Source string for the business object definition tags search score multiplier
+     */
     private static final String BDEF_TAGS_SEARCH_SCORE_MULTIPLIER = "tagSearchScoreMultiplier";
 
     /**
