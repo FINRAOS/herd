@@ -147,9 +147,13 @@ public class BusinessObjectDefinitionHelper
         return jsonString;
     }
 
+    /**
+     * Processes the tags search score multiplier. Multiply all the tags search score.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity
+     */
     public void processTagSearchScoreMultiplier(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
-        // Process the tags search score multiplier. Multiply all the tags search score.
         BigDecimal totalSearchScoreMultiplier =
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().stream().filter(item -> item.getTag().getSearchScoreMultiplier() != null)
                 .reduce(BigDecimal.ONE, (bd, item) -> bd.multiply(item.getTag().getSearchScoreMultiplier()), BigDecimal::multiply)
