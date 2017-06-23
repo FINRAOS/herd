@@ -227,14 +227,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             queryBuilder = disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder);
         }
 
-        // Script for tag search score multiplier
-        String inlineScript = "_score * params.['_source']." + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER;
-
-        // Set the script
-        ScriptScoreFunctionBuilder scoreFunction = ScoreFunctionBuilders.scriptFunction(inlineScript);
-
-        // Create function score query builder
-        FunctionScoreQueryBuilder functionScoreQueryBuilder = new FunctionScoreQueryBuilder(queryBuilder, scoreFunction);
+        // Get function score query builder
+        FunctionScoreQueryBuilder functionScoreQueryBuilder = getFunctionScoreQueryBuilder(queryBuilder);
 
         // The fields in the search indexes to return
         final String[] searchSources =
@@ -351,6 +345,25 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         }
 
         return new IndexSearchResponse(searchResult.getTotal(), indexSearchResults, facets);
+    }
+
+    /**
+     * Processes the scripts and score function
+     *
+     * @param queryBuilder the query builder
+     *
+     * @return the function score query builder
+     */
+    private FunctionScoreQueryBuilder getFunctionScoreQueryBuilder(QueryBuilder queryBuilder)
+    {
+        // Script for tag search score multiplier
+        String inlineScript = "_score * params.['_source']." + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER;
+
+        // Set the script
+        ScriptScoreFunctionBuilder scoreFunction = ScoreFunctionBuilders.scriptFunction(inlineScript);
+
+        // Create function score query builder
+        return new FunctionScoreQueryBuilder(queryBuilder, scoreFunction);
     }
 
     /**
