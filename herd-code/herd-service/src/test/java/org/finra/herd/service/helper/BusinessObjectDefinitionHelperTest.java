@@ -24,6 +24,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -220,7 +221,7 @@ public class BusinessObjectDefinitionHelperTest extends AbstractServiceTest
         businessObjectDefinitionHelper.processTagSearchScoreMultiplier(businessObjectDefinitionEntity);
 
         // Validate the result
-        assertEquals(businessObjectDefinitionEntity.getTagSearchScoreMultiplier(), TAG_SEARCH_SCORE_MULTIPLIER);
+        assertEquals(businessObjectDefinitionEntity.getTagSearchScoreMultiplier(), TAG_SEARCH_SCORE_MULTIPLIER.setScale(3, RoundingMode.HALF_UP));
     }
 
     @Test
@@ -239,7 +240,7 @@ public class BusinessObjectDefinitionHelperTest extends AbstractServiceTest
         // Call the method under test
         businessObjectDefinitionHelper.processTagSearchScoreMultiplier(businessObjectDefinitionEntity);
 
-        // Validate the search score multiplier
-        assertEquals(businessObjectDefinitionEntity.getTagSearchScoreMultiplier(), new BigDecimal(1.0));
+        // Validate the result
+        assertEquals(businessObjectDefinitionEntity.getTagSearchScoreMultiplier(), BigDecimal.ONE.setScale(3, RoundingMode.HALF_UP));
     }
 }
