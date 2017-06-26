@@ -516,6 +516,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final BigDecimal NO_BID_PRICE = null;
 
+    public static final List<SchemaColumn> NO_COLUMNS = null;
+
     public static final String NO_COLUMN_NAME = null;
 
     public static final XMLGregorianCalendar NO_CREATED_ON = null;
