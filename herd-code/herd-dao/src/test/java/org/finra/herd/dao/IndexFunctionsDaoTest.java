@@ -79,13 +79,13 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         // Call the method under test
         indexFunctionsDao.createIndexDocument("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
 
         // Verify the calls to external methods
-        verify(jestClientHelper).searchExecute(any());
-
+        verify(jestClientHelper).executeAction(any());
+        verify(jestResult).isSucceeded();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
 
@@ -94,11 +94,11 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.getSourceAsString()).thenReturn("");
         indexFunctionsDao.validateDocumentIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
         // Verify the calls to external methods
-        verify(jestClientHelper, times(2)).searchExecute(any());
+        verify(jestClientHelper, times(2)).executeAction(any());
         verify(jestResult).getSourceAsString();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
@@ -108,11 +108,11 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.getSourceAsString()).thenReturn("JSON_UPDATE");
         indexFunctionsDao.validateDocumentIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
         // Verify the calls to external methods
-        verify(jestClientHelper, times(2)).searchExecute(any());
+        verify(jestClientHelper, times(2)).executeAction(any());
         verify(jestResult).getSourceAsString();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
@@ -122,11 +122,11 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.getSourceAsString()).thenReturn("JSON");
         indexFunctionsDao.validateDocumentIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
         // Verify the calls to external methods
-        verify(jestClientHelper, times(1)).searchExecute(any());
+        verify(jestClientHelper, times(1)).executeAction(any());
         verify(jestResult).getSourceAsString();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
@@ -136,14 +136,14 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.getSourceAsString()).thenReturn("JSON");
 
         // Call the method under test
         boolean isValid = indexFunctionsDao.isValidDocumentIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
         assertThat("IsValid is false when it should have been true.", isValid, is(true));
 
-        verify(jestClientHelper, times(1)).searchExecute(any());
+        verify(jestClientHelper, times(1)).executeAction(any());
         verify(jestResult).getSourceAsString();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
@@ -153,14 +153,14 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.getSourceAsString()).thenReturn("");
 
         // Call the method under test
         boolean isValid = indexFunctionsDao.isValidDocumentIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
         assertThat("IsValid is true when it should have been false.", isValid, is(false));
 
-        verify(jestClientHelper, times(1)).searchExecute(any());
+        verify(jestClientHelper, times(1)).executeAction(any());
         verify(jestResult).getSourceAsString();
         verifyNoMoreInteractions(createdMocks.toArray());
 
@@ -171,14 +171,14 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.getSourceAsString()).thenReturn(null);
 
         // Call the method under test
         boolean isValid = indexFunctionsDao.isValidDocumentIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
         assertThat("IsValid is true when it should have been false.", isValid, is(false));
 
-        verify(jestClientHelper, times(1)).searchExecute(any());
+        verify(jestClientHelper, times(1)).executeAction(any());
         verify(jestResult).getSourceAsString();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
@@ -188,14 +188,14 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.getSourceAsString()).thenReturn("JSON_NOT_EQUAL");
 
         // Call the method under test
         boolean isValid = indexFunctionsDao.isValidDocumentIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
         assertThat("IsValid is true when it should have been false.", isValid, is(false));
 
-        verify(jestClientHelper, times(1)).searchExecute(any());
+        verify(jestClientHelper, times(1)).executeAction(any());
         verify(jestResult).getSourceAsString();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
@@ -243,13 +243,13 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.isSucceeded()).thenReturn(true);
         Map<String, String> documentMap = new HashMap<>();
         documentMap.put("1", "JSON");
         indexFunctionsDao.createIndexDocuments("INDEX_NAME", "DOCUMENT_TYPE", documentMap);
 
-        verify(jestClientHelper).searchExecute(any());
+        verify(jestClientHelper).executeAction(any());
         verify(jestResult).isSucceeded();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
@@ -259,13 +259,13 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.isSucceeded()).thenReturn(false);
         Map<String, String> documentMap = new HashMap<>();
         documentMap.put("1", "JSON");
         indexFunctionsDao.createIndexDocuments("INDEX_NAME", "DOCUMENT_TYPE", documentMap);
 
-        verify(jestClientHelper).searchExecute(any());
+        verify(jestClientHelper).executeAction(any());
         verify(jestResult).isSucceeded();
         verify(jestResult).getErrorMessage();
         verifyNoMoreInteractions(createdMocks.toArray());
@@ -289,7 +289,7 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.isSucceeded()).thenReturn(true);
         // Call the method under test
         List<Integer> businessObjectDefinitionIds = new ArrayList<>();
@@ -297,7 +297,7 @@ public class IndexFunctionsDaoTest
         indexFunctionsDao.deleteIndexDocuments("INDEX_NAME", "DOCUMENT_TYPE", businessObjectDefinitionIds);
 
         // Verify the calls to external methods
-        verify(jestClientHelper).searchExecute(any());
+        verify(jestClientHelper).executeAction(any());
         verify(jestResult).isSucceeded();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
@@ -307,7 +307,7 @@ public class IndexFunctionsDaoTest
     {
         SearchResult jestResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(jestResult);
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
         when(jestResult.isSucceeded()).thenReturn(false);
         // Call the method under test
         List<Integer> businessObjectDefinitionIds = new ArrayList<>();
@@ -315,7 +315,7 @@ public class IndexFunctionsDaoTest
         indexFunctionsDao.deleteIndexDocuments("INDEX_NAME", "DOCUMENT_TYPE", businessObjectDefinitionIds);
 
         // Verify the calls to external methods
-        verify(jestClientHelper).searchExecute(any());
+        verify(jestClientHelper).executeAction(any());
         verify(jestResult).isSucceeded();
         verify(jestResult).getErrorMessage();
         verifyNoMoreInteractions(createdMocks.toArray());
@@ -324,14 +324,14 @@ public class IndexFunctionsDaoTest
     @Test
     public void testNumberOfTypesInIndexFunction()
     {
-        SearchResult searchResult = mock(SearchResult.class);
+        JestResult searchResult = mock(SearchResult.class);
         // Build mocks
-        when(jestClientHelper.searchExecute(any())).thenReturn(searchResult);
-        when(searchResult.getTotal()).thenReturn(100);
+        when(jestClientHelper.executeAction(any())).thenReturn(searchResult);
+        when(searchResult.getSourceAsString()).thenReturn("100");
         indexFunctionsDao.getNumberOfTypesInIndex("INDEX_NAME", "DOCUMENT_TYPE");
         // Verify the calls to external methods
-        verify(jestClientHelper).searchExecute(any());
-        verify(searchResult).getTotal();
+        verify(jestClientHelper).executeAction(any());
+        verify(searchResult).getSourceAsString();
 
         verifyNoMoreInteractions(createdMocks.toArray());
     }

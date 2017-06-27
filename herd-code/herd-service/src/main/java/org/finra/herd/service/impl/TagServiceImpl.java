@@ -108,9 +108,6 @@ public class TagServiceImpl implements TagService, SearchableService
     @Autowired
     private ConfigurationHelper configurationHelper;
 
-    //@Autowired
-    //private SearchFunctions searchFunctions;
-
     @Autowired
     private IndexFunctionsDao indexFunctionsDao;
 
@@ -321,19 +318,14 @@ public class TagServiceImpl implements TagService, SearchableService
         {
             case SEARCH_INDEX_UPDATE_TYPE_CREATE:
                 // Create a search index document
-                //searchFunctions.getCreateIndexDocumentsFunction()
-                //    .accept(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
-                indexFunctionsDao.createIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+            indexFunctionsDao.createIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
                 // Update a search index document
-                //searchFunctions.getUpdateIndexDocumentsFunction()
-                //    .accept(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
-                indexFunctionsDao.updateIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+               indexFunctionsDao.updateIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_DELETE:
                 // Delete a search index document
-                //searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
                 indexFunctionsDao.deleteIndexDocuments(indexName, documentType, ids);
                 break;
             default:

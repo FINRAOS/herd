@@ -506,7 +506,8 @@ public class ElasticsearchHelper
      *
      * @return list of tag type index search dto
      */
-    private List<TagTypeIndexSearchResponseDto> getTagTypeIndexSearchResponseDtosFromTermsAggregation(TermsAggregation termsAggregation, TermsAggregation tagTypeFacetAggregation)
+    private List<TagTypeIndexSearchResponseDto> getTagTypeIndexSearchResponseDtosFromTermsAggregation(TermsAggregation termsAggregation,
+        TermsAggregation tagTypeFacetAggregation)
     {
         List<TermsAggregation.Entry> bucketsL0 = termsAggregation.getBuckets();
 
@@ -530,9 +531,7 @@ public class ElasticsearchHelper
             }
 
             TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
-                new TagTypeIndexSearchResponseDto(entryL1.getKeyAsString(),
-                    count,
-                   tagIndexSearchResponseDtos, null);
+                new TagTypeIndexSearchResponseDto(entryL1.getKeyAsString(), count, tagIndexSearchResponseDtos, null);
 
             tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
@@ -556,7 +555,6 @@ public class ElasticsearchHelper
                     }
                 }
             }
-
         }
 
         return tagTypeIndexSearchResponseDtos;

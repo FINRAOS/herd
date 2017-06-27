@@ -89,6 +89,11 @@ public class JestClientHelper
         return searchResult;
     }
 
+    /**
+     * execute action
+     * @param action action
+     * @return JestResult
+     */
     public JestResult executeAction(Action action)
     {
         JestResult searchResult;
