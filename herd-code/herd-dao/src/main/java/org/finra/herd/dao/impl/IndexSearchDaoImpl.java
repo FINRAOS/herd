@@ -42,6 +42,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.index.query.functionscore.ScriptScoreFunctionBuilder;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -359,8 +361,11 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         // Script for tag search score multiplier
         String inlineScript = "_score * params.['_source']." + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER;
 
+        // Set the lang to groovy
+        Script script = new Script(ScriptType.INLINE, "groovy", inlineScript, null);
+
         // Set the script
-        ScriptScoreFunctionBuilder scoreFunction = ScoreFunctionBuilders.scriptFunction(inlineScript);
+        ScriptScoreFunctionBuilder scoreFunction = ScoreFunctionBuilders.scriptFunction(script);
 
         // Create function score query builder
         return new FunctionScoreQueryBuilder(queryBuilder, scoreFunction);
