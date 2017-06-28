@@ -26,11 +26,13 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonObject;
 import io.searchbox.client.JestResult;
 import io.searchbox.core.SearchResult;
 import org.junit.Before;
@@ -339,79 +341,23 @@ public class IndexFunctionsDaoTest
     @Test
     public void testIdsInIndexFunction()
     {
-        //        BiFunction<String, String, List<String>> idsInIndexFunction = searchFunctions.getIdsInIndexFunction();
-        //        assertThat("Function is null.", idsInIndexFunction, not(nullValue()));
-        //        assertThat("Ids in index function not an instance of BiFunction.", idsInIndexFunction, instanceOf(BiFunction.class));
-        //
-        //        // Build mocks
-        //        TransportClient transportClient = mock(TransportClient.class);
-        //        SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
-        //        SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
-        //        SearchRequestBuilder searchRequestBuilderWithQuery = mock(SearchRequestBuilder.class);
-        //        SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
-        //        SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
-        //        SearchResponse searchResponse = mock(SearchResponse.class);
-        //        SearchHits searchHits = mock(SearchHits.class);
-        //        SearchHit searchHit1 = mock(SearchHit.class);
-        //        SearchHit searchHit2 = mock(SearchHit.class);
-        //        SearchScrollRequestBuilder searchScrollRequestBuilder = mock(SearchScrollRequestBuilder.class);
-        //        SearchHit[] searchHitArray = new SearchHit[2];
-        //        searchHitArray[0] = searchHit1;
-        //        searchHitArray[1] = searchHit2;
-        //        SearchResponse searchResponseScroll = mock(SearchResponse.class);
-        //        SearchHits searchHitsScroll = mock(SearchHits.class);
-        //        SearchHit[] searchHitArrayScroll = new SearchHit[0];
-        //
-        //        @SuppressWarnings("unchecked")
-        //        ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
-        //        @SuppressWarnings("unchecked")
-        //        ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
-        //
-        //        // Mock the call to external methods
-        //        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
-        //        when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
-        //        when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
-        //        when(searchRequestBuilderWithTypes.setQuery(any())).thenReturn(searchRequestBuilderWithQuery);
-        //        when(searchRequestBuilderWithQuery.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
-        //        when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
-        //        when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
-        //        when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
-        //        when(searchResponse.getHits()).thenReturn(searchHits);
-        //        when(searchHits.hits()).thenReturn(searchHitArray);
-        //        when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
-        //        when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
-        //        when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
-        //        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
-        //        when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
-        //
-        //        // Call the method under test
-        //        List<String> idsInIndex = idsInIndexFunction.apply("INDEX_NAME", "DOCUMENT_TYPE");
-        //
-        //        assertThat("Ids in index list is null.", idsInIndex, not(nullValue()));
-        //
-        //        // Verify the calls to external methods
-        //        verify(transportClientFactory).getTransportClient();
-        //        verify(transportClient).prepareSearch("INDEX_NAME");
-        //        verify(searchRequestBuilder).setTypes("DOCUMENT_TYPE");
-        //        verify(searchRequestBuilderWithTypes).setQuery(any());
-        //        verify(searchResponse).getScrollId();
-        //        verify(searchRequestBuilderWithQuery).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
-        //        verify(searchRequestBuilderWithScroll).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
-        //        verify(searchRequestBuilder).execute();
-        //        verify(listenableActionFuture).actionGet();
-        //        verify(searchResponse).getHits();
-        //        verify(searchHits).hits();
-        //        verify(searchHitArray[0]).id();
-        //        verify(searchHitArray[1]).id();
-        //        verify(transportClient).prepareSearchScroll(any());
-        //        verify(searchScrollRequestBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
-        //        verify(searchScrollRequestBuilder).execute();
-        //        verify(listenableActionFutureScroll).actionGet();
-        //        verify(searchResponseScroll).getHits();
-        //        verify(searchHitsScroll).hits();
-        //        verifyNoMoreInteractions(createdMocks.toArray());
-        //
-        //        List<String> idsInIndex =  indexFunctionsDao.getIdsInIndex("INDEX_NAME", "DOCUMENT_TYPE");
+        JestResult jestResult = mock(JestResult.class);
+        SearchResult searchResult = mock(SearchResult.class);
+        List<String> idList = Arrays.asList("{id:1}");
+        List<String> emptyList = new ArrayList<>();
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("_scroll_id", "100");
+        when(jestClientHelper.searchExecute(any())).thenReturn(searchResult);
+        when(searchResult.getSourceAsStringList()).thenReturn(idList);
+        when(searchResult.getJsonObject()).thenReturn(jsonObject);
+        when(jestClientHelper.searchScrollExecute(any())).thenReturn(jestResult);
+        when(jestResult.getSourceAsStringList()).thenReturn(emptyList);
+        indexFunctionsDao.getIdsInIndex("INDEX_NAME", "DOCUMENT_TYPE");
+        verify(jestClientHelper).searchExecute(any());
+        verify(searchResult, times(2)).getSourceAsStringList();
+        verify(searchResult).getJsonObject();
+        verify(jestClientHelper).searchScrollExecute(any());
+        verify(jestResult).getSourceAsStringList();
     }
 
 
