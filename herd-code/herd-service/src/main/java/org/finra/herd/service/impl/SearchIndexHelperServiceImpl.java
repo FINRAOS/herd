@@ -57,9 +57,6 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
     @Autowired
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
-//    @Autowired
-//    private SearchFunctions searchFunctions;
-
     @Autowired
     private SearchIndexDaoHelper searchIndexDaoHelper;
 
