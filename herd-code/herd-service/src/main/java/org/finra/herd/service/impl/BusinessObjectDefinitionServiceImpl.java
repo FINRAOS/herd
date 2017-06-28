@@ -148,8 +148,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Autowired
     private ConfigurationHelper configurationHelper;
 
-    //@Autowired
-    //private SearchFunctions searchFunctions;
     @Autowired
     private IndexFunctionsDao indexFunctionsDao;
 
@@ -1079,21 +1077,16 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             {
                 case SEARCH_INDEX_UPDATE_TYPE_CREATE:
                     // Create a search index document
-                    //searchFunctions.getCreateIndexDocumentsFunction().accept(indexName, documentType,
-                    //    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
                     indexFunctionsDao.createIndexDocuments(indexName, documentType,
                         convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
                     break;
                 case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
                     // Update a search index document
-                    //searchFunctions.getUpdateIndexDocumentsFunction().accept(indexName, documentType,
-                    //    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
                     indexFunctionsDao.updateIndexDocuments(indexName, documentType,
                         convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
                     break;
                 case SEARCH_INDEX_UPDATE_TYPE_DELETE:
                     // Delete a search index document
-                    //searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
                     indexFunctionsDao.deleteIndexDocuments(indexName, documentType, ids);
                     break;
                 default:
