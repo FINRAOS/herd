@@ -1,7 +1,6 @@
 package org.finra.herd.dao;
 
-import static org.finra.herd.dao.SearchFilterType.EXCLUSION_SEARCH_FILTER;
-import static org.finra.herd.dao.SearchFilterType.INCLUSION_SEARCH_FILTER;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -37,10 +36,10 @@ import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.dto.DataProvider;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.Namespace;
+import org.finra.herd.model.dto.SearchFilterType;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
-
 
 public class BusinessObjectDefinitionIndexSearchDaoTest extends AbstractDaoTest
 {
@@ -84,19 +83,26 @@ public class BusinessObjectDefinitionIndexSearchDaoTest extends AbstractDaoTest
         List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtoList = new ArrayList<>();
 
         when(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(any(SearchResult.class))).thenReturn(tagTypeIndexSearchResponseDtoList);
-        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList
-          = Arrays.asList(new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider("data provider"), "description 1", "display name", "bdefname", new Namespace("namespace")));
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = Arrays.asList(
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider("data provider"), "description 1", "display name", "bdefname",
+                new Namespace("namespace")));
 
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("_scroll_id", "100");
-        when(searchResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class)).thenReturn(businessObjectDefinitionIndexSearchResponseDtoList);
+        when(searchResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class))
+            .thenReturn(businessObjectDefinitionIndexSearchResponseDtoList);
         when(jestClientHelper.searchScrollExecute(any())).thenReturn(jestResult);
         when(searchResult.getJsonObject()).thenReturn(jsonObject);
-        List<BusinessObjectDefinitionIndexSearchResponseDto> emptyBusinessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
 
-        ElasticsearchResponseDto elasticsearchResponseDto =  businessObjectDefinitionIndexSearchDao.findAllBusinessObjectDefinitions("INDEX_NAME", "DOCUMENT_TYPE", new HashSet<>());
+        // Call the method under test.
+        ElasticsearchResponseDto result =
+            businessObjectDefinitionIndexSearchDao.findAllBusinessObjectDefinitions("INDEX_NAME", "DOCUMENT_TYPE", new HashSet<>());
 
+        // Verify the external calls.
         verify(jestClientHelper).searchExecute(any());
+
+        // Validate the results.
+        assertEquals(new ElasticsearchResponseDto(businessObjectDefinitionIndexSearchResponseDtoList, null, null, null), result);
     }
 
     @Test
@@ -115,15 +121,16 @@ public class BusinessObjectDefinitionIndexSearchDaoTest extends AbstractDaoTest
         List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtoList = new ArrayList<>();
 
         when(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(any(SearchResult.class))).thenReturn(tagTypeIndexSearchResponseDtoList);
-        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList
-            = Arrays.asList(new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider("data provider"), "description 1", "display name", "bdefname", new Namespace("namespace")));
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = Arrays.asList(
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider("data provider"), "description 1", "display name", "bdefname",
+                new Namespace("namespace")));
 
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("_scroll_id", "100");
-        when(searchResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class)).thenReturn(businessObjectDefinitionIndexSearchResponseDtoList);
+        when(searchResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class))
+            .thenReturn(businessObjectDefinitionIndexSearchResponseDtoList);
         when(jestClientHelper.searchScrollExecute(any())).thenReturn(jestResult);
         when(searchResult.getJsonObject()).thenReturn(jsonObject);
-        List<BusinessObjectDefinitionIndexSearchResponseDto> emptyBusinessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
 
         // Get test tag entity
         TagEntity tagEntity = new TagEntity();
@@ -141,12 +148,18 @@ public class BusinessObjectDefinitionIndexSearchDaoTest extends AbstractDaoTest
 
         // List<Map<SearchFilterType, List<TagEntity>>>
         Map<SearchFilterType, List<TagEntity>> searchFilterTypeListMap = new HashMap<>();
-        searchFilterTypeListMap.put(INCLUSION_SEARCH_FILTER, tagEntities);
+        searchFilterTypeListMap.put(SearchFilterType.INCLUSION_SEARCH_FILTER, tagEntities);
         List<Map<SearchFilterType, List<TagEntity>>> tagEnLists = Collections.singletonList(searchFilterTypeListMap);
 
-        ElasticsearchResponseDto elasticsearchResponseDto = businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags("INDEX_NAME", "DOCUMENT_TYPE", tagEnLists, new HashSet<>());
+        // Call the method under test.
+        ElasticsearchResponseDto result =
+            businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags("INDEX_NAME", "DOCUMENT_TYPE", tagEnLists, new HashSet<>());
 
+        // Verify the external calls.
         verify(jestClientHelper).searchExecute(any());
+
+        // Validate the results.
+        assertEquals(new ElasticsearchResponseDto(businessObjectDefinitionIndexSearchResponseDtoList, null, null, null), result);
     }
 
     @Test
@@ -165,15 +178,16 @@ public class BusinessObjectDefinitionIndexSearchDaoTest extends AbstractDaoTest
         List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtoList = new ArrayList<>();
 
         when(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(any(SearchResult.class))).thenReturn(tagTypeIndexSearchResponseDtoList);
-        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList
-            = Arrays.asList(new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider("data provider"), "description 1", "display name", "bdefname", new Namespace("namespace")));
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = Arrays.asList(
+            new BusinessObjectDefinitionIndexSearchResponseDto(new DataProvider("data provider"), "description 1", "display name", "bdefname",
+                new Namespace("namespace")));
 
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("_scroll_id", "100");
-        when(searchResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class)).thenReturn(businessObjectDefinitionIndexSearchResponseDtoList);
+        when(searchResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class))
+            .thenReturn(businessObjectDefinitionIndexSearchResponseDtoList);
         when(jestClientHelper.searchScrollExecute(any())).thenReturn(jestResult);
         when(searchResult.getJsonObject()).thenReturn(jsonObject);
-        List<BusinessObjectDefinitionIndexSearchResponseDto> emptyBusinessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
 
         // Get test tag entity
         TagEntity tagEntity = new TagEntity();
@@ -191,13 +205,21 @@ public class BusinessObjectDefinitionIndexSearchDaoTest extends AbstractDaoTest
 
         // List<Map<SearchFilterType, List<TagEntity>>>
         Map<SearchFilterType, List<TagEntity>> searchFilterTypeListMap = new HashMap<>();
-        searchFilterTypeListMap.put(EXCLUSION_SEARCH_FILTER, tagEntities);
+        searchFilterTypeListMap.put(SearchFilterType.EXCLUSION_SEARCH_FILTER, tagEntities);
         List<Map<SearchFilterType, List<TagEntity>>> tagEnLists = Collections.singletonList(searchFilterTypeListMap);
 
+        // Mock the external calls.
         when(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResult)).thenReturn(tagTypeIndexSearchResponseDtoList);
-        ElasticsearchResponseDto elasticsearchResponseDto = businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags("INDEX_NAME", "DOCUMENT_TYPE", tagEnLists, new HashSet<>(Arrays.asList("tag")));
 
+        // Call the method under test.
+        ElasticsearchResponseDto result = businessObjectDefinitionIndexSearchDao
+            .searchBusinessObjectDefinitionsByTags("INDEX_NAME", "DOCUMENT_TYPE", tagEnLists, new HashSet<>(Arrays.asList("tag")));
+
+        // Verify the external calls.
         verify(jestClientHelper, times(2)).searchExecute(any());
         verify(jestClientHelper).searchScrollExecute(any());
+
+        // Validate the results.
+        assertEquals(new ElasticsearchResponseDto(businessObjectDefinitionIndexSearchResponseDtoList, null, null, null), result);
     }
 }
