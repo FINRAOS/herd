@@ -19,9 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import io.searchbox.client.http.JestHttpClient;
-import io.searchbox.indices.mapping.GetMapping;
-import org.elasticsearch.client.AdminClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,16 +29,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.IndexFunctionsDao;
-import org.finra.herd.dao.JestClientFactory;
 import org.finra.herd.dao.TagDao;
-import org.finra.herd.dao.TransportClientFactory;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.SearchIndexHelperService;
-import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.TagHelper;

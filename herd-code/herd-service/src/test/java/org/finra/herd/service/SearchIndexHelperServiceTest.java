@@ -40,7 +40,6 @@ import org.mockito.MockitoAnnotations;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.TagDao;
-import org.finra.herd.dao.TransportClientFactory;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
@@ -75,9 +74,6 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
 
     @Mock
     private TagHelper tagHelper;
-
-    @Mock
-    private TransportClientFactory transportClientFactory;
 
     @Before
     public void before()
