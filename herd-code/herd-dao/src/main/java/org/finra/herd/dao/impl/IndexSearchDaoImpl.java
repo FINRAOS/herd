@@ -22,6 +22,7 @@ import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -362,7 +363,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         String inlineScript = "_score * params.['_source']." + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER;
 
         // Set the lang to groovy
-        Script script = new Script(ScriptType.INLINE, "groovy", inlineScript, null);
+        Script script = new Script(ScriptType.INLINE, "groovy", inlineScript, Collections.emptyMap());
 
         // Set the script
         ScriptScoreFunctionBuilder scoreFunction = ScoreFunctionBuilders.scriptFunction(script);
