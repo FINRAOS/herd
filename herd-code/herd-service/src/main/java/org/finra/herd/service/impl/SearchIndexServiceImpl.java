@@ -64,9 +64,6 @@ public class SearchIndexServiceImpl implements SearchIndexService
     @Autowired
     private ConfigurationHelper configurationHelper;
 
-//    @Autowired
-//    private SearchFunctions searchFunctions;
-
     @Autowired
     private SearchIndexDao searchIndexDao;
 
