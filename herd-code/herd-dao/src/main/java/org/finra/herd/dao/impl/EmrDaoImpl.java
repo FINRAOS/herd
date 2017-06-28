@@ -309,15 +309,15 @@ public class EmrDaoImpl implements EmrDao
     }
 
     @Override
-    public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams)
-    {
-        emrOperations.terminateEmrCluster(getEmrClient(awsParams), clusterId, overrideTerminationProtection);
-    }
-
-    @Override
     public ListInstanceFleetsResult getListInstanceFleetsResult(String clusterId, AwsParamsDto awsParams)
     {
         return emrOperations.listInstanceFleets(getEmrClient(awsParams), new ListInstanceFleetsRequest().withClusterId(clusterId));
+    }
+
+    @Override
+    public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams)
+    {
+        emrOperations.terminateEmrCluster(getEmrClient(awsParams), clusterId, overrideTerminationProtection);
     }
 
     /**
@@ -446,12 +446,17 @@ public class EmrDaoImpl implements EmrDao
      * @param instanceType EC2 instance type for the instance group
      * @param instanceCount number of instances for the instance group
      * @param bidPrice bid price in case of SPOT instance request
+     * @param emrClusterDefinitionEbsConfiguration the instance of {@link EmrClusterDefinitionEbsConfiguration} that contains EBS configurations that will be
+     * attached to each EC2 instance in this instance group
      *
      * @return the instance group config object
      */
-    protected InstanceGroupConfig getInstanceGroupConfig(InstanceRoleType roleType, String instanceType, Integer instanceCount, BigDecimal bidPrice)
+    protected InstanceGroupConfig getInstanceGroupConfig(InstanceRoleType roleType, String instanceType, Integer instanceCount, BigDecimal bidPrice,
+        EmrClusterDefinitionEbsConfiguration emrClusterDefinitionEbsConfiguration)
     {
-        InstanceGroupConfig instanceGroup = new InstanceGroupConfig(roleType, instanceType, instanceCount);
+        // Create an instance group configuration with an optional EBS configuration.
+        InstanceGroupConfig instanceGroup =
+            new InstanceGroupConfig(roleType, instanceType, instanceCount).withEbsConfiguration(getEbsConfiguration(emrClusterDefinitionEbsConfiguration));
 
         // Consider spot price, if specified.
         if (bidPrice != null)
@@ -481,20 +486,23 @@ public class EmrDaoImpl implements EmrDao
 
             // Fill-in the MASTER node details.
             instanceGroupConfigs.add(getInstanceGroupConfig(InstanceRoleType.MASTER, instanceDefinitions.getMasterInstances().getInstanceType(),
-                instanceDefinitions.getMasterInstances().getInstanceCount(), instanceDefinitions.getMasterInstances().getInstanceSpotPrice()));
+                instanceDefinitions.getMasterInstances().getInstanceCount(), instanceDefinitions.getMasterInstances().getInstanceSpotPrice(),
+                instanceDefinitions.getMasterInstances().getEbsConfiguration()));
 
             // if the optional core instances are specified, fill-in the CORE node details.
             if (instanceDefinitions.getCoreInstances() != null)
             {
                 instanceGroupConfigs.add(getInstanceGroupConfig(InstanceRoleType.CORE, instanceDefinitions.getCoreInstances().getInstanceType(),
-                    instanceDefinitions.getCoreInstances().getInstanceCount(), instanceDefinitions.getCoreInstances().getInstanceSpotPrice()));
+                    instanceDefinitions.getCoreInstances().getInstanceCount(), instanceDefinitions.getCoreInstances().getInstanceSpotPrice(),
+                    instanceDefinitions.getCoreInstances().getEbsConfiguration()));
             }
 
             // If the optional task instances are specified, fill-in the TASK node details.
             if (instanceDefinitions.getTaskInstances() != null)
             {
                 instanceGroupConfigs.add(getInstanceGroupConfig(InstanceRoleType.TASK, instanceDefinitions.getTaskInstances().getInstanceType(),
-                    instanceDefinitions.getTaskInstances().getInstanceCount(), instanceDefinitions.getTaskInstances().getInstanceSpotPrice()));
+                    instanceDefinitions.getTaskInstances().getInstanceCount(), instanceDefinitions.getTaskInstances().getInstanceSpotPrice(),
+                    instanceDefinitions.getTaskInstances().getEbsConfiguration()));
             }
         }
 

@@ -33,6 +33,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -1200,6 +1201,52 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitionsByIds(any());
         verifyNoMoreInteractions(businessObjectDefinitionDao, configurationHelper, jsonHelper);
+    }
+
+    @Test
+    public void testUpdateSearchIndexDocumentBusinessObjectDefinitionUpdateIdListSizeGreaterThanChunkSize() throws Exception
+    {
+        // Create two lists of business object definition entities.
+        List<List<BusinessObjectDefinitionEntity>> businessObjectDefinitionEntities = Arrays.asList(Collections.singletonList(
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes())), Collections.singletonList(businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes2())));
+
+        // Create a list of business object definition ids that would require to be processed in chunks.
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.addAll(Collections.nCopies(BusinessObjectDefinitionServiceImpl.UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE + 1, ID));
+
+        // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn(SEARCH_INDEX_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn(SEARCH_INDEX_DOCUMENT_TYPE);
+        when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(
+            businessObjectDefinitionIds.subList(0, BusinessObjectDefinitionServiceImpl.UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE)))
+            .thenReturn(businessObjectDefinitionEntities.get(0));
+        when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(businessObjectDefinitionIds
+            .subList(BusinessObjectDefinitionServiceImpl.UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE, businessObjectDefinitionIds.size())))
+            .thenReturn(businessObjectDefinitionEntities.get(1));
+        when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(businessObjectDefinitionEntities.get(0).get(0))).thenReturn(JSON_STRING);
+        when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(businessObjectDefinitionEntities.get(1).get(0))).thenReturn(JSON_STRING);
+        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
+        });
+
+        // Call the method under test.
+        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(
+            new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE));
+
+        // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitionsByIds(
+            businessObjectDefinitionIds.subList(0, BusinessObjectDefinitionServiceImpl.UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE));
+        verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitionsByIds(businessObjectDefinitionIds
+            .subList(BusinessObjectDefinitionServiceImpl.UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE, businessObjectDefinitionIds.size()));
+        verify(businessObjectDefinitionHelper).safeObjectMapperWriteValueAsString(businessObjectDefinitionEntities.get(0).get(0));
+        verify(businessObjectDefinitionHelper).safeObjectMapperWriteValueAsString(businessObjectDefinitionEntities.get(1).get(0));
+        verify(searchFunctions, times(2)).getUpdateIndexDocumentsFunction();
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationHelper, configurationDaoHelper, jsonHelper,
+            searchFunctions, tagDaoHelper, tagHelper);
     }
 
     @Test
