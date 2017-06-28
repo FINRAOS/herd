@@ -360,7 +360,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private FunctionScoreQueryBuilder getFunctionScoreQueryBuilder(QueryBuilder queryBuilder)
     {
         // Script for tag search score multiplier
-        String inlineScript = "_score * params.['_source']." + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER;
+        String inlineScript = "_score * doc['" + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER + "']";
 
         // Set the lang to groovy
         Script script = new Script(ScriptType.INLINE, "groovy", inlineScript, Collections.emptyMap());
