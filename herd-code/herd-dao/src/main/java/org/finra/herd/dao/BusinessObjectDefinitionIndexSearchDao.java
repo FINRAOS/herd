@@ -20,13 +20,33 @@ import java.util.Map;
 import java.util.Set;
 
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
+import org.finra.herd.model.dto.SearchFilterType;
 import org.finra.herd.model.jpa.TagEntity;
 
 
 public interface BusinessObjectDefinitionIndexSearchDao
 {
+    /**
+     * Returns business object definition records indexed in the Elasticsearch that match the specified tags.
+     *
+     * @param indexName the index name
+     * @param documentType the document type
+     * @param nestedTagEntityMaps the
+     * @param facetFieldsList the set of facet fields
+     *
+     * @return the response from the Elasticsearch
+     */
     public ElasticsearchResponseDto searchBusinessObjectDefinitionsByTags(String indexName, String documentType,
         List<Map<SearchFilterType, List<TagEntity>>> nestedTagEntityMaps, Set<String> facetFieldsList);
-    
+
+    /**
+     * Returns all business object definition records indexed in the Elasticsearch.
+     *
+     * @param indexName the index name
+     * @param documentType the document type
+     * @param facetFieldsList the set of facet fields
+     *
+     * @return the response from the Elasticsearch
+     */
     public ElasticsearchResponseDto findAllBusinessObjectDefinitions(String indexName, String documentType, Set<String> facetFieldsList);
 }

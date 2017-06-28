@@ -345,6 +345,13 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:simpleType name="searchFilterType">
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="EXCLUSION_SEARCH_FILTER"/>
+         <xs:enumeration value="INCLUSION_SEARCH_FILTER"/>
+      </xs:restriction>
+   </xs:simpleType>
+
    <xs:complexType name="storageAlternateKeyDto">
       <xs:sequence>
          <xs:element name="storageName" type="xs:string" minOccurs="0"/>
