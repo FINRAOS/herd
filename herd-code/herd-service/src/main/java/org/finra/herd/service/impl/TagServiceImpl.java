@@ -45,6 +45,7 @@ import org.springframework.util.Assert;
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
@@ -68,7 +69,6 @@ import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagService;
-import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
@@ -109,7 +109,7 @@ public class TagServiceImpl implements TagService, SearchableService
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private SearchFunctions searchFunctions;
+    private IndexFunctionsDao indexFunctionsDao;
 
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
@@ -318,17 +318,15 @@ public class TagServiceImpl implements TagService, SearchableService
         {
             case SEARCH_INDEX_UPDATE_TYPE_CREATE:
                 // Create a search index document
-                searchFunctions.getCreateIndexDocumentsFunction()
-                    .accept(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+            indexFunctionsDao.createIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
                 // Update a search index document
-                searchFunctions.getUpdateIndexDocumentsFunction()
-                    .accept(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+               indexFunctionsDao.updateIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_DELETE:
                 // Delete a search index document
-                searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
+                indexFunctionsDao.deleteIndexDocuments(indexName, documentType, ids);
                 break;
             default:
                 LOGGER.warn("Unknown modification type received.");
@@ -645,7 +643,8 @@ public class TagServiceImpl implements TagService, SearchableService
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Simple count validation, index size should equal entity list size
-        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
+        final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName, documentType);
+            //searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
         final long tagDatabaseTableSize = tagDao.getCountOfAllTags();
         if (tagDatabaseTableSize != indexSize)
         {
@@ -692,7 +691,8 @@ public class TagServiceImpl implements TagService, SearchableService
         removeAnyIndexDocumentsThatAreNotInTagsList(indexName, documentType, tagEntityList);
 
         // Validate all Tags
-        tagHelper.executeFunctionForTagEntities(indexName, documentType, tagEntityList, searchFunctions.getValidateFunction());
+        tagHelper.executeFunctionForTagEntities(indexName, documentType, tagEntityList, indexFunctionsDao::validateDocumentIndex);
+            //searchFunctions.getValidateFunction());
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
         // can call "get" to see if any exceptions were thrown.
@@ -713,13 +713,15 @@ public class TagServiceImpl implements TagService, SearchableService
         tagEntityList.forEach(tagEntity -> databaseTagIdList.add(tagEntity.getId().toString()));
 
         // Get a list of tag ids in the search index
-        List<String> indexDocumentTagIdList = searchFunctions.getIdsInIndexFunction().apply(indexName, documentType);
+        List<String> indexDocumentTagIdList = indexFunctionsDao.getIdsInIndex(indexName, documentType);
+            //searchFunctions.getIdsInIndexFunction().apply(indexName, documentType);
 
         // Remove the database ids from the index ids
         indexDocumentTagIdList.removeAll(databaseTagIdList);
 
         // If there are any ids left in the index list they need to be removed
-        indexDocumentTagIdList.forEach(id -> searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
+        indexDocumentTagIdList.forEach(id -> indexFunctionsDao.deleteDocumentById(indexName, documentType, id));
+            //searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
     }
 
     /**
@@ -741,7 +743,8 @@ public class TagServiceImpl implements TagService, SearchableService
             // Convert the tag entity to a JSON string
             final String jsonString = tagHelper.safeObjectMapperWriteValueAsString(tagEntity);
 
-            return searchFunctions.getIsValidFunction().test(indexName, documentType, tagEntity.getId().toString(), jsonString);
+            return this.indexFunctionsDao.isValidDocumentIndex(indexName, documentType, tagEntity.getId().toString(), jsonString);
+                //searchFunctions.getIsValidFunction().test(indexName, documentType, tagEntity.getId().toString(), jsonString);
         };
 
         boolean isValid = true;

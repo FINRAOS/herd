@@ -274,32 +274,7 @@ public class DaoSpringModuleConfig implements CachingConfigurer
         cacheConfiguration.setMaxElementsInMemory(configurationHelper.getProperty(ConfigurationValue.HERD_CACHE_MAX_ELEMENTS_IN_MEMORY, Integer.class));
         cacheConfiguration.setMemoryStoreEvictionPolicy(configurationHelper.getProperty(ConfigurationValue.HERD_CACHE_MEMORY_STORE_EVICTION_POLICY));
 
-        // Adding a transport client cache to store the active transport client used to connect to the search index
-        CacheConfiguration transportClientCacheConfiguration = new CacheConfiguration();
-        transportClientCacheConfiguration.setName(TRANSPORT_CLIENT_CACHE_NAME);
-        // The maximum number of seconds an element can exist in the cache regardless of use.
-        // The element expires at this limit and will no longer be returned from the cache.
-        // The default value is 0, which means no timeToLive (TTL) eviction takes place (infinite lifetime).
-        transportClientCacheConfiguration
-            .setTimeToLiveSeconds(configurationHelper.getProperty(ConfigurationValue.TRANSPORT_CLIENT_CACHE_TIME_TO_LIVE_SECONDS, Long.class));
-        // The maximum number of seconds an element can exist in the cache without being accessed.
-        // The element expires at this limit and will no longer be returned from the cache.
-        // The default value is 0, which means no timeToIdle (TTI) eviction takes place (infinite lifetime).
-        transportClientCacheConfiguration
-            .setTimeToIdleSeconds(configurationHelper.getProperty(ConfigurationValue.TRANSPORT_CLIENT_CACHE_TIME_TO_IDLE_SECONDS, Long.class));
-        // The maximum entries to be held in the cache
-        transportClientCacheConfiguration
-            .setMaxElementsInMemory(configurationHelper.getProperty(ConfigurationValue.TRANSPORT_CLIENT_CACHE_MAX_ELEMENTS_IN_MEMORY, Integer.class));
-        // The policy used to evict elements from the MemoryStore. This can be one of:
-        // LRU - least recently used
-        // LFU - less frequently used
-        // FIFO - first in first out, the oldest element by creation time
-        // The default value is LRU
-        transportClientCacheConfiguration
-            .setMemoryStoreEvictionPolicy(configurationHelper.getProperty(ConfigurationValue.TRANSPORT_CLIENT_CACHE_MEMORY_STORE_EVICTION_POLICY));
-
         net.sf.ehcache.config.Configuration config = new net.sf.ehcache.config.Configuration();
-        config.addCache(transportClientCacheConfiguration);
         config.addCache(cacheConfiguration);
 
         return net.sf.ehcache.CacheManager.create(config);
