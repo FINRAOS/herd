@@ -33,7 +33,6 @@ import io.searchbox.core.Delete;
 import io.searchbox.core.Get;
 import io.searchbox.core.Index;
 import io.searchbox.core.Search;
-import io.searchbox.core.SearchResult;
 import io.searchbox.core.SearchScroll;
 import io.searchbox.core.Update;
 import io.searchbox.indices.CreateIndex;
@@ -43,12 +42,8 @@ import io.searchbox.indices.mapping.PutMapping;
 import io.searchbox.indices.settings.GetSettings;
 import io.searchbox.params.Parameters;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.action.bulk.BulkAction;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.update.UpdateAction;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -319,25 +314,20 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
             Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
 
         // Prepare a bulk request builder
-        final BulkRequestBuilder bulkRequestBuilder = new BulkRequestBuilder(new ElasticsearchClientImpl(), BulkAction.INSTANCE);
-
+        Bulk.Builder bulkBuilder = new Bulk.Builder();
         // For each document prepare an update request and add it to the bulk request builder
         documentMap.forEach((id, jsonString) ->
         {
-            final UpdateRequestBuilder updateRequestBuilder = new UpdateRequestBuilder(new ElasticsearchClientImpl(), UpdateAction.INSTANCE);
-            updateRequestBuilder.setId(id).setIndex(indexName).setType(documentType);
-            updateRequestBuilder.setDoc(jsonString);
-            bulkRequestBuilder.add(updateRequestBuilder);
+            BulkableAction updateIndex = new Update.Builder(jsonString).index(indexName).type(documentType).id(id).build();
+            bulkBuilder.addAction(updateIndex);
         });
 
-        final Search.Builder searchBuilder = new Search.Builder(bulkRequestBuilder.toString());
-
         // Execute the bulk update request
-        final SearchResult searchResult = jestClientHelper.searchExecute(searchBuilder.build());
+        JestResult jestResult = jestClientHelper.executeAction(bulkBuilder.build());
         // If there are failures log them
-        if (!searchResult.isSucceeded())
+        if (!jestResult.isSucceeded())
         {
-            LOGGER.error("Bulk response error = {}", searchResult.getErrorMessage());
+            LOGGER.error("Bulk response error = {}", jestResult.getErrorMessage());
         }
     }
 
