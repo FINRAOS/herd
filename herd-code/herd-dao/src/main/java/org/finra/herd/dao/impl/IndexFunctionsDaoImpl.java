@@ -36,6 +36,7 @@ import io.searchbox.core.Search;
 import io.searchbox.core.SearchScroll;
 import io.searchbox.core.Update;
 import io.searchbox.indices.CreateIndex;
+import io.searchbox.indices.DeleteIndex;
 import io.searchbox.indices.IndicesExists;
 import io.searchbox.indices.Stats;
 import io.searchbox.indices.mapping.PutMapping;
@@ -122,7 +123,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     @Override
     public final void deleteIndex(String indexName)
     {
-        Action action = new Delete.Builder(indexName).build();
+        Action action = new DeleteIndex.Builder(indexName).build();
 
         LOGGER.info("Deleting Elasticsearch index, indexName={}.", indexName);
         JestResult result = jestClientHelper.executeAction(action);
@@ -215,7 +216,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     {
         LOGGER.info("Deleting Elasticsearch document from index, indexName={}, documentType={}, id={}.", indexName, documentType, id);
 
-        Action action = new Delete.Builder(indexName).id(id).type(documentType).build();
+        Action action = new Delete.Builder(id).index(indexName).type(documentType).build();
 
         JestResult result = jestClientHelper.executeAction(action);
 
@@ -233,14 +234,13 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
             ids.stream().map(Object::toString).collect(Collectors.joining(",")));
 
         // Prepare a bulk request builder
-        //final BulkRequestBuilder bulkRequestBuilder = new BulkRequestBuilder(new ElasticsearchClientImpl(), BulkAction.INSTANCE);
         Bulk.Builder bulkBuilder = new Bulk.Builder();
 
 
         // For each document prepare a delete request and add it to the bulk request builder
         ids.forEach(id ->
         {
-            BulkableAction action = new Delete.Builder(indexName).id(id.toString()).type(documentType).build();
+            BulkableAction action = new Delete.Builder(id.toString()).index(indexName).type(documentType).build();
             bulkBuilder.addAction(action);
         });
 
