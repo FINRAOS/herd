@@ -34,7 +34,6 @@ import io.searchbox.core.Get;
 import io.searchbox.core.Index;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchScroll;
-import io.searchbox.core.Update;
 import io.searchbox.indices.CreateIndex;
 import io.searchbox.indices.DeleteIndex;
 import io.searchbox.indices.IndicesExists;
@@ -151,15 +150,16 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.warn("Document does not exist in the index, adding the document to the index.");
             Index index = new Index.Builder(json).index(indexName).type(documentType).id(id).build();
-            jestClientHelper.executeAction(index);
+            jestResult = jestClientHelper.executeAction(index);
+            LOGGER.info("adding the document to the index is {}", jestResult.isSucceeded());
         }
         // Else if the JSON does not match the JSON from the index update the index
         else if (!json.equals(jsonStringFromIndex))
         {
             LOGGER.warn("Document does not match the document in the index, updating the document in the index.");
-
-            Update updateIndex = new Update.Builder(json).index(indexName).type(documentType).id(id).build();
-            jestClientHelper.executeAction(updateIndex);
+            Index index = new Index.Builder(json).index(indexName).type(documentType).id(id).build();
+            jestResult = jestClientHelper.executeAction(index);
+            LOGGER.info("updating the document to the index is {}", jestResult.isSucceeded());
         }
     }
 
@@ -318,7 +318,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         // For each document prepare an update request and add it to the bulk request builder
         documentMap.forEach((id, jsonString) ->
         {
-            BulkableAction updateIndex = new Update.Builder(jsonString).index(indexName).type(documentType).id(id).build();
+            BulkableAction updateIndex = new Index.Builder(jsonString).index(indexName).type(documentType).id(id).build();
             bulkBuilder.addAction(updateIndex);
         });
 

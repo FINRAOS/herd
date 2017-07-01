@@ -102,6 +102,7 @@ public class IndexFunctionsDaoTest
         // Verify the calls to external methods
         verify(jestClientHelper, times(2)).executeAction(any());
         verify(jestResult).getSourceAsString();
+        verify(jestResult).isSucceeded();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
 
@@ -116,6 +117,7 @@ public class IndexFunctionsDaoTest
         // Verify the calls to external methods
         verify(jestClientHelper, times(2)).executeAction(any());
         verify(jestResult).getSourceAsString();
+        verify(jestResult).isSucceeded();
         verifyNoMoreInteractions(createdMocks.toArray());
     }
 
