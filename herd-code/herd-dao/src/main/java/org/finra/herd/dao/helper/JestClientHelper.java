@@ -18,6 +18,7 @@ package org.finra.herd.dao.helper;
 import java.io.IOException;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.searchbox.action.Action;
 import io.searchbox.client.JestResult;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
@@ -82,6 +83,28 @@ public class JestClientHelper
         catch (final IOException ioException)
         {
             LOGGER.error("Failed to execute JEST client search.", ioException);
+            throw new RuntimeException(ioException); //NOPMD
+        }
+
+        return searchResult;
+    }
+
+    /**
+     * execute action
+     * @param action action
+     * @return JestResult
+     */
+    public JestResult executeAction(Action action)
+    {
+        JestResult searchResult;
+        try
+        {
+            searchResult =
+                jestClientFactory.getJestClient().execute(action);
+        }
+        catch (final IOException ioException)
+        {
+            LOGGER.error("Failed to execute JEST client action.", ioException);
             throw new RuntimeException(ioException); //NOPMD
         }
 

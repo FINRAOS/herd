@@ -112,6 +112,14 @@ public abstract class AbstractCoreTest
     }
 
     /**
+     * Returns a random integer.
+     */
+    public static Integer getRandomInteger()
+    {
+        return (int) (Math.random() * Integer.MAX_VALUE);
+    }
+
+    /**
      * Returns a random suffix.
      */
     public static String getRandomSuffix()

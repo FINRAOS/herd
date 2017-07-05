@@ -16,10 +16,12 @@
 package org.finra.herd.dao.helper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -27,6 +29,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.dao.AbstractDaoTest;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 
 /**
  * This class tests functionality within the JsonHelper class.
@@ -73,6 +77,29 @@ public class JsonHelperTest extends AbstractDaoTest
     public void testObjectToJson()
     {
         assertEquals(String.format("\"%s\"", STRING_VALUE), jsonHelper.objectToJson(STRING_VALUE));
+    }
+
+    @Test
+    public void testObjectToJsonValidateNoStackOverflowErrorWithCircularDependency()
+    {
+        // Create a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, NO_ATTRIBUTES);
+
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE,
+                fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, null), FORMAT_VERSION, FORMAT_DESCRIPTION, LATEST_VERSION_FLAG_SET,
+                PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_COMMA, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, NO_COLUMNS,
+                NO_PARTITION_COLUMNS);
+
+        // Introduce circular dependency to the business object format parent/child relationship.
+        businessObjectFormatEntity.setBusinessObjectFormatParents(Arrays.asList(businessObjectFormatEntity));
+        businessObjectFormatEntity.setBusinessObjectFormatChildren(Arrays.asList(businessObjectFormatEntity));
+        businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
+
+        // Create a JSON object from the business object definition entity.
+        assertNotNull(jsonHelper.objectToJson(businessObjectDefinitionEntity));
     }
 
     @Test

@@ -17,8 +17,6 @@ package org.finra.herd.service;
 
 import java.util.concurrent.Future;
 
-import org.elasticsearch.client.AdminClient;
-
 import org.finra.herd.model.api.xml.SearchIndexKey;
 
 /**
@@ -26,13 +24,6 @@ import org.finra.herd.model.api.xml.SearchIndexKey;
  */
 public interface SearchIndexHelperService
 {
-    /**
-     * Gets a search index client to perform administrative actions/operations against the cluster or the indices.
-     *
-     * @return the search index administrative client
-     */
-    public AdminClient getAdminClient();
-
     /**
      * Indexes all business object definitions defined in the system.
      *

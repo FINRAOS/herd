@@ -13,13 +13,4 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.service.functional;
 
-/**
- * SearchFilterType enum. Used to determine the difference between an inclusion and exclusion search filter.
- */
-public enum SearchFilterType
-{
-    EXCLUSION_SEARCH_FILTER,
-    INCLUSION_SEARCH_FILTER;
-}

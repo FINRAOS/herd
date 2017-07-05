@@ -466,7 +466,7 @@ public class ElasticsearchHelper
     {
         MetricAggregation metricAggregation = searchResult.getAggregations();
         TermsAggregation tagTypeFacetAggregation = metricAggregation.getTermsAggregation(TAG_TYPE_FACET_AGGS);
-        return getTagTypeIndexSearchResponseDtosFromTermsAggregation(tagTypeFacetAggregation);
+        return getTagTypeIndexSearchResponseDtosFromTermsAggregation(tagTypeFacetAggregation, null);
     }
 
     /**
@@ -495,7 +495,8 @@ public class ElasticsearchHelper
         MetricAggregation metricAggregation = searchResult.getAggregations();
         MetricAggregation tagFacetAggregation = metricAggregation.getSumAggregation(TAG_FACET_AGGS);
         TermsAggregation tagTypeCodesAggregation = tagFacetAggregation.getTermsAggregation(TAGTYPE_CODE_AGGREGATION);
-        return getTagTypeIndexSearchResponseDtosFromTermsAggregation(tagTypeCodesAggregation);
+        TermsAggregation tagTypeFacetAggregation = metricAggregation.getTermsAggregation(TAG_TYPE_FACET_AGGS);
+        return getTagTypeIndexSearchResponseDtosFromTermsAggregation(tagTypeCodesAggregation, tagTypeFacetAggregation);
     }
 
     /**
@@ -505,7 +506,8 @@ public class ElasticsearchHelper
      *
      * @return list of tag type index search dto
      */
-    private List<TagTypeIndexSearchResponseDto> getTagTypeIndexSearchResponseDtosFromTermsAggregation(TermsAggregation termsAggregation)
+    private List<TagTypeIndexSearchResponseDto> getTagTypeIndexSearchResponseDtosFromTermsAggregation(TermsAggregation termsAggregation,
+        TermsAggregation tagTypeFacetAggregation)
     {
         List<TermsAggregation.Entry> bucketsL0 = termsAggregation.getBuckets();
 
@@ -518,8 +520,19 @@ public class ElasticsearchHelper
             TermsAggregation termsAggregationL1 = entryL1.getTermsAggregation(TAGTYPE_NAME_AGGREGATION);
             List<TermsAggregation.Entry> bucketsL1 = termsAggregationL1.getBuckets();
 
+            long count = 0;
+            if (tagTypeFacetAggregation != null)
+            {
+                count = getCountByBucketKey(tagTypeFacetAggregation, entryL1.getKeyAsString());
+            }
+            else
+            {
+                count = entryL1.getCount();
+            }
+
             TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
-                new TagTypeIndexSearchResponseDto(entryL1.getKeyAsString(), entryL1.getCount(), tagIndexSearchResponseDtos, null);
+                new TagTypeIndexSearchResponseDto(entryL1.getKeyAsString(), count, tagIndexSearchResponseDtos, null);
+
             tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
             for (TermsAggregation.Entry entryL2 : bucketsL1)
@@ -542,10 +555,28 @@ public class ElasticsearchHelper
                     }
                 }
             }
-
         }
 
         return tagTypeIndexSearchResponseDtos;
+    }
+
+    /**
+     * get the county by bucket key
+     * @param termsAggregation terms aggregation
+     * @param keyName key name
+     * @return count
+     */
+    private long getCountByBucketKey(TermsAggregation termsAggregation, String keyName)
+    {
+        long count = 0;
+        for (TermsAggregation.Entry entry : termsAggregation.getBuckets())
+        {
+            if (entry.getKeyAsString().equalsIgnoreCase(keyName))
+            {
+                count = entry.getCount();
+            }
+        }
+        return count;
     }
 
     /**

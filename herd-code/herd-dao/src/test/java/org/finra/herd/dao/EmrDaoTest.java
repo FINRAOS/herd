@@ -289,8 +289,12 @@ public class EmrDaoTest extends AbstractDaoTest
         String clusterName = "clusterName";
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-        instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-        instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", null, null, null));
+        instanceDefinitions.setMasterInstances(
+            new MasterInstanceDefinition(10, "masterInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE,
+                NO_INSTANCE_MAX_SEARCH_PRICE, NO_INSTANCE_ON_DEMAND_THRESHOLD));
+        instanceDefinitions.setCoreInstances(
+            new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
 
@@ -345,9 +349,15 @@ public class EmrDaoTest extends AbstractDaoTest
         String clusterName = "clusterName";
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-        instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-        instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", BigDecimal.ONE, null, null));
-        instanceDefinitions.setTaskInstances(new InstanceDefinition(30, "taskInstanceType", null, null, null));
+        instanceDefinitions.setMasterInstances(
+            new MasterInstanceDefinition(10, "masterInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE,
+                NO_INSTANCE_MAX_SEARCH_PRICE, NO_INSTANCE_ON_DEMAND_THRESHOLD));
+        instanceDefinitions.setCoreInstances(
+            new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, BigDecimal.ONE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD));
+        instanceDefinitions.setTaskInstances(
+            new InstanceDefinition(30, "taskInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue"), new NodeTag("", "tagValue"), new NodeTag("tagName", "")));
 
@@ -558,8 +568,12 @@ public class EmrDaoTest extends AbstractDaoTest
         String clusterName = "clusterName";
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-        instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-        instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", null, null, null));
+        instanceDefinitions.setMasterInstances(
+            new MasterInstanceDefinition(10, "masterInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE,
+                NO_INSTANCE_MAX_SEARCH_PRICE, NO_INSTANCE_ON_DEMAND_THRESHOLD));
+        instanceDefinitions.setCoreInstances(
+            new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
 
@@ -591,8 +605,12 @@ public class EmrDaoTest extends AbstractDaoTest
         String clusterName = "clusterName";
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-        instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-        instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", null, null, null));
+        instanceDefinitions.setMasterInstances(
+            new MasterInstanceDefinition(10, "masterInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE,
+                NO_INSTANCE_MAX_SEARCH_PRICE, NO_INSTANCE_ON_DEMAND_THRESHOLD));
+        instanceDefinitions.setCoreInstances(
+            new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
 

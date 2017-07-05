@@ -27,6 +27,7 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.SearchIndexDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
@@ -41,7 +42,6 @@ import org.finra.herd.model.jpa.SearchIndexStatusEntity;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 import org.finra.herd.service.SearchIndexHelperService;
 import org.finra.herd.service.SearchIndexService;
-import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
@@ -65,9 +65,6 @@ public class SearchIndexServiceImpl implements SearchIndexService
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private SearchFunctions searchFunctions;
-
-    @Autowired
     private SearchIndexDao searchIndexDao;
 
     @Autowired
@@ -81,6 +78,9 @@ public class SearchIndexServiceImpl implements SearchIndexService
 
     @Autowired
     private SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
+
+    @Autowired
+    private IndexFunctionsDao indexFunctionsDao;
 
     @Override
     public SearchIndex createSearchIndex(SearchIndexCreateRequest request)
@@ -146,16 +146,9 @@ public class SearchIndexServiceImpl implements SearchIndexService
 
         // Create the search index object from the persisted entity.
         SearchIndex searchIndex = createSearchIndexFromEntity(searchIndexEntity);
-
+        DocsStats docsStats = indexFunctionsDao.getIndexStats(searchIndexKey.getSearchIndexName());
         // Retrieve index settings from the actual search index. A non-existing search index name results in a "no such index" internal server error.
-        Settings settings =
-            searchIndexHelperService.getAdminClient().indices().prepareGetIndex().setIndices(searchIndexKey.getSearchIndexName()).execute().actionGet()
-                .getSettings().get(searchIndexKey.getSearchIndexName());
-
-        // Retrieve indices level docs stats.
-        DocsStats docsStats =
-            searchIndexHelperService.getAdminClient().indices().prepareStats(searchIndexKey.getSearchIndexName()).clear().setDocs(true).execute().actionGet()
-                .getIndex(searchIndexKey.getSearchIndexName()).getPrimaries().getDocs();
+        Settings settings = indexFunctionsDao.getIndexSettings(searchIndexKey.getSearchIndexName());
 
         // Update the search index statistics.
         searchIndex.setSearchIndexStatistics(createSearchIndexStatistics(settings, docsStats));
@@ -244,7 +237,8 @@ public class SearchIndexServiceImpl implements SearchIndexService
         deleteSearchIndexHelper(searchIndexKey.getSearchIndexName());
 
         // Create the index.
-        searchFunctions.getCreateIndexFunction().accept(searchIndexKey.getSearchIndexName(), documentType, mapping, settings);
+        //searchFunctions.getCreateIndexFunction().accept(searchIndexKey.getSearchIndexName(), documentType, mapping, settings);
+        indexFunctionsDao.createIndex(searchIndexKey.getSearchIndexName(), documentType, mapping, settings);
 
         //Fetch data from database and index them
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
@@ -293,10 +287,9 @@ public class SearchIndexServiceImpl implements SearchIndexService
      */
     protected void deleteSearchIndexHelper(String searchIndexName)
     {
-        // If the index exists delete it.
-        if (searchFunctions.getIndexExistsFunction().test(searchIndexName))
+        if (indexFunctionsDao.isIndexExists(searchIndexName))
         {
-            searchFunctions.getDeleteIndexFunction().accept(searchIndexName);
+            indexFunctionsDao.deleteIndex(searchIndexName);
         }
     }
 

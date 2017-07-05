@@ -15,9 +15,6 @@
 */
 package org.finra.herd.dao.impl;
 
-import static org.finra.herd.dao.SearchFilterType.EXCLUSION_SEARCH_FILTER;
-import static org.finra.herd.dao.SearchFilterType.INCLUSION_SEARCH_FILTER;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,13 +44,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.BusinessObjectDefinitionIndexSearchDao;
-import org.finra.herd.dao.SearchFilterType;
 import org.finra.herd.dao.helper.ElasticsearchClientImpl;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JestClientHelper;
 import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
+import org.finra.herd.model.dto.SearchFilterType;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.TagEntity;
 
@@ -230,21 +227,21 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
 
         for (Map<SearchFilterType, List<TagEntity>> tagEntityMap : nestedTagEntityMaps)
         {
-            if (tagEntityMap.containsKey(INCLUSION_SEARCH_FILTER))
+            if (tagEntityMap.containsKey(SearchFilterType.INCLUSION_SEARCH_FILTER))
             {
-                nestedInclusionTagEntityLists.add(tagEntityMap.get(INCLUSION_SEARCH_FILTER));
+                nestedInclusionTagEntityLists.add(tagEntityMap.get(SearchFilterType.INCLUSION_SEARCH_FILTER));
             }
-            else if (tagEntityMap.containsKey(EXCLUSION_SEARCH_FILTER))
+            else if (tagEntityMap.containsKey(SearchFilterType.EXCLUSION_SEARCH_FILTER))
             {
-                nestedExclusionTagEntityLists.add(tagEntityMap.get(EXCLUSION_SEARCH_FILTER));
+                nestedExclusionTagEntityLists.add(tagEntityMap.get(SearchFilterType.EXCLUSION_SEARCH_FILTER));
             }
         }
 
-        LOGGER.info("Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagEntityList={}",
-            indexName, documentType, tagEntityListToString(flattenTagEntitiesList(nestedInclusionTagEntityLists)));
+        LOGGER.info("Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagEntityList={}", indexName,
+            documentType, tagEntityListToString(flattenTagEntitiesList(nestedInclusionTagEntityLists)));
 
-        LOGGER.info("Excluding the following tagEntityList={}",
-            indexName, documentType, tagEntityListToString(flattenTagEntitiesList(nestedExclusionTagEntityLists)));
+        LOGGER.info("Excluding the following tagEntityList={}", indexName, documentType,
+            tagEntityListToString(flattenTagEntitiesList(nestedExclusionTagEntityLists)));
 
         BoolQueryBuilder compoundSearchFiltersQueryBuilder = new BoolQueryBuilder();
 
@@ -264,10 +261,8 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
             {
                 // Add constant-score term queries for tagType-code and tag-code from the tag-key.
                 ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(
-                    QueryBuilders.boolQuery()
-                        .must(QueryBuilders.termQuery(TAGTYPE_CODE_FIELD, tagEntity.getTagType().getCode()))
-                        .must(QueryBuilders.termQuery(TAG_CODE_FIELD, tagEntity.getTagCode()))
-                );
+                    QueryBuilders.boolQuery().must(QueryBuilders.termQuery(TAGTYPE_CODE_FIELD, tagEntity.getTagType().getCode()))
+                        .must(QueryBuilders.termQuery(TAG_CODE_FIELD, tagEntity.getTagCode())));
 
                 // Individual tag-keys are OR-ed
                 searchFilterQueryBuilder.should(searchKeyQueryBuilder);
@@ -283,9 +278,9 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
             for (TagEntity tagEntity : tagEntities)
             {
                 // Add constant-score term queries for tagType-code and tag-code from the tag-key.
-                QueryBuilder searchKeyQueryBuilder = QueryBuilders.boolQuery()
-                    .must(QueryBuilders.termQuery(TAGTYPE_CODE_FIELD, tagEntity.getTagType().getCode()))
-                    .must(QueryBuilders.termQuery(TAG_CODE_FIELD, tagEntity.getTagCode()));
+                QueryBuilder searchKeyQueryBuilder =
+                    QueryBuilders.boolQuery().must(QueryBuilders.termQuery(TAGTYPE_CODE_FIELD, tagEntity.getTagType().getCode()))
+                        .must(QueryBuilders.termQuery(TAG_CODE_FIELD, tagEntity.getTagCode()));
 
                 // Exclusion: individual tag-keys are added as a must not query
                 compoundSearchFiltersQueryBuilder.mustNot(searchKeyQueryBuilder);
@@ -300,18 +295,16 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
         searchSourceBuilder.query(compoundSearchFiltersQueryBuilder);
 
         // Create a search request and set the scroll time and scroll size
-        SearchRequestBuilder searchRequestBuilder =  new SearchRequestBuilder(new ElasticsearchClientImpl(), SearchAction.INSTANCE);
+        SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(new ElasticsearchClientImpl(), SearchAction.INSTANCE);
         searchRequestBuilder.setIndices(indexName);
 
         // Construct scroll query
-        searchRequestBuilder.setTypes(documentType)
-            .setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
-            .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
+        searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
             .setSource(searchSourceBuilder)
 
-            // Add sorting criteria.
-            // First, sort in ascending order on business object definition name
-            // then sort in ascending order on namespace code
+                // Add sorting criteria.
+                // First, sort in ascending order on business object definition name
+                // then sort in ascending order on namespace code
             .addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC))
             .addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
 
@@ -324,8 +317,7 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
         // Log the actual search query
         LOGGER.info("bdefIndexSearchQuery={}", searchRequestBuilder.toString());
 
-        elasticsearchResponseDto
-            .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
+        elasticsearchResponseDto.setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
 
         return elasticsearchResponseDto;
     }
@@ -333,7 +325,6 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
     @Override
     public ElasticsearchResponseDto findAllBusinessObjectDefinitions(String indexName, String documentType, Set<String> facetFieldsList)
     {
-
         LOGGER.info("Elasticsearch get all business object definition documents from index, indexName={} and documentType={}.", indexName, documentType);
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -347,21 +338,20 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
         searchRequestBuilder.setIndices(indexName);
 
         searchRequestBuilder.setTypes(documentType)
-           // .setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
+            // .setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
             //.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
             .setSource(searchSourceBuilder)
 
-            // Set sort options.
-            // First, sort on business object definition name
-            // then sort on namespace code
+                // Set sort options.
+                // First, sort on business object definition name
+                // then sort on namespace code
             .addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC))
             .addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
 
         //Add aggregation builder if facet fields are present
         addFacetFieldAggregations(facetFieldsList, elasticsearchResponseDto, searchRequestBuilder);
 
-        elasticsearchResponseDto
-            .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
+        elasticsearchResponseDto.setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
 
         return elasticsearchResponseDto;
     }
@@ -372,7 +362,6 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
      * @param searchRequestBuilder the the search request to scroll through
      *
      * @return list of business object definition entities
-     * @throws Exception
      */
     private List<BusinessObjectDefinitionIndexSearchResponseDto> scrollSearchResultsIntoBusinessObjectDefinitionDto(
         final SearchRequestBuilder searchRequestBuilder)
@@ -387,7 +376,7 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
 
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
         List<BusinessObjectDefinitionIndexSearchResponseDto> resultList =
-                jestResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class);
+            jestResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class);
 
         while (resultList.size() != 0)
         {
@@ -395,8 +384,7 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
             String scrollId = jestResult.getJsonObject().get(SCROLL_ID).getAsString();
             SearchScroll scroll = new SearchScroll.Builder(scrollId, new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME).toString()).build();
             jestResult = jestClientHelper.searchScrollExecute(scroll);
-            resultList =
-                    jestResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class);
+            resultList = jestResult.getSourceAsObjectList(BusinessObjectDefinitionIndexSearchResponseDto.class);
         }
 
         return businessObjectDefinitionIndexSearchResponseDtoList;
