@@ -22,6 +22,7 @@ import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +40,11 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
+import org.elasticsearch.index.query.functionscore.ScriptScoreFunctionBuilder;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -167,6 +173,16 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private static final String TAG_TYPE_CODE_SOURCE = "tagType.code";
 
     /**
+     * Source string for the business object definition tags
+     */
+    private static final String BDEF_TAGS_SOURCE = "businessObjectDefinitionTags";
+
+    /**
+     * Source string for the business object definition tags search score multiplier
+     */
+    private static final String BDEF_TAGS_SEARCH_SCORE_MULTIPLIER = "tagSearchScoreMultiplier";
+
+    /**
      * The configuration helper used to retrieve configuration values
      */
     @Autowired
@@ -214,15 +230,20 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             queryBuilder = disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder);
         }
 
+        // Get function score query builder
+        FunctionScoreQueryBuilder functionScoreQueryBuilder = getFunctionScoreQueryBuilder(queryBuilder);
+
         // The fields in the search indexes to return
-        final String[] searchSources = {NAME_SOURCE, NAMESPACE_CODE_SOURCE, TAG_CODE_SOURCE, TAG_TYPE_CODE_SOURCE, DISPLAY_NAME_SOURCE, DESCRIPTION_SOURCE};
+        final String[] searchSources =
+            {NAME_SOURCE, NAMESPACE_CODE_SOURCE, TAG_CODE_SOURCE, TAG_TYPE_CODE_SOURCE, DISPLAY_NAME_SOURCE, DESCRIPTION_SOURCE, BDEF_TAGS_SOURCE,
+                BDEF_TAGS_SEARCH_SCORE_MULTIPLIER};
 
         // Create a new indexSearch source builder
         final SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
         // Fetch only the required fields
         searchSourceBuilder.fetchSource(searchSources, null);
-        searchSourceBuilder.query(queryBuilder);
+        searchSourceBuilder.query(functionScoreQueryBuilder);
 
         // Create a indexSearch request builder
         SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(new ElasticsearchClientImpl(), SearchAction.INSTANCE);
@@ -327,6 +348,28 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         }
 
         return new IndexSearchResponse(searchResult.getTotal(), indexSearchResults, facets);
+    }
+
+    /**
+     * Processes the scripts and score function
+     *
+     * @param queryBuilder the query builder
+     *
+     * @return the function score query builder
+     */
+    private FunctionScoreQueryBuilder getFunctionScoreQueryBuilder(QueryBuilder queryBuilder)
+    {
+        // Script for tag search score multiplier. If bdef set to tag search score multiplier else set to a default value.
+        String inlineScript = "_score * (doc['_index'].value == 'bdef' ? doc['" + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER + "']: 1)";
+
+        // Set the lang to groovy
+        Script script = new Script(ScriptType.INLINE, "groovy", inlineScript, Collections.emptyMap());
+
+        // Set the script
+        ScriptScoreFunctionBuilder scoreFunction = ScoreFunctionBuilders.scriptFunction(script);
+
+        // Create function score query builder
+        return new FunctionScoreQueryBuilder(queryBuilder, scoreFunction);
     }
 
     /**

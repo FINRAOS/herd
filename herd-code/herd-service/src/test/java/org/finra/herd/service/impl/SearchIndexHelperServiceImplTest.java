@@ -28,9 +28,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
-import org.finra.herd.dao.TransportClientFactory;
+import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.service.AbstractServiceTest;
-import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
 
@@ -46,16 +45,13 @@ public class SearchIndexHelperServiceImplTest extends AbstractServiceTest
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
     @Mock
-    private SearchFunctions searchFunctions;
-
-    @Mock
     private SearchIndexDaoHelper searchIndexDaoHelper;
 
     @InjectMocks
     private SearchIndexHelperServiceImpl searchIndexHelperServiceImpl;
 
     @Mock
-    private TransportClientFactory transportClientFactory;
+    private IndexFunctionsDao indexFunctionsDao;
 
     @Before
     public void before()
@@ -67,14 +63,14 @@ public class SearchIndexHelperServiceImplTest extends AbstractServiceTest
     public void testValidateSearchIndexSizeValidationFails()
     {
         // Mock the external calls. Please note that we mock index size not to be equal to the business object definition entity list size.
-        when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 1L);
+        when(indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(1L);
 
         // Index all business object definitions defined in the system.
         boolean response = searchIndexHelperServiceImpl.validateSearchIndexSize(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE, 2);
 
         // Verify the external calls.
-        verify(searchFunctions).getNumberOfTypesInIndexFunction();
-        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, transportClientFactory);
+        verify(indexFunctionsDao).getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE);
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, indexFunctionsDao, searchIndexDaoHelper);
 
         // Validate the results.
         assertFalse(response);
@@ -84,14 +80,15 @@ public class SearchIndexHelperServiceImplTest extends AbstractServiceTest
     public void testValidateSearchIndexSizeValidationPasses()
     {
         // Mock the external calls. Please note that we mock index size to be equal to the business object definition entity list size.
-        when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 2L);
+        when(indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(2L);
+
 
         // Index all business object definitions defined in the system.
         boolean response = searchIndexHelperServiceImpl.validateSearchIndexSize(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE, 2);
 
         // Verify the external calls.
-        verify(searchFunctions).getNumberOfTypesInIndexFunction();
-        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, transportClientFactory);
+        verify(indexFunctionsDao).getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE);
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, indexFunctionsDao, searchIndexDaoHelper);
 
         // Validate the results.
         assertTrue(response);

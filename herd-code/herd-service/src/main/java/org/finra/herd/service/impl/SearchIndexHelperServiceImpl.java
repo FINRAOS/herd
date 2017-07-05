@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import org.elasticsearch.client.AdminClient;
-import org.elasticsearch.client.transport.TransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,15 +28,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.TagDao;
-import org.finra.herd.dao.TransportClientFactory;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.SearchIndexHelperService;
-import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
@@ -61,9 +58,6 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
     @Autowired
-    private SearchFunctions searchFunctions;
-
-    @Autowired
     private SearchIndexDaoHelper searchIndexDaoHelper;
 
     @Autowired
@@ -73,14 +67,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
     private TagHelper tagHelper;
 
     @Autowired
-    private TransportClientFactory transportClientFactory;
-
-    @Override
-    public AdminClient getAdminClient()
-    {
-        final TransportClient transportClient = transportClientFactory.getTransportClient();
-        return transportClient.admin();
-    }
+    private IndexFunctionsDao indexFunctionsDao;
 
     @Override
     @Async
@@ -96,7 +83,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
             // Index business object definitions selected for processing.
             businessObjectDefinitionHelper
                 .executeFunctionForBusinessObjectDefinitionEntities(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities,
-                    searchFunctions.getIndexFunction());
+                    indexFunctionsDao::createIndexDocument);
 
             // Increment the offset.
             startPosition += BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE;
@@ -124,7 +111,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
         final List<TagEntity> tagEntities = Collections.unmodifiableList(tagDao.getTags());
 
         // Index all tags.
-        tagHelper.executeFunctionForTagEntities(searchIndexKey.getSearchIndexName(), documentType, tagEntities, searchFunctions.getIndexFunction());
+        tagHelper.executeFunctionForTagEntities(searchIndexKey.getSearchIndexName(), documentType, tagEntities, indexFunctionsDao::createIndexDocument);
 
         // Simple count validation, index size should equal entity list size.
         validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, tagEntities.size());
@@ -148,7 +135,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
      */
     protected boolean validateSearchIndexSize(String indexName, String documentType, int expectedIndexSize)
     {
-        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
+        final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName, documentType);
 
         boolean result = true;
         if (indexSize != expectedIndexSize)
