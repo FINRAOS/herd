@@ -15,7 +15,11 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.util.Map;
+
 import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.MessageAttributeValue;
+import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 
 import org.finra.herd.dao.SnsOperations;
@@ -23,8 +27,8 @@ import org.finra.herd.dao.SnsOperations;
 public class SnsOperationsImpl implements SnsOperations
 {
     @Override
-    public PublishResult publish(String topicArn, String messageText, AmazonSNS amazonSNS)
+    public PublishResult publish(String topicArn, String messageText, Map<String, MessageAttributeValue> messageAttributes, AmazonSNS amazonSNS)
     {
-        return amazonSNS.publish(topicArn, messageText);
+        return amazonSNS.publish(new PublishRequest().withTopicArn(topicArn).withMessage(messageText).withMessageAttributes(messageAttributes));
     }
 }

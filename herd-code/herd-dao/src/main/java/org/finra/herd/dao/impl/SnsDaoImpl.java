@@ -15,7 +15,13 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.amazonaws.services.sns.model.MessageAttributeValue;
 import com.amazonaws.services.sns.model.PublishResult;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +29,7 @@ import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.SnsDao;
 import org.finra.herd.dao.SnsOperations;
 import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.MessageHeader;
 
 /**
  * The SNS DAO implementation.
@@ -37,8 +44,20 @@ public class SnsDaoImpl implements SnsDao
     private SnsOperations snsOperations;
 
     @Override
-    public PublishResult publish(AwsParamsDto awsParamsDto, String topicArn, String messageText)
+    public PublishResult publish(AwsParamsDto awsParamsDto, String topicArn, String messageText, List<MessageHeader> messageHeaders)
     {
-        return snsOperations.publish(topicArn, messageText, awsClientFactory.getAmazonSNSClient(awsParamsDto));
+        Map<String, MessageAttributeValue> messageAttributes = null;
+
+        if (CollectionUtils.isNotEmpty(messageHeaders))
+        {
+            messageAttributes = new HashMap<>();
+
+            for (MessageHeader messageHeader : messageHeaders)
+            {
+                messageAttributes.put(messageHeader.getKey(), new MessageAttributeValue().withDataType("String").withStringValue(messageHeader.getValue()));
+            }
+        }
+
+        return snsOperations.publish(topicArn, messageText, messageAttributes, awsClientFactory.getAmazonSNSClient(awsParamsDto));
     }
 }

@@ -148,7 +148,8 @@ public class SearchIndexUpdateHelper
             else
             {
                 // Add the JMS message to the "in-memory" JMS message queue to be published by the advice.
-                notificationMessageInMemoryQueue.add(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), getSqsQueueName(), messageText));
+                notificationMessageInMemoryQueue
+                    .add(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), getSqsQueueName(), messageText, null));
             }
         }
     }

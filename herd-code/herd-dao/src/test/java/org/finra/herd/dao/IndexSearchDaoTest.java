@@ -22,6 +22,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -505,7 +506,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         if (isHitHighlightingEnabled)
         {
             // verify interactions with the helpers which is required to fetch highlighting config
-            verify(jsonHelper, times(3)).unmarshallJsonToObject(any(), any(String.class));
+            verify(jsonHelper, times(2)).unmarshallJsonToObject(eq(Map.class), any(String.class));
+            verify(jsonHelper, times(1)).unmarshallJsonToObject(eq(IndexSearchHighlightFields.class), any(String.class));
             verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
             verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
             verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS);

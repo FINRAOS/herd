@@ -22,11 +22,14 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Collections;
+
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import org.finra.herd.dao.impl.MockSqsOperationsImpl;
+import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.model.jpa.NotificationMessageEntity;
@@ -47,8 +50,9 @@ public class NotificationMessagePublishingServiceTest extends AbstractServiceTes
         assertNull(notificationMessageDao.getOldestNotificationMessage());
 
         // Add a notification message to the database queue.
-        notificationMessagePublishingServiceImpl
-            .addNotificationMessageToDatabaseQueue(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT));
+        notificationMessagePublishingServiceImpl.addNotificationMessageToDatabaseQueue(
+            new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT,
+                Collections.singletonList(new MessageHeader(KEY, VALUE))));
 
         // Validate that the database queue is not empty now.
         assertNotNull(notificationMessageDao.getOldestNotificationMessage());
@@ -57,20 +61,23 @@ public class NotificationMessagePublishingServiceTest extends AbstractServiceTes
         assertTrue(notificationMessagePublishingServiceImpl.publishOldestNotificationMessageFromDatabaseQueue());
 
         // Publish notification message directly - not from the database queue.
-        notificationMessagePublishingServiceImpl
-            .publishNotificationMessage(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT));
+        notificationMessagePublishingServiceImpl.publishNotificationMessage(
+            new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT,
+                Collections.singletonList(new MessageHeader(KEY, VALUE))));
     }
 
     @Test
     public void testPublishNotificationMessage()
     {
         // Publish a notification message with SQS message type.
-        notificationMessagePublishingService
-            .publishNotificationMessage(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT));
+        notificationMessagePublishingService.publishNotificationMessage(
+            new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT,
+                Collections.singletonList(new MessageHeader(KEY, VALUE))));
 
         // Publish a notification message with SNS message type.
-        notificationMessagePublishingService
-            .publishNotificationMessage(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SNS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT));
+        notificationMessagePublishingService.publishNotificationMessage(
+            new NotificationMessage(MessageTypeEntity.MessageEventTypes.SNS.name(), MESSAGE_DESTINATION, MESSAGE_TEXT,
+                Collections.singletonList(new MessageHeader(KEY, VALUE))));
     }
 
     @Test
@@ -79,7 +86,8 @@ public class NotificationMessagePublishingServiceTest extends AbstractServiceTes
         // Try to publish notification message with an invalid message type.
         try
         {
-            notificationMessagePublishingService.publishNotificationMessage(new NotificationMessage(I_DO_NOT_EXIST, MESSAGE_DESTINATION, MESSAGE_TEXT));
+            notificationMessagePublishingService.publishNotificationMessage(
+                new NotificationMessage(I_DO_NOT_EXIST, MESSAGE_DESTINATION, MESSAGE_TEXT, Collections.singletonList(new MessageHeader(KEY, VALUE))));
             fail();
         }
         catch (IllegalStateException e)
