@@ -15,8 +15,14 @@
 */
 package org.finra.herd.service.impl;
 
+import java.io.IOException;
+import java.util.List;
+
 import com.amazonaws.services.sns.model.PublishResult;
 import com.amazonaws.services.sqs.model.SendMessageResult;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +36,7 @@ import org.finra.herd.dao.SqsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.model.jpa.NotificationMessageEntity;
@@ -114,6 +121,10 @@ public class NotificationMessagePublishingServiceImpl implements NotificationMes
         notificationMessageEntity.setMessageType(messageTypeEntity);
         notificationMessageEntity.setMessageDestination(notificationMessage.getMessageDestination());
         notificationMessageEntity.setMessageText(notificationMessage.getMessageText());
+        if (CollectionUtils.isNotEmpty(notificationMessage.getMessageHeaders()))
+        {
+            notificationMessageEntity.setMessageHeaders(jsonHelper.objectToJson(notificationMessage.getMessageHeaders()));
+        }
         notificationMessageDao.saveAndRefresh(notificationMessageEntity);
     }
 
@@ -130,24 +141,26 @@ public class NotificationMessagePublishingServiceImpl implements NotificationMes
             if (notificationMessage.getMessageType().equals(MessageTypeEntity.MessageEventTypes.SQS.name()))
             {
                 // Publish the message using SQS.
-                SendMessageResult sendMessageResult =
-                    sqsDao.sendMessage(awsHelper.getAwsParamsDto(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText());
+                SendMessageResult sendMessageResult = sqsDao
+                    .sendMessage(awsHelper.getAwsParamsDto(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText(),
+                        notificationMessage.getMessageHeaders());
 
                 // Log response and the message information.
-                LOGGER.info("Published {} notification message. messageDestination=\"{}\" messageText={} sendMessageResult={}",
+                LOGGER.info("Published {} notification message. messageDestination=\"{}\" messageText={} messageHeaders={} sendMessageResult={}",
                     notificationMessage.getMessageType(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText(),
-                    jsonHelper.objectToJson(sendMessageResult));
+                    jsonHelper.objectToJson(notificationMessage.getMessageHeaders()), jsonHelper.objectToJson(sendMessageResult));
             }
             else if (notificationMessage.getMessageType().equals(MessageTypeEntity.MessageEventTypes.SNS.name()))
             {
                 // Publish the message using SNS.
-                PublishResult publishResult =
-                    snsDao.publish(awsHelper.getAwsParamsDto(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText());
+                PublishResult publishResult = snsDao
+                    .publish(awsHelper.getAwsParamsDto(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText(),
+                        notificationMessage.getMessageHeaders());
 
                 // Log response and the message information.
-                LOGGER
-                    .info("Published {} notification message. messageDestination=\"{}\" messageText={} publishResult={}", notificationMessage.getMessageType(),
-                        notificationMessage.getMessageDestination(), notificationMessage.getMessageText(), jsonHelper.objectToJson(publishResult));
+                LOGGER.info("Published {} notification message. messageDestination=\"{}\" messageText={} messageHeaders={} publishResult={}",
+                    notificationMessage.getMessageType(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText(),
+                    jsonHelper.objectToJson(notificationMessage.getMessageHeaders()), jsonHelper.objectToJson(publishResult));
             }
             else
             {
@@ -157,8 +170,9 @@ public class NotificationMessagePublishingServiceImpl implements NotificationMes
         catch (RuntimeException e)
         {
             // Log an error message.
-            LOGGER.error("Failed to publish {} notification message to \"{}\" destination. messageText={}", notificationMessage.getMessageType(),
-                notificationMessage.getMessageDestination(), notificationMessage.getMessageText());
+            LOGGER.error("Failed to publish {} notification message to \"{}\" destination. messageText={} messageHeaders={}",
+                notificationMessage.getMessageType(), notificationMessage.getMessageDestination(), notificationMessage.getMessageText(),
+                jsonHelper.objectToJson(notificationMessage.getMessageHeaders()));
 
             // Rethrow the exception.
             throw new IllegalStateException(e.getMessage(), e);
@@ -170,6 +184,7 @@ public class NotificationMessagePublishingServiceImpl implements NotificationMes
      *
      * @return true if notification message was successfully published and false otherwise
      */
+    @SuppressWarnings("unchecked")
     protected boolean publishOldestNotificationMessageFromDatabaseQueueImpl()
     {
         // Initialize the result flag to false.
@@ -181,10 +196,29 @@ public class NotificationMessagePublishingServiceImpl implements NotificationMes
         // If message is retrieved, publish and remove it from the queue.
         if (notificationMessageEntity != null)
         {
+            // Get the message headers from the entity.
+            List<MessageHeader> messageHeaders = null;
+            if (StringUtils.isNotBlank(notificationMessageEntity.getMessageHeaders()))
+            {
+                try
+                {
+                    messageHeaders = jsonHelper.unmarshallJsonToObject(new TypeReference<List<MessageHeader>>()
+                    {
+                    }, notificationMessageEntity.getMessageHeaders());
+                }
+                catch (IOException e)
+                {
+                    throw new IllegalStateException(String.format("Failed to unmarshall notification message headers. " +
+                        "messageId=%d messageType=%s messageDestination=%s messageText=%s messageHeaders=%s", notificationMessageEntity.getId(),
+                        notificationMessageEntity.getMessageType().getCode(), notificationMessageEntity.getMessageDestination(),
+                        notificationMessageEntity.getMessageText(), notificationMessageEntity.getMessageHeaders()), e);
+                }
+            }
+
             // Publish notification message.
             publishNotificationMessageImpl(
                 new NotificationMessage(notificationMessageEntity.getMessageType().getCode(), notificationMessageEntity.getMessageDestination(),
-                    notificationMessageEntity.getMessageText()));
+                    notificationMessageEntity.getMessageText(), messageHeaders));
 
             // Delete this message from the queue.
             notificationMessageDao.delete(notificationMessageEntity);

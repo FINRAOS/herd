@@ -15,7 +15,10 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.util.Map;
+
 import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.MessageAttributeValue;
 import com.amazonaws.services.sns.model.PublishResult;
 
 import org.finra.herd.dao.AbstractDaoTest;
@@ -27,7 +30,7 @@ import org.finra.herd.dao.SnsOperations;
 public class MockSnsOperationsImpl implements SnsOperations
 {
     @Override
-    public PublishResult publish(String topicArn, String messageText, AmazonSNS amazonSNS)
+    public PublishResult publish(String topicArn, String messageText, Map<String, MessageAttributeValue> messageAttributes, AmazonSNS amazonSNS)
     {
         // Nothing to do in the normal case since our unit tests aren't reading messages once they have been published.
         return new PublishResult().withMessageId(AbstractDaoTest.MESSAGE_ID);

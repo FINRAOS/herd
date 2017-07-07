@@ -49,6 +49,9 @@ public class NotificationMessageEntity extends AuditableEntity
     @Column(name = "msg_tx")
     private String messageText;
 
+    @Column(name = "msg_hdrs")
+    private String messageHeaders;
+
     public Integer getId()
     {
         return id;
@@ -87,5 +90,15 @@ public class NotificationMessageEntity extends AuditableEntity
     public void setMessageText(String messageText)
     {
         this.messageText = messageText;
+    }
+
+    public String getMessageHeaders()
+    {
+        return messageHeaders;
+    }
+
+    public void setMessageHeaders(String messageHeaders)
+    {
+        this.messageHeaders = messageHeaders;
     }
 }

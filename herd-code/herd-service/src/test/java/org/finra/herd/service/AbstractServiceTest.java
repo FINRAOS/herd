@@ -168,6 +168,94 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
 
+    public static final String BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
+        "  \"eventDate\" : \"$current_time\",\n" +
+        "  \"businessObjectDataKey\" : {\n" +
+        "    \"namespace\" : \"$businessObjectDataKey.namespace\",\n" +
+        "    \"businessObjectDefinitionName\" : \"$businessObjectDataKey.businessObjectDefinitionName\",\n" +
+        "    \"businessObjectFormatUsage\" : \"$businessObjectDataKey.businessObjectFormatUsage\",\n" +
+        "    \"businessObjectFormatFileType\" : \"$businessObjectDataKey.businessObjectFormatFileType\",\n" +
+        "    \"businessObjectFormatVersion\" : $businessObjectDataKey.businessObjectFormatVersion,\n" +
+        "    \"partitionValue\" : \"$businessObjectDataKey.partitionValue\",\n" +
+        "#if($CollectionUtils.isNotEmpty($businessObjectDataKey.subPartitionValues))    \"subPartitionValues\" : [ " +
+        "\"$businessObjectDataKey.subPartitionValues.get(0)\"" +
+        "#foreach ($subPartitionValue in $businessObjectDataKey.subPartitionValues.subList(1, $businessObjectDataKey.subPartitionValues.size())), \"$subPartitionValue\"" +
+        "#end\n" +
+        " ],\n" +
+        "#end\n" +
+        "    \"businessObjectDataVersion\" : $businessObjectDataKey.businessObjectDataVersion\n" +
+        "  },\n" +
+        "  \"newBusinessObjectDataStatus\" : \"$newBusinessObjectDataStatus\"" +
+        "#if($StringUtils.isNotEmpty($oldBusinessObjectDataStatus)),\n  \"oldBusinessObjectDataStatus\" : \"$oldBusinessObjectDataStatus\"" +
+        "#end\n" +
+        "#if($CollectionUtils.isNotEmpty($businessObjectDataAttributes.keySet())),\n" +
+        "  \"attributes\" : {\n" +
+        "#set ($keys = $Collections.list($Collections.enumeration($businessObjectDataAttributes.keySet())))\n" +
+        "    \"$keys.get(0)\" : \"$!businessObjectDataAttributes.get($keys.get(0))\"" +
+        "#foreach($key in $keys.subList(1, $keys.size()))\n" +
+        ",\n    \"$key\" : \"$!businessObjectDataAttributes.get($key)\"" +
+        "#end\n" +
+        "\n  }\n" +
+        "#end\n" +
+        "}\n";
+
+    public static final String BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML = "<?xml version=\"1.1\" encoding=\"UTF-8\"?>\n" +
+        "<datamgt:TestApplicationEvent xmlns:datamgt=\"http://testDomain/testApplication/testApplication-event\">\n" +
+        "   <header>\n" +
+        "      <producer>\n" +
+        "         <name>testDomain/testApplication</name>\n" +
+        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "      </producer>\n" +
+        "      <creation>\n" +
+        "         <datetime>$current_time</datetime>\n" +
+        "      </creation>\n" +
+        "      <correlation-id>BusinessObjectData_$businessObjectDataId</correlation-id>\n" +
+        "      <context-message-type>testDomain/testApplication/BusinessObjectDataStatusChanged</context-message-type>\n" +
+        "      <system-message-type>NoError</system-message-type>\n" +
+        "      <xsd>http://testDomain/testApplication/testApplication-event.xsd</xsd>\n" +
+        "      <event-id>\n" +
+        "         <system-name>testDomain/testApplication</system-name>\n" +
+        "         <system-unique-id>$uuid</system-unique-id>\n" +
+        "      </event-id>\n" +
+        "   </header>\n" +
+        "   <payload>\n" +
+        "      <eventDate>$current_time</eventDate>\n" +
+        "      <datamgtEvent>\n" +
+        "         <businessObjectDataStatusChanged>\n" +
+        "            <businessObjectDataKey>\n" +
+        "               <namespace>$businessObjectDataKey.namespace</namespace>\n" +
+        "               <businessObjectDefinitionName>$businessObjectDataKey.businessObjectDefinitionName</businessObjectDefinitionName>\n" +
+        "               <businessObjectFormatUsage>$businessObjectDataKey.businessObjectFormatUsage</businessObjectFormatUsage>\n" +
+        "               <businessObjectFormatFileType>$businessObjectDataKey.businessObjectFormatFileType</businessObjectFormatFileType>\n" +
+        "               <businessObjectFormatVersion>$businessObjectDataKey.businessObjectFormatVersion</businessObjectFormatVersion>\n" +
+        "               <partitionValue>$businessObjectDataKey.partitionValue</partitionValue>\n" +
+        "#if($CollectionUtils.isNotEmpty($businessObjectDataKey.subPartitionValues))               <subPartitionValues>\n" +
+        "#foreach ($subPartitionValue in $businessObjectDataKey.subPartitionValues)                  <partitionValue>$subPartitionValue</partitionValue>\n" +
+        "#end" +
+        "               </subPartitionValues>\n" +
+        "#end" +
+        "               <businessObjectDataVersion>$businessObjectDataKey.businessObjectDataVersion</businessObjectDataVersion>\n" +
+        "            </businessObjectDataKey>\n" +
+        "            <newBusinessObjectDataStatus>$newBusinessObjectDataStatus</newBusinessObjectDataStatus>\n" +
+        "#if($StringUtils.isNotEmpty($oldBusinessObjectDataStatus))            <oldBusinessObjectDataStatus>$oldBusinessObjectDataStatus</oldBusinessObjectDataStatus>\n" +
+        "#end" +
+        "#if($CollectionUtils.isNotEmpty($businessObjectDataAttributes.keySet()))" +
+        "            <attributes>\n" +
+        "#foreach($attributeName in $businessObjectDataAttributes.keySet())" +
+        "                <attribute name=\"$attributeName\">$!businessObjectDataAttributes.get($attributeName)</attribute>\n" +
+        "#end" +
+        "            </attributes>\n" +
+        "#end" +
+        "         </businessObjectDataStatusChanged>\n" +
+        "      </datamgtEvent>\n" +
+        "   </payload>\n" +
+        "   <soa-audit>\n" +
+        "      <triggered-date-time>$current_time</triggered-date-time>\n" +
+        "      <triggered-by-username>$username</triggered-by-username>\n" +
+        "      <transmission-id>$uuid</transmission-id>\n" +
+        "   </soa-audit>\n" +
+        "</datamgt:TestApplicationEvent>";
+
     public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
@@ -258,6 +346,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean INCLUDE_DROP_TABLE_STATEMENT = true;
 
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
+
+    public static final String MESSAGE_VERSION = "UT_MessageVersion" + RANDOM_SUFFIX;
 
     public static final String METHOD_NAME = "UT_MethodName_1_" + RANDOM_SUFFIX;
 
@@ -406,6 +496,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String SKU = "UT_SKU_Value_" + RANDOM_SUFFIX;
 
+    public static final String SOURCE_SYSTEM = "UT_SourceSystem" + RANDOM_SUFFIX;
+
     public static final String START_PARTITION_VALUE = "2014-04-02";
 
     public static final DateTime START_TIME = getRandomDateTime();
@@ -413,6 +505,27 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
 
     public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
+
+    public static final String SYSTEM_MONITOR_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML = "<?xml version=\"1.1\" encoding=\"UTF-8\"?>\n" +
+        "<datamgt:monitor xmlns:datamgt=\"http://testDomain/system-monitor\">\n" +
+        "   <header>\n" +
+        "      <producer>\n" +
+        "         <name>testDomain/testApplication</name>\n" +
+        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "      </producer>\n" +
+        "      <creation>\n" +
+        "         <datetime>$current_time</datetime>\n" +
+        "      </creation>\n" +
+        "#if($StringUtils.isNotEmpty($incoming_message_correlation_id))      <correlation-id>$incoming_message_correlation_id</correlation-id>\n" +
+        "#end\n" +
+        "      <context-message-type>$incoming_message_context_message_type</context-message-type>\n" +
+        "      <system-message-type>NoError</system-message-type>\n" +
+        "      <xsd>http://testDomain/system-monitor.xsd</xsd>\n" +
+        "   </header>\n" +
+        "   <payload>\n" +
+        "      <contextMessageTypeToPublish />\n" +
+        "   </payload>\n" +
+        "</datamgt:monitor>";
 
     /**
      * The test job name as per the above workflow XML file.

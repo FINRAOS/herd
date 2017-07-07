@@ -7451,7 +7451,21 @@
          <xs:element name="messageType" type="xs:string" minOccurs="0"/>
          <xs:element name="messageDestination" type="xs:string" minOccurs="0"/>
          <xs:element name="messageVelocityTemplate" type="xs:string" minOccurs="0"/>
+         <xs:element name="messageHeaderDefinitions" type="messageHeaderDefinitions" minOccurs="0"/>
       </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="messageHeaderDefinitions">
+      <xs:sequence>
+         <xs:element name="messageHeaderDefinition" type="messageHeaderDefinition" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="messageHeaderDefinition">
+      <xs:all>
+         <xs:element name="key" type="xs:string" minOccurs="0"/>
+         <xs:element name="valueVelocityTemplate" type="xs:string" minOccurs="0"/>
+      </xs:all>
    </xs:complexType>
 
 </xs:schema>

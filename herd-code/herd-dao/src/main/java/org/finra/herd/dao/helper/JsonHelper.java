@@ -18,6 +18,7 @@ package org.finra.herd.dao.helper;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Component;
@@ -95,5 +96,19 @@ public class JsonHelper
     public <T> T unmarshallJsonToObject(Class<T> classType, String jsonContent) throws IOException
     {
         return new ObjectMapper().readValue(jsonContent, classType);
+    }
+
+    /**
+     * Deserializes JSON content from given JSON content String.
+     *
+     * @param typeReference the type reference
+     * @param jsonContent the JSON string
+     *
+     * @return the object
+     * @throws java.io.IOException if there is an error in unmarshalling
+     */
+    public <T> T unmarshallJsonToObject(TypeReference typeReference, String jsonContent) throws IOException
+    {
+        return new ObjectMapper().readValue(jsonContent, typeReference);
     }
 }
