@@ -35,8 +35,8 @@ public class MessageTypeDaoTestHelper
      */
     public MessageTypeEntity createMessageTypeEntity(String code)
     {
-        MessageTypeEntity storageUnitTypeEntity = new MessageTypeEntity();
-        storageUnitTypeEntity.setCode(code);
-        return messageTypeDao.saveAndRefresh(storageUnitTypeEntity);
+        MessageTypeEntity messageTypeEntity = new MessageTypeEntity();
+        messageTypeEntity.setCode(code);
+        return messageTypeDao.saveAndRefresh(messageTypeEntity);
     }
 }

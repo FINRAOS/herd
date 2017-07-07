@@ -210,7 +210,7 @@ public class NotificationMessagePublishingServiceImpl implements NotificationMes
                 {
                     throw new IllegalStateException(String.format("Failed to unmarshall notification message headers. " +
                         "messageId=%d messageType=%s messageDestination=%s messageText=%s messageHeaders=%s", notificationMessageEntity.getId(),
-                        notificationMessageEntity.getMessageType(), notificationMessageEntity.getMessageDestination(),
+                        notificationMessageEntity.getMessageType().getCode(), notificationMessageEntity.getMessageDestination(),
                         notificationMessageEntity.getMessageText(), notificationMessageEntity.getMessageHeaders()), e);
                 }
             }

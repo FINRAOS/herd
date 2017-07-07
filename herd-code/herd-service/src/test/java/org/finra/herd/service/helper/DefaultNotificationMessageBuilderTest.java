@@ -187,6 +187,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         List<Attribute> attributes = new ArrayList<>();
         attributes.add(new Attribute(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.ATTRIBUTE_VALUE_1));
         attributes.add(new Attribute(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.ATTRIBUTE_VALUE_2));
+        attributes.add(new Attribute(AbstractServiceTest.ATTRIBUTE_NAME_3_MIXED_CASE, AbstractServiceTest.ATTRIBUTE_VALUE_3));
 
         // Create a list of attribute definitions.
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
@@ -215,7 +216,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Validate the notification message.
         assertEquals(1, CollectionUtils.size(result));
         validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
-            attributes, NO_MESSAGE_HEADERS, result.get(0));
+            attributes.subList(0, 2), NO_MESSAGE_HEADERS, result.get(0));
     }
 
     @Test
@@ -445,6 +446,32 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         catch (ParseErrorException e)
         {
             assertTrue(e.getMessage().startsWith("Encountered \"<EOF>\" at systemMonitorResponse[line 1, column 28]"));
+        }
+        finally
+        {
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testBuildSystemMonitorResponseInvalidXmlRequestPayload() throws Exception
+    {
+        // Override the configuration to remove the XPath expressions when building the system monitor response.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_SYS_MONITOR_RESPONSE_VELOCITY_TEMPLATE.getKey(),
+            SYSTEM_MONITOR_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            // Try to get a system monitor response when request payload contains invalid XML.
+            defaultNotificationMessageBuilder.buildSystemMonitorResponse(INVALID_VALUE);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Payload is not valid XML:\n%s", INVALID_VALUE), e.getMessage());
         }
         finally
         {
