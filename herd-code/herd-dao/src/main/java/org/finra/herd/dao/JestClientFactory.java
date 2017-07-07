@@ -75,6 +75,8 @@ public class JestClientFactory
         final String serverUri = String.format("%s://%s:%d", scheme, hostname, port);
         final String userName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
         final String credentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
+        final int connectionTimeout = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
+        final int readTimeout = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
         String password;
         try
         {
@@ -99,7 +101,8 @@ public class JestClientFactory
 
         io.searchbox.client.JestClientFactory jestClientFactory = new io.searchbox.client.JestClientFactory();
         jestClientFactory.setHttpClientConfig(
-            new HttpClientConfig.Builder(serverUri).defaultCredentials(userName, password).sslSocketFactory(sslSocketFactory).multiThreaded(true).build());
+            new HttpClientConfig.Builder(serverUri).connTimeout(connectionTimeout).readTimeout(readTimeout).
+                defaultCredentials(userName, password).sslSocketFactory(sslSocketFactory).multiThreaded(true).build());
         return jestClientFactory.getObject();
     }
 

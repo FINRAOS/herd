@@ -86,7 +86,15 @@ public class BusinessObjectDefinitionHelper
             if (StringUtils.isNotEmpty(jsonString))
             {
                 // Call the function that will process each business object definition entity against the index
-                function.accept(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+                try
+                {
+                    function.accept(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+                }
+                catch (Exception ex)
+                {
+                    LOGGER.warn("Index operation exception is logged {} for {}, {}, {}, {}", ex, indexName, documentType,
+                        businessObjectDefinitionEntity.getId().toString(), jsonString);
+                }
             }
         });
 

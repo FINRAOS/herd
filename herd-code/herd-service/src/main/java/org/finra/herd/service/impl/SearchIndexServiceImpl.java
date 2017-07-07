@@ -245,7 +245,6 @@ public class SearchIndexServiceImpl implements SearchIndexService
         {
             // Asynchronously index all business object definitions.
             searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, documentType);
-
         }
         else
         {
