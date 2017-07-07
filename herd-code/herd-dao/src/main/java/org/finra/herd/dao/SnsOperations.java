@@ -15,7 +15,10 @@
 */
 package org.finra.herd.dao;
 
+import java.util.Map;
+
 import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.MessageAttributeValue;
 import com.amazonaws.services.sns.model.PublishResult;
 
 /**
@@ -28,9 +31,10 @@ public interface SnsOperations
      *
      * @param topicArn the topic to publish the message to
      * @param messageText the text of the message
+     * @param messageAttributes the optional SNS message attributes
      * @param amazonSNS the client for accessing AWS SNS
      *
      * @return the result of the publish operation returned by the service
      */
-    public PublishResult publish(String topicArn, String messageText, AmazonSNS amazonSNS);
+    public PublishResult publish(String topicArn, String messageText, Map<String, MessageAttributeValue> messageAttributes, AmazonSNS amazonSNS);
 }

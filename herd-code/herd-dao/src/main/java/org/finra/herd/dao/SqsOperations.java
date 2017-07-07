@@ -15,7 +15,10 @@
 */
 package org.finra.herd.dao;
 
+import java.util.Map;
+
 import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 
 /**
@@ -28,9 +31,10 @@ public interface SqsOperations
      *
      * @param queueName the name of the Amazon SQS queue to which a message is sent
      * @param messageText the text of the message
+     * @param messageAttributes the optional SQS message attributes
      * @param amazonSQS the client for accessing AWS SQS
      *
      * @return the result the send message operation returned by the service
      */
-    public SendMessageResult sendMessage(String queueName, String messageText, AmazonSQS amazonSQS);
+    public SendMessageResult sendMessage(String queueName, String messageText, Map<String, MessageAttributeValue> messageAttributes, AmazonSQS amazonSQS);
 }

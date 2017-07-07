@@ -262,6 +262,13 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="messageHeader">
+      <xs:all>
+         <xs:element name="key" type="xs:string" minOccurs="0"/>
+         <xs:element name="value" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
    <xs:complexType name="namespace">
       <xs:sequence>
          <xs:element name="code" type="xs:string" minOccurs="0"/>
@@ -283,6 +290,7 @@
          <xs:element name="messageType" type="xs:string" minOccurs="0"/>
          <xs:element name="messageDestination" type="xs:string" minOccurs="0"/>
          <xs:element name="messageText" type="xs:string" minOccurs="0"/>
+         <xs:element name="messageHeaders" type="messageHeader" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
    </xs:complexType>
 

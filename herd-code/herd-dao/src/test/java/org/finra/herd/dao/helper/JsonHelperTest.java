@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.junit.Test;
@@ -103,8 +104,16 @@ public class JsonHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testUnmarshallJsonToObject() throws IOException
+    public void testUnmarshallJsonToObjectUsingClassType() throws IOException
     {
         assertEquals(STRING_VALUE, jsonHelper.unmarshallJsonToObject(String.class, String.format("\"%s\"", STRING_VALUE)));
+    }
+
+    @Test
+    public void testUnmarshallJsonToObjectUsingTypeReference() throws IOException
+    {
+        assertEquals(STRING_VALUE, jsonHelper.unmarshallJsonToObject(new TypeReference<String>()
+        {
+        }, String.format("\"%s\"", STRING_VALUE)));
     }
 }
