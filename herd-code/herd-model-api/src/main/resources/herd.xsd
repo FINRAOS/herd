@@ -297,6 +297,11 @@
                <xs:documentation>The list of namespace authorizations</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="securityRoles" type="securityRoles">
+            <xs:annotation>
+               <xs:documentation>The list of security roles</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -346,6 +351,16 @@
       </xs:restriction>
    </xs:simpleType>
 
+   <xs:element name="securityRoles" type="securityRoles"/>
+   <xs:complexType name="securityRoles">
+      <xs:sequence>
+         <xs:element name="securityRole" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The security role</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
 
    <!-- ***** User Namespace Authorization ***** -->
 

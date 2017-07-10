@@ -973,6 +973,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String VOLUME_TYPE = "UT_VolumeType_" + RANDOM_SUFFIX;
 
+    public static final List<String> NO_ROLES = null;
+
+    public static final List<String> EMPTY_ROLES = new ArrayList<>();
+
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 
     // A holding location for a property source.

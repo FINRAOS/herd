@@ -17,6 +17,8 @@ package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ import org.finra.herd.model.api.xml.UserAuthorizations;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.service.CurrentUserService;
+import org.finra.herd.service.helper.SecurityRoleDaoHelper;
 
 /**
  * The current user service implementation.
@@ -35,6 +38,9 @@ import org.finra.herd.service.CurrentUserService;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class CurrentUserServiceImpl implements CurrentUserService
 {
+    @Autowired
+    private SecurityRoleDaoHelper securityRoleDaoHelper;
+
     @Override
     public UserAuthorizations getCurrentUser()
     {
@@ -43,11 +49,19 @@ public class CurrentUserServiceImpl implements CurrentUserService
 
         // Get the application user.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (authentication != null)
         {
             SecurityUserWrapper securityUserWrapper = (SecurityUserWrapper) authentication.getPrincipal();
             ApplicationUser applicationUser = securityUserWrapper.getApplicationUser();
             userAuthorizations.setUserId(applicationUser.getUserId());
+
+            // If roles are present on the application user then filter the herd-specific security roles and add that information to the Current user.
+            if (CollectionUtils.isNotEmpty(applicationUser.getRoles()))
+            {
+                userAuthorizations.setSecurityRoles(new ArrayList<>(securityRoleDaoHelper.getValidSecurityRoles(applicationUser.getRoles())));
+            }
+
             userAuthorizations.setNamespaceAuthorizations(new ArrayList<>(applicationUser.getNamespaceAuthorizations()));
         }
 

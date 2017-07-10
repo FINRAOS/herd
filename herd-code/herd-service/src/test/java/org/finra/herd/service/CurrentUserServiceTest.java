@@ -105,7 +105,7 @@ public class CurrentUserServiceTest extends AbstractServiceTest
             UserAuthorizations userAuthorizations = currentUserService.getCurrentUser();
 
             // Validate the response object.
-            assertEquals(new UserAuthorizations(USER_ID, new ArrayList<>(namespaceAuthorizations)), userAuthorizations);
+            assertEquals(new UserAuthorizations(USER_ID, new ArrayList<>(namespaceAuthorizations), NO_ROLES), userAuthorizations);
         }
         finally
         {
@@ -125,7 +125,7 @@ public class CurrentUserServiceTest extends AbstractServiceTest
             UserAuthorizations userAuthorizations = currentUserService.getCurrentUser();
 
             // Validate the response object.
-            assertEquals(new UserAuthorizations(null, null), userAuthorizations);
+            assertEquals(new UserAuthorizations(null, null, NO_ROLES), userAuthorizations);
         }
         finally
         {
