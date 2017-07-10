@@ -69,6 +69,7 @@
          <Class name="~org.finra.herd.model.dto.IndexSearchHighlightField"/>
          <Class name="~org.finra.herd.model.dto.IndexSearchHighlightFields"/>
          <Class name="~org.finra.herd.model.dto.JobDefinitionAlternateKeyDto"/>
+         <Class name="~org.finra.herd.model.dto.MessageHeader"/>
          <Class name="~org.finra.herd.model.dto.Namespace"/>
          <Class name="~org.finra.herd.model.dto.NotificationEventParamsDto"/>
          <Class name="~org.finra.herd.model.dto.NotificationMessage"/>
