@@ -1115,6 +1115,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             {
                 businessObjectDefinitionJSONMap.put(businessObjectDefinitionEntity.getId().toString(), jsonString);
             }
+            else
+            {
+                LOGGER.warn("Business Object Definition Entity {} jsonString is empty.", businessObjectDefinitionEntity.getId());
+            }
         });
 
         return businessObjectDefinitionJSONMap;
