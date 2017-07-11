@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.springframework.security.core.Authentication;
@@ -33,6 +34,7 @@ import org.finra.herd.model.api.xml.NamespaceAuthorization;
 import org.finra.herd.model.api.xml.UserAuthorizations;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
+import org.finra.herd.model.jpa.SecurityRoleEntity;
 
 /**
  * This class tests various functionality within the current user service.
@@ -126,6 +128,90 @@ public class CurrentUserServiceTest extends AbstractServiceTest
 
             // Validate the response object.
             assertEquals(new UserAuthorizations(null, null, NO_ROLES), userAuthorizations);
+        }
+        finally
+        {
+            // Restore the original authentication.
+            SecurityContextHolder.getContext().setAuthentication(originalAuthentication);
+        }
+    }
+
+    @Test
+    public void testGetCurrentUserWithRoles()
+    {
+        // Create test roles
+        List<SecurityRoleEntity> securityRoleEntities = securityRoleDaoTestHelper.createTestSecurityRoles();
+
+        // Fetch the security role codes to add to the application user
+        Set<String> roles =securityRoleEntities.stream().map(SecurityRoleEntity::getCode).collect(Collectors.toSet());
+
+        // Create a set of test namespace authorizations.
+        Set<NamespaceAuthorization> namespaceAuthorizations = new LinkedHashSet<>();
+        namespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE, SUPPORTED_NAMESPACE_PERMISSIONS));
+        namespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_2, SUPPORTED_NAMESPACE_PERMISSIONS));
+
+        // Override the security context to return an application user populated with test values.
+        Authentication originalAuthentication = SecurityContextHolder.getContext().getAuthentication();
+        try
+        {
+            SecurityContextHolder.getContext().setAuthentication(new Authentication()
+            {
+                @Override
+                public String getName()
+                {
+                    return null;
+                }
+
+                @Override
+                public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException
+                {
+                }
+
+                @Override
+                public boolean isAuthenticated()
+                {
+                    return false;
+                }
+
+                @Override
+                public Object getPrincipal()
+                {
+                    List<GrantedAuthority> authorities = Collections.emptyList();
+
+                    ApplicationUser applicationUser = new ApplicationUser(this.getClass());
+                    applicationUser.setUserId(USER_ID);
+
+                    // add test roles to the application user
+                    applicationUser.setRoles(roles);
+                    applicationUser.setNamespaceAuthorizations(namespaceAuthorizations);
+
+                    return new SecurityUserWrapper(USER_ID, STRING_VALUE, true, true, true, true, authorities, applicationUser);
+                }
+
+                @Override
+                public Object getDetails()
+                {
+                    return null;
+                }
+
+                @Override
+                public Object getCredentials()
+                {
+                    return null;
+                }
+
+                @Override
+                public Collection<? extends GrantedAuthority> getAuthorities()
+                {
+                    return null;
+                }
+            });
+
+            // Get the current user information.
+            UserAuthorizations userAuthorizations = currentUserService.getCurrentUser();
+
+            // Validate the response object.
+            assertEquals(new UserAuthorizations(USER_ID, new ArrayList<>(namespaceAuthorizations), new ArrayList<>(roles)), userAuthorizations);
         }
         finally
         {

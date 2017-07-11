@@ -17,13 +17,15 @@ package org.finra.herd.dao;
 
 import java.util.List;
 
+import org.finra.herd.model.jpa.SecurityRoleEntity;
+
 public interface SecurityRoleDao extends BaseJpaDao
 {
     /**
-     * Gets the list of security roles.
+     * Gets the list of all security roles entities.
      *
-     * @return the list of security roles
+     * @return the list of security role entities
      */
-    public List<String> getAllSecurityRoles();
+    public List<SecurityRoleEntity> getAllSecurityRoles();
 
 }

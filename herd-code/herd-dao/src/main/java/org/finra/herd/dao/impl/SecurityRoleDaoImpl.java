@@ -35,22 +35,25 @@ public class SecurityRoleDaoImpl extends AbstractHerdDao implements SecurityRole
 {
     @Override
     @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
-    public List<String> getAllSecurityRoles()
+    public List<SecurityRoleEntity> getAllSecurityRoles()
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<String> criteria = builder.createQuery(String.class);
+        CriteriaQuery<SecurityRoleEntity> criteria = builder.createQuery(SecurityRoleEntity.class);
 
         // The criteria root is the security role
         Root<SecurityRoleEntity> securityRoleEntity = criteria.from(SecurityRoleEntity.class);
 
+        // Create select query
+        criteria.select(securityRoleEntity);
+
         // Get the role code column.
         Path<String> roleCodeColumn = securityRoleEntity.get(SecurityRoleEntity_.code);
 
-        // Create select query with the role code column
-        criteria.select(roleCodeColumn);
+        // Set the order by clause
+        criteria.orderBy(builder.asc(roleCodeColumn));
 
-        // run the query to get the list of role codes and return
+        // run the query to get the list of security role entities and return them
         return entityManager.createQuery(criteria).getResultList();
     }
 }
