@@ -20,7 +20,6 @@ import java.util.List;
 
 import com.amazonaws.services.sns.model.PublishResult;
 import com.amazonaws.services.sqs.model.SendMessageResult;
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -202,9 +201,7 @@ public class NotificationMessagePublishingServiceImpl implements NotificationMes
             {
                 try
                 {
-                    messageHeaders = jsonHelper.unmarshallJsonToObject(new TypeReference<List<MessageHeader>>()
-                    {
-                    }, notificationMessageEntity.getMessageHeaders());
+                    messageHeaders = jsonHelper.unmarshallJsonToListOfObjects(MessageHeader.class, notificationMessageEntity.getMessageHeaders());
                 }
                 catch (IOException e)
                 {
