@@ -784,6 +784,16 @@ public enum ConfigurationValue
      */
     ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname",  null),
 
+    /*
+     * The elasticsearch search rest client timeout
+     */
+    ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT("elasticsearch.rest.client.connection.timeout", 60000),
+
+    /*
+     * The elasticsearch search rest client read timeout
+     */
+    ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT("elasticsearch.rest.client.read.timeout", 60000),
+
     /**
      * The elasticsearch search guard truststore file path
      */

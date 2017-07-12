@@ -71,7 +71,8 @@ public class BusinessObjectDefinitionHelper
         final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities, final QuadConsumer<String, String, String, String> function)
     {
         // For each business object definition apply the passed in function
-        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
+        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity ->
+        {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -86,7 +87,15 @@ public class BusinessObjectDefinitionHelper
             if (StringUtils.isNotEmpty(jsonString))
             {
                 // Call the function that will process each business object definition entity against the index
-                function.accept(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+                try
+                {
+                    function.accept(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+                }
+                catch (Exception ex)
+                {
+                    LOGGER.warn("Index operation exception is logged {} for {}, {}, {}, {}", ex, indexName, documentType,
+                        businessObjectDefinitionEntity.getId().toString(), jsonString);
+                }
             }
         });
 
@@ -143,7 +152,8 @@ public class BusinessObjectDefinitionHelper
             LOGGER.warn("Could not parse BusinessObjectDefinitionEntity id={" + businessObjectDefinitionEntity.getId() + "} into JSON string. ",
                 illegalStateException);
         }
-
+        LOGGER.debug("safeObjectMapperWriteValueAsString" + jsonString + " " + businessObjectDefinitionEntity.getId() + " " +
+            businessObjectDefinitionEntity.getBusinessObjectDefinitionTags());
         return jsonString;
     }
 
@@ -154,6 +164,8 @@ public class BusinessObjectDefinitionHelper
      */
     public void processTagSearchScoreMultiplier(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
+        LOGGER.debug("processTagSearchScoreMultiplier " + businessObjectDefinitionEntity.getId() + " " +
+            businessObjectDefinitionEntity.getBusinessObjectDefinitionTags());
         BigDecimal totalSearchScoreMultiplier =
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().stream().filter(item -> item.getTag().getSearchScoreMultiplier() != null)
                 .reduce(BigDecimal.ONE, (bd, item) -> bd.multiply(item.getTag().getSearchScoreMultiplier()), BigDecimal::multiply)

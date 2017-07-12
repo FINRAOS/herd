@@ -692,7 +692,6 @@ public class TagServiceImpl implements TagService, SearchableService
 
         // Validate all Tags
         tagHelper.executeFunctionForTagEntities(indexName, documentType, tagEntityList, indexFunctionsDao::validateDocumentIndex);
-            //searchFunctions.getValidateFunction());
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
         // can call "get" to see if any exceptions were thrown.
