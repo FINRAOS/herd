@@ -26,7 +26,10 @@ import io.searchbox.core.SearchScroll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 
 import org.finra.herd.dao.JestClientFactory;
 
@@ -49,6 +52,7 @@ public class JestClientHelper
      * @return a search result
      */
     @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", justification="cast is safe in this situation")
+    @Retryable(maxAttempts = 3, value = RestClientException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
     public SearchResult searchExecute(final Search search)
     {
         SearchResult searchResult = null;
@@ -59,7 +63,8 @@ public class JestClientHelper
         catch (final IOException ioException)
         {
             LOGGER.error("Failed to execute JEST client search.", ioException);
-            throw new RuntimeException(ioException); //NOPMD
+            //throw a runtime exception so that the client needs not catch
+            throw new RestClientException(ioException.getMessage()); //NOPMD
         }
 
         return searchResult;
@@ -72,9 +77,10 @@ public class JestClientHelper
      *
      * @return a jest search result
      */
+    @Retryable(maxAttempts = 3, value = RestClientException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
     public JestResult searchScrollExecute(final SearchScroll searchScroll)
     {
-        JestResult searchResult;
+        JestResult searchResult = null;
         try
         {
             searchResult =
@@ -83,7 +89,8 @@ public class JestClientHelper
         catch (final IOException ioException)
         {
             LOGGER.error("Failed to execute JEST client search.", ioException);
-            throw new RuntimeException(ioException); //NOPMD
+            //throw a runtime exception so that the client needs not catch
+            throw new RestClientException(ioException.getMessage()); //NOPMD
         }
 
         return searchResult;
@@ -94,9 +101,10 @@ public class JestClientHelper
      * @param action action
      * @return JestResult
      */
+    @Retryable(maxAttempts = 3, value = RestClientException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
     public JestResult executeAction(Action action)
     {
-        JestResult searchResult;
+        JestResult searchResult = null;
         try
         {
             searchResult =
@@ -105,7 +113,8 @@ public class JestClientHelper
         catch (final IOException ioException)
         {
             LOGGER.error("Failed to execute JEST client action.", ioException);
-            throw new RuntimeException(ioException); //NOPMD
+            //throw a runtime exception so that the client needs not catch
+            throw new RestClientException(ioException.getMessage()); //NOPMD
         }
 
         return searchResult;
