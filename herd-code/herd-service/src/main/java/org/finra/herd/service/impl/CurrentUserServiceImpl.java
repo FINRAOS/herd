@@ -16,6 +16,9 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +27,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.finra.herd.dao.SecurityRoleDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.UserAuthorizations;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
+import org.finra.herd.model.jpa.SecurityRoleEntity;
 import org.finra.herd.service.CurrentUserService;
-import org.finra.herd.service.helper.SecurityRoleDaoHelper;
 
 /**
  * The current user service implementation.
@@ -39,7 +43,7 @@ import org.finra.herd.service.helper.SecurityRoleDaoHelper;
 public class CurrentUserServiceImpl implements CurrentUserService
 {
     @Autowired
-    private SecurityRoleDaoHelper securityRoleDaoHelper;
+    private SecurityRoleDao securityRoleDao;
 
     @Override
     public UserAuthorizations getCurrentUser()
@@ -59,12 +63,37 @@ public class CurrentUserServiceImpl implements CurrentUserService
             // If roles are present on the application user then filter the herd-specific security roles and add that information to the Current user.
             if (CollectionUtils.isNotEmpty(applicationUser.getRoles()))
             {
-                userAuthorizations.setSecurityRoles(new ArrayList<>(securityRoleDaoHelper.getValidSecurityRoles(applicationUser.getRoles())));
+                userAuthorizations.setSecurityRoles(new ArrayList<>(getValidSecurityRoles(applicationUser.getRoles())));
             }
 
             userAuthorizations.setNamespaceAuthorizations(new ArrayList<>(applicationUser.getNamespaceAuthorizations()));
         }
 
         return userAuthorizations;
+    }
+
+    /**
+     * Filters a set of roles based on a list of role values specific for herd.
+     *
+     * @param roles A given set of roles
+     *
+     * @return Valid roles from the specified set of roles
+     */
+    private Set<String> getValidSecurityRoles(final Set<String> roles)
+    {
+        // Copy the set of specified roles to another set
+        Set<String> incomingRoles = new HashSet<>(roles);
+
+        // Copy the roles to a set for easier computation
+        Set<SecurityRoleEntity> securityRoleEntities = new HashSet<>(securityRoleDao.getAllSecurityRoles());
+
+        // Collect all security role codes from the entities
+        Set<String> securityRoles = securityRoleEntities.stream().map(SecurityRoleEntity::getCode).collect(Collectors.toSet());
+
+        // The Set of valid roles is the intersection of the two collections
+        incomingRoles.retainAll(securityRoles);
+
+        // Return valid roles
+        return incomingRoles;
     }
 }

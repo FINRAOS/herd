@@ -750,7 +750,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SECURITY_FUNCTION_3 = "FN_UT_SECURITY_FUNCTION_3_" + RANDOM_SUFFIX;
 
-    public static final String SECURITY_ROLE = "FN_UT_SECURITY_ROLE_1_" + RANDOM_SUFFIX;
+    public static final String SECURITY_ROLE_1 = "FN_UT_SECURITY_ROLE_A_" + RANDOM_SUFFIX;
+
+    public static final String SECURITY_ROLE_2 = "FN_UT_SECURITY_ROLE_B_" + RANDOM_SUFFIX;
 
     public static final Boolean SELECT_ONLY_AVAILABLE_STORAGE_UNITS = true;
 
@@ -1201,6 +1203,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected SecurityFunctionDao securityFunctionDao;
+
+    @Autowired
+    protected SecurityRoleDao securityRoleDao;
+
+    @Autowired
+    protected  SecurityRoleDaoTestHelper securityRoleDaoTestHelper;
 
     @Autowired
     protected SnsDao snsDao;
