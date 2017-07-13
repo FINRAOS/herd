@@ -7005,6 +7005,11 @@
                <xs:documentation>The UUID of the index</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="indexCount" type="xs:long" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The count of the index size from count query</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
