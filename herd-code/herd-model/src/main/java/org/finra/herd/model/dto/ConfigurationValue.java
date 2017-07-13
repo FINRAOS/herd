@@ -661,6 +661,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_BDEF_DOCUMENT_TYPE("elasticsearch.bdef.document.type", "doc"),
 
     /**
+     * The elasticsearch document type
+     */
+    ELASTICSEARCH_TAG_DOCUMENT_TYPE("elasticsearch.tag.document.type", "doc"),
+
+    /**
      * The elasticsearch business object definition mappings JSON
      */
     ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),

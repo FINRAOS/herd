@@ -160,7 +160,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
         {
 
-            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_DOCUMENT_TYPE, String.class);
         }
         else
         {
@@ -242,8 +242,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         }
         else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
         {
-
-            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_DOCUMENT_TYPE, String.class);
             mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey());
             settings = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_SETTINGS_JSON.getKey());
         }
