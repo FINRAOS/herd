@@ -54,6 +54,7 @@ import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.dto.MessageHeader;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
 /**
  * This is an abstract base class that provides useful methods for DAO test drivers.
@@ -731,6 +732,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SEARCH_INDEX_TYPE = "UT_SearchIndexType_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_TYPE_2 = "UT_SearchIndexType_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_TYPE_BDEF = SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name();
 
     public static final String SEARCH_RESPONSE_JSON_STRING = "UT_SearchResponseJsonString_" + RANDOM_SUFFIX;
 

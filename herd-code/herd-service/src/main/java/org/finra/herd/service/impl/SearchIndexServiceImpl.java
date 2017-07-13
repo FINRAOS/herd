@@ -150,8 +150,27 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Retrieve index settings from the actual search index. A non-existing search index name results in a "no such index" internal server error.
         Settings settings = indexFunctionsDao.getIndexSettings(searchIndexKey.getSearchIndexName());
 
+        String searchIndexType = searchIndexEntity.getType().getCode();
+        String documentType = null;
+        // Currently, only search index for business object definitions and tag are supported.
+        if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
+        {
+            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        }
+        else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
+        {
+
+            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        }
+        else
+        {
+            throw new IllegalArgumentException(String.format("Search index type with code \"%s\" is not supported.", searchIndexType));
+        }
+
+        long indexCount = indexFunctionsDao.getNumberOfTypesInIndex(searchIndexKey.getSearchIndexName(), documentType);
+
         // Update the search index statistics.
-        searchIndex.setSearchIndexStatistics(createSearchIndexStatistics(settings, docsStats));
+        searchIndex.setSearchIndexStatistics(createSearchIndexStatistics(settings, docsStats, indexCount));
 
         return searchIndex;
     }
@@ -253,15 +272,17 @@ public class SearchIndexServiceImpl implements SearchIndexService
         }
     }
 
+
     /**
      * Creates a new search index statistics objects per specified parameters.
      *
      * @param settings the search index settings
      * @param docsStats the search index docs stats
+     * @param indexCount the count of index
      *
      * @return the newly created search index statistics object
      */
-    protected SearchIndexStatistics createSearchIndexStatistics(Settings settings, DocsStats docsStats)
+    protected SearchIndexStatistics createSearchIndexStatistics(Settings settings, DocsStats docsStats, long indexCount)
     {
         SearchIndexStatistics searchIndexStatistics = new SearchIndexStatistics();
 
@@ -275,6 +296,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         searchIndexStatistics.setIndexNumberOfActiveDocuments(docsStats.getCount());
         searchIndexStatistics.setIndexNumberOfDeletedDocuments(docsStats.getDeleted());
         searchIndexStatistics.setIndexUuid(settings.get(IndexMetaData.SETTING_INDEX_UUID));
+        searchIndexStatistics.setIndexCount(indexCount);
 
         return searchIndexStatistics;
     }
