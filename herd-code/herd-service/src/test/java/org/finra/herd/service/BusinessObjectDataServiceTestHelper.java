@@ -83,6 +83,7 @@ import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -2312,12 +2313,13 @@ public class BusinessObjectDataServiceTestHelper
      * @param expectedNewBusinessObjectDataStatus the expected new business object data status
      * @param expectedOldBusinessObjectDataStatus the expected old business object data status
      * @param expectedBusinessObjectDataAttributes the expected list of business object data attributes
+     * @param expectedMessageHeaders the list of expected message headers
      * @param notificationMessage the notification message to be validated
      */
-    public void validateBusinessObjectDataStatusChangeMessage(String expectedMessageType, String expectedMessageDestination,
+    public void validateBusinessObjectDataStatusChangeMessageWithXmlPayload(String expectedMessageType, String expectedMessageDestination,
         BusinessObjectDataKey expectedBusinessObjectDataKey, Integer expectedBusinessObjectDataId, String expectedUsername,
         String expectedNewBusinessObjectDataStatus, String expectedOldBusinessObjectDataStatus, List<Attribute> expectedBusinessObjectDataAttributes,
-        NotificationMessage notificationMessage)
+        List<MessageHeader> expectedMessageHeaders, NotificationMessage notificationMessage)
     {
         assertNotNull(notificationMessage);
 
@@ -2378,6 +2380,8 @@ public class BusinessObjectDataServiceTestHelper
         }
 
         validateXmlFieldPresent(messageText, "businessObjectDataVersion", expectedBusinessObjectDataKey.getBusinessObjectDataVersion());
+
+        assertEquals(expectedMessageHeaders, notificationMessage.getMessageHeaders());
     }
 
     /**

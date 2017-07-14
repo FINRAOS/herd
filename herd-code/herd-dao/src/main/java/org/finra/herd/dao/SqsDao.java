@@ -15,9 +15,12 @@
 */
 package org.finra.herd.dao;
 
+import java.util.List;
+
 import com.amazonaws.services.sqs.model.SendMessageResult;
 
 import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.MessageHeader;
 
 /**
  * A DAO for Amazon AWS SQS.
@@ -30,8 +33,9 @@ public interface SqsDao
      * @param awsParamsDto the AWS related parameters that contain optional proxy information
      * @param queueName the name of the Amazon SQS queue to which a message is sent
      * @param messageText the text of the message
+     * @param messageHeaders the optional list of message headers
      *
      * @return the result the send message operation returned by the service
      */
-    public SendMessageResult sendMessage(AwsParamsDto awsParamsDto, String queueName, String messageText);
+    public SendMessageResult sendMessage(AwsParamsDto awsParamsDto, String queueName, String messageText, List<MessageHeader> messageHeaders);
 }

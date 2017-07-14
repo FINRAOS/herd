@@ -15,8 +15,12 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.util.Map;
+
 import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 
 import org.finra.herd.dao.SqsOperations;
@@ -24,11 +28,12 @@ import org.finra.herd.dao.SqsOperations;
 public class SqsOperationsImpl implements SqsOperations
 {
     @Override
-    public SendMessageResult sendMessage(String queueName, String messageText, AmazonSQS amazonSQS)
+    public SendMessageResult sendMessage(String queueName, String messageText, Map<String, MessageAttributeValue> messageAttributes, AmazonSQS amazonSQS)
     {
         try
         {
-            return amazonSQS.sendMessage(amazonSQS.getQueueUrl(queueName).getQueueUrl(), messageText);
+            return amazonSQS.sendMessage(new SendMessageRequest().withQueueUrl(amazonSQS.getQueueUrl(queueName).getQueueUrl()).withMessageBody(messageText)
+                .withMessageAttributes(messageAttributes));
         }
         catch (QueueDoesNotExistException e)
         {
