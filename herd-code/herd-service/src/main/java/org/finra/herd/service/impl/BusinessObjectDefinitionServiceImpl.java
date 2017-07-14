@@ -1101,6 +1101,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         Map<String, String> businessObjectDefinitionJSONMap = new HashMap<>();
 
+        LOGGER.debug("convertBusinessObjectDefinitionEntityListToJSONStringMap bdef size is {}.",  businessObjectDefinitionEntities.size());
         businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
@@ -1114,6 +1115,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             if (StringUtils.isNotEmpty(jsonString))
             {
                 businessObjectDefinitionJSONMap.put(businessObjectDefinitionEntity.getId().toString(), jsonString);
+            }
+            else
+            {
+                LOGGER.warn("Business Object Definition Entity {} jsonString is empty.", businessObjectDefinitionEntity.getId());
             }
         });
 

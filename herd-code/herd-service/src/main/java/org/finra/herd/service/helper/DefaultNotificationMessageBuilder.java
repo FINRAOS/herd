@@ -17,6 +17,7 @@ package org.finra.herd.service.helper;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,9 +44,11 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinitions;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
@@ -130,10 +133,22 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
                 String messageText = evaluateVelocityTemplate(notificationMessageDefinition.getMessageVelocityTemplate(), velocityContextMap,
                     "businessObjectDataStatusChangeEvent");
 
+                // Build a list of optional message headers.
+                List<MessageHeader> messageHeaders = new ArrayList<>();
+                if (CollectionUtils.isNotEmpty(notificationMessageDefinition.getMessageHeaderDefinitions()))
+                {
+                    for (MessageHeaderDefinition messageHeaderDefinition : notificationMessageDefinition.getMessageHeaderDefinitions())
+                    {
+                        messageHeaders.add(new MessageHeader(messageHeaderDefinition.getKey(),
+                            evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
+                                String.format("businessObjectDataStatusChangeEvent_messageHeader_%s", messageHeaderDefinition.getKey()))));
+                    }
+                }
+
                 // Create a notification message and add it to the result list.
                 notificationMessages.add(
-                    new NotificationMessage(notificationMessageDefinition.getMessageType(), notificationMessageDefinition.getMessageDestination(),
-                        messageText));
+                    new NotificationMessage(notificationMessageDefinition.getMessageType(), notificationMessageDefinition.getMessageDestination(), messageText,
+                        messageHeaders));
             }
         }
 
@@ -156,7 +171,7 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
                 "systemMonitorResponse");
 
             // Create a new notification message and return it.
-            return new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), getSqsQueueName(), messageText);
+            return new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), getSqsQueueName(), messageText, null);
         }
         else
         {
@@ -174,7 +189,6 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
      *
      * @return the evaluated velocity template
      */
-
     private String evaluateVelocityTemplate(String velocityTemplate, Map<String, Object> contextMap, String velocityTemplateName)
     {
         // Initialize the message text to null which will cause a message to not be sent.
@@ -186,6 +200,7 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
             // Create and populate the velocity context with dynamic values. Note that we can't use periods within the context keys since they can't
             // be referenced in the velocity template (i.e. they're used to separate fields with the context object being referenced).
             Map<String, Object> context = new HashMap<>();
+            context.put(ConfigurationValue.HERD_ENVIRONMENT.getKey().replace('.', '_'), configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT));
             context.put(ConfigurationValue.HERD_NOTIFICATION_SQS_ENVIRONMENT.getKey().replace('.', '_'),
                 configurationHelper.getProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_ENVIRONMENT));
             context.put("current_time", HerdDateUtils.now().toString());
@@ -193,6 +208,7 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
             context.put("username", herdDaoSecurityHelper.getCurrentUsername());
             context.put("StringUtils", StringUtils.class);
             context.put("CollectionUtils", CollectionUtils.class);
+            context.put("Collections", Collections.class);
 
             // Populate the context map entries into the velocity context.
             for (Map.Entry<String, Object> mapEntry : contextMap.entrySet())

@@ -48,6 +48,7 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.GetObjectTaggingRequest;
 import com.amazonaws.services.s3.model.GetObjectTaggingResult;
+import com.amazonaws.services.s3.model.GlacierJobParameters;
 import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ListVersionsRequest;
@@ -114,6 +115,8 @@ public class S3DaoImpl implements S3Dao
     private static final Logger LOGGER = LoggerFactory.getLogger(S3DaoImpl.class);
 
     private static final int MAX_KEYS_PER_DELETE_REQUEST = 1000;
+
+    private static final String GLACIER_RETRIEVAL_OPTION = "Bulk";
 
     @Autowired
     private AwsHelper awsHelper;
@@ -592,6 +595,8 @@ public class S3DaoImpl implements S3Dao
 
                 // Create a restore object request.
                 RestoreObjectRequest requestRestore = new RestoreObjectRequest(params.getS3BucketName(), null, expirationInDays);
+                // Make Bulk as default glacier retrieval option
+                requestRestore.setGlacierJobParameters(new GlacierJobParameters().withTier(GLACIER_RETRIEVAL_OPTION));
 
                 try
                 {

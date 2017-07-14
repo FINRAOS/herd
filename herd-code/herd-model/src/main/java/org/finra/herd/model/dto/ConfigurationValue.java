@@ -661,6 +661,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_BDEF_DOCUMENT_TYPE("elasticsearch.bdef.document.type", "doc"),
 
     /**
+     * The elasticsearch document type
+     */
+    ELASTICSEARCH_TAG_DOCUMENT_TYPE("elasticsearch.tag.document.type", "doc"),
+
+    /**
      * The elasticsearch business object definition mappings JSON
      */
     ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
@@ -783,6 +788,16 @@ public enum ConfigurationValue
      * The elasticsearch search rest client user credential name
      */
     ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname",  null),
+
+    /*
+     * The elasticsearch search rest client timeout
+     */
+    ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT("elasticsearch.rest.client.connection.timeout", 60000),
+
+    /*
+     * The elasticsearch search rest client read timeout
+     */
+    ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT("elasticsearch.rest.client.read.timeout", 60000),
 
     /**
      * The elasticsearch search guard truststore file path

@@ -103,6 +103,13 @@ public class JsonHelperTest extends AbstractDaoTest
     }
 
     @Test
+    public void testUnmarshallJsonToListOfObjects() throws IOException
+    {
+        assertEquals(Arrays.asList(STRING_VALUE, STRING_VALUE_2),
+            jsonHelper.unmarshallJsonToListOfObjects(String.class, String.format("[\"%s\",\"%s\"]", STRING_VALUE, STRING_VALUE_2)));
+    }
+
+    @Test
     public void testUnmarshallJsonToObject() throws IOException
     {
         assertEquals(STRING_VALUE, jsonHelper.unmarshallJsonToObject(String.class, String.format("\"%s\"", STRING_VALUE)));

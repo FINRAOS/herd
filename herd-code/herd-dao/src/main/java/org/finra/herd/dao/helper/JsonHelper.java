@@ -17,6 +17,7 @@ package org.finra.herd.dao.helper;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.simple.JSONObject;
@@ -81,6 +82,21 @@ public class JsonHelper
         }
 
         return stringWriter.toString();
+    }
+
+    /**
+     * Deserializes JSON content from given JSON content String to a list of objects.
+     *
+     * @param classType the class type of the object
+     * @param jsonContent the JSON string
+     *
+     * @return the object
+     * @throws java.io.IOException if there is an error in unmarshalling
+     */
+    public <T> List<T> unmarshallJsonToListOfObjects(Class<T> classType, String jsonContent) throws IOException
+    {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(jsonContent, objectMapper.getTypeFactory().constructCollectionType(List.class, classType));
     }
 
     /**

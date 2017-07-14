@@ -15,7 +15,13 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.SendMessageResult;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +29,7 @@ import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.SqsDao;
 import org.finra.herd.dao.SqsOperations;
 import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.MessageHeader;
 
 /**
  * The SQS DAO implementation.
@@ -37,8 +44,20 @@ public class SqsDaoImpl implements SqsDao
     private SqsOperations sqsOperations;
 
     @Override
-    public SendMessageResult sendMessage(AwsParamsDto awsParamsDto, String queueName, String messageText)
+    public SendMessageResult sendMessage(AwsParamsDto awsParamsDto, String queueName, String messageText, List<MessageHeader> messageHeaders)
     {
-        return sqsOperations.sendMessage(queueName, messageText, awsClientFactory.getAmazonSQSClient(awsParamsDto));
+        Map<String, MessageAttributeValue> messageAttributes = null;
+
+        if (CollectionUtils.isNotEmpty(messageHeaders))
+        {
+            messageAttributes = new HashMap<>();
+
+            for (MessageHeader messageHeader : messageHeaders)
+            {
+                messageAttributes.put(messageHeader.getKey(), new MessageAttributeValue().withDataType("String").withStringValue(messageHeader.getValue()));
+            }
+        }
+
+        return sqsOperations.sendMessage(queueName, messageText, messageAttributes, awsClientFactory.getAmazonSQSClient(awsParamsDto));
     }
 }

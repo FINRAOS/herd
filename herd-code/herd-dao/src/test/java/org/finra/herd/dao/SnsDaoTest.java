@@ -17,10 +17,13 @@ package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
+
 import com.amazonaws.services.sns.model.PublishResult;
 import org.junit.Test;
 
 import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.MessageHeader;
 
 /**
  * This class tests the functionality of DAO for Amazon AWS SNS.
@@ -30,12 +33,16 @@ public class SnsDaoTest extends AbstractDaoTest
     @Test
     public void testPublish()
     {
-        // Publish an SNS message using proxy.
+        // Publish an SNS message without proxy.
+        assertEquals(new PublishResult().withMessageId(MESSAGE_ID), snsDao.publish(new AwsParamsDto(), AWS_SNS_TOPIC_ARN, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
+
+        // Publish an SNS message using proxy settings.
         assertEquals(new PublishResult().withMessageId(MESSAGE_ID), snsDao
             .publish(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT), AWS_SNS_TOPIC_ARN,
-                MESSAGE_TEXT));
+                MESSAGE_TEXT, NO_MESSAGE_HEADERS));
 
-        // Publish an SNS message without proxy.
-        assertEquals(new PublishResult().withMessageId(MESSAGE_ID), snsDao.publish(new AwsParamsDto(), AWS_SNS_TOPIC_ARN, MESSAGE_TEXT));
+        // Publish an SNS message with message headers.
+        assertEquals(new PublishResult().withMessageId(MESSAGE_ID),
+            snsDao.publish(new AwsParamsDto(), AWS_SNS_TOPIC_ARN, MESSAGE_TEXT, Collections.singletonList(new MessageHeader(KEY, VALUE))));
     }
 }

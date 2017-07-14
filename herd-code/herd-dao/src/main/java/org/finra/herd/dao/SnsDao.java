@@ -15,9 +15,12 @@
 */
 package org.finra.herd.dao;
 
+import java.util.List;
+
 import com.amazonaws.services.sns.model.PublishResult;
 
 import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.MessageHeader;
 
 /**
  * A DAO for Amazon AWS SNS.
@@ -30,8 +33,9 @@ public interface SnsDao
      * @param awsParamsDto the AWS related parameters that contain optional proxy information
      * @param topicArn the topic to publish the message to
      * @param messageText the text of the message
+     * @param messageHeaders the optional list of message headers
      *
      * @return the result of the publish operation returned by the service
      */
-    public PublishResult publish(AwsParamsDto awsParamsDto, String topicArn, String messageText);
+    public PublishResult publish(AwsParamsDto awsParamsDto, String topicArn, String messageText, List<MessageHeader> messageHeaders);
 }

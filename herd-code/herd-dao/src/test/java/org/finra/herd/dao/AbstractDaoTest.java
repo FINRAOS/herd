@@ -48,10 +48,13 @@ import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.DataProviderKey;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
+import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.dto.MessageHeader;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
 /**
  * This is an abstract base class that provides useful methods for DAO test drivers.
@@ -285,8 +288,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_CLUSTER_DEFINITION_NAME_2 = "UT_EMR_CLUSTER_DFN_2" + RANDOM_SUFFIX;
 
-    public static final EmrClusterDefinitionVolumeSpecification NO_EMR_CLUSTER_DEFINITION_VOLUME_SPECIFICATION = null;
-
     public static final String EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH = "classpath:testEmrClusterDefinitionMinimal.xml";
 
     public static final String EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH = "classpath:testEmrClusterDefinition.xml";
@@ -453,8 +454,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String MESSAGE_TYPE_2 = "UT_MessageType_2_" + RANDOM_SUFFIX;
 
-    public static final String MESSAGE_VELOCITY_TEMPLATE = "UT_MessageVelocityTemplate_" + RANDOM_SUFFIX;
-
     public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_INTERSECTION = Collections.unmodifiableList(Arrays.asList("2014-04-08"));
 
     public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION =
@@ -530,6 +529,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final EmrClusterDefinitionEbsConfiguration NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION = null;
 
+    public static final EmrClusterDefinitionVolumeSpecification NO_EMR_CLUSTER_DEFINITION_VOLUME_SPECIFICATION = null;
+
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
 
     public static final Integer NO_EXPIRATION_IN_DAYS = null;
@@ -561,6 +562,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer NO_MAX_RESULTS = null;
 
     public static final String NO_MESSAGE_DESTINATION = null;
+
+    public static final List<MessageHeader> NO_MESSAGE_HEADERS = new ArrayList<>();
+
+    public static final List<MessageHeaderDefinition> NO_MESSAGE_HEADER_DEFINITIONS = new ArrayList<>();
 
     public static final String NO_MESSAGE_TYPE = null;
 
@@ -728,6 +733,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_TYPE_2 = "UT_SearchIndexType_2_" + RANDOM_SUFFIX;
 
+    public static final String SEARCH_INDEX_TYPE_BDEF = SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name();
+
     public static final String SEARCH_RESPONSE_JSON_STRING = "UT_SearchResponseJsonString_" + RANDOM_SUFFIX;
 
     public static final int SEARCH_RESULT_SIZE = 200;
@@ -746,7 +753,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SECURITY_FUNCTION_3 = "FN_UT_SECURITY_FUNCTION_3_" + RANDOM_SUFFIX;
 
-    public static final String SECURITY_ROLE = "FN_UT_SECURITY_ROLE_1_" + RANDOM_SUFFIX;
+    public static final String SECURITY_ROLE_1 = "FN_UT_SECURITY_ROLE_A_" + RANDOM_SUFFIX;
+
+    public static final String SECURITY_ROLE_2 = "FN_UT_SECURITY_ROLE_B_" + RANDOM_SUFFIX;
 
     public static final Boolean SELECT_ONLY_AVAILABLE_STORAGE_UNITS = true;
 
@@ -968,6 +977,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer VOLUMES_PER_INSTANCE = getRandomInteger();
 
     public static final String VOLUME_TYPE = "UT_VolumeType_" + RANDOM_SUFFIX;
+
+    public static final List<String> NO_ROLES = null;
+
+    public static final List<String> EMPTY_ROLES = new ArrayList<>();
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 
@@ -1193,6 +1206,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected SecurityFunctionDao securityFunctionDao;
+
+    @Autowired
+    protected SecurityRoleDao securityRoleDao;
+
+    @Autowired
+    protected  SecurityRoleDaoTestHelper securityRoleDaoTestHelper;
 
     @Autowired
     protected SnsDao snsDao;

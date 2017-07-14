@@ -241,7 +241,7 @@ public class SearchIndexServiceTest extends AbstractServiceTest
             indexFunctionsDao, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
 
         // Validate the returned object.
-        assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_STATISTICS, USER_ID, CREATED_ON, UPDATED_ON),
+        assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE_BDEF, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_STATISTICS, USER_ID, CREATED_ON, UPDATED_ON),
             response);
     }
 
@@ -270,6 +270,8 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         when(indexFunctionsDao.getIndexStats(SEARCH_INDEX_NAME)).thenReturn(mockedDocsStats);
         when(mockedDocsStats.getCount()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS);
         when(mockedDocsStats.getDeleted()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("doc");
+        when(indexFunctionsDao.getNumberOfTypesInIndex(any(), any())).thenReturn(0l);
 
         // Get a search index.
         SearchIndex response = searchIndexService.getSearchIndex(searchIndexKey);
@@ -281,16 +283,17 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         verify(mockedDocsStats).getDeleted();
         verify(indexFunctionsDao).getIndexSettings(SEARCH_INDEX_NAME);
         verify(indexFunctionsDao).getIndexStats(SEARCH_INDEX_NAME);
-
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(indexFunctionsDao).getNumberOfTypesInIndex(any(), any());
 
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
             indexFunctionsDao, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
 
         //response.getSearchIndexStatistics().setIndexCreationDate(SEARCH_INDEX_STATISTICS_CREATION_DATE);
         // Validate the returned object.
-        assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS,
+        assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE_BDEF, SEARCH_INDEX_STATUS,
             new SearchIndexStatistics(SEARCH_INDEX_STATISTICS_CREATION_DATE, SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS,
-                SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS, SEARCH_INDEX_STATISTICS_INDEX_UUID), USER_ID, CREATED_ON, UPDATED_ON), response);
+                SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS, SEARCH_INDEX_STATISTICS_INDEX_UUID, 0l), USER_ID, CREATED_ON, UPDATED_ON), response);
     }
 
     @Test
@@ -323,7 +326,7 @@ public class SearchIndexServiceTest extends AbstractServiceTest
     {
         // Creates a test search index type entity.
         SearchIndexTypeEntity searchIndexTypeEntity = new SearchIndexTypeEntity();
-        searchIndexTypeEntity.setCode(SEARCH_INDEX_TYPE);
+        searchIndexTypeEntity.setCode(SEARCH_INDEX_TYPE_BDEF);
 
         // Creates a test search index status entity.
         SearchIndexStatusEntity searchIndexStatusEntity = new SearchIndexStatusEntity();
