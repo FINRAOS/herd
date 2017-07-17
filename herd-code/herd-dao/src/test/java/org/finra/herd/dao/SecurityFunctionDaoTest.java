@@ -62,11 +62,11 @@ public class SecurityFunctionDaoTest extends AbstractDaoTest
     public void testGetSecurityFunctionsByRole() throws Exception
     {
         // Create role and function.
-        SecurityRoleEntity securityRoleEntity = createSecurityRoleEntity(SECURITY_ROLE);
+        SecurityRoleEntity securityRoleEntity = createSecurityRoleEntity(SECURITY_ROLE_1);
         SecurityFunctionEntity securityFunctionEntity = createSecurityFunctionEntity(SECURITY_FUNCTION);
 
         // Validate that no security functions are returned for the role.
-        assertTrue(securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE).isEmpty());
+        assertTrue(securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE_1).isEmpty());
 
         // Add new role to functions mapping.
         SecurityRoleFunctionEntity securityRoleFunctionEntity = new SecurityRoleFunctionEntity();
@@ -75,20 +75,20 @@ public class SecurityFunctionDaoTest extends AbstractDaoTest
         herdDao.saveAndRefresh(securityRoleFunctionEntity);
 
         // Since the functions method is cached, the test function still will not be retrieved.
-        assertTrue(securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE).isEmpty());
+        assertTrue(securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE_1).isEmpty());
 
         // Clear the cache and retrieve the functions again.
         cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
 
         // Validate that test security function mapped to the role is now retrieved.
-        assertEquals(Arrays.asList(SECURITY_FUNCTION), securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE));
+        assertEquals(Arrays.asList(SECURITY_FUNCTION), securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE_1));
     }
 
     @Test
     public void testGetUnrestrictedSecurityFunctions() throws Exception
     {
         // Create a role and two functions.
-        SecurityRoleEntity securityRoleEntity = createSecurityRoleEntity(SECURITY_ROLE);
+        SecurityRoleEntity securityRoleEntity = createSecurityRoleEntity(SECURITY_ROLE_1);
         List<SecurityFunctionEntity> securityFunctionEntities = Arrays
             .asList(createSecurityFunctionEntity(SECURITY_FUNCTION_3), createSecurityFunctionEntity(SECURITY_FUNCTION_2),
                 createSecurityFunctionEntity(SECURITY_FUNCTION));

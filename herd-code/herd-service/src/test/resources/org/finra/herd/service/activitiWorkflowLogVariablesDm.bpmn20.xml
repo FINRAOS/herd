@@ -21,7 +21,7 @@
 
       <startEvent id="startEvent" name="Start"/>
       <!-- This service task uses a deprecated service task. -->
-      <serviceTask id="logVariablesServiceTask" name="Log Variables" activiti:class="org.finra.dm.service.activiti.task.LogVariables">
+      <serviceTask id="logVariablesServiceTask" name="Log Variables" activiti:class="org.finra.herd.service.activiti.task.LogVariables">
          <extensionElements>
             <!-- Only log variables that contain the text "Attribute Name 1" within variable name -->
             <activiti:field name="regex" stringValue=".*Attribute Name 1.*"/>

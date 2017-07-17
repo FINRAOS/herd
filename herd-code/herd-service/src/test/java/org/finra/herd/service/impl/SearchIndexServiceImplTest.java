@@ -253,7 +253,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         when(mockedDocsStats.getDeleted()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS);
 
         // Get a search index settings created.
-        SearchIndexStatistics response = searchIndexServiceImpl.createSearchIndexStatistics(getIndexResponseSettings.get(SEARCH_INDEX_NAME), mockedDocsStats);
+        SearchIndexStatistics response = searchIndexServiceImpl.createSearchIndexStatistics(getIndexResponseSettings.get(SEARCH_INDEX_NAME), mockedDocsStats, 0l);
 
         // Verify the external calls.
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
@@ -261,7 +261,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new SearchIndexStatistics(NO_SEARCH_INDEX_STATISTICS_CREATION_DATE, SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS,
-            SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS, SEARCH_INDEX_STATISTICS_INDEX_UUID), response);
+            SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS, SEARCH_INDEX_STATISTICS_INDEX_UUID, 0l), response);
     }
 
     @Test

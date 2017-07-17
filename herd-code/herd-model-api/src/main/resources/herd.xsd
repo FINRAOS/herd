@@ -297,6 +297,11 @@
                <xs:documentation>The list of namespace authorizations</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="securityRoles" type="securityRoles">
+            <xs:annotation>
+               <xs:documentation>The list of security roles</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -346,6 +351,16 @@
       </xs:restriction>
    </xs:simpleType>
 
+   <xs:element name="securityRoles" type="securityRoles"/>
+   <xs:complexType name="securityRoles">
+      <xs:sequence>
+         <xs:element name="securityRole" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The security role</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
 
    <!-- ***** User Namespace Authorization ***** -->
 
@@ -6990,6 +7005,11 @@
                <xs:documentation>The UUID of the index</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="indexCount" type="xs:long" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The count of the index size from count query</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -7451,7 +7471,21 @@
          <xs:element name="messageType" type="xs:string" minOccurs="0"/>
          <xs:element name="messageDestination" type="xs:string" minOccurs="0"/>
          <xs:element name="messageVelocityTemplate" type="xs:string" minOccurs="0"/>
+         <xs:element name="messageHeaderDefinitions" type="messageHeaderDefinitions" minOccurs="0"/>
       </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="messageHeaderDefinitions">
+      <xs:sequence>
+         <xs:element name="messageHeaderDefinition" type="messageHeaderDefinition" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="messageHeaderDefinition">
+      <xs:all>
+         <xs:element name="key" type="xs:string" minOccurs="0"/>
+         <xs:element name="valueVelocityTemplate" type="xs:string" minOccurs="0"/>
+      </xs:all>
    </xs:complexType>
 
 </xs:schema>

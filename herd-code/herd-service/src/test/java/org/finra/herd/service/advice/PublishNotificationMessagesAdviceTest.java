@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 
 import com.amazonaws.AmazonServiceException;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -38,6 +39,7 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
+import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -65,7 +67,8 @@ public class PublishNotificationMessagesAdviceTest extends AbstractServiceTest
     public void testPublishNotificationMessages() throws Throwable
     {
         // Create a notification message.
-        NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT);
+        NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT,
+            Collections.singletonList(new MessageHeader(KEY, VALUE)));
 
         // Mock a join point of the method call.
         ProceedingJoinPoint joinPoint = getMockedProceedingJoinPoint("testPublishNotificationMessages");
@@ -104,7 +107,8 @@ public class PublishNotificationMessagesAdviceTest extends AbstractServiceTest
     public void testPublishNotificationMessagesAmazonServiceException() throws Throwable
     {
         // Create a notification message.
-        NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT);
+        NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT,
+            Collections.singletonList(new MessageHeader(KEY, VALUE)));
 
         // Mock a join point of the method call.
         ProceedingJoinPoint joinPoint = getMockedProceedingJoinPoint("testPublishNotificationMessages");
@@ -145,7 +149,8 @@ public class PublishNotificationMessagesAdviceTest extends AbstractServiceTest
     public void testPublishNotificationMessagesDatabaseException() throws Throwable
     {
         // Create a notification message.
-        NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT);
+        NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT,
+            Collections.singletonList(new MessageHeader(KEY, VALUE)));
 
         // Mock a join point of the method call.
         ProceedingJoinPoint joinPoint = getMockedProceedingJoinPoint("testPublishNotificationMessages");
@@ -195,7 +200,8 @@ public class PublishNotificationMessagesAdviceTest extends AbstractServiceTest
             setLogLevel(PublishNotificationMessagesAdvice.class, LogLevel.DEBUG);
 
             // Create a notification message.
-            NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT);
+            NotificationMessage notificationMessage = new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT,
+                Collections.singletonList(new MessageHeader(KEY, VALUE)));
 
             // Mock a join point of the method call.
             ProceedingJoinPoint joinPoint = getMockedProceedingJoinPoint("testPublishNotificationMessages");
