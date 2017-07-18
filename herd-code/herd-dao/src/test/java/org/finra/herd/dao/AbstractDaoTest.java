@@ -292,6 +292,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH = "classpath:testEmrClusterDefinition.xml";
 
+    public static final String EMR_MASTER_SECURITY_GROUP = "UT_EMR_MASTER_SECURITY_GROUP" + RANDOM_SUFFIX;
+
+    public static final String EMR_SLAVE_SECURITY_GROUP = "UT_EMR_SLAVE_SECURITY_GROUP" + RANDOM_SUFFIX;
+
     public static final String EMR_CLUSTER_ID = "UT_EMR_ClusterId_" + RANDOM_SUFFIX;
 
     public static final String EMR_CLUSTER_NAME = "UT_EMR_CLUSTER" + RANDOM_SUFFIX;
