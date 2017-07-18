@@ -13,5 +13,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+-----------------------------------------------------------------
+--Following change is from 48 and was missed in 47 to 48 upgrade.
 
 alter table ntfcn_msg add column msg_hdrs text NULL;
+
+--Add 0.49.0 Below.
