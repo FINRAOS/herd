@@ -5277,6 +5277,17 @@
                <xs:documentation>The name of a security configuration to apply to the cluster</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="masterSecurityGroup" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The master security group to use instead of the account default value</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="slaveSecurityGroup" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The slave security group to use instead of the account default value</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+
       </xs:all>
    </xs:complexType>
 

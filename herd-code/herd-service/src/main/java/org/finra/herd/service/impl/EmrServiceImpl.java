@@ -568,6 +568,14 @@ public class EmrServiceImpl implements EmrService
             {
                 emrClusterDefinition.setSecurityConfiguration(emrClusterDefinitionOverride.getSecurityConfiguration());
             }
+            if (emrClusterDefinitionOverride.getMasterSecurityGroup() != null)
+            {
+                emrClusterDefinition.setMasterSecurityGroup(emrClusterDefinitionOverride.getMasterSecurityGroup());
+            }
+            if (emrClusterDefinitionOverride.getSlaveSecurityGroup() != null)
+            {
+                emrClusterDefinition.setSlaveSecurityGroup(emrClusterDefinitionOverride.getSlaveSecurityGroup());
+            }
         }
     }
 

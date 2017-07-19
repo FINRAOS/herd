@@ -860,6 +860,9 @@ public class EmrDaoImpl implements EmrDao
     {
         // Create a new job flow instances configuration object.
         JobFlowInstancesConfig jobFlowInstancesConfig = new JobFlowInstancesConfig();
+        // Set up master/slave security group
+        jobFlowInstancesConfig.setEmrManagedMasterSecurityGroup(emrClusterDefinition.getMasterSecurityGroup());
+        jobFlowInstancesConfig.setEmrManagedSlaveSecurityGroup(emrClusterDefinition.getSlaveSecurityGroup());
 
         // Add additional security groups to master nodes.
         jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(emrClusterDefinition.getAdditionalMasterSecurityGroups());
