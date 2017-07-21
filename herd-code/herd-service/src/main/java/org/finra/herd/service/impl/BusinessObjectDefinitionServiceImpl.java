@@ -178,6 +178,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @PublishNotificationMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition createBusinessObjectDefinition(BusinessObjectDefinitionCreateRequest request)
     {
         // Perform the validation.
@@ -345,6 +346,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionUpdateRequest request)
     {
@@ -432,6 +434,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
         // Perform validation and trim.
