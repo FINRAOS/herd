@@ -175,11 +175,28 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     private static final String TAG_FACET_FIELD = "tag";
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
     @PublishNotificationMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition createBusinessObjectDefinition(BusinessObjectDefinitionCreateRequest request)
+    {
+        return createBusinessObjectDefinitionImpl(request);
+    }
+
+    /**
+     * Creates a new business object definition.
+     *
+     * @param request the business object definition create request
+     *
+     * @return the created business object definition
+     */
+    protected BusinessObjectDefinition createBusinessObjectDefinitionImpl(BusinessObjectDefinitionCreateRequest request)
     {
         // Perform the validation.
         validateBusinessObjectDefinitionCreateRequest(request);
@@ -343,11 +360,30 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return isValid;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
     @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionUpdateRequest request)
+    {
+        return updateBusinessObjectDefinitionImpl(businessObjectDefinitionKey, request);
+    }
+
+    /**
+     * Updates a business object definition.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     * @param request the business object definition update request
+     *
+     * @return the updated business object definition
+     */
+    protected BusinessObjectDefinition updateBusinessObjectDefinitionImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionUpdateRequest request)
     {
         // Perform validation and trim.
@@ -368,9 +404,29 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
     @PublishNotificationMessages
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
+    {
+        return updateBusinessObjectDefinitionDescriptiveInformationImpl(businessObjectDefinitionKey, request);
+    }
+
+    /**
+     * Updates a business object definition descriptive information.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     * @param request the business object definition descriptive information update request
+     *
+     * @return the updated business object definition
+     */
+    protected BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformationImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         // Perform validation and trim.
@@ -404,6 +460,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
@@ -431,11 +492,28 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
     @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    {
+        return deleteBusinessObjectDefinitionImpl(businessObjectDefinitionKey);
+    }
+
+    /**
+     * Deletes a business object definition for the specified name.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     *
+     * @return the business object definition that was deleted.
+     */
+    protected BusinessObjectDefinition deleteBusinessObjectDefinitionImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
         // Perform validation and trim.
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
@@ -1104,7 +1182,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         Map<String, String> businessObjectDefinitionJSONMap = new HashMap<>();
 
-        LOGGER.debug("convertBusinessObjectDefinitionEntityListToJSONStringMap bdef size is {}.",  businessObjectDefinitionEntities.size());
+        LOGGER.debug("convertBusinessObjectDefinitionEntityListToJSONStringMap bdef size is {}.", businessObjectDefinitionEntities.size());
         businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
