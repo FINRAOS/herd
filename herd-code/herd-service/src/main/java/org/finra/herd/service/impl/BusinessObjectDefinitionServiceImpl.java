@@ -110,6 +110,8 @@ import org.finra.herd.service.helper.TagHelper;
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
+// TODO: Refactor the service implementation and remove the PMD suppress warning statement below.
+@SuppressWarnings("PMD.TooManyMethods")
 public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService, SearchableService, FacetFieldValidationService
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionServiceImpl.class);
