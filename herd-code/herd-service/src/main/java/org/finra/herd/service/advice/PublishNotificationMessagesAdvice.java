@@ -18,7 +18,7 @@ package org.finra.herd.service.advice;
 import java.lang.reflect.Method;
 
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
@@ -51,18 +51,22 @@ public class PublishNotificationMessagesAdvice extends AbstractServiceAdvice
      *
      * @param joinPoint the join point
      *
+     * @return the return value of the method at the join point
      * @throws Throwable if any errors were encountered
      */
-    @AfterReturning("serviceMethods()")
-    public void publishNotificationMessages(ProceedingJoinPoint joinPoint) throws Throwable
+    @Around("serviceMethods()")
+    public Object publishNotificationMessages(ProceedingJoinPoint joinPoint) throws Throwable
     {
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         Method method = methodSignature.getMethod();
 
         boolean publishNotificationMessages = method.isAnnotationPresent(PublishNotificationMessages.class);
 
+        // Proceed to the join point (i.e. call the method and let it return).
         try
         {
+            Object returnValue = joinPoint.proceed();
+
             if (publishNotificationMessages)
             {
                 if (LOGGER.isDebugEnabled())
@@ -103,6 +107,8 @@ public class PublishNotificationMessagesAdvice extends AbstractServiceAdvice
                     }
                 }
             }
+
+            return returnValue;
         }
         finally
         {
