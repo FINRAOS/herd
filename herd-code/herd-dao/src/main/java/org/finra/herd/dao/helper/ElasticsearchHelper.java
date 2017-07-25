@@ -261,11 +261,9 @@ public class ElasticsearchHelper
                             AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(BDEF_TAG_CODE_FIELD)
                                 .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(BDEF_TAG_NAME_FIELD))))));
 
-                searchRequestBuilder.addAggregation(AggregationBuilders.terms(TAG_TYPE_FACET_AGGS).field(TAGTYPE_CODE_FIELD_TAG_INDEX).subAggregation(
-                    AggregationBuilders.terms(TAGTYPE_NAME_AGGREGATION).field(TAGTYPE_NAME_FIELD_TAG_INDEX).subAggregation(
-                        AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(TAG_CODE_FIELD_TAG_INDEX)
-                            .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(TAG_NAME_FIELD_TAG_INDEX)))));
-
+                searchRequestBuilder.addAggregation(AggregationBuilders.terms(TAG_TYPE_FACET_AGGS).field(BDEF_TAGTYPE_CODE_FIELD).subAggregation(
+                    AggregationBuilders.terms(NAMESPACE_CODE_AGGS).field(NAMESPACE_FIELD)
+                        .subAggregation(AggregationBuilders.terms(BDEF_NAME_AGGS).field(BDEF_NAME_FIELD))));
             }
             if (facetFieldsList.contains(RESULT_TYPE_FACET))
             {
