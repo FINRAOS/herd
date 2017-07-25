@@ -443,6 +443,8 @@ public class EmrDaoTest extends AbstractDaoTest
         emrClusterDefinition.setSupportedProduct("supportedProduct");
         emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
 
+        emrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP);
+        emrClusterDefinition.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP);
         String clusterId = "clusterId";
 
         when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
@@ -551,7 +553,8 @@ public class EmrDaoTest extends AbstractDaoTest
                 }
                 assertEquals(Arrays.asList("supportedProduct"), runJobFlowRequest.getSupportedProducts());
                 assertEquals("securityConfiguration", runJobFlowRequest.getSecurityConfiguration());
-
+                assertEquals(EMR_MASTER_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedMasterSecurityGroup());
+                assertEquals(EMR_SLAVE_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedSlaveSecurityGroup());
                 return clusterId;
             }
         });

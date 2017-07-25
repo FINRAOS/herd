@@ -30,6 +30,8 @@ import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -44,6 +46,7 @@ import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.EmrPricingHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
@@ -78,6 +81,8 @@ import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class EmrServiceImpl implements EmrService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmrServiceImpl.class);
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -116,6 +121,9 @@ public class EmrServiceImpl implements EmrService
 
     @Autowired
     private XmlHelper xmlHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     /**
      * {@inheritDoc}
@@ -568,6 +576,14 @@ public class EmrServiceImpl implements EmrService
             {
                 emrClusterDefinition.setSecurityConfiguration(emrClusterDefinitionOverride.getSecurityConfiguration());
             }
+            if (emrClusterDefinitionOverride.getMasterSecurityGroup() != null)
+            {
+                emrClusterDefinition.setMasterSecurityGroup(emrClusterDefinitionOverride.getMasterSecurityGroup());
+            }
+            if (emrClusterDefinitionOverride.getSlaveSecurityGroup() != null)
+            {
+                emrClusterDefinition.setSlaveSecurityGroup(emrClusterDefinitionOverride.getSlaveSecurityGroup());
+            }
         }
     }
 
@@ -927,13 +943,22 @@ public class EmrServiceImpl implements EmrService
         key.setEmrClusterName(alternateKeyHelper.validateStringParameter("An", "EMR cluster name", key.getEmrClusterName()));
     }
 
-    private void setEmrClusterStatus(EmrCluster cl, ClusterStatus amazonClusterStatus)
+    /**
+     * Updates EMR cluster model object with the specified EMR cluster status information.
+     *
+     * @param emrCluster the EMR cluster
+     * @param clusterStatus the EMR cluster status information
+     */
+    private void setEmrClusterStatus(EmrCluster emrCluster, ClusterStatus clusterStatus)
     {
-        cl.setStatus(amazonClusterStatus.getState());
-        cl.setStatusChangeReason(
-            new StatusChangeReason(amazonClusterStatus.getStateChangeReason().getCode(), amazonClusterStatus.getStateChangeReason().getMessage()));
-        cl.setStatusTimeline(new StatusTimeline(toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getCreationDateTime()),
-            toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getReadyDateTime()),
-            toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getEndDateTime())));
+        // Log cluster status information.
+        LOGGER.info("emrClusterId=\"{}\" emrClusterStatus={}", emrCluster.getId(), jsonHelper.objectToJson(clusterStatus));
+
+        // Update the EMR cluster with the status information.
+        emrCluster.setStatus(clusterStatus.getState());
+        emrCluster
+            .setStatusChangeReason(new StatusChangeReason(clusterStatus.getStateChangeReason().getCode(), clusterStatus.getStateChangeReason().getMessage()));
+        emrCluster.setStatusTimeline(new StatusTimeline(toXmlGregorianCalendar(clusterStatus.getTimeline().getCreationDateTime()),
+            toXmlGregorianCalendar(clusterStatus.getTimeline().getReadyDateTime()), toXmlGregorianCalendar(clusterStatus.getTimeline().getEndDateTime())));
     }
 }
