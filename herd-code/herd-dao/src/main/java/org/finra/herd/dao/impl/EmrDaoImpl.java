@@ -879,7 +879,7 @@ public class EmrDaoImpl implements EmrDao
         // Fill-in subnet id.
         if (StringUtils.isNotBlank(emrClusterDefinition.getSubnetId()))
         {
-            jobFlowInstancesConfig.setEc2SubnetIds(herdStringHelper.splitAndTrim(emrClusterDefinition.getSubnetId(), ","));
+            jobFlowInstancesConfig.setEc2SubnetId(emrClusterDefinition.getSubnetId());
         }
 
         // Fill in configuration for the instance groups in a cluster.

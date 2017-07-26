@@ -62,7 +62,6 @@ import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.elasticmapreduce.model.StepState;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import com.amazonaws.services.elasticmapreduce.model.Tag;
-import org.apache.commons.collections4.CollectionUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -468,8 +467,7 @@ public class EmrDaoTest extends AbstractDaoTest
                     assertEquals(30, instanceGroupConfig.getInstanceCount().intValue());
                 }
                 assertEquals("sshKeyPairName", runJobFlowRequest.getInstances().getEc2KeyName());
-                assertEquals(1, CollectionUtils.size(runJobFlowRequest.getInstances().getEc2SubnetIds()));
-                assertEquals("subnetId", runJobFlowRequest.getInstances().getEc2SubnetIds().get(0));
+                assertEquals("subnetId", runJobFlowRequest.getInstances().getEc2SubnetId());
                 assertEquals(true, runJobFlowRequest.getInstances().getKeepJobFlowAliveWhenNoSteps());
                 assertEquals(true, runJobFlowRequest.getInstances().getTerminationProtected());
                 assertEquals("hadoopVersion", runJobFlowRequest.getInstances().getHadoopVersion());
