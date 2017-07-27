@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.48.0-SNAPSHOT</version>
+   <version>0.49.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>

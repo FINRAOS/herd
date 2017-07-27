@@ -25,7 +25,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * A partition key group.
@@ -46,7 +46,7 @@ public class PartitionKeyGroupEntity extends AuditableEntity
     @Column(name = "prtn_key_group_tx")
     private String partitionKeyGroupName;
 
-    @JsonManagedReference
+    @JsonIgnore
     @OneToMany(mappedBy = "partitionKeyGroup", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("partitionValue")
     private Collection<ExpectedPartitionValueEntity> expectedPartitionValues;

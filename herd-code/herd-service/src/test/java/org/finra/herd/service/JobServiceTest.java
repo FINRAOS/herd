@@ -73,6 +73,7 @@ import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
+import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * This class tests various functionality within the Job REST controller.
@@ -742,6 +743,65 @@ public class JobServiceTest extends AbstractServiceTest
         // Job should have been completed.
         jobGet = jobService.getJob(job.getId(), true);
         assertEquals(JobStatusEnum.COMPLETED, jobGet.getStatus());
+    }
+
+    @Test
+    public void testSignalJobWithCheckEmrClusterTask() throws Exception
+    {
+        // Create EC2 on-demand pricing entities required for testing.
+        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
+
+        // Create a list of parameters for the job.
+        List<Parameter> parameters = new ArrayList<>();
+        Parameter parameter = new Parameter("clusterName", EMR_CLUSTER_NAME);
+        parameters.add(parameter);
+
+        // Run a job with Activiti XML that will start cluster, check status, wait on receive task and terminate.
+        Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_CHECK_CLUSTER_AND_RECEIVE_TASK_WITH_CLASSPATH, parameters);
+        assertNotNull(job);
+
+        // Job should be waiting at receive task.
+        Job getJobResponse = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.RUNNING, getJobResponse.getStatus());
+        assertEquals("receiveTask", getJobResponse.getCurrentWorkflowStep().getId());
+
+        // Validate that create and check cluster tasks were successful.
+        assertTrue(getJobResponse.getParameters().contains(new Parameter("createClusterServiceTask_taskStatus", ActivitiRuntimeHelper.TASK_STATUS_SUCCESS)));
+        assertTrue(getJobResponse.getParameters().contains(new Parameter("checkClusterServiceTask_taskStatus", ActivitiRuntimeHelper.TASK_STATUS_SUCCESS)));
+
+        // Signal job to continue.
+        Parameter signalParameter = new Parameter(PARAMETER_NAME, PARAMETER_VALUE);
+        JobSignalRequest jobSignalRequest = new JobSignalRequest(job.getId(), "receiveTask", Collections.singletonList(signalParameter), null);
+        Job signalJobResponse = jobService.signalJob(jobSignalRequest);
+
+        // Validate the signal job response.
+        assertEquals(JobStatusEnum.RUNNING, signalJobResponse.getStatus());
+        assertEquals("receiveTask", signalJobResponse.getCurrentWorkflowStep().getId());
+        assertTrue(signalJobResponse.getParameters().contains(signalParameter));
+
+        // Validate the cluster status information.
+        Map<String, Parameter> jobParameters = jobServiceTestHelper.toMap(signalJobResponse.getParameters());
+        assertTrue(jobParameters.containsKey("checkClusterServiceTask_emrClusterStatus_creationTime"));
+        assertTrue(jobParameters.containsKey("checkClusterServiceTask_emrClusterStatus_readyTime"));
+        assertTrue(jobParameters.containsKey("checkClusterServiceTask_emrClusterStatus_endTime"));
+
+        // Job should have been completed.
+        getJobResponse = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.COMPLETED, getJobResponse.getStatus());
+        assertTrue(getJobResponse.getParameters().contains(signalParameter));
+
+        // Get the process variables.
+        HistoricProcessInstance historicProcessInstance =
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+        Map<String, Object> processVariables = historicProcessInstance.getProcessVariables();
+
+        // Validate the cluster status information.
+        assertTrue(processVariables.containsKey("checkClusterServiceTask_emrClusterStatus_creationTime"));
+        assertNotNull(processVariables.get("checkClusterServiceTask_emrClusterStatus_creationTime"));
+        assertTrue(processVariables.containsKey("checkClusterServiceTask_emrClusterStatus_readyTime"));
+        assertNull(processVariables.get("checkClusterServiceTask_emrClusterStatus_readyTime"));
+        assertTrue(processVariables.containsKey("checkClusterServiceTask_emrClusterStatus_endTime"));
+        assertNull(processVariables.get("checkClusterServiceTask_emrClusterStatus_endTime"));
     }
 
     @Test

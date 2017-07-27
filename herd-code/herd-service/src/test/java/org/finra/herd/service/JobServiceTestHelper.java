@@ -17,10 +17,13 @@ package org.finra.herd.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -255,5 +258,27 @@ public class JobServiceTestHelper
         SecurityContextHolder.getContext().setAuthentication(
             new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
                 null));
+    }
+
+    /**
+     * Converts the given list of parameters into a map for easy access.
+     *
+     * @param parameters the list of parameters
+     *
+     * @return the map of key-values
+     */
+    public Map<String, Parameter> toMap(List<Parameter> parameters)
+    {
+        Map<String, Parameter> map = new HashMap<>();
+
+        if (!CollectionUtils.isEmpty(parameters))
+        {
+            for (Parameter parameter : parameters)
+            {
+                map.put(parameter.getName(), parameter);
+            }
+        }
+
+        return map;
     }
 }
