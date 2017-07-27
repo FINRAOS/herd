@@ -31,6 +31,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,11 +48,16 @@ import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.service.AbstractServiceTest;
+import org.finra.herd.service.BusinessObjectDefinitionService;
 
 public class NamespaceSecurityAdviceTest extends AbstractServiceTest
 {
     @Autowired
     private NamespaceSecurityAdvice namespaceSecurityAdvice;
+
+    @Autowired
+    @Qualifier(value = "businessObjectDefinitionServiceImpl")
+    private BusinessObjectDefinitionService businessObjectDefinitionServiceImpl;
 
     @After
     public void after()
@@ -79,7 +85,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectDefinitionService
+            businessObjectDefinitionServiceImpl
                 .createBusinessObjectDefinition(new BusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, null));
             fail();
         }
