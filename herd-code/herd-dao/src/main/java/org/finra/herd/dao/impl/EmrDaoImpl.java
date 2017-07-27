@@ -59,12 +59,12 @@ import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import com.amazonaws.services.elasticmapreduce.model.Tag;
 import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
 import com.amazonaws.services.elasticmapreduce.util.StepFactory;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.AwsClientFactory;
@@ -860,6 +860,9 @@ public class EmrDaoImpl implements EmrDao
     {
         // Create a new job flow instances configuration object.
         JobFlowInstancesConfig jobFlowInstancesConfig = new JobFlowInstancesConfig();
+        // Set up master/slave security group
+        jobFlowInstancesConfig.setEmrManagedMasterSecurityGroup(emrClusterDefinition.getMasterSecurityGroup());
+        jobFlowInstancesConfig.setEmrManagedSlaveSecurityGroup(emrClusterDefinition.getSlaveSecurityGroup());
 
         // Add additional security groups to master nodes.
         jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(emrClusterDefinition.getAdditionalMasterSecurityGroups());
@@ -873,17 +876,25 @@ public class EmrDaoImpl implements EmrDao
             jobFlowInstancesConfig.setEc2KeyName(emrClusterDefinition.getSshKeyPairName());
         }
 
-        // Fill-in subnet id.
-        if (StringUtils.isNotBlank(emrClusterDefinition.getSubnetId()))
-        {
-            jobFlowInstancesConfig.setEc2SubnetId(emrClusterDefinition.getSubnetId());
-        }
-
         // Fill in configuration for the instance groups in a cluster.
         jobFlowInstancesConfig.setInstanceGroups(getInstanceGroupConfigs(emrClusterDefinition.getInstanceDefinitions()));
 
         // Fill in instance fleet configuration.
         jobFlowInstancesConfig.setInstanceFleets(getInstanceFleets(emrClusterDefinition.getInstanceFleets()));
+
+        // Fill-in subnet id.
+        if (StringUtils.isNotBlank(emrClusterDefinition.getSubnetId()))
+        {
+            // Use collection of subnet IDs when instance fleet configuration is specified. Otherwise, we expect a single EC2 subnet ID to be passed here.
+            if (CollectionUtils.isNotEmpty(jobFlowInstancesConfig.getInstanceFleets()))
+            {
+                jobFlowInstancesConfig.setEc2SubnetIds(herdStringHelper.splitAndTrim(emrClusterDefinition.getSubnetId(), ","));
+            }
+            else
+            {
+                jobFlowInstancesConfig.setEc2SubnetId(emrClusterDefinition.getSubnetId());
+            }
+        }
 
         // Fill in optional keep alive flag.
         if (emrClusterDefinition.isKeepAlive() != null)

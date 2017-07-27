@@ -1083,8 +1083,49 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     {
         try
         {
+            businessObjectDefinitionServiceImpl.createBusinessObjectDefinition(new BusinessObjectDefinitionCreateRequest());
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            businessObjectDefinitionServiceImpl.deleteBusinessObjectDefinition(new BusinessObjectDefinitionKey());
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        try
+        {
             businessObjectDefinitionServiceImpl.getBusinessObjectDefinition(new BusinessObjectDefinitionKey());
-            fail("Should throw an IllegalArgumentException.");
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            businessObjectDefinitionServiceImpl.updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(), new BusinessObjectDefinitionUpdateRequest());
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(),
+                new BusinessObjectDefinitionDescriptiveInformationUpdateRequest());
+            fail();
         }
         catch (IllegalArgumentException e)
         {

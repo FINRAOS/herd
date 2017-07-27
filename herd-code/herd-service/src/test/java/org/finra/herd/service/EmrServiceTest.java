@@ -1306,6 +1306,71 @@ public class EmrServiceTest extends AbstractServiceTest
         assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
     }
 
+    @Test
+    public void testCreateEmrClusterWithSecurityGroups() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Retrieve the EMR cluster definition.
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+
+        // Update the EMR cluster definition to use instance fleets instead of instance group definitions.
+        emrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP);
+        emrClusterDefinition.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP);
+
+        // Create an entity for the the updated EMR cluster definition.
+        configXml = xmlHelper.objectToXml(emrClusterDefinition);
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+
+        // Create a new EMR cluster create request.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        EmrCluster emrCluster = emrService.createCluster(request);
+
+        // Validate the returned object against the input.
+        assertNotNull(emrCluster);
+        assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
+        assertTrue(emrCluster.getEmrClusterDefinition().getMasterSecurityGroup().equals(EMR_MASTER_SECURITY_GROUP));
+        assertTrue(emrCluster.getEmrClusterDefinition().getSlaveSecurityGroup().equals(EMR_SLAVE_SECURITY_GROUP));
+    }
+
+    @Test
+    public void testCreateEmrClusterOverrideSecurityGroups() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        expectedEmrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP + "override");
+        expectedEmrClusterDefinition.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP + "override");
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
+
+        // Create a new EMR cluster create request
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        emrClusterDefinitionOverride.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP + "override");
+        emrClusterDefinitionOverride.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP + "override");
+        request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
+
+        EmrCluster emrCluster = emrService.createCluster(request);
+
+        // Validate the returned object against the input.
+        assertNotNull(emrCluster);
+        assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
+        assertTrue(emrCluster.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
+        assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
+        assertNotNull(emrCluster.getId());
+        assertNull(emrCluster.isDryRun());
+        assertTrue(emrCluster.isEmrClusterCreated());
+        assertNotNull(emrCluster.getEmrClusterDefinition());
+        assertEquals(expectedEmrClusterDefinition, emrCluster.getEmrClusterDefinition());
+
+        validateEmrClusterCreationLogUnique(emrCluster, expectedEmrClusterDefinition);
+    }
+
     /**
      * This method tests some of the negative test cases
      */

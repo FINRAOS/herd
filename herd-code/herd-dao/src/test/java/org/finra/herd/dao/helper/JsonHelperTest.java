@@ -16,7 +16,9 @@
 package org.finra.herd.dao.helper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -31,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 
 /**
  * This class tests functionality within the JsonHelper class.
@@ -77,6 +80,38 @@ public class JsonHelperTest extends AbstractDaoTest
     public void testObjectToJson()
     {
         assertEquals(String.format("\"%s\"", STRING_VALUE), jsonHelper.objectToJson(STRING_VALUE));
+    }
+
+    @Test
+    public void testObjectToJsonValidateJsonIgnoreOnExpectedPartitionValues()
+    {
+        // Create a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, NO_ATTRIBUTES);
+
+        // Create a partition key group entity.
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+
+        // Create a list of expected partition values.
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2, PARTITION_VALUE_3));
+
+        // Create a business object format entity.
+        businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE,
+            fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, null), FORMAT_VERSION, FORMAT_DESCRIPTION, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
+            partitionKeyGroupEntity, NO_ATTRIBUTES, SCHEMA_DELIMITER_COMMA, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, NO_COLUMNS,
+            NO_PARTITION_COLUMNS);
+
+        // Create a JSON object from the business object definition entity.
+        String result = jsonHelper.objectToJson(businessObjectDefinitionEntity);
+
+        // Validate the results.
+        assertNotNull(result);
+        assertTrue(result.contains("partitionKeyGroup"));
+        assertFalse(result.contains("expectedPartitionValues"));
+        assertFalse(result.contains(PARTITION_VALUE));
+        assertFalse(result.contains(PARTITION_VALUE_2));
+        assertFalse(result.contains(PARTITION_VALUE_3));
     }
 
     @Test

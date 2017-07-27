@@ -122,6 +122,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ACTIVITI_XML_ADD_EMR_STEPS_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowAddEmrStep.bpmn20.xml";
 
+    public static final String ACTIVITI_XML_CHECK_CLUSTER_AND_RECEIVE_TASK_WITH_CLASSPATH =
+        "classpath:org/finra/herd/service/activitiWorkflowCheckEmrClusterAndReceiveTask.bpmn20.xml";
+
     public static final String ACTIVITI_XML_CHECK_CLUSTER_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCheckEmrCluster.bpmn20.xml";
 
     public static final String ACTIVITI_XML_CREATE_CLUSTER_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCreateEmrCluster.bpmn20.xml";
@@ -277,6 +280,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String EC2_PRODUCT_KEY_2 = "UT_EC2_ProductKey_2_" + RANDOM_SUFFIX;
 
     public static final String EMR_CLUSTER_ID = "UT_EMR_Cluster_ID_" + RANDOM_SUFFIX;
+
+    public static final String EMR_CLUSTER_NAME = "UT_EMR_Cluster_Name_" + RANDOM_SUFFIX;
 
     public static final Boolean EMR_CLUSTER_VERBOSE_FLAG = true;
 
@@ -452,6 +457,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String NO_USER_ID = null;
 
     public static final Boolean OVERRIDE_TERMINATION_PROTECTION = true;
+
+    public static final String PARAMETER_NAME = "UT_ParameterName_" + RANDOM_SUFFIX;
+
+    public static final String PARAMETER_VALUE = "UT_ParameterValue_" + RANDOM_SUFFIX;
 
     public static final List<String> PROCESS_DATE_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-08");
 
