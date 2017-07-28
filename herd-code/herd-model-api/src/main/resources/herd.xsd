@@ -6894,6 +6894,11 @@
                <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="full" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if full-validation should be run on the index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 

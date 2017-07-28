@@ -48,12 +48,8 @@ public class SearchIndexValidationRestControllerTest extends AbstractRestTest
         MockitoAnnotations.initMocks(this);
     }
 
-    @Test
-    public void testCreateSearchIndexValidation()
+    private void searchIndexValidation(SearchIndexValidationCreateRequest searchIndexValidationCreateRequest)
     {
-        // Create a search index validation create request.
-        SearchIndexValidationCreateRequest searchIndexValidationCreateRequest = new SearchIndexValidationCreateRequest(new SearchIndexKey(SEARCH_INDEX_NAME));
-
         // Create a search index validation response.
         SearchIndexValidation searchIndexValidation =
             new SearchIndexValidation(new SearchIndexKey(SEARCH_INDEX_NAME), SEARCH_INDEX_STATISTICS_CREATION_DATE, false, false, false);
@@ -70,5 +66,25 @@ public class SearchIndexValidationRestControllerTest extends AbstractRestTest
         response.setValidateStartTime(SEARCH_INDEX_STATISTICS_CREATION_DATE);
         // Validate the returned object.
         assertEquals(searchIndexValidation, response);
+    }
+
+    @Test
+    public void testCreateSearchIndexValidationFull()
+    {
+        // Create a search index validation create request.
+        SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
+            new SearchIndexValidationCreateRequest(new SearchIndexKey(SEARCH_INDEX_NAME), SEARCH_INDEX_VALIDATION_ENABLED);
+
+        searchIndexValidation(searchIndexValidationCreateRequest);
+    }
+
+    @Test
+    public void testCreateSearchIndexValidation()
+    {
+        // Create a search index validation create request.
+        SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
+            new SearchIndexValidationCreateRequest(new SearchIndexKey(SEARCH_INDEX_NAME), SEARCH_INDEX_VALIDATION_DISABLED);
+
+        searchIndexValidation(searchIndexValidationCreateRequest);
     }
 }
