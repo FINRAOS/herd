@@ -731,7 +731,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
      *
      * @return the updated business object data
      */
-    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}" +
+    @RequestMapping(value = "/businessObjectDataAttributes/namespaces/{namespace}" +
         "/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
         "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
         "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}/businessObjectDataVersions/{businessObjectDataVersion}",
@@ -765,7 +765,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
      *
      * @return the updated business object data
      */
-    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}" +
+    @RequestMapping(value = "/businessObjectDataAttributes/namespaces/{namespace}" +
         "/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
         "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
         "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}" +
@@ -801,7 +801,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
      *
      * @return the updated business object data
      */
-    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}" +
+    @RequestMapping(value = "/businessObjectDataAttributes/namespaces/{namespace}" +
         "/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
         "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
         "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}" +
@@ -839,7 +839,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
      *
      * @return the updated business object data
      */
-    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}" +
+    @RequestMapping(value = "/businessObjectDataAttributes/namespaces/{namespace}" +
         "/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
         "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
         "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}" +
@@ -880,7 +880,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
      *
      * @return the updated business object data
      */
-    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}" +
+    @RequestMapping(value = "/businessObjectDataAttributes/namespaces/{namespace}" +
         "/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
         "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
         "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}" +
