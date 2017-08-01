@@ -19,6 +19,7 @@ import static org.finra.herd.core.HerdDateUtils.getXMLGregorianCalendarValue;
 
 import java.util.Date;
 
+import org.apache.commons.lang.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,14 +73,22 @@ public class SearchIndexValidationServiceImpl implements SearchIndexValidationSe
         // Currently, only search index for business object definitions and tag are supported.
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
         {
-            businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions();
+            // only perform full validation if specified in the request
+            if (BooleanUtils.isTrue(request.isPerformFullSearchIndexValidation()))
+            {
+                businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions();
+            }
             sizeCheck = businessObjectDefinitionService.indexSizeCheckValidationBusinessObjectDefinitions();
             spotCheckPercentage = businessObjectDefinitionService.indexSpotCheckPercentageValidationBusinessObjectDefinitions();
             spotCheckMostRecent = businessObjectDefinitionService.indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
         }
         else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
         {
-            tagService.indexValidateAllTags();
+            // only perform full validation if specified in the request
+            if (BooleanUtils.isTrue(request.isPerformFullSearchIndexValidation()))
+            {
+                tagService.indexValidateAllTags();
+            }
             sizeCheck = tagService.indexSizeCheckValidationTags();
             spotCheckPercentage = tagService.indexSpotCheckPercentageValidationTags();
             spotCheckMostRecent = tagService.indexSpotCheckMostRecentValidationTags();
