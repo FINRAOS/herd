@@ -3286,6 +3286,19 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDataAttributesUpdateRequest" type="businessObjectDataAttributesUpdateRequest"/>
+   <xs:complexType name="businessObjectDataAttributesUpdateRequest">
+      <xs:all>
+         <xs:element name="attributes" type="attributes" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Custom user-defined metadata associated with this Business Object Data. "name" is the attribute name (i.e. the key) and
+                  "value" is the attribute value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="businessObjectDataAttributeKeys" type="businessObjectDataAttributeKeys"/>
    <xs:complexType name="businessObjectDataAttributeKeys">
       <xs:sequence>

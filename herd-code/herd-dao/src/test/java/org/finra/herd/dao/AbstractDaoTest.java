@@ -77,6 +77,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = true;
 
+    public static final String ATTRIBUTE_NAME = "UT_AttributeName_1_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_NAME_2 = "UT_AttributeName_2_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_NAME_3 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_NAME_4 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
+
     public static final String ATTRIBUTE_NAME_1_MIXED_CASE = "Attribute Name 1";
 
     public static final String ATTRIBUTE_NAME_2_MIXED_CASE = "Attribute Name 2";
@@ -84,6 +92,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String ATTRIBUTE_NAME_3_MIXED_CASE = "Attribute Name 3";
 
     public static final String ATTRIBUTE_NAME_4_MIXED_CASE = "Attribute Name 4";
+
+    public static final String ATTRIBUTE_VALUE = "UT_AttributeValue_1_" + RANDOM_SUFFIX;
 
     public static final String ATTRIBUTE_VALUE_1 = "Attribute Value 1";
 
