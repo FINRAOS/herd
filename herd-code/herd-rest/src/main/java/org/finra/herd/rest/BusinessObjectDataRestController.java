@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailability;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionResponse;
@@ -714,6 +715,192 @@ public class BusinessObjectDataRestController extends HerdBaseController
     public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
     {
         return businessObjectDataService.searchBusinessObjectData(businessObjectDataSearchRequest);
+    }
+
+    /**
+     * Updates attributes for the business object data without subpartition values. <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param partitionValue the partition value of the business object data
+     * @param businessObjectDataVersion the business object data version
+     * @param request the information needed to update the business object data attributes
+     *
+     * @return the updated business object data
+     */
+    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}" +
+        "/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+        "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}/businessObjectDataVersions/{businessObjectDataVersion}",
+        method = RequestMethod.PUT,
+        consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_PUT)
+    public BusinessObjectData updateBusinessObjectDataAttributes(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestBody BusinessObjectDataAttributesUpdateRequest request)
+    {
+        return businessObjectDataService.updateBusinessObjectDataAttributes(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, new ArrayList<>(), businessObjectDataVersion), request);
+    }
+
+    /**
+     * Updates attributes for the business object data with 1 subpartition value. <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param partitionValue the primary partition value of the business object data
+     * @param subPartition1Value the 1st subpartition value of the business object data
+     * @param businessObjectDataVersion the business object data version
+     * @param request the information needed to update the business object data attributes
+     *
+     * @return the updated business object data
+     */
+    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}" +
+        "/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+        "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}" +
+        "/businessObjectDataVersions/{businessObjectDataVersion}",
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_PUT)
+    public BusinessObjectData updateBusinessObjectDataAttributes(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("subPartition1Value") String subPartition1Value, @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
+        @RequestBody BusinessObjectDataAttributesUpdateRequest request)
+    {
+        return businessObjectDataService.updateBusinessObjectDataAttributes(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value), businessObjectDataVersion), request);
+    }
+
+    /**
+     * Updates attributes for the business object data with 2 subpartition values. <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param partitionValue the primary partition value of the business object data
+     * @param subPartition1Value the 1st subpartition value of the business object data
+     * @param subPartition2Value the 2nd subpartition value of the business object data
+     * @param businessObjectDataVersion the business object data version
+     * @param request the information needed to update the business object data attributes
+     *
+     * @return the updated business object data
+     */
+    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}" +
+        "/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+        "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}" +
+        "/subPartition2Values/{subPartition2Value}" +
+        "/businessObjectDataVersions/{businessObjectDataVersion}",
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_PUT)
+    public BusinessObjectData updateBusinessObjectDataAttributes(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("subPartition1Value") String subPartition1Value, @PathVariable("subPartition2Value") String subPartition2Value,
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestBody BusinessObjectDataAttributesUpdateRequest request)
+    {
+        return businessObjectDataService.updateBusinessObjectDataAttributes(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value), businessObjectDataVersion), request);
+    }
+
+    /**
+     * Updates attributes for the business object data with 3 subpartition values. <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param partitionValue the primary partition value of the business object data
+     * @param subPartition1Value the 1st subpartition value of the business object data
+     * @param subPartition2Value the 2nd subpartition value of the business object data
+     * @param subPartition3Value the 3rd subpartition value of the business object data
+     * @param businessObjectDataVersion the business object data version
+     * @param request the information needed to update the business object data attributes
+     *
+     * @return the updated business object data
+     */
+    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}" +
+        "/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+        "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}" +
+        "/subPartition2Values/{subPartition2Value}/subPartition3Values/{subPartition3Value}" +
+        "/businessObjectDataVersions/{businessObjectDataVersion}",
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_PUT)
+    public BusinessObjectData updateBusinessObjectDataAttributes(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("subPartition1Value") String subPartition1Value, @PathVariable("subPartition2Value") String subPartition2Value,
+        @PathVariable("subPartition3Value") String subPartition3Value, @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
+        @RequestBody BusinessObjectDataAttributesUpdateRequest request)
+    {
+        return businessObjectDataService.updateBusinessObjectDataAttributes(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value, subPartition3Value),
+                businessObjectDataVersion), request);
+    }
+
+    /**
+     * Updates attributes for the business object data with 4 subpartition values. <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param partitionValue the primary partition value of the business object data
+     * @param subPartition1Value the 1st subpartition value of the business object data
+     * @param subPartition2Value the 2nd subpartition value of the business object data
+     * @param subPartition3Value the 3rd subpartition value of the business object data
+     * @param subPartition4Value the 4th subpartition value of the business object data
+     * @param businessObjectDataVersion the business object data version
+     * @param request the information needed to update the business object data attributes
+     *
+     * @return the updated business object data
+     */
+    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}" +
+        "/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+        "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}" +
+        "/subPartition2Values/{subPartition2Value}/subPartition3Values/{subPartition3Value}/subPartition4Values/{subPartition4Value}" +
+        "/businessObjectDataVersions/{businessObjectDataVersion}",
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_PUT)
+    public BusinessObjectData updateBusinessObjectDataAttributes(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("subPartition1Value") String subPartition1Value, @PathVariable("subPartition2Value") String subPartition2Value,
+        @PathVariable("subPartition3Value") String subPartition3Value, @PathVariable("subPartition4Value") String subPartition4Value,
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestBody BusinessObjectDataAttributesUpdateRequest request)
+    {
+        return businessObjectDataService.updateBusinessObjectDataAttributes(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value, subPartition3Value, subPartition4Value),
+                businessObjectDataVersion), request);
     }
 
     /**

@@ -21,8 +21,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.servlet.ServletRequest;
 
@@ -32,8 +35,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailability;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionResponse;
@@ -160,138 +165,63 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testDeleteBusinessObjectDataSubPartitionValuesCount0()
+    public void testDeleteBusinessObjectData()
     {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, DATA_VERSION);
+        // Create a list of business object data keys with all possible number of sub-partition values.
+        List<BusinessObjectDataKey> businessObjectDataKeys = new ArrayList<>();
+        for (int subPartitionValuesCount = 0; subPartitionValuesCount <= SUBPARTITION_VALUES.size(); subPartitionValuesCount++)
+        {
+            businessObjectDataKeys.add(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES.subList(0, subPartitionValuesCount), DATA_VERSION));
+        }
 
-        // Create a business object data.
-        BusinessObjectData businessObjectData = new BusinessObjectData();
+        // Create a list of business object data instances one per business object data key.
+        List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
+        for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
+        {
+            BusinessObjectData businessObjectData = new BusinessObjectData();
+            businessObjectData.setNamespace(businessObjectDataKey.getNamespace());
+            businessObjectData.setBusinessObjectDefinitionName(businessObjectDataKey.getBusinessObjectDefinitionName());
+            businessObjectData.setBusinessObjectFormatUsage(businessObjectDataKey.getBusinessObjectFormatUsage());
+            businessObjectData.setBusinessObjectFormatFileType(businessObjectDataKey.getBusinessObjectFormatFileType());
+            businessObjectData.setBusinessObjectFormatVersion(businessObjectDataKey.getBusinessObjectFormatVersion());
+            businessObjectData.setPartitionValue(businessObjectDataKey.getPartitionValue());
+            businessObjectData.setSubPartitionValues(businessObjectDataKey.getSubPartitionValues());
+            businessObjectData.setVersion(businessObjectDataKey.getBusinessObjectDataVersion());
+            businessObjectDataList.add(businessObjectData);
+        }
 
         // Mock the external calls.
-        when(businessObjectDataService.deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES)).thenReturn(businessObjectData);
+        for (int subPartitionValuesCount = 0; subPartitionValuesCount <= SUBPARTITION_VALUES.size(); subPartitionValuesCount++)
+        {
+            when(businessObjectDataService.deleteBusinessObjectData(businessObjectDataKeys.get(subPartitionValuesCount), DELETE_FILES))
+                .thenReturn(businessObjectDataList.get(subPartitionValuesCount));
+        }
 
-        // Call the method under test.
-        BusinessObjectData result = businessObjectDataRestController
+        // Call the methods under test and validate the results.
+        assertEquals(businessObjectDataList.get(0), businessObjectDataRestController
             .deleteBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
-                DELETE_FILES);
-
-        // Verify the external calls.
-        verify(businessObjectDataService).deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES);
-        verifyNoMoreInteractionsHelper();
-
-        // Validate the results.
-        assertEquals(businessObjectData, result);
-    }
-
-    @Test
-    public void testDeleteBusinessObjectDataSubPartitionValuesCount1()
-    {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                Arrays.asList(SUBPARTITION_VALUES.get(0)), DATA_VERSION);
-
-        // Create a business object data.
-        BusinessObjectData businessObjectData = new BusinessObjectData();
-
-        // Mock the external calls.
-        when(businessObjectDataService.deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES)).thenReturn(businessObjectData);
-
-        // Call the method under test.
-        BusinessObjectData result = businessObjectDataRestController
+                DELETE_FILES));
+        assertEquals(businessObjectDataList.get(1), businessObjectDataRestController
             .deleteBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES.get(0), DATA_VERSION, DELETE_FILES);
-
-        // Verify the external calls.
-        verify(businessObjectDataService).deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES);
-        verifyNoMoreInteractionsHelper();
-
-        // Validate the results.
-        assertEquals(businessObjectData, result);
-    }
-
-    @Test
-    public void testDeleteBusinessObjectDataSubPartitionValuesCount2()
-    {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1)), DATA_VERSION);
-
-        // Create a business object data.
-        BusinessObjectData businessObjectData = new BusinessObjectData();
-
-        // Mock the external calls.
-        when(businessObjectDataService.deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES)).thenReturn(businessObjectData);
-
-        // Call the method under test.
-        BusinessObjectData result = businessObjectDataRestController
+                SUBPARTITION_VALUES.get(0), DATA_VERSION, DELETE_FILES));
+        assertEquals(businessObjectDataList.get(2), businessObjectDataRestController
             .deleteBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), DATA_VERSION, DELETE_FILES);
-
-        // Verify the external calls.
-        verify(businessObjectDataService).deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES);
-        verifyNoMoreInteractionsHelper();
-
-        // Validate the results.
-        assertEquals(businessObjectData, result);
-    }
-
-    @Test
-    public void testDeleteBusinessObjectDataSubPartitionValuesCount3()
-    {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION);
-
-        // Create a business object data.
-        BusinessObjectData businessObjectData = new BusinessObjectData();
-
-        // Mock the external calls.
-        when(businessObjectDataService.deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES)).thenReturn(businessObjectData);
-
-        // Call the method under test.
-        BusinessObjectData result = businessObjectDataRestController
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), DATA_VERSION, DELETE_FILES));
+        assertEquals(businessObjectDataList.get(3), businessObjectDataRestController
             .deleteBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), DATA_VERSION, DELETE_FILES);
-
-        // Verify the external calls.
-        verify(businessObjectDataService).deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES);
-        verifyNoMoreInteractionsHelper();
-
-        // Validate the results.
-        assertEquals(businessObjectData, result);
-    }
-
-    @Test
-    public void testDeleteBusinessObjectDataSubPartitionValuesCount4()
-    {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3)), DATA_VERSION);
-
-        // Create a business object data.
-        BusinessObjectData businessObjectData = new BusinessObjectData();
-
-        // Mock the external calls.
-        when(businessObjectDataService.deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES)).thenReturn(businessObjectData);
-
-        // Call the method under test.
-        BusinessObjectData result = businessObjectDataRestController
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), DATA_VERSION, DELETE_FILES));
+        assertEquals(businessObjectDataList.get(4), businessObjectDataRestController
             .deleteBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION, DELETE_FILES);
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION, DELETE_FILES));
 
         // Verify the external calls.
-        verify(businessObjectDataService).deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES);
+        for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
+        {
+            verify(businessObjectDataService).deleteBusinessObjectData(businessObjectDataKey, DELETE_FILES);
+        }
         verifyNoMoreInteractionsHelper();
-
-        // Validate the results.
-        assertEquals(businessObjectData, result);
     }
 
     @Test
@@ -647,6 +577,72 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
 
         // Validate the results.
         assertEquals(businessObjectDataSearchResult, result);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataAttributes()
+    {
+        // Create a list of business object data keys with all possible number of sub-partition values.
+        List<BusinessObjectDataKey> businessObjectDataKeys = new ArrayList<>();
+        for (int subPartitionValuesCount = 0; subPartitionValuesCount <= SUBPARTITION_VALUES.size(); subPartitionValuesCount++)
+        {
+            businessObjectDataKeys.add(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES.subList(0, subPartitionValuesCount), DATA_VERSION));
+        }
+
+        // Create a business object data attributes update request.
+        BusinessObjectDataAttributesUpdateRequest businessObjectDataAttributesUpdateRequest =
+            new BusinessObjectDataAttributesUpdateRequest(Collections.singletonList(new Attribute(ATTRIBUTE_NAME, ATTRIBUTE_VALUE)));
+
+        // Create a list of business object data instances one per business object data key.
+        List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
+        for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
+        {
+            BusinessObjectData businessObjectData = new BusinessObjectData();
+            businessObjectData.setNamespace(businessObjectDataKey.getNamespace());
+            businessObjectData.setBusinessObjectDefinitionName(businessObjectDataKey.getBusinessObjectDefinitionName());
+            businessObjectData.setBusinessObjectFormatUsage(businessObjectDataKey.getBusinessObjectFormatUsage());
+            businessObjectData.setBusinessObjectFormatFileType(businessObjectDataKey.getBusinessObjectFormatFileType());
+            businessObjectData.setBusinessObjectFormatVersion(businessObjectDataKey.getBusinessObjectFormatVersion());
+            businessObjectData.setPartitionValue(businessObjectDataKey.getPartitionValue());
+            businessObjectData.setSubPartitionValues(businessObjectDataKey.getSubPartitionValues());
+            businessObjectData.setVersion(businessObjectDataKey.getBusinessObjectDataVersion());
+            businessObjectDataList.add(businessObjectData);
+        }
+
+        // Mock the external calls.
+        for (int subPartitionValuesCount = 0; subPartitionValuesCount <= SUBPARTITION_VALUES.size(); subPartitionValuesCount++)
+        {
+            when(businessObjectDataService
+                .updateBusinessObjectDataAttributes(businessObjectDataKeys.get(subPartitionValuesCount), businessObjectDataAttributesUpdateRequest))
+                .thenReturn(businessObjectDataList.get(subPartitionValuesCount));
+        }
+
+        // Call the methods under test and validate the results.
+        assertEquals(businessObjectDataList.get(0), businessObjectDataRestController
+            .updateBusinessObjectDataAttributes(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                DATA_VERSION, businessObjectDataAttributesUpdateRequest));
+        assertEquals(businessObjectDataList.get(1), businessObjectDataRestController
+            .updateBusinessObjectDataAttributes(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), DATA_VERSION, businessObjectDataAttributesUpdateRequest));
+        assertEquals(businessObjectDataList.get(2), businessObjectDataRestController
+            .updateBusinessObjectDataAttributes(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), DATA_VERSION, businessObjectDataAttributesUpdateRequest));
+        assertEquals(businessObjectDataList.get(3), businessObjectDataRestController
+            .updateBusinessObjectDataAttributes(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), DATA_VERSION, businessObjectDataAttributesUpdateRequest));
+        assertEquals(businessObjectDataList.get(4), businessObjectDataRestController
+            .updateBusinessObjectDataAttributes(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION,
+                businessObjectDataAttributesUpdateRequest));
+
+        // Verify the external calls.
+        for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
+        {
+            verify(businessObjectDataService).updateBusinessObjectDataAttributes(businessObjectDataKey, businessObjectDataAttributesUpdateRequest);
+        }
+        verifyNoMoreInteractionsHelper();
     }
 
     /**
