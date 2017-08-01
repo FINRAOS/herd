@@ -74,7 +74,7 @@ public class SearchIndexValidationServiceImpl implements SearchIndexValidationSe
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
         {
             // only perform full validation if specified in the request
-            if (BooleanUtils.isTrue(request.isFull()))
+            if (BooleanUtils.isTrue(request.isPerformFullSearchIndexValidation()))
             {
                 businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions();
             }
@@ -85,7 +85,7 @@ public class SearchIndexValidationServiceImpl implements SearchIndexValidationSe
         else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
         {
             // only perform full validation if specified in the request
-            if (BooleanUtils.isTrue(request.isFull()))
+            if (BooleanUtils.isTrue(request.isPerformFullSearchIndexValidation()))
             {
                 tagService.indexValidateAllTags();
             }

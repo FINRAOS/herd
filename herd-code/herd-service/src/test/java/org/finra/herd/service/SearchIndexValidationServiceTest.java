@@ -111,7 +111,7 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
         if (searchIndexType.equals(SearchIndexTypeEntity.SearchIndexTypes.TAG.name()))
         {
             // verify that full validation is invoked only if specified in the request
-            if (searchIndexValidationCreateRequest.isFull())
+            if (searchIndexValidationCreateRequest.isPerformFullSearchIndexValidation())
             {
                 verify(tagService, times(1)).indexValidateAllTags();
             }
@@ -131,7 +131,7 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
         else
         {
             // verify that full validation is invoked only if specified in the request
-            if (searchIndexValidationCreateRequest.isFull())
+            if (searchIndexValidationCreateRequest.isPerformFullSearchIndexValidation())
             {
                 verify(businessObjectDefinitionService, times(1)).indexValidateAllBusinessObjectDefinitions();
             }
@@ -161,7 +161,7 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
 
         // Create a search index create request.
         SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
-            new SearchIndexValidationCreateRequest(searchIndexKey, SEARCH_INDEX_VALIDATION_ENABLED);
+            new SearchIndexValidationCreateRequest(searchIndexKey, PERFORM_FULL_SEARCH_INDEX_VALIDATION);
 
         searchIndexValidation(searchIndexKey, searchIndexValidationCreateRequest, searchIndexType);
     }
@@ -177,7 +177,7 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
 
         // Create a search index create request.
         SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
-            new SearchIndexValidationCreateRequest(searchIndexKey, SEARCH_INDEX_VALIDATION_DISABLED);
+            new SearchIndexValidationCreateRequest(searchIndexKey, NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION);
 
         searchIndexValidation(searchIndexKey, searchIndexValidationCreateRequest, searchIndexType);
     }
@@ -193,7 +193,7 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
 
         // Create a search index create request.
         SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
-            new SearchIndexValidationCreateRequest(searchIndexKey, SEARCH_INDEX_VALIDATION_ENABLED);
+            new SearchIndexValidationCreateRequest(searchIndexKey, PERFORM_FULL_SEARCH_INDEX_VALIDATION);
 
         searchIndexValidation(searchIndexKey, searchIndexValidationCreateRequest, searchIndexType);
     }
@@ -209,7 +209,7 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
 
         // Create a search index create request.
         SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
-            new SearchIndexValidationCreateRequest(searchIndexKey, SEARCH_INDEX_VALIDATION_DISABLED);
+            new SearchIndexValidationCreateRequest(searchIndexKey, NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION);
 
         searchIndexValidation(searchIndexKey, searchIndexValidationCreateRequest, searchIndexType);
     }
