@@ -77,6 +77,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = true;
 
+    public static final String ATTRIBUTE_NAME = "UT_AttributeName_1_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_NAME_2 = "UT_AttributeName_2_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_NAME_3 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_NAME_4 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
+
     public static final String ATTRIBUTE_NAME_1_MIXED_CASE = "Attribute Name 1";
 
     public static final String ATTRIBUTE_NAME_2_MIXED_CASE = "Attribute Name 2";
@@ -84,6 +92,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String ATTRIBUTE_NAME_3_MIXED_CASE = "Attribute Name 3";
 
     public static final String ATTRIBUTE_NAME_4_MIXED_CASE = "Attribute Name 4";
+
+    public static final String ATTRIBUTE_VALUE = "UT_AttributeValue_1_" + RANDOM_SUFFIX;
 
     public static final String ATTRIBUTE_VALUE_1 = "Attribute Value 1";
 
@@ -280,6 +290,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EC2_SECURITY_GROUP_2 = "UT_Ec2SecurityGroup2" + RANDOM_SUFFIX;
 
+    public static final String EC2_SUBNET = "UT_EC2_Subnet_1_" + RANDOM_SUFFIX;
+
+    public static final String EC2_SUBNET_2 = "UT_EC2_Subnet_2_" + RANDOM_SUFFIX;
+
+    public static final List<String> EMPTY_ROLES = new ArrayList<>();
+
     public static final String EMPTY_S3_BUCKET_NAME = "";
 
     public static final String EMPTY_STRING = "";
@@ -292,13 +308,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH = "classpath:testEmrClusterDefinition.xml";
 
-    public static final String EMR_MASTER_SECURITY_GROUP = "UT_EMR_MASTER_SECURITY_GROUP" + RANDOM_SUFFIX;
-
-    public static final String EMR_SLAVE_SECURITY_GROUP = "UT_EMR_SLAVE_SECURITY_GROUP" + RANDOM_SUFFIX;
-
     public static final String EMR_CLUSTER_ID = "UT_EMR_ClusterId_" + RANDOM_SUFFIX;
 
     public static final String EMR_CLUSTER_NAME = "UT_EMR_CLUSTER" + RANDOM_SUFFIX;
+
+    public static final String EMR_MASTER_SECURITY_GROUP = "UT_EMR_MASTER_SECURITY_GROUP" + RANDOM_SUFFIX;
+
+    public static final String EMR_SLAVE_SECURITY_GROUP = "UT_EMR_SLAVE_SECURITY_GROUP" + RANDOM_SUFFIX;
 
     public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
 
@@ -586,6 +602,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_PARTITION_KEY_GROUP = null;
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
+
+    public static final List<String> NO_ROLES = null;
 
     public static final String NO_S3_BUCKET_NAME = null;
 
@@ -982,10 +1000,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String VOLUME_TYPE = "UT_VolumeType_" + RANDOM_SUFFIX;
 
-    public static final List<String> NO_ROLES = null;
-
-    public static final List<String> EMPTY_ROLES = new ArrayList<>();
-
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 
     // A holding location for a property source.
@@ -1215,7 +1229,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected SecurityRoleDao securityRoleDao;
 
     @Autowired
-    protected  SecurityRoleDaoTestHelper securityRoleDaoTestHelper;
+    protected SecurityRoleDaoTestHelper securityRoleDaoTestHelper;
 
     @Autowired
     protected SnsDao snsDao;

@@ -19,3 +19,5 @@
 alter table ntfcn_msg add column msg_hdrs text NULL;
 
 --Add 0.49.0 Below.
+
+drop table jms_msg;

@@ -3286,6 +3286,19 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDataAttributesUpdateRequest" type="businessObjectDataAttributesUpdateRequest"/>
+   <xs:complexType name="businessObjectDataAttributesUpdateRequest">
+      <xs:all>
+         <xs:element name="attributes" type="attributes" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Custom user-defined metadata associated with this Business Object Data. "name" is the attribute name (i.e. the key) and
+                  "value" is the attribute value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="businessObjectDataAttributeKeys" type="businessObjectDataAttributeKeys"/>
    <xs:complexType name="businessObjectDataAttributeKeys">
       <xs:sequence>
@@ -6892,6 +6905,11 @@
          <xs:element name="searchIndexKey" type="searchIndexKey">
             <xs:annotation>
                <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="performFullSearchIndexValidation" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if full-validation should be run on the index</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

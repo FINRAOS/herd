@@ -488,6 +488,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             "#end" +
             "#end";
 
+    public static final boolean PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.TRUE;
+
+    public static final boolean NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.FALSE;
+
     public static final XMLGregorianCalendar SEARCH_INDEX_STATISTICS_CREATION_DATE = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String SEARCH_INDEX_STATISTICS_INDEX_UUID = "UT_SearchIndexSetting_Uuid_" + RANDOM_SUFFIX;

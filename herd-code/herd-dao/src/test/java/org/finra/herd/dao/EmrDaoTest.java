@@ -18,6 +18,7 @@ package org.finra.herd.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -47,7 +48,9 @@ import com.amazonaws.services.elasticmapreduce.model.DescribeClusterResult;
 import com.amazonaws.services.elasticmapreduce.model.DescribeStepRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeStepResult;
 import com.amazonaws.services.elasticmapreduce.model.Instance;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetConfig;
 import com.amazonaws.services.elasticmapreduce.model.InstanceGroupConfig;
+import com.amazonaws.services.elasticmapreduce.model.InstanceTypeConfig;
 import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
@@ -62,6 +65,7 @@ import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.elasticmapreduce.model.StepState;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import com.amazonaws.services.elasticmapreduce.model.Tag;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,6 +80,9 @@ import org.finra.herd.model.api.xml.ConfigurationFiles;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
 import org.finra.herd.model.api.xml.HadoopJarStep;
 import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
@@ -322,6 +329,67 @@ public class EmrDaoTest extends AbstractDaoTest
                     assertEquals(20, instanceGroupConfig.getInstanceCount().intValue());
                     assertEquals("coreInstanceType", instanceGroupConfig.getInstanceType());
                 }
+                assertEquals(herdStringHelper.getRequiredConfigurationValue(ConfigurationValue.EMR_DEFAULT_EC2_NODE_IAM_PROFILE_NAME),
+                    runJobFlowRequest.getJobFlowRole());
+                assertEquals(herdStringHelper.getRequiredConfigurationValue(ConfigurationValue.EMR_DEFAULT_SERVICE_IAM_ROLE_NAME),
+                    runJobFlowRequest.getServiceRole());
+                List<StepConfig> stepConfigs = runJobFlowRequest.getSteps();
+                assertEquals(0, stepConfigs.size());
+                List<Tag> tags = runJobFlowRequest.getTags();
+                assertEquals(1, tags.size());
+                {
+                    Tag tag = tags.get(0);
+                    assertEquals("tagName", tag.getKey());
+                    assertEquals("tagValue", tag.getValue());
+                }
+
+                return clusterId;
+            }
+        });
+
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
+    }
+
+    @Test
+    public void createEmrClusterAssertCallRunEmrJobFlowWithInstanceFleetAndMultipleSubnets() throws Exception
+    {
+        // Create objects required for testing.
+        final String clusterName = "clusterName";
+        final String clusterId = "clusterId";
+        final String name = STRING_VALUE;
+        final String instanceFleetType = STRING_VALUE_2;
+        final Integer targetOnDemandCapacity = INTEGER_VALUE;
+        final Integer targetSpotCapacity = INTEGER_VALUE_2;
+        final List<EmrClusterDefinitionInstanceTypeConfig> emrClusterDefinitionInstanceTypeConfigs = null;
+        final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications = null;
+        final EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet =
+            new EmrClusterDefinitionInstanceFleet(name, instanceFleetType, targetOnDemandCapacity, targetSpotCapacity, emrClusterDefinitionInstanceTypeConfigs,
+                emrClusterDefinitionLaunchSpecifications);
+
+        // Create an EMR cluster definition with instance fleet configuration and multiple EC2 subnet IDs.
+        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
+        emrClusterDefinition.setInstanceFleets(Arrays.asList(emrClusterDefinitionInstanceFleet));
+        emrClusterDefinition.setSubnetId(String.format("%s , %s  ", EC2_SUBNET, EC2_SUBNET_2));
+        emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
+
+        when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
+        {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable
+            {
+                // Assert that the given EMR cluster definition produced the correct RunJobFlowRequest.
+                RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
+                JobFlowInstancesConfig jobFlowInstancesConfig = runJobFlowRequest.getInstances();
+                assertEquals(0, CollectionUtils.size(jobFlowInstancesConfig.getInstanceGroups()));
+                final List<InstanceTypeConfig> expectedInstanceTypeConfigs = null;
+                assertEquals(Arrays.asList(
+                    new InstanceFleetConfig().withName(name).withInstanceFleetType(instanceFleetType).withTargetOnDemandCapacity(targetOnDemandCapacity)
+                        .withTargetSpotCapacity(targetSpotCapacity).withInstanceTypeConfigs(expectedInstanceTypeConfigs).withLaunchSpecifications(null)),
+                    jobFlowInstancesConfig.getInstanceFleets());
+                assertNull(jobFlowInstancesConfig.getEc2SubnetId());
+                assertEquals(2, CollectionUtils.size(jobFlowInstancesConfig.getEc2SubnetIds()));
+                assertTrue(jobFlowInstancesConfig.getEc2SubnetIds().contains(EC2_SUBNET));
+                assertTrue(jobFlowInstancesConfig.getEc2SubnetIds().contains(EC2_SUBNET_2));
                 assertEquals(herdStringHelper.getRequiredConfigurationValue(ConfigurationValue.EMR_DEFAULT_EC2_NODE_IAM_PROFILE_NAME),
                     runJobFlowRequest.getJobFlowRole());
                 assertEquals(herdStringHelper.getRequiredConfigurationValue(ConfigurationValue.EMR_DEFAULT_SERVICE_IAM_ROLE_NAME),

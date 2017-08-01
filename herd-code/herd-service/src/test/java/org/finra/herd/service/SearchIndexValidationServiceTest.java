@@ -67,18 +67,9 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
         MockitoAnnotations.initMocks(this);
     }
 
-    @Test
-    public void testCreateSearchIndexValidationBusinessObjectDefinitions()
+    private void searchIndexValidation(SearchIndexKey searchIndexKey, SearchIndexValidationCreateRequest searchIndexValidationCreateRequest,
+        String searchIndexType)
     {
-        // Create a search index key.
-        SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
-
-        // Get the search index type value.
-        String searchIndexType = SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name();
-
-        // Create a search index create request.
-        SearchIndexValidationCreateRequest searchIndexValidationCreateRequest = new SearchIndexValidationCreateRequest(searchIndexKey);
-
         //Create the search index type entity
         SearchIndexTypeEntity searchIndexTypeEntity = new SearchIndexTypeEntity();
         searchIndexTypeEntity.setCode(searchIndexType);
@@ -105,19 +96,121 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
         when(businessObjectDefinitionService.indexSpotCheckPercentageValidationBusinessObjectDefinitions()).thenReturn(spotCheckPercentage);
         when(businessObjectDefinitionService.indexSpotCheckMostRecentValidationBusinessObjectDefinitions()).thenReturn(spotCheckMostRecent);
 
+        when(tagService.indexValidateAllTags()).thenReturn(new AsyncResult<>(null));
+        when(tagService.indexSizeCheckValidationTags()).thenReturn(sizeCheck);
+        when(tagService.indexSpotCheckPercentageValidationTags()).thenReturn(spotCheckPercentage);
+        when(tagService.indexSpotCheckMostRecentValidationTags()).thenReturn(spotCheckMostRecent);
+
         // Create a search index.
         SearchIndexValidation response = searchIndexValidationService.createSearchIndexValidation(searchIndexValidationCreateRequest);
 
         // Verify the external calls.
         verify(alternateKeyHelper).validateStringParameter("Search index name", SEARCH_INDEX_NAME);
-        verify(businessObjectDefinitionService, times(1)).indexValidateAllBusinessObjectDefinitions();
         verify(searchIndexDaoHelper).getSearchIndexEntity(searchIndexKey);
-        verify(businessObjectDefinitionService).indexValidateAllBusinessObjectDefinitions();
-        verify(businessObjectDefinitionService).indexSizeCheckValidationBusinessObjectDefinitions();
-        verify(businessObjectDefinitionService).indexSpotCheckPercentageValidationBusinessObjectDefinitions();
-        verify(businessObjectDefinitionService).indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
-        verifyNoMoreInteractions(alternateKeyHelper, searchIndexDaoHelper, businessObjectDefinitionService);
-        // Validate the returned object.
-        assertEquals(new SearchIndexValidation(searchIndexKey, response.getValidateStartTime(), sizeCheck, spotCheckPercentage, spotCheckMostRecent), response);
+
+        if (searchIndexType.equals(SearchIndexTypeEntity.SearchIndexTypes.TAG.name()))
+        {
+            // verify that full validation is invoked only if specified in the request
+            if (searchIndexValidationCreateRequest.isPerformFullSearchIndexValidation())
+            {
+                verify(tagService, times(1)).indexValidateAllTags();
+            }
+            else
+            {
+                verify(tagService, times(0)).indexValidateAllTags();
+            }
+            verify(tagService).indexSizeCheckValidationTags();
+            verify(tagService).indexSpotCheckPercentageValidationTags();
+            verify(tagService).indexSpotCheckMostRecentValidationTags();
+            verifyNoMoreInteractions(alternateKeyHelper, searchIndexDaoHelper, tagService);
+            // Validate the returned object.
+            assertEquals(new SearchIndexValidation(searchIndexKey, response.getValidateStartTime(), sizeCheck, spotCheckPercentage, spotCheckMostRecent),
+                response);
+        }
+
+        else
+        {
+            // verify that full validation is invoked only if specified in the request
+            if (searchIndexValidationCreateRequest.isPerformFullSearchIndexValidation())
+            {
+                verify(businessObjectDefinitionService, times(1)).indexValidateAllBusinessObjectDefinitions();
+            }
+            else
+            {
+                verify(businessObjectDefinitionService, times(0)).indexValidateAllBusinessObjectDefinitions();
+            }
+            verify(businessObjectDefinitionService).indexSizeCheckValidationBusinessObjectDefinitions();
+            verify(businessObjectDefinitionService).indexSpotCheckPercentageValidationBusinessObjectDefinitions();
+            verify(businessObjectDefinitionService).indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
+            verifyNoMoreInteractions(alternateKeyHelper, searchIndexDaoHelper, businessObjectDefinitionService);
+            // Validate the returned object.
+            assertEquals(new SearchIndexValidation(searchIndexKey, response.getValidateStartTime(), sizeCheck, spotCheckPercentage, spotCheckMostRecent),
+                response);
+        }
+
+    }
+
+    @Test
+    public void testCreateSearchIndexValidationBusinessObjectDefinitionsFull()
+    {
+        // Create a search index key.
+        SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
+
+        // Get the search index type value.
+        String searchIndexType = SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name();
+
+        // Create a search index create request.
+        SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
+            new SearchIndexValidationCreateRequest(searchIndexKey, PERFORM_FULL_SEARCH_INDEX_VALIDATION);
+
+        searchIndexValidation(searchIndexKey, searchIndexValidationCreateRequest, searchIndexType);
+    }
+
+    @Test
+    public void testCreateSearchIndexValidationBusinessObjectDefinitions()
+    {
+        // Create a search index key.
+        SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
+
+        // Get the search index type value.
+        String searchIndexType = SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name();
+
+        // Create a search index create request.
+        SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
+            new SearchIndexValidationCreateRequest(searchIndexKey, NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION);
+
+        searchIndexValidation(searchIndexKey, searchIndexValidationCreateRequest, searchIndexType);
+    }
+
+    @Test
+    public void testCreateSearchIndexValidationTagsFull()
+    {
+        // Create a search index key.
+        SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
+
+        // Get the search index type value.
+        String searchIndexType = SearchIndexTypeEntity.SearchIndexTypes.TAG.name();
+
+        // Create a search index create request.
+        SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
+            new SearchIndexValidationCreateRequest(searchIndexKey, PERFORM_FULL_SEARCH_INDEX_VALIDATION);
+
+        searchIndexValidation(searchIndexKey, searchIndexValidationCreateRequest, searchIndexType);
+    }
+
+    @Test
+    public void testCreateSearchIndexValidationTags()
+    {
+        // Create a search index key.
+        SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
+
+        // Get the search index type value.
+        String searchIndexType = SearchIndexTypeEntity.SearchIndexTypes.TAG.name();
+
+        // Create a search index create request.
+        SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
+            new SearchIndexValidationCreateRequest(searchIndexKey, NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION);
+
+        searchIndexValidation(searchIndexKey, searchIndexValidationCreateRequest, searchIndexType);
     }
 }
