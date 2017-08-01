@@ -1128,8 +1128,24 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateSearchIndexDocumentBusinessObjectDefinition(SearchIndexUpdateDto searchIndexUpdateDto)
+    {
+        updateSearchIndexDocumentBusinessObjectDefinitionImpl(searchIndexUpdateDto);
+    }
+
+    /**
+     * Updates the search index document representation of the business object definition.
+     *
+     * @param searchIndexUpdateDto the SearchIndexUpdateDto object
+     */
+    protected void updateSearchIndexDocumentBusinessObjectDefinitionImpl(SearchIndexUpdateDto searchIndexUpdateDto)
     {
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
