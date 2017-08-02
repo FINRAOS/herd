@@ -1198,9 +1198,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private Map<String, String> convertBusinessObjectDefinitionEntityListToJSONStringMap(List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities)
     {
+        LOGGER.info("List size is {}.", businessObjectDefinitionEntities.size());
+
         Map<String, String> businessObjectDefinitionJSONMap = new HashMap<>();
 
-        LOGGER.debug("convertBusinessObjectDefinitionEntityListToJSONStringMap bdef size is {}.", businessObjectDefinitionEntities.size());
         businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
