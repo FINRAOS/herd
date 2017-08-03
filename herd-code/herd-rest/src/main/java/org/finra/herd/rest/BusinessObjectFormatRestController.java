@@ -174,7 +174,6 @@ public class BusinessObjectFormatRestController extends HerdBaseController
 
     /**
      * Retrieves the DDL to initialize the specified type of the database system (e.g. Hive) by creating a table for the requested business object format.
-     * <p>Requires READ permission on namespace</p>
      *
      * @param businessObjectFormatDdlRequest the business object data DDL request
      *
@@ -222,12 +221,10 @@ public class BusinessObjectFormatRestController extends HerdBaseController
     public BusinessObjectFormat updateBusinessObjectFormatParents(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
-        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
-        @RequestBody BusinessObjectFormatParentsUpdateRequest request)
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType, @RequestBody BusinessObjectFormatParentsUpdateRequest request)
     {
         BusinessObjectFormatKey businessObjectFormatKey =
-            new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                null);
+            new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType, null);
         return businessObjectFormatService.updateBusinessObjectFormatParents(businessObjectFormatKey, request);
     }
 
