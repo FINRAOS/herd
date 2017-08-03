@@ -233,6 +233,7 @@ public class EmrServiceTest extends AbstractServiceTest
 
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        assertEquals("scaleDownBehavior", expectedEmrClusterDefinition.getScaleDownBehavior());
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
         // Create a new EMR cluster create request
@@ -371,6 +372,7 @@ public class EmrServiceTest extends AbstractServiceTest
         emrClusterDefinition.setServiceIamRole(null);
         emrClusterDefinition.setAmiVersion(null);
         emrClusterDefinition.setServiceIamRole(emrClusterDefinition.getEc2NodeIamProfileName());
+        emrClusterDefinition.setScaleDownBehavior(null);
 
         configXml = xmlHelper.objectToXml(emrClusterDefinition);
 
@@ -1015,6 +1017,8 @@ public class EmrServiceTest extends AbstractServiceTest
         expectedEmrClusterDefinition.setSupportedProduct(emrClusterDefinitionOverride.getSupportedProduct());
         emrClusterDefinitionOverride.setSecurityConfiguration("test" + Math.random());
         expectedEmrClusterDefinition.setSecurityConfiguration(emrClusterDefinitionOverride.getSecurityConfiguration());
+        emrClusterDefinitionOverride.setScaleDownBehavior("test" + Math.random());
+        expectedEmrClusterDefinition.setScaleDownBehavior(emrClusterDefinitionOverride.getScaleDownBehavior());
         emrClusterDefinitionOverride.setTerminationProtection(!expectedEmrClusterDefinition.isTerminationProtection());
         expectedEmrClusterDefinition.setTerminationProtection(emrClusterDefinitionOverride.isTerminationProtection());
         emrClusterDefinitionOverride.setVisibleToAll(!expectedEmrClusterDefinition.isVisibleToAll());
