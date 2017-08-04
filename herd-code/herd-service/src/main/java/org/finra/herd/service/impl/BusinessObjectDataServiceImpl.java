@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +38,7 @@ import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.annotation.NamespacePermission;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailability;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionRequest;
@@ -65,7 +64,6 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
-import org.finra.herd.model.dto.BusinessObjectDataRetryStoragePolicyTransitionDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -79,13 +77,13 @@ import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.BusinessObjectDataInitiateRestoreHelperService;
-import org.finra.herd.service.BusinessObjectDataRetryStoragePolicyTransitionHelperService;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
+import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
 import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDataStatusDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
@@ -106,22 +104,12 @@ import org.finra.herd.service.helper.StorageUnitHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataServiceImpl.class);
-
     /**
      * A status reason of "not registered".
      */
     public static final String REASON_NOT_REGISTERED = "NOT_REGISTERED";
 
-    /**
-     * A status reason of "no enabled storage unit".
-     */
-    public static final String REASON_NO_ENABLED_STORAGE_UNIT = "NO_ENABLED_STORAGE_UNIT";
-
-    /**
-     * A status reason of "archived".
-     */
-    public static final String REASON_ARCHIVED = "ARCHIVED";
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataServiceImpl.class);
 
     @Autowired
     private BusinessObjectDataDao businessObjectDataDao;
@@ -133,16 +121,16 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
-    private BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
-
-    @Autowired
     private BusinessObjectDataInitiateRestoreHelperService businessObjectDataInitiateRestoreHelperService;
 
     @Autowired
     private BusinessObjectDataInvalidateUnregisteredHelper businessObjectDataInvalidateUnregisteredHelper;
 
     @Autowired
-    private BusinessObjectDataRetryStoragePolicyTransitionHelperService businessObjectDataRetryStoragePolicyTransitionHelperService;
+    private BusinessObjectDataRetryStoragePolicyTransitionHelper businessObjectDataRetryStoragePolicyTransitionHelper;
+
+    @Autowired
+    private BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
 
     @Autowired
     private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
@@ -172,6 +160,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     private JsonHelper jsonHelper;
 
     @Autowired
+    private NotificationEventService notificationEventService;
+
+    @Autowired
     private S3KeyPrefixHelper s3KeyPrefixHelper;
 
     @Autowired
@@ -189,95 +180,31 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     @Autowired
     private StorageUnitHelper storageUnitHelper;
 
-    @Autowired
-    private NotificationEventService notificationEventService;
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public BusinessObjectDataAvailability checkBusinessObjectDataAvailability(BusinessObjectDataAvailabilityRequest request)
+    {
+        return checkBusinessObjectDataAvailabilityImpl(request);
+    }
 
-    @PublishJmsMessages
+    @NamespacePermission(fields = "#request?.businessObjectDataAvailabilityRequests?.![namespace]",
+        permissions = NamespacePermissionEnum.READ)
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollection(
+        BusinessObjectDataAvailabilityCollectionRequest request)
+    {
+        return checkBusinessObjectDataAvailabilityCollectionImpl(request);
+    }
+
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest request)
     {
         return businessObjectDataDaoHelper.createBusinessObjectData(request);
-    }
-
-    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.READ)
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory)
-    {
-        return getBusinessObjectDataImpl(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus,
-            includeBusinessObjectDataStatusHistory);
-    }
-
-    /**
-     * Retrieves existing business object data entry information. This method does not start a new transaction and instead continues with existing transaction,
-     * if any.
-     *
-     * @param businessObjectDataKey the business object data key
-     * @param businessObjectFormatPartitionKey the business object format partition key, may be null
-     * @param businessObjectDataStatus the business object data status, may be null
-     * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
-     *
-     * @return the retrieved business object data information
-     */
-    protected BusinessObjectData getBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory)
-    {
-        // Validate and trim the business object data key.
-        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, false, false);
-
-        // If specified, trim the partition key parameter.
-        String businessObjectFormatPartitionKeyLocal = businessObjectFormatPartitionKey != null ? businessObjectFormatPartitionKey.trim() : null;
-
-        // If specified, trim the business object data status parameter; otherwise default to VALID status.
-        String businessObjectDataStatusLocal = businessObjectDataStatus != null ? businessObjectDataStatus.trim() : BusinessObjectDataStatusEntity.VALID;
-
-        // Validate the business object data status.
-        BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
-            businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(businessObjectDataStatusLocal);
-
-        // Get the business object data based on the specified parameters. If a business object data version isn't specified,
-        // the latest version of business object data of the specified business object data status is returned.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataDaoHelper.getBusinessObjectDataEntityByKeyAndStatus(businessObjectDataKey, businessObjectDataStatusEntity.getCode());
-
-        // If specified, ensure the partition key matches what's configured within the business object format.
-        if (StringUtils.isNotBlank(businessObjectFormatPartitionKeyLocal))
-        {
-            String configuredPartitionKey = businessObjectDataEntity.getBusinessObjectFormat().getPartitionKey();
-            Assert.isTrue(configuredPartitionKey.equalsIgnoreCase(businessObjectFormatPartitionKeyLocal), String
-                .format("Partition key \"%s\" doesn't match configured business object format partition key \"%s\".", businessObjectFormatPartitionKeyLocal,
-                    configuredPartitionKey));
-        }
-
-        // Create and return the business object definition object from the persisted entity.
-        return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity, includeBusinessObjectDataStatusHistory);
-    }
-
-    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.READ)
-    @Override
-    public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey)
-    {
-        // Validate and trim the business object data key.
-        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, false, false);
-
-        // Get the business object data versions based on the specified parameters.
-        List<BusinessObjectDataEntity> businessObjectDataEntities = businessObjectDataDao.getBusinessObjectDataEntities(businessObjectDataKey);
-
-        // Create the response.
-        BusinessObjectDataVersions businessObjectDataVersions = new BusinessObjectDataVersions();
-        for (BusinessObjectDataEntity businessObjectDataEntity : businessObjectDataEntities)
-        {
-            BusinessObjectDataVersion businessObjectDataVersion = new BusinessObjectDataVersion();
-            BusinessObjectDataKey businessObjectDataVersionKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
-            businessObjectDataVersion.setBusinessObjectDataKey(businessObjectDataVersionKey);
-            businessObjectDataVersion.setStatus(businessObjectDataEntity.getStatus().getCode());
-            businessObjectDataVersions.getBusinessObjectDataVersions().add(businessObjectDataVersion);
-        }
-
-        return businessObjectDataVersions;
     }
 
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
@@ -420,19 +347,225 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectDataAvailability checkBusinessObjectDataAvailability(BusinessObjectDataAvailabilityRequest request)
+    public BusinessObjectDataDdl generateBusinessObjectDataDdl(BusinessObjectDataDdlRequest request)
     {
-        return checkBusinessObjectDataAvailabilityImpl(request);
+        return generateBusinessObjectDataDdlImpl(request, false);
     }
 
-    @NamespacePermission(fields = "#request?.businessObjectDataAvailabilityRequests?.![namespace]",
-        permissions = NamespacePermissionEnum.READ)
+    @NamespacePermission(fields = "#request?.businessObjectDataDdlRequests?.![namespace]", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollection(
-        BusinessObjectDataAvailabilityCollectionRequest request)
+    public BusinessObjectDataDdlCollectionResponse generateBusinessObjectDataDdlCollection(BusinessObjectDataDdlCollectionRequest request)
     {
-        return checkBusinessObjectDataAvailabilityCollectionImpl(request);
+        return generateBusinessObjectDataDdlCollectionImpl(request);
+    }
+
+    @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    {
+        // Perform validation and trim.
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+
+        // Ensure that a business object definition already exists with the specified name.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+
+        // Get the maximum number of records to return.
+        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+
+        // Gets the list of keys and return them.
+        BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
+        businessObjectDataKeys.getBusinessObjectDataKeys()
+            .addAll(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, maxResults));
+        return businessObjectDataKeys;
+    }
+
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
+    {
+        // Perform validation and trim. Please note that we specify business object format version parameter to be required.
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, true);
+
+        // Ensure that a business object definition already exists with the specified name.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+
+        // Get the maximum number of records to return.
+        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+
+        // Gets the list of business object data keys and return them.
+        BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
+        businessObjectDataKeys.getBusinessObjectDataKeys()
+            .addAll(businessObjectDataDao.getBusinessObjectDataByBusinessObjectFormat(businessObjectFormatEntity, maxResults));
+        return businessObjectDataKeys;
+    }
+
+    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory)
+    {
+        return getBusinessObjectDataImpl(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus,
+            includeBusinessObjectDataStatusHistory);
+    }
+
+    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey)
+    {
+        // Validate and trim the business object data key.
+        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, false, false);
+
+        // Get the business object data versions based on the specified parameters.
+        List<BusinessObjectDataEntity> businessObjectDataEntities = businessObjectDataDao.getBusinessObjectDataEntities(businessObjectDataKey);
+
+        // Create the response.
+        BusinessObjectDataVersions businessObjectDataVersions = new BusinessObjectDataVersions();
+        for (BusinessObjectDataEntity businessObjectDataEntity : businessObjectDataEntities)
+        {
+            BusinessObjectDataVersion businessObjectDataVersion = new BusinessObjectDataVersion();
+            BusinessObjectDataKey businessObjectDataVersionKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+            businessObjectDataVersion.setBusinessObjectDataKey(businessObjectDataVersionKey);
+            businessObjectDataVersion.setStatus(businessObjectDataEntity.getStatus().getCode());
+            businessObjectDataVersions.getBusinessObjectDataVersions().add(businessObjectDataVersion);
+        }
+
+        return businessObjectDataVersions;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Delegates implementation to {@link org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper}. Starts a new transaction. Meant for
+     * Activiti wrapper usage.
+     */
+    @PublishNotificationMessages
+    @NamespacePermission(fields = "#businessObjectDataInvalidateUnregisteredRequest.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectData(
+        BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
+    {
+        return invalidateUnregisteredBusinessObjectDataImpl(businessObjectDataInvalidateUnregisteredRequest);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation executes non-transactionally, suspends the current transaction if one exists.
+     */
+    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)
+    {
+        return restoreBusinessObjectDataImpl(businessObjectDataKey, expirationInDays);
+    }
+
+    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public BusinessObjectData retryStoragePolicyTransition(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataRetryStoragePolicyTransitionRequest request)
+    {
+        return businessObjectDataRetryStoragePolicyTransitionHelper.retryStoragePolicyTransition(businessObjectDataKey, request);
+    }
+
+    /**
+     * Search business object data based on the request
+     *
+     * @param request search request
+     *
+     * @return business data search result
+     */
+    @NamespacePermission(fields = "#request.businessObjectDataSearchFilters[0].BusinessObjectDataSearchKeys[0].namespace",
+        permissions = NamespacePermissionEnum.READ)
+    @Override
+    public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request)
+    {
+        //TO DO check name space permission for all entries in the request.
+        // validate search request
+        businessObjectDataSearchHelper.validateBusinesObjectDataSearchRequest(request);
+
+        // search business object data
+        List<BusinessObjectData> businessObjectDataList = businessObjectDataDao.searchBusinessObjectData(request.getBusinessObjectDataSearchFilters());
+        BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();
+        result.setBusinessObjectDataElements(businessObjectDataList);
+
+        return result;
+    }
+
+    /**
+     * Updates the list of not-available statuses by adding business object data status instances created from discovered "non-available" registered
+     * sub-partitions as per list of "matched" partition filters to the specified list of not-available statuses.
+     *
+     * @param notAvailableStatuses the list of not-available statuses to be updated
+     * @param businessObjectFormatKey the business object format key
+     * @param matchedAvailablePartitionFilters the list of "matched" partition filters
+     * @param availablePartitions the list of already discovered "available" partitions, where each partition consists of primary and optional sub-partition
+     * values
+     * @param storageNames the list of storage names
+     */
+    protected void addNotAvailableBusinessObjectDataStatuses(List<BusinessObjectDataStatus> notAvailableStatuses,
+        BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> matchedAvailablePartitionFilters, List<List<String>> availablePartitions,
+        List<String> storageNames)
+    {
+        // Now try to retrieve latest business object data per list of matched filters regardless of business object data and/or storage unit statuses.
+        // This is done to include all registered sub-partitions in the response.
+        // Business object data availability works across all storage platform types, so the storage platform type is not specified in the herdDao call.
+        // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
+        List<StorageUnitEntity> matchedNotAvailableStorageUnitEntities = storageUnitDao
+            .getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, matchedAvailablePartitionFilters, null, null, storageNames, null, null,
+                false);
+
+        // Exclude all storage units with business object data having "DELETED" status.
+        matchedNotAvailableStorageUnitEntities =
+            storageUnitHelper.excludeBusinessObjectDataStatus(matchedNotAvailableStorageUnitEntities, BusinessObjectDataStatusEntity.DELETED);
+
+        // Exclude all already discovered "available" partitions. Please note that, since we got here, the list of matched partitions can not be empty.
+        matchedNotAvailableStorageUnitEntities = storageUnitHelper.excludePartitions(matchedNotAvailableStorageUnitEntities, availablePartitions);
+
+        // Keep processing the matched "not available" storage units only when the list is not empty.
+        if (!CollectionUtils.isEmpty(matchedNotAvailableStorageUnitEntities))
+        {
+            // Populate the "not available" statuses with all found "not available" registered sub-partitions.
+            addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, matchedNotAvailableStorageUnitEntities);
+        }
+    }
+
+    /**
+     * Performs an availability check for a collection of business object data.
+     *
+     * @param businessObjectDataAvailabilityCollectionRequest the business object data availability collection requests
+     *
+     * @return the business object data availability information
+     */
+    protected BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollectionImpl(
+        BusinessObjectDataAvailabilityCollectionRequest businessObjectDataAvailabilityCollectionRequest)
+    {
+        // Perform the validation of the entire request, before we start processing the individual requests that requires the database access.
+        validateBusinessObjectDataAvailabilityCollectionRequest(businessObjectDataAvailabilityCollectionRequest);
+
+        // Process the individual requests and build the response.
+        BusinessObjectDataAvailabilityCollectionResponse businessObjectDataAvailabilityCollectionResponse =
+            new BusinessObjectDataAvailabilityCollectionResponse();
+        List<BusinessObjectDataAvailability> businessObjectDataAvailabilityResponses = new ArrayList<>();
+        businessObjectDataAvailabilityCollectionResponse.setBusinessObjectDataAvailabilityResponses(businessObjectDataAvailabilityResponses);
+        boolean isAllDataAvailable = true;
+        boolean isAllDataNotAvailable = true;
+        for (BusinessObjectDataAvailabilityRequest request : businessObjectDataAvailabilityCollectionRequest.getBusinessObjectDataAvailabilityRequests())
+        {
+            // Please note that when calling to process individual availability requests, we ask to skip the request validation and trimming step.
+            BusinessObjectDataAvailability businessObjectDataAvailability = checkBusinessObjectDataAvailabilityImpl(request, true);
+            businessObjectDataAvailabilityResponses.add(businessObjectDataAvailability);
+            isAllDataAvailable = isAllDataAvailable && businessObjectDataAvailability.getNotAvailableStatuses().isEmpty();
+            isAllDataNotAvailable = isAllDataNotAvailable && businessObjectDataAvailability.getAvailableStatuses().isEmpty();
+        }
+        businessObjectDataAvailabilityCollectionResponse.setIsAllDataAvailable(isAllDataAvailable);
+        businessObjectDataAvailabilityCollectionResponse.setIsAllDataNotAvailable(isAllDataNotAvailable);
+
+        return businessObjectDataAvailabilityCollectionResponse;
     }
 
     /**
@@ -477,19 +610,17 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
         // Build partition filters based on the specified partition value filters.
         // Business object data availability works across all storage platform types, so the storage platform type is not specified in the call.
-        // Since we want to search across "available" storage units, we exclude Glacier storage platform type.
         List<List<String>> partitionFilters = businessObjectDataDaoHelper
             .buildPartitionFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), businessObjectFormatKey,
-                request.getBusinessObjectDataVersion(), storageNames, null, StoragePlatformEntity.GLACIER, businessObjectFormatEntity);
+                request.getBusinessObjectDataVersion(), storageNames, null, null, businessObjectFormatEntity);
 
         // Retrieve a list of storage unit entities for the specified partition values. The entities will be sorted by partition value that is identified
         // by partition column position. If a business object data version isn't specified, the latest VALID business object data version is returned.
         // Business object data availability works across all storage platform types, so the storage platform type is not specified in the herdDao call.
-        // We want to select only "available" storage units, so we exclude Glacier storage platform type (when storage names are not specified) and pass
-        // "true" for selectOnlyAvailableStorageUnits parameter.
+        // We want to select only "available" storage units, so we pass "true" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitEntity> availableStorageUnitEntities = storageUnitDao
             .getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, partitionFilters, request.getBusinessObjectDataVersion(),
-                BusinessObjectDataStatusEntity.VALID, storageNames, null, StoragePlatformEntity.GLACIER, true);
+                BusinessObjectDataStatusEntity.VALID, storageNames, null, null, true);
 
         // Create business object data availability object instance and initialise it with request field values.
         BusinessObjectDataAvailability businessObjectDataAvailability = createBusinessObjectDataAvailability(request);
@@ -525,21 +656,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
                 matchedAvailablePartitionFilters.add(businessObjectDataHelper.getPartitionFilter(businessObjectDataKey, partitionFilters.get(0)));
                 availablePartitions.add(businessObjectDataHelper.getPrimaryAndSubPartitionValues(businessObjectDataKey));
-
-                // For the result storage units, the storage platform could be "Glacier", since Glacier storage name might be specified in the request.
-                if (StoragePlatformEntity.GLACIER.equals(storageUnitEntity.getStorage().getStoragePlatform().getName()))
-                {
-                    // For a Glacier storage, add the storage unit to the "not-available" statuses list with the "ARCHIVED" reason.
-                    BusinessObjectDataStatus businessObjectDataStatus = createAvailableBusinessObjectDataStatus(businessObjectDataEntity);
-                    businessObjectDataStatus.setReason(REASON_ARCHIVED);
-                    notAvailableStatuses.add(businessObjectDataStatus);
-                }
-                else
-                {
-                    // For a non-Glacier storage, add the storage unit to the "available" statuses list.
-                    availableStatuses.add(createAvailableBusinessObjectDataStatus(businessObjectDataEntity));
-                }
-
+                availableStatuses.add(createAvailableBusinessObjectDataStatus(businessObjectDataEntity));
                 businessObjectDataToStorageUnitMap.put(businessObjectDataEntity, storageUnitEntity);
             }
         }
@@ -566,21 +683,10 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitEntity> notAvailableStorageUnitEntities = storageUnitDao
             .getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, unmatchedPartitionFilters, request.getBusinessObjectDataVersion(), null,
-                storageNames, null, StoragePlatformEntity.GLACIER, false);
-
-        // For all unmatched filters, select "available" storage units in any storages of the GLACIER storage platform type.
-        // This is done to be able to check if business object data with a "non-available" storage unit is actually archived.
-        // We want to select only "available" storage units, so we pass "true" for selectOnlyAvailableStorageUnits parameter.
-        List<StorageUnitEntity> archivedStorageUnitEntities = storageUnitDao
-            .getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, unmatchedPartitionFilters, request.getBusinessObjectDataVersion(), null,
-                null, StoragePlatformEntity.GLACIER, null, true);
-
-        // Populate a set of archived business object data entities for easy access. Please note that business object data might be archived in more than
-        // one Glacier storage.
-        Set<BusinessObjectDataEntity> archivedBusinessObjectDataEntities = storageUnitHelper.getBusinessObjectDataEntitiesSet(archivedStorageUnitEntities);
+                storageNames, null, null, false);
 
         // Populate the not-available statuses list.
-        addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, notAvailableStorageUnitEntities, archivedBusinessObjectDataEntities);
+        addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, notAvailableStorageUnitEntities);
 
         // Build a list of matched "not-available" partition filters.
         // Please note that each request partition filter might result in multiple available business object data entities.
@@ -599,53 +705,34 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     }
 
     /**
-     * Performs an availability check for a collection of business object data.
+     * Retrieves the DDL to initialize the specified type of the database system to perform queries for a collection of business object data in the specified
+     * storages.
      *
-     * @param businessObjectDataAvailabilityCollectionRequest the business object data availability collection requests
+     * @param businessObjectDataDdlCollectionRequest the business object data DDL collection request
      *
-     * @return the business object data availability information
+     * @return the business object data DDL information
      */
-    protected BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollectionImpl(
-        BusinessObjectDataAvailabilityCollectionRequest businessObjectDataAvailabilityCollectionRequest)
+    protected BusinessObjectDataDdlCollectionResponse generateBusinessObjectDataDdlCollectionImpl(
+        BusinessObjectDataDdlCollectionRequest businessObjectDataDdlCollectionRequest)
     {
         // Perform the validation of the entire request, before we start processing the individual requests that requires the database access.
-        validateBusinessObjectDataAvailabilityCollectionRequest(businessObjectDataAvailabilityCollectionRequest);
+        validateBusinessObjectDataDdlCollectionRequest(businessObjectDataDdlCollectionRequest);
 
         // Process the individual requests and build the response.
-        BusinessObjectDataAvailabilityCollectionResponse businessObjectDataAvailabilityCollectionResponse =
-            new BusinessObjectDataAvailabilityCollectionResponse();
-        List<BusinessObjectDataAvailability> businessObjectDataAvailabilityResponses = new ArrayList<>();
-        businessObjectDataAvailabilityCollectionResponse.setBusinessObjectDataAvailabilityResponses(businessObjectDataAvailabilityResponses);
-        boolean isAllDataAvailable = true;
-        boolean isAllDataNotAvailable = true;
-        for (BusinessObjectDataAvailabilityRequest request : businessObjectDataAvailabilityCollectionRequest.getBusinessObjectDataAvailabilityRequests())
+        BusinessObjectDataDdlCollectionResponse businessObjectDataDdlCollectionResponse = new BusinessObjectDataDdlCollectionResponse();
+        List<BusinessObjectDataDdl> businessObjectDataDdlResponses = new ArrayList<>();
+        businessObjectDataDdlCollectionResponse.setBusinessObjectDataDdlResponses(businessObjectDataDdlResponses);
+        List<String> ddls = new ArrayList<>();
+        for (BusinessObjectDataDdlRequest request : businessObjectDataDdlCollectionRequest.getBusinessObjectDataDdlRequests())
         {
-            // Please note that when calling to process individual availability requests, we ask to skip the request validation and trimming step.
-            BusinessObjectDataAvailability businessObjectDataAvailability = checkBusinessObjectDataAvailabilityImpl(request, true);
-            businessObjectDataAvailabilityResponses.add(businessObjectDataAvailability);
-            isAllDataAvailable = isAllDataAvailable && businessObjectDataAvailability.getNotAvailableStatuses().isEmpty();
-            isAllDataNotAvailable = isAllDataNotAvailable && businessObjectDataAvailability.getAvailableStatuses().isEmpty();
+            // Please note that when calling to process individual ddl requests, we ask to skip the request validation and trimming step.
+            BusinessObjectDataDdl businessObjectDataDdl = generateBusinessObjectDataDdlImpl(request, true);
+            businessObjectDataDdlResponses.add(businessObjectDataDdl);
+            ddls.add(businessObjectDataDdl.getDdl());
         }
-        businessObjectDataAvailabilityCollectionResponse.setIsAllDataAvailable(isAllDataAvailable);
-        businessObjectDataAvailabilityCollectionResponse.setIsAllDataNotAvailable(isAllDataNotAvailable);
+        businessObjectDataDdlCollectionResponse.setDdlCollection(StringUtils.join(ddls, "\n\n"));
 
-        return businessObjectDataAvailabilityCollectionResponse;
-    }
-
-    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.READ)
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectDataDdl generateBusinessObjectDataDdl(BusinessObjectDataDdlRequest request)
-    {
-        return generateBusinessObjectDataDdlImpl(request, false);
-    }
-
-    @NamespacePermission(fields = "#request?.businessObjectDataDdlRequests?.![namespace]", permissions = NamespacePermissionEnum.READ)
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectDataDdlCollectionResponse generateBusinessObjectDataDdlCollection(BusinessObjectDataDdlCollectionRequest request)
-    {
-        return generateBusinessObjectDataDdlCollectionImpl(request);
+        return businessObjectDataDdlCollectionResponse;
     }
 
     /**
@@ -730,34 +817,354 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     }
 
     /**
-     * Retrieves the DDL to initialize the specified type of the database system to perform queries for a collection of business object data in the specified
-     * storages.
+     * Retrieves existing business object data entry information. This method does not start a new transaction and instead continues with existing transaction,
+     * if any.
      *
-     * @param businessObjectDataDdlCollectionRequest the business object data DDL collection request
+     * @param businessObjectDataKey the business object data key
+     * @param businessObjectFormatPartitionKey the business object format partition key, may be null
+     * @param businessObjectDataStatus the business object data status, may be null
+     * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
      *
-     * @return the business object data DDL information
+     * @return the retrieved business object data information
      */
-    protected BusinessObjectDataDdlCollectionResponse generateBusinessObjectDataDdlCollectionImpl(
-        BusinessObjectDataDdlCollectionRequest businessObjectDataDdlCollectionRequest)
+    protected BusinessObjectData getBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory)
     {
-        // Perform the validation of the entire request, before we start processing the individual requests that requires the database access.
-        validateBusinessObjectDataDdlCollectionRequest(businessObjectDataDdlCollectionRequest);
+        // Validate and trim the business object data key.
+        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, false, false);
 
-        // Process the individual requests and build the response.
-        BusinessObjectDataDdlCollectionResponse businessObjectDataDdlCollectionResponse = new BusinessObjectDataDdlCollectionResponse();
-        List<BusinessObjectDataDdl> businessObjectDataDdlResponses = new ArrayList<>();
-        businessObjectDataDdlCollectionResponse.setBusinessObjectDataDdlResponses(businessObjectDataDdlResponses);
-        List<String> ddls = new ArrayList<>();
-        for (BusinessObjectDataDdlRequest request : businessObjectDataDdlCollectionRequest.getBusinessObjectDataDdlRequests())
+        // If specified, trim the partition key parameter.
+        String businessObjectFormatPartitionKeyLocal = businessObjectFormatPartitionKey != null ? businessObjectFormatPartitionKey.trim() : null;
+
+        // If specified, trim the business object data status parameter; otherwise default to VALID status.
+        String businessObjectDataStatusLocal = businessObjectDataStatus != null ? businessObjectDataStatus.trim() : BusinessObjectDataStatusEntity.VALID;
+
+        // Validate the business object data status.
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
+            businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(businessObjectDataStatusLocal);
+
+        // Get the business object data based on the specified parameters. If a business object data version isn't specified,
+        // the latest version of business object data of the specified business object data status is returned.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataDaoHelper.getBusinessObjectDataEntityByKeyAndStatus(businessObjectDataKey, businessObjectDataStatusEntity.getCode());
+
+        // If specified, ensure the partition key matches what's configured within the business object format.
+        if (StringUtils.isNotBlank(businessObjectFormatPartitionKeyLocal))
         {
-            // Please note that when calling to process individual ddl requests, we ask to skip the request validation and trimming step.
-            BusinessObjectDataDdl businessObjectDataDdl = generateBusinessObjectDataDdlImpl(request, true);
-            businessObjectDataDdlResponses.add(businessObjectDataDdl);
-            ddls.add(businessObjectDataDdl.getDdl());
+            String configuredPartitionKey = businessObjectDataEntity.getBusinessObjectFormat().getPartitionKey();
+            Assert.isTrue(configuredPartitionKey.equalsIgnoreCase(businessObjectFormatPartitionKeyLocal), String
+                .format("Partition key \"%s\" doesn't match configured business object format partition key \"%s\".", businessObjectFormatPartitionKeyLocal,
+                    configuredPartitionKey));
         }
-        businessObjectDataDdlCollectionResponse.setDdlCollection(StringUtils.join(ddls, "\n\n"));
 
-        return businessObjectDataDdlCollectionResponse;
+        // Create and return the business object definition object from the persisted entity.
+        return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity, includeBusinessObjectDataStatusHistory);
+    }
+
+    /**
+     * Delegates implementation to {@link org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper}. Keeps current transaction context.
+     *
+     * @param businessObjectDataInvalidateUnregisteredRequest {@link org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest}
+     *
+     * @return {@link BusinessObjectDataInvalidateUnregisteredResponse}
+     */
+    protected BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectDataImpl(
+        BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
+    {
+        return businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
+    }
+
+    /**
+     * Initiates a restore request for a currently archived business object data. Keeps current transaction context.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
+     *
+     * @return the business object data information
+     */
+    protected BusinessObjectData restoreBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)
+    {
+        // Execute the initiate a restore request before step.
+        BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, expirationInDays);
+
+        // Create storage unit notification for the origin storage unit.
+        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getStorageName(),
+            businessObjectDataRestoreDto.getNewStorageUnitStatus(), businessObjectDataRestoreDto.getOldStorageUnitStatus());
+
+        // Initiate the restore request.
+        businessObjectDataInitiateRestoreHelperService.executeS3SpecificSteps(businessObjectDataRestoreDto);
+
+        // On failure of the above step, execute the "after" step, and re-throw the exception.
+        if (businessObjectDataRestoreDto.getException() != null)
+        {
+            // On failure, execute the after step that updates the storage unit status back to ARCHIVED.
+            businessObjectDataInitiateRestoreHelperService.executeInitiateRestoreAfterStep(businessObjectDataRestoreDto);
+
+            // Create storage unit notification for the origin storage unit.
+            notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+                businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getStorageName(),
+                businessObjectDataRestoreDto.getNewStorageUnitStatus(), businessObjectDataRestoreDto.getOldStorageUnitStatus());
+
+            // Re-throw the original exception.
+            throw new IllegalStateException(businessObjectDataRestoreDto.getException());
+        }
+        else
+        {
+            // Execute the after step for the initiate a business object data restore request
+            // and return the business object data information.
+            return businessObjectDataInitiateRestoreHelperService.executeInitiateRestoreAfterStep(businessObjectDataRestoreDto);
+        }
+    }
+
+    /**
+     * Adds business object data status instances created from the list of storage unit entities to the specified list of not-available statuses.
+     *
+     * @param notAvailableStatuses the list of not-available statuses
+     * @param storageUnitEntities the list of storage unit entities
+     */
+    private void addNotAvailableBusinessObjectDataStatuses(List<BusinessObjectDataStatus> notAvailableStatuses, List<StorageUnitEntity> storageUnitEntities)
+    {
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            notAvailableStatuses.add(createNotAvailableBusinessObjectDataStatus(storageUnitEntity));
+        }
+    }
+
+    /**
+     * Creates a business object data status instance from the business object data entity.
+     *
+     * @param businessObjectDataEntity the business object data entity
+     *
+     * @return the business object data status instance
+     */
+    private BusinessObjectDataStatus createAvailableBusinessObjectDataStatus(BusinessObjectDataEntity businessObjectDataEntity)
+    {
+        BusinessObjectDataStatus businessObjectDataStatus = new BusinessObjectDataStatus();
+
+        businessObjectDataStatus.setBusinessObjectFormatVersion(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion());
+        businessObjectDataStatus.setPartitionValue(businessObjectDataEntity.getPartitionValue());
+        businessObjectDataStatus.setSubPartitionValues(businessObjectDataHelper.getSubPartitionValues(businessObjectDataEntity));
+        businessObjectDataStatus.setBusinessObjectDataVersion(businessObjectDataEntity.getVersion());
+        businessObjectDataStatus.setReason(businessObjectDataEntity.getStatus().getCode());
+
+        return businessObjectDataStatus;
+    }
+
+    /**
+     * Creates business object data availability object instance and initialise it with the business object data availability request field values.
+     *
+     * @param request the business object data availability request
+     *
+     * @return the newly created BusinessObjectDataAvailability object instance
+     */
+    private BusinessObjectDataAvailability createBusinessObjectDataAvailability(BusinessObjectDataAvailabilityRequest request)
+    {
+        BusinessObjectDataAvailability businessObjectDataAvailability = new BusinessObjectDataAvailability();
+
+        businessObjectDataAvailability.setNamespace(request.getNamespace());
+        businessObjectDataAvailability.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName());
+        businessObjectDataAvailability.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage());
+        businessObjectDataAvailability.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType());
+        businessObjectDataAvailability.setBusinessObjectFormatVersion(request.getBusinessObjectFormatVersion());
+
+        businessObjectDataAvailability.setPartitionValueFilters(request.getPartitionValueFilters());
+        businessObjectDataAvailability.setPartitionValueFilter(request.getPartitionValueFilter());
+
+        businessObjectDataAvailability.setBusinessObjectDataVersion(request.getBusinessObjectDataVersion());
+
+        businessObjectDataAvailability.setStorageNames(request.getStorageNames());
+        businessObjectDataAvailability.setStorageName(request.getStorageName());
+
+        return businessObjectDataAvailability;
+    }
+
+    /**
+     * Creates business object data ddl object instance and initialise it with the business object data ddl request field values.
+     *
+     * @param request the business object data ddl request
+     *
+     * @return the newly created BusinessObjectDataDdl object instance
+     */
+    private BusinessObjectDataDdl createBusinessObjectDataDdl(BusinessObjectDataDdlRequest request)
+    {
+        BusinessObjectDataDdl businessObjectDataDdl = new BusinessObjectDataDdl();
+
+        businessObjectDataDdl.setNamespace(request.getNamespace());
+        businessObjectDataDdl.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName());
+        businessObjectDataDdl.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage());
+        businessObjectDataDdl.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType());
+        businessObjectDataDdl.setBusinessObjectFormatVersion(request.getBusinessObjectFormatVersion());
+
+        businessObjectDataDdl.setPartitionValueFilters(request.getPartitionValueFilters());
+        businessObjectDataDdl.setPartitionValueFilter(request.getPartitionValueFilter());
+
+        businessObjectDataDdl.setBusinessObjectDataVersion(request.getBusinessObjectDataVersion());
+
+        businessObjectDataDdl.setStorageNames(request.getStorageNames());
+        businessObjectDataDdl.setStorageName(request.getStorageName());
+
+        businessObjectDataDdl.setOutputFormat(request.getOutputFormat());
+        businessObjectDataDdl.setTableName(request.getTableName());
+        businessObjectDataDdl.setCustomDdlName(request.getCustomDdlName());
+
+        return businessObjectDataDdl;
+    }
+
+    /**
+     * Creates a business object data status instance from the storage unit entity.
+     *
+     * @param storageUnitEntity the storage unit entity
+     *
+     * @return the business object data status instance
+     */
+    private BusinessObjectDataStatus createNotAvailableBusinessObjectDataStatus(StorageUnitEntity storageUnitEntity)
+    {
+        // Get the business object entity.
+        BusinessObjectDataEntity businessObjectDataEntity = storageUnitEntity.getBusinessObjectData();
+
+        // Create and populate the business object data status instance.
+        BusinessObjectDataStatus businessObjectDataStatus = new BusinessObjectDataStatus();
+
+        businessObjectDataStatus.setBusinessObjectFormatVersion(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion());
+        businessObjectDataStatus.setPartitionValue(businessObjectDataEntity.getPartitionValue());
+        businessObjectDataStatus.setSubPartitionValues(businessObjectDataHelper.getSubPartitionValues(businessObjectDataEntity));
+        businessObjectDataStatus.setBusinessObjectDataVersion(businessObjectDataEntity.getVersion());
+
+        // If storage unit is "available", the business object data is selected as "non-available" due to its business object data status.
+        if (storageUnitEntity.getStatus().getAvailable())
+        {
+            businessObjectDataStatus.setReason(businessObjectDataEntity.getStatus().getCode());
+        }
+        // Otherwise, report the storage unit status as a reason for the business object data not being available.
+        else
+        {
+            businessObjectDataStatus.setReason(storageUnitEntity.getStatus().getCode());
+        }
+
+        return businessObjectDataStatus;
+    }
+
+    /**
+     * Creates the business object data status.
+     *
+     * @param businessObjectDataAvailabilityRequest the business object data availability request
+     * @param unmatchedPartitionFilter the partition filter that got no matched business object data instances
+     * @param reason the reason for the business object data not being available
+     *
+     * @return the business object data status
+     */
+    private BusinessObjectDataStatus createNotAvailableBusinessObjectDataStatus(BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest,
+        List<String> unmatchedPartitionFilter, String reason)
+    {
+        BusinessObjectDataStatus businessObjectDataStatus = new BusinessObjectDataStatus();
+
+        // Populate business object data status values using the business object data availability request.
+        businessObjectDataStatus.setBusinessObjectFormatVersion(businessObjectDataAvailabilityRequest.getBusinessObjectFormatVersion());
+
+        // When list of partition value filters is used, we populate primary and/or sub-partition values.
+        if (businessObjectDataAvailabilityRequest.getPartitionValueFilters() != null)
+        {
+            // Replace all null partition values with an empty string.
+            replaceAllNullsWithEmptyString(unmatchedPartitionFilter);
+
+            // Populate primary and sub-partition values from the unmatched partition filter.
+            businessObjectDataStatus.setPartitionValue(unmatchedPartitionFilter.get(0));
+            businessObjectDataStatus.setSubPartitionValues(unmatchedPartitionFilter.subList(1, unmatchedPartitionFilter.size()));
+        }
+        // Otherwise, for backwards compatibility, populate primary partition value only per expected single partition value from the unmatched filter.
+        else
+        {
+            // Since the availability request contains a standalone partition value filter,
+            // the unmatched partition filter is expected to contain only a single partition value.
+            for (String partitionValue : unmatchedPartitionFilter)
+            {
+                if (partitionValue != null)
+                {
+                    businessObjectDataStatus.setPartitionValue(partitionValue);
+                    break;
+                }
+            }
+        }
+        businessObjectDataStatus.setBusinessObjectDataVersion(businessObjectDataAvailabilityRequest.getBusinessObjectDataVersion());
+        businessObjectDataStatus.setReason(reason);
+
+        return businessObjectDataStatus;
+    }
+
+    /**
+     * Gets business object format key from the business object data availability request.
+     *
+     * @param request the business object data availability request
+     *
+     * @return the business object format key
+     */
+    private BusinessObjectFormatKey getBusinessObjectFormatKey(BusinessObjectDataAvailabilityRequest request)
+    {
+        return new BusinessObjectFormatKey(request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
+            request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion());
+    }
+
+    /**
+     * Gets a list of matched partition filters per specified list of storage unit entities and a sample partition filter.
+     *
+     * @param storageUnitEntities the list of storage unit entities
+     * @param samplePartitionFilter the sample partition filter
+     *
+     * @return the list of partition filters
+     */
+    private List<List<String>> getPartitionFilters(List<StorageUnitEntity> storageUnitEntities, List<String> samplePartitionFilter)
+    {
+        List<List<String>> partitionFilters = new ArrayList<>();
+
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData());
+            partitionFilters.add(businessObjectDataHelper.getPartitionFilter(businessObjectDataKey, samplePartitionFilter));
+        }
+
+        return partitionFilters;
+    }
+
+    /**
+     * Gets storage names from the business object data availability request.
+     *
+     * @param request the business object data availability request
+     *
+     * @return the list of storage names
+     */
+    private List<String> getStorageNames(BusinessObjectDataAvailabilityRequest request)
+    {
+        List<String> storageNames = new ArrayList<>();
+
+        if (StringUtils.isNotBlank(request.getStorageName()))
+        {
+            storageNames.add(request.getStorageName());
+        }
+
+        if (!CollectionUtils.isEmpty(request.getStorageNames()))
+        {
+            storageNames.addAll(request.getStorageNames());
+        }
+
+        return storageNames;
+    }
+
+    /**
+     * Replaces all null values in the specified list with empty strings.
+     *
+     * @param list the list of strings
+     */
+    private void replaceAllNullsWithEmptyString(List<String> list)
+    {
+        for (int i = 0; i < list.size(); i++)
+        {
+            if (list.get(i) == null)
+            {
+                list.set(i, "");
+            }
+        }
     }
 
     /**
@@ -828,43 +1235,6 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 request.getStorageNames().set(i, request.getStorageNames().get(i).trim());
             }
         }
-    }
-
-    /**
-     * Gets business object format key from the business object data availability request.
-     *
-     * @param request the business object data availability request
-     *
-     * @return the business object format key
-     */
-    private BusinessObjectFormatKey getBusinessObjectFormatKey(BusinessObjectDataAvailabilityRequest request)
-    {
-        return new BusinessObjectFormatKey(request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
-            request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion());
-    }
-
-    /**
-     * Gets storage names from the business object data availability request.
-     *
-     * @param request the business object data availability request
-     *
-     * @return the list of storage names
-     */
-    private List<String> getStorageNames(BusinessObjectDataAvailabilityRequest request)
-    {
-        List<String> storageNames = new ArrayList<>();
-
-        if (StringUtils.isNotBlank(request.getStorageName()))
-        {
-            storageNames.add(request.getStorageName());
-        }
-
-        if (!CollectionUtils.isEmpty(request.getStorageNames()))
-        {
-            storageNames.addAll(request.getStorageNames());
-        }
-
-        return storageNames;
     }
 
     /**
@@ -944,463 +1314,5 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         {
             request.setCustomDdlName(request.getCustomDdlName().trim());
         }
-    }
-
-
-    /**
-     * Creates business object data availability object instance and initialise it with the business object data availability request field values.
-     *
-     * @param request the business object data availability request
-     *
-     * @return the newly created BusinessObjectDataAvailability object instance
-     */
-    private BusinessObjectDataAvailability createBusinessObjectDataAvailability(BusinessObjectDataAvailabilityRequest request)
-    {
-        BusinessObjectDataAvailability businessObjectDataAvailability = new BusinessObjectDataAvailability();
-
-        businessObjectDataAvailability.setNamespace(request.getNamespace());
-        businessObjectDataAvailability.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName());
-        businessObjectDataAvailability.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage());
-        businessObjectDataAvailability.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType());
-        businessObjectDataAvailability.setBusinessObjectFormatVersion(request.getBusinessObjectFormatVersion());
-
-        businessObjectDataAvailability.setPartitionValueFilters(request.getPartitionValueFilters());
-        businessObjectDataAvailability.setPartitionValueFilter(request.getPartitionValueFilter());
-
-        businessObjectDataAvailability.setBusinessObjectDataVersion(request.getBusinessObjectDataVersion());
-
-        businessObjectDataAvailability.setStorageNames(request.getStorageNames());
-        businessObjectDataAvailability.setStorageName(request.getStorageName());
-
-        return businessObjectDataAvailability;
-    }
-
-    /**
-     * Creates a business object data status instance from the business object data entity.
-     *
-     * @param businessObjectDataEntity the business object data entity
-     *
-     * @return the business object data status instance
-     */
-    private BusinessObjectDataStatus createAvailableBusinessObjectDataStatus(BusinessObjectDataEntity businessObjectDataEntity)
-    {
-        BusinessObjectDataStatus businessObjectDataStatus = new BusinessObjectDataStatus();
-
-        businessObjectDataStatus.setBusinessObjectFormatVersion(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion());
-        businessObjectDataStatus.setPartitionValue(businessObjectDataEntity.getPartitionValue());
-        businessObjectDataStatus.setSubPartitionValues(businessObjectDataHelper.getSubPartitionValues(businessObjectDataEntity));
-        businessObjectDataStatus.setBusinessObjectDataVersion(businessObjectDataEntity.getVersion());
-        businessObjectDataStatus.setReason(businessObjectDataEntity.getStatus().getCode());
-
-        return businessObjectDataStatus;
-    }
-
-    /**
-     * Updates the list of not-available statuses by adding business object data status instances created from discovered "non-available" registered
-     * sub-partitions as per list of "matched" partition filters to the specified list of not-available statuses.
-     *
-     * @param notAvailableStatuses the list of not-available statuses to be updated
-     * @param businessObjectFormatKey the business object format key
-     * @param matchedAvailablePartitionFilters the list of "matched" partition filters
-     * @param availablePartitions the list of already discovered "available" partitions, where each partition consists of primary and optional sub-partition
-     * values
-     * @param storageNames the list of storage names
-     */
-    protected void addNotAvailableBusinessObjectDataStatuses(List<BusinessObjectDataStatus> notAvailableStatuses,
-        BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> matchedAvailablePartitionFilters, List<List<String>> availablePartitions,
-        List<String> storageNames)
-    {
-        // Now try to retrieve latest business object data per list of matched filters regardless of business object data and/or storage unit statuses.
-        // This is done to include all registered sub-partitions in the response.
-        // Business object data availability works across all storage platform types, so the storage platform type is not specified in the herdDao call.
-        // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
-        List<StorageUnitEntity> matchedNotAvailableStorageUnitEntities = storageUnitDao
-            .getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, matchedAvailablePartitionFilters, null, null, storageNames, null,
-                StoragePlatformEntity.GLACIER, false);
-
-        // Exclude all storage units with business object data having "DELETED" status.
-        matchedNotAvailableStorageUnitEntities =
-            storageUnitHelper.excludeBusinessObjectDataStatus(matchedNotAvailableStorageUnitEntities, BusinessObjectDataStatusEntity.DELETED);
-
-        // Exclude all already discovered "available" partitions. Please note that, since we got here, the list of matched partitions can not be empty.
-        matchedNotAvailableStorageUnitEntities = storageUnitHelper.excludePartitions(matchedNotAvailableStorageUnitEntities, availablePartitions);
-
-        // Keep processing the matched "not available" storage units only when the list is not empty.
-        if (!CollectionUtils.isEmpty(matchedNotAvailableStorageUnitEntities))
-        {
-            // Also, for all matched filters, select "available" storage units in any storages of the GLACIER storage platform type.
-            // This is done to be able to check if business object data with a "non-available" storage unit is actually archived.
-            // We want to select only "available" storage units, so we pass "true" for selectOnlyAvailableStorageUnits parameter.
-            List<StorageUnitEntity> matchedArchivedStorageUnitEntities = storageUnitDao
-                .getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, matchedAvailablePartitionFilters, null, null, null,
-                    StoragePlatformEntity.GLACIER, null, true);
-
-            // Populate a set of archived business object data entities for easy access.
-            Set<BusinessObjectDataEntity> matchedArchivedBusinessObjectDataEntities =
-                storageUnitHelper.getBusinessObjectDataEntitiesSet(matchedArchivedStorageUnitEntities);
-
-            // Populate the "not available" statuses with all found "not available" registered sub-partitions.
-            addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, matchedNotAvailableStorageUnitEntities, matchedArchivedBusinessObjectDataEntities);
-        }
-    }
-
-    /**
-     * Adds business object data status instances created from the list of storage unit entities to the specified list of not-available statuses.
-     *
-     * @param notAvailableStatuses the list of not-available statuses
-     * @param storageUnitEntities the list of storage unit entities
-     * @param archivedBusinessObjectDataEntities the set of archived business object data entities, not null
-     */
-    private void addNotAvailableBusinessObjectDataStatuses(List<BusinessObjectDataStatus> notAvailableStatuses, List<StorageUnitEntity> storageUnitEntities,
-        Set<BusinessObjectDataEntity> archivedBusinessObjectDataEntities)
-    {
-        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
-        {
-            notAvailableStatuses.add(createNotAvailableBusinessObjectDataStatus(storageUnitEntity, archivedBusinessObjectDataEntities));
-        }
-    }
-
-    /**
-     * Creates a business object data status instance from the storage unit entity.
-     *
-     * @param storageUnitEntity the storage unit entity
-     * @param archivedBusinessObjectDataEntities the set of archived business object data entities, not null
-     *
-     * @return the business object data status instance
-     */
-    private BusinessObjectDataStatus createNotAvailableBusinessObjectDataStatus(StorageUnitEntity storageUnitEntity,
-        Set<BusinessObjectDataEntity> archivedBusinessObjectDataEntities)
-    {
-        // Get the business object entity.
-        BusinessObjectDataEntity businessObjectDataEntity = storageUnitEntity.getBusinessObjectData();
-
-        // Create and populate the business object data status instance.
-        BusinessObjectDataStatus businessObjectDataStatus = new BusinessObjectDataStatus();
-
-        businessObjectDataStatus.setBusinessObjectFormatVersion(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion());
-        businessObjectDataStatus.setPartitionValue(businessObjectDataEntity.getPartitionValue());
-        businessObjectDataStatus.setSubPartitionValues(businessObjectDataHelper.getSubPartitionValues(businessObjectDataEntity));
-        businessObjectDataStatus.setBusinessObjectDataVersion(businessObjectDataEntity.getVersion());
-
-        if (storageUnitEntity.getStatus().getAvailable())
-        {
-            // Storage unit is "available", so business object data is selected as "non-available" due to its business object data status.
-            businessObjectDataStatus.setReason(businessObjectDataEntity.getStatus().getCode());
-        }
-        else if (archivedBusinessObjectDataEntities.contains(storageUnitEntity.getBusinessObjectData()))
-        {
-            // Storage unit is not "available", but business object data is archived.
-            businessObjectDataStatus.setReason(BusinessObjectDataServiceImpl.REASON_ARCHIVED);
-        }
-        else
-        {
-            businessObjectDataStatus.setReason(BusinessObjectDataServiceImpl.REASON_NO_ENABLED_STORAGE_UNIT);
-        }
-
-        return businessObjectDataStatus;
-    }
-
-    /**
-     * Creates the business object data status.
-     *
-     * @param businessObjectDataAvailabilityRequest the business object data availability request
-     * @param unmatchedPartitionFilter the partition filter that got no matched business object data instances
-     * @param reason the reason for the business object data not being available
-     *
-     * @return the business object data status
-     */
-    private BusinessObjectDataStatus createNotAvailableBusinessObjectDataStatus(BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest,
-        List<String> unmatchedPartitionFilter, String reason)
-    {
-        BusinessObjectDataStatus businessObjectDataStatus = new BusinessObjectDataStatus();
-
-        // Populate business object data status values using the business object data availability request.
-        businessObjectDataStatus.setBusinessObjectFormatVersion(businessObjectDataAvailabilityRequest.getBusinessObjectFormatVersion());
-
-        // When list of partition value filters is used, we populate primary and/or sub-partition values.
-        if (businessObjectDataAvailabilityRequest.getPartitionValueFilters() != null)
-        {
-            // Replace all null partition values with an empty string.
-            replaceAllNullsWithEmptyString(unmatchedPartitionFilter);
-
-            // Populate primary and sub-partition values from the unmatched partition filter.
-            businessObjectDataStatus.setPartitionValue(unmatchedPartitionFilter.get(0));
-            businessObjectDataStatus.setSubPartitionValues(unmatchedPartitionFilter.subList(1, unmatchedPartitionFilter.size()));
-        }
-        // Otherwise, for backwards compatibility, populate primary partition value only per expected single partition value from the unmatched filter.
-        else
-        {
-            // Since the availability request contains a standalone partition value filter,
-            // the unmatched partition filter is expected to contain only a single partition value.
-            for (String partitionValue : unmatchedPartitionFilter)
-            {
-                if (partitionValue != null)
-                {
-                    businessObjectDataStatus.setPartitionValue(partitionValue);
-                    break;
-                }
-            }
-        }
-        businessObjectDataStatus.setBusinessObjectDataVersion(businessObjectDataAvailabilityRequest.getBusinessObjectDataVersion());
-        businessObjectDataStatus.setReason(reason);
-
-        return businessObjectDataStatus;
-    }
-
-    /**
-     * Gets a list of matched partition filters per specified list of storage unit entities and a sample partition filter.
-     *
-     * @param storageUnitEntities the list of storage unit entities
-     * @param samplePartitionFilter the sample partition filter
-     *
-     * @return the list of partition filters
-     */
-    private List<List<String>> getPartitionFilters(List<StorageUnitEntity> storageUnitEntities, List<String> samplePartitionFilter)
-    {
-        List<List<String>> partitionFilters = new ArrayList<>();
-
-        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
-        {
-            BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData());
-            partitionFilters.add(businessObjectDataHelper.getPartitionFilter(businessObjectDataKey, samplePartitionFilter));
-        }
-
-        return partitionFilters;
-    }
-
-    /**
-     * Creates business object data ddl object instance and initialise it with the business object data ddl request field values.
-     *
-     * @param request the business object data ddl request
-     *
-     * @return the newly created BusinessObjectDataDdl object instance
-     */
-    private BusinessObjectDataDdl createBusinessObjectDataDdl(BusinessObjectDataDdlRequest request)
-    {
-        BusinessObjectDataDdl businessObjectDataDdl = new BusinessObjectDataDdl();
-
-        businessObjectDataDdl.setNamespace(request.getNamespace());
-        businessObjectDataDdl.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName());
-        businessObjectDataDdl.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage());
-        businessObjectDataDdl.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType());
-        businessObjectDataDdl.setBusinessObjectFormatVersion(request.getBusinessObjectFormatVersion());
-
-        businessObjectDataDdl.setPartitionValueFilters(request.getPartitionValueFilters());
-        businessObjectDataDdl.setPartitionValueFilter(request.getPartitionValueFilter());
-
-        businessObjectDataDdl.setBusinessObjectDataVersion(request.getBusinessObjectDataVersion());
-
-        businessObjectDataDdl.setStorageNames(request.getStorageNames());
-        businessObjectDataDdl.setStorageName(request.getStorageName());
-
-        businessObjectDataDdl.setOutputFormat(request.getOutputFormat());
-        businessObjectDataDdl.setTableName(request.getTableName());
-        businessObjectDataDdl.setCustomDdlName(request.getCustomDdlName());
-
-        return businessObjectDataDdl;
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Delegates implementation to {@link org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper}. Starts a new transaction. Meant for
-     * Activiti wrapper usage.
-     */
-    @PublishJmsMessages
-    @NamespacePermission(fields = "#businessObjectDataInvalidateUnregisteredRequest.namespace", permissions = NamespacePermissionEnum.WRITE)
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectData(
-        BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
-    {
-        return invalidateUnregisteredBusinessObjectDataImpl(businessObjectDataInvalidateUnregisteredRequest);
-    }
-
-    /**
-     * Delegates implementation to {@link org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper}. Keeps current transaction context.
-     *
-     * @param businessObjectDataInvalidateUnregisteredRequest {@link org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest}
-     *
-     * @return {@link BusinessObjectDataInvalidateUnregisteredResponse}
-     */
-    protected BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectDataImpl(
-        BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
-    {
-        return businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * This implementation executes non-transactionally, suspends the current transaction if one exists.
-     */
-    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
-    @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public BusinessObjectData retryStoragePolicyTransition(BusinessObjectDataKey businessObjectDataKey,
-        BusinessObjectDataRetryStoragePolicyTransitionRequest request)
-    {
-        return retryStoragePolicyTransitionImpl(businessObjectDataKey, request);
-    }
-
-    /**
-     * Retries a storage policy transition by forcing re-initiation of the archiving process for the specified business object data that is still in progress of
-     * a valid archiving operation.
-     *
-     * @param businessObjectDataKey the business object data key
-     * @param request the information needed to retry a storage policy transition
-     *
-     * @return the business object data information
-     */
-    protected BusinessObjectData retryStoragePolicyTransitionImpl(BusinessObjectDataKey businessObjectDataKey,
-        BusinessObjectDataRetryStoragePolicyTransitionRequest request)
-    {
-        // Prepare to retry a storage policy transition.
-        BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto =
-            businessObjectDataRetryStoragePolicyTransitionHelperService.prepareToRetryStoragePolicyTransition(businessObjectDataKey, request);
-
-        // Execute S3 specific steps needed to retry a storage policy transition.
-        businessObjectDataRetryStoragePolicyTransitionHelperService.executeS3SpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
-
-        // Execute the after step for the retry a storage policy transition and return the business object data information.
-        return businessObjectDataRetryStoragePolicyTransitionHelperService
-            .executeRetryStoragePolicyTransitionAfterStep(businessObjectDataRetryStoragePolicyTransitionDto);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * This implementation executes non-transactionally, suspends the current transaction if one exists.
-     */
-    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
-    @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
-    {
-        return restoreBusinessObjectDataImpl(businessObjectDataKey);
-    }
-
-    /**
-     * Initiates a restore request for a currently archived business object data. Keeps current transaction context.
-     *
-     * @param businessObjectDataKey the business object data key
-     *
-     * @return the business object data information
-     */
-    protected BusinessObjectData restoreBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey)
-    {
-        // Execute the initiate a restore request before step.
-        BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey);
-
-        // Create storage unit notification for the origin storage unit.
-        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-            businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getOriginStorageName(),
-            businessObjectDataRestoreDto.getNewOriginStorageUnitStatus(), businessObjectDataRestoreDto.getOldOriginStorageUnitStatus());
-
-        // Initiate the restore request.
-        businessObjectDataInitiateRestoreHelperService.executeS3SpecificSteps(businessObjectDataRestoreDto);
-
-        // On failure of the above step, execute the "after" step, and re-throw the exception.
-        if (businessObjectDataRestoreDto.getException() != null)
-        {
-            // On failure, execute the after step that updates the origin storage unit status to DISABLED.
-            businessObjectDataInitiateRestoreHelperService.executeInitiateRestoreAfterStep(businessObjectDataRestoreDto);
-
-            // Create storage unit notification for the origin storage unit.
-            notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-                businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getOriginStorageName(),
-                businessObjectDataRestoreDto.getNewOriginStorageUnitStatus(), businessObjectDataRestoreDto.getOldOriginStorageUnitStatus());
-
-            // Re-throw the original exception.
-            throw new IllegalStateException(businessObjectDataRestoreDto.getException());
-        }
-        else
-        {
-            // Execute the after step for the initiate a business object data restore request
-            // and return the business object data information.
-            return businessObjectDataInitiateRestoreHelperService.executeInitiateRestoreAfterStep(businessObjectDataRestoreDto);
-        }
-    }
-
-    /**
-     * Replaces all null values in the specified list with empty strings.
-     *
-     * @param list the list of strings
-     */
-    private void replaceAllNullsWithEmptyString(List<String> list)
-    {
-        for (int i = 0; i < list.size(); i++)
-        {
-            if (list.get(i) == null)
-            {
-                list.set(i, "");
-            }
-        }
-    }
-
-    /**
-     * Search business object data based on the request
-     *
-     * @param request search request
-     *
-     * @return business data search result
-     */
-    @NamespacePermission(fields = "#request.businessObjectDataSearchFilters[0].BusinessObjectDataSearchKeys[0].namespace",
-        permissions = NamespacePermissionEnum.READ)
-    @Override
-    public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request)
-    {
-        //TO DO check name space permission for all entries in the request.
-        // validate search request
-        businessObjectDataSearchHelper.validateBusinesObjectDataSearchRequest(request);
-
-        // search business object data
-        List<BusinessObjectData> businessObjectDataList = businessObjectDataDao.searchBusinessObjectData(request.getBusinessObjectDataSearchFilters());
-        BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();
-        result.setBusinessObjectDataElements(businessObjectDataList);
-
-        return result;
-    }
-
-    @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.READ)
-    @Override
-    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
-    {
-        // Perform validation and trim.
-        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-
-        // Ensure that a business object definition already exists with the specified name.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
-
-        // Get the maximum number of records to return.
-        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
-
-        // Gets the list of keys and return them.
-        BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
-        businessObjectDataKeys.getBusinessObjectDataKeys()
-            .addAll(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, maxResults));
-        return businessObjectDataKeys;
-    }
-
-    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.READ)
-    @Override
-    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
-    {
-        // Perform validation and trim. Please note that we specify business object format version parameter to be required.
-        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, true);
-
-        // Ensure that a business object definition already exists with the specified name.
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
-
-        // Get the maximum number of records to return.
-        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
-
-        // Gets the list of business object data keys and return them.
-        BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
-        businessObjectDataKeys.getBusinessObjectDataKeys()
-            .addAll(businessObjectDataDao.getBusinessObjectDataByBusinessObjectFormat(businessObjectFormatEntity, maxResults));
-        return businessObjectDataKeys;
     }
 }

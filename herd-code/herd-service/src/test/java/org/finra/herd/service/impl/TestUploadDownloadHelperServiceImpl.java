@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.CompleteUploadSingleParamsDto;
 
@@ -37,7 +37,7 @@ public class TestUploadDownloadHelperServiceImpl extends UploadDownloadHelperSer
      * <p/>
      * Overwrite the base class method to change transactional attributes.
      */
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public void prepareForFileMove(String objectKey, CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
@@ -60,7 +60,7 @@ public class TestUploadDownloadHelperServiceImpl extends UploadDownloadHelperSer
      * <p/>
      * Overwrite the base class method to change transactional attributes.
      */
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public void executeFileMoveAfterSteps(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
@@ -72,10 +72,21 @@ public class TestUploadDownloadHelperServiceImpl extends UploadDownloadHelperSer
      * <p/>
      * Overwrite the base class method to change transactional attributes.
      */
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public void updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
     {
         updateBusinessObjectDataStatusImpl(businessObjectDataKey, businessObjectDataStatus);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
+    @Override
+    public void deleteSourceFileFromS3(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    {
+        deleteSourceFileFromS3Impl(completeUploadSingleParamsDto);
     }
 }

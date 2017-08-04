@@ -178,6 +178,17 @@ public enum ConfigurationValue
     JMS_PUBLISHING_JOB_CRON_EXPRESSION("jms.publishing.job.cron.expression", "0 0/5 * * * ?"),
 
     /**
+     * The cron expression to schedule "ec2OnDemandPricingUpdate" system job.  Default is to run the system job at 06:00 on Sunday.
+     */
+    EC2_ON_DEMAND_PRICING_UPDATE_JOB_CRON_EXPRESSION("ec2.on.demand.pricing.update.job.cron.expression", "0 0 6 ? * SUN"),
+
+    /**
+     * The URL of the Amazon EC2 pricing list in JSON format. Default is set to the URL specified by Amazon.
+     */
+    EC2_ON_DEMAND_PRICING_UPDATE_JOB_EC2_PRICING_LIST_URL("ec2.on.demand.pricing.update.job.ec2.pricing.list.url",
+        "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/index.json"),
+
+    /**
      * The cron expression to schedule "storagePolicySelector" system job.  Default is to run the system job every night at 2 AM.
      */
     STORAGE_POLICY_SELECTOR_JOB_CRON_EXPRESSION("storage.policy.selector.job.cron.expression", "0 0 2 * * ?"),
@@ -214,6 +225,23 @@ public enum ConfigurationValue
      * business object data instances.
      */
     BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES("business.object.data.finalize.restore.job.max.business.object.data.instances", "1000"),
+
+    /**
+     * The cron expression to schedule "businessObjectDataFinalizeRestore" system job. The default is to run this system job every 6 hours every day, starting
+     * at 1 AM.
+     */
+    EXPIRE_RESTORED_BDATA_JOB_CRON_EXPRESSION("expire.restored.business.object.data.job.cron.expression", "0 0 1/6 * * ?"),
+
+    /**
+     * The maximum number of business object data instances with expired restoration interval that can get processed in a single run of this system job. The
+     * default is 1000 business object data instances.
+     */
+    EXPIRE_RESTORED_BDATA_JOB_MAX_BDATA_INSTANCES("expire.restored.business.object.data.job.max.business.object.data.instances", "1000"),
+
+    /**
+     * The default value for the expiration time for the business object data restore. The default is 30 days
+     */
+    BDATA_RESTORE_EXPIRATION_IN_DAYS_DEFAULT("business.object.data.restore.expiration.in.days.default", 30),
 
     /**
      * The tokenized template of the Activiti Id. The default is computed dynamically so it is not listed here.
@@ -266,46 +294,6 @@ public enum ConfigurationValue
     EMR_CONDITIONAL_SCRIPT("emr.aws.node.conditional.script", "s3://elasticmapreduce/bootstrap-actions/run-if"),
 
     /**
-     * Bootstrapping script for Oozie Installation. This is required so there is no default.
-     */
-    EMR_OOZIE_SCRIPT("emr.oozie.script", null),
-
-    /**
-     * Bootstrapping script for running oozie commands. This is required so there is no default.
-     */
-    EMR_OOZIE_RUN_SCRIPT("emr.oozie.run.script", null),
-
-    /**
-     * The folder on S3 where the herd wrapper workflow is. This is required so there is no default.
-     */
-    EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION("emr.oozie.herd.wrapper.workflow.s3.location", null),
-
-    /**
-     * The folder on HDFS where the herd wrapper workflow is copied to.
-     */
-    EMR_OOZIE_HERD_WRAPPER_WORKFLOW_HDFS_LOCATION("emr.oozie.herd.wrapper.workflow.hdfs.location", "/user/hadoop/datamgmt/oozie_wrapper/"),
-
-    /**
-     * S3 to HDFS copy script. This is required so there is no default.
-     */
-    EMR_S3_HDFS_COPY_SCRIPT("emr.s3.hdfs.copy.script", null),
-
-    /**
-     * The oozie url template.
-     */
-    EMR_OOZIE_URL_TEMPLATE("emr.oozie.url.template", "http://%s:11000/oozie/"),
-
-    /**
-     * The number of oozie jobs to return with EMR cluster status.
-     */
-    EMR_OOZIE_JOBS_TO_INCLUDE_IN_CLUSTER_STATUS("emr.oozie.jobs.to.include.in.cluster.status", 100),
-
-    /**
-     * The herd EMR support security group.
-     */
-    EMR_HERD_SUPPORT_SECURITY_GROUP("emr.herd.support.security.group", null),
-
-    /**
      * Bootstrapping script for daemon configuration. The default value is the path to the EMR configure daemons script.
      */
     EMR_CONFIGURE_DAEMON("emr.aws.configure.daemon", "s3://elasticmapreduce/bootstrap-actions/configure-daemons"),
@@ -334,11 +322,6 @@ public enum ConfigurationValue
      * The maximum number of instances allowed in EMR cluster. The default is 0 (i.e. no maximum).
      */
     MAX_EMR_INSTANCES_COUNT("max.emr.instance.count", 0),
-
-    /**
-     * Tar file for the installation of Oozie. This is required so there is no default.
-     */
-    EMR_OOZIE_TAR_FILE("emr.oozie.tar", null),
 
     /**
      * The mandatory AWS tags for instances. This is required so there is no default.
@@ -560,11 +543,11 @@ public enum ConfigurationValue
     HERD_NOTIFICATION_SQS_SYS_MONITOR_RESPONSE_VELOCITY_TEMPLATE("herd.notification.sqs.sys.monitor.response.velocity.template", null),
 
     /**
-     * The velocity template to use when generate the business object data status change message. There is no default value which will cause no message to be
-     * sent.
+     * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
+     * NotificationMessageDefinitions} to use when generating notification messages for a business object data status change event. There is no default value
+     * which will cause no messages to be sent.
      */
-    HERD_NOTIFICATION_SQS_BUSINESS_OBJECT_DATA_STATUS_CHANGE_VELOCITY_TEMPLATE("herd.notification.sqs.business.object.data.status.change.velocity.template",
-        null),
+    HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS("herd.notification.business.object.data.status.change.message.definitions", null),
 
     /**
      * The cache time to live in seconds defined in net.sf.ehcache.config.CacheConfiguration.
@@ -678,6 +661,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_BDEF_DOCUMENT_TYPE("elasticsearch.bdef.document.type", "doc"),
 
     /**
+     * The elasticsearch document type
+     */
+    ELASTICSEARCH_TAG_DOCUMENT_TYPE("elasticsearch.tag.document.type", "doc"),
+
+    /**
      * The elasticsearch business object definition mappings JSON
      */
     ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
@@ -706,19 +694,54 @@ public enum ConfigurationValue
         "{ \"clientTransportAddresses\": [\"localhost\"], \"clientTransportSniff\": true, \"elasticSearchCluster\": \"elasticsearch\" }"),
 
     /**
+     * Searchable 'stemmed' fields, defaults to all stemmed fields with no boost
+     */
+    ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED("elasticsearch.searchable.fields.stemmed", "{\"*.stemmed\": \"1.0\"}"),
+
+    /**
+     * Searchable 'stemmed' fields, defaults to all ngrams fields with no boost
+     */
+    ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS("elasticsearch.searchable.fields.ngrams", "{\"*.ngrams\": \"1.0\"}"),
+
+    /**
+     * Pre-tags used for highlighting
+     */
+    ELASTICSEARCH_HIGHLIGHT_PRETAGS("elasticsearch.highlight.pretags", "<hlt class=\"highlight\">"),
+
+    /**
+     * Post-tags used for highlighting
+     */
+    ELASTICSEARCH_HIGHLIGHT_POSTTAGS("elasticsearch.highlight.posttags", "</hlt>"),
+
+    /**
+     * Fields on which highlighting should be done, defaults to all fields
+     */
+    ELASTICSEARCH_HIGHLIGHT_FIELDS("elasticsearch.highlight.fields", "{\"fields\": [\"*\"]}"),
+
+    /**
      * The elasticsearch default port
      */
     ELASTICSEARCH_DEFAULT_PORT("elasticsearch.default.port", 9300),
 
     /**
-     * The elasticsearch spot check percentage
+     * The elasticsearch spot check percentage for bdefs
      */
     ELASTICSEARCH_BDEF_SPOT_CHECK_PERCENTAGE("elasticsearch.bdef.spot.check.percentage", 0.05),
 
     /**
-     * The elasticsearch spot check most recent number
+     * The elasticsearch spot check most recent number for bdefs
      */
     ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.bdef.spot.check.most.recent.number", 100),
+
+    /**
+     * The elasticsearch spot check percentage for tags
+     */
+    ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE("elasticsearch.tag.spot.check.percentage", 0.2),
+
+    /**
+     * The elasticsearch spot check most recent number for tags
+     */
+    ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.tag.spot.check.most.recent.number", 10),
 
     /**
      * The elasticsearch search guard enabled
@@ -740,6 +763,41 @@ public enum ConfigurationValue
      * The elasticsearch search guard keystore path
      */
     ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH("elasticsearch.search.guard.keystore.path", "/path/to/keystore.jks"),
+
+    /**
+     * The elasticsearch search rest client hostname
+     */
+    ELASTICSEARCH_REST_CLIENT_HOSTNAME("elasticsearch.rest.client.hostname", "localhost"),
+
+    /**
+     * The elasticsearch search rest client port number
+     */
+    ELASTICSEARCH_REST_CLIENT_PORT("elasticsearch.rest.client.port", 9200),
+
+    /**
+     * The elasticsearch search rest client scheme
+     */
+    ELASTICSEARCH_REST_CLIENT_SCHEME("elasticsearch.rest.client.scheme", "http"),
+
+    /*
+     * The elasticsearch search rest client user name
+     */
+    ELASTICSEARCH_REST_CLIENT_USERNAME("elasticsearch.rest.client.username",  null),
+
+    /*
+     * The elasticsearch search rest client user credential name
+     */
+    ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname",  null),
+
+    /*
+     * The elasticsearch search rest client timeout
+     */
+    ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT("elasticsearch.rest.client.connection.timeout", 60000),
+
+    /*
+     * The elasticsearch search rest client read timeout
+     */
+    ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT("elasticsearch.rest.client.read.timeout", 60000),
 
     /**
      * The elasticsearch search guard truststore file path
@@ -774,12 +832,32 @@ public enum ConfigurationValue
     /**
      * The cut-off length of the short description
      */
-    TAG_SHORT_DESCRIPTION_LENGTH("tag.short.description.max.length", 300);
+    TAG_SHORT_DESCRIPTION_LENGTH("tag.short.description.max.length", 300),
+
+    /**
+     * The S3 object tag key to be used to trigger S3 object archiving to Glacier.
+     */
+    S3_ARCHIVE_TO_GLACIER_TAG_KEY("s3.archive.to.glacier.tag.key", "HerdArchiveToGlacier"),
+
+    /**
+     * The S3 object tag value to be used to trigger S3 object archiving to Glacier.
+     */
+    S3_ARCHIVE_TO_GLACIER_TAG_VALUE("s3.archive.to.glacier.tag.value", "true"),
+
+    /**
+     * The Amazon Resource Name (ARN) of the role to assume when tagging S3 objects to trigger archiving to Glacier.
+     */
+    S3_ARCHIVE_TO_GLACIER_ROLE_ARN("s3.archive.to.glacier.role.arn", null),
+
+    /**
+     * The session identifier for the assumed role to be used when tagging S3 objects to trigger archiving to Glacier.
+     */
+    S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME("s3.archive.to.glacier.role.session.name", null);
+
+    private Object defaultValue;
 
     // Properties
     private String key;
-
-    private Object defaultValue;
 
     private ConfigurationValue(String key, Object defaultValue)
     {
@@ -787,13 +865,13 @@ public enum ConfigurationValue
         this.defaultValue = defaultValue;
     }
 
-    public String getKey()
-    {
-        return key;
-    }
-
     public Object getDefaultValue()
     {
         return defaultValue;
+    }
+
+    public String getKey()
+    {
+        return key;
     }
 }

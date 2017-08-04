@@ -1003,7 +1003,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Retrieve the actual business object definition objects from the search response.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE_4), INCLUDE_TAG_HIERARCHY))))),
             Sets.newHashSet(FIELD_SHORT_DESCRIPTION));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
@@ -1083,8 +1083,49 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     {
         try
         {
+            businessObjectDefinitionServiceImpl.createBusinessObjectDefinition(new BusinessObjectDefinitionCreateRequest());
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            businessObjectDefinitionServiceImpl.deleteBusinessObjectDefinition(new BusinessObjectDefinitionKey());
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        try
+        {
             businessObjectDefinitionServiceImpl.getBusinessObjectDefinition(new BusinessObjectDefinitionKey());
-            fail("Should throw an IllegalArgumentException.");
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            businessObjectDefinitionServiceImpl.updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(), new BusinessObjectDefinitionUpdateRequest());
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(),
+                new BusinessObjectDefinitionDescriptiveInformationUpdateRequest());
+            fail();
         }
         catch (IllegalArgumentException e)
         {
@@ -1340,12 +1381,15 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a root tag entity for the tag type.
-        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION);
 
         // Create three children for the root tag.
-        TagEntity childTagEntity1 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, rootTagEntity);
-        TagEntity childTagEntity2 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, rootTagEntity);
-        TagEntity childTagEntity3 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4, rootTagEntity);
+        TagEntity childTagEntity1 =
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_SEARCH_SCORE_MULTIPLIER_2, TAG_DESCRIPTION_2, rootTagEntity);
+        TagEntity childTagEntity2 =
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_SEARCH_SCORE_MULTIPLIER_3, TAG_DESCRIPTION_3, rootTagEntity);
+        TagEntity childTagEntity3 =
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_SEARCH_SCORE_MULTIPLIER_4, TAG_DESCRIPTION_4, rootTagEntity);
 
         // Create association between business object definition and tag.
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), childTagEntity1);
@@ -1365,7 +1409,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Retrieve the actual business object definition objects from the search response.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
             Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
@@ -1421,8 +1465,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.searchBusinessObjectDefinitions(new BusinessObjectDefinitionSearchRequest(Arrays.asList(
-                new BusinessObjectDefinitionSearchFilter(Arrays.asList(new BusinessObjectDefinitionSearchKey(), new BusinessObjectDefinitionSearchKey())))),
-                NO_SEARCH_RESPONSE_FIELDS);
+                new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
+                    Arrays.asList(new BusinessObjectDefinitionSearchKey(), new BusinessObjectDefinitionSearchKey())))), NO_SEARCH_RESPONSE_FIELDS);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -1434,7 +1478,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.searchBusinessObjectDefinitions(new BusinessObjectDefinitionSearchRequest(Arrays.asList(
-                new BusinessObjectDefinitionSearchFilter(
+                new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                     Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey("I_DO_NOT_EXIST", "I_DO_NO_EXIST"), NOT_INCLUDE_TAG_HIERARCHY))))),
                 NO_SEARCH_RESPONSE_FIELDS);
             fail();
@@ -1448,7 +1492,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.searchBusinessObjectDefinitions(new BusinessObjectDefinitionSearchRequest(Arrays.asList(
-                new BusinessObjectDefinitionSearchFilter(
+                new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                     Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
                 Sets.newHashSet("I_DO_NOT_EXIST"));
             fail();
@@ -1462,7 +1506,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.searchBusinessObjectDefinitions(new BusinessObjectDefinitionSearchRequest(Arrays.asList(
-                new BusinessObjectDefinitionSearchFilter(
+                new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                     Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
                 Sets.newHashSet(FIELD_DISPLAY_NAME, "I_DO_NOT_EXIST", FIELD_DATA_PROVIDER_NAME));
             fail();
@@ -1481,7 +1525,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Retrieve the actual business object definition objects from the search response.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
             Sets.newHashSet(FIELD_DATA_PROVIDER_NAME.toLowerCase(), FIELD_DISPLAY_NAME.toLowerCase(), FIELD_SHORT_DESCRIPTION.toLowerCase()));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
@@ -1497,7 +1541,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Retrieve the actual business object definition objects from the search response.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
             Sets.newHashSet(FIELD_DATA_PROVIDER_NAME.toUpperCase(), FIELD_DISPLAY_NAME.toUpperCase(), FIELD_SHORT_DESCRIPTION.toUpperCase()));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
@@ -1522,7 +1566,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Retrieve the actual business object definition objects from the search response.
         // Fields are required to have a blank text value because that is set by default in the controller.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))), Sets.newHashSet(BLANK_TEXT));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
 
@@ -1544,7 +1588,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Retrieve the actual business object definition objects from the search response.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
             Sets.newHashSet(FIELD_DISPLAY_NAME));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
@@ -1567,7 +1611,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Retrieve the actual business object definition objects from the search response.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
             Sets.newHashSet(FIELD_SHORT_DESCRIPTION));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
@@ -1590,7 +1634,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Retrieve the actual business object definition objects from the search response.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
             Sets.newHashSet(FIELD_DATA_PROVIDER_NAME));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
@@ -1612,7 +1656,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Retrieve the actual business object definition objects from the search response.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
             Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
@@ -1634,7 +1678,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Retrieve the actual business object definition objects from the search response.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
             Sets.newHashSet(FIELD_SHORT_DESCRIPTION, FIELD_DATA_PROVIDER_NAME));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
@@ -1656,7 +1700,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Retrieve the actual business object definition objects from the search response.
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
-            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(NO_EXCLUSION_SEARCH_FILTER,
                 Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))),
             Sets.newHashSet(FIELD_SHORT_DESCRIPTION, FIELD_DISPLAY_NAME));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());

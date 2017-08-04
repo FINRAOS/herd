@@ -36,7 +36,7 @@ import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JsonHelper;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.CompleteUploadSingleParamsDto;
@@ -106,7 +106,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
     @Autowired
     private StorageUnitDaoHelper storageUnitDaoHelper;
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void prepareForFileMove(String objectKey, CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
@@ -181,9 +181,9 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
 
             // Validate the source S3 file.
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-                S3FileTransferRequestParamsDto.builder().s3BucketName(completeUploadSingleParamsDto.getSourceBucketName())
-                    .s3KeyPrefix(completeUploadSingleParamsDto.getSourceFilePath()).httpProxyHost(awsParamsDto.getHttpProxyHost())
-                    .httpProxyPort(awsParamsDto.getHttpProxyPort()).build();
+                S3FileTransferRequestParamsDto.builder().withS3BucketName(completeUploadSingleParamsDto.getSourceBucketName())
+                    .withS3KeyPrefix(completeUploadSingleParamsDto.getSourceFilePath()).withHttpProxyHost(awsParamsDto.getHttpProxyHost())
+                    .withHttpProxyPort(awsParamsDto.getHttpProxyPort()).build();
             s3Dao.validateS3File(s3FileTransferRequestParamsDto, sourceStorageFileEntity.getFileSizeBytes());
 
             // Get the S3 managed "external" storage entity and make sure it exists.
@@ -296,7 +296,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         completeUploadSingleParamsDto.setTargetNewStatus(targetStatus);
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void executeFileMoveAfterSteps(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
@@ -346,25 +346,6 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
 
         try
         {
-            // Delete the source file from S3.
-            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-                S3FileTransferRequestParamsDto.builder().s3BucketName(completeUploadSingleParamsDto.getSourceBucketName())
-                    .s3KeyPrefix(completeUploadSingleParamsDto.getSourceFilePath())
-                    .httpProxyHost(completeUploadSingleParamsDto.getAwsParams().getHttpProxyHost())
-                    .httpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort()).build();
-
-            s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
-        }
-        catch (Exception e)
-        {
-            // Log the error if failed to delete the file from source S3 bucket.
-            LOGGER.error("Failed to delete the upload single file. s3Key=\"{}\" sourceS3BucketName=\"{}\" sourceBusinessObjectDataKey={}",
-                completeUploadSingleParamsDto.getSourceFilePath(), completeUploadSingleParamsDto.getSourceBucketName(),
-                jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()), e);
-        }
-
-        try
-        {
             // Update the status of the source business object data to deleted.
             completeUploadSingleParamsDto.setSourceOldStatus(completeUploadSingleParamsDto.getSourceNewStatus());
             completeUploadSingleParamsDto.setSourceNewStatus(BusinessObjectDataStatusEntity.DELETED);
@@ -400,7 +381,41 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         }
     }
 
-    @PublishJmsMessages
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void deleteSourceFileFromS3(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    {
+        deleteSourceFileFromS3Impl(completeUploadSingleParamsDto);
+    }
+
+    /**
+     * Delete the source file from S3
+     *
+     * @param completeUploadSingleParamsDto the DTO that contains complete upload single message parameters
+     */
+    protected void deleteSourceFileFromS3Impl(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    {
+        try
+        {
+            // Delete the source file from S3.
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
+                S3FileTransferRequestParamsDto.builder().withS3BucketName(completeUploadSingleParamsDto.getSourceBucketName())
+                    .withS3KeyPrefix(completeUploadSingleParamsDto.getSourceFilePath())
+                    .withHttpProxyHost(completeUploadSingleParamsDto.getAwsParams().getHttpProxyHost())
+                    .withHttpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort()).build();
+
+            s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
+        }
+        catch (Exception e)
+        {
+            // Log the error if failed to delete the file from source S3 bucket.
+            LOGGER.error("Failed to delete the upload single file. s3Key=\"{}\" sourceS3BucketName=\"{}\" sourceBusinessObjectDataKey={}",
+                completeUploadSingleParamsDto.getSourceFilePath(), completeUploadSingleParamsDto.getSourceBucketName(),
+                jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()), e);
+        }
+    }
+
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
@@ -512,8 +527,8 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
                 AwsParamsDto awsParams = awsHelper.getAwsParamsDto();
 
                 S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-                    S3FileTransferRequestParamsDto.builder().s3BucketName(s3BucketName).s3KeyPrefix(storageFilePath).httpProxyHost(awsParams.getHttpProxyHost())
-                        .httpProxyPort(awsParams.getHttpProxyPort()).build();
+                    S3FileTransferRequestParamsDto.builder().withS3BucketName(s3BucketName).withS3KeyPrefix(storageFilePath)
+                        .withHttpProxyHost(awsParams.getHttpProxyHost()).withHttpProxyPort(awsParams.getHttpProxyPort()).build();
 
                 s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
             }

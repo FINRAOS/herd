@@ -15,9 +15,6 @@
 */
 package org.finra.herd.rest;
 
-import static org.finra.herd.core.HerdDateUtils.getXMLGregorianCalendarValue;
-
-import java.util.Date;
 import java.util.Set;
 
 import io.swagger.annotations.Api;
@@ -40,7 +37,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionValidateResponse;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.ui.constants.UiConstants;
@@ -209,19 +205,4 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
         return businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(request, fields);
     }
 
-    /**
-     * Validate all business object definitions in the index
-     *
-     * @return the business object definition validate index response
-     */
-    @RequestMapping(value = "/businessObjectDefinitions/validateindex", method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_VALIDATE_INDEX_GET)
-    public BusinessObjectDefinitionValidateResponse validateIndexBusinessObjectDefinitions()
-    {
-        businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions();
-        boolean sizeCheck = businessObjectDefinitionService.indexSizeCheckValidationBusinessObjectDefinitions();
-        boolean spotCheckPercentage = businessObjectDefinitionService.indexSpotCheckPercentageValidationBusinessObjectDefinitions();
-        boolean spotCheckMostRecent = businessObjectDefinitionService.indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
-        return new BusinessObjectDefinitionValidateResponse(getXMLGregorianCalendarValue(new Date()), sizeCheck, spotCheckPercentage, spotCheckMostRecent);
-    }
 }

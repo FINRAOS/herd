@@ -29,7 +29,7 @@ import org.finra.herd.dao.BusinessObjectDefinitionTagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTag;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagCreateRequest;
@@ -71,7 +71,7 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
     @Autowired
     private TagHelper tagHelper;
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionTag createBusinessObjectDefinitionTag(BusinessObjectDefinitionTagCreateRequest request)
     {
@@ -105,7 +105,7 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
         return createBusinessObjectDefinitionTagFromEntity(businessObjectDefinitionTagEntity);
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionTag deleteBusinessObjectDefinitionTag(BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey)
     {

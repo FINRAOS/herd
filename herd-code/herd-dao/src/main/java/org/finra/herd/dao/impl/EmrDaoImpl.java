@@ -32,31 +32,39 @@ import com.amazonaws.services.elasticmapreduce.model.Configuration;
 import com.amazonaws.services.elasticmapreduce.model.DescribeClusterRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeClusterResult;
 import com.amazonaws.services.elasticmapreduce.model.DescribeStepRequest;
-import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
+import com.amazonaws.services.elasticmapreduce.model.EbsBlockDeviceConfig;
+import com.amazonaws.services.elasticmapreduce.model.EbsConfiguration;
 import com.amazonaws.services.elasticmapreduce.model.Instance;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetConfig;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetProvisioningSpecifications;
 import com.amazonaws.services.elasticmapreduce.model.InstanceGroupConfig;
 import com.amazonaws.services.elasticmapreduce.model.InstanceGroupType;
 import com.amazonaws.services.elasticmapreduce.model.InstanceRoleType;
+import com.amazonaws.services.elasticmapreduce.model.InstanceTypeConfig;
 import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.MarketType;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.ScriptBootstrapActionConfig;
+import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.Step;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.elasticmapreduce.model.StepState;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import com.amazonaws.services.elasticmapreduce.model.Tag;
+import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
 import com.amazonaws.services.elasticmapreduce.util.StepFactory;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.AwsClientFactory;
@@ -71,8 +79,15 @@ import org.finra.herd.model.api.xml.ConfigurationFiles;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsBlockDeviceConfig;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionSpotSpecification;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
 import org.finra.herd.model.api.xml.HadoopJarStep;
-import org.finra.herd.model.api.xml.InstanceDefinition;
+import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.KeyValuePairConfiguration;
 import org.finra.herd.model.api.xml.KeyValuePairConfigurations;
 import org.finra.herd.model.api.xml.NodeTag;
@@ -110,41 +125,6 @@ public class EmrDaoImpl implements EmrDao
     @Autowired
     private JsonHelper jsonHelper;
 
-    /**
-     * Add an EMR Step. This method adds the step to EMR cluster based on the input.
-     *
-     * @param clusterId EMR cluster ID.
-     * @param emrStepConfig the EMR step config to be added.
-     * @param awsParamsDto the proxy details.
-     * <p/>
-     * There are five serializable objects supported currently. They are 1: ShellStep - For shell scripts 2: OozieStep - For Oozie workflow xml files 3:
-     * HiveStep - For hive scripts 4: HadoopJarStep - For Custom Map Reduce Jar files and 5: PigStep - For Pig scripts.
-     *
-     * @return the step id
-     */
-    @Override
-    public String addEmrStep(String clusterId, StepConfig emrStepConfig, AwsParamsDto awsParamsDto) throws Exception
-    {
-        List<StepConfig> steps = new ArrayList<>();
-
-        steps.add(emrStepConfig);
-
-        // Add the job flow request
-        AddJobFlowStepsRequest jobFlowStepRequest = new AddJobFlowStepsRequest(clusterId, steps);
-        List<String> emrStepIds = emrOperations.addJobFlowStepsRequest(getEmrClient(awsParamsDto), jobFlowStepRequest);
-
-        return emrStepIds.get(0);
-    }
-
-    /**
-     * Add Security groups to the master node of EMR cluster.
-     *
-     * @param clusterId EMR cluster Id.
-     * @param securityGroups the security groups list.
-     * @param awsParams the proxy details.
-     *
-     * @return the security groups that were added.
-     */
     @Override
     public List<String> addEmrMasterSecurityGroups(String clusterId, List<String> securityGroups, AwsParamsDto awsParams) throws Exception
     {
@@ -167,113 +147,30 @@ public class EmrDaoImpl implements EmrDao
         return securityGroups;
     }
 
-    /**
-     * Gets the master instance of the EMR cluster.
-     *
-     * @param clusterId EMR cluster id.
-     * @param awsParams the proxy details.
-     *
-     * @return the master instance of the cluster.
-     */
     @Override
-    public Instance getEmrMasterInstance(String clusterId, AwsParamsDto awsParams) throws Exception
+    public String addEmrStep(String clusterId, StepConfig emrStepConfig, AwsParamsDto awsParamsDto) throws Exception
     {
-        // Get the master EC2 instance
-        ListInstancesRequest listInstancesRequest = new ListInstancesRequest().withClusterId(clusterId).withInstanceGroupTypes(InstanceGroupType.MASTER);
+        List<StepConfig> steps = new ArrayList<>();
 
-        List<Instance> instances = emrOperations.listClusterInstancesRequest(getEmrClient(awsParams), listInstancesRequest).getInstances();
+        steps.add(emrStepConfig);
 
-        // Throw error in case there are no master instances found yet
-        if (instances.size() == 0)
-        {
-            throw new IllegalArgumentException("No master instances found for the cluster \"" + clusterId + "\".");
-        }
+        // Add the job flow request
+        AddJobFlowStepsRequest jobFlowStepRequest = new AddJobFlowStepsRequest(clusterId, steps);
+        List<String> emrStepIds = emrOperations.addJobFlowStepsRequest(getEmrClient(awsParamsDto), jobFlowStepRequest);
 
-        // EMR has only one master node.
-        return instances.get(0);
+        return emrStepIds.get(0);
     }
 
-    /**
-     * Create the EMR cluster.
-     *
-     * @param awsParams AWS related parameters for access/secret keys and proxy details.
-     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters.
-     * @param clusterName the cluster name value.
-     *
-     * @return the cluster Id.
-     */
     @Override
     public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParams)
     {
-        RunJobFlowRequest runJobFlowRequest = getRunJobFlowRequest(clusterName, emrClusterDefinition, StringUtils.isNotBlank(awsParams.getAwsAccessKeyId()));
+        RunJobFlowRequest runJobFlowRequest = getRunJobFlowRequest(clusterName, emrClusterDefinition);
         LOGGER.info("runJobFlowRequest={}", jsonHelper.objectToJson(runJobFlowRequest));
         String clusterId = emrOperations.runEmrJobFlow(getEmrClient(awsParams), runJobFlowRequest);
         LOGGER.info("EMR cluster started. emrClusterId=\"{}\"", clusterId);
         return clusterId;
     }
 
-    /**
-     * Terminates the EMR cluster.
-     *
-     * @param clusterId the cluster Id.
-     * @param awsParams AWS related parameters for access/secret keys and proxy details.
-     */
-    @Override
-    public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams)
-    {
-        emrOperations.terminateEmrCluster(getEmrClient(awsParams), clusterId, overrideTerminationProtection);
-    }
-
-    /**
-     * Get EMR cluster by cluster Id.
-     *
-     * @param clusterId the job Id returned by EMR for the cluster.
-     * @param awsParams AWS related parameters for access/secret keys and proxy details.
-     *
-     * @return the cluster status.
-     */
-    @Override
-    public Cluster getEmrClusterById(String clusterId, AwsParamsDto awsParams)
-    {
-        Cluster cluster = null;
-        if (StringUtils.isNotBlank(clusterId))
-        {
-            DescribeClusterResult describeClusterResult =
-                emrOperations.describeClusterRequest(getEmrClient(awsParams), new DescribeClusterRequest().withClusterId(clusterId));
-            if (describeClusterResult != null && describeClusterResult.getCluster() != null)
-            {
-                cluster = describeClusterResult.getCluster();
-            }
-        }
-
-        return cluster;
-    }
-
-    /**
-     * Get EMR cluster status by cluster Id.
-     *
-     * @param clusterId the job Id returned by EMR for the cluster.
-     * @param awsParams AWS related parameters for access/secret keys and proxy details.
-     *
-     * @return the cluster status.
-     */
-    @Override
-    public String getEmrClusterStatusById(String clusterId, AwsParamsDto awsParams)
-    {
-        Cluster cluster = getEmrClusterById(clusterId, awsParams);
-
-        return ((cluster == null) ? null : cluster.getStatus().getState());
-    }
-
-    /**
-     * Get an Active EMR cluster by the cluster name. Cluster only in following states are returned: ClusterState.BOOTSTRAPPING, ClusterState.RUNNING,
-     * ClusterState.STARTING, ClusterState.WAITING
-     *
-     * @param awsParams AWS related parameters for access/secret keys and proxy details.
-     * @param clusterName the cluster name value.
-     *
-     * @return the ClusterSummary object.
-     */
     @Override
     public ClusterSummary getActiveEmrClusterByName(String clusterName, AwsParamsDto awsParams)
     {
@@ -319,13 +216,33 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
-     * Gets the active step on the cluster if any.
+     * Converts the given list of {@link EmrClusterDefinitionApplication} into a list of {@link Application}
      *
-     * @param clusterId the cluster id.
-     * @param awsParamsDto AWS related parameters for access/secret keys and proxy details.
+     * @param emrClusterDefinitionApplications list of {@link EmrClusterDefinitionApplication}
      *
-     * @return the step summary object.
+     * @return list {@link Application}
      */
+    public List<Application> getApplications(List<EmrClusterDefinitionApplication> emrClusterDefinitionApplications)
+    {
+        List<Application> applications = new ArrayList<>();
+        for (EmrClusterDefinitionApplication emrClusterDefinitionApplication : emrClusterDefinitionApplications)
+        {
+            Application application = new Application();
+            application.setName(emrClusterDefinitionApplication.getName());
+            application.setVersion(emrClusterDefinitionApplication.getVersion());
+            application.setArgs(emrClusterDefinitionApplication.getArgs());
+
+            List<Parameter> additionalInfoList = emrClusterDefinitionApplication.getAdditionalInfoList();
+            if (!CollectionUtils.isEmpty(additionalInfoList))
+            {
+                application.setAdditionalInfo(getMap(additionalInfoList));
+            }
+
+            applications.add(application);
+        }
+        return applications;
+    }
+
     @Override
     public StepSummary getClusterActiveStep(String clusterId, AwsParamsDto awsParamsDto)
     {
@@ -335,15 +252,6 @@ public class EmrDaoImpl implements EmrDao
         return !stepSummaryList.isEmpty() ? stepSummaryList.get(0) : null;
     }
 
-    /**
-     * Gets the step on the cluster.
-     *
-     * @param clusterId the cluster id.
-     * @param stepId the step id to get details of.
-     * @param awsParamsDto AWS related parameters for access/secret keys and proxy details.
-     *
-     * @return the step object.
-     */
     @Override
     public Step getClusterStep(String clusterId, String stepId, AwsParamsDto awsParamsDto)
     {
@@ -351,264 +259,438 @@ public class EmrDaoImpl implements EmrDao
         return emrOperations.describeStepRequest(getEmrClient(awsParamsDto), describeStepRequest).getStep();
     }
 
-    /**
-     * Create the EMR client with the given proxy and access key details.
-     *
-     * @param awsParamsDto AWS related parameters for access/secret keys and proxy details.
-     *
-     * @return the AmazonElasticMapReduceClient object.
-     */
     @Override
     public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
     {
         return awsClientFactory.getEmrClient(awsParamsDto);
     }
 
-    private String[] getActiveEmrClusterStates()
+    @Override
+    public Cluster getEmrClusterById(String clusterId, AwsParamsDto awsParams)
     {
-        String emrStatesString = configurationHelper.getProperty(ConfigurationValue.EMR_VALID_STATES);
-        return emrStatesString.split("\\" + configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER));
+        Cluster cluster = null;
+        if (StringUtils.isNotBlank(clusterId))
+        {
+            DescribeClusterResult describeClusterResult =
+                emrOperations.describeClusterRequest(getEmrClient(awsParams), new DescribeClusterRequest().withClusterId(clusterId));
+            if (describeClusterResult != null && describeClusterResult.getCluster() != null)
+            {
+                cluster = describeClusterResult.getCluster();
+            }
+        }
+
+        return cluster;
+    }
+
+    @Override
+    public String getEmrClusterStatusById(String clusterId, AwsParamsDto awsParams)
+    {
+        Cluster cluster = getEmrClusterById(clusterId, awsParams);
+
+        return ((cluster == null) ? null : cluster.getStatus().getState());
+    }
+
+    @Override
+    public Instance getEmrMasterInstance(String clusterId, AwsParamsDto awsParams) throws Exception
+    {
+        // Get the master EC2 instance
+        ListInstancesRequest listInstancesRequest = new ListInstancesRequest().withClusterId(clusterId).withInstanceGroupTypes(InstanceGroupType.MASTER);
+
+        List<Instance> instances = emrOperations.listClusterInstancesRequest(getEmrClient(awsParams), listInstancesRequest).getInstances();
+
+        // Throw error in case there are no master instances found yet
+        if (instances.size() == 0)
+        {
+            throw new IllegalArgumentException("No master instances found for the cluster \"" + clusterId + "\".");
+        }
+
+        // EMR has only one master node.
+        return instances.get(0);
+    }
+
+    @Override
+    public ListInstanceFleetsResult getListInstanceFleetsResult(String clusterId, AwsParamsDto awsParams)
+    {
+        return emrOperations.listInstanceFleets(getEmrClient(awsParams), new ListInstanceFleetsRequest().withClusterId(clusterId));
+    }
+
+    @Override
+    public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams)
+    {
+        emrOperations.terminateEmrCluster(getEmrClient(awsParams), clusterId, overrideTerminationProtection);
     }
 
     /**
-     * Get the S3_STAGING_RESOURCE full path from the bucket name as well as other details.
+     * Converts the given list of {@link EmrClusterDefinitionConfiguration} into a list of {@link Configuration}.
      *
-     * @return the s3 managed location.
+     * @param emrClusterDefinitionConfigurations list of {@link EmrClusterDefinitionConfiguration}
+     *
+     * @return list of {@link Configuration}
      */
-    private String getS3StagingLocation()
+    protected List<Configuration> getConfigurations(List<EmrClusterDefinitionConfiguration> emrClusterDefinitionConfigurations)
     {
-        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) +
-            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME) +
-            configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
+        List<Configuration> configurations = null;
+
+        if (!CollectionUtils.isEmpty(emrClusterDefinitionConfigurations))
+        {
+            configurations = new ArrayList<>();
+
+            for (EmrClusterDefinitionConfiguration emrClusterDefinitionConfiguration : emrClusterDefinitionConfigurations)
+            {
+                if (emrClusterDefinitionConfiguration != null)
+                {
+                    Configuration configuration = new Configuration();
+                    configuration.setClassification(emrClusterDefinitionConfiguration.getClassification());
+                    configuration.setConfigurations(getConfigurations(emrClusterDefinitionConfiguration.getConfigurations()));
+                    configuration.setProperties(getMap(emrClusterDefinitionConfiguration.getProperties()));
+
+                    configurations.add(configuration);
+                }
+            }
+        }
+
+        return configurations;
     }
 
     /**
-     * Create the instance group configuration.
+     * Creates a list of {@link EbsBlockDeviceConfig} from a given list of {@link EmrClusterDefinitionEbsBlockDeviceConfig}.
      *
-     * @param roleType role type for the instance group (MASTER/CORE/TASK).
-     * @param instanceType EC2 instance type for the instance group.
-     * @param instanceCount number of instances for the instance group.
-     * @param bidPrice bid price in case of SPOT instance request.
+     * @param emrClusterDefinitionEbsBlockDeviceConfigs the list of {@link EmrClusterDefinitionEbsBlockDeviceConfig}
      *
-     * @return the instance group config object.
+     * @return the list of {@link EbsBlockDeviceConfig}
      */
-    private InstanceGroupConfig getInstanceGroupConfig(InstanceRoleType roleType, String instanceType, Integer instanceCount, BigDecimal bidPrice)
+    protected List<EbsBlockDeviceConfig> getEbsBlockDeviceConfigs(List<EmrClusterDefinitionEbsBlockDeviceConfig> emrClusterDefinitionEbsBlockDeviceConfigs)
     {
-        InstanceGroupConfig instanceGroup = new InstanceGroupConfig(roleType, instanceType, instanceCount);
+        List<EbsBlockDeviceConfig> ebsBlockDeviceConfigs = null;
 
-        // Consider spot price, if specified
+        if (!CollectionUtils.isEmpty(emrClusterDefinitionEbsBlockDeviceConfigs))
+        {
+            ebsBlockDeviceConfigs = new ArrayList<>();
+
+            for (EmrClusterDefinitionEbsBlockDeviceConfig emrClusterDefinitionEbsBlockDeviceConfig : emrClusterDefinitionEbsBlockDeviceConfigs)
+            {
+                if (emrClusterDefinitionEbsBlockDeviceConfig != null)
+                {
+                    EbsBlockDeviceConfig ebsBlockDeviceConfig = new EbsBlockDeviceConfig();
+                    ebsBlockDeviceConfig.setVolumeSpecification(getVolumeSpecification(emrClusterDefinitionEbsBlockDeviceConfig.getVolumeSpecification()));
+                    ebsBlockDeviceConfig.setVolumesPerInstance(emrClusterDefinitionEbsBlockDeviceConfig.getVolumesPerInstance());
+
+                    ebsBlockDeviceConfigs.add(ebsBlockDeviceConfig);
+                }
+            }
+        }
+
+        return ebsBlockDeviceConfigs;
+    }
+
+    /**
+     * Creates an instance of {@link EbsConfiguration} from a given instance of {@link EmrClusterDefinitionEbsConfiguration}.
+     *
+     * @param emrClusterDefinitionEbsConfiguration the instance of {@link EmrClusterDefinitionEbsConfiguration}
+     *
+     * @return the instance of {@link EbsConfiguration}
+     */
+    protected EbsConfiguration getEbsConfiguration(EmrClusterDefinitionEbsConfiguration emrClusterDefinitionEbsConfiguration)
+    {
+        EbsConfiguration ebsConfiguration = null;
+
+        if (emrClusterDefinitionEbsConfiguration != null)
+        {
+            ebsConfiguration = new EbsConfiguration();
+            ebsConfiguration.setEbsBlockDeviceConfigs(getEbsBlockDeviceConfigs(emrClusterDefinitionEbsConfiguration.getEbsBlockDeviceConfigs()));
+            ebsConfiguration.setEbsOptimized(emrClusterDefinitionEbsConfiguration.isEbsOptimized());
+        }
+
+        return ebsConfiguration;
+    }
+
+    /**
+     * Creates an instance fleet configuration that describes the EC2 instances and instance configurations for clusters that use this feature.
+     *
+     * @param emrClusterDefinitionInstanceFleets the list of instance fleet configurations from the EMR cluster definition
+     *
+     * @return the instance fleet configuration
+     */
+    protected List<InstanceFleetConfig> getInstanceFleets(List<EmrClusterDefinitionInstanceFleet> emrClusterDefinitionInstanceFleets)
+    {
+        List<InstanceFleetConfig> instanceFleets = null;
+
+        if (!CollectionUtils.isEmpty(emrClusterDefinitionInstanceFleets))
+        {
+            instanceFleets = new ArrayList<>();
+
+            for (EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet : emrClusterDefinitionInstanceFleets)
+            {
+                if (emrClusterDefinitionInstanceFleet != null)
+                {
+                    InstanceFleetConfig instanceFleetConfig = new InstanceFleetConfig();
+                    instanceFleetConfig.setName(emrClusterDefinitionInstanceFleet.getName());
+                    instanceFleetConfig.setInstanceFleetType(emrClusterDefinitionInstanceFleet.getInstanceFleetType());
+                    instanceFleetConfig.setTargetOnDemandCapacity(emrClusterDefinitionInstanceFleet.getTargetOnDemandCapacity());
+                    instanceFleetConfig.setTargetSpotCapacity(emrClusterDefinitionInstanceFleet.getTargetSpotCapacity());
+                    instanceFleetConfig.setInstanceTypeConfigs(getInstanceTypeConfigs(emrClusterDefinitionInstanceFleet.getInstanceTypeConfigs()));
+                    instanceFleetConfig.setLaunchSpecifications(getLaunchSpecifications(emrClusterDefinitionInstanceFleet.getLaunchSpecifications()));
+
+                    instanceFleets.add(instanceFleetConfig);
+                }
+            }
+        }
+
+        return instanceFleets;
+    }
+
+    /**
+     * Creates an instance group configuration.
+     *
+     * @param roleType role type for the instance group (MASTER/CORE/TASK)
+     * @param instanceType EC2 instance type for the instance group
+     * @param instanceCount number of instances for the instance group
+     * @param bidPrice bid price in case of SPOT instance request
+     * @param emrClusterDefinitionEbsConfiguration the instance of {@link EmrClusterDefinitionEbsConfiguration} that contains EBS configurations that will be
+     * attached to each EC2 instance in this instance group
+     *
+     * @return the instance group config object
+     */
+    protected InstanceGroupConfig getInstanceGroupConfig(InstanceRoleType roleType, String instanceType, Integer instanceCount, BigDecimal bidPrice,
+        EmrClusterDefinitionEbsConfiguration emrClusterDefinitionEbsConfiguration)
+    {
+        // Create an instance group configuration with an optional EBS configuration.
+        InstanceGroupConfig instanceGroup =
+            new InstanceGroupConfig(roleType, instanceType, instanceCount).withEbsConfiguration(getEbsConfiguration(emrClusterDefinitionEbsConfiguration));
+
+        // Consider spot price, if specified.
         if (bidPrice != null)
         {
             instanceGroup.setMarket(MarketType.SPOT);
             instanceGroup.setBidPrice(bidPrice.toString());
         }
+
         return instanceGroup;
     }
 
     /**
      * Create the instance group configuration for MASTER/CORE/TASK nodes as per the input parameters.
      *
-     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters.
+     * @param instanceDefinitions the instance group definitions from the EMR cluster definition
      *
-     * @return the instance group config list with all the instance group definitions.
+     * @return the instance group config list with all the instance group definitions
      */
-    private ArrayList<InstanceGroupConfig> getInstanceGroupConfig(EmrClusterDefinition emrClusterDefinition)
+    protected List<InstanceGroupConfig> getInstanceGroupConfigs(InstanceDefinitions instanceDefinitions)
     {
-        // Create the instance groups
-        ArrayList<InstanceGroupConfig> emrInstanceGroups = new ArrayList<>();
+        List<InstanceGroupConfig> instanceGroupConfigs = null;
 
-        // Fill-in the MASTER node details.
-        emrInstanceGroups.add(
-            getInstanceGroupConfig(InstanceRoleType.MASTER, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceType(),
-                emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceCount(),
-                emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice()));
-
-        // Fill-in the CORE node details
-        InstanceDefinition coreInstances = emrClusterDefinition.getInstanceDefinitions().getCoreInstances();
-        if (coreInstances != null)
+        if (!emrHelper.isInstanceDefinitionsEmpty(instanceDefinitions))
         {
-            emrInstanceGroups.add(getInstanceGroupConfig(InstanceRoleType.CORE, coreInstances.getInstanceType(), coreInstances.getInstanceCount(),
-                coreInstances.getInstanceSpotPrice()));
-        }
+            // Create the instance group configurations.
+            instanceGroupConfigs = new ArrayList<>();
 
-        // Fill-in the TASK node details, if the optional task instances are specified.
-        if (emrClusterDefinition.getInstanceDefinitions().getTaskInstances() != null)
-        {
-            emrInstanceGroups.add(
-                getInstanceGroupConfig(InstanceRoleType.TASK, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceType(),
-                    emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceCount(),
-                    emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice()));
-        }
+            // Fill-in the MASTER node details.
+            instanceGroupConfigs.add(getInstanceGroupConfig(InstanceRoleType.MASTER, instanceDefinitions.getMasterInstances().getInstanceType(),
+                instanceDefinitions.getMasterInstances().getInstanceCount(), instanceDefinitions.getMasterInstances().getInstanceSpotPrice(),
+                instanceDefinitions.getMasterInstances().getEbsConfiguration()));
 
-        return emrInstanceGroups;
-    }
-
-    /**
-     * Create the job flow instance configuration which contains all the job flow configuration details.
-     *
-     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters
-     * @param crossAccountAccess specifies whether the EMR cluster will be created in another AWS account
-     *
-     * @return the job flow instance configuration
-     */
-    private JobFlowInstancesConfig getJobFlowInstancesConfig(EmrClusterDefinition emrClusterDefinition, boolean crossAccountAccess)
-    {
-        // Create a new job flow instance config object
-        JobFlowInstancesConfig jobFlowInstancesConfig = new JobFlowInstancesConfig();
-
-        // We do not add herd EMR support security group as an additional group to master node when cluster is getting started in other AWS account.
-        if (crossAccountAccess)
-        {
-            jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(emrClusterDefinition.getAdditionalMasterSecurityGroups());
-        }
-        else
-        {
-            // Add the herd EMR support security group as additional group to master node.
-            jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(getAdditionalMasterSecurityGroups(emrClusterDefinition));
-        }
-
-        jobFlowInstancesConfig.setAdditionalSlaveSecurityGroups(emrClusterDefinition.getAdditionalSlaveSecurityGroups());
-
-        // Fill-in the ssh key
-        if (StringUtils.isNotBlank(emrClusterDefinition.getSshKeyPairName()))
-        {
-            jobFlowInstancesConfig.setEc2KeyName(emrClusterDefinition.getSshKeyPairName());
-        }
-
-        // Fill-in subnet id
-        if (StringUtils.isNotBlank(emrClusterDefinition.getSubnetId()))
-        {
-            jobFlowInstancesConfig.setEc2SubnetId(emrClusterDefinition.getSubnetId());
-        }
-
-        // Fill in instance groups
-        jobFlowInstancesConfig.setInstanceGroups(getInstanceGroupConfig(emrClusterDefinition));
-
-        // Check for optional parameters and then fill-in
-        // Keep Alive Cluster flag
-        if (emrClusterDefinition.isKeepAlive() != null)
-        {
-            jobFlowInstancesConfig.setKeepJobFlowAliveWhenNoSteps(emrClusterDefinition.isKeepAlive());
-        }
-
-        // Termination protection flag
-        if (emrClusterDefinition.isTerminationProtection() != null)
-        {
-            jobFlowInstancesConfig.setTerminationProtected(emrClusterDefinition.isTerminationProtection());
-        }
-
-        // Setting the hadoop version
-        if (StringUtils.isNotBlank(emrClusterDefinition.getHadoopVersion()))
-        {
-            jobFlowInstancesConfig.setHadoopVersion(emrClusterDefinition.getHadoopVersion());
-        }
-
-        // Return the object
-        return jobFlowInstancesConfig;
-    }
-
-    /**
-     * Gets the additional master node security groups from the given EMR cluster definition. Automatically adds the configured EMR support security group. If
-     * the support SG is not configured, the list of additional security group is retrieved from the given definition as-is. Otherwise, the list is initialized
-     * as needed.
-     *
-     * @param emrClusterDefinition The EMR cluster definition
-     *
-     * @return List of additional master node security groups
-     */
-    private List<String> getAdditionalMasterSecurityGroups(EmrClusterDefinition emrClusterDefinition)
-    {
-        List<String> additionalMasterSecurityGroups = emrClusterDefinition.getAdditionalMasterSecurityGroups();
-        String emrSupportSecurityGroup = configurationHelper.getProperty(ConfigurationValue.EMR_HERD_SUPPORT_SECURITY_GROUP);
-        if (StringUtils.isNotBlank(emrSupportSecurityGroup))
-        {
-            if (additionalMasterSecurityGroups == null)
+            // if the optional core instances are specified, fill-in the CORE node details.
+            if (instanceDefinitions.getCoreInstances() != null)
             {
-                additionalMasterSecurityGroups = new ArrayList<>();
+                instanceGroupConfigs.add(getInstanceGroupConfig(InstanceRoleType.CORE, instanceDefinitions.getCoreInstances().getInstanceType(),
+                    instanceDefinitions.getCoreInstances().getInstanceCount(), instanceDefinitions.getCoreInstances().getInstanceSpotPrice(),
+                    instanceDefinitions.getCoreInstances().getEbsConfiguration()));
             }
-            additionalMasterSecurityGroups.add(emrSupportSecurityGroup);
+
+            // If the optional task instances are specified, fill-in the TASK node details.
+            if (instanceDefinitions.getTaskInstances() != null)
+            {
+                instanceGroupConfigs.add(getInstanceGroupConfig(InstanceRoleType.TASK, instanceDefinitions.getTaskInstances().getInstanceType(),
+                    instanceDefinitions.getTaskInstances().getInstanceCount(), instanceDefinitions.getTaskInstances().getInstanceSpotPrice(),
+                    instanceDefinitions.getTaskInstances().getEbsConfiguration()));
+            }
         }
-        return additionalMasterSecurityGroups;
+
+        return instanceGroupConfigs;
     }
 
     /**
-     * Create the BootstrapActionConfig object from the bootstrap script.
+     * Creates a list of {@link InstanceTypeConfig} from a given list of {@link EmrClusterDefinitionInstanceTypeConfig}.
      *
-     * @param scriptDescription bootstrap script name to be displayed.
-     * @param bootstrapScript location of the bootstrap script.
+     * @param emrClusterDefinitionInstanceTypeConfigs the list of {@link EmrClusterDefinitionInstanceTypeConfig}
      *
-     * @return bootstrap action configuration that contains all the bootstrap actions for the given configuration.
+     * @return the list of {@link InstanceTypeConfig}
      */
-    private BootstrapActionConfig getBootstrapActionConfig(String scriptDescription, String bootstrapScript)
+    protected List<InstanceTypeConfig> getInstanceTypeConfigs(List<EmrClusterDefinitionInstanceTypeConfig> emrClusterDefinitionInstanceTypeConfigs)
     {
-        // Create the BootstrapActionConfig object
-        BootstrapActionConfig bootstrapConfig = new BootstrapActionConfig();
-        ScriptBootstrapActionConfig bootstrapConfigScript = new ScriptBootstrapActionConfig();
+        List<InstanceTypeConfig> instanceTypeConfigs = null;
 
-        // Set the bootstrapScript
-        bootstrapConfig.setName(scriptDescription);
-        bootstrapConfigScript.setPath(bootstrapScript);
-        bootstrapConfig.setScriptBootstrapAction(bootstrapConfigScript);
-
-        // Return the object
-        return bootstrapConfig;
-    }
-
-    /**
-     * Get the encryption script location from the bucket name and encryption script location.
-     *
-     * @return location of the encryption script.
-     */
-    private String getEncryptionScriptLocation()
-    {
-        // Whenever the user requests for encryption, we have an encryption script that is stored in herd bucket.
-        // We use this encryption script to encrypt all the volumes of all the instances.
-        // Amazon plans to support encryption in EMR soon. Once that support is enabled, we can remove this script and use the one provided by AWS.
-        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(ConfigurationValue.EMR_ENCRYPTION_SCRIPT);
-    }
-
-    /**
-     * Get the Oozie installation script location from the bucket name and Oozie installation script location.
-     *
-     * @return location of the Oozie installation script.
-     */
-    private String getOozieScriptLocation()
-    {
-        // Oozie is currently not supported by Amazon as a bootstrapping step
-        // So, we are using our own Oozie installation script on the Master node to install Oozie
-        // Once Amazon rolls out Oozie support, this can be removed and AWS Ooize steps can be added later
-        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_SCRIPT);
-    }
-
-    /**
-     * Create the bootstrap action configuration List from all the bootstrapping scripts specified.
-     *
-     * @param emrClusterDefinition the EMR definition name value.
-     *
-     * @return list of bootstrap action configurations that contains all the bootstrap actions for the given configuration.
-     */
-    private ArrayList<BootstrapActionConfig> getBootstrapActionConfigList(EmrClusterDefinition emrClusterDefinition)
-    {
-        // Create the list
-        ArrayList<BootstrapActionConfig> bootstrapActions = new ArrayList<>();
-
-        // Add encryption script support if needed
-        if (emrClusterDefinition.isEncryptionEnabled() != null && emrClusterDefinition.isEncryptionEnabled())
+        if (!CollectionUtils.isEmpty(emrClusterDefinitionInstanceTypeConfigs))
         {
-            bootstrapActions.add(getBootstrapActionConfig(ConfigurationValue.EMR_ENCRYPTION_SCRIPT.getKey(), getEncryptionScriptLocation()));
+            instanceTypeConfigs = new ArrayList<>();
+
+            for (EmrClusterDefinitionInstanceTypeConfig emrClusterDefinitionInstanceTypeConfig : emrClusterDefinitionInstanceTypeConfigs)
+            {
+                if (emrClusterDefinitionInstanceTypeConfig != null)
+                {
+                    InstanceTypeConfig instanceTypeConfig = new InstanceTypeConfig();
+                    instanceTypeConfig.setInstanceType(emrClusterDefinitionInstanceTypeConfig.getInstanceType());
+                    instanceTypeConfig.setWeightedCapacity(emrClusterDefinitionInstanceTypeConfig.getWeightedCapacity());
+                    instanceTypeConfig.setBidPrice(emrClusterDefinitionInstanceTypeConfig.getBidPrice());
+                    instanceTypeConfig.setBidPriceAsPercentageOfOnDemandPrice(emrClusterDefinitionInstanceTypeConfig.getBidPriceAsPercentageOfOnDemandPrice());
+                    instanceTypeConfig.setEbsConfiguration(getEbsConfiguration(emrClusterDefinitionInstanceTypeConfig.getEbsConfiguration()));
+                    instanceTypeConfig.setConfigurations(getConfigurations(emrClusterDefinitionInstanceTypeConfig.getConfigurations()));
+
+                    instanceTypeConfigs.add(instanceTypeConfig);
+                }
+            }
         }
 
-        // Add bootstrap actions.
-        addDaemonBootstrapActionConfig(emrClusterDefinition, bootstrapActions);
-        addHadoopBootstrapActionConfig(emrClusterDefinition, bootstrapActions);
-        addCustomBootstrapActionConfig(emrClusterDefinition, bootstrapActions);
-        addCustomMasterBootstrapActionConfig(emrClusterDefinition, bootstrapActions);
+        return instanceTypeConfigs;
+    }
 
-        // Return the object
-        return bootstrapActions;
+    /**
+     * Creates an instance of {@link InstanceFleetProvisioningSpecifications} from a given instance of {@link EmrClusterDefinitionLaunchSpecifications}.
+     *
+     * @param emrClusterDefinitionLaunchSpecifications the instance of {@link EmrClusterDefinitionLaunchSpecifications}
+     *
+     * @return the instance of {@link InstanceFleetProvisioningSpecifications}
+     */
+    protected InstanceFleetProvisioningSpecifications getLaunchSpecifications(EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications)
+    {
+        InstanceFleetProvisioningSpecifications instanceFleetProvisioningSpecifications = null;
+
+        if (emrClusterDefinitionLaunchSpecifications != null)
+        {
+            instanceFleetProvisioningSpecifications = new InstanceFleetProvisioningSpecifications();
+            instanceFleetProvisioningSpecifications.setSpotSpecification(getSpotSpecification(emrClusterDefinitionLaunchSpecifications.getSpotSpecification()));
+        }
+
+        return instanceFleetProvisioningSpecifications;
+    }
+
+    /**
+     * Converts the given list of {@link Parameter} into a {@link Map} of {@link String}, {@link String}
+     *
+     * @param parameters List of {@link Parameter}
+     *
+     * @return {@link Map}
+     */
+    protected Map<String, String> getMap(List<Parameter> parameters)
+    {
+        Map<String, String> map = null;
+
+        if (!CollectionUtils.isEmpty(parameters))
+        {
+            map = new HashMap<>();
+
+            for (Parameter parameter : parameters)
+            {
+                if (parameter != null)
+                {
+                    map.put(parameter.getName(), parameter.getValue());
+                }
+            }
+        }
+
+        return map;
+    }
+
+    /**
+     * Creates an instance of {@link SpotProvisioningSpecification} from a given instance of {@link EmrClusterDefinitionSpotSpecification}.
+     *
+     * @param emrClusterDefinitionSpotSpecification the instance of {@link EmrClusterDefinitionSpotSpecification}
+     *
+     * @return the instance of {@link SpotProvisioningSpecification}
+     */
+    protected SpotProvisioningSpecification getSpotSpecification(EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification)
+    {
+        SpotProvisioningSpecification spotProvisioningSpecification = null;
+
+        if (emrClusterDefinitionSpotSpecification != null)
+        {
+            spotProvisioningSpecification = new SpotProvisioningSpecification();
+            spotProvisioningSpecification.setTimeoutDurationMinutes(emrClusterDefinitionSpotSpecification.getTimeoutDurationMinutes());
+            spotProvisioningSpecification.setTimeoutAction(emrClusterDefinitionSpotSpecification.getTimeoutAction());
+            spotProvisioningSpecification.setBlockDurationMinutes(emrClusterDefinitionSpotSpecification.getBlockDurationMinutes());
+        }
+
+        return spotProvisioningSpecification;
+    }
+
+    /**
+     * Creates an instance of {@link VolumeSpecification} from a given instance of {@link EmrClusterDefinitionVolumeSpecification}.
+     *
+     * @param emrClusterDefinitionVolumeSpecification the instance of {@link EmrClusterDefinitionVolumeSpecification}
+     *
+     * @return the instance of {@link VolumeSpecification}
+     */
+    protected VolumeSpecification getVolumeSpecification(EmrClusterDefinitionVolumeSpecification emrClusterDefinitionVolumeSpecification)
+    {
+        VolumeSpecification volumeSpecification = null;
+
+        if (emrClusterDefinitionVolumeSpecification != null)
+        {
+            volumeSpecification = new VolumeSpecification();
+            volumeSpecification.setVolumeType(emrClusterDefinitionVolumeSpecification.getVolumeType());
+            volumeSpecification.setIops(emrClusterDefinitionVolumeSpecification.getIops());
+            volumeSpecification.setSizeInGB(emrClusterDefinitionVolumeSpecification.getSizeInGB());
+        }
+
+        return volumeSpecification;
+    }
+
+    private void addCustomBootstrapActionConfig(EmrClusterDefinition emrClusterDefinition, ArrayList<BootstrapActionConfig> bootstrapActions)
+    {
+        // Add Custom bootstrap script support if needed
+        if (!CollectionUtils.isEmpty(emrClusterDefinition.getCustomBootstrapActionAll()))
+        {
+            for (ScriptDefinition scriptDefinition : emrClusterDefinition.getCustomBootstrapActionAll())
+            {
+                BootstrapActionConfig customActionConfigAll = getBootstrapActionConfig(scriptDefinition.getScriptName(), scriptDefinition.getScriptLocation());
+
+                ArrayList<String> argList = new ArrayList<>();
+                if (!CollectionUtils.isEmpty(scriptDefinition.getScriptArguments()))
+                {
+                    for (String argument : scriptDefinition.getScriptArguments())
+                    {
+                        // Trim the argument
+                        argList.add(argument.trim());
+                    }
+                }
+                // Set arguments to bootstrap action
+                customActionConfigAll.getScriptBootstrapAction().setArgs(argList);
+
+                bootstrapActions.add(customActionConfigAll);
+            }
+        }
+    }
+
+    private void addCustomMasterBootstrapActionConfig(EmrClusterDefinition emrClusterDefinition, ArrayList<BootstrapActionConfig> bootstrapActions)
+    {
+        // Add Master custom bootstrap script support if needed
+        if (!CollectionUtils.isEmpty(emrClusterDefinition.getCustomBootstrapActionMaster()))
+        {
+            for (ScriptDefinition scriptDefinition : emrClusterDefinition.getCustomBootstrapActionMaster())
+            {
+                BootstrapActionConfig bootstrapActionConfig =
+                    getBootstrapActionConfig(scriptDefinition.getScriptName(), configurationHelper.getProperty(ConfigurationValue.EMR_CONDITIONAL_SCRIPT));
+
+                // Add arguments to the bootstrap script
+                ArrayList<String> argList = new ArrayList<>();
+
+                // Execute this script only on the master node.
+                argList.add(configurationHelper.getProperty(ConfigurationValue.EMR_NODE_CONDITION));
+                argList.add(scriptDefinition.getScriptLocation());
+
+                if (!CollectionUtils.isEmpty(scriptDefinition.getScriptArguments()))
+                {
+                    for (String argument : scriptDefinition.getScriptArguments())
+                    {
+                        // Trim the argument
+                        argList.add(argument.trim());
+                    }
+                }
+
+                bootstrapActionConfig.getScriptBootstrapAction().setArgs(argList);
+                bootstrapActions.add(bootstrapActionConfig);
+            }
+        }
     }
 
     private void addDaemonBootstrapActionConfig(EmrClusterDefinition emrClusterDefinition, ArrayList<BootstrapActionConfig> bootstrapActions)
@@ -671,124 +753,61 @@ public class EmrDaoImpl implements EmrDao
         }
     }
 
-    private void addCustomBootstrapActionConfig(EmrClusterDefinition emrClusterDefinition, ArrayList<BootstrapActionConfig> bootstrapActions)
+    private String[] getActiveEmrClusterStates()
     {
-        // Add Custom bootstrap script support if needed
-        if (!CollectionUtils.isEmpty(emrClusterDefinition.getCustomBootstrapActionAll()))
-        {
-            for (ScriptDefinition scriptDefinition : emrClusterDefinition.getCustomBootstrapActionAll())
-            {
-                BootstrapActionConfig customActionConfigAll = getBootstrapActionConfig(scriptDefinition.getScriptName(), scriptDefinition.getScriptLocation());
-
-                ArrayList<String> argList = new ArrayList<>();
-                if (!CollectionUtils.isEmpty(scriptDefinition.getScriptArguments()))
-                {
-                    for (String argument : scriptDefinition.getScriptArguments())
-                    {
-                        // Trim the argument
-                        argList.add(argument.trim());
-                    }
-                }
-                // Set arguments to bootstrap action
-                customActionConfigAll.getScriptBootstrapAction().setArgs(argList);
-
-                bootstrapActions.add(customActionConfigAll);
-            }
-        }
-    }
-
-    private void addCustomMasterBootstrapActionConfig(EmrClusterDefinition emrClusterDefinition, ArrayList<BootstrapActionConfig> bootstrapActions)
-    {
-        // Add Master custom bootstrap script support if needed
-        if (!CollectionUtils.isEmpty(emrClusterDefinition.getCustomBootstrapActionMaster()))
-        {
-            for (ScriptDefinition scriptDefinition : emrClusterDefinition.getCustomBootstrapActionMaster())
-            {
-                BootstrapActionConfig bootstrapActionConfig =
-                    getBootstrapActionConfig(scriptDefinition.getScriptName(), configurationHelper.getProperty(ConfigurationValue.EMR_CONDITIONAL_SCRIPT));
-
-                // Add arguments to the bootstrap script
-                ArrayList<String> argList = new ArrayList<>();
-
-                // Execute this script only on the master node.
-                argList.add(configurationHelper.getProperty(ConfigurationValue.EMR_NODE_CONDITION));
-                argList.add(scriptDefinition.getScriptLocation());
-
-                if (!CollectionUtils.isEmpty(scriptDefinition.getScriptArguments()))
-                {
-                    for (String argument : scriptDefinition.getScriptArguments())
-                    {
-                        // Trim the argument
-                        argList.add(argument.trim());
-                    }
-                }
-
-                bootstrapActionConfig.getScriptBootstrapAction().setArgs(argList);
-                bootstrapActions.add(bootstrapActionConfig);
-            }
-        }
+        String emrStatesString = configurationHelper.getProperty(ConfigurationValue.EMR_VALID_STATES);
+        return emrStatesString.split("\\" + configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER));
     }
 
     /**
-     * Create the step config list of objects for hive/pig installation.
+     * Create the BootstrapActionConfig object from the bootstrap script.
+     *
+     * @param scriptDescription bootstrap script name to be displayed.
+     * @param bootstrapScript location of the bootstrap script.
+     *
+     * @return bootstrap action configuration that contains all the bootstrap actions for the given configuration.
+     */
+    private BootstrapActionConfig getBootstrapActionConfig(String scriptDescription, String bootstrapScript)
+    {
+        // Create the BootstrapActionConfig object
+        BootstrapActionConfig bootstrapConfig = new BootstrapActionConfig();
+        ScriptBootstrapActionConfig bootstrapConfigScript = new ScriptBootstrapActionConfig();
+
+        // Set the bootstrapScript
+        bootstrapConfig.setName(scriptDescription);
+        bootstrapConfigScript.setPath(bootstrapScript);
+        bootstrapConfig.setScriptBootstrapAction(bootstrapConfigScript);
+
+        // Return the object
+        return bootstrapConfig;
+    }
+
+    /**
+     * Create the bootstrap action configuration List from all the bootstrapping scripts specified.
      *
      * @param emrClusterDefinition the EMR definition name value.
      *
-     * @return list of step configuration that contains all the steps for the given configuration.
+     * @return list of bootstrap action configurations that contains all the bootstrap actions for the given configuration.
      */
-    private List<StepConfig> getStepConfig(EmrClusterDefinition emrClusterDefinition)
+    private ArrayList<BootstrapActionConfig> getBootstrapActionConfigList(EmrClusterDefinition emrClusterDefinition)
     {
-        StepFactory stepFactory = new StepFactory();
-        List<StepConfig> appSteps = new ArrayList<>();
+        // Create the list
+        ArrayList<BootstrapActionConfig> bootstrapActions = new ArrayList<>();
 
-        String hadoopJarForShellScript = configurationHelper.getProperty(ConfigurationValue.EMR_SHELL_SCRIPT_JAR);
-
-        // Create install hive step and add to the StepConfig list
-        if (StringUtils.isNotBlank(emrClusterDefinition.getHiveVersion()))
+        // Add encryption script support if needed
+        if (emrClusterDefinition.isEncryptionEnabled() != null && emrClusterDefinition.isEncryptionEnabled())
         {
-            StepConfig installHive =
-                new StepConfig().withName("Hive " + emrClusterDefinition.getHiveVersion()).withActionOnFailure(ActionOnFailure.TERMINATE_JOB_FLOW)
-                    .withHadoopJarStep(stepFactory.newInstallHiveStep(emrClusterDefinition.getHiveVersion()));
-            appSteps.add(installHive);
+            bootstrapActions.add(getBootstrapActionConfig(ConfigurationValue.EMR_ENCRYPTION_SCRIPT.getKey(), getEncryptionScriptLocation()));
         }
 
-        // Create install Pig step and add to the StepConfig List
-        if (StringUtils.isNotBlank(emrClusterDefinition.getPigVersion()))
-        {
-            StepConfig installPig =
-                new StepConfig().withName("Pig " + emrClusterDefinition.getPigVersion()).withActionOnFailure(ActionOnFailure.TERMINATE_JOB_FLOW)
-                    .withHadoopJarStep(stepFactory.newInstallPigStep(emrClusterDefinition.getPigVersion()));
-            appSteps.add(installPig);
-        }
+        // Add bootstrap actions.
+        addDaemonBootstrapActionConfig(emrClusterDefinition, bootstrapActions);
+        addHadoopBootstrapActionConfig(emrClusterDefinition, bootstrapActions);
+        addCustomBootstrapActionConfig(emrClusterDefinition, bootstrapActions);
+        addCustomMasterBootstrapActionConfig(emrClusterDefinition, bootstrapActions);
 
-        // Add Oozie support if needed
-        if (emrClusterDefinition.isInstallOozie() != null && emrClusterDefinition.isInstallOozie())
-        {
-            String oozieShellArg = getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-                configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_TAR_FILE);
-
-            List<String> argsList = new ArrayList<>();
-            argsList.add(getOozieScriptLocation());
-            argsList.add(oozieShellArg);
-
-            HadoopJarStepConfig jarConfig = new HadoopJarStepConfig(hadoopJarForShellScript).withArgs(argsList);
-            appSteps.add(new StepConfig().withName("Oozie").withHadoopJarStep(jarConfig));
-        }
-
-        // Add the hadoop jar steps that need to be added.
-        if (!CollectionUtils.isEmpty(emrClusterDefinition.getHadoopJarSteps()))
-        {
-            for (HadoopJarStep hadoopJarStep : emrClusterDefinition.getHadoopJarSteps())
-            {
-                StepConfig stepConfig = emrHelper
-                    .getEmrHadoopJarStepConfig(hadoopJarStep.getStepName(), hadoopJarStep.getJarLocation(), hadoopJarStep.getMainClass(),
-                        hadoopJarStep.getScriptArguments(), hadoopJarStep.isContinueOnError());
-
-                appSteps.add(stepConfig);
-            }
-        }
-
-        return appSteps;
+        // Return the object
+        return bootstrapActions;
     }
 
     /**
@@ -817,18 +836,100 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
+     * Get the encryption script location from the bucket name and encryption script location.
+     *
+     * @return location of the encryption script.
+     */
+    private String getEncryptionScriptLocation()
+    {
+        // Whenever the user requests for encryption, we have an encryption script that is stored in herd bucket.
+        // We use this encryption script to encrypt all the volumes of all the instances.
+        // Amazon plans to support encryption in EMR soon. Once that support is enabled, we can remove this script and use the one provided by AWS.
+        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
+            configurationHelper.getProperty(ConfigurationValue.EMR_ENCRYPTION_SCRIPT);
+    }
+
+    /**
+     * Creates the job flow instance configuration containing specification of the number and type of Amazon EC2 instances.
+     *
+     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters
+     *
+     * @return the job flow instance configuration
+     */
+    private JobFlowInstancesConfig getJobFlowInstancesConfig(EmrClusterDefinition emrClusterDefinition)
+    {
+        // Create a new job flow instances configuration object.
+        JobFlowInstancesConfig jobFlowInstancesConfig = new JobFlowInstancesConfig();
+        // Set up master/slave security group
+        jobFlowInstancesConfig.setEmrManagedMasterSecurityGroup(emrClusterDefinition.getMasterSecurityGroup());
+        jobFlowInstancesConfig.setEmrManagedSlaveSecurityGroup(emrClusterDefinition.getSlaveSecurityGroup());
+
+        // Add additional security groups to master nodes.
+        jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(emrClusterDefinition.getAdditionalMasterSecurityGroups());
+
+        // Add additional security groups to slave nodes.
+        jobFlowInstancesConfig.setAdditionalSlaveSecurityGroups(emrClusterDefinition.getAdditionalSlaveSecurityGroups());
+
+        // Fill-in the ssh key.
+        if (StringUtils.isNotBlank(emrClusterDefinition.getSshKeyPairName()))
+        {
+            jobFlowInstancesConfig.setEc2KeyName(emrClusterDefinition.getSshKeyPairName());
+        }
+
+        // Fill in configuration for the instance groups in a cluster.
+        jobFlowInstancesConfig.setInstanceGroups(getInstanceGroupConfigs(emrClusterDefinition.getInstanceDefinitions()));
+
+        // Fill in instance fleet configuration.
+        jobFlowInstancesConfig.setInstanceFleets(getInstanceFleets(emrClusterDefinition.getInstanceFleets()));
+
+        // Fill-in subnet id.
+        if (StringUtils.isNotBlank(emrClusterDefinition.getSubnetId()))
+        {
+            // Use collection of subnet IDs when instance fleet configuration is specified. Otherwise, we expect a single EC2 subnet ID to be passed here.
+            if (CollectionUtils.isNotEmpty(jobFlowInstancesConfig.getInstanceFleets()))
+            {
+                jobFlowInstancesConfig.setEc2SubnetIds(herdStringHelper.splitAndTrim(emrClusterDefinition.getSubnetId(), ","));
+            }
+            else
+            {
+                jobFlowInstancesConfig.setEc2SubnetId(emrClusterDefinition.getSubnetId());
+            }
+        }
+
+        // Fill in optional keep alive flag.
+        if (emrClusterDefinition.isKeepAlive() != null)
+        {
+            jobFlowInstancesConfig.setKeepJobFlowAliveWhenNoSteps(emrClusterDefinition.isKeepAlive());
+        }
+
+        // Fill in optional termination protection flag.
+        if (emrClusterDefinition.isTerminationProtection() != null)
+        {
+            jobFlowInstancesConfig.setTerminationProtected(emrClusterDefinition.isTerminationProtection());
+        }
+
+        // Fill in optional Hadoop version flag.
+        if (StringUtils.isNotBlank(emrClusterDefinition.getHadoopVersion()))
+        {
+            jobFlowInstancesConfig.setHadoopVersion(emrClusterDefinition.getHadoopVersion());
+        }
+
+        // Return the object.
+        return jobFlowInstancesConfig;
+    }
+
+    /**
      * Create the run job flow request object.
      *
      * @param emrClusterDefinition the EMR definition name value
      * @param clusterName the EMR cluster name
-     * @param crossAccountAccess specifies whether the EMR cluster will be created in another AWS account
      *
      * @return the run job flow request for the given configuration
      */
-    private RunJobFlowRequest getRunJobFlowRequest(String clusterName, EmrClusterDefinition emrClusterDefinition, boolean crossAccountAccess)
+    private RunJobFlowRequest getRunJobFlowRequest(String clusterName, EmrClusterDefinition emrClusterDefinition)
     {
         // Create the object
-        RunJobFlowRequest runJobFlowRequest = new RunJobFlowRequest(clusterName, getJobFlowInstancesConfig(emrClusterDefinition, crossAccountAccess));
+        RunJobFlowRequest runJobFlowRequest = new RunJobFlowRequest(clusterName, getJobFlowInstancesConfig(emrClusterDefinition));
 
         // Set release label
         if (StringUtils.isNotBlank(emrClusterDefinition.getReleaseLabel()))
@@ -925,81 +1026,61 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
-     * Converts the given list of {@link EmrClusterDefinitionApplication} into a list of {@link Application}
+     * Get the S3_STAGING_RESOURCE full path from the bucket name as well as other details.
      *
-     * @param emrClusterDefinitionApplications list of {@link EmrClusterDefinitionApplication}
-     *
-     * @return list {@link Application}
+     * @return the s3 managed location.
      */
-    public List<Application> getApplications(List<EmrClusterDefinitionApplication> emrClusterDefinitionApplications)
+    private String getS3StagingLocation()
     {
-        List<Application> applications = new ArrayList<>();
-        for (EmrClusterDefinitionApplication emrClusterDefinitionApplication : emrClusterDefinitionApplications)
-        {
-            Application application = new Application();
-            application.setName(emrClusterDefinitionApplication.getName());
-            application.setVersion(emrClusterDefinitionApplication.getVersion());
-            application.setArgs(emrClusterDefinitionApplication.getArgs());
-
-            List<Parameter> additionalInfoList = emrClusterDefinitionApplication.getAdditionalInfoList();
-            if (!CollectionUtils.isEmpty(additionalInfoList))
-            {
-                application.setAdditionalInfo(getMap(additionalInfoList));
-            }
-
-            applications.add(application);
-        }
-        return applications;
+        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) +
+            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME) +
+            configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
+            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
     }
 
     /**
-     * Converts the given list of {@link Parameter} into a {@link Map} of {@link String}, {@link String}
+     * Create the step config list of objects for hive/pig installation.
      *
-     * @param parameters List of {@link Parameter}
+     * @param emrClusterDefinition the EMR definition name value.
      *
-     * @return {@link Map}
+     * @return list of step configuration that contains all the steps for the given configuration.
      */
-    public Map<String, String> getMap(List<Parameter> parameters)
+    private List<StepConfig> getStepConfig(EmrClusterDefinition emrClusterDefinition)
     {
-        HashMap<String, String> map = new HashMap<String, String>();
-        for (Parameter parameter : parameters)
+        StepFactory stepFactory = new StepFactory();
+        List<StepConfig> appSteps = new ArrayList<>();
+
+        // Create install hive step and add to the StepConfig list
+        if (StringUtils.isNotBlank(emrClusterDefinition.getHiveVersion()))
         {
-            map.put(parameter.getName(), parameter.getValue());
+            StepConfig installHive =
+                new StepConfig().withName("Hive " + emrClusterDefinition.getHiveVersion()).withActionOnFailure(ActionOnFailure.TERMINATE_JOB_FLOW)
+                    .withHadoopJarStep(stepFactory.newInstallHiveStep(emrClusterDefinition.getHiveVersion()));
+            appSteps.add(installHive);
         }
-        return map;
-    }
 
-    /**
-     * Converts the given list of {@link EmrClusterDefinitionConfiguration} into a list of {@link Configuration}.
-     *
-     * @param emrClusterDefinitionConfigurations list of {@link EmrClusterDefinitionConfiguration}
-     *
-     * @return list of {@link Configuration}
-     */
-    public List<Configuration> getConfigurations(List<EmrClusterDefinitionConfiguration> emrClusterDefinitionConfigurations)
-    {
-        List<Configuration> result = new ArrayList<>();
-        for (EmrClusterDefinitionConfiguration emrClusterDefinitionConfiguration : emrClusterDefinitionConfigurations)
+        // Create install Pig step and add to the StepConfig List
+        if (StringUtils.isNotBlank(emrClusterDefinition.getPigVersion()))
         {
-            Configuration configuration = new Configuration();
-
-            configuration.setClassification(emrClusterDefinitionConfiguration.getClassification());
-
-            // Child configurations are gotten recursively
-            List<EmrClusterDefinitionConfiguration> requestedConfigurations = emrClusterDefinitionConfiguration.getConfigurations();
-            if (!CollectionUtils.isEmpty(requestedConfigurations))
-            {
-                configuration.setConfigurations(getConfigurations(requestedConfigurations));
-            }
-
-            List<Parameter> properties = emrClusterDefinitionConfiguration.getProperties();
-            if (!CollectionUtils.isEmpty(properties))
-            {
-                configuration.setProperties(getMap(properties));
-            }
-
-            result.add(configuration);
+            StepConfig installPig =
+                new StepConfig().withName("Pig " + emrClusterDefinition.getPigVersion()).withActionOnFailure(ActionOnFailure.TERMINATE_JOB_FLOW)
+                    .withHadoopJarStep(stepFactory.newInstallPigStep(emrClusterDefinition.getPigVersion()));
+            appSteps.add(installPig);
         }
-        return result;
+
+        // Add the hadoop jar steps that need to be added.
+        if (!CollectionUtils.isEmpty(emrClusterDefinition.getHadoopJarSteps()))
+        {
+            for (HadoopJarStep hadoopJarStep : emrClusterDefinition.getHadoopJarSteps())
+            {
+                StepConfig stepConfig = emrHelper
+                    .getEmrHadoopJarStepConfig(hadoopJarStep.getStepName(), hadoopJarStep.getJarLocation(), hadoopJarStep.getMainClass(),
+                        hadoopJarStep.getScriptArguments(), hadoopJarStep.isContinueOnError());
+
+                appSteps.add(stepConfig);
+            }
+        }
+
+        return appSteps;
     }
 }

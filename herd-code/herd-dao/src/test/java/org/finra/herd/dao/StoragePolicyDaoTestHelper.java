@@ -29,6 +29,7 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
 import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
+import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
 
 @Component
 public class StoragePolicyDaoTestHelper
@@ -69,6 +70,9 @@ public class StoragePolicyDaoTestHelper
     @Autowired
     private StoragePolicyStatusDao storagePolicyStatusDao;
 
+    @Autowired
+    private StoragePolicyTransitionTypeDao storagePolicyTransitionTypeDao;
+
     /**
      * Creates and persists a storage policy entity.
      *
@@ -80,7 +84,7 @@ public class StoragePolicyDaoTestHelper
     {
         return createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, AbstractDaoTest.BDATA_AGE_IN_DAYS,
             AbstractDaoTest.BDEF_NAMESPACE, AbstractDaoTest.BDEF_NAME, AbstractDaoTest.FORMAT_USAGE_CODE, AbstractDaoTest.FORMAT_FILE_TYPE_CODE,
-            AbstractDaoTest.STORAGE_NAME_ORIGIN, AbstractDaoTest.STORAGE_NAME_GLACIER, StoragePolicyStatusEntity.ENABLED, AbstractDaoTest.INITIAL_VERSION,
+            AbstractDaoTest.STORAGE_NAME, AbstractDaoTest.STORAGE_NAME, StoragePolicyStatusEntity.ENABLED, AbstractDaoTest.INITIAL_VERSION,
             AbstractDaoTest.LATEST_VERSION_FLAG_SET);
     }
 
@@ -95,7 +99,7 @@ public class StoragePolicyDaoTestHelper
      * @param businessObjectFormatUsage the business object usage
      * @param businessObjectFormatFileType the business object format file type
      * @param storageName the storage name
-     * @param destinationStorageName the destination storage name
+     * @param storagePolicyTransitionType the transition type of the storage policy
      * @param storagePolicyStatus the storage policy status
      * @param storagePolicyVersion the storage policy version
      * @param storagePolicyLatestVersion specifies if this storage policy is flagged as latest version or not
@@ -104,7 +108,7 @@ public class StoragePolicyDaoTestHelper
      */
     public StoragePolicyEntity createStoragePolicyEntity(StoragePolicyKey storagePolicyKey, String storagePolicyRuleType, Integer storagePolicyRuleValue,
         String businessObjectDefinitionNamespace, String businessObjectDefinitionName, String businessObjectFormatUsage, String businessObjectFormatFileType,
-        String storageName, String destinationStorageName, String storagePolicyStatus, Integer storagePolicyVersion, Boolean storagePolicyLatestVersion)
+        String storageName, String storagePolicyTransitionType, String storagePolicyStatus, Integer storagePolicyVersion, Boolean storagePolicyLatestVersion)
     {
         // Create a storage policy namespace entity if needed.
         NamespaceEntity storagePolicyNamespaceEntity = namespaceDao.getNamespaceByCd(storagePolicyKey.getNamespace());
@@ -154,14 +158,15 @@ public class StoragePolicyDaoTestHelper
             storageEntity = storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3);
         }
 
-        // Create a destination storage entity of GLACIER storage platform type if needed.
-        StorageEntity destinationStorageEntity = storageDao.getStorageByName(destinationStorageName);
-        if (destinationStorageEntity == null)
+        // Create a storage policy transition type entity, if not exists.
+        StoragePolicyTransitionTypeEntity storagePolicyTransitionTypeEntity =
+            storagePolicyTransitionTypeDao.getStoragePolicyTransitionTypeByCode(storagePolicyTransitionType);
+        if (storagePolicyTransitionTypeEntity == null)
         {
-            destinationStorageEntity = storageDaoTestHelper.createStorageEntity(destinationStorageName, StoragePlatformEntity.GLACIER);
+            storagePolicyTransitionTypeEntity = createStoragePolicyTransitionTypeEntity(storagePolicyTransitionType);
         }
 
-        // Create a storage entity, if not exists.
+        // Create a storage policy status entity, if not exists.
         StoragePolicyStatusEntity storagePolicyStatusEntity = storagePolicyStatusDao.getStoragePolicyStatusByCode(storagePolicyStatus);
         if (storagePolicyStatusEntity == null)
         {
@@ -179,7 +184,7 @@ public class StoragePolicyDaoTestHelper
         storagePolicyEntity.setUsage(businessObjectFormatUsage);
         storagePolicyEntity.setFileType(fileTypeEntity);
         storagePolicyEntity.setStorage(storageEntity);
-        storagePolicyEntity.setDestinationStorage(destinationStorageEntity);
+        storagePolicyEntity.setStoragePolicyTransitionType(storagePolicyTransitionTypeEntity);
         storagePolicyEntity.setStatus(storagePolicyStatusEntity);
         storagePolicyEntity.setVersion(storagePolicyVersion);
         storagePolicyEntity.setLatestVersion(storagePolicyLatestVersion);
@@ -213,5 +218,19 @@ public class StoragePolicyDaoTestHelper
         storagePolicyStatusEntity.setCode(statusCode);
         storagePolicyStatusEntity.setDescription(description);
         return storagePolicyStatusDao.saveAndRefresh(storagePolicyStatusEntity);
+    }
+
+    /**
+     * Creates and persists a new storage policy transition type entity.
+     *
+     * @param storagePolicyTransitionType the transition type of the storage policy
+     *
+     * @return the newly created storage policy transition type entity
+     */
+    public StoragePolicyTransitionTypeEntity createStoragePolicyTransitionTypeEntity(String storagePolicyTransitionType)
+    {
+        StoragePolicyTransitionTypeEntity storagePolicyTransitionTypeEntity = new StoragePolicyTransitionTypeEntity();
+        storagePolicyTransitionTypeEntity.setCode(storagePolicyTransitionType);
+        return storagePolicyTransitionTypeDao.saveAndRefresh(storagePolicyTransitionTypeEntity);
     }
 }

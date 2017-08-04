@@ -48,11 +48,12 @@ import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.BusinessObjectDefinitionIndexSearchDao;
+import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
@@ -76,6 +77,8 @@ import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
+import org.finra.herd.model.dto.FacetTypeEnum;
+import org.finra.herd.model.dto.SearchFilterType;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
@@ -90,7 +93,6 @@ import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.SearchableService;
-import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
@@ -108,9 +110,16 @@ import org.finra.herd.service.helper.TagHelper;
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
+// TODO: Refactor the service implementation and remove the PMD suppress warning statement below.
+@SuppressWarnings("PMD.TooManyMethods")
 public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService, SearchableService, FacetFieldValidationService
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionServiceImpl.class);
+
+    /**
+     * The size of the chunks to use when updating search index documents based on a list of ids.
+     */
+    public static final int UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE = 100;
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
@@ -140,10 +149,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private JsonHelper jsonHelper;
-
-    @Autowired
-    private SearchFunctions searchFunctions;
+    private IndexFunctionsDao indexFunctionsDao;
 
     @Autowired
     private TagHelper tagHelper;
@@ -157,6 +163,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
+    @Autowired
+    private BusinessObjectDefinitionIndexSearchDao businessObjectDefinitionIndexSearchDao;
+
     // Constant to hold the data provider name option for the business object definition search
     private static final String DATA_PROVIDER_NAME_FIELD = "dataprovidername";
 
@@ -168,10 +177,28 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     private static final String TAG_FACET_FIELD = "tag";
 
-    @PublishJmsMessages
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition createBusinessObjectDefinition(BusinessObjectDefinitionCreateRequest request)
+    {
+        return createBusinessObjectDefinitionImpl(request);
+    }
+
+    /**
+     * Creates a new business object definition.
+     *
+     * @param request the business object definition create request
+     *
+     * @return the created business object definition
+     */
+    protected BusinessObjectDefinition createBusinessObjectDefinitionImpl(BusinessObjectDefinitionCreateRequest request)
     {
         // Perform the validation.
         validateBusinessObjectDefinitionCreateRequest(request);
@@ -213,7 +240,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Simple count validation, index size should equal entity list size
-        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
+        final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName, documentType);
         final long businessObjectDefinitionDatabaseTableSize = businessObjectDefinitionDao.getCountOfAllBusinessObjectDefinitions();
         if (businessObjectDefinitionDatabaseTableSize != indexSize)
         {
@@ -265,7 +292,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Validate all Business Object Definitions
         businessObjectDefinitionHelper.executeFunctionForBusinessObjectDefinitionEntities(indexName, documentType, businessObjectDefinitionEntityList,
-            searchFunctions.getValidateFunction());
+            indexFunctionsDao::validateDocumentIndex);
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
         // can call "get" to see if any exceptions were thrown.
@@ -288,13 +315,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             .forEach(businessObjectDefinitionEntity -> databaseBusinessObjectDefinitionIdList.add(businessObjectDefinitionEntity.getId().toString()));
 
         // Get a list of business object definition ids in the search index
-        List<String> indexDocumentBusinessObjectDefinitionIdList = searchFunctions.getIdsInIndexFunction().apply(indexName, documentType);
+        List<String> indexDocumentBusinessObjectDefinitionIdList = indexFunctionsDao.getIdsInIndex(indexName, documentType);
 
         // Remove the database ids from the index ids
         indexDocumentBusinessObjectDefinitionIdList.removeAll(databaseBusinessObjectDefinitionIdList);
 
         // If there are any ids left in the index list they need to be removed
-        indexDocumentBusinessObjectDefinitionIdList.forEach(id -> searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
+        indexDocumentBusinessObjectDefinitionIdList.forEach(id -> indexFunctionsDao.deleteDocumentById(indexName, documentType, id));
     }
 
     /**
@@ -309,8 +336,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
-        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity ->
-        {
+        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -319,9 +345,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             businessObjectDefinitionEntity.getSampleDataFiles().size();
 
             // Convert the business object definition entity to a JSON string
-            final String jsonString = safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
+            final String jsonString = businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
 
-            return searchFunctions.getIsValidFunction().test(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+            return indexFunctionsDao.isValidDocumentIndex(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
         };
 
         boolean isValid = true;
@@ -337,35 +363,29 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     /**
-     * Wrapper method that will safely call the object mapper write value as string method and handle the JsonProcessingException. This wrapper is needed so
-     * that we can do the object mapping within a Java stream.
-     *
-     * @param businessObjectDefinitionEntity the entity to convert to JSON
-     *
-     * @return JSON string value of the object
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
      */
-    private String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
-    {
-        String jsonString = "";
-
-        try
-        {
-            // Convert the business object definition entity to a JSON string
-            jsonString = jsonHelper.objectToJson(businessObjectDefinitionEntity);
-        }
-        catch (IllegalStateException illegalStateException)
-        {
-            LOGGER.warn("Could not parse BusinessObjectDefinitionEntity id={" + businessObjectDefinitionEntity.getId() + "} into JSON string. ",
-                illegalStateException);
-        }
-
-        return jsonString;
-    }
-
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionUpdateRequest request)
+    {
+        return updateBusinessObjectDefinitionImpl(businessObjectDefinitionKey, request);
+    }
+
+    /**
+     * Updates a business object definition.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     * @param request the business object definition update request
+     *
+     * @return the updated business object definition
+     */
+    protected BusinessObjectDefinition updateBusinessObjectDefinitionImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionUpdateRequest request)
     {
         // Perform validation and trim.
@@ -386,9 +406,29 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
-    @PublishJmsMessages
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
+    @PublishNotificationMessages
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
+    {
+        return updateBusinessObjectDefinitionDescriptiveInformationImpl(businessObjectDefinitionKey, request);
+    }
+
+    /**
+     * Updates a business object definition descriptive information.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     * @param request the business object definition descriptive information update request
+     *
+     * @return the updated business object definition
+     */
+    protected BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformationImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         // Perform validation and trim.
@@ -422,6 +462,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
@@ -449,10 +494,28 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
-    @PublishJmsMessages
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    {
+        return deleteBusinessObjectDefinitionImpl(businessObjectDefinitionKey);
+    }
+
+    /**
+     * Deletes a business object definition for the specified name.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     *
+     * @return the business object definition that was deleted.
+     */
+    protected BusinessObjectDefinition deleteBusinessObjectDefinitionImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
         // Perform validation and trim.
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
@@ -524,17 +587,29 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             // Validate the search request.
             validateBusinessObjectDefinitionIndexSearchRequest(searchRequest);
 
-            List<List<TagEntity>> tagEntitiesPerSearchFilter = new ArrayList<>();
+            List<Map<SearchFilterType, List<TagEntity>>> tagEntitiesPerSearchFilter = new ArrayList<>();
 
             // Iterate through all search filters and extract tag keys
             for (BusinessObjectDefinitionSearchFilter searchFilter : searchRequest.getBusinessObjectDefinitionSearchFilters())
             {
+
                 List<TagEntity> tagEntities = new ArrayList<>();
+                Map<SearchFilterType, List<TagEntity>> searchFilterTypeListMap = new HashMap<>();
+
+                if (BooleanUtils.isTrue(searchFilter.isIsExclusionSearchFilter()))
+                {
+                    searchFilterTypeListMap.put(SearchFilterType.EXCLUSION_SEARCH_FILTER, tagEntities);
+                    validateExclusionSearchFilter(searchFilter);
+                }
+                else
+                {
+                    searchFilterTypeListMap.put(SearchFilterType.INCLUSION_SEARCH_FILTER, tagEntities);
+                }
 
                 for (BusinessObjectDefinitionSearchKey searchKey : searchFilter.getBusinessObjectDefinitionSearchKeys())
                 {
                     // Get the actual tag entity from its key.
-                    // todo: bulk fetch tags and their children from the search index after we start indexing tags
+                    // TODO: bulk fetch tags and their children from the search index after we start indexing tags
                     TagEntity tagEntity = tagDaoHelper.getTagEntity(searchKey.getTagKey());
                     tagEntities.add(tagEntity);
 
@@ -546,20 +621,18 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 }
 
                 // Collect all tag entities and their children (if included) into separate lists
-                tagEntitiesPerSearchFilter.add(new ArrayList<>(tagEntities));
+                tagEntitiesPerSearchFilter.add(searchFilterTypeListMap);
             }
 
             // Use the tag type entities lists to search in the search index for business object definitions
             elasticsearchResponseDto =
-                searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntitiesPerSearchFilter, facetFields);
+                businessObjectDefinitionIndexSearchDao.searchBusinessObjectDefinitionsByTags(indexName, documentType, tagEntitiesPerSearchFilter, facetFields);
         }
         else
         {
-
             // Else get all of the business object definitions
-            elasticsearchResponseDto = searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType, facetFields);
+            elasticsearchResponseDto = businessObjectDefinitionIndexSearchDao.findAllBusinessObjectDefinitions(indexName, documentType, facetFields);
         }
-
 
         // Create a list to hold the business object definitions that will be returned as part of the search response
         List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
@@ -589,14 +662,14 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
                 for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos())
                 {
-                    Facet tagFacet =
-                        new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), TagIndexSearchResponseDto.getFacetType(),
-                            tagIndexSearchResponseDto.getTagCode(), null);
+                    Facet tagFacet = new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), FacetTypeEnum.TAG.value(),
+                        tagIndexSearchResponseDto.getTagCode(), null);
                     tagFacets.add(tagFacet);
                 }
 
-                tagTypeFacets.add(new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), tagTypeIndexSearchResponseDto.getCount(),
-                    TagTypeIndexSearchResponseDto.getFacetType(), tagTypeIndexSearchResponseDto.getCode(), tagFacets));
+                tagTypeFacets.add(
+                    new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), tagTypeIndexSearchResponseDto.getCount(), FacetTypeEnum.TAG_TYPE.value(),
+                        tagTypeIndexSearchResponseDto.getCode(), tagFacets));
             }
         }
 
@@ -607,6 +680,20 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return searchResponse;
     }
 
+    /**
+     * Private validate method to validate the exclusion search filter. Asserts that the isIncludeTagHierarchy flag is false, because the isIncludeTagHierarchy
+     * option should not be used at the same time as the exclusion option.
+     *
+     * @param searchFilter the search filter to validate
+     */
+    private void validateExclusionSearchFilter(BusinessObjectDefinitionSearchFilter searchFilter)
+    {
+        for (BusinessObjectDefinitionSearchKey searchKey : searchFilter.getBusinessObjectDefinitionSearchKeys())
+        {
+            Assert.isTrue(!BooleanUtils.isTrue(searchKey.isIncludeTagHierarchy()),
+                "IsExclusionSearchFilter and includeTagHierarchy cannot both be true for a business object definition search filter.");
+        }
+    }
 
     @Override
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
@@ -907,11 +994,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         BusinessObjectDefinition definition = new BusinessObjectDefinition();
 
-        //populate namespace and business object definition name fields by default
+        // Populate namespace and business object definition name fields by default
         definition.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
         definition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
 
-        //decorate object with only the required fields
+        // Decorate object with only the required fields
         if (fields.contains(DATA_PROVIDER_NAME_FIELD))
         {
             definition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
@@ -995,7 +1082,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto)
@@ -1004,9 +1091,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         String fileName = businessObjectDefinitionSampleFileUpdateDto.getFileName();
         long fileSize = businessObjectDefinitionSampleFileUpdateDto.getFileSize();
 
-        // validate business object key
+        // Validate business object key
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-        // validate file name
+        // Validate file name
         Assert.hasText(fileName, "A file name must be specified.");
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
@@ -1014,7 +1101,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         boolean found = false;
         for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFieEntity : sampleFiles)
         {
-            //assume the path is the same for this business object definition
+            // Assume the path is the same for this business object definition
             if (sampleDataFieEntity.getFileName().equals(fileName))
             {
                 found = true;
@@ -1023,7 +1110,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 break;
             }
         }
-        // create a new entity when not found
+        // Create a new entity when not found
         if (!found)
         {
             StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE);
@@ -1050,26 +1137,39 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         String modificationType = searchIndexUpdateDto.getModificationType();
         List<Integer> ids = searchIndexUpdateDto.getBusinessObjectDefinitionIds();
 
-        // Switch on the type of CRUD modification to be done
-        switch (modificationType)
+        // Start at index 0
+        int fromIndex = 0;
+
+        // Process documents until the ids are all updated
+        while (fromIndex < ids.size())
         {
-            case SEARCH_INDEX_UPDATE_TYPE_CREATE:
-                // Create a search index document
-                searchFunctions.getCreateIndexDocumentsFunction().accept(indexName, documentType,
-                    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
-                break;
-            case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
-                // Update a search index document
-                searchFunctions.getUpdateIndexDocumentsFunction().accept(indexName, documentType,
-                    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
-                break;
-            case SEARCH_INDEX_UPDATE_TYPE_DELETE:
-                // Delete a search index document
-                searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
-                break;
-            default:
-                LOGGER.warn("Unknown modification type received.");
-                break;
+            // Process based on a document chunk size, if the id.size is greater than the chunk size then use the chunk size
+            int toIndex = ids.size() > fromIndex + UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE ? fromIndex + UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE : ids.size();
+
+            // Switch on the type of CRUD modification to be done
+            switch (modificationType)
+            {
+                case SEARCH_INDEX_UPDATE_TYPE_CREATE:
+                    // Create a search index document
+                    indexFunctionsDao.createIndexDocuments(indexName, documentType, convertBusinessObjectDefinitionEntityListToJSONStringMap(
+                        businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids.subList(fromIndex, toIndex))));
+                    break;
+                case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
+                    // Update a search index document
+                    indexFunctionsDao.updateIndexDocuments(indexName, documentType, convertBusinessObjectDefinitionEntityListToJSONStringMap(
+                        businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids.subList(fromIndex, toIndex))));
+                    break;
+                case SEARCH_INDEX_UPDATE_TYPE_DELETE:
+                    // Delete a search index document
+                    indexFunctionsDao.deleteIndexDocuments(indexName, documentType, ids);
+                    break;
+                default:
+                    LOGGER.warn("Unknown modification type received.");
+                    break;
+            }
+
+            // Set the from index to the toIndex
+            fromIndex = toIndex;
         }
     }
 
@@ -1084,8 +1184,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         Map<String, String> businessObjectDefinitionJSONMap = new HashMap<>();
 
-        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity ->
-        {
+        LOGGER.debug("convertBusinessObjectDefinitionEntityListToJSONStringMap bdef size is {}.", businessObjectDefinitionEntities.size());
+        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -1093,11 +1193,15 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             businessObjectDefinitionEntity.getColumns().size();
             businessObjectDefinitionEntity.getSampleDataFiles().size();
 
-            String jsonString = safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
+            String jsonString = businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
 
             if (StringUtils.isNotEmpty(jsonString))
             {
                 businessObjectDefinitionJSONMap.put(businessObjectDefinitionEntity.getId().toString(), jsonString);
+            }
+            else
+            {
+                LOGGER.warn("Business Object Definition Entity {} jsonString is empty.", businessObjectDefinitionEntity.getId());
             }
         });
 
@@ -1117,11 +1221,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         BusinessObjectDefinition definition = new BusinessObjectDefinition();
 
-        //populate namespace and business object definition name fields by default
+        // Populate namespace and business object definition name fields by default
         definition.setNamespace(businessObjectDefinitionIndexSearchResponseDto.getNamespace().getCode());
         definition.setBusinessObjectDefinitionName(businessObjectDefinitionIndexSearchResponseDto.getName());
 
-        //decorate object with only the required fields
+        // Decorate object with only the required fields
         if (fields.contains(DATA_PROVIDER_NAME_FIELD))
         {
             definition.setDataProviderName(businessObjectDefinitionIndexSearchResponseDto.getDataProvider().getName());

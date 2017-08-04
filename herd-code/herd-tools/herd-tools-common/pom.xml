@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-tools</artifactId>
-      <version>0.39.0-SNAPSHOT</version>
+      <version>0.49.0-SNAPSHOT</version>
    </parent>
 
    <name>herd tools common</name>
@@ -40,10 +40,6 @@
          Exclude dependencies that aren't needed in the uploader and downloader applications.
          -->
          <exclusions>
-            <exclusion>
-               <artifactId>oozie-client</artifactId>
-               <groupId>org.apache.oozie</groupId>
-            </exclusion>
             <exclusion>
                <artifactId>activiti-spring</artifactId>
                <groupId>org.activiti</groupId>
@@ -66,10 +62,6 @@
             </exclusion>
             <exclusion>
                <artifactId>aws-java-sdk-emr</artifactId>
-               <groupId>com.amazonaws</groupId>
-            </exclusion>
-            <exclusion>
-               <artifactId>aws-java-sdk-sts</artifactId>
                <groupId>com.amazonaws</groupId>
             </exclusion>
             <exclusion>

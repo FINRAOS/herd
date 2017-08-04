@@ -145,7 +145,7 @@ public class ApplicationUser implements Serializable
 
     public String toString()
     {
-        return "userId=" + userId + " username=\"" + firstName + " " + lastName + "\" sessionId=" + sessionId + " generatedByClass=" +
+        return "userId=" + userId + " username=\"" + firstName + " " + lastName + "\" sessionId=" + sessionId + " roles=" + roles + " generatedByClass=" +
             generatedByClass.getCanonicalName();
     }
 }

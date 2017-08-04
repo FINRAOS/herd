@@ -15,13 +15,18 @@
 */
 package org.finra.herd.core;
 
+import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Entities;
+import org.jsoup.safety.Cleaner;
+import org.jsoup.safety.Whitelist;
 
 /**
  * HerdStringUtils
  */
-public class HerdStringUtils extends StringUtils
+public class HerdStringUtils
 {
     /**
      * Truncates the description field to a configurable value thereby producing a 'short description'
@@ -37,5 +42,44 @@ public class HerdStringUtils extends StringUtils
         // Do a partial HTML parse just in case there are some elements that don't have ending tags or the like
         String toParse = description != null ? description : "";
         return StringUtils.left(Jsoup.parseBodyFragment(toParse).body().text(), shortDescMaxLength);
+    }
+
+    /**
+     * Strips HTML tags from a given input String, allows some tags to be retained via a whitelist
+     *
+     * @param fragment the specified String
+     * @param whitelistTags the specified whitelist tags
+     *
+     * @return cleaned String with allowed tags
+     */
+    public static String stripHtml(String fragment, String... whitelistTags)
+    {
+
+        // Parse out html tags except those from a given list of whitelist tags
+        Document dirty = Jsoup.parseBodyFragment(fragment);
+
+        Whitelist whitelist = new Whitelist();
+
+        for (String whitelistTag : whitelistTags)
+        {
+            // Get the actual tag name from the whitelist tag
+            // this is vulnerable in general to complex tags but will suffice for our simple needs
+            whitelistTag = StringUtils.removePattern(whitelistTag, "[^\\{IsAlphabetic}]");
+
+            // Add all specified tags to the whitelist while preserving inline css
+            whitelist.addTags(whitelistTag).addAttributes(whitelistTag, "class");
+        }
+
+        Cleaner cleaner = new Cleaner(whitelist);
+        Document clean = cleaner.clean(dirty);
+        clean.outputSettings()
+            .escapeMode(Entities.EscapeMode.base)
+             // Set character encoding to UTF-8
+            .charset(CharEncoding.UTF_8)
+             // Make sure no line-breaks are added
+            .prettyPrint(false);
+
+        // return 'cleaned' html body
+        return clean.body().html();
     }
 }

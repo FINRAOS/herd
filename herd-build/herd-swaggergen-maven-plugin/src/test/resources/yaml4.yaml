@@ -104,7 +104,7 @@ definitions:
     properties:
       id:
         type: "integer"
-        format: "int32"
+        format: "int64"
       name:
         type: "string"
     example: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<person>\n\

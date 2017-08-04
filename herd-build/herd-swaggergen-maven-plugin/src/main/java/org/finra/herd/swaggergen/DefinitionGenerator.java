@@ -35,6 +35,7 @@ import io.swagger.models.properties.BooleanProperty;
 import io.swagger.models.properties.DateTimeProperty;
 import io.swagger.models.properties.DecimalProperty;
 import io.swagger.models.properties.IntegerProperty;
+import io.swagger.models.properties.LongProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.RefProperty;
 import io.swagger.models.properties.StringProperty;
@@ -199,10 +200,13 @@ public class DefinitionGenerator
         {
             property = new StringProperty();
         }
-        else if (Integer.class.isAssignableFrom(fieldType) || int.class.isAssignableFrom(fieldType) || Long.class.isAssignableFrom(fieldType) ||
-            long.class.isAssignableFrom(fieldType))
+        else if (Integer.class.isAssignableFrom(fieldType) || int.class.isAssignableFrom(fieldType))
         {
             property = new IntegerProperty();
+        }
+        else if( Long.class.isAssignableFrom(fieldType) ||  long.class.isAssignableFrom(fieldType))
+        {
+            property =  new LongProperty();
         }
         else if (BigDecimal.class.isAssignableFrom(fieldType))
         {

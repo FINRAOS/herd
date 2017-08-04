@@ -339,35 +339,38 @@ public class Hive13DdlGenerator extends DdlGenerator
                 "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {^%s$}", storageName, storageFile,
                 businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), s3KeyPrefix, pattern.pattern()));
 
-            // Add the top level partition value.
-            HivePartitionDto newHivePartition = new HivePartitionDto();
-            newHivePartition.getPartitionValues().add(businessObjectDataKey.getPartitionValue());
-            newHivePartition.getPartitionValues().addAll(businessObjectDataKey.getSubPartitionValues());
+            // Create a list of partition values.
+            List<String> partitionValues = new ArrayList<>();
+
+            // Add partition values per business object data key.
+            partitionValues.add(businessObjectDataKey.getPartitionValue());
+            partitionValues.addAll(businessObjectDataKey.getSubPartitionValues());
+
             // Extract relative partition values.
             for (int i = 1; i <= matcher.groupCount(); i++)
             {
-                newHivePartition.getPartitionValues().add(matcher.group(i));
+                partitionValues.add(matcher.group(i));
             }
 
-            // Remove the trailing "/" plus an optional file name from the file path and store the result string as this partition relative path.
-            newHivePartition.setPath(relativeFilePath.replaceAll("/[^/]*$", ""));
+            // Get path for this partition by removing trailing "/" plus an optional file name from the relative file path.
+            String partitionPath = relativeFilePath.replaceAll("/[^/]*$", "");
 
             // Check if we already have that partition discovered - that would happen if partition contains multiple data files.
-            HivePartitionDto hivePartition = linkedHashMap.get(newHivePartition.getPartitionValues());
+            HivePartitionDto hivePartition = linkedHashMap.get(partitionValues);
 
             if (hivePartition != null)
             {
-                // Partition is already discovered, so just validate that the relative file paths match.
-                Assert.isTrue(hivePartition.getPath().equals(newHivePartition.getPath()), String.format(
+                // Partition is already discovered, so just validate that the relative paths match.
+                Assert.isTrue(hivePartition.getPath().equals(partitionPath), String.format(
                     "Found two different locations for the same Hive partition. Storage: {%s}, business object data: {%s}, " +
                         "S3 key prefix: {%s}, path[1]: {%s}, path[2]: {%s}", storageName,
                     businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), s3KeyPrefix, hivePartition.getPath(),
-                    newHivePartition.getPath()));
+                    partitionPath));
             }
             else
             {
                 // Add this partition to the hash map of discovered partitions.
-                linkedHashMap.put(newHivePartition.getPartitionValues(), newHivePartition);
+                linkedHashMap.put(partitionValues, new HivePartitionDto(partitionPath, partitionValues));
             }
         }
 
@@ -849,7 +852,7 @@ public class Hive13DdlGenerator extends DdlGenerator
         // file paths for the relative storage units loaded in a multi-valued map for easy access.
         MultiValuedMap<Integer, String> storageUnitIdToStorageFilePathsMap =
             BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions) ? new ArrayListValuedHashMap<>() :
-                storageFileDao.getStorageFilePathsByStorageUnits(storageUnitEntities);
+                storageFileDao.getStorageFilePathsByStorageUnitIds(storageUnitHelper.getStorageUnitIds(storageUnitEntities));
 
         // Process all available business object data instances.
         for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
@@ -886,8 +889,8 @@ public class Hive13DdlGenerator extends DdlGenerator
 
                 // Validate storage file paths registered with this business object data in the specified storage.
                 // The validation check below is required even if we have no storage files registered.
-                storageFileHelper
-                    .validateStorageFiles(storageFilePaths, s3KeyPrefix, storageUnitEntity.getBusinessObjectData(), storageUnitEntity.getStorage().getName());
+                storageFileHelper.validateStorageFilePaths(storageFilePaths, s3KeyPrefix, storageUnitEntity.getBusinessObjectData(),
+                    storageUnitEntity.getStorage().getName());
 
                 // If there are no storage files registered for this storage unit, we should use the storage directory path value.
                 if (storageFilePaths.isEmpty())

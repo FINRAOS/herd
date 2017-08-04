@@ -32,10 +32,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -262,8 +262,9 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
      */
     protected S3FileTransferRequestParamsDto getTestS3FileTransferRequestParamsDto(String s3KeyPrefix)
     {
-        return S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(s3KeyPrefix).s3AccessKey(S3_ACCESS_KEY)
-            .s3SecretKey(S3_SECRET_KEY).httpProxyHost(HTTP_PROXY_HOST).httpProxyPort(HTTP_PROXY_PORT).localPath(LOCAL_TEMP_PATH_INPUT.toString()).build();
+        return S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(s3KeyPrefix).withAwsAccessKeyId(S3_ACCESS_KEY)
+            .withAwsSecretKey(S3_SECRET_KEY).withHttpProxyHost(HTTP_PROXY_HOST).withHttpProxyPort(HTTP_PROXY_PORT)
+            .withLocalPath(LOCAL_TEMP_PATH_INPUT.toString()).build();
     }
 
     /**

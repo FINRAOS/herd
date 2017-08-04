@@ -19,11 +19,15 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_DELETE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.function.Predicate;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
@@ -32,6 +36,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -39,10 +45,11 @@ import org.springframework.util.Assert;
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagCreateRequest;
@@ -56,12 +63,12 @@ import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagService;
-import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
@@ -89,6 +96,9 @@ public class TagServiceImpl implements TagService, SearchableService
     // Constant to hold the parent tag key field option for the search response.
     public final static String PARENT_TAG_KEY_FIELD = "parentTagKey".toLowerCase();
 
+    // Constant to hold the search score multiplier option for the search response.
+    public final static String SEARCH_SCORE_MULTIPLIER_FIELD = "searchScoreMultiplier".toLowerCase();
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -99,7 +109,7 @@ public class TagServiceImpl implements TagService, SearchableService
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private SearchFunctions searchFunctions;
+    private IndexFunctionsDao indexFunctionsDao;
 
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
@@ -116,7 +126,7 @@ public class TagServiceImpl implements TagService, SearchableService
     @Autowired
     private TagTypeDaoHelper tagTypeDaoHelper;
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public Tag createTag(TagCreateRequest request)
     {
@@ -159,7 +169,7 @@ public class TagServiceImpl implements TagService, SearchableService
         return createTagFromEntity(tagEntity);
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public Tag deleteTag(TagKey tagKey)
     {
@@ -168,6 +178,18 @@ public class TagServiceImpl implements TagService, SearchableService
 
         // Retrieve and ensure that a Tag already exists for the given tag key.
         TagEntity tagEntity = tagDaoHelper.getTagEntity(tagKey);
+
+        // List of tag entities to update in the search index
+        List<TagEntity> tagEntities = new ArrayList<>();
+        tagEntities.add(tagEntity);
+
+        // If there is a parent tag entity add it to the tag entities list
+        if (tagEntity.getParentTagEntity() != null)
+        {
+            tagEntities.add(tagEntity.getParentTagEntity());
+        }
+
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities);
 
         // delete the tag.
         tagDao.delete(tagEntity);
@@ -180,6 +202,9 @@ public class TagServiceImpl implements TagService, SearchableService
         {
             searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity.getParentTagEntity(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         }
+
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the tag object from the deleted entity.
         return createTagFromEntity(tagEntity);
@@ -233,7 +258,7 @@ public class TagServiceImpl implements TagService, SearchableService
     @Override
     public Set<String> getValidSearchResponseFields()
     {
-        return ImmutableSet.of(DISPLAY_NAME_FIELD, DESCRIPTION_FIELD, PARENT_TAG_KEY_FIELD, HAS_CHILDREN_FIELD);
+        return ImmutableSet.of(DISPLAY_NAME_FIELD, SEARCH_SCORE_MULTIPLIER_FIELD, DESCRIPTION_FIELD, PARENT_TAG_KEY_FIELD, HAS_CHILDREN_FIELD);
     }
 
     @Override
@@ -271,8 +296,8 @@ public class TagServiceImpl implements TagService, SearchableService
         List<Tag> tags = new ArrayList<>();
         for (TagEntity tagEntity : tagEntities)
         {
-            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), fields.contains(DESCRIPTION_FIELD), false, false, false,
-                fields.contains(PARENT_TAG_KEY_FIELD), fields.contains(HAS_CHILDREN_FIELD)));
+            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), fields.contains(SEARCH_SCORE_MULTIPLIER_FIELD),
+                fields.contains(DESCRIPTION_FIELD), false, false, false, fields.contains(PARENT_TAG_KEY_FIELD), fields.contains(HAS_CHILDREN_FIELD)));
         }
 
         // Build and return the tag search response.
@@ -293,17 +318,15 @@ public class TagServiceImpl implements TagService, SearchableService
         {
             case SEARCH_INDEX_UPDATE_TYPE_CREATE:
                 // Create a search index document
-                searchFunctions.getCreateIndexDocumentsFunction()
-                    .accept(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+            indexFunctionsDao.createIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
                 // Update a search index document
-                searchFunctions.getUpdateIndexDocumentsFunction()
-                    .accept(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+               indexFunctionsDao.updateIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_DELETE:
                 // Delete a search index document
-                searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
+                indexFunctionsDao.deleteIndexDocuments(indexName, documentType, ids);
                 break;
             default:
                 LOGGER.warn("Unknown modification type received.");
@@ -311,7 +334,7 @@ public class TagServiceImpl implements TagService, SearchableService
         }
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public Tag updateTag(TagKey tagKey, TagUpdateRequest tagUpdateRequest)
     {
@@ -385,6 +408,7 @@ public class TagServiceImpl implements TagService, SearchableService
         tagEntity.setTagType(tagTypeEntity);
         tagEntity.setTagCode(request.getTagKey().getTagCode());
         tagEntity.setDisplayName(request.getDisplayName());
+        tagEntity.setSearchScoreMultiplier(request.getSearchScoreMultiplier());
         tagEntity.setDescription(request.getDescription());
         tagEntity.setParentTagEntity(parentTagEntity);
 
@@ -400,7 +424,7 @@ public class TagServiceImpl implements TagService, SearchableService
      */
     private Tag createTagFromEntity(TagEntity tagEntity)
     {
-        return createTagFromEntity(tagEntity, true, true, true, true, true, true, true, false);
+        return createTagFromEntity(tagEntity, true, true, true, true, true, true, true, true, false);
     }
 
     /**
@@ -409,6 +433,7 @@ public class TagServiceImpl implements TagService, SearchableService
      * @param tagEntity the tag entity
      * @param includeId specifies to include the display name field
      * @param includeDisplayName specifies to include the display name field
+     * @param includeSearchScoreMultiplier specifies to include the search score multiplier
      * @param includeDescription specifies to include the description field
      * @param includeUserId specifies to include the user id of the user who created this tag
      * @param includeLastUpdatedByUserId specifies to include the user id of the user who last updated this tag
@@ -418,8 +443,9 @@ public class TagServiceImpl implements TagService, SearchableService
      *
      * @return the tag
      */
-    private Tag createTagFromEntity(TagEntity tagEntity, boolean includeId, boolean includeDisplayName, boolean includeDescription, boolean includeUserId,
-        boolean includeLastUpdatedByUserId, boolean includeUpdatedTime, boolean includeParentTagKey, boolean includeHasChildren)
+    private Tag createTagFromEntity(TagEntity tagEntity, boolean includeId, boolean includeDisplayName, boolean includeSearchScoreMultiplier,
+        boolean includeDescription, boolean includeUserId, boolean includeLastUpdatedByUserId, boolean includeUpdatedTime, boolean includeParentTagKey,
+        boolean includeHasChildren)
     {
         Tag tag = new Tag();
 
@@ -433,6 +459,11 @@ public class TagServiceImpl implements TagService, SearchableService
         if (includeDisplayName)
         {
             tag.setDisplayName(tagEntity.getDisplayName());
+        }
+
+        if (includeSearchScoreMultiplier)
+        {
+            tag.setSearchScoreMultiplier(tagEntity.getSearchScoreMultiplier());
         }
 
         if (includeDescription)
@@ -505,6 +536,7 @@ public class TagServiceImpl implements TagService, SearchableService
     private void updateTagEntity(TagEntity tagEntity, TagUpdateRequest request, TagEntity parentTagEntity)
     {
         tagEntity.setDisplayName(request.getDisplayName());
+        tagEntity.setSearchScoreMultiplier(request.getSearchScoreMultiplier());
         tagEntity.setDescription(request.getDescription());
         tagEntity.setParentTagEntity(parentTagEntity);
         tagDao.saveAndRefresh(tagEntity);
@@ -527,6 +559,22 @@ public class TagServiceImpl implements TagService, SearchableService
         }
 
         request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
+
+        validateTagSearchScoreMultiplier(request.getSearchScoreMultiplier());
+    }
+
+    /**
+     * Validate an optional tag's search score multiplier value.
+     *
+     * @param searchScoreMultiplier the tag's search score multiplier value
+     */
+    private void validateTagSearchScoreMultiplier(BigDecimal searchScoreMultiplier)
+    {
+        if (searchScoreMultiplier != null && searchScoreMultiplier.compareTo(BigDecimal.ZERO) == -1)
+        {
+            throw new IllegalArgumentException(
+                String.format("The searchScoreMultiplier can not have a negative value. searchScoreMultiplier=%s", searchScoreMultiplier.toPlainString()));
+        }
     }
 
     /**
@@ -584,5 +632,129 @@ public class TagServiceImpl implements TagService, SearchableService
         }
 
         request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
+
+        validateTagSearchScoreMultiplier(request.getSearchScoreMultiplier());
+    }
+
+    @Override
+    public boolean indexSizeCheckValidationTags()
+    {
+        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        // Simple count validation, index size should equal entity list size
+        final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName, documentType);
+            //searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
+        final long tagDatabaseTableSize = tagDao.getCountOfAllTags();
+        if (tagDatabaseTableSize != indexSize)
+        {
+            LOGGER.error("Index validation failed, tag database table size {}, does not equal index size {}.", tagDatabaseTableSize, indexSize);
+        }
+
+        return tagDatabaseTableSize == indexSize;
+    }
+
+    @Override
+    public boolean indexSpotCheckPercentageValidationTags()
+    {
+        final Double spotCheckPercentage = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class);
+
+        // Get a list of all tags
+        final List<TagEntity> tagEntityList = Collections.unmodifiableList(tagDao.getPercentageOfAllTags(spotCheckPercentage));
+
+        return indexValidateTagsList(tagEntityList);
+    }
+
+    @Override
+    public boolean indexSpotCheckMostRecentValidationTags()
+    {
+        final Integer spotCheckMostRecentNumber =
+            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
+
+        // Get a list of all tags
+        final List<TagEntity> tagEntityList = Collections.unmodifiableList(tagDao.getMostRecentTags(spotCheckMostRecentNumber));
+
+        return indexValidateTagsList(tagEntityList);
+    }
+
+    @Override
+    @Async
+    public Future<Void> indexValidateAllTags()
+    {
+        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        // Get a list of all tags
+        final List<TagEntity> tagEntityList = Collections.unmodifiableList(tagDao.getTags());
+
+        // Remove any index documents that are not in the database
+        removeAnyIndexDocumentsThatAreNotInTagsList(indexName, documentType, tagEntityList);
+
+        // Validate all Tags
+        tagHelper.executeFunctionForTagEntities(indexName, documentType, tagEntityList, indexFunctionsDao::validateDocumentIndex);
+
+        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
+        // can call "get" to see if any exceptions were thrown.
+        return new AsyncResult<>(null);
+    }
+
+    /**
+     * Method to remove tags in the index that don't exist in the database
+     *
+     * @param indexName the name of the index
+     * @param documentType the document type
+     * @param tagEntityList list of tags in the database
+     */
+    private void removeAnyIndexDocumentsThatAreNotInTagsList(final String indexName, final String documentType, List<TagEntity> tagEntityList)
+    {
+        // Get a list of tag ids from the list of tag entities in the database
+        List<String> databaseTagIdList = new ArrayList<>();
+        tagEntityList.forEach(tagEntity -> databaseTagIdList.add(tagEntity.getId().toString()));
+
+        // Get a list of tag ids in the search index
+        List<String> indexDocumentTagIdList = indexFunctionsDao.getIdsInIndex(indexName, documentType);
+            //searchFunctions.getIdsInIndexFunction().apply(indexName, documentType);
+
+        // Remove the database ids from the index ids
+        indexDocumentTagIdList.removeAll(databaseTagIdList);
+
+        // If there are any ids left in the index list they need to be removed
+        indexDocumentTagIdList.forEach(id -> indexFunctionsDao.deleteDocumentById(indexName, documentType, id));
+            //searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
+    }
+
+    /**
+     * A helper method that will validate a list of tags
+     *
+     * @param tagEntityList the list of tags that will be validated
+     *
+     * @return true all of the tags are valid in the index
+     */
+    private boolean indexValidateTagsList(final List<TagEntity> tagEntityList)
+    {
+        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        Predicate<TagEntity> validInIndexPredicate = tagEntity -> {
+            // Fetch Join with .size()
+            tagEntity.getChildrenTagEntities().size();
+
+            // Convert the tag entity to a JSON string
+            final String jsonString = tagHelper.safeObjectMapperWriteValueAsString(tagEntity);
+
+            return this.indexFunctionsDao.isValidDocumentIndex(indexName, documentType, tagEntity.getId().toString(), jsonString);
+                //searchFunctions.getIsValidFunction().test(indexName, documentType, tagEntity.getId().toString(), jsonString);
+        };
+
+        boolean isValid = true;
+        for (TagEntity tagEntity : tagEntityList)
+        {
+            if (!validInIndexPredicate.test(tagEntity))
+            {
+                isValid = false;
+            }
+        }
+
+        return isValid;
     }
 }

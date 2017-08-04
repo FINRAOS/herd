@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao.helper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -24,20 +25,40 @@ import java.util.UUID;
 import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import com.amazonaws.services.elasticmapreduce.model.Configuration;
+import com.amazonaws.services.elasticmapreduce.model.EbsBlockDevice;
 import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleet;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetProvisioningSpecifications;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetStatus;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetTimeline;
+import com.amazonaws.services.elasticmapreduce.model.InstanceTypeSpecification;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
+import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
+import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.oozie.client.WorkflowAction;
-import org.apache.oozie.client.WorkflowJob;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.StsDao;
-import org.finra.herd.dao.impl.OozieDaoImpl;
+import org.finra.herd.model.api.xml.EmrClusterEbsBlockDevice;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleet;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetProvisioningSpecifications;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetStateChangeReason;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetStatus;
+import org.finra.herd.model.api.xml.EmrClusterInstanceFleetTimeline;
+import org.finra.herd.model.api.xml.EmrClusterInstanceTypeConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterInstanceTypeSpecification;
+import org.finra.herd.model.api.xml.EmrClusterSpotProvisioningSpecification;
+import org.finra.herd.model.api.xml.EmrClusterVolumeSpecification;
+import org.finra.herd.model.api.xml.InstanceDefinitions;
+import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.TrustingAccountEntity;
@@ -52,11 +73,11 @@ public class EmrHelper extends AwsHelper
     private EmrDao emrDao;
 
     @Autowired
-    private TrustingAccountDaoHelper trustingAccountDaoHelper;
-    
-    @Autowired
     private StsDao stsDao;
-    
+
+    @Autowired
+    private TrustingAccountDaoHelper trustingAccountDaoHelper;
+
     /**
      * Returns EMR cluster name constructed according to the template defined.
      *
@@ -105,109 +126,85 @@ public class EmrHelper extends AwsHelper
     }
 
     /**
-     * Get the S3_STAGING_RESOURCE full path from the bucket name as well as other details.
+     * Gets the ID of an active EMR cluster which matches the given criteria. If both cluster ID and cluster name is specified, the name of the actual cluster
+     * with the given ID must match the specified name. For cases where the cluster is not found (does not exists or not active), the method fails. All
+     * parameters are case-insensitive and whitespace trimmed. Blank parameters are equal to null.
      *
-     * @return the s3 managed location.
+     * @param emrClusterId EMR cluster ID
+     * @param emrClusterName EMR cluster name
+     * @param accountId the account Id that EMR cluster is running under
+     *
+     * @return The cluster ID
      */
-    public String getS3StagingLocation()
+    public String getActiveEmrClusterId(String emrClusterId, String emrClusterName, String accountId)
     {
-        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) +
-            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME) +
-            configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
-    }
+        boolean emrClusterIdSpecified = StringUtils.isNotBlank(emrClusterId);
+        boolean emrClusterNameSpecified = StringUtils.isNotBlank(emrClusterName);
 
-    /**
-     * Gets the S3 to HDFS copy script name.
-     *
-     * @return the S3 to HDFS copy script name.
-     * @throws IllegalStateException if the S3 to HDGFS copy script name is not configured.
-     */
-    public String getS3HdfsCopyScriptName() throws IllegalStateException
-    {
-        String s3HdfsCopyScript = configurationHelper.getProperty(ConfigurationValue.EMR_S3_HDFS_COPY_SCRIPT);
-        if (StringUtils.isBlank(s3HdfsCopyScript))
+        Assert.isTrue(emrClusterIdSpecified || emrClusterNameSpecified, "One of EMR cluster ID or EMR cluster name must be specified.");
+        AwsParamsDto awsParamsDto = getAwsParamsDtoByAcccountId(accountId);
+
+        // Get cluster by ID first
+        if (emrClusterIdSpecified)
         {
-            throw new IllegalStateException(String.format("No S3 to HDFS copy script name found. Ensure the \"%s\" configuration entry is configured.",
-                ConfigurationValue.EMR_S3_HDFS_COPY_SCRIPT.getKey()));
-        }
+            String emrClusterIdTrimmed = emrClusterId.trim();
 
-        return s3HdfsCopyScript;
-    }
+            // Assert cluster exists
+            Cluster cluster = emrDao.getEmrClusterById(emrClusterIdTrimmed, awsParamsDto);
+            Assert.notNull(cluster, String.format("The cluster with ID \"%s\" does not exist.", emrClusterIdTrimmed));
 
-    /**
-     * Gets the Oozie herd wrapper Workflow S3 Location ConfigurationValue.
-     *
-     * @return the ConfigurationValue of S3 location of herd oozie wrapper workflow.
-     * @throws IllegalStateException if the S3 location of herd wrapper workflow is not configured.
-     */
-    public ConfigurationValue getEmrOozieHerdWorkflowS3LocationConfiguration() throws IllegalStateException
-    {
-        String s3HdfsCopyScript = configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION);
-        if (StringUtils.isBlank(s3HdfsCopyScript))
-        {
-            throw new IllegalStateException(String
-                .format("No herd wrapper oozie workflow S3 locaton found. Ensure the \"%s\" configuration entry is configured.",
-                    ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION.getKey()));
-        }
+            // Assert the cluster's state is active
+            String emrClusterState = cluster.getStatus().getState();
+            Assert.isTrue(isActiveEmrState(emrClusterState), String
+                .format("The cluster with ID \"%s\" is not active. The cluster state must be in one of %s. Current state is \"%s\"", emrClusterIdTrimmed,
+                    Arrays.toString(getActiveEmrClusterStates()), emrClusterState));
 
-        return ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION;
-    }
-
-    /**
-     * Retrieves the workflow action for the client workflow. This is the sub workflow with the name OozieDaoImpl.ACTION_NAME_CLIENT_WORKFLOW. Returns null if
-     * not found.
-     *
-     * @param wrapperWorkflowJob the herd wrapper workflow job.
-     *
-     * @return the client workflow action.
-     */
-    public WorkflowAction getClientWorkflowAction(WorkflowJob wrapperWorkflowJob)
-    {
-        WorkflowAction clientWorkflowAction = null;
-        if (wrapperWorkflowJob.getActions() != null)
-        {
-            for (WorkflowAction workflowAction : wrapperWorkflowJob.getActions())
+            // Assert cluster name equals if cluster name was specified
+            if (emrClusterNameSpecified)
             {
-                if (OozieDaoImpl.ACTION_NAME_CLIENT_WORKFLOW.equals(workflowAction.getName()))
-                {
-                    clientWorkflowAction = workflowAction;
-                    break;
-                }
+                String emrClusterNameTrimmed = emrClusterName.trim();
+                Assert.isTrue(cluster.getName().equalsIgnoreCase(emrClusterNameTrimmed), String
+                    .format("The cluster with ID \"%s\" does not match the expected name \"%s\". The actual name is \"%s\".", cluster.getId(),
+                        emrClusterNameTrimmed, cluster.getName()));
             }
-        }
 
-        return clientWorkflowAction;
+            return cluster.getId();
+        }
+        else
+        {
+            String emrClusterNameTrimmed = emrClusterName.trim();
+            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(emrClusterNameTrimmed, awsParamsDto);
+            Assert.notNull(clusterSummary, String.format("The cluster with name \"%s\" does not exist.", emrClusterNameTrimmed));
+            return clusterSummary.getId();
+        }
     }
 
     /**
-     * Retrieves the first workflow action that is in error. Returns null if not found.
+     * Get the AWS Params DTO for the account Id if no account id is specified, use the default
      *
-     * @param workflowJob the oozie workflow job.
+     * @param accountId account Id
      *
-     * @return the workflow action that has errors.
+     * @return AwsParamsDto
      */
-    public WorkflowAction getFirstWorkflowActionInError(WorkflowJob workflowJob)
+    public AwsParamsDto getAwsParamsDtoByAcccountId(String accountId)
     {
-        WorkflowAction errorWorkflowAction = null;
-        if (workflowJob.getActions() != null)
+        AwsParamsDto awsParamsDto = getAwsParamsDto();
+        if (StringUtils.isNotBlank(accountId))
         {
-            for (WorkflowAction workflowAction : workflowJob.getActions())
-            {
-                if (workflowAction.getStatus().equals(WorkflowAction.Status.ERROR))
-                {
-                    errorWorkflowAction = workflowAction;
-                    break;
-                }
-            }
+            updateAwsParamsForCrossAccountAccess(awsParamsDto, accountId.trim());
         }
 
-        return errorWorkflowAction;
+        return awsParamsDto;
     }
 
-    public boolean isActiveEmrState(String status)
+    public EmrDao getEmrDao()
     {
-        return Arrays.asList(getActiveEmrClusterStates()).contains(status);
+        return emrDao;
+    }
+
+    public void setEmrDao(EmrDao emrDao)
+    {
+        this.emrDao = emrDao;
     }
 
     /**
@@ -248,93 +245,51 @@ public class EmrHelper extends AwsHelper
         }
     }
 
+    /**
+     * Get the S3_STAGING_RESOURCE full path from the bucket name as well as other details.
+     *
+     * @return the s3 managed location.
+     */
+    public String getS3StagingLocation()
+    {
+        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) +
+            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME) +
+            configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
+            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
+    }
+
+    /**
+     * Returns {@code true} if the supplied EMR status is considered to be active.
+     *
+     * @param status the EMR status
+     *
+     * @return whether the given EMR status is active
+     */
+    public boolean isActiveEmrState(String status)
+    {
+        return Arrays.asList(getActiveEmrClusterStates()).contains(status);
+    }
+
+    /**
+     * Returns {@code true} if the supplied InstanceDefinitions is {@code null} or empty (contains no elements).
+     *
+     * @param instanceDefinitions the instance group definitions from the EMR cluster definition
+     *
+     * @return whether the given InstanceDefinitions is empty
+     */
+    public boolean isInstanceDefinitionsEmpty(InstanceDefinitions instanceDefinitions)
+    {
+        return (instanceDefinitions == null || (instanceDefinitions.getMasterInstances() == null && instanceDefinitions.getCoreInstances() == null &&
+            instanceDefinitions.getTaskInstances() == null));
+    }
+
     private String[] getActiveEmrClusterStates()
     {
         String emrStatesString = configurationHelper.getProperty(ConfigurationValue.EMR_VALID_STATES);
         return emrStatesString.split("\\" + configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER));
     }
 
-    /**
-     * Gets the ID of an active EMR cluster which matches the given criteria. If both cluster ID and cluster name is specified, the name of the actual cluster
-     * with the given ID must match the specified name. For cases where the cluster is not found (does not exists or not active), the method fails. All
-     * parameters are case-insensitive and whitespace trimmed. Blank parameters are equal to null.
-     *
-     * @param emrClusterId EMR cluster ID
-     * @param emrClusterName EMR cluster name
-     * @param accountId the account Id that EMR cluster is running under
-     * @return The cluster ID
-     */
-    public String getActiveEmrClusterId(String emrClusterId, String emrClusterName, String accountId)
-    {
-        boolean emrClusterIdSpecified = StringUtils.isNotBlank(emrClusterId);
-        boolean emrClusterNameSpecified = StringUtils.isNotBlank(emrClusterName);
-        
-        Assert.isTrue(emrClusterIdSpecified || emrClusterNameSpecified, "One of EMR cluster ID or EMR cluster name must be specified.");
-        AwsParamsDto awsParamsDto = getAwsparamsDtoByAcccountId(accountId);
-        
-        // Get cluster by ID first
-        if (emrClusterIdSpecified)
-        {
-            String emrClusterIdTrimmed = emrClusterId.trim();
-
-            // Assert cluster exists
-            Cluster cluster = emrDao.getEmrClusterById(emrClusterIdTrimmed, awsParamsDto);
-            Assert.notNull(cluster, String.format("The cluster with ID \"%s\" does not exist.", emrClusterIdTrimmed));
-
-            // Assert the cluster's state is active
-            String emrClusterState = cluster.getStatus().getState();
-            Assert.isTrue(isActiveEmrState(emrClusterState), String
-                .format("The cluster with ID \"%s\" is not active. The cluster state must be in one of %s. Current state is \"%s\"", emrClusterIdTrimmed,
-                    Arrays.toString(getActiveEmrClusterStates()), emrClusterState));
-
-            // Assert cluster name equals if cluster name was specified
-            if (emrClusterNameSpecified)
-            {
-                String emrClusterNameTrimmed = emrClusterName.trim();
-                Assert.isTrue(cluster.getName().equalsIgnoreCase(emrClusterNameTrimmed), String
-                    .format("The cluster with ID \"%s\" does not match the expected name \"%s\". The actual name is \"%s\".", cluster.getId(),
-                        emrClusterNameTrimmed, cluster.getName()));
-            }
-
-            return cluster.getId();
-        }
-        else
-        {
-            String emrClusterNameTrimmed = emrClusterName.trim();
-            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(emrClusterNameTrimmed, awsParamsDto);
-            Assert.notNull(clusterSummary, String.format("The cluster with name \"%s\" does not exist.", emrClusterNameTrimmed));
-            return clusterSummary.getId();
-        }
-    }
-
-    public EmrDao getEmrDao()
-    {
-        return emrDao;
-    }
-
-    public void setEmrDao(EmrDao emrDao)
-    {
-        this.emrDao = emrDao;
-    }
-    
-    /**
-     * Get the AWS Params DTO for the account Id
-     * if no account id is specified, use the default
-     * @param accountId account Id
-     * @return AwsParamsDto
-     */
-    public AwsParamsDto getAwsparamsDtoByAcccountId(String accountId)
-    {
-        AwsParamsDto awsParamsDto = getAwsParamsDto();
-        if (StringUtils.isNotBlank(accountId))
-        {
-            updateAwsParamsForCrossAccountAccess(awsParamsDto, accountId.trim());
-        }
-        
-        return awsParamsDto;
-    }
-    
-    /**
+    /*
      * Updates the AWS parameters DTO with the temporary credentials for the cross-account access.
      *
      * @param awsParamsDto the AWS connection parameters
@@ -354,4 +309,265 @@ public class EmrHelper extends AwsHelper
         awsParamsDto.setAwsSecretKey(credentials.getSecretAccessKey());
         awsParamsDto.setSessionToken(credentials.getSessionToken());
     }
+
+    /**
+     * Returns  EmrClusterInstanceFleet list from AWS call
+     *
+     * @param awsInstanceFleetsResult AWS Instance Fleets result
+     *
+     * @return list of  EmrClusterInstanceFleet
+     */
+    public List<EmrClusterInstanceFleet> buildEmrClusterInstanceFleetFromAwsResult(ListInstanceFleetsResult awsInstanceFleetsResult)
+    {
+        List<EmrClusterInstanceFleet> emrInstanceFleets = null;
+
+        if (awsInstanceFleetsResult != null && !CollectionUtils.isEmpty(awsInstanceFleetsResult.getInstanceFleets()))
+        {
+            emrInstanceFleets = new ArrayList();
+
+            for (InstanceFleet awsInstanceFleet : awsInstanceFleetsResult.getInstanceFleets())
+            {
+                if (awsInstanceFleet != null)
+                {
+                    EmrClusterInstanceFleet emrInstanceFleet = new EmrClusterInstanceFleet();
+                    emrInstanceFleet.setId(awsInstanceFleet.getId());
+                    emrInstanceFleet.setName(awsInstanceFleet.getName());
+                    emrInstanceFleet.setInstanceFleetType(awsInstanceFleet.getInstanceFleetType());
+                    emrInstanceFleet.setTargetOnDemandCapacity(awsInstanceFleet.getTargetOnDemandCapacity());
+                    emrInstanceFleet.setTargetSpotCapacity(awsInstanceFleet.getTargetSpotCapacity());
+                    emrInstanceFleet.setProvisionedOnDemandCapacity(awsInstanceFleet.getProvisionedOnDemandCapacity());
+                    emrInstanceFleet.setProvisionedSpotCapacity(awsInstanceFleet.getProvisionedSpotCapacity());
+                    emrInstanceFleet.setInstanceTypeSpecifications(getInstanceTypeSpecifications(awsInstanceFleet.getInstanceTypeSpecifications()));
+                    emrInstanceFleet.setLaunchSpecifications(getLaunchSpecifications(awsInstanceFleet.getLaunchSpecifications()));
+                    emrInstanceFleet.setInstanceFleetStatus(getEmrClusterInstanceFleetStatus(awsInstanceFleet.getStatus()));
+                    emrInstanceFleets.add(emrInstanceFleet);
+                }
+            }
+        }
+
+        return emrInstanceFleets;
+    }
+
+    /**
+     * Returns EmrClusterInstanceFleetStatus
+     *
+     * @param instanceFleetStatus AWS object
+     *
+     * @return EmrClusterInstanceFleetStatus
+     */
+    protected EmrClusterInstanceFleetStatus getEmrClusterInstanceFleetStatus(InstanceFleetStatus instanceFleetStatus)
+    {
+        EmrClusterInstanceFleetStatus emrClusterInstanceFleetStatus = null;
+        if (instanceFleetStatus != null)
+        {
+            emrClusterInstanceFleetStatus = new EmrClusterInstanceFleetStatus();
+            emrClusterInstanceFleetStatus.setState(instanceFleetStatus.getState());
+
+            if (instanceFleetStatus.getStateChangeReason() != null)
+            {
+                EmrClusterInstanceFleetStateChangeReason emrClusterInstanceFleetStateChangeReason = new EmrClusterInstanceFleetStateChangeReason();
+                emrClusterInstanceFleetStateChangeReason.setCode(instanceFleetStatus.getStateChangeReason().getCode());
+                emrClusterInstanceFleetStateChangeReason.setMessage(instanceFleetStatus.getStateChangeReason().getMessage());
+                emrClusterInstanceFleetStatus.setStateChangeReason(emrClusterInstanceFleetStateChangeReason);
+            }
+            if (instanceFleetStatus.getTimeline() != null)
+            {
+                InstanceFleetTimeline instanceFleetTimeline = instanceFleetStatus.getTimeline();
+                EmrClusterInstanceFleetTimeline emrClusterInstanceFleetTimeline = new EmrClusterInstanceFleetTimeline();
+                emrClusterInstanceFleetTimeline.setCreationDateTime(HerdDateUtils.getXMLGregorianCalendarValue(instanceFleetTimeline.getCreationDateTime()));
+                emrClusterInstanceFleetTimeline.setEndDateTime(HerdDateUtils.getXMLGregorianCalendarValue(instanceFleetTimeline.getEndDateTime()));
+                emrClusterInstanceFleetTimeline.setReadyDateTime(HerdDateUtils.getXMLGregorianCalendarValue(instanceFleetTimeline.getReadyDateTime()));
+                emrClusterInstanceFleetStatus.setTimeline(emrClusterInstanceFleetTimeline);
+            }
+        }
+        return emrClusterInstanceFleetStatus;
+    }
+
+    /**
+     * Returns  EmrClusterInstanceFleetProvisioningSpecifications
+     *
+     * @param instanceFleetProvisioningSpecifications AWS object
+     *
+     * @return EmrClusterInstanceFleetProvisioningSpecifications
+     */
+    protected EmrClusterInstanceFleetProvisioningSpecifications getLaunchSpecifications(
+        InstanceFleetProvisioningSpecifications instanceFleetProvisioningSpecifications)
+    {
+        EmrClusterInstanceFleetProvisioningSpecifications emrClusterDefinitionLaunchSpecifications = null;
+
+        if (instanceFleetProvisioningSpecifications != null)
+        {
+            emrClusterDefinitionLaunchSpecifications = new EmrClusterInstanceFleetProvisioningSpecifications();
+            emrClusterDefinitionLaunchSpecifications.setSpotSpecification(getSpotSpecification(instanceFleetProvisioningSpecifications.getSpotSpecification()));
+        }
+
+        return emrClusterDefinitionLaunchSpecifications;
+    }
+
+    /**
+     * Returns EmrClusterSpotProvisioningSpecification from AWS call
+     *
+     * @param spotProvisioningSpecification AWS object
+     *
+     * @return EmrClusterSpotProvisioningSpecification
+     */
+    protected EmrClusterSpotProvisioningSpecification getSpotSpecification(SpotProvisioningSpecification spotProvisioningSpecification)
+    {
+        EmrClusterSpotProvisioningSpecification emrClusterSpotProvisioningSpecification = null;
+
+        if (spotProvisioningSpecification != null)
+        {
+            emrClusterSpotProvisioningSpecification = new EmrClusterSpotProvisioningSpecification();
+            emrClusterSpotProvisioningSpecification.setTimeoutDurationMinutes(spotProvisioningSpecification.getTimeoutDurationMinutes());
+            emrClusterSpotProvisioningSpecification.setTimeoutAction(spotProvisioningSpecification.getTimeoutAction());
+            emrClusterSpotProvisioningSpecification.setBlockDurationMinutes(spotProvisioningSpecification.getBlockDurationMinutes());
+        }
+
+        return emrClusterSpotProvisioningSpecification;
+    }
+
+    /**
+     * Returns list of EmrClusterEbsBlockDevice
+     *
+     * @param ebsBlockDevices AWS object
+     *
+     * @return list of EmrClusterEbsBlockDevice
+     */
+    protected List<EmrClusterEbsBlockDevice> getEbsBlockDevices(List<EbsBlockDevice> ebsBlockDevices)
+    {
+        List<EmrClusterEbsBlockDevice> emrClusterEbsBlockDevices = null;
+
+        if (!CollectionUtils.isEmpty(ebsBlockDevices))
+        {
+            emrClusterEbsBlockDevices = new ArrayList<>();
+
+            for (EbsBlockDevice ebsBlockDevice : ebsBlockDevices)
+            {
+                if (ebsBlockDevice != null)
+                {
+                    EmrClusterEbsBlockDevice emrClusterEbsBlockDevice = new EmrClusterEbsBlockDevice();
+                    emrClusterEbsBlockDevice.setDevice(ebsBlockDevice.getDevice());
+                    emrClusterEbsBlockDevice.setVolumeSpecification(getVolumeSpecification(ebsBlockDevice.getVolumeSpecification()));
+
+                    emrClusterEbsBlockDevices.add(emrClusterEbsBlockDevice);
+                }
+            }
+        }
+
+        return emrClusterEbsBlockDevices;
+    }
+
+    /**
+     * Returns EmrClusterVolumeSpecification
+     *
+     * @param volumeSpecification AWS object
+     *
+     * @return EmrClusterVolumeSpecification
+     */
+    protected EmrClusterVolumeSpecification getVolumeSpecification(VolumeSpecification volumeSpecification)
+    {
+        EmrClusterVolumeSpecification emrClusterVolumeSpecification = null;
+
+        if (volumeSpecification != null)
+        {
+            emrClusterVolumeSpecification = new EmrClusterVolumeSpecification();
+            emrClusterVolumeSpecification.setVolumeType(volumeSpecification.getVolumeType());
+            emrClusterVolumeSpecification.setIops(volumeSpecification.getIops());
+            emrClusterVolumeSpecification.setSizeInGB(volumeSpecification.getSizeInGB());
+        }
+
+        return emrClusterVolumeSpecification;
+    }
+
+    /**
+     * Returns list of  EmrClusterInstanceTypeSpecification
+     *
+     * @param awsInstanceTypeConfigs AWS object
+     *
+     * @return list of  EmrClusterInstanceTypeSpecification
+     */
+    protected List<EmrClusterInstanceTypeSpecification> getInstanceTypeSpecifications(List<InstanceTypeSpecification> awsInstanceTypeConfigs)
+    {
+        List<EmrClusterInstanceTypeSpecification> emrClusterInstanceTypeSpecifications = null;
+
+        if (!CollectionUtils.isEmpty(awsInstanceTypeConfigs))
+        {
+            emrClusterInstanceTypeSpecifications = new ArrayList<>();
+
+            for (InstanceTypeSpecification awsInstanceTypeConfig : awsInstanceTypeConfigs)
+            {
+                if (awsInstanceTypeConfig != null)
+                {
+                    EmrClusterInstanceTypeSpecification emrClusterInstanceTypeSpecification = new EmrClusterInstanceTypeSpecification();
+                    emrClusterInstanceTypeSpecification.setInstanceType(awsInstanceTypeConfig.getInstanceType());
+                    emrClusterInstanceTypeSpecification.setWeightedCapacity(awsInstanceTypeConfig.getWeightedCapacity());
+                    emrClusterInstanceTypeSpecification.setBidPrice(awsInstanceTypeConfig.getBidPrice());
+                    emrClusterInstanceTypeSpecification.setBidPriceAsPercentageOfOnDemandPrice(awsInstanceTypeConfig.getBidPriceAsPercentageOfOnDemandPrice());
+                    emrClusterInstanceTypeSpecification.setEbsBlockDevices(getEbsBlockDevices(awsInstanceTypeConfig.getEbsBlockDevices()));
+                    emrClusterInstanceTypeSpecification.setEbsOptimized(awsInstanceTypeConfig.getEbsOptimized());
+                    emrClusterInstanceTypeSpecification.setConfigurations(getConfigurations(awsInstanceTypeConfig.getConfigurations()));
+
+                    emrClusterInstanceTypeSpecifications.add(emrClusterInstanceTypeSpecification);
+                }
+            }
+        }
+
+        return emrClusterInstanceTypeSpecifications;
+    }
+
+    /**
+     * Returns list of EmrClusterInstanceTypeConfiguration
+     *
+     * @param configurations AWS configuration object list
+     *
+     * @return list of EmrClusterInstanceTypeConfiguration
+     */
+    protected List<EmrClusterInstanceTypeConfiguration> getConfigurations(List<Configuration> configurations)
+    {
+        List<EmrClusterInstanceTypeConfiguration> emrClusterInstanceTypeConfigurations = null;
+
+        if (!CollectionUtils.isEmpty(configurations))
+        {
+            emrClusterInstanceTypeConfigurations = new ArrayList<>();
+
+            for (Configuration configuration : configurations)
+            {
+                if (configuration != null)
+                {
+                    EmrClusterInstanceTypeConfiguration emrClusterInstanceTypeConfiguration = new EmrClusterInstanceTypeConfiguration();
+                    emrClusterInstanceTypeConfiguration.setClassification(configuration.getClassification());
+                    emrClusterInstanceTypeConfiguration.setConfigurations(getConfigurations(configuration.getConfigurations()));
+                    emrClusterInstanceTypeConfiguration.setProperties(getParameterList(configuration.getProperties()));
+
+                    emrClusterInstanceTypeConfigurations.add(emrClusterInstanceTypeConfiguration);
+                }
+            }
+        }
+
+        return emrClusterInstanceTypeConfigurations;
+    }
+
+    /**
+     * Returns parameter list
+     *
+     * @param properties properties
+     *
+     * @return list of parameters
+     */
+    protected List<Parameter> getParameterList(Map<String, String> properties)
+    {
+        List<Parameter> parameters = null;
+        if (!CollectionUtils.isEmpty(properties))
+        {
+            parameters = new ArrayList<>();
+
+            for (Map.Entry<String, String> entry : properties.entrySet())
+            {
+                Parameter parameter = new Parameter(entry.getKey(), entry.getValue());
+                parameters.add(parameter);
+            }
+        }
+        return parameters;
+    }
+
 }

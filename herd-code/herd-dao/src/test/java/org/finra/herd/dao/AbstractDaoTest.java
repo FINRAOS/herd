@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,11 +23,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import com.amazonaws.services.s3.AmazonS3;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -42,10 +46,15 @@ import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.DataProviderKey;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
+import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.dto.MessageHeader;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
 /**
  * This is an abstract base class that provides useful methods for DAO test drivers.
@@ -61,6 +70,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String ACTIVITI_ID_3 = "UT_Activiti_ID_3_" + RANDOM_SUFFIX;
 
     public static final String ACTIVITI_ID_4 = "UT_Activiti_ID_4_" + RANDOM_SUFFIX;
+
+    public static final String AGGREGATION_NAME = "UT_AggregationName_" + RANDOM_SUFFIX;
+
+    public static final String ALLOWED_ATTRIBUTE_VALUE = "UT_ALLOWED_ATTRIBUTE_VALUE" + RANDOM_SUFFIX;
 
     public static final Boolean ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = true;
 
@@ -82,17 +95,51 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ATTRIBUTE_VALUE_4 = "Attribute Value 4";
 
+    public static final String ATTRIBUTE_VALUE_LIST = "UT_Attribute_Value_list_1_" + RANDOM_SUFFIX;
+
+    public static final int ATTRIBUTE_VALUE_LIST_ID = 1009;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAME = "UT_Attribute_Value_List_Name_1_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE = "UT_Attribute_Value_List_Namespace_1_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE_2 = "UT_Attribute_Value_List_Namespace_2_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAME_2 = "UT_Attribute_Value_List_Name_2_" + RANDOM_SUFFIX;
+
     public static final String AWS_ACCOUNT_ID = "UT_AwsAccountId_1_" + RANDOM_SUFFIX;
 
     public static final String AWS_ASSUMED_ROLE_ACCESS_KEY = "UT_AwsAssumedRoleAccessKey_1_" + RANDOM_SUFFIX;
 
+    public static final String AWS_ASSUMED_ROLE_ACCESS_KEY_2 = "UT_AwsAssumedRoleAccessKey_2_" + RANDOM_SUFFIX;
+
     public static final String AWS_ASSUMED_ROLE_SECRET_KEY = "UT_AwsAssumedRoleSecretKey_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_ASSUMED_ROLE_SECRET_KEY_2 = "UT_AwsAssumedRoleSecretKey_2_" + RANDOM_SUFFIX;
+
+    public static final XMLGregorianCalendar AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String AWS_ASSUMED_ROLE_SESSION_TOKEN = "UT_AwsAssumedRoleSessionToken_1_" + RANDOM_SUFFIX;
 
-    public static final String AWS_REGION = "UT_Region" + RANDOM_SUFFIX;
+    public static final String AWS_ASSUMED_ROLE_SESSION_TOKEN_2 = "UT_AwsAssumedRoleSessionToken_2_" + RANDOM_SUFFIX;
+
+    public static final String AWS_KMS_KEY_ID = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
+
+    public static final String AWS_PRE_SIGNED_URL = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME = "UT_AwsRegionName_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME_2 = "UT_AwsRegionName_2_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME_3 = "UT_AwsRegionName_3_" + RANDOM_SUFFIX;
+
+    public static final String AWS_REGION_NAME_4 = "UT_AwsRegionName_4_" + RANDOM_SUFFIX;
 
     public static final String AWS_ROLE_ARN = "UT_AwsRoleArn" + RANDOM_SUFFIX;
+
+    public static final String AWS_SNS_TOPIC_ARN = "UT_AWS_SNS_Topic_ARN_" + RANDOM_SUFFIX;
+
+    public static final String AWS_SQS_QUEUE_NAME = "UT_AWS_SQS_Queue_Name_" + RANDOM_SUFFIX;
 
     public static final String BACKSLASH = "\\";
 
@@ -144,6 +191,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BDEF_SHORT_DESCRIPTION_2 = "UT_BusinessObjectDefinition_ShortDescription_2_" + RANDOM_SUFFIX;
 
+    public static final BigDecimal BID_PRICE = getRandomBigDecimal();
+
     public static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
 
     public static final float BUSINESS_OBJECT_DEFINITION_INDEX_BOOST = 1f;
@@ -186,6 +235,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CORRELATION_DATA_3 = "UT_Correlation_Data_3" + RANDOM_SUFFIX;
 
+    public static final String CREATED_BY = "UT_CreatedBy_" + RANDOM_SUFFIX;
+
     public static final XMLGregorianCalendar CREATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String CUSTOM_DDL_NAME = "UT_CustomDdl" + RANDOM_SUFFIX;
@@ -201,21 +252,39 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer DATA_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
 
+    public static final Integer DATA_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
+
     public static final String DESCRIPTION = "UT_Description_1_" + RANDOM_SUFFIX;
 
     public static final String DESCRIPTION_2 = "UT_Description_2_" + RANDOM_SUFFIX;
 
     public static final String DISPLAY_NAME_FIELD = "displayname";
 
+    public static final Double DOUBLE_VALUE = Math.random() * Double.MAX_VALUE;
+
     public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
+
+    public static final Boolean EBS_OPTIMIZED = true;
 
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
 
-    public static final String EC2_INSTANCE_TYPE = "UT_Ec2InstanceType" + RANDOM_SUFFIX;
+    public static final String EC2_INSTANCE_TYPE = "UT_Ec2InstanceType_1_" + RANDOM_SUFFIX;
+
+    public static final String EC2_INSTANCE_TYPE_2 = "UT_Ec2InstanceType_2_" + RANDOM_SUFFIX;
+
+    public static final String EC2_INSTANCE_TYPE_3 = "UT_Ec2InstanceType_3_" + RANDOM_SUFFIX;
+
+    public static final String EC2_INSTANCE_TYPE_4 = "UT_Ec2InstanceType_4_" + RANDOM_SUFFIX;
 
     public static final String EC2_SECURITY_GROUP_1 = "UT_Ec2SecurityGroup1" + RANDOM_SUFFIX;
 
     public static final String EC2_SECURITY_GROUP_2 = "UT_Ec2SecurityGroup2" + RANDOM_SUFFIX;
+
+    public static final String EC2_SUBNET = "UT_EC2_Subnet_1_" + RANDOM_SUFFIX;
+
+    public static final String EC2_SUBNET_2 = "UT_EC2_Subnet_2_" + RANDOM_SUFFIX;
+
+    public static final List<String> EMPTY_ROLES = new ArrayList<>();
 
     public static final String EMPTY_S3_BUCKET_NAME = "";
 
@@ -229,9 +298,23 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH = "classpath:testEmrClusterDefinition.xml";
 
+    public static final String EMR_CLUSTER_ID = "UT_EMR_ClusterId_" + RANDOM_SUFFIX;
+
     public static final String EMR_CLUSTER_NAME = "UT_EMR_CLUSTER" + RANDOM_SUFFIX;
 
+    public static final String EMR_MASTER_SECURITY_GROUP = "UT_EMR_MASTER_SECURITY_GROUP" + RANDOM_SUFFIX;
+
+    public static final String EMR_SLAVE_SECURITY_GROUP = "UT_EMR_SLAVE_SECURITY_GROUP" + RANDOM_SUFFIX;
+
+    public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
+
     public static final String ENVIRONMENT_NAME = "TEST";
+
+    public static final String ERROR_CODE = "UT_Error_Code_" + RANDOM_SUFFIX;
+
+    public static final String ERROR_MESSAGE = "UT_Error_Message_" + RANDOM_SUFFIX;
+
+    public static final Integer EXPIRATION_IN_DAYS = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final String FIELD_DISPLAY_NAME = "displayName";
 
@@ -261,15 +344,45 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String FORMAT_USAGE_CODE_2 = "UT_Usage_2" + RANDOM_SUFFIX;
 
+    public static final String FORMAT_USAGE_CODE_3 = "UT_Usage_3" + RANDOM_SUFFIX;
+
     public static final Integer FORMAT_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer FORMAT_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer FOURTH_FORMAT_VERSION = 3;
 
-    public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
+    public static final Integer GLOBAL_ATTRIBUTE_DEFINITON_ID = (int) (Math.random() * Integer.MAX_VALUE);
 
-    public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * Integer.MAX_VALUE);
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_INVALID_LEVEL = "BUS_OBJECT_FORMAT";
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_LEVEL = "BUS_OBJCT_FRMT";
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME = "UT_GlobalAttributeDefinitionName_1_" + RANDOM_SUFFIX;
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_2 = "UT_GlobalAttributeDefinitionName_2_" + RANDOM_SUFFIX;
+
+    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
+
+    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
+
+    public static final BigDecimal HOURLY_PRICE = getRandomBigDecimal();
+
+    public static final BigDecimal HOURLY_PRICE_2 = getRandomBigDecimal();
+
+    public static final BigDecimal HOURLY_PRICE_3 = getRandomBigDecimal();
+
+    public static final BigDecimal HOURLY_PRICE_4 = getRandomBigDecimal();
+
+    public static final BigDecimal HOURLY_PRICE_5 = getRandomBigDecimal();
+
+    public static final String HTTP_PROXY_HOST = "UT_HttpProxyHost_1_" + RANDOM_SUFFIX;
+
+    public static final String HTTP_PROXY_HOST_2 = "UT_HttpProxyHost_2_" + RANDOM_SUFFIX;
+
+    public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * (Short.MAX_VALUE << 1));
+
+    public static final Integer HTTP_PROXY_PORT_2 = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 
@@ -279,6 +392,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INITIAL_VERSION = 0;
 
+    public static final Integer INSTANCE_COUNT = getRandomInteger();
+
     public static final Integer INTEGER_VALUE = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer INTEGER_VALUE_2 = (int) (Math.random() * Integer.MAX_VALUE);
@@ -287,13 +402,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INVALID_FORMAT_VERSION = -1 * FORMAT_VERSION;
 
+    public static final String INVALID_VALUE = "UT_InvalidValue_" + RANDOM_SUFFIX;
+
+    public static final Integer IOPS = getRandomInteger();
+
     public static final String I_DO_NOT_EXIST = "I_DO_NOT_EXIST";
 
-    public static final String JMS_QUEUE_NAME = "UT_JmsQueueName" + RANDOM_SUFFIX;
-
-    public static final String JMS_QUEUE_NAME_2 = "UT_JmsQueueName_2" + RANDOM_SUFFIX;
-
     public static final String JOB_DESCRIPTION = "UT_JobDescription" + RANDOM_SUFFIX;
+
+    public static final String JOB_ID = "UT_JobId_" + RANDOM_SUFFIX;
 
     public static final String JOB_NAME = "UT_Job" + RANDOM_SUFFIX;
 
@@ -307,7 +424,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String JOB_NAME_3 = "UT_Job_3" + RANDOM_SUFFIX;
 
+    public static final String JOB_RECEIVE_TASK_ID = "UT_JobReceiveTaskId_" + RANDOM_SUFFIX;
+
     public static final String JSON_STRING = "UT_JsonString_" + RANDOM_SUFFIX;
+
+    public static final String KEY = "UT_Key_" + RANDOM_SUFFIX;
 
     public static final Boolean LATEST_VERSION_FLAG_SET = true;
 
@@ -319,6 +440,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Long LONG_VALUE = (long) (Math.random() * Long.MAX_VALUE);
 
+    public static final String MARKER = "UT_Marker_" + RANDOM_SUFFIX;
+
     public static final Integer MAX_COLUMNS = 10;
 
     public static final Integer MAX_PARTITIONS = 5;
@@ -327,9 +450,19 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer MAX_RESULTS_1 = 1;
 
+    public static final String MESSAGE_DESTINATION = "UT_MessageDestination_1_" + RANDOM_SUFFIX;
+
+    public static final String MESSAGE_DESTINATION_2 = "UT_MessageDestination_2_" + RANDOM_SUFFIX;
+
+    public static final String MESSAGE_ID = "UT_Message_ID_" + RANDOM_SUFFIX;
+
     public static final String MESSAGE_TEXT = "UT_Message_Text" + RANDOM_SUFFIX;
 
     public static final String MESSAGE_TEXT_2 = "UT_Message_Text_2" + RANDOM_SUFFIX;
+
+    public static final String MESSAGE_TYPE = "UT_MessageType_1_" + RANDOM_SUFFIX;
+
+    public static final String MESSAGE_TYPE_2 = "UT_MessageType_2_" + RANDOM_SUFFIX;
 
     public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_INTERSECTION = Collections.unmodifiableList(Arrays.asList("2014-04-08"));
 
@@ -346,21 +479,33 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NAMESPACE_CODE = "UT_NamespaceCode_1_" + RANDOM_SUFFIX;
 
-    public static final String NOTIFICATION_EVENT_TYPE = "UT_Ntfcn_Event" + RANDOM_SUFFIX;
+    public static final String NESTED_AGGREGATION_JSON_STRING = "UT_NestedAggregationJsonString_" + RANDOM_SUFFIX;
 
-    public static final String NOTIFICATION_EVENT_TYPE_2 = "UT_Ntfcn_Event_2" + RANDOM_SUFFIX;
+    public static final String NESTED_AGGREGATION_NAME = "UT_NestedAggregationName_" + RANDOM_SUFFIX;
+
+    public static final String NOTIFICATION_EVENT_TYPE = "UT_NotificationEventType_1_" + RANDOM_SUFFIX;
+
+    public static final String NOTIFICATION_EVENT_TYPE_2 = "UT_NotificationEventType_2_" + RANDOM_SUFFIX;
 
     public static final String NOTIFICATION_NAME = "UT_Ntfcn_Name" + RANDOM_SUFFIX;
 
     public static final String NOTIFICATION_NAME_2 = "UT_Ntfcn_Name_2" + RANDOM_SUFFIX;
 
+    public static final String NOTIFICATION_REGISTRATION_STATUS = "UT_NotificationRegistrationStatus_1_" + RANDOM_SUFFIX;
+
     public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
+
+    public static final List<String> NO_ALLOWED_ATTRIBUTE_VALUES = new ArrayList<>();
 
     public static final Boolean NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = false;
 
     public static final List<Attribute> NO_ATTRIBUTES = new ArrayList<>();
 
     public static final List<AttributeDefinition> NO_ATTRIBUTE_DEFINITIONS = new ArrayList<>();
+
+    public static final String NO_AWS_ACCESS_KEY = null;
+
+    public static final String NO_AWS_SECRET_KEY = null;
 
     public static final String NO_BDATA_STATUS = null;
 
@@ -378,6 +523,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_BDEF_SHORT_DESCRIPTION = null;
 
+    public static final BigDecimal NO_BID_PRICE = null;
+
+    public static final List<SchemaColumn> NO_COLUMNS = null;
+
     public static final String NO_COLUMN_NAME = null;
 
     public static final XMLGregorianCalendar NO_CREATED_ON = null;
@@ -388,6 +537,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer NO_DATA_VERSION = null;
 
+    public static final EmrClusterDefinitionEbsConfiguration NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION = null;
+
+    public static final EmrClusterDefinitionVolumeSpecification NO_EMR_CLUSTER_DEFINITION_VOLUME_SPECIFICATION = null;
+
+    public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
+
+    public static final Integer NO_EXPIRATION_IN_DAYS = null;
+
     public static final String NO_FORMAT_DESCRIPTION = null;
 
     public static final String NO_FORMAT_FILE_TYPE_CODE = null;
@@ -395,6 +552,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_FORMAT_USAGE_CODE = null;
 
     public static final Integer NO_FORMAT_VERSION = null;
+
+    public static final BigDecimal NO_HOURLY_PRICE = null;
+
+    public static final BigDecimal NO_INSTANCE_MAX_SEARCH_PRICE = null;
+
+    public static final BigDecimal NO_INSTANCE_ON_DEMAND_THRESHOLD = null;
+
+    public static final BigDecimal NO_INSTANCE_SPOT_PRICE = null;
 
     public static final Boolean NO_IS_PARENT_TAG_NULL_FLAG = null;
 
@@ -405,6 +570,16 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean NO_LATEST_VERSION_FLAG_SET = false;
 
     public static final Integer NO_MAX_RESULTS = null;
+
+    public static final String NO_MESSAGE_DESTINATION = null;
+
+    public static final List<MessageHeader> NO_MESSAGE_HEADERS = new ArrayList<>();
+
+    public static final List<MessageHeaderDefinition> NO_MESSAGE_HEADER_DEFINITIONS = new ArrayList<>();
+
+    public static final String NO_MESSAGE_TYPE = null;
+
+    public static final String NO_MESSAGE_VELOCITY_TEMPLATE = null;
 
     public static final String NO_NAMESPACE = null;
 
@@ -418,13 +593,21 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
 
+    public static final List<String> NO_ROLES = null;
+
     public static final String NO_S3_BUCKET_NAME = null;
+
+    public static final AmazonS3 NO_S3_CLIENT = null;
+
+    public static final String NO_S3_ENDPOINT = null;
 
     public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
 
     public static final Schema NO_SCHEMA = null;
 
     public static final Boolean NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS = false;
+
+    public static final String NO_SESSION_TOKEN = null;
 
     public static final String NO_STORAGE_DIRECTORY_PATH = null;
 
@@ -438,11 +621,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> NO_SUBPARTITION_VALUES = new ArrayList<>();
 
+    public static final SchemaColumn[] NO_SUB_PARTITION_KEYS = null;
+
     public static final String NO_TAG_DESCRIPTION = null;
 
     public static final String NO_TAG_DISPLAY_NAME = null;
 
     public static final Boolean NO_TAG_HAS_CHILDREN_FLAG = null;
+
+    public static final BigDecimal NO_TAG_SEARCH_SCORE_MULTIPLIER = null;
 
     public static final String NO_TAG_TYPE_DESCRIPTION = null;
 
@@ -477,25 +664,47 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String PARTITION_VALUE_3 = "UT_2015-08-20" + RANDOM_SUFFIX;
 
-    public static final String PARTITION_VALUE_4 = "UT_2016-04-11" + RANDOM_SUFFIX;
-
-    public static final String PARTITION_VALUE_5 = "UT_2016-06-20" + RANDOM_SUFFIX;
-
     public static final Boolean PUBLISH_ATTRIBUTE = true;
 
     public static final String REASON = "UT_Reason_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_ATTRIBUTE_NAME_BUCKET_NAME = "UT_S3_Attribute_Name_Bucket_Name_" + RANDOM_SUFFIX;
+
+    public static final String S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE = "UT_S3_Attribute_Name_Validate_File_Existence_" + RANDOM_SUFFIX;
+
+    public static final String S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE = "UT_S3_Attribute_Name_Validate_File_Size_" + RANDOM_SUFFIX;
+
+    public static final String S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX = "UT_S3_Attribute_Name_Validate_Path_Prefix_" + RANDOM_SUFFIX;
 
     public static final String S3_BUCKET_NAME = "UT_S3_Bucket_Name" + RANDOM_SUFFIX;
 
     public static final String S3_BUCKET_NAME_2 = "UT_S3_Bucket_Name2" + RANDOM_SUFFIX;
 
-    public static final String S3_BUCKET_NAME_GLACIER = "UT_S3_Bucket_Name_Glacier_" + RANDOM_SUFFIX;
-
-    public static final String S3_BUCKET_NAME_ORIGIN = "UT_S3_Bucket_Name_Origin_" + RANDOM_SUFFIX;
-
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
 
+    public static final String S3_ENDPOINT = "UT_S3_Endpoint_" + RANDOM_SUFFIX;
+
+    public static final String S3_KEY = "UT_S3_Key_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_KEY_2 = "UT_S3_Key_2_" + RANDOM_SUFFIX;
+
+    public static final String S3_KEY_PREFIX = "UT_S3_Key_Prefix_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAGGER_ROLE_ARN = "UT_S3_Object_Tagger_Role_Arn_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAGGER_ROLE_SESSION_NAME = "UT_S3_Object_Tagger_Role_Session_Name_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_KEY = "UT_S3_Object_Tag_Key_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_KEY_2 = "UT_S3_Object_Tag_Key_2_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_VALUE = "UT_S3_Object_Tag_Value_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_VALUE_2 = "UT_S3_Object_Tag_Value_2_" + RANDOM_SUFFIX;
+
     public static final Integer S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS = 7;
+
+    public static final String S3_VERSION_ID = "UT_S3_Version_ID_" + RANDOM_SUFFIX;
 
     public static final String[][] SCHEMA_COLUMNS =
         new String[][] {{"TINYINT", null}, {"SMALLINT", null}, {"INT", null}, {"BIGINT", null}, {"FLOAT", null}, {"DOUBLE", null}, {"DECIMAL", null},
@@ -522,11 +731,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
 
-    public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
-
     public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_STATUS = "UT_SearchIndexStatus_1_" + RANDOM_SUFFIX;
 
@@ -535,6 +744,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SEARCH_INDEX_TYPE = "UT_SearchIndexType_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_TYPE_2 = "UT_SearchIndexType_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_TYPE_BDEF = SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name();
+
+    public static final String SEARCH_RESPONSE_JSON_STRING = "UT_SearchResponseJsonString_" + RANDOM_SUFFIX;
 
     public static final int SEARCH_RESULT_SIZE = 200;
 
@@ -552,15 +765,21 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SECURITY_FUNCTION_3 = "FN_UT_SECURITY_FUNCTION_3_" + RANDOM_SUFFIX;
 
-    public static final String SECURITY_ROLE = "FN_UT_SECURITY_ROLE_1_" + RANDOM_SUFFIX;
+    public static final String SECURITY_ROLE_1 = "FN_UT_SECURITY_ROLE_A_" + RANDOM_SUFFIX;
+
+    public static final String SECURITY_ROLE_2 = "FN_UT_SECURITY_ROLE_B_" + RANDOM_SUFFIX;
 
     public static final Boolean SELECT_ONLY_AVAILABLE_STORAGE_UNITS = true;
 
     public static final String SESSION_NAME = "UT_SessionName" + RANDOM_SUFFIX;
 
+    public static final String SHORT_DESCRIPTION = "UT_ShortDescription" + RANDOM_SUFFIX;
+
     public static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
 
     public static final String SINGLE_QUOTE = "'";
+
+    public static final Integer SIZE_IN_GB = getRandomInteger();
 
     public static final List<String> SORTED_LOCAL_FILES =
         Arrays.asList("FOO3.DAT", "Foo2.dat", "folder/foo1.dat", "folder/foo2.dat", "folder/foo3.dat", "foo1.dat");
@@ -594,10 +813,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String STORAGE_NAME_5 = "UT_Storage_5_" + RANDOM_SUFFIX;
 
-    public static final String STORAGE_NAME_GLACIER = "UT_Storage_Glacier_" + RANDOM_SUFFIX;
-
-    public static final String STORAGE_NAME_ORIGIN = "UT_Storage_Origin_" + RANDOM_SUFFIX;
-
     public static final String STORAGE_PLATFORM_CODE = "UT_StoragePlatform_1_" + RANDOM_SUFFIX;
 
     public static final String STORAGE_PLATFORM_CODE_2 = "UT_StoragePlatform_2_" + RANDOM_SUFFIX;
@@ -618,6 +833,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer STORAGE_POLICY_RULE_VALUE_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
+    public static final String STORAGE_POLICY_TRANSITION_TYPE = "UT_Storage_Policy_Transition_Type_1_" + RANDOM_SUFFIX;
+
+    public static final String STORAGE_POLICY_TRANSITION_TYPE_2 = "UT_Storage_Policy_Transition_Type_2_" + RANDOM_SUFFIX;
+
+    public static final Integer STORAGE_POLICY_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
+
     public static final String STORAGE_UNIT_STATUS = "UT_SU_Status_1_" + RANDOM_SUFFIX;
 
     public static final String STORAGE_UNIT_STATUS_2 = "UT_SU_Status_2_" + RANDOM_SUFFIX;
@@ -630,11 +851,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String STRING_VALUE = "UT_SomeText" + RANDOM_SUFFIX;
 
+    public static final String STRING_VALUE_2 = "UT_SomeText_2_" + RANDOM_SUFFIX;
+
     public static final List<String> SUBPARTITION_VALUES =
         Arrays.asList("Aa" + RANDOM_SUFFIX, "Bb" + RANDOM_SUFFIX, "Cc" + RANDOM_SUFFIX, "Dd" + RANDOM_SUFFIX);
 
     public static final List<String> SUBPARTITION_VALUES_2 =
         Arrays.asList("Ee" + RANDOM_SUFFIX, "Ff" + RANDOM_SUFFIX, "Gg" + RANDOM_SUFFIX, "Hh" + RANDOM_SUFFIX);
+
+    public static final String SUB_AGGREGATION_NAME = "UT_SubAggregationName_" + RANDOM_SUFFIX;
 
     public static final String SUB_PARTITION_VALUE_1 = "UT_SubPartition_1_" + RANDOM_SUFFIX;
 
@@ -685,6 +910,16 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final float TAG_INDEX_BOOST = 1000f;
 
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER = getRandomBigDecimal();
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_2 = getRandomBigDecimal();
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_3 = getRandomBigDecimal();
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_4 = getRandomBigDecimal();
+
+    public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER_NULL = null;
+
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
@@ -729,6 +964,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<String> UNSORTED_PARTITION_VALUES =
         Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
 
+    public static final String UPDATED_BY = "UT_UpdatedBy_" + RANDOM_SUFFIX;
+
     public static final XMLGregorianCalendar UPDATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
@@ -747,6 +984,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String USER_TELEPHONE_NUMBER = "UT_User_Telephone_Number_" + RANDOM_SUFFIX;
 
+    public static final String VALUE = "UT_Value_" + RANDOM_SUFFIX;
+
+    public static final Integer VOLUMES_PER_INSTANCE = getRandomInteger();
+
+    public static final String VOLUME_TYPE = "UT_VolumeType_" + RANDOM_SUFFIX;
+
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 
     // A holding location for a property source.
@@ -754,6 +997,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     // environment, we will take it from this holding area and put it back in the environment. When the property source is in the environment, we
     // set this holder to null.
     public ReloadablePropertySource propertySourceHoldingLocation;
+
+    @Autowired
+    protected AllowedAttributeValueDaoTestHelper allowedAttributeValueDaoTestHelper;
+
+    @Autowired
+    protected AttributeValueListDao attributeValueListDao;
+
+    @Autowired
+    protected AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
 
     @Autowired
     protected BusinessObjectDataAttributeDao businessObjectDataAttributeDao;
@@ -828,6 +1080,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected Ec2Dao ec2Dao;
 
     @Autowired
+    protected Ec2OnDemandPricingDao ec2OnDemandPricingDao;
+
+    @Autowired
+    protected Ec2OnDemandPricingDaoTestHelper ec2OnDemandPricingDaoTestHelper;
+
+    @Autowired
     protected EmrClusterDefinitionDao emrClusterDefinitionDao;
 
     @Autowired
@@ -852,6 +1110,18 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected FileTypeDaoTestHelper fileTypeDaoTestHelper;
 
     @Autowired
+    protected GlobalAttributeDefinitionDao globalAttributeDefinitionDao;
+
+    @Autowired
+    protected GlobalAttributeDefinitionDaoTestHelper globalAttributeDefinitionDaoTestHelper;
+
+    @Autowired
+    protected GlobalAttributeDefinitionLevelDao globalAttributeDefinitionLevelDao;
+
+    @Autowired
+    protected GlobalAttributeDefinitionLevelDaoTestHelper globalAttributeDefinitionLevelDaoTestHelper;
+
+    @Autowired
     protected HerdCollectionHelper herdCollectionHelper;
 
     // Provide easy access to the herd DAO for all test methods.
@@ -865,12 +1135,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected JdbcDao jdbcDao;
 
     @Autowired
-    protected JmsMessageDao jmsMessageDao;
-
-    @Autowired
-    protected JmsMessageDaoTestHelper jmsMessageDaoTestHelper;
-
-    @Autowired
     protected JobDefinitionDao jobDefinitionDao;
 
     @Autowired
@@ -878,6 +1142,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected KmsDao kmsDao;
+
+    @Autowired
+    protected MessageTypeDao messageTypeDao;
+
+    @Autowired
+    protected MessageTypeDaoTestHelper messageTypeDaoTestHelper;
 
     @Autowired
     protected NamespaceDao namespaceDao;
@@ -889,6 +1159,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected NotificationEventTypeDao notificationEventTypeDao;
 
     @Autowired
+    protected NotificationMessageDao notificationMessageDao;
+
+    @Autowired
+    protected NotificationMessageDaoTestHelper notificationMessageDaoTestHelper;
+
+    @Autowired
     protected NotificationRegistrationDao notificationRegistrationDao;
 
     @Autowired
@@ -898,18 +1174,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected NotificationRegistrationStatusDao notificationRegistrationStatusDao;
 
     @Autowired
-    protected OnDemandPriceDao onDemandPriceDao;
-
-    @Autowired
-    protected OozieDao oozieDao;
-
-    @Autowired
     protected PartitionKeyGroupDao partitionKeyGroupDao;
 
     @Autowired
     protected PartitionKeyGroupDaoTestHelper partitionKeyGroupDaoTestHelper;
 
-    // Provide easy access to the S3 DAO for all test methods.
     @Autowired
     protected S3Dao s3Dao;
 
@@ -947,6 +1216,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected SecurityFunctionDao securityFunctionDao;
 
     @Autowired
+    protected SecurityRoleDao securityRoleDao;
+
+    @Autowired
+    protected SecurityRoleDaoTestHelper securityRoleDaoTestHelper;
+
+    @Autowired
+    protected SnsDao snsDao;
+
+    @Autowired
     protected SqsDao sqsDao;
 
     @Autowired
@@ -981,6 +1259,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected StoragePolicyStatusDao storagePolicyStatusDao;
+
+    @Autowired
+    protected StoragePolicyTransitionTypeDao storagePolicyTransitionTypeDao;
+
+    @Autowired
+    protected StoragePolicyTransitionTypeDaoTestHelper storagePolicyTransitionTypeDaoTestHelper;
 
     @Autowired
     protected StorageUnitDao storageUnitDao;
@@ -1032,6 +1316,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected UserNamespaceAuthorizationDaoTestHelper userNamespaceAuthorizationDaoTestHelper;
+
+    /**
+     * Returns a random timestamp.
+     */
+    public static DateTime getRandomDateTime()
+    {
+        return new DateTime(new Random().nextLong()).withMillisOfSecond(0);
+    }
 
     /**
      * Modifies the re-loadable property source. Copies all the existing properties and overrides with the properties passed in the map.

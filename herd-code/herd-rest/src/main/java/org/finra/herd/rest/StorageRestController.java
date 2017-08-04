@@ -72,7 +72,7 @@ public class StorageRestController extends HerdBaseController
     @Secured(SecurityFunctions.FN_STORAGES_PUT)
     public Storage updateStorage(@PathVariable("storageName") String storageName, @RequestBody StorageUpdateRequest request)
     {
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storageName).build();
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
         return storageService.updateStorage(alternateKey, request);
     }
 
@@ -87,7 +87,7 @@ public class StorageRestController extends HerdBaseController
     @Secured(SecurityFunctions.FN_STORAGES_GET)
     public Storage getStorage(@PathVariable("storageName") String storageName)
     {
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storageName).build();
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
         return storageService.getStorage(alternateKey);
     }
 
@@ -102,7 +102,7 @@ public class StorageRestController extends HerdBaseController
     @Secured(SecurityFunctions.FN_STORAGES_DELETE)
     public Storage deleteStorage(@PathVariable("storageName") String storageName)
     {
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storageName).build();
+        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
         return storageService.deleteStorage(alternateKey);
     }
 

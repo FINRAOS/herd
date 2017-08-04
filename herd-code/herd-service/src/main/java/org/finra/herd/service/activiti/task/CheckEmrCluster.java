@@ -17,13 +17,14 @@ package org.finra.herd.service.activiti.task;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.EmrCluster;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
- * An Activiti task that gets the EMR cluster details
+ * An Activiti task that gets the EMR cluster details.
  * <p/>
  * <p/>
  * <pre>
@@ -34,27 +35,32 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
  *   <activiti:field name="emrClusterId" stringValue="" />
  *   <activiti:field name="emrStepId" stringValue="" />
  *   <activiti:field name="verbose" stringValue="" />
- *   <activiti:field name="retrieveOozieJobs" stringValue="" />
+ *   <activiti:field name="retrieveInstanceFleets" stringValue="" />
  * </extensionElements>
  * </pre>
  */
 @Component
 public class CheckEmrCluster extends BaseEmrCluster
 {
-    public static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE = "emrClusterStatus_changeReasonCode";
-    public static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE = "emrClusterStatus_changeReasonMessage";
     public static final String VARIABLE_EMR_CLUSTER_CREATION_TIME = "emrClusterStatus_creationTime";
-    public static final String VARIABLE_EMR_CLUSTER_READY_TIME = "emrClusterStatus_readyTime";
+
     public static final String VARIABLE_EMR_CLUSTER_END_TIME = "emrClusterStatus_endTime";
+
+    public static final String VARIABLE_EMR_CLUSTER_READY_TIME = "emrClusterStatus_readyTime";
+
+    public static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE = "emrClusterStatus_changeReasonCode";
+
+    public static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE = "emrClusterStatus_changeReasonMessage";
+
+    private Expression accountId;
+
     private Expression emrClusterId;
 
     private Expression emrStepId;
 
     private Expression verbose;
 
-    private Expression retrieveOozieJobs;
-    
-    private Expression accountId;
+    private Expression retrieveInstanceFleets;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -64,13 +70,13 @@ public class CheckEmrCluster extends BaseEmrCluster
         String emrStepIdString = activitiHelper.getExpressionVariableAsString(emrStepId, execution);
         String emrClusterIdString = activitiHelper.getExpressionVariableAsString(emrClusterId, execution);
         boolean verboseBoolean = activitiHelper.getExpressionVariableAsBoolean(verbose, execution, "verbose", false, false);
-        boolean retrieveOozieJobsBoolean = activitiHelper.getExpressionVariableAsBoolean(retrieveOozieJobs, execution, "retrieveOozieJobs", false, false);
         String accountIdString = activitiHelper.getExpressionVariableAsString(accountId, execution);
-        
+        Boolean retrieveInstanceFleetsBoolean =
+            activitiHelper.getExpressionVariableAsBoolean(retrieveInstanceFleets, execution, "retrieveInstanceFleets", false, false);
+
         // Gets the EMR cluster details.
-        EmrCluster emrCluster =
-                emrService
-                        .getCluster(emrClusterAlternateKeyDto, emrClusterIdString, emrStepIdString, verboseBoolean, retrieveOozieJobsBoolean, accountIdString);
+        EmrCluster emrCluster = emrService
+            .getCluster(emrClusterAlternateKeyDto, emrClusterIdString, emrStepIdString, verboseBoolean, accountIdString, retrieveInstanceFleetsBoolean);
 
         // Set cluster id and status workflow variables based on the result EMR cluster.
         setIdStatusWorkflowVariables(execution, emrCluster);
@@ -113,10 +119,10 @@ public class CheckEmrCluster extends BaseEmrCluster
             }
         }
 
-        // Set the oozie workflows in response
-        if (retrieveOozieJobsBoolean)
+        // Set the instance fleets variable
+        if (BooleanUtils.isTrue(retrieveInstanceFleetsBoolean))
         {
-            setTaskWorkflowVariable(execution, "oozie_workflow_jobs", jsonHelper.objectToJson(emrCluster.getOozieWorkflowJobs()));
+            setTaskWorkflowVariable(execution, "instance_fleets", jsonHelper.objectToJson(emrCluster.getInstanceFleets()));
         }
     }
 }

@@ -33,7 +33,7 @@ import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.TagTypeDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.annotation.PublishJmsMessages;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.TagType;
 import org.finra.herd.model.api.xml.TagTypeCreateRequest;
 import org.finra.herd.model.api.xml.TagTypeKey;
@@ -58,7 +58,7 @@ import org.finra.herd.service.helper.TagTypeHelper;
 public class TagTypeServiceImpl implements TagTypeService, SearchableService
 {
     // Constant to hold the description field option for the search response.
-    public final static String DESCRIPTION_FIELD = "display".toLowerCase();
+    public final static String DESCRIPTION_FIELD = "description".toLowerCase();
 
     // Constant to hold the display name field option for the search response.
     public final static String DISPLAY_NAME_FIELD = "displayName".toLowerCase();
@@ -175,7 +175,7 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
         return new TagTypeSearchResponse(tagTypes);
     }
 
-    @PublishJmsMessages
+    @PublishNotificationMessages
     @Override
     public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest request)
     {

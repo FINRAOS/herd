@@ -15,25 +15,38 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.IndexSearchDao;
+import org.finra.herd.dao.helper.ElasticsearchHelper;
+import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
+import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
+import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.jpa.TagEntity;
+import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.IndexSearchService;
 import org.finra.herd.service.SearchableService;
+import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
+import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.service.helper.TagHelper;
 
 /**
  * IndexSearchServiceImpl is the implementation of the IndexSearchService and includes an indexSearch method that will handle search requests against a search
  * index.
  */
 @Service
-public class IndexSearchServiceImpl implements IndexSearchService, SearchableService
+public class IndexSearchServiceImpl implements IndexSearchService, SearchableService, FacetFieldValidationService
 {
     /**
      * Constant to hold the display name option for the indexSearch
@@ -53,6 +66,14 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     @Autowired
     private IndexSearchDao indexSearchDao;
 
+    @Autowired
+    private TagHelper tagHelper;
+
+    @Autowired
+    private TagDaoHelper tagDaoHelper;
+
+    @Autowired
+    private IndexSearchResultTypeHelper resultTypeHelper;
 
     @Override
     public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
@@ -62,6 +83,21 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
 
         // Validate the search term
         validateIndexSearchRequestSearchTerm(request.getSearchTerm());
+
+        // Validate the index search filters if specified in the request
+        if (request.getIndexSearchFilters() != null)
+        {
+            validateIndexSearchFilters(request.getIndexSearchFilters());
+        }
+
+        Set<String> facetFields = new HashSet<>();
+        if (CollectionUtils.isNotEmpty(request.getFacetFields()))
+        {
+            facetFields.addAll(validateFacetFields(new HashSet<>(request.getFacetFields())));
+
+            //set the facets fields after validation
+            request.setFacetFields(new ArrayList<>(facetFields));
+        }
 
         return indexSearchDao.indexSearch(request, fields);
     }
@@ -82,9 +118,77 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
             "The search term length must be at least " + SEARCH_TERM_MINIMUM_ALLOWABLE_LENGTH + " characters.");
     }
 
+    /**
+     * Validates the specified index search filters.
+     *
+     * @param indexSearchFilters the index search filters
+     */
+    private void validateIndexSearchFilters(List<IndexSearchFilter> indexSearchFilters)
+    {
+        // Validate that the search filters list is not empty
+        Assert.notEmpty(indexSearchFilters, "At least one index search filter must be specified.");
+
+        for (IndexSearchFilter searchFilter : indexSearchFilters)
+        {
+            // Silently skip a search filter which is null
+            if (null != searchFilter)
+            {
+                // Validate that each search filter has at least one index search key
+                Assert.notEmpty(searchFilter.getIndexSearchKeys(), "At least one index search key must be specified.");
+
+                // Guard against a single null element in the index search keys list
+                if (null != searchFilter.getIndexSearchKeys().get(0))
+                {
+                    // Get the instance type of the key in the search filter, match all other keys with this
+                    Class<?> expectedInstanceType =
+                        searchFilter.getIndexSearchKeys().get(0).getIndexSearchResultTypeKey() != null ? IndexSearchResultTypeKey.class : TagKey.class;
+
+                    searchFilter.getIndexSearchKeys().forEach(indexSearchKey ->
+                    {
+                        // Validate that each search key has either an index search result type key or a tag key
+                        Assert.isTrue((indexSearchKey.getIndexSearchResultTypeKey() != null) ^ (indexSearchKey.getTagKey() != null),
+                            "Exactly one instance of index search result type key or tag key must be specified.");
+
+                        Class<?> actualInstanceType = indexSearchKey.getIndexSearchResultTypeKey() != null ? IndexSearchResultTypeKey.class : TagKey.class;
+
+                        // Validate that search keys within the same filter have either index search result type keys or tag keys
+                        Assert.isTrue(expectedInstanceType.equals(actualInstanceType),
+                            "Index search keys should be a homogeneous list of either index search result type keys or tag keys.");
+
+                        // Validate tag key if present
+                        if (indexSearchKey.getTagKey() != null)
+                        {
+                            tagHelper.validateTagKey(indexSearchKey.getTagKey());
+
+                            // Validates that a tag entity exists for the specified tag key and gets the actual key from the database
+                            // We then modify the index search filter key to use the actual values because it eventually becomes a filter query and it will not
+                            // automatically be case-sensitivity and whitespace resilient.
+                            TagEntity actualTagEntity = tagDaoHelper.getTagEntity(indexSearchKey.getTagKey());
+                            TagKey tagKey = new TagKey(actualTagEntity.getTagType().getCode(), actualTagEntity.getTagCode());
+
+                            indexSearchKey.setTagKey(tagKey);
+                        }
+
+                        // Validate search result type key if present
+                        if (indexSearchKey.getIndexSearchResultTypeKey() != null)
+                        {
+                            resultTypeHelper.validateIndexSearchResultTypeKey(indexSearchKey.getIndexSearchResultTypeKey());
+                        }
+                    });
+                }
+            }
+        }
+    }
+
     @Override
     public Set<String> getValidSearchResponseFields()
     {
         return ImmutableSet.of(SHORT_DESCRIPTION_FIELD, DISPLAY_NAME_FIELD);
+    }
+
+    @Override
+    public Set<String> getValidFacetFields()
+    {
+        return ImmutableSet.of(ElasticsearchHelper.TAG_FACET, ElasticsearchHelper.RESULT_TYPE_FACET);
     }
 }

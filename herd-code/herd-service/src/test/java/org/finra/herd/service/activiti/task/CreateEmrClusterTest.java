@@ -19,14 +19,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.JAXBException;
-
 import org.activiti.engine.history.HistoricProcessInstance;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,15 +38,21 @@ import org.finra.herd.service.EmrServiceTest;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 /**
- * Tests the CreateEmrCluster class. Most of the functionalities are already tested in the {@link EmrServiceTest}. This test suite will test whether the
- * activiti task accepts the variables correctly, and sets return variables correctly.
+ * Tests the CreateEmrCluster class. Most of the functionality is already tested in the {@link EmrServiceTest}. This test suite will test whether the activiti
+ * task accepts the variables correctly, and sets return variables correctly.
  */
 public class CreateEmrClusterTest extends AbstractServiceTest
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateEmrClusterTest.class);
 
-    private Map<String, Object> createJob(String clusterName, String dryRun, String contentType, String emrClusterDefinitionOverride)
-        throws Exception, JAXBException, IOException
+    @Before
+    public void createDatabaseEntities()
+    {
+        // Create EC2 on-demand pricing entities required for testing.
+        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
+    }
+
+    private Map<String, Object> createJob(String clusterName, String dryRun, String contentType, String emrClusterDefinitionOverride) throws Exception
     {
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(new Parameter("clusterName", clusterName));

@@ -30,20 +30,22 @@ import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.JdbcOperations;
 import org.finra.herd.dao.KmsOperations;
 import org.finra.herd.dao.LdapOperations;
-import org.finra.herd.dao.OozieOperations;
 import org.finra.herd.dao.S3Operations;
+import org.finra.herd.dao.SnsOperations;
 import org.finra.herd.dao.SqsOperations;
 import org.finra.herd.dao.StsOperations;
+import org.finra.herd.dao.UrlOperations;
 import org.finra.herd.dao.impl.Ec2OperationsImpl;
 import org.finra.herd.dao.impl.EmrOperationsImpl;
 import org.finra.herd.dao.impl.HttpClientOperationsImpl;
 import org.finra.herd.dao.impl.JdbcOperationsImpl;
 import org.finra.herd.dao.impl.KmsOperationsImpl;
 import org.finra.herd.dao.impl.LdapOperationsImpl;
-import org.finra.herd.dao.impl.OozieOperationsImpl;
 import org.finra.herd.dao.impl.S3OperationsImpl;
+import org.finra.herd.dao.impl.SnsOperationsImpl;
 import org.finra.herd.dao.impl.SqsOperationsImpl;
 import org.finra.herd.dao.impl.StsOperationsImpl;
+import org.finra.herd.dao.impl.UrlOperationsImpl;
 import org.finra.herd.model.dto.ConfigurationValue;
 
 /**
@@ -107,15 +109,15 @@ public class DaoEnvSpringModuleConfig
     }
 
     @Bean
-    public StsOperations stsOperations()
+    public SnsOperations snsOperations()
     {
-        return new StsOperationsImpl();
+        return new SnsOperationsImpl();
     }
 
     @Bean
-    public OozieOperations oozieOperations()
+    public StsOperations stsOperations()
     {
-        return new OozieOperationsImpl();
+        return new StsOperationsImpl();
     }
 
     @Bean
@@ -140,5 +142,11 @@ public class DaoEnvSpringModuleConfig
     public HttpClientOperations httpClientOperations()
     {
         return new HttpClientOperationsImpl();
+    }
+
+    @Bean
+    public UrlOperations urlOperations()
+    {
+        return new UrlOperationsImpl();
     }
 }

@@ -52,57 +52,18 @@ public class StorageUnitDaoTestHelper
     private StorageUnitStatusDaoTestHelper storageUnitStatusDaoTestHelper;
 
     /**
-     * Create and persist business object data entity in "restoring" state.
+     * Creates and persists a new storage unit entity.
      *
+     * @param storageName the storage name
      * @param businessObjectDataKey the business object data key
-     * @param originStorageName the origin S3 storage name
-     * @param originStorageUnitStatus the origin S3 storage unit status
-     * @param glacierStorageName the Glacier storage name
-     * @param glacierStorageUnitStatus the Glacier storage unit status
+     * @param storageUnitStatus the storage unit status
      *
-     * @return the business object data entity
+     * @return the newly created storage unit entity
      */
-    public BusinessObjectDataEntity createBusinessObjectDataEntityInRestoringState(BusinessObjectDataKey businessObjectDataKey, String originStorageName,
-        String originStorageUnitStatus, String glacierStorageName, String glacierStorageUnitStatus)
+    public StorageUnitEntity createStorageUnitEntity(String storageName, BusinessObjectDataKey businessObjectDataKey, String storageUnitStatus)
     {
-        // Create and persist a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(businessObjectDataKey, AbstractDaoTest.LATEST_VERSION_FLAG_SET, AbstractDaoTest.BDATA_STATUS);
-
-        // Create and persist an origin S3 storage entity, if not exists.
-        StorageEntity originStorageEntity = storageDao.getStorageByName(originStorageName);
-        if (originStorageEntity == null)
-        {
-            originStorageEntity = storageDaoTestHelper.createStorageEntity(originStorageName, StoragePlatformEntity.S3);
-        }
-
-        // Create and persist a Glacier storage entity, if not exists.
-        StorageEntity glacierStorageEntity = storageDao.getStorageByName(glacierStorageName);
-        if (glacierStorageEntity == null)
-        {
-            glacierStorageEntity = storageDaoTestHelper.createStorageEntity(glacierStorageName, StoragePlatformEntity.GLACIER);
-        }
-
-        // Create and persist an S3 storage unit entity.
-        StorageUnitEntity originStorageUnitEntity = null;
-        if (originStorageUnitStatus != null)
-        {
-            originStorageUnitEntity =
-                createStorageUnitEntity(originStorageEntity, businessObjectDataEntity, originStorageUnitStatus, AbstractDaoTest.NO_STORAGE_DIRECTORY_PATH);
-        }
-
-        // Create and persist a Glacier storage unit entity.
-        if (glacierStorageUnitStatus != null)
-        {
-            StorageUnitEntity glacierStorageUnitEntity =
-                createStorageUnitEntity(glacierStorageEntity, businessObjectDataEntity, glacierStorageUnitStatus, AbstractDaoTest.NO_STORAGE_DIRECTORY_PATH);
-
-            // Set a parent storage unit for the Glacier storage unit.
-            glacierStorageUnitEntity.setParentStorageUnit(originStorageUnitEntity);
-        }
-
-        // Return the business object data entity.
-        return businessObjectDataEntity;
+        return createStorageUnitEntity(storageName, StoragePlatformEntity.S3, businessObjectDataKey, AbstractDaoTest.LATEST_VERSION_FLAG_SET,
+            AbstractDaoTest.BDATA_STATUS, storageUnitStatus, AbstractDaoTest.NO_STORAGE_DIRECTORY_PATH);
     }
 
     /**
@@ -197,7 +158,7 @@ public class StorageUnitDaoTestHelper
     public StorageUnitEntity createStorageUnitEntity(StorageEntity storageEntity, BusinessObjectDataEntity businessObjectDataEntity, String storageUnitStatus,
         String directoryPath)
     {
-        // Create a storage entity, if not exists.
+        // Create a storage unit status entity, if not exists.
         StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDao.getStorageUnitStatusByCode(storageUnitStatus);
         if (storageUnitStatusEntity == null)
         {

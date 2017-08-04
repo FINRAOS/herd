@@ -26,6 +26,7 @@ import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FieldExtension;
 import org.activiti.bpmn.model.ServiceTask;
 import org.activiti.engine.history.HistoricProcessInstance;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.Job;
@@ -35,6 +36,12 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 public class AddEmrStepsTest extends AbstractServiceTest
 {
+    @Before
+    public void createDatabaseEntities()
+    {
+        // Create EC2 on-demand pricing entities required for testing.
+        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
+    }
 
     @Test
     public void testAddShellStep() throws Exception
@@ -76,32 +83,6 @@ public class AddEmrStepsTest extends AbstractServiceTest
         parameters.add(parameter);
 
         testActivitiAddEmrStepSuccess(AddEmrPigStep.class.getCanonicalName(), getScriptStepsFieldExtension(), parameters);
-    }
-
-    @Test
-    public void testAddOozieStep() throws Exception
-    {
-        List<FieldExtension> fieldExtensionList = new ArrayList<>();
-
-        FieldExtension exceptionField = new FieldExtension();
-        exceptionField.setFieldName("workflowXmlLocation");
-        exceptionField.setExpression("${workflowXmlLocation}");
-        fieldExtensionList.add(exceptionField);
-
-        exceptionField = new FieldExtension();
-        exceptionField.setFieldName("ooziePropertiesFileLocation");
-        exceptionField.setExpression("${ooziePropertiesFileLocation}");
-        fieldExtensionList.add(exceptionField);
-
-        List<Parameter> parameters = new ArrayList<>(getCommonParameters("Oozie Step"));
-
-        Parameter parameter = new Parameter("workflowXmlLocation", "s3://test-bucket-managed/app-a/test/workflow.xml");
-        parameters.add(parameter);
-
-        parameter = new Parameter("ooziePropertiesFileLocation", "s3://test-bucket-managed/app-a/test/job.properties");
-        parameters.add(parameter);
-
-        testActivitiAddEmrStepSuccess(AddEmrOozieStep.class.getCanonicalName(), fieldExtensionList, parameters);
     }
 
     @Test
@@ -195,34 +176,6 @@ public class AddEmrStepsTest extends AbstractServiceTest
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             testActivitiAddEmrStepFailure(AddEmrShellStep.class.getCanonicalName(), getScriptStepsFieldExtension(), parameters);
-        });
-    }
-
-    @Test
-    public void testAddOozieStepNoWorkflowXml() throws Exception
-    {
-        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
-            testActivitiAddEmrStepFailure(AddEmrOozieStep.class.getCanonicalName(), new ArrayList<>(), getCommonParameters("Oozie Step"));
-        });
-    }
-
-    @Test
-    public void testAddOozieStepNoOoziePropertiesLocation() throws Exception
-    {
-        List<FieldExtension> fieldExtensionList = new ArrayList<>();
-
-        FieldExtension exceptionField = new FieldExtension();
-        exceptionField.setFieldName("workflowXmlLocation");
-        exceptionField.setExpression("${workflowXmlLocation}");
-        fieldExtensionList.add(exceptionField);
-
-        List<Parameter> parameters = getCommonParameters("Oozie Step");
-
-        Parameter parameter = new Parameter("workflowXmlLocation", "workflow_xml_location");
-        parameters.add(parameter);
-
-        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
-            testActivitiAddEmrStepFailure(AddEmrOozieStep.class.getCanonicalName(), fieldExtensionList, parameters);
         });
     }
 

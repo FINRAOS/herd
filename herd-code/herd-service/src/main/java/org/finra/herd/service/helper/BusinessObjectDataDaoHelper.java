@@ -66,9 +66,9 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.BusinessObjectDataService;
+import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.S3Service;
-import org.finra.herd.service.SqsNotificationEventService;
 
 /**
  * Helper for business object data related operations which require DAO.
@@ -115,7 +115,7 @@ public class BusinessObjectDataDaoHelper
     private S3Service s3Service;
 
     @Autowired
-    private SqsNotificationEventService sqsNotificationEventService;
+    private MessageNotificationEventService sqsNotificationEventService;
 
     @Autowired
     private StorageDaoHelper storageDaoHelper;

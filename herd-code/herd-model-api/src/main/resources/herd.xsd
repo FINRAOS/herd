@@ -297,6 +297,11 @@
                <xs:documentation>The list of namespace authorizations</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="securityRoles" type="securityRoles">
+            <xs:annotation>
+               <xs:documentation>The list of security roles</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -346,6 +351,16 @@
       </xs:restriction>
    </xs:simpleType>
 
+   <xs:element name="securityRoles" type="securityRoles"/>
+   <xs:complexType name="securityRoles">
+      <xs:sequence>
+         <xs:element name="securityRole" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The security role</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
 
    <!-- ***** User Namespace Authorization ***** -->
 
@@ -631,6 +646,11 @@
                <xs:documentation>The tag's name in plain text for human readability</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="searchScoreMultiplier" type="xs:decimal" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional tag's search score multiplier. Search score multiplier is numeric and can be a decimal</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional description</xs:documentation>
@@ -650,6 +670,11 @@
          <xs:element name="displayName" type="xs:string">
             <xs:annotation>
                <xs:documentation>The tag's name in plain text for human readability</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchScoreMultiplier" type="xs:decimal" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional tag's search score multiplier. Search score multiplier is numeric and can be a decimal</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
@@ -681,6 +706,11 @@
          <xs:element name="displayName" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag's name in plain text for human readability</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchScoreMultiplier" type="xs:decimal" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional tag's search score multiplier. Search score multiplier is numeric and can be a decimal</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
@@ -903,7 +933,7 @@
          <xs:element name="attributes" type="attributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Definition. "name" is the attribute name (i.e. the key) and
-                  "value" is the attribute value.
+                  "value" is the attribute value
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -926,7 +956,7 @@
          <xs:element name="attributes" type="attributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Definition. "name" is the attribute name (i.e. the key) and
-                  "value" is the attribute value.
+                  "value" is the attribute value
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -984,8 +1014,7 @@
          </xs:element>
          <xs:element name="shortDescription" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  An optional short-description. This is actually the 'description' field truncated to a configurable number of characters.
+               <xs:documentation>An optional short-description. This is actually the 'description' field truncated to a configurable number of characters
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -1010,9 +1039,7 @@
          </xs:element>
          <xs:element name="sampleDataFiles" type="sampleDataFiles" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  An optional list of sample data files associated with the Business Object Definition
-               </xs:documentation>
+               <xs:documentation>An optional list of sample data files associated with the Business Object Definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="createdByUserId" type="xs:string" minOccurs="0">
@@ -1088,7 +1115,7 @@
          <xs:element name="businessObjectFormatUsage" type="xs:string">
             <xs:annotation>
                <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
-                  Object Format.
+                  Object Format
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -1104,8 +1131,7 @@
       <xs:sequence>
          <xs:element name="sampleDataFile" type="sampleDataFile" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>
-                  A sample data file associated with the Business Object Definition. The data in this file is expected to match the schema of the
+               <xs:documentation>A sample data file associated with the Business Object Definition. The data in this file is expected to match the schema of the
                   descriptiveFormat for this Business Object Definition – but the data in this file is not validated against the descriptiveFormat schema at
                   this time
                </xs:documentation>
@@ -1185,9 +1211,15 @@
 
    <xs:complexType name="businessObjectDefinitionSearchFilter">
       <xs:all>
+         <xs:element name="isExclusionSearchFilter" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if the search filter is an exclusion filter that excludes items from the search results
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="businessObjectDefinitionSearchKeys" type="businessObjectDefinitionSearchKeys">
             <xs:annotation>
-               <xs:documentation>A list of business Object Definition search keys.</xs:documentation>
+               <xs:documentation>A list of business Object Definition search keys</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -1224,9 +1256,7 @@
       <xs:all>
          <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Values that identify a business object definition search response.
-               </xs:documentation>
+               <xs:documentation>Values that identify a business object definition search response</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -1237,16 +1267,12 @@
       <xs:all>
          <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Values that identify a business object definition search response.
-               </xs:documentation>
+               <xs:documentation>Values that identify a business object definition search response</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="facets" type="facets" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Values that identifies a list of facet information response.
-               </xs:documentation>
+               <xs:documentation>Values that identifies a list of facet information response</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -1320,38 +1346,6 @@
          <xs:element name="indexStartTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The timestamp of when the index creation started</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
-   <xs:element name="businessObjectDefinitionValidateResponse" type="businessObjectDefinitionValidateResponse"/>
-   <xs:complexType name="businessObjectDefinitionValidateResponse">
-      <xs:all>
-         <xs:element name="validateStartTime" type="xs:dateTime" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>The timestamp of when the index validation started</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="sizeCheckPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number
-                  in the index
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="spotCheckRandomPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database
-                  are the same as the indexed documents
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="spotCheckMostRecentPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the
-                  database are the same as the indexed documents
-               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -1921,6 +1915,26 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:complexType name="businessObjectFormatParents">
+      <xs:sequence>
+         <xs:element name="businessObjectFormatKey" type="businessObjectFormatKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data without version</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectFormatChildren">
+      <xs:sequence>
+         <xs:element name="businessObjectFormatKey" type="businessObjectFormatKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data without version</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:element name="businessObjectFormatUpdateRequest" type="businessObjectFormatUpdateRequest"/>
    <xs:complexType name="businessObjectFormatUpdateRequest">
       <xs:all>
@@ -1939,6 +1953,32 @@
          <xs:element name="schema" type="schema" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The schema associated with this Business Object Format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectFormatParentsUpdateRequest" type="businessObjectFormatParentsUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatParentsUpdateRequest">
+      <xs:all>
+         <xs:element name="businessObjectFormatParents" type="businessObjectFormatParents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Business Object Data parents (i.e. predecessors) that were used/needed in the creation of this data. This is used for
+                  data lineage. Each parent consists of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectFormatAttributesUpdateRequest" type="businessObjectFormatAttributesUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatAttributesUpdateRequest">
+      <xs:all>
+         <xs:element name="attributes" type="attributes" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Custom user-defined metadata associated with this Business Object Format. "name" is the attribute name (i.e. the key) and
+                  "value" is the attribute value
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -2020,6 +2060,20 @@
                <xs:documentation>The schema associated with this Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectFormatParents" type="businessObjectFormatParents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Business Object Data parents (i.e. predecessors) that were used/needed in the creation of this data. This is used for
+                  data lineage. Each parent consists of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatChildren" type="businessObjectFormatChildren" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Business Object Data children that were creation from this data. This is used for data lineage. Each child consists
+                  of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -2050,9 +2104,7 @@
          </xs:element>
          <xs:element name="publish" type="xs:boolean" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  If true, this business object data attribute will be published in notification messages
-               </xs:documentation>
+               <xs:documentation>If true, this business object data attribute will be published in notification messages</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4033,15 +4085,13 @@
          </xs:element>
          <xs:element name="storageUnitEventType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
+               <xs:documentation>The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageUnitNotificationFilter" type="storageUnitNotificationFilter">
             <xs:annotation>
-               <xs:documentation>
-                  The filter to use against storage unit events. The notification will only trigger for events matching this filter
+               <xs:documentation>The filter to use against storage unit events. The notification will only trigger for events matching this filter
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4052,8 +4102,7 @@
          </xs:element>
          <xs:element name="notificationRegistrationStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The status of the notification registration. One of the following values: ENABLED or DISABLED. Default value is ENABLED
+               <xs:documentation>The status of the notification registration. One of the following values: ENABLED or DISABLED. Default value is ENABLED
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4068,15 +4117,13 @@
       <xs:all>
          <xs:element name="storageUnitEventType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
+               <xs:documentation>The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageUnitNotificationFilter" type="storageUnitNotificationFilter">
             <xs:annotation>
-               <xs:documentation>
-                  The filter to use against storage unit events. The notification will only trigger for events matching this filter
+               <xs:documentation>The filter to use against storage unit events. The notification will only trigger for events matching this filter
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4087,9 +4134,7 @@
          </xs:element>
          <xs:element name="notificationRegistrationStatus" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The status of the notification registration. One of the following values: ENABLED or DISABLED
-               </xs:documentation>
+               <xs:documentation>The status of the notification registration. One of the following values: ENABLED or DISABLED</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4113,15 +4158,13 @@
          </xs:element>
          <xs:element name="storageUnitEventType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
+               <xs:documentation>The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageUnitNotificationFilter" type="storageUnitNotificationFilter">
             <xs:annotation>
-               <xs:documentation>
-                  The filter to use against storage unit events. The notification will only trigger for events matching this filter
+               <xs:documentation>The filter to use against storage unit events. The notification will only trigger for events matching this filter
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4132,9 +4175,7 @@
          </xs:element>
          <xs:element name="notificationRegistrationStatus" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The status of the notification registration. One of the following values: ENABLED or DISABLED
-               </xs:documentation>
+               <xs:documentation>The status of the notification registration. One of the following values: ENABLED or DISABLED</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4184,16 +4225,12 @@
          </xs:element>
          <xs:element name="newStorageUnitStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The new storage unit status. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING
-               </xs:documentation>
+               <xs:documentation>The new storage unit status. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="oldStorageUnitStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The old storage unit status. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING
-               </xs:documentation>
+               <xs:documentation>The old storage unit status. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4473,21 +4510,6 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="emrOozieStepAddRequest" type="emrOozieStepAddRequest"/>
-   <xs:complexType name="emrOozieStepAddRequest">
-      <xs:all>
-         <xs:element name="namespace" type="xs:string"/>
-         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
-         <xs:element name="emrClusterName" type="xs:string"/>
-         <xs:element name="stepName" type="xs:string"/>
-         <xs:element name="workflowXmlLocation" type="xs:string"/>
-         <xs:element name="ooziePropertiesFileLocation" type="xs:string"/>
-         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
-         <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
-         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
-      </xs:all>
-   </xs:complexType>
-
    <xs:element name="emrHadoopJarStepAddRequest" type="emrHadoopJarStepAddRequest"/>
    <xs:complexType name="emrHadoopJarStepAddRequest">
       <xs:all>
@@ -4570,21 +4592,6 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="emrOozieStep" type="emrOozieStep"/>
-   <xs:complexType name="emrOozieStep">
-      <xs:all>
-         <xs:element name="id" type="xs:string"/>
-         <xs:element name="namespace" type="xs:string"/>
-         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
-         <xs:element name="emrClusterName" type="xs:string"/>
-         <xs:element name="stepName" type="xs:string"/>
-         <xs:element name="workflowXmlLocation" type="xs:string"/>
-         <xs:element name="ooziePropertiesFileLocation" type="xs:string"/>
-         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
-         <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
-      </xs:all>
-   </xs:complexType>
-
    <xs:element name="emrHadoopJarStep" type="emrHadoopJarStep"/>
    <xs:complexType name="emrHadoopJarStep">
       <xs:all>
@@ -4598,43 +4605,6 @@
          <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
-      </xs:all>
-   </xs:complexType>
-
-   <xs:element name="oozieWorkflowJob" type="oozieWorkflowJob"/>
-   <xs:complexType name="oozieWorkflowJob">
-      <xs:all>
-         <xs:element name="id" type="xs:string" minOccurs="0"/>
-         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
-         <xs:element name="emrClusterDefinitionName" type="xs:string" minOccurs="0"/>
-         <xs:element name="emrClusterName" type="xs:string" minOccurs="0"/>
-         <xs:element name="status" type="xs:string" minOccurs="0"/>
-         <xs:element name="errorCode" type="xs:string" minOccurs="0"/>
-         <xs:element name="errorMessage" type="xs:string" minOccurs="0"/>
-         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="workflowActions" type="oozieWorkflowActions" minOccurs="0"/>
-         <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
-      </xs:all>
-   </xs:complexType>
-
-   <xs:element name="oozieWorkflowActions" type="oozieWorkflowActions"/>
-   <xs:complexType name="oozieWorkflowActions">
-      <xs:sequence>
-         <xs:element name="workflowAction" type="oozieWorkflowAction" minOccurs="0" maxOccurs="unbounded"/>
-      </xs:sequence>
-   </xs:complexType>
-
-   <xs:element name="oozieWorkflowAction" type="oozieWorkflowAction"/>
-   <xs:complexType name="oozieWorkflowAction">
-      <xs:all>
-         <xs:element name="id" type="xs:string" minOccurs="0"/>
-         <xs:element name="name" type="xs:string" minOccurs="0"/>
-         <xs:element name="status" type="xs:string" minOccurs="0"/>
-         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="errorCode" type="xs:string" minOccurs="0"/>
-         <xs:element name="errorMessage" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4676,45 +4646,37 @@
       <xs:all>
          <xs:element name="namespace" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The name of a valid namespace known by the system
-               </xs:documentation>
+               <xs:documentation>The name of a valid namespace known by the system</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="jobName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The name of the job definition
-               </xs:documentation>
+               <xs:documentation>The name of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  An optional description of the job definition
-               </xs:documentation>
+               <xs:documentation>An optional description of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="activitiJobXml" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  Activiti workflow XML related to the job. Id should be named as "{applicationName}.{jobName}". Activiti XML can not contain a CDATA section
+               <xs:documentation>Activiti workflow XML related to the job. Id should be named as "{applicationName}.{jobName}". Activiti XML can not contain a
+                  CDATA section
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by
+                  parameters
                   specified during the job execution
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The location to the Java properties file in S3
-               </xs:documentation>
+               <xs:documentation>The location to the Java properties file in S3</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4725,31 +4687,27 @@
       <xs:all>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  An optional description of the job definition
-               </xs:documentation>
+               <xs:documentation>An optional description of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="activitiJobXml" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  Activiti workflow XML related to the job. Id should be named as "{applicationName}.{jobName}". Activiti XML can not contain a CDATA section
+               <xs:documentation>Activiti workflow XML related to the job. Id should be named as "{applicationName}.{jobName}". Activiti XML can not contain a
+                  CDATA section
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by
+                  parameters
                   specified during the job execution
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The location to the Java properties file in S3
-               </xs:documentation>
+               <xs:documentation>The location to the Java properties file in S3</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4760,52 +4718,40 @@
       <xs:all>
          <xs:element name="id" type="xs:int">
             <xs:annotation>
-               <xs:documentation>
-                  The internal identifier that uniquely references a job definition
-               </xs:documentation>
+               <xs:documentation>The internal identifier that uniquely references a job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="namespace" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The namespace of the job definition
-               </xs:documentation>
+               <xs:documentation>The namespace of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="jobName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The name of the job definition
-               </xs:documentation>
+               <xs:documentation>The name of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Description of the job definition
-               </xs:documentation>
+               <xs:documentation>Description of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="activitiJobXml" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  Activiti workflow XML related to the job
-               </xs:documentation>
+               <xs:documentation>Activiti workflow XML related to the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by
+                  parameters
                   specified during the job execution
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The location to the Java properties file in S3
-               </xs:documentation>
+               <xs:documentation>The location to the Java properties file in S3</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="lastUpdatedByUserId" type="xs:string" minOccurs="0">
@@ -4831,8 +4777,8 @@
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  List of key/value pairs that will be made available to the job when it is executed. These parameters will override any parameters defined as
+               <xs:documentation>List of key/value pairs that will be made available to the job when it is executed. These parameters will override any
+                  parameters defined as
                   part of the job definition
                </xs:documentation>
             </xs:annotation>
@@ -4850,9 +4796,7 @@
       <xs:all>
          <xs:element name="action" type="jobActionEnum">
             <xs:annotation>
-               <xs:documentation>
-                  The action to take for the job. One of the following values: SUSPEND, RESUME
-               </xs:documentation>
+               <xs:documentation>The action to take for the job. One of the following values: SUSPEND, RESUME</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4863,16 +4807,12 @@
       <xs:all>
          <xs:element name="id" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The internal identifier that uniquely references a job
-               </xs:documentation>
+               <xs:documentation>The internal identifier that uniquely references a job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="status" type="jobStatusEnum" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The status of the job. One of the following values: RUNNING, SUSPENDED, COMPLETED
-               </xs:documentation>
+               <xs:documentation>The status of the job. One of the following values: RUNNING, SUSPENDED, COMPLETED</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="namespace" type="xs:string" minOccurs="0">
@@ -4887,59 +4827,44 @@
          </xs:element>
          <xs:element name="startTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The start time of the job
-               </xs:documentation>
+               <xs:documentation>The start time of the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The end time of the job. It is not returned for a job in RUNNING state
-               </xs:documentation>
+               <xs:documentation>The end time of the job. It is not returned for a job in RUNNING state</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="currentWorkflowStep" type="workflowStep" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The step where the workflow currently is. It is returned for a job in RUNNING state
-               </xs:documentation>
+               <xs:documentation>The step where the workflow currently is. It is returned for a job in RUNNING state</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="completedWorkflowSteps" type="workflowSteps" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The steps that have been completed. For a job in RUNNING state, steps up to the last Async task will be returned. For a job in
+               <xs:documentation>The steps that have been completed. For a job in RUNNING state, steps up to the last Async task will be returned. For a job in
                   COMPLETED state, all executed steps will be returned
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Current workflow variables and values
-               </xs:documentation>
+               <xs:documentation>Current workflow variables and values</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="activitiJobXml" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Activiti workflow XML related to the job
-               </xs:documentation>
+               <xs:documentation>Activiti workflow XML related to the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="workflowErrors" type="workflowErrors" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The workflow errors
-               </xs:documentation>
+               <xs:documentation>The workflow errors</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="deleteReason" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  A reason this job has been deleted. It is returned if the job has been deleted
-               </xs:documentation>
+               <xs:documentation>A reason this job has been deleted. It is returned if the job has been deleted</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4949,9 +4874,7 @@
       <xs:sequence>
          <xs:element name="parameter" type="parameter" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>
-                  An individual parameter (a key/value pair)
-               </xs:documentation>
+               <xs:documentation>An individual parameter (a key/value pair)</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -4961,15 +4884,13 @@
       <xs:all>
          <xs:element name="name" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  Name of the parameter
-               </xs:documentation>
+               <xs:documentation>Name of the parameter</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="value" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Value of the parameter. If the name of the parameter contains the word "password," this value will be masked before being logged into the
+               <xs:documentation>Value of the parameter. If the name of the parameter contains the word "password," this value will be masked before being
+                  logged into the
                   application logs
                </xs:documentation>
             </xs:annotation>
@@ -4981,9 +4902,7 @@
       <xs:sequence>
          <xs:element name="workflowStep" type="workflowStep" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>
-                  An individual step of the job
-               </xs:documentation>
+               <xs:documentation>An individual step of the job</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -4993,30 +4912,22 @@
       <xs:all>
          <xs:element name="id" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The internal identifier that uniquely references a step
-               </xs:documentation>
+               <xs:documentation>The internal identifier that uniquely references a step</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="name" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The name of the step
-               </xs:documentation>
+               <xs:documentation>The name of the step</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="startTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The start time of the step
-               </xs:documentation>
+               <xs:documentation>The start time of the step</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The end time of the step
-               </xs:documentation>
+               <xs:documentation>The end time of the step</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5026,9 +4937,7 @@
       <xs:sequence>
          <xs:element name="workflowError" type="workflowError" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>
-                  An individual workflow error
-               </xs:documentation>
+               <xs:documentation>An individual workflow error</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -5038,23 +4947,17 @@
       <xs:all>
          <xs:element name="errorMessage" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  Error message
-               </xs:documentation>
+               <xs:documentation>Error message</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="retriesLeft" type="xs:int">
             <xs:annotation>
-               <xs:documentation>
-                  Number of retries left
-               </xs:documentation>
+               <xs:documentation>Number of retries left</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="errorStackTrace" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The error stack trace
-               </xs:documentation>
+               <xs:documentation>The error stack trace</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5080,9 +4983,7 @@
       <xs:sequence>
          <xs:element name="jobSummary" type="jobSummary" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>
-                  An individual job summary
-               </xs:documentation>
+               <xs:documentation>An individual job summary</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -5092,9 +4993,7 @@
       <xs:all>
          <xs:element name="id" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The job id that uniquely identifies the previously submitted job
-               </xs:documentation>
+               <xs:documentation>The job id that uniquely identifies the previously submitted job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <!--
@@ -5103,44 +5002,32 @@
          -->
          <xs:element name="namespace" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The namespace of the job
-               </xs:documentation>
+               <xs:documentation>The namespace of the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="jobName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The name of the job
-               </xs:documentation>
+               <xs:documentation>The name of the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="startTime" type="xs:dateTime">
             <xs:annotation>
-               <xs:documentation>
-                  The start time of the job
-               </xs:documentation>
+               <xs:documentation>The start time of the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The end time of the job. It is not returned for a job in RUNNING state
-               </xs:documentation>
+               <xs:documentation>The end time of the job. It is not returned for a job in RUNNING state</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="status" type="jobStatusEnum" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The status of the job. One of the following values: RUNNING, COMPLETED
-               </xs:documentation>
+               <xs:documentation>The status of the job. One of the following values: RUNNING, COMPLETED</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="totalExceptions" type="xs:long">
             <xs:annotation>
-               <xs:documentation>
-                  The number of exceptions
-               </xs:documentation>
+               <xs:documentation>The number of exceptions</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5151,30 +5038,23 @@
       <xs:all>
          <xs:element name="id" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The job id that uniquely identifies the previously submitted job
-               </xs:documentation>
+               <xs:documentation>The job id that uniquely identifies the previously submitted job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="receiveTaskId" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The task Id of the receive task in the job workflow to signal. The job must be waiting on this task at the time of this call
+               <xs:documentation>The task Id of the receive task in the job workflow to signal. The job must be waiting on this task at the time of this call
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  List of key/value pairs that will be made available to the job
-               </xs:documentation>
+               <xs:documentation>List of key/value pairs that will be made available to the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The location to the Java properties file in S3
-               </xs:documentation>
+               <xs:documentation>The location to the Java properties file in S3</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5338,6 +5218,13 @@
                <xs:documentation>Instance Group Definitions</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="instanceFleets" type="emrClusterDefinitionInstanceFleets" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Describes the EC2 instances and instance configurations for clusters that use the instance fleet configuration. The instance
+                  fleet configuration is available only in Amazon EMR versions 4.8.0 and later, excluding 5.0.x versions
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="nodeTags" type="nodeTags" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom tags to be applied on the EC2 nodes</xs:documentation>
@@ -5390,6 +5277,17 @@
                <xs:documentation>The name of a security configuration to apply to the cluster</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="masterSecurityGroup" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The master security group to use instead of the account default value</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="slaveSecurityGroup" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The slave security group to use instead of the account default value</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+
       </xs:all>
    </xs:complexType>
 
@@ -5550,6 +5448,11 @@
       <xs:all>
          <xs:element name="instanceCount" type="xs:int"/>
          <xs:element name="instanceType" type="xs:string"/>
+         <xs:element name="ebsConfiguration" type="emrClusterDefinitionEbsConfiguration" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The EBS configurations that will be attached to each EC2 instance in the instance group</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="instanceSpotPrice" type="xs:decimal" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The instance bid price, in USD. If not specified, uses on-demand</xs:documentation>
@@ -5577,11 +5480,16 @@
       <xs:all>
          <xs:element name="instanceCount" type="xs:int"/>
          <xs:element name="instanceType" type="xs:string"/>
+         <xs:element name="ebsConfiguration" type="emrClusterDefinitionEbsConfiguration" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The EBS configurations that will be attached to each EC2 instance in the instance group</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="instanceSpotPrice" type="xs:decimal" minOccurs="0"/>
          <xs:element name="instanceMaxSearchPrice" type="xs:decimal" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The maximum amount, in USD, to search for the best price. The best price search will only search for prices lower than this
-                  value. If a spot instance is selected by the search, this value will be the bid price.
+                  value. If a spot instance is selected by the search, this value will be the bid price
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -5591,6 +5499,581 @@
                   dynamically balance the cost vs. stability of your instances.&lt;/p&gt;
                   &lt;p&gt;If not specified, the search will not attempt to find an on-demand instance when a spot is found. This is the same behavior as when
                   this parameter is set to $0.&lt;/p&gt;</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionInstanceFleets">
+      <xs:sequence>
+         <xs:element name="instanceFleet" type="emrClusterDefinitionInstanceFleet" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The configuration that defines an instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleets">
+      <xs:sequence>
+         <xs:element name="instanceFleet" type="emrClusterInstanceFleet" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The configuration that defines an instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionInstanceFleet">
+      <xs:all>
+         <xs:element name="name" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The friendly name of the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="instanceFleetType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The node type that the instance fleet hosts. Valid values are MASTER,CORE,and TASK</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="targetOnDemandCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The target capacity of On-Demand units for the instance fleet, which determines how many On-Demand instances to provision. When
+                  the instance fleet launches, Amazon EMR tries to provision On-Demand instances as specified by InstanceTypeConfig. Each instance configuration
+                  has a specified WeightedCapacity. When an On-Demand instance is provisioned, the WeightedCapacity units count toward the target capacity.
+                  Amazon EMR provisions instances until the target capacity is totally fulfilled, even if this results in an overage. For example, if there are
+                  2 units remaining to fulfill capacity, and Amazon EMR can only provision an instance with a WeightedCapacity of 5 units, the instance is
+                  provisioned, and the target capacity is exceeded by 3 units.
+                  NOTE: If not specified or set to 0, only Spot instances are provisioned for the instance fleet using TargetSpotCapacity. At least one of
+                  TargetSpotCapacity and TargetOnDemandCapacity should be greater than 0. For a master instance fleet, only one of TargetSpotCapacity and
+                  TargetOnDemandCapacity can be specified, and its value must be 1.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="targetSpotCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The target capacity of Spot units for the instance fleet, which determines how many Spot instances to provision. When the
+                  instance fleet launches, Amazon EMR tries to provision Spot instances as specified by InstanceTypeConfig. Each instance configuration has a
+                  specified WeightedCapacity. When a Spot instance is provisioned, the WeightedCapacity units count toward the target capacity. Amazon EMR
+                  provisions instances until the target capacity is totally fulfilled, even if this results in an overage. For example, if there are 2 units
+                  remaining to fulfill capacity, and Amazon EMR can only provision an instance with a WeightedCapacity of 5 units, the instance is provisioned,
+                  and the target capacity is exceeded by 3 units.
+                  NOTE: If not specified or set to 0, only On-Demand instances are provisioned for the instance fleet. At least one of TargetSpotCapacity and
+                  TargetOnDemandCapacity should be greater than 0. For a master instance fleet, only one of TargetSpotCapacity and TargetOnDemandCapacity can be
+                  specified, and its value must be 1.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="instanceTypeConfigs" type="emrClusterDefinitionInstanceTypeConfigs" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The instance type configurations that define the EC2 instances in the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="launchSpecifications" type="emrClusterDefinitionLaunchSpecifications" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The launch specification for the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleet">
+      <xs:all>
+         <xs:element name="id" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The unique identifier of the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="name" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The friendly name of the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="instanceFleetType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The node type that the instance fleet hosts. Valid values are MASTER,CORE,and TASK</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="targetOnDemandCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The target capacity of On-Demand units for the instance fleet, which determines how many On-Demand instances to provision. When
+                  the instance fleet launches, Amazon EMR tries to provision On-Demand instances as specified by InstanceTypeConfig. Each instance configuration
+                  has a specified WeightedCapacity. When an On-Demand instance is provisioned, the WeightedCapacity units count toward the target capacity.
+                  Amazon EMR provisions instances until the target capacity is totally fulfilled, even if this results in an overage. For example, if there are
+                  2 units remaining to fulfill capacity, and Amazon EMR can only provision an instance with a WeightedCapacity of 5 units, the instance is
+                  provisioned, and the target capacity is exceeded by 3 units.
+                  NOTE: If not specified or set to 0, only Spot instances are provisioned for the instance fleet using TargetSpotCapacity. At least one of
+                  TargetSpotCapacity and TargetOnDemandCapacity should be greater than 0. For a master instance fleet, only one of TargetSpotCapacity and
+                  TargetOnDemandCapacity can be specified, and its value must be 1.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="targetSpotCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The target capacity of Spot units for the instance fleet, which determines how many Spot instances to provision. When the
+                  instance fleet launches, Amazon EMR tries to provision Spot instances as specified by InstanceTypeConfig. Each instance configuration has a
+                  specified WeightedCapacity. When a Spot instance is provisioned, the WeightedCapacity units count toward the target capacity. Amazon EMR
+                  provisions instances until the target capacity is totally fulfilled, even if this results in an overage. For example, if there are 2 units
+                  remaining to fulfill capacity, and Amazon EMR can only provision an instance with a WeightedCapacity of 5 units, the instance is provisioned,
+                  and the target capacity is exceeded by 3 units.
+                  NOTE: If not specified or set to 0, only On-Demand instances are provisioned for the instance fleet. At least one of TargetSpotCapacity and
+                  TargetOnDemandCapacity should be greater than 0. For a master instance fleet, only one of TargetSpotCapacity and TargetOnDemandCapacity can be
+                  specified, and its value must be 1.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="provisionedOnDemandCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of On-Demand units that have been provisioned for the instance fleet to fulfill TargetOnDemandCapacity.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="provisionedSpotCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of Spot units that have been provisioned for this instance fleet to fulfill TargetSpotCapacity
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="instanceFleetStatus" type="emrClusterInstanceFleetStatus" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The current status of the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="instanceTypeSpecifications" type="emrClusterInstanceTypeSpecifications" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The instance type configurations that define the EC2 instances in the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="launchSpecifications" type="emrClusterInstanceFleetProvisioningSpecifications" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Describes the launch specification for an instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleetStatus">
+      <xs:all>
+         <xs:element name="state" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A code representing the instance fleet status
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="stateChangeReason" type="emrClusterInstanceFleetStateChangeReason" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Provides status change reason details for the instance fleet.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="timeline" type="emrClusterInstanceFleetTimeline" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Provides historical timestamps for the instance fleet, including the time of creation, the time it became ready to run jobs,
+                  and the time of termination.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleetStateChangeReason">
+      <xs:all>
+         <xs:element name="code" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A code corresponding to the reason the state change occurred
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="message" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An explanatory message
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleetTimeline">
+      <xs:all>
+         <xs:element name="creationDateTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The time and date the instance fleet was created
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="endDateTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The time and date the instance fleet terminated
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="readyDateTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The time and date the instance fleet was ready to run jobs
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceFleetProvisioningSpecifications">
+      <xs:all>
+         <xs:element name="spotSpecification" type="emrClusterSpotProvisioningSpecification" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The launch specification for Spot instances in the fleet, which determines the defined duration and provisioning timeout
+                  behavior
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterSpotProvisioningSpecification">
+      <xs:all>
+         <xs:element name="timeoutDurationMinutes" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The spot provisioning timeout period in minutes
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="timeoutAction" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The action to take when TargetSpotCapacity has not been fulfilled when the TimeoutDurationMinutes has expired
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="blockDurationMinutes" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The defined duration for Spot instances (also known as Spot blocks) in minutes
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceTypeSpecifications">
+      <xs:sequence>
+         <xs:element name="InstanceTypeSpecification" type="emrClusterInstanceTypeSpecification" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The specification for the instance types that comprise an instance fleet
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceTypeSpecification">
+      <xs:all>
+         <xs:element name="instanceType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An EC2 instance type, such as 'm3.xlarge'.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="weightedCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of units that a provisioned instance of this type provides toward fulfilling the target capacities defined in
+                  InstanceFleetConfig
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="bidPrice" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The bid price for each EC2 Spot instance type as defined by InstanceType.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="bidPriceAsPercentageOfOnDemandPrice" type="xs:double" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The bid price, as a percentage of On-Demand price, for each EC2 Spot instance as defined by InstanceType
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="ebsOptimized" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Evaluates to TRUE when the specified InstanceType is EBS-optimized
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="ebsBlockDevices" type="emrClusterEbsBlockDevices" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The configuration of Amazon Elastic Block Storage (EBS) attached to each instance as defined by InstanceType
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="configurations" type="emrClusterInstanceTypeConfigurations" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A configuration classification that applies when provisioning cluster instances, which can include configurations for
+                  applications and software bundled with Amazon EMR
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterEbsBlockDevices">
+      <xs:sequence>
+         <xs:element name="ebsBlockDevice" type="emrClusterEbsBlockDevice" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Configuration of requested EBS block device associated with the instance group
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceTypeConfigurations">
+      <xs:sequence>
+         <xs:element name="configuration" type="emrClusterInstanceTypeConfiguration" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Configuration of requested EBS block device associated with the instance group with count of volumes that will be associated to
+                  every instance
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterInstanceTypeConfiguration">
+      <xs:sequence>
+         <xs:element name="classification" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The configuration classification</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="configurations" type="emrClusterInstanceTypeConfigurations" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>List of configurations</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="properties" type="emrClusterConfigurationProperties" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>List of properties</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterConfigurationProperties">
+      <xs:sequence>
+         <xs:element name="property" type="parameter" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A property</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterEbsBlockDevice">
+      <xs:all>
+         <xs:element name="volumeSpecification" type="emrClusterVolumeSpecification" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>EBS volume specifications such as volume type, IOPS, and size (GiB) that will be requested for the EBS volume attached to an
+                  EC2 instance in the cluster
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="device" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The device name that is exposed to the instance, such as /dev/sdh.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="volumesPerInstance" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Number of EBS volumes with a specific volume configuration that will be associated with every instance in the instance group
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterVolumeSpecification">
+      <xs:all>
+         <xs:element name="volumeType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The volume type. Volume types supported are gp2, io1, standard</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="iops" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of I/O operations per second (IOPS) that the volume supports</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="sizeInGB" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The volume size, in gibibytes (GiB). This can be a number from 1 - 1024. If the volume type is EBS-optimized, the minimum value
+                  is 10
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionInstanceTypeConfigs">
+      <xs:sequence>
+         <xs:element name="instanceTypeConfig" type="emrClusterDefinitionInstanceTypeConfig" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>An instance type configuration for each instance type in an instance fleet, which determines the EC2 instances Amazon EMR
+                  attempts to provision to fulfill On-Demand and Spot target capacities. There can be a maximum of 5 instance type configurations in a fleet
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionInstanceTypeConfig">
+      <xs:all>
+         <xs:element name="instanceType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An EC2 instance type, such as 'm3.xlarge'.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="weightedCapacity" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of units that a provisioned instance of this type provides toward fulfilling the target capacities
+                  defined in InstanceFleetConfig. This value is 1 for a master instance fleet, and must be greater than 0
+                  for core and task instance fleets
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="bidPrice" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The bid price for each EC2 Spot instance type as defined by InstanceType. Expressed in USD. If neither BidPrice nor
+                  BidPriceAsPercentageOfOnDemandPrice is provided, BidPriceAsPercentageOfOnDemandPrice defaults to 100%
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="bidPriceAsPercentageOfOnDemandPrice" type="xs:double" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The bid price, as a percentage of On-Demand price, for each EC2 Spot instance as defined by InstanceType. Expressed as a number
+                  between 0 and 1000 (for example, 20 specifies 20%). If neither BidPrice nor BidPriceAsPercentageOfOnDemandPrice is provided,
+                  BidPriceAsPercentageOfOnDemandPrice defaults to 100%
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="ebsConfiguration" type="emrClusterDefinitionEbsConfiguration" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The configuration of Amazon Elastic Block Storage (EBS) attached to each instance as defined by InstanceType
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="configurations" type="emrClusterDefinitionConfigurations" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A configuration classification that applies when provisioning cluster instances, which can include configurations for
+                  applications and software that run on the cluster
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionEbsConfiguration">
+      <xs:all>
+         <xs:element name="ebsBlockDeviceConfigs" type="emrClusterDefinitionEbsBlockDeviceConfigs" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An array of Amazon EBS volume specifications attached to a cluster instance</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="ebsOptimized" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Indicates whether an Amazon EBS volume is EBS-optimized</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionEbsBlockDeviceConfigs">
+      <xs:sequence>
+         <xs:element name="ebsBlockDeviceConfig" type="emrClusterDefinitionEbsBlockDeviceConfig" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Configuration of requested EBS block device associated with the instance group with count of volumes that will be associated to
+                  every instance
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionEbsBlockDeviceConfig">
+      <xs:all>
+         <xs:element name="volumeSpecification" type="emrClusterDefinitionVolumeSpecification" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>EBS volume specifications such as volume type, IOPS, and size (GiB) that will be requested for the EBS volume attached to an
+                  EC2 instance in the cluster
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="volumesPerInstance" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Number of EBS volumes with a specific volume configuration that will be associated with every instance in the instance group
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionVolumeSpecification">
+      <xs:all>
+         <xs:element name="volumeType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The volume type. Volume types supported are gp2, io1, standard</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="iops" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of I/O operations per second (IOPS) that the volume supports</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="sizeInGB" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The volume size, in gibibytes (GiB). This can be a number from 1 - 1024. If the volume type is EBS-optimized, the minimum value
+                  is 10
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionLaunchSpecifications">
+      <xs:all>
+         <xs:element name="spotSpecification" type="emrClusterDefinitionSpotSpecification" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The launch specification for Spot instances in the fleet, which determines the defined duration and provisioning timeout
+                  behavior
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionSpotSpecification">
+      <xs:all>
+         <xs:element name="timeoutDurationMinutes" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The spot provisioning timeout period in minutes. If Spot instances are not provisioned within this time period, the
+                  TimeOutAction is taken. Minimum value is 5 and maximum value is 1440. The timeout applies only during initial provisioning, when the cluster
+                  is first created
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="timeoutAction" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The action to take when TargetSpotCapacity has not been fulfilled when the TimeoutDurationMinutes has expired. Spot instances
+                  are not uprovisioned within the Spot provisioining timeout. Valid values are TERMINATE_CLUSTER and SWITCH_TO_ON_DEMAND to fulfill the
+                  remaining capacity
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="blockDurationMinutes" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The defined duration for Spot instances (also known as Spot blocks) in minutes. When specified, the Spot instance does not
+                  terminate before the defined duration expires, and defined duration pricing for Spot instances applies. Valid values are 60, 120, 180, 240,
+                  300, or 360. The duration period starts as soon as a Spot instance receives its instance ID. At the end of the duration, Amazon EC2 marks the
+                  Spot instance for termination and provides a Spot instance termination notice, which gives the instance a two-minute warning before it
+                  terminates
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5669,16 +6152,12 @@
          <xs:element name="status" type="xs:string" minOccurs="0"/>
          <xs:element name="statusChangeReason" type="statusChangeReason" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The reason for the cluster status change.
-               </xs:documentation>
+               <xs:documentation>The reason for the cluster status change</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="statusTimeline" type="statusTimeline" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  A timeline that represents the status of a cluster over the lifetime of the cluster.
-               </xs:documentation>
+               <xs:documentation>A timeline that represents the status of a cluster over the lifetime of the cluster</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="namespace" type="xs:string"/>
@@ -5691,10 +6170,16 @@
          </xs:element>
          <xs:element name="activeStep" type="emrStep" minOccurs="0"/>
          <xs:element name="step" type="emrStep" minOccurs="0"/>
-         <xs:element name="oozieWorkflowJobs" type="oozieWorkflowJobs" minOccurs="0"/>
          <xs:element name="dryRun" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterCreated" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterDefinition" type="emrClusterDefinition" minOccurs="0"/>
+         <xs:element name="instanceFleets" type="emrClusterInstanceFleets" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Describes the EC2 instances and instance configurations for clusters that use the instance fleet configuration. The instance
+                  fleet configuration is available only in Amazon EMR versions 4.8.0 and later, excluding 5.0.x versions
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -5702,16 +6187,12 @@
       <xs:all>
          <xs:element name="code" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The programmatic code for the state change reason.
-               </xs:documentation>
+               <xs:documentation>The programmatic code for the state change reason</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="message" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The descriptive message for the state change reason.
-               </xs:documentation>
+               <xs:documentation>The descriptive message for the state change reason</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5721,23 +6202,17 @@
       <xs:all>
          <xs:element name="creationTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The creation date and time of the cluster.
-               </xs:documentation>
+               <xs:documentation>The creation date and time of the cluster</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="readyTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The date and time when the cluster was ready to execute steps.
-               </xs:documentation>
+               <xs:documentation>The date and time when the cluster was ready to execute steps</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The date and time when the cluster was terminated.
-               </xs:documentation>
+               <xs:documentation>The date and time when the cluster was terminated</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5753,13 +6228,6 @@
          <xs:element name="continueOnError" type="xs:string" minOccurs="0"/>
          <xs:element name="status" type="xs:string"/>
       </xs:all>
-   </xs:complexType>
-
-   <xs:element name="oozieWorkflowJobs" type="oozieWorkflowJobs"/>
-   <xs:complexType name="oozieWorkflowJobs">
-      <xs:sequence>
-         <xs:element name="workflowJob" type="oozieWorkflowJob" minOccurs="0" maxOccurs="unbounded"/>
-      </xs:sequence>
    </xs:complexType>
 
    <!-- ***** Business Object Data Storage File ***** -->
@@ -5820,16 +6288,15 @@
          </xs:element>
          <xs:element name="storageFiles" type="storageFiles" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The list of storage files to be added. Storage files are required, unless discovery of storage files is enabled. In that case, the storage
+               <xs:documentation>The list of storage files to be added. Storage files are required, unless discovery of storage files is enabled. In that case,
+                  the storage
                   files are not allowed to be specified
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="discoverStorageFiles" type="xs:boolean" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  If true, enables the auto-discovery of all storage files in the relative S3 storage under the relative storage directory
+               <xs:documentation>If true, enables the auto-discovery of all storage files in the relative S3 storage under the relative storage directory
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -6265,7 +6732,8 @@
       <xs:all>
          <xs:element name="ruleType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The storage policy rule type. Supported rule types are: DAYS_SINCE_BDATA_REGISTERED</xs:documentation>
+               <xs:documentation>The storage policy rule type. Supported rule types are: DAYS_SINCE_BDATA_REGISTERED, DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <!--
@@ -6320,10 +6788,9 @@
 
    <xs:complexType name="storagePolicyTransition">
       <xs:all>
-         <xs:element name="destinationStorageName" type="xs:string">
+         <xs:element name="transitionType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The name of the destination storage. The storage with this name must already exist. Currently, only GLACIER storage platform
-                  type is supported for the destination storage by the storage policies
+               <xs:documentation>The name of the transition type. Currently, only GLACIER transition type is supported by the storage policies
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -6418,6 +6885,56 @@
       </xs:sequence>
    </xs:complexType>
 
+   <!-- ***** Search Index Validation *****-->
+   <xs:element name="searchIndexValidationCreateRequest" type="searchIndexValidationCreateRequest"/>
+   <xs:complexType name="searchIndexValidationCreateRequest">
+      <xs:all>
+         <xs:element name="searchIndexKey" type="searchIndexKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="searchIndexValidation" type="searchIndexValidation"/>
+   <xs:complexType name="searchIndexValidation">
+      <xs:all>
+         <xs:element name="searchIndexKey" type="searchIndexKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="validateStartTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the index validation started</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="sizeCheckPassed" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number
+                  in the index
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="spotCheckRandomPassed" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database
+                  are the same as the indexed documents
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="spotCheckMostRecentPassed" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the
+                  database are the same as the indexed documents
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+
    <!-- ***** Search Index ***** -->
 
    <xs:element name="searchIndexCreateRequest" type="searchIndexCreateRequest"/>
@@ -6430,7 +6947,7 @@
          </xs:element>
          <xs:element name="searchIndexType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of this Search Index</xs:documentation>
+               <xs:documentation>The type of this Search Index. One of the following values: BUS_OBJCT_DFNTN, TAG</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -6446,7 +6963,7 @@
          </xs:element>
          <xs:element name="searchIndexType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of this Search Index</xs:documentation>
+               <xs:documentation>The type of this Search Index. One of the following values: BUS_OBJCT_DFNTN, TAG</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="searchIndexStatus" type="xs:string">
@@ -6499,6 +7016,11 @@
                <xs:documentation>The UUID of the index</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="indexCount" type="xs:long" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The count of the index size from count query</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -6543,6 +7065,87 @@
                <xs:documentation>The search term upon which to search</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="indexSearchFilters" type="indexSearchFilters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of index search filters. Multiple filters are supported which are AND-ed</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetFields" type="facetFields" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag and ResultType facet information is supported
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="enableHitHighlighting" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if highlighting should be enabled on the matched terms or not
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="indexSearchFilters">
+      <xs:sequence>
+         <xs:element name="indexSearchFilter" type="indexSearchFilter" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>An index search filter</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="indexSearchFilter">
+      <xs:all>
+         <xs:element name="isExclusionSearchFilter" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if the search filter is an exclusion filter that excludes items from the search results
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexSearchKeys" type="indexSearchKeys">
+            <xs:annotation>
+               <xs:documentation>A list of index search keys. Multiple search keys are supported which are OR-ed</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="indexSearchKeys">
+      <xs:sequence>
+         <xs:element name="indexSearchKey" type="indexSearchKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>An index search key. Only one of tagKey or indexSearchResultKey is allowed</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="indexSearchKey">
+      <xs:all>
+         <xs:element name="tagKey" type="tagKey" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation>An optional tag key. Only one is allowed</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexSearchResultTypeKey" type="indexSearchResultTypeKey" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation>An optional index search result type key. Only one is allowed
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="indexSearchResultTypeKey" type="indexSearchResultTypeKey"/>
+   <xs:complexType name="indexSearchResultTypeKey">
+      <xs:all>
+         <xs:element name="indexSearchResultType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The index from which search results are fetched. Currently 'bdef' and 'tag' are supported. Only one is allowed
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -6556,8 +7159,13 @@
          </xs:element>
          <xs:element name="indexSearchResults" type="indexSearchResults" minOccurs="0">
             <xs:annotation>
+               <xs:documentation>The top 200 index search results that matched the search term query</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facets" type="facets" minOccurs="0">
+            <xs:annotation>
                <xs:documentation>
-                  The top 200 index search results that matched the search term query
+                  Values that identifies a list of facet information.
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -6590,18 +7198,16 @@
          </xs:element>
          <xs:element name="displayName" type="xs:string" minOccurs="0" maxOccurs="1">
             <xs:annotation>
-               <xs:documentation>
-                  The display name of the tag or business object definition
-               </xs:documentation>
+               <xs:documentation>The display name of the tag or business object definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="shortDescription" type="xs:string" minOccurs="0" maxOccurs="1">
             <xs:annotation>
-               <xs:documentation>
-                  An optional short-description. This is actually the 'description' field truncated to a configurable number of characters
+               <xs:documentation>An optional short-description. This is actually the 'description' field truncated to a configurable number of characters
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="highlight" type="highlight" minOccurs="0" maxOccurs="1"/>
       </xs:all>
    </xs:complexType>
 
@@ -6618,6 +7224,278 @@
                <xs:documentation>Values that uniquely identify a Business Object Definition</xs:documentation>
             </xs:annotation>
          </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="highlight" type="highlight">
+      <xs:annotation>
+         <xs:documentation>A wrapper for the highlighted fields content
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="highlight">
+      <xs:all>
+         <xs:element name="fields" type="fields"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="fields" type="fields">
+      <xs:annotation>
+         <xs:documentation>A list of fields which matched and have highlighted content
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="fields">
+      <xs:sequence>
+         <xs:element name="field" type="field" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="field" type="field">
+      <xs:annotation>
+         <xs:documentation>A single field from the document which has a highlighted fragment
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="field">
+      <xs:all>
+         <xs:element name="fieldName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>Name of the field which has highlighted content
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="fragments" type="fragments"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="fragments" type="fragments">
+      <xs:annotation>
+         <xs:documentation>A list of fragments which contain the highlighted content
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="fragments">
+      <xs:sequence>
+         <xs:element name="fragment" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Actual text fragments (partial) which contain the highlighted content
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Global Attribute Definition ***** -->
+
+   <xs:element name="globalAttributeDefinition" type="globalAttributeDefinition"/>
+   <xs:complexType name="globalAttributeDefinition">
+      <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>The internal Id that uniquely references a Global Attribute Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="globalAttributeDefinitionKey" type="globalAttributeDefinitionKey">
+            <xs:annotation>
+               <xs:documentation>The global attribute definition unique key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="attributeValueList" type="attributeValueList" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The attribute value list</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="globalAttributeDefinitionKey" type="globalAttributeDefinitionKey"/>
+   <xs:complexType name="globalAttributeDefinitionKey">
+      <xs:all>
+         <xs:element name="globalAttributeDefinitionLevel" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The global attribute definition level. Only BUS_OBJCT_FRMT is currently supported.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="globalAttributeDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The global attribute definition name to be associated with the level.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="globalAttributeDefinitionCreateRequest" type="globalAttributeDefinitionCreateRequest"/>
+   <xs:complexType name="globalAttributeDefinitionCreateRequest">
+      <xs:all>
+         <xs:element name="globalAttributeDefinitionKey" type="globalAttributeDefinitionKey">
+            <xs:annotation>
+               <xs:documentation>The global attribute definition unique key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A wrapper for attribute value list information</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="globalAttributeDefinitionKeys" type="globalAttributeDefinitionKeys"/>
+   <xs:complexType name="globalAttributeDefinitionKeys">
+      <xs:sequence>
+         <xs:element name="globalAttributeDefinitionKey" type="globalAttributeDefinitionKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Global Attribute Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Attribute Value List ***** -->
+
+   <xs:element name="attributeValueList" type="attributeValueList"/>
+   <xs:complexType name="attributeValueList">
+      <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>Auto generated ID of the attributeValueList</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for attribute value list information</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="attributeValueListKey" type="attributeValueListKey"/>
+   <xs:complexType name="attributeValueListKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>Namespace of the attribute value list</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="attributeValueListName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>Names of the attribute value list</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="attributeValueListKeys" type="attributeValueListKeys"/>
+   <xs:complexType name="attributeValueListKeys">
+      <xs:sequence>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a attribute value list</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="attributeValueListCreateRequest" type="attributeValueListCreateRequest"/>
+   <xs:complexType name="attributeValueListCreateRequest">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>The attribute value list unique key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Allowed Attribute Value ***** -->
+
+   <xs:element name="allowedAttributeValuesCreateRequest" type="allowedAttributeValuesCreateRequest"/>
+   <xs:complexType name="allowedAttributeValuesCreateRequest">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allowedAttributeValues" type="allowedAttributeValues">
+            <xs:annotation>
+               <xs:documentation>List of Allowed Attribute Values</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="allowedAttributeValuesInformation" type="allowedAttributeValuesInformation"/>
+   <xs:complexType name="allowedAttributeValuesInformation">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allowedAttributeValues" type="allowedAttributeValues">
+            <xs:annotation>
+               <xs:documentation>List of Allowed Attribute Values</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="allowedAttributeValuesDeleteRequest" type="allowedAttributeValuesDeleteRequest"/>
+   <xs:complexType name="allowedAttributeValuesDeleteRequest">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allowedAttributeValues" type="allowedAttributeValues">
+            <xs:annotation>
+               <xs:documentation>List of Allowed Attribute Values</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="allowedAttributeValues">
+      <xs:sequence>
+         <xs:element name="allowedAttributeValue" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The Allowed Attribute Value</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Notification Message Definitions ***** -->
+
+   <xs:element name="notificationMessageDefinitions" type="notificationMessageDefinitions"/>
+   <xs:complexType name="notificationMessageDefinitions">
+      <xs:sequence>
+         <xs:element name="notificationMessageDefinition" type="notificationMessageDefinition" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="notificationMessageDefinition">
+      <xs:sequence>
+         <xs:element name="messageType" type="xs:string" minOccurs="0"/>
+         <xs:element name="messageDestination" type="xs:string" minOccurs="0"/>
+         <xs:element name="messageVelocityTemplate" type="xs:string" minOccurs="0"/>
+         <xs:element name="messageHeaderDefinitions" type="messageHeaderDefinitions" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="messageHeaderDefinitions">
+      <xs:sequence>
+         <xs:element name="messageHeaderDefinition" type="messageHeaderDefinition" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="messageHeaderDefinition">
+      <xs:all>
+         <xs:element name="key" type="xs:string" minOccurs="0"/>
+         <xs:element name="valueVelocityTemplate" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 

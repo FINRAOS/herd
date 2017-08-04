@@ -16,13 +16,18 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTag;
@@ -30,13 +35,25 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagKeys;
 import org.finra.herd.model.api.xml.TagKey;
-import org.finra.herd.model.jpa.BusinessObjectDefinitionTagEntity;
+import org.finra.herd.service.BusinessObjectDefinitionTagService;
 
 /**
  * This class tests various functionality within the business object definition column REST controller.
  */
 public class BusinessObjectDefinitionTagRestControllerTest extends AbstractRestTest
 {
+    @InjectMocks
+    private BusinessObjectDefinitionTagRestController businessObjectDefinitionTagRestController;
+
+    @Mock
+    private BusinessObjectDefinitionTagService businessObjectDefinitionTagService;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testCreateBusinessObjectDefinitionTag()
     {
@@ -46,19 +63,20 @@ public class BusinessObjectDefinitionTagRestControllerTest extends AbstractRestT
         // Create a business object definition tag key.
         BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey =
             new BusinessObjectDefinitionTagKey(businessObjectDefinitionKey, new TagKey(TAG_TYPE, TAG_CODE));
+        BusinessObjectDefinitionTag businessObjectDefinitionTag = new BusinessObjectDefinitionTag(ID, businessObjectDefinitionTagKey);
 
-        // Create and persist a business object definition entity.
-        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(businessObjectDefinitionKey, DATA_PROVIDER_NAME, DESCRIPTION);
+        BusinessObjectDefinitionTagCreateRequest request = new BusinessObjectDefinitionTagCreateRequest(businessObjectDefinitionTagKey);
 
-        // Create and persist a tag entity.
-        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        when(businessObjectDefinitionTagService.createBusinessObjectDefinitionTag(request)).thenReturn(businessObjectDefinitionTag);
 
         // Create a business object definition tag.
-        BusinessObjectDefinitionTag result = businessObjectDefinitionTagRestController
-            .createBusinessObjectDefinitionTag(new BusinessObjectDefinitionTagCreateRequest(businessObjectDefinitionTagKey));
+        BusinessObjectDefinitionTag result = businessObjectDefinitionTagRestController.createBusinessObjectDefinitionTag(request);
 
+        // Verify the external calls.
+        verify(businessObjectDefinitionTagService).createBusinessObjectDefinitionTag(request);
+        verifyNoMoreInteractions(businessObjectDefinitionTagService);
         // Validate the returned object.
-        assertEquals(new BusinessObjectDefinitionTag(result.getId(), businessObjectDefinitionTagKey), result);
+        assertEquals(businessObjectDefinitionTag, result);
     }
 
     @Test
@@ -68,22 +86,19 @@ public class BusinessObjectDefinitionTagRestControllerTest extends AbstractRestT
         BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey =
             new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new TagKey(TAG_TYPE, TAG_CODE));
 
-        // Create and persist a business object definition tag entity.
-        BusinessObjectDefinitionTagEntity businessObjectDefinitionTagEntity = businessObjectDefinitionTagDaoTestHelper
-            .createBusinessObjectDefinitionTagEntity(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new TagKey(TAG_TYPE, TAG_CODE));
+        BusinessObjectDefinitionTag businessObjectDefinitionTag = new BusinessObjectDefinitionTag(ID, businessObjectDefinitionTagKey);
 
-        // Validate that this business object definition tag exists.
-        assertNotNull(businessObjectDefinitionTagDao.getBusinessObjectDefinitionTagByKey(businessObjectDefinitionTagKey));
+        when(businessObjectDefinitionTagService.deleteBusinessObjectDefinitionTag(businessObjectDefinitionTagKey)).thenReturn(businessObjectDefinitionTag);
 
         // Delete this business object definition tag.
         BusinessObjectDefinitionTag result =
             businessObjectDefinitionTagRestController.deleteBusinessObjectDefinitionTag(BDEF_NAMESPACE, BDEF_NAME, TAG_TYPE, TAG_CODE);
 
+        // Verify the external calls.
+        verify(businessObjectDefinitionTagService).deleteBusinessObjectDefinitionTag(businessObjectDefinitionTagKey);
+        verifyNoMoreInteractions(businessObjectDefinitionTagService);
         // Validate the returned object.
-        assertEquals(new BusinessObjectDefinitionTag(businessObjectDefinitionTagEntity.getId(), businessObjectDefinitionTagKey), result);
-
-        // Ensure that this business object definition tag is no longer there.
-        assertNull(businessObjectDefinitionTagDao.getBusinessObjectDefinitionTagByKey(businessObjectDefinitionTagKey));
+        assertEquals(businessObjectDefinitionTag, result);
     }
 
     @Test
@@ -91,48 +106,43 @@ public class BusinessObjectDefinitionTagRestControllerTest extends AbstractRestT
     {
         // Create a business object definition key.
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
-
         // Create tag keys.
         List<TagKey> tagKeys = Arrays.asList(new TagKey(TAG_TYPE, TAG_CODE), new TagKey(TAG_TYPE_2, TAG_CODE_2));
+        BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey =
+            new BusinessObjectDefinitionTagKey(businessObjectDefinitionKey, new TagKey(TAG_TYPE, TAG_CODE));
+        BusinessObjectDefinitionTagKeys BusinessObjectDefinitionTagKeys = new BusinessObjectDefinitionTagKeys(Arrays.asList(businessObjectDefinitionTagKey));
 
-        // Create and persist business object definition tag entities.
-        for (TagKey tagKey : tagKeys)
-        {
-            businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionKey, tagKey);
-        }
+        when(businessObjectDefinitionTagService.getBusinessObjectDefinitionTagsByBusinessObjectDefinition(businessObjectDefinitionKey))
+            .thenReturn(BusinessObjectDefinitionTagKeys);
 
         // Get business object definition tags by business object definition.
         BusinessObjectDefinitionTagKeys result =
             businessObjectDefinitionTagRestController.getBusinessObjectDefinitionTagsByBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME);
 
+        // Verify the external calls.
+        verify(businessObjectDefinitionTagService).getBusinessObjectDefinitionTagsByBusinessObjectDefinition(businessObjectDefinitionKey);
+        verifyNoMoreInteractions(businessObjectDefinitionTagService);
         // Validate the returned object.
-        assertNotNull(result);
-        assertEquals(Arrays.asList(new BusinessObjectDefinitionTagKey(businessObjectDefinitionKey, tagKeys.get(0)),
-            new BusinessObjectDefinitionTagKey(businessObjectDefinitionKey, tagKeys.get(1))), result.getBusinessObjectDefinitionTagKeys());
+        assertEquals(BusinessObjectDefinitionTagKeys, result);
     }
 
     @Test
     public void testGetBusinessObjectDefinitionTagsByTag()
     {
-        // Create business object definition keys.
-        List<BusinessObjectDefinitionKey> businessObjectDefinitionKeys =
-            Arrays.asList(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new BusinessObjectDefinitionKey(BDEF_NAMESPACE_2, BDEF_NAME_2));
-
-        // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
+        BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey =
+            new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new TagKey(TAG_TYPE, TAG_CODE));
+        BusinessObjectDefinitionTagKeys businessObjectDefinitionTagKeys = new BusinessObjectDefinitionTagKeys(Arrays.asList(businessObjectDefinitionTagKey));
 
-        // Create and persist business object definition tag entities.
-        for (BusinessObjectDefinitionKey businessObjectDefinitionKey : businessObjectDefinitionKeys)
-        {
-            businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionKey, tagKey);
-        }
+        when(businessObjectDefinitionTagService.getBusinessObjectDefinitionTagsByTag(tagKey)).thenReturn(businessObjectDefinitionTagKeys);
 
         // Get business object definition tags by tag.
         BusinessObjectDefinitionTagKeys result = businessObjectDefinitionTagRestController.getBusinessObjectDefinitionTagsByTag(TAG_TYPE, TAG_CODE);
 
+        // Verify the external calls.
+        verify(businessObjectDefinitionTagService).getBusinessObjectDefinitionTagsByTag(tagKey);
+        verifyNoMoreInteractions(businessObjectDefinitionTagService);
         // Validate the returned object.
-        assertNotNull(result);
-        assertEquals(Arrays.asList(new BusinessObjectDefinitionTagKey(businessObjectDefinitionKeys.get(0), tagKey),
-            new BusinessObjectDefinitionTagKey(businessObjectDefinitionKeys.get(1), tagKey)), result.getBusinessObjectDefinitionTagKeys());
+        assertEquals(businessObjectDefinitionTagKeys, result);
     }
 }

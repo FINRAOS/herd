@@ -31,9 +31,18 @@ public class StorageUnitStatusEntity extends AuditableEntity
 {
     // List of common statuses
     public static final String ENABLED = "ENABLED";
+
     public static final String DISABLED = "DISABLED";
+
     public static final String ARCHIVING = "ARCHIVING";
+
+    public static final String ARCHIVED = "ARCHIVED";
+
     public static final String RESTORING = "RESTORING";
+
+    public static final String RESTORED = "RESTORED";
+
+    public static final String EXPIRING = "EXPIRING";
 
     @Id
     @Column(name = "strge_unit_stts_cd")

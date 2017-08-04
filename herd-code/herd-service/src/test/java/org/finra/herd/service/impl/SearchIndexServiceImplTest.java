@@ -19,6 +19,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -39,6 +41,7 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.SearchIndexDao;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.api.xml.SearchIndex;
@@ -51,7 +54,6 @@ import org.finra.herd.model.jpa.SearchIndexStatusEntity;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 import org.finra.herd.service.AbstractServiceTest;
 import org.finra.herd.service.SearchIndexHelperService;
-import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
@@ -80,7 +82,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
     private ConfigurationHelper configurationHelper;
 
     @Mock
-    private SearchFunctions searchFunctions;
+    private IndexFunctionsDao indexFunctionDao;
 
     @Mock
     private SearchIndexDao searchIndexDao;
@@ -132,7 +134,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
 
         // Verify the external calls.
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
-            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+            searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
 
         // Validate the returned object.
         assertNotNull(searchIndexEntity);
@@ -175,7 +177,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
 
         // Verify the external calls.
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
-            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+            searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
 
         // Validate the returned object.
         assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_STATISTICS, USER_ID, CREATED_ON, UPDATED_ON),
@@ -199,11 +201,9 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn(SEARCH_INDEX_DOCUMENT_TYPE);
         when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_MAPPING);
         when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_SETTINGS);
-        when(searchFunctions.getIndexExistsFunction()).thenReturn(indexName -> true);
-        when(searchFunctions.getDeleteIndexFunction()).thenReturn(indexName -> {
-        });
-        when(searchFunctions.getCreateIndexFunction()).thenReturn((indexName, documentType, mapping, settings) -> {
-        });
+        when(indexFunctionDao.isIndexExists(SEARCH_INDEX_NAME)).thenReturn(true);
+        doNothing().when(indexFunctionDao).deleteIndex(SEARCH_INDEX_NAME);
+
         when(searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(mockedFuture);
 
         // Create a search index.
@@ -213,12 +213,12 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
         verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey());
-        verify(searchFunctions).getIndexExistsFunction();
-        verify(searchFunctions).getDeleteIndexFunction();
-        verify(searchFunctions).getCreateIndexFunction();
+        verify(indexFunctionDao).isIndexExists(SEARCH_INDEX_NAME);
+        verify(indexFunctionDao).deleteIndex(SEARCH_INDEX_NAME);
+        verify(indexFunctionDao).createIndex(any(), any() , any(), any());
         verify(searchIndexHelperService).indexAllBusinessObjectDefinitions(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
-            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+            indexFunctionDao, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
     }
 
     @Test
@@ -237,7 +237,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
 
         // Verify the external calls.
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
-            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+            searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
     }
 
     @Test
@@ -253,45 +253,44 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         when(mockedDocsStats.getDeleted()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS);
 
         // Get a search index settings created.
-        SearchIndexStatistics response = searchIndexServiceImpl.createSearchIndexStatistics(getIndexResponseSettings.get(SEARCH_INDEX_NAME), mockedDocsStats);
+        SearchIndexStatistics response = searchIndexServiceImpl.createSearchIndexStatistics(getIndexResponseSettings.get(SEARCH_INDEX_NAME), mockedDocsStats, 0l);
 
         // Verify the external calls.
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
-            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+            searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
 
         // Validate the returned object.
         assertEquals(new SearchIndexStatistics(NO_SEARCH_INDEX_STATISTICS_CREATION_DATE, SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS,
-            SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS, SEARCH_INDEX_STATISTICS_INDEX_UUID), response);
+            SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS, SEARCH_INDEX_STATISTICS_INDEX_UUID, 0l), response);
     }
 
     @Test
     public void testDeleteSearchIndexHelperIndexAlreadyExists()
     {
         // Mock the external calls.
-        when(searchFunctions.getIndexExistsFunction()).thenReturn(indexName -> true);
-        when(searchFunctions.getDeleteIndexFunction()).thenReturn(indexName -> {
-        });
+        when(indexFunctionDao.isIndexExists(SEARCH_INDEX_NAME)).thenReturn(true);
+        doNothing().when(indexFunctionDao).deleteIndex(SEARCH_INDEX_NAME);
 
         // Call a delete index method when a search index exists.
         searchIndexServiceImpl.deleteSearchIndexHelper(SEARCH_INDEX_NAME);
 
-        verify(searchFunctions).getIndexExistsFunction();
-        verify(searchFunctions).getDeleteIndexFunction();
+        verify(indexFunctionDao).isIndexExists(SEARCH_INDEX_NAME);
+        verify(indexFunctionDao).deleteIndex(SEARCH_INDEX_NAME);
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
-            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+            indexFunctionDao, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
     }
 
     @Test
     public void testDeleteSearchIndexHelperIndexNoExists()
     {
         // Mock the external calls.
-        when(searchFunctions.getIndexExistsFunction()).thenReturn(indexName -> false);
+        when(indexFunctionDao.isIndexExists(SEARCH_INDEX_NAME)).thenReturn(false);
 
         // Call a delete index method when a search index does not exists.
         searchIndexServiceImpl.deleteSearchIndexHelper(SEARCH_INDEX_NAME);
 
-        verify(searchFunctions).getIndexExistsFunction();
+        verify(indexFunctionDao).isIndexExists(SEARCH_INDEX_NAME);
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
-            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+            indexFunctionDao, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
     }
 }

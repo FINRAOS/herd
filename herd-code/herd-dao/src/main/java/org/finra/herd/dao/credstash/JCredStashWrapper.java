@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A wrapper class for the JCredStash library
  */
-public class JCredStashWrapper
+public class JCredStashWrapper implements CredStash
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(JCredStashWrapper.class);
 
@@ -43,34 +43,14 @@ public class JCredStashWrapper
      *
      * @param region the aws region location of the KMS Client
      * @param tableName name of the credentials table
+     * @param clientConfiguration the AWS client configuration
      */
-    public JCredStashWrapper(String region, String tableName)
+    public JCredStashWrapper(String region, String tableName, ClientConfiguration clientConfiguration)
     {
-        ClientConfiguration clientConf = defaultClientConfiguration(new EnvConfig());
         AWSCredentialsProvider provider = new DefaultAWSCredentialsProviderChain();
-        AmazonDynamoDBClient ddb = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.fromName(region));
-        AWSKMSClient kms = new AWSKMSClient(provider, clientConf).withRegion(Regions.fromName(region));
+        AmazonDynamoDBClient ddb = new AmazonDynamoDBClient(provider, clientConfiguration).withRegion(Regions.fromName(region));
+        AWSKMSClient kms = new AWSKMSClient(provider, clientConfiguration).withRegion(Regions.fromName(region));
         credstash = new JCredStash(tableName, ddb, kms, new CredStashBouncyCastleCrypto());
-    }
-
-    /**
-     * Private method to get the client configuration
-     *
-     * @param envConfig the configuration from the environment
-     *
-     * @return the client configuration
-     */
-    private ClientConfiguration defaultClientConfiguration(EnvConfig envConfig)
-    {
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-
-        if (envConfig.hasProxyEnv())
-        {
-            clientConfiguration.setProxyHost(envConfig.getProxy());
-            clientConfiguration.setProxyPort(Integer.parseInt(envConfig.getPort()));
-        }
-
-        return clientConfiguration;
     }
 
     /**

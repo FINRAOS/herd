@@ -106,18 +106,19 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
             assertEquals("An EMR cluster definition configuration must be specified.", e.getMessage());
         }
 
-        // Try to perform a create without specifying instance definitions.
+        // Try to perform a create without specifying both instance definitions and instance fleets.
         try
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.setInstanceDefinitions(null);
+            emrClusterDefinitionConfiguration.setInstanceFleets(null);
             emrClusterDefinitionService
                 .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
-            fail("Should throw an IllegalArgumentException when instance definitions are not specified.");
+            fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Instance definitions must be specified.", e.getMessage());
+            assertEquals("Instance group definitions or instance fleets must be specified.", e.getMessage());
         }
 
         // Try to perform a create without specifying master instances.
@@ -502,7 +503,9 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
-        InstanceDefinition coreInstanceDefinition = new InstanceDefinition(0, "m1.medium", null, null, null);
+        InstanceDefinition coreInstanceDefinition =
+            new InstanceDefinition(0, "m1.medium", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD);
         request.getEmrClusterDefinition().getInstanceDefinitions().setCoreInstances(coreInstanceDefinition);
 
         // Create an EMR cluster definition.
@@ -523,7 +526,9 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
-        InstanceDefinition coreInstanceDefinition = new InstanceDefinition(-1, "m1.medium", null, null, null);
+        InstanceDefinition coreInstanceDefinition =
+            new InstanceDefinition(-1, "m1.medium", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD);
         request.getEmrClusterDefinition().getInstanceDefinitions().setCoreInstances(coreInstanceDefinition);
 
         // Create an EMR cluster definition.
@@ -726,18 +731,19 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
             assertEquals("An EMR cluster definition configuration must be specified.", e.getMessage());
         }
 
-        // Try to perform an update without specifying instance definitions.
+        // Try to perform an update without specifying both instance definitions and instance fleets.
         try
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.setInstanceDefinitions(null);
+            emrClusterDefinitionConfiguration.setInstanceFleets(null);
             emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
-            fail("Should throw an IllegalArgumentException when instance definitions are not specified.");
+            fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Instance definitions must be specified.", e.getMessage());
+            assertEquals("Instance group definitions or instance fleets must be specified.", e.getMessage());
         }
 
         // Try to perform an update without specifying master instances.

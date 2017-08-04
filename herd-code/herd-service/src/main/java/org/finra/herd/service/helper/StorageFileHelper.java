@@ -40,6 +40,7 @@ import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
+import org.finra.herd.model.jpa.StorageUnitEntity;
 
 /**
  * A helper class for StorageFile related code.
@@ -103,6 +104,38 @@ public class StorageFileHelper
             storageFiles.add(new StorageFile(s3ObjectSummary.getKey(), s3ObjectSummary.getSize(), null));
         }
 
+        return storageFiles;
+    }
+
+    /**
+     * Retrieves and validates a list of storage files registered with the specified storage unit. This method makes sure that the list of storage files is not
+     * empty and that all storage files match the expected s3 key prefix value.
+     *
+     * @param storageUnitEntity the storage unit entity the storage file paths to be validated
+     * @param s3KeyPrefix the S3 key prefix that storage file paths are expected to start with
+     * @param storageName the storage name
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the list of storage files
+     */
+    public List<StorageFile> getAndValidateStorageFiles(StorageUnitEntity storageUnitEntity, String s3KeyPrefix, String storageName,
+        BusinessObjectDataKey businessObjectDataKey)
+    {
+        // Check if the list of storage files is not empty.
+        if (CollectionUtils.isEmpty(storageUnitEntity.getStorageFiles()))
+        {
+            throw new IllegalArgumentException(String
+                .format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}", storageName,
+                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+        }
+
+        // Retrieve storage files.
+        List<StorageFile> storageFiles = createStorageFilesFromEntities(storageUnitEntity.getStorageFiles());
+
+        // Validate storage file paths registered with this business object data in the specified storage.
+        validateStorageFilePaths(getFilePathsFromStorageFiles(storageFiles), s3KeyPrefix, storageUnitEntity.getBusinessObjectData(), storageName);
+
+        // Return the list of storage files.
         return storageFiles;
     }
 
@@ -202,58 +235,6 @@ public class StorageFileHelper
     }
 
     /**
-     * Returns a map of file paths to the storage files build from the list of storage files with map iteration order matching the original list order.
-     *
-     * @param storageFiles the list of storage files
-     *
-     * @return the map of file paths to storage files
-     */
-    public Map<String, StorageFile> getStorageFilesMapFromStorageFiles(List<StorageFile> storageFiles)
-    {
-        Map<String, StorageFile> result = new LinkedHashMap<>();
-
-        for (StorageFile storageFile : storageFiles)
-        {
-            result.put(storageFile.getFilePath(), storageFile);
-        }
-
-        return result;
-    }
-
-    /**
-     * Get the total size in bytes of all storage files in the specified list.
-     *
-     * @param storageFiles the list of storage files
-     *
-     * @return the total size of storage files in bytes
-     */
-    public long getStorageFilesSizeBytes(Collection<StorageFile> storageFiles)
-    {
-        long storageFilesSizeBytes = 0;
-
-        for (StorageFile storageFile : storageFiles)
-        {
-            storageFilesSizeBytes += storageFile.getFileSizeBytes();
-        }
-
-        return storageFilesSizeBytes;
-    }
-
-    /**
-     * Validates archived S3 files per list of expected storage files.
-     *
-     * @param expectedStorageFiles the list of expected S3 files represented by storage files
-     * @param actualS3Files the list of actual S3 files represented by S3 object summaries
-     * @param storageName the storage name
-     * @param businessObjectDataKey the business object data key
-     */
-    public void validateArchivedS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
-        BusinessObjectDataKey businessObjectDataKey)
-    {
-        validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "archived");
-    }
-
-    /**
      * Validates copied S3 files per list of expected storage files.
      *
      * @param expectedStorageFiles the list of expected S3 files represented by storage files
@@ -333,20 +314,6 @@ public class StorageFileHelper
     }
 
     /**
-     * Validates restored S3 files per list of expected storage files.
-     *
-     * @param expectedStorageFiles the list of expected S3 files represented by storage files
-     * @param actualS3Files the list of actual S3 files represented by S3 object summaries
-     * @param storageName the storage name
-     * @param businessObjectDataKey the business object data key
-     */
-    public void validateRestoredS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
-        BusinessObjectDataKey businessObjectDataKey)
-    {
-        validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "restored");
-    }
-
-    /**
      * Validates registered S3 files per list of expected storage files.
      *
      * @param expectedStorageFiles the list of expected S3 files represented by storage files
@@ -354,7 +321,7 @@ public class StorageFileHelper
      * @param storageName the storage name
      * @param businessObjectDataKey the business object data key
      */
-    public void validateSourceS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
+    public void validateRegisteredS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
         BusinessObjectDataKey businessObjectDataKey)
     {
         validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "registered");
@@ -413,18 +380,15 @@ public class StorageFileHelper
     }
 
     /**
-     * Validates a list of storage files registered with specified business object data at specified storage. This method makes sure that all storage files
-     * match the expected s3 key prefix value.
+     * Validates a list of storage file paths. This method makes sure that all storage file paths match the expected s3 key prefix value.
      *
      * @param storageFilePaths the storage file paths to be validated
      * @param s3KeyPrefix the S3 key prefix that storage file paths are expected to start with
      * @param businessObjectDataEntity the business object data entity
      * @param storageName the name of the storage that storage files are stored in
-     *
-     * @throws IllegalArgumentException if a storage file doesn't match the expected S3 key prefix.
      */
-    public void validateStorageFiles(Collection<String> storageFilePaths, String s3KeyPrefix, BusinessObjectDataEntity businessObjectDataEntity,
-        String storageName) throws IllegalArgumentException
+    public void validateStorageFilePaths(Collection<String> storageFilePaths, String s3KeyPrefix, BusinessObjectDataEntity businessObjectDataEntity,
+        String storageName)
     {
         for (String storageFilePath : storageFilePaths)
         {

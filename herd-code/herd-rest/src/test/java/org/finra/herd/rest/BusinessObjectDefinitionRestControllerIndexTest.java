@@ -16,9 +16,9 @@
 package org.finra.herd.rest;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -27,9 +27,6 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
-
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -39,16 +36,15 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.scheduling.annotation.AsyncResult;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionValidateResponse;
 import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.dto.FacetTypeEnum;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -87,7 +83,7 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
 
         // Create a new business object definition search filter list with the new business object definition search key list
         List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
-        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(false, businessObjectDefinitionSearchKeyList));
 
 
         //Create a list of facet fields
@@ -144,15 +140,13 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
 
             for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponse.getTagIndexSearchResponseDtos())
             {
-                Facet tagFacet =
-                    new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), TagIndexSearchResponseDto.getFacetType(),
-                        tagIndexSearchResponseDto.getTagCode(), null);
+                Facet tagFacet = new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), FacetTypeEnum.TAG.value(),
+                    tagIndexSearchResponseDto.getTagCode(), null);
                 tagFacets.add(tagFacet);
             }
 
-            tagTypeFacets.add(
-                new Facet(tagTypeIndexSearchResponse.getDisplayName(), tagTypeIndexSearchResponse.getCount(), TagTypeIndexSearchResponseDto.getFacetType(),
-                    tagTypeIndexSearchResponse.getCode(), tagFacets));
+            tagTypeFacets.add(new Facet(tagTypeIndexSearchResponse.getDisplayName(), tagTypeIndexSearchResponse.getCount(), FacetTypeEnum.TAG_TYPE.value(),
+                tagTypeIndexSearchResponse.getCode(), tagFacets));
         }
 
         // Construct business object search response.
@@ -177,43 +171,5 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
             is(businessObjectDefinitionSearchResponse));
         assertThat("Business object definition index search response was not an instance of BusinessObjectDefinitionSearchResponse.class.",
             businessObjectDefinitionSearchResponseFromRestCall, instanceOf(BusinessObjectDefinitionIndexSearchResponse.class));
-    }
-
-    @Test
-    public void testValidateIndexBusinessObjectDefinitions()
-    {
-        // Randomly valid half the time
-        boolean isSizeCheckValid = ThreadLocalRandom.current().nextDouble() < 0.5;
-        boolean isSpotCheckPercentageValid = ThreadLocalRandom.current().nextDouble() < 0.5;
-        boolean isSpotCheckRecentValid = ThreadLocalRandom.current().nextDouble() < 0.5;
-
-        // Mock the call to the business object definition service
-        when(businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions()).thenReturn(new AsyncResult<>(null));
-        when(businessObjectDefinitionService.indexSizeCheckValidationBusinessObjectDefinitions()).thenReturn(isSizeCheckValid);
-        when(businessObjectDefinitionService.indexSpotCheckPercentageValidationBusinessObjectDefinitions()).thenReturn(isSpotCheckPercentageValid);
-        when(businessObjectDefinitionService.indexSpotCheckMostRecentValidationBusinessObjectDefinitions()).thenReturn(isSpotCheckRecentValid);
-
-        // Create a business object definition.
-        BusinessObjectDefinitionValidateResponse businessObjectDefinitionValidateResponse =
-            businessObjectDefinitionRestController.validateIndexBusinessObjectDefinitions();
-
-        // Verify the method call to businessObjectDefinitionService index validate methods
-        verify(businessObjectDefinitionService, times(1)).indexValidateAllBusinessObjectDefinitions();
-        verify(businessObjectDefinitionService, times(1)).indexSizeCheckValidationBusinessObjectDefinitions();
-        verify(businessObjectDefinitionService, times(1)).indexSpotCheckPercentageValidationBusinessObjectDefinitions();
-        verify(businessObjectDefinitionService, times(1)).indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
-
-        // Validate the returned object.
-        assertThat("Business object definition validate response was null.", businessObjectDefinitionValidateResponse, not(nullValue()));
-        assertThat("Business object definition validate response index start time was null.", businessObjectDefinitionValidateResponse.getValidateStartTime(),
-            not(nullValue()));
-        assertThat("Business object definition validate response index start time was not an instance of XMLGregorianCalendar.class.",
-            businessObjectDefinitionValidateResponse.getValidateStartTime(), instanceOf(XMLGregorianCalendar.class));
-        assertThat("Business object definition validate response index size check passed is not true.",
-            businessObjectDefinitionValidateResponse.isSizeCheckPassed(), is(isSizeCheckValid));
-        assertThat("Business object definition validate response index spot check random passed is not true.",
-            businessObjectDefinitionValidateResponse.isSpotCheckRandomPassed(), is(isSpotCheckPercentageValid));
-        assertThat("Business object definition validate response index spot check most recent passed is not true.",
-            businessObjectDefinitionValidateResponse.isSpotCheckMostRecentPassed(), is(isSpotCheckRecentValid));
     }
 }

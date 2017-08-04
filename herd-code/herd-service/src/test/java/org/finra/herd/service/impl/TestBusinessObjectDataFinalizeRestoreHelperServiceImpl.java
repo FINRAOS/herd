@@ -34,9 +34,9 @@ public class TestBusinessObjectDataFinalizeRestoreHelperServiceImpl extends Busi
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectDataRestoreDto prepareToFinalizeRestore(StorageUnitAlternateKeyDto glacierStorageUnitKey)
+    public void completeFinalizeRestore(BusinessObjectDataRestoreDto businessObjectDataRestoreDto)
     {
-        return prepareToFinalizeRestoreImpl(glacierStorageUnitKey);
+        completeFinalizeRestoreImpl(businessObjectDataRestoreDto);
     }
 
     /**
@@ -56,8 +56,8 @@ public class TestBusinessObjectDataFinalizeRestoreHelperServiceImpl extends Busi
      * This implementation keeps the current transaction context.
      */
     @Override
-    public void enableOriginStorageUnit(BusinessObjectDataRestoreDto businessObjectDataRestoreDto)
+    public BusinessObjectDataRestoreDto prepareToFinalizeRestore(StorageUnitAlternateKeyDto storageUnitKey)
     {
-        enableOriginStorageUnitImpl(businessObjectDataRestoreDto);
+        return prepareToFinalizeRestoreImpl(storageUnitKey);
     }
 }

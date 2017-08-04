@@ -98,7 +98,7 @@ public class ParameterHelper
      *
      * @return the parameter value if found, the relative configuration setting value otherwise
      */
-    private String getParameterValue(Map<String, String> parameters, ConfigurationValue configurationValue)
+    public String getParameterValue(Map<String, String> parameters, ConfigurationValue configurationValue)
     {
         String parameterName = configurationValue.getKey().toLowerCase();
         String parameterValue;

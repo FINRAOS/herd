@@ -21,7 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 
 /**
  * This is a Business Object Definition service implementation for testing.
@@ -31,9 +34,60 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 @Primary
 public class TestBusinessObjectDefinitionServiceImpl extends BusinessObjectDefinitionServiceImpl
 {
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public BusinessObjectDefinition createBusinessObjectDefinition(BusinessObjectDefinitionCreateRequest request)
+    {
+        return createBusinessObjectDefinitionImpl(request);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    {
+        return deleteBusinessObjectDefinitionImpl(businessObjectDefinitionKey);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
     @Override
     public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
         return getBusinessObjectDefinitionImpl(businessObjectDefinitionKey);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionUpdateRequest request)
+    {
+        return updateBusinessObjectDefinitionImpl(businessObjectDefinitionKey, request);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
+    {
+        return updateBusinessObjectDefinitionDescriptiveInformationImpl(businessObjectDefinitionKey, request);
     }
 }

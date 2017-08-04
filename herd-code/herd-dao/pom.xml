@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.39.0-SNAPSHOT</version>
+      <version>0.49.0-SNAPSHOT</version>
    </parent>
 
    <name>herd dao</name>
@@ -169,14 +169,8 @@
       </dependency>
 
       <dependency>
-         <groupId>org.apache.oozie</groupId>
-         <artifactId>oozie-client</artifactId>
-         <exclusions>
-            <exclusion>
-               <artifactId>slf4j-simple</artifactId>
-               <groupId>org.slf4j</groupId>
-            </exclusion>
-         </exclusions>
+         <groupId>com.google.guava</groupId>
+         <artifactId>guava</artifactId>
       </dependency>
 
       <dependency>
@@ -198,6 +192,10 @@
          <artifactId>transport</artifactId>
       </dependency>
       <dependency>
+         <groupId>io.searchbox</groupId>
+         <artifactId>jest</artifactId>
+      </dependency>
+      <dependency>
          <groupId>com.floragunn</groupId>
          <artifactId>search-guard-ssl</artifactId>
       </dependency>
@@ -208,6 +206,12 @@
       <dependency>
          <groupId>co.wrisk.jcredstash</groupId>
          <artifactId>jcredstash</artifactId>
+      </dependency>
+
+      <!-- A simple Java toolkit for JSON -->
+      <dependency>
+         <groupId>com.googlecode.json-simple</groupId>
+         <artifactId>json-simple</artifactId>
       </dependency>
 
    </dependencies>

@@ -20,7 +20,6 @@ import java.util.List;
 import org.apache.commons.collections4.MultiValuedMap;
 
 import org.finra.herd.model.jpa.StorageFileEntity;
-import org.finra.herd.model.jpa.StorageUnitEntity;
 
 public interface StorageFileDao extends BaseJpaDao
 {
@@ -45,6 +44,15 @@ public interface StorageFileDao extends BaseJpaDao
     public Long getStorageFileCount(String storageName, String filePathPrefix);
 
     /**
+     * Retrieves a map of storage unit ids to their corresponding storage file paths.
+     *
+     * @param storageUnitIds the list of storage unit identifiers
+     *
+     * @return the map of storage unit ids to their corresponding storage file paths.
+     */
+    public MultiValuedMap<Integer, String> getStorageFilePathsByStorageUnitIds(List<Integer> storageUnitIds);
+
+    /**
      * Retrieves a sorted list of storage file paths matching S3 key prefix in the specified storage.
      *
      * @param storageName the storage name (case-insensitive)
@@ -53,13 +61,4 @@ public interface StorageFileDao extends BaseJpaDao
      * @return the list of storage file paths
      */
     public List<String> getStorageFilesByStorageAndFilePathPrefix(String storageName, String filePathPrefix);
-
-    /**
-     * Retrieves a map of storage unit ids to their corresponding storage file paths.
-     *
-     * @param storageUnitEntities the list of storage unit entities
-     *
-     * @return the map of storage unit ids to their corresponding storage file paths.
-     */
-    public MultiValuedMap<Integer, String> getStorageFilePathsByStorageUnits(List<StorageUnitEntity> storageUnitEntities);
 }

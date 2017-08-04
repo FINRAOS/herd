@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.Ec2Dao;
-import org.finra.herd.dao.OnDemandPriceDao;
+import org.finra.herd.dao.Ec2OnDemandPricingDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinition;
@@ -48,7 +48,7 @@ import org.finra.herd.model.dto.Ec2PriceDto;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.dto.EmrClusterPriceDto;
 import org.finra.herd.model.dto.EmrVpcPricingState;
-import org.finra.herd.model.jpa.OnDemandPriceEntity;
+import org.finra.herd.model.jpa.Ec2OnDemandPricingEntity;
 
 /**
  * Encapsulates logic for calculating the best price for EMR cluster.
@@ -71,7 +71,7 @@ public class EmrPricingHelper extends AwsHelper
     private JsonHelper jsonHelper;
 
     @Autowired
-    private OnDemandPriceDao onDemandPriceDao;
+    private Ec2OnDemandPricingDao ec2OnDemandPricingDao;
 
     /**
      * Finds the best price for each master and core instances based on the subnets and master and core instance search parameters given in the definition.
@@ -286,7 +286,7 @@ public class EmrPricingHelper extends AwsHelper
     private BigDecimal getSpotBidPrice(Ec2PriceDto ec2Price)
     {
         BigDecimal bidPrice = null;
-        if (ec2Price.getIsSpot())
+        if (ec2Price.isSpotPricing())
         {
             bidPrice = ec2Price.getBidPrice();
         }
@@ -462,13 +462,13 @@ public class EmrPricingHelper extends AwsHelper
 
         LOGGER.debug("instanceSpotBidPrice={} instanceMaxSearchPrice={} instanceOnDemandThreshold={}", spotBidPrice, maxSearchPrice, onDemandThreshold);
 
-        Ec2PriceDto bestPrice = null;
+        Ec2PriceDto bestPrice;
 
         // spotBidPrice is set. User wants to explicitly use spot pricing
         if (spotBidPrice != null)
         {
             bestPrice = new Ec2PriceDto();
-            bestPrice.setIsSpot(true);
+            bestPrice.setSpotPricing(true);
             bestPrice.setInstancePrice(spotPrice);
             bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
             bestPrice.setBidPrice(spotBidPrice);
@@ -477,7 +477,7 @@ public class EmrPricingHelper extends AwsHelper
         else if (maxSearchPrice == null)
         {
             bestPrice = new Ec2PriceDto();
-            bestPrice.setIsSpot(false);
+            bestPrice.setSpotPricing(false);
             bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
             bestPrice.setInstancePrice(onDemandPrice);
         }
@@ -486,7 +486,7 @@ public class EmrPricingHelper extends AwsHelper
         {
             // Default to on-demand
             bestPrice = new Ec2PriceDto();
-            bestPrice.setIsSpot(false);
+            bestPrice.setSpotPricing(false);
             bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
             bestPrice.setInstancePrice(onDemandPrice);
 
@@ -507,7 +507,7 @@ public class EmrPricingHelper extends AwsHelper
             // Should I use spot?
             if (isSpotBelowMax && isSpotBelowOnDemand && (isThresholdBelowOnDemand || !isOnDemandBelowMax))
             {
-                bestPrice.setIsSpot(true);
+                bestPrice.setSpotPricing(true);
                 bestPrice.setInstancePrice(spotPrice);
                 bestPrice.setBidPrice(maxSearchPrice);
             }
@@ -588,7 +588,7 @@ public class EmrPricingHelper extends AwsHelper
         Map<String, BigDecimal> instanceTypeOnDemandPrices = new HashMap<>();
         for (String instanceType : instanceTypes)
         {
-            OnDemandPriceEntity onDemandPrice = onDemandPriceDao.getOnDemandPrice(availabilityZone.getRegionName(), instanceType);
+            Ec2OnDemandPricingEntity onDemandPrice = ec2OnDemandPricingDao.getEc2OnDemandPricing(availabilityZone.getRegionName(), instanceType);
 
             if (onDemandPrice == null)
             {
@@ -596,7 +596,7 @@ public class EmrPricingHelper extends AwsHelper
                     "On-demand price for region '" + availabilityZone.getRegionName() + "' and instance type '" + instanceType + "' not found.");
             }
 
-            instanceTypeOnDemandPrices.put(instanceType, onDemandPrice.getValue());
+            instanceTypeOnDemandPrices.put(instanceType, onDemandPrice.getHourlyPrice());
         }
 
         return instanceTypeOnDemandPrices;

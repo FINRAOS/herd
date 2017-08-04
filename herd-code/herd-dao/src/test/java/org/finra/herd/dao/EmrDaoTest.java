@@ -18,6 +18,7 @@ package org.finra.herd.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -29,10 +30,8 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
@@ -49,7 +48,9 @@ import com.amazonaws.services.elasticmapreduce.model.DescribeClusterResult;
 import com.amazonaws.services.elasticmapreduce.model.DescribeStepRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeStepResult;
 import com.amazonaws.services.elasticmapreduce.model.Instance;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetConfig;
 import com.amazonaws.services.elasticmapreduce.model.InstanceGroupConfig;
+import com.amazonaws.services.elasticmapreduce.model.InstanceTypeConfig;
 import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
@@ -64,6 +65,7 @@ import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.elasticmapreduce.model.StepState;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import com.amazonaws.services.elasticmapreduce.model.Tag;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -78,6 +80,9 @@ import org.finra.herd.model.api.xml.ConfigurationFiles;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
 import org.finra.herd.model.api.xml.HadoopJarStep;
 import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
@@ -291,8 +296,12 @@ public class EmrDaoTest extends AbstractDaoTest
         String clusterName = "clusterName";
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-        instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-        instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", null, null, null));
+        instanceDefinitions.setMasterInstances(
+            new MasterInstanceDefinition(10, "masterInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE,
+                NO_INSTANCE_MAX_SEARCH_PRICE, NO_INSTANCE_ON_DEMAND_THRESHOLD));
+        instanceDefinitions.setCoreInstances(
+            new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
 
@@ -342,14 +351,81 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
+    public void createEmrClusterAssertCallRunEmrJobFlowWithInstanceFleetAndMultipleSubnets() throws Exception
+    {
+        // Create objects required for testing.
+        final String clusterName = "clusterName";
+        final String clusterId = "clusterId";
+        final String name = STRING_VALUE;
+        final String instanceFleetType = STRING_VALUE_2;
+        final Integer targetOnDemandCapacity = INTEGER_VALUE;
+        final Integer targetSpotCapacity = INTEGER_VALUE_2;
+        final List<EmrClusterDefinitionInstanceTypeConfig> emrClusterDefinitionInstanceTypeConfigs = null;
+        final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications = null;
+        final EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet =
+            new EmrClusterDefinitionInstanceFleet(name, instanceFleetType, targetOnDemandCapacity, targetSpotCapacity, emrClusterDefinitionInstanceTypeConfigs,
+                emrClusterDefinitionLaunchSpecifications);
+
+        // Create an EMR cluster definition with instance fleet configuration and multiple EC2 subnet IDs.
+        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
+        emrClusterDefinition.setInstanceFleets(Arrays.asList(emrClusterDefinitionInstanceFleet));
+        emrClusterDefinition.setSubnetId(String.format("%s , %s  ", EC2_SUBNET, EC2_SUBNET_2));
+        emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
+
+        when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
+        {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable
+            {
+                // Assert that the given EMR cluster definition produced the correct RunJobFlowRequest.
+                RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
+                JobFlowInstancesConfig jobFlowInstancesConfig = runJobFlowRequest.getInstances();
+                assertEquals(0, CollectionUtils.size(jobFlowInstancesConfig.getInstanceGroups()));
+                final List<InstanceTypeConfig> expectedInstanceTypeConfigs = null;
+                assertEquals(Arrays.asList(
+                    new InstanceFleetConfig().withName(name).withInstanceFleetType(instanceFleetType).withTargetOnDemandCapacity(targetOnDemandCapacity)
+                        .withTargetSpotCapacity(targetSpotCapacity).withInstanceTypeConfigs(expectedInstanceTypeConfigs).withLaunchSpecifications(null)),
+                    jobFlowInstancesConfig.getInstanceFleets());
+                assertNull(jobFlowInstancesConfig.getEc2SubnetId());
+                assertEquals(2, CollectionUtils.size(jobFlowInstancesConfig.getEc2SubnetIds()));
+                assertTrue(jobFlowInstancesConfig.getEc2SubnetIds().contains(EC2_SUBNET));
+                assertTrue(jobFlowInstancesConfig.getEc2SubnetIds().contains(EC2_SUBNET_2));
+                assertEquals(herdStringHelper.getRequiredConfigurationValue(ConfigurationValue.EMR_DEFAULT_EC2_NODE_IAM_PROFILE_NAME),
+                    runJobFlowRequest.getJobFlowRole());
+                assertEquals(herdStringHelper.getRequiredConfigurationValue(ConfigurationValue.EMR_DEFAULT_SERVICE_IAM_ROLE_NAME),
+                    runJobFlowRequest.getServiceRole());
+                List<StepConfig> stepConfigs = runJobFlowRequest.getSteps();
+                assertEquals(0, stepConfigs.size());
+                List<Tag> tags = runJobFlowRequest.getTags();
+                assertEquals(1, tags.size());
+                {
+                    Tag tag = tags.get(0);
+                    assertEquals("tagName", tag.getKey());
+                    assertEquals("tagValue", tag.getValue());
+                }
+
+                return clusterId;
+            }
+        });
+
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
+    }
+
+    @Test
     public void createEmrClusterAssertCallRunEmrJobFlowOptionalParams() throws Exception
     {
         String clusterName = "clusterName";
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-        instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-        instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", BigDecimal.ONE, null, null));
-        instanceDefinitions.setTaskInstances(new InstanceDefinition(30, "taskInstanceType", null, null, null));
+        instanceDefinitions.setMasterInstances(
+            new MasterInstanceDefinition(10, "masterInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE,
+                NO_INSTANCE_MAX_SEARCH_PRICE, NO_INSTANCE_ON_DEMAND_THRESHOLD));
+        instanceDefinitions.setCoreInstances(
+            new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, BigDecimal.ONE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD));
+        instanceDefinitions.setTaskInstances(
+            new InstanceDefinition(30, "taskInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue"), new NodeTag("", "tagValue"), new NodeTag("tagName", "")));
 
@@ -435,6 +511,8 @@ public class EmrDaoTest extends AbstractDaoTest
         emrClusterDefinition.setSupportedProduct("supportedProduct");
         emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
 
+        emrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP);
+        emrClusterDefinition.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP);
         String clusterId = "clusterId";
 
         when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
@@ -543,94 +621,13 @@ public class EmrDaoTest extends AbstractDaoTest
                 }
                 assertEquals(Arrays.asList("supportedProduct"), runJobFlowRequest.getSupportedProducts());
                 assertEquals("securityConfiguration", runJobFlowRequest.getSecurityConfiguration());
-
+                assertEquals(EMR_MASTER_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedMasterSecurityGroup());
+                assertEquals(EMR_SLAVE_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedSlaveSecurityGroup());
                 return clusterId;
             }
         });
 
         assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
-    }
-
-    @Test
-    public void createEmrClusterAssertAdditionalSecurityGroup() throws Exception
-    {
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.EMR_HERD_SUPPORT_SECURITY_GROUP.getKey(), "EMR_HERD_SUPPORT_SECURITY_GROUP");
-        modifyPropertySourceInEnvironment(overrideMap);
-        try
-        {
-            /*
-             * Use only minimum required options
-             */
-            String clusterName = "clusterName";
-            EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
-            InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-            instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-            instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", null, null, null));
-            emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
-            emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
-
-            String clusterId = "clusterId";
-
-            when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
-            {
-                @Override
-                public String answer(InvocationOnMock invocation) throws Throwable
-                {
-                    RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
-                    assertEquals(Arrays.asList("EMR_HERD_SUPPORT_SECURITY_GROUP"), runJobFlowRequest.getInstances().getAdditionalMasterSecurityGroups());
-                    return clusterId;
-                }
-            });
-
-            assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
-        }
-        finally
-        {
-            restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
-    public void createEmrClusterAssertAdditionalSecurityGroupWhenListIsNotNull() throws Exception
-    {
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.EMR_HERD_SUPPORT_SECURITY_GROUP.getKey(), "EMR_HERD_SUPPORT_SECURITY_GROUP");
-        modifyPropertySourceInEnvironment(overrideMap);
-        try
-        {
-            /*
-             * Use only minimum required options
-             */
-            String clusterName = "clusterName";
-            EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
-            InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-            instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-            instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", null, null, null));
-            emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
-            emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
-            emrClusterDefinition.setAdditionalMasterSecurityGroups(new ArrayList<>(Arrays.asList("additionalMasterSecurityGroup")));
-
-            String clusterId = "clusterId";
-
-            when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
-            {
-                @Override
-                public String answer(InvocationOnMock invocation) throws Throwable
-                {
-                    RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
-                    assertEquals(Arrays.asList("additionalMasterSecurityGroup", "EMR_HERD_SUPPORT_SECURITY_GROUP"),
-                        runJobFlowRequest.getInstances().getAdditionalMasterSecurityGroups());
-                    return clusterId;
-                }
-            });
-
-            assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
-        }
-        finally
-        {
-            restorePropertySourceInEnvironment();
-        }
     }
 
     @Test
@@ -642,8 +639,12 @@ public class EmrDaoTest extends AbstractDaoTest
         String clusterName = "clusterName";
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-        instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-        instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", null, null, null));
+        instanceDefinitions.setMasterInstances(
+            new MasterInstanceDefinition(10, "masterInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE,
+                NO_INSTANCE_MAX_SEARCH_PRICE, NO_INSTANCE_ON_DEMAND_THRESHOLD));
+        instanceDefinitions.setCoreInstances(
+            new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
 
@@ -675,8 +676,12 @@ public class EmrDaoTest extends AbstractDaoTest
         String clusterName = "clusterName";
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-        instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-        instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", null, null, null));
+        instanceDefinitions.setMasterInstances(
+            new MasterInstanceDefinition(10, "masterInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE,
+                NO_INSTANCE_MAX_SEARCH_PRICE, NO_INSTANCE_ON_DEMAND_THRESHOLD));
+        instanceDefinitions.setCoreInstances(
+            new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
+                NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
 
@@ -1025,18 +1030,5 @@ public class EmrDaoTest extends AbstractDaoTest
         ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonElasticMapReduceClient, "clientConfiguration");
         assertNotNull(clientConfiguration);
         assertNull(clientConfiguration.getProxyHost());
-    }
-
-    private boolean isUuid(String string)
-    {
-        try
-        {
-            UUID.fromString(string);
-            return true;
-        }
-        catch (IllegalArgumentException e)
-        {
-            return false;
-        }
     }
 }

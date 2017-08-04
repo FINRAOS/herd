@@ -111,7 +111,7 @@ public class TagTypeRestController
      * value ascending.
      *
      * @param request the tag type search request. The request does not take any search keys or filters
-     * @param fields the field options for the tag type search response. The valid field options are: displayName, tagTypeOrder
+     * @param fields the field options for the tag type search response. The valid field options are: displayName, tagTypeOrder and description
      *
      * @return the tag type search response
      */

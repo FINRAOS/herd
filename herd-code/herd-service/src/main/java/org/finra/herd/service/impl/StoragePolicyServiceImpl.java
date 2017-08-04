@@ -42,7 +42,9 @@ import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
 import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
+import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
 import org.finra.herd.service.StoragePolicyService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.FileTypeDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
@@ -51,6 +53,7 @@ import org.finra.herd.service.helper.StoragePolicyDaoHelper;
 import org.finra.herd.service.helper.StoragePolicyHelper;
 import org.finra.herd.service.helper.StoragePolicyRuleTypeDaoHelper;
 import org.finra.herd.service.helper.StoragePolicyStatusDaoHelper;
+import org.finra.herd.service.helper.StoragePolicyTransitionTypeDaoHelper;
 
 /**
  * The storage policy service implementation.
@@ -59,6 +62,9 @@ import org.finra.herd.service.helper.StoragePolicyStatusDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class StoragePolicyServiceImpl implements StoragePolicyService
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
@@ -86,6 +92,9 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
     @Autowired
     private StoragePolicyStatusDaoHelper storagePolicyStatusDaoHelper;
 
+    @Autowired
+    private StoragePolicyTransitionTypeDaoHelper storagePolicyTransitionTypeDaoHelper;
+
     @NamespacePermissions({@NamespacePermission(fields = "#request?.storagePolicyKey?.namespace", permissions = NamespacePermissionEnum.WRITE),
         @NamespacePermission(fields = "#request?.storagePolicyFilter?.namespace", permissions = NamespacePermissionEnum.READ)})
     @Override
@@ -108,7 +117,7 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         // Retrieve and ensure that namespace exists with the specified storage policy namespace code.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(storagePolicyKey.getNamespace());
 
-        // Retrieve and ensure that storage policy type exists.
+        // Retrieve and ensure that storage policy rule type exists.
         StoragePolicyRuleTypeEntity storagePolicyRuleTypeEntity =
             storagePolicyRuleTypeDaoHelper.getStoragePolicyRuleTypeEntity(request.getStoragePolicyRule().getRuleType());
 
@@ -134,22 +143,19 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storagePolicyFilter.getStorageName());
 
         // Validate the source storage.
-        storagePolicyDaoHelper.validateSourceStorage(storageEntity);
+        storagePolicyDaoHelper.validateStoragePolicyFilterStorage(storageEntity);
 
-        // Retrieve and ensure that destination storage exists.
-        StorageEntity destinationStorageEntity = storageDaoHelper.getStorageEntity(request.getStoragePolicyTransition().getDestinationStorageName());
-
-        // Validate the destination storage.
-        storagePolicyDaoHelper.validateDestinationStorage(destinationStorageEntity);
+        // Retrieve and ensure that storage policy transition type exists.
+        StoragePolicyTransitionTypeEntity storagePolicyTransitionTypeEntity =
+            storagePolicyTransitionTypeDaoHelper.getStoragePolicyTransitionTypeEntity(request.getStoragePolicyTransition().getTransitionType());
 
         // Retrieve and ensure that specified storage policy status exists.
         StoragePolicyStatusEntity storagePolicyStatusEntity = storagePolicyStatusDaoHelper.getStoragePolicyStatusEntity(request.getStatus());
 
         // Create and persist a new storage policy entity from the request information.
-        storagePolicyEntity = createStoragePolicyEntity(namespaceEntity, storagePolicyKey.getStoragePolicyName(), storageEntity, destinationStorageEntity,
-            storagePolicyRuleTypeEntity, request.getStoragePolicyRule().getRuleValue(), businessObjectDefinitionEntity,
-            request.getStoragePolicyFilter().getBusinessObjectFormatUsage(), fileTypeEntity, storagePolicyStatusEntity,
-            StoragePolicyEntity.STORAGE_POLICY_INITIAL_VERSION, true);
+        storagePolicyEntity = createStoragePolicyEntity(namespaceEntity, storagePolicyKey.getStoragePolicyName(), storageEntity, storagePolicyRuleTypeEntity,
+            request.getStoragePolicyRule().getRuleValue(), businessObjectDefinitionEntity, request.getStoragePolicyFilter().getBusinessObjectFormatUsage(),
+            fileTypeEntity, storagePolicyTransitionTypeEntity, storagePolicyStatusEntity, StoragePolicyEntity.STORAGE_POLICY_INITIAL_VERSION, true);
 
         // Create and return the storage policy object from the persisted entity.
         return createStoragePolicyFromEntity(storagePolicyEntity);
@@ -195,13 +201,11 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storagePolicyFilter.getStorageName());
 
         // Validate the source storage.
-        storagePolicyDaoHelper.validateSourceStorage(storageEntity);
+        storagePolicyDaoHelper.validateStoragePolicyFilterStorage(storageEntity);
 
-        // Retrieve and ensure that destination storage exists.
-        StorageEntity destinationStorageEntity = storageDaoHelper.getStorageEntity(request.getStoragePolicyTransition().getDestinationStorageName());
-
-        // Validate the destination storage.
-        storagePolicyDaoHelper.validateDestinationStorage(destinationStorageEntity);
+        // Retrieve and ensure that storage policy transition type exists.
+        StoragePolicyTransitionTypeEntity storagePolicyTransitionTypeEntity =
+            storagePolicyTransitionTypeDaoHelper.getStoragePolicyTransitionTypeEntity(request.getStoragePolicyTransition().getTransitionType());
 
         // Retrieve and ensure that specified storage policy status exists.
         StoragePolicyStatusEntity storagePolicyStatusEntity = storagePolicyStatusDaoHelper.getStoragePolicyStatusEntity(request.getStatus());
@@ -210,10 +214,9 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         // Please note that simply adding 1 to the latest version without "DB locking" is sufficient here,
         // even for multi-threading, since we are relying on the DB having version as part of the alternate key.
         StoragePolicyEntity newVersionStoragePolicyEntity =
-            createStoragePolicyEntity(storagePolicyEntity.getNamespace(), storagePolicyEntity.getName(), storageEntity, destinationStorageEntity,
-                storagePolicyRuleTypeEntity, request.getStoragePolicyRule().getRuleValue(), businessObjectDefinitionEntity,
-                request.getStoragePolicyFilter().getBusinessObjectFormatUsage(), fileTypeEntity, storagePolicyStatusEntity,
-                storagePolicyEntity.getVersion() + 1, true);
+            createStoragePolicyEntity(storagePolicyEntity.getNamespace(), storagePolicyEntity.getName(), storageEntity, storagePolicyRuleTypeEntity,
+                request.getStoragePolicyRule().getRuleValue(), businessObjectDefinitionEntity, request.getStoragePolicyFilter().getBusinessObjectFormatUsage(),
+                fileTypeEntity, storagePolicyTransitionTypeEntity, storagePolicyStatusEntity, storagePolicyEntity.getVersion() + 1, true);
 
         // Update the existing latest version storage policy entity, so it would not be flagged as the latest version anymore.
         storagePolicyEntity.setLatestVersion(false);
@@ -352,9 +355,8 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
     private void validateStoragePolicyTransition(StoragePolicyTransition storagePolicyTransition) throws IllegalArgumentException
     {
         Assert.notNull(storagePolicyTransition, "A storage policy transition must be specified.");
-
-        Assert.hasText(storagePolicyTransition.getDestinationStorageName(), "A destination storage name must be specified.");
-        storagePolicyTransition.setDestinationStorageName(storagePolicyTransition.getDestinationStorageName().trim());
+        storagePolicyTransition
+            .setTransitionType(alternateKeyHelper.validateStringParameter("storage policy transition type", storagePolicyTransition.getTransitionType()));
     }
 
     /**
@@ -363,11 +365,12 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
      * @param namespaceEntity the namespace entity
      * @param storagePolicyName the storage policy name
      * @param storageEntity the storage entity
-     * @param destinationStorageEntity the destination storage entity
      * @param storagePolicyRuleTypeEntity the storage policy rule type entity
+     * @param storagePolicyRuleValue the storage policy rule value
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param businessObjectFormatUsage the business object format usage
      * @param fileTypeEntity the file type entity
+     * @param storagePolicyTransitionTypeEntity the transition type of the storage policy
      * @param storagePolicyStatusEntity the storage policy status entity
      * @param storagePolicyVersion the storage policy version
      * @param storagePolicyLatestVersion specifies if this storage policy is flagged as latest version or not
@@ -375,8 +378,8 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
      * @return the newly created storage policy entity
      */
     private StoragePolicyEntity createStoragePolicyEntity(NamespaceEntity namespaceEntity, String storagePolicyName, StorageEntity storageEntity,
-        StorageEntity destinationStorageEntity, StoragePolicyRuleTypeEntity storagePolicyRuleTypeEntity, Integer storagePolicyRuleValue,
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage, FileTypeEntity fileTypeEntity,
+        StoragePolicyRuleTypeEntity storagePolicyRuleTypeEntity, Integer storagePolicyRuleValue, BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, StoragePolicyTransitionTypeEntity storagePolicyTransitionTypeEntity,
         StoragePolicyStatusEntity storagePolicyStatusEntity, Integer storagePolicyVersion, Boolean storagePolicyLatestVersion)
     {
         StoragePolicyEntity storagePolicyEntity = new StoragePolicyEntity();
@@ -384,7 +387,6 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         storagePolicyEntity.setNamespace(namespaceEntity);
         storagePolicyEntity.setName(storagePolicyName);
         storagePolicyEntity.setStorage(storageEntity);
-        storagePolicyEntity.setDestinationStorage(destinationStorageEntity);
         storagePolicyEntity.setStoragePolicyRuleType(storagePolicyRuleTypeEntity);
         storagePolicyEntity.setStoragePolicyRuleValue(storagePolicyRuleValue);
         storagePolicyEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
@@ -393,6 +395,7 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
             storagePolicyEntity.setUsage(businessObjectFormatUsage);
         }
         storagePolicyEntity.setFileType(fileTypeEntity);
+        storagePolicyEntity.setStoragePolicyTransitionType(storagePolicyTransitionTypeEntity);
         storagePolicyEntity.setStatus(storagePolicyStatusEntity);
         storagePolicyEntity.setVersion(storagePolicyVersion);
         storagePolicyEntity.setLatestVersion(storagePolicyLatestVersion);
@@ -435,7 +438,7 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
 
         StoragePolicyTransition storagePolicyTransition = new StoragePolicyTransition();
         storagePolicy.setStoragePolicyTransition(storagePolicyTransition);
-        storagePolicyTransition.setDestinationStorageName(storagePolicyEntity.getDestinationStorage().getName());
+        storagePolicyTransition.setTransitionType(storagePolicyEntity.getStoragePolicyTransitionType().getCode());
 
         storagePolicy.setStatus(storagePolicyEntity.getStatus().getCode());
 

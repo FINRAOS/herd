@@ -59,30 +59,20 @@ public class StoragePolicyProcessorServiceImpl implements StoragePolicyProcessor
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             storagePolicyProcessorHelperService.initiateStoragePolicyTransition(storagePolicySelection);
 
-        // Create storage unit notifications. Please note that destination storage
-        // unit might actually exist with DISABLED storage unit status, but
-        // we disregard that scenario when triggering the storage unit notification.
+        // Create a storage unit notification for the source storage unit.
         notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-            storagePolicyTransitionParamsDto.getBusinessObjectDataKey(), storagePolicyTransitionParamsDto.getDestinationStorageName(),
-            storagePolicyTransitionParamsDto.getNewDestinationStorageUnitStatus(), storagePolicyTransitionParamsDto.getOldDestinationStorageUnitStatus());
+            storagePolicyTransitionParamsDto.getBusinessObjectDataKey(), storagePolicyTransitionParamsDto.getStorageName(),
+            storagePolicyTransitionParamsDto.getNewStorageUnitStatus(), storagePolicyTransitionParamsDto.getOldStorageUnitStatus());
 
-        // Execute the actual data transfer using the DAO tier.
+        // Execute the actual transition using the DAO tier.
         storagePolicyProcessorHelperService.executeStoragePolicyTransition(storagePolicyTransitionParamsDto);
 
         // Complete the storage policy transition.
         storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
 
-        // Create storage unit notification for the source storage unit.
+        // Create a storage unit notification for the source storage unit.
         notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-            storagePolicyTransitionParamsDto.getBusinessObjectDataKey(), storagePolicyTransitionParamsDto.getSourceStorageName(),
-            storagePolicyTransitionParamsDto.getNewSourceStorageUnitStatus(), storagePolicyTransitionParamsDto.getOldSourceStorageUnitStatus());
-
-        // Create storage unit notification for the destination storage unit.
-        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-            storagePolicyTransitionParamsDto.getBusinessObjectDataKey(), storagePolicyTransitionParamsDto.getDestinationStorageName(),
-            storagePolicyTransitionParamsDto.getNewDestinationStorageUnitStatus(), storagePolicyTransitionParamsDto.getOldDestinationStorageUnitStatus());
-
-        // Execute the storage policy transition after step.
-        storagePolicyProcessorHelperService.executeStoragePolicyTransitionAfterStep(storagePolicyTransitionParamsDto);
+            storagePolicyTransitionParamsDto.getBusinessObjectDataKey(), storagePolicyTransitionParamsDto.getStorageName(),
+            storagePolicyTransitionParamsDto.getNewStorageUnitStatus(), storagePolicyTransitionParamsDto.getOldStorageUnitStatus());
     }
 }

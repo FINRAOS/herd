@@ -41,7 +41,6 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.impl.BusinessObjectDataServiceImpl;
@@ -874,50 +873,6 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
     }
 
     @Test
-    public void testCheckBusinessObjectDataAvailabilityNoStorageUnitExistsBdataArchived()
-    {
-        // Create a non-Glacier storage.
-        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE);
-
-        // Create a Glacier storage.
-        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Create VALID business object data with an "available" storage unit in the Glacier storage.
-        storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME_2, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
-                NO_STORAGE_DIRECTORY_PATH);
-
-        // Check the business object data availability in the non-Glacier storage.
-        BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "not available" with the "NOT_REGISTERED" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList("", "", "", ""), NO_DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED))), result);
-
-        // Check the business object data availability without specifying storage.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "not available" with the "NOT_REGISTERED" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-            NO_AVAILABLE_STATUSES, Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList("", "", "", ""), NO_DATA_VERSION,
-            BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED))), result);
-    }
-
-    @Test
     public void testCheckBusinessObjectDataAvailabilityNonAvailableStorageUnitForSingleValidVersion()
     {
         // Create VALID business object data with an "available" storage unit.
@@ -953,8 +908,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_NO_ENABLED_STORAGE_UNIT))), result);
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_UNIT_STATUS))), result);
     }
 
     @Test
@@ -987,57 +941,12 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
     }
 
     @Test
-    public void testCheckBusinessObjectDataAvailabilityAvailableStorageUnitBdataArchived()
-    {
-        // Create VALID business object data with an "available" storage unit in a non-Glacier storage.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
-                NO_STORAGE_DIRECTORY_PATH);
-
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the business object data to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntity.getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
-
-        // Check the business object data availability.
-        BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "available" with the "VALID" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays
-            .asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
-            NO_NOT_AVAILABLE_STATUSES), result);
-
-        // Check the business object data availability without specifying storage.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "available" with the "VALID" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME, Arrays
-            .asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
-            NO_NOT_AVAILABLE_STATUSES), result);
-    }
-
-    @Test
-    public void testCheckBusinessObjectDataAvailabilityNonAvailableStorageUnitBdataArchived()
+    public void testCheckBusinessObjectDataAvailabilityStorageUnitArchived()
     {
         // Create VALID business object data with a "non-available" storage unit.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+        storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.DISABLED,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ARCHIVED,
                 NO_STORAGE_DIRECTORY_PATH);
 
         // Check the business object data availability.
@@ -1047,192 +956,12 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
                     NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
                 NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
-        // Validate the response object. Business object data should be listed as "not available" with the "NO_ENABLED_STORAGE_UNIT" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_NO_ENABLED_STORAGE_UNIT))), result);
-
-        // Create two Glacier storage. The second storage is needed here just for code coverage.
-        StorageEntity glacierStorageEntity1 = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-        StorageEntity glacierStorageEntity2 = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.GLACIER);
-
-        // Add a "non-available" storage unit for the business object data to the Glacier storage.
-        StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(glacierStorageEntity1, storageUnitEntity.getBusinessObjectData(),
-                storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.DISABLED), NO_STORAGE_DIRECTORY_PATH);
-
-        // Check the business object data availability.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should still be listed as "not available" with the "NO_ENABLED_STORAGE_UNIT" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_NO_ENABLED_STORAGE_UNIT))), result);
-
-        // Update the Glacier storage unit status to a available one.
-        glacierStorageUnitEntity.setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED));
-        herdDao.saveAndRefresh(glacierStorageUnitEntity);
-
-        // Check the business object data availability.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
         // Validate the response object. Business object data should be listed as "not available" with the "ARCHIVED" reason.
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_ARCHIVED))), result);
-
-        // Check the business object data availability without specifying storage.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "not available" with the "ARCHIVED" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-            NO_AVAILABLE_STATUSES, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_ARCHIVED))),
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, StorageUnitStatusEntity.ARCHIVED))),
             result);
-
-        // Add an "available" storage unit to the second Glacier storage. This is only needed for code coverage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity2, storageUnitEntity.getBusinessObjectData(), StorageUnitStatusEntity.ENABLED,
-            NO_STORAGE_DIRECTORY_PATH);
-
-        // Check the business object data availability.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be still listed as "not available" with the "ARCHIVED" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_ARCHIVED))), result);
-    }
-
-    @Test
-    public void testCheckBusinessObjectDataAvailabilityGlacierStorageOnly()
-    {
-        // Create a Glacier storage.
-        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.GLACIER);
-
-        // Create a business object format.
-        businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
-
-        // Check the business object data availability in the Glacier storage.
-        BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "not available" with the "NOT_REGISTERED" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList("", "", "", ""), NO_DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED))), result);
-
-        // Check the business object data availability without specifying storage.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "not available" with the "NOT_REGISTERED" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-            NO_AVAILABLE_STATUSES, Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList("", "", "", ""), NO_DATA_VERSION,
-            BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED))), result);
-
-        // Create VALID business object data with a "non-available" storage unit in the Glacier storage.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.DISABLED,
-                NO_STORAGE_DIRECTORY_PATH);
-
-        // Check the business object data availability in the Glacier storage.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "not available" with the "NO_ENABLED_STORAGE_UNIT" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_NO_ENABLED_STORAGE_UNIT))), result);
-
-        // Check the business object data availability without specifying storage.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "not available" with the "NOT_REGISTERED" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-            NO_AVAILABLE_STATUSES, Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList("", "", "", ""), NO_DATA_VERSION,
-            BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED))), result);
-
-        // Update the Glacier storage unit status to a available one.
-        storageUnitEntity.setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED));
-        herdDao.saveAndRefresh(storageUnitEntity);
-
-        // Check the business object data availability.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "not available" with the "ARCHIVED" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_ARCHIVED))), result);
-
-        // Check the business object data availability without specifying storage.
-        result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Business object data should be listed as "not available" with the "NOT_REGISTERED" reason.
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-            NO_AVAILABLE_STATUSES, Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList("", "", "", ""), NO_DATA_VERSION,
-            BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED))), result);
     }
 
     @Test
@@ -2202,27 +1931,21 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_NO_ENABLED_STORAGE_UNIT))), result);
+                StorageUnitStatusEntity.DISABLED))), result);
     }
 
     @Test
     public void testCheckBusinessObjectDataAvailabilityIncludeAllRegisteredSubPartitionsSecondSubPartitionValidNonAvailableStorageUnitBdataArchived()
     {
-        // Create two VALID sub-partitions - the first with an "available" storage unit and the second with a "non-available" storage unit.
-        List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitDaoTestHelper
+        // Create two VALID sub-partitions - the first with an "available" storage unit and the second with an "ARCHIVED" storage unit.
+        storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH), storageUnitDaoTestHelper
+                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH));
-
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
+                StorageUnitStatusEntity.ARCHIVED, NO_STORAGE_DIRECTORY_PATH);
 
         // Check this business object data availability with "IncludeAllRegisteredSubPartitions" option enabled.
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
@@ -2239,27 +1962,21 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION,
-                BusinessObjectDataServiceImpl.REASON_ARCHIVED))), result);
+                StorageUnitStatusEntity.ARCHIVED))), result);
     }
 
     @Test
     public void testCheckBusinessObjectDataAvailabilityIncludeAllRegisteredSubPartitionsSecondSubPartitionInvalidBdataArchived()
     {
-        // Create two VALID sub-partitions - the first with an "available" storage unit and the second with a "non-available" storage unit.
-        List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitDaoTestHelper
+        // Create VALID and INVALID sub-partitions - the first with an "available" storage unit and the second with a "non-available" storage unit.
+        storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH), storageUnitDaoTestHelper
+                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.INVALID,
-                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH));
-
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
+                StorageUnitStatusEntity.ARCHIVED, NO_STORAGE_DIRECTORY_PATH);
 
         // Check this business object data availability with "IncludeAllRegisteredSubPartitions" option enabled.
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
@@ -2268,70 +1985,28 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
                     NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
                 INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
-        // Validate the response object. Both sub-partitions should be listed - the first as VALID "available" and the second as INVALID "non-available".
+        // Validate the response object. Both sub-partitions should be listed - the first as VALID "available" and the second as "ARCHIVED" "non-available".
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION,
-                BusinessObjectDataStatusEntity.INVALID))), result);
-    }
-
-    @Test
-    public void testCheckBusinessObjectDataAvailabilityIncludeAllRegisteredSubPartitionsSecondSubPartitionInvalidNonAvailableStorageUnitBdataArchived()
-    {
-        // Create two VALID sub-partitions - the first with an "available" storage unit and the second with a "non-available" storage unit.
-        List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH), storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING,
-                StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH));
-
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
-
-        // Check this business object data availability with "IncludeAllRegisteredSubPartitions" option enabled.
-        BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
-            new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
-
-        // Validate the response object. Both sub-partitions should be listed - the first as VALID "available" and the second as ARCHIVED "non-available".
-        assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
-                BusinessObjectDataStatusEntity.VALID)), Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION,
-                BusinessObjectDataStatusEntity.ARCHIVED))), result);
+                StorageUnitStatusEntity.ARCHIVED))), result);
     }
 
     @Test
     public void testCheckBusinessObjectDataAvailabilityIncludeAllRegisteredSubPartitionsSecondSubPartitionDeletedBdataArchived()
     {
-        // Create two VALID sub-partitions - the first with an "available" storage unit and the second with a "non-available" storage unit.
-        List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitDaoTestHelper
+        // Create VALID and DELETED sub-partitions - the first with an "available" storage unit and the second with an "ARCHIVED" storage unit.
+        storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH), storageUnitDaoTestHelper
+                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.DELETED,
-                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH));
-
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
+                StorageUnitStatusEntity.ARCHIVED, NO_STORAGE_DIRECTORY_PATH);
 
         // Check this business object data availability with "IncludeAllRegisteredSubPartitions" option enabled.
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
@@ -2351,21 +2026,15 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
     @Test
     public void testCheckBusinessObjectDataAvailabilityIncludeAllRegisteredSubPartitionsSecondSubPartitionDeletedNonAvailableStorageUnitBdataArchived()
     {
-        // Create two VALID sub-partitions - the first with an "available" storage unit and the second with a "non-available" storage unit.
-        List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitDaoTestHelper
+        // Create two VALID and DELETED sub-partitions - the first with an "available" storage unit and the second with an "ARCHIVED" storage unit.
+        storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH), storageUnitDaoTestHelper
+                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.DELETED,
-                StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH));
-
-        // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
-
-        // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
-            storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
+                StorageUnitStatusEntity.ARCHIVED, NO_STORAGE_DIRECTORY_PATH);
 
         // Check this business object data availability with "IncludeAllRegisteredSubPartitions" option enabled.
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(

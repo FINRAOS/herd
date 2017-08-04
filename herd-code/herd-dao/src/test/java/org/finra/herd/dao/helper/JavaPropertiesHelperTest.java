@@ -15,13 +15,14 @@
 */
 package org.finra.herd.dao.helper;
 
+import java.io.ByteArrayInputStream;
 import java.util.Map;
 import java.util.Properties;
 
-import org.finra.herd.dao.AbstractDaoTest;
-import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.junit.Assert;
 import org.junit.Test;
+
+import org.finra.herd.dao.AbstractDaoTest;
 
 public class JavaPropertiesHelperTest extends AbstractDaoTest
 {

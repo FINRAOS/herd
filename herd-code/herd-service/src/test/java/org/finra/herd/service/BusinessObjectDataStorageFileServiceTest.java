@@ -497,8 +497,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
             assertEquals(String.format(
                 "Business object data status must be one of the pre-registration statuses. " + "Business object data status {%s}, business object data {%s}",
                 businessObjectDataStatusEntity.getCode(), businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    NO_PARTITION_VALUES, DATA_VERSION)), e.getMessage());
+                    .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        NO_PARTITION_VALUES, DATA_VERSION)), e.getMessage());
         }
     }
 
@@ -947,7 +947,7 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Number of storage files (1) already registered for the business object data in \"%s\" storage is not equal " +
-                "to the number of registered storage files (2) matching \"%s/\" S3 key prefix in the same storage.", StorageEntity.MANAGED_STORAGE,
+                    "to the number of registered storage files (2) matching \"%s/\" S3 key prefix in the same storage.", StorageEntity.MANAGED_STORAGE,
                 testS3KeyPrefix), e.getMessage());
         }
     }
@@ -1147,5 +1147,40 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
             .createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         super.storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, FILE_PATH_1, FILE_SIZE_1_KB, null);
+    }
+
+    @Test
+    public void testCreateBusinessObjectDataStorageFilesBadStorageUnitStatus()
+    {
+        // Create an S3 storage with file size validation enabled without file existence validation.
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME_2),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                    S3_KEY_PREFIX_VELOCITY_TEMPLATE),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE), Boolean.toString(true))));
+
+        // Create a storage unit.
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING, StorageUnitStatusEntity.ARCHIVED,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Try to add storage files to an S3 storage unit with non-ENABLED status.
+        try
+        {
+            businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
+                new BusinessObjectDataStorageFilesCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
+            fail("Should throw an IllegalArgumentException when adding files to storage unit with status that is not ENABLED.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Storage unit must be in the ENABLED status. Storage unit status {%s}, business object data {%s}", StorageUnitStatusEntity.ARCHIVED,
+                    businessObjectDataServiceTestHelper
+                        .getExpectedBusinessObjectDataKeyAsString(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                            PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION)), e.getMessage());
+        }
     }
 }

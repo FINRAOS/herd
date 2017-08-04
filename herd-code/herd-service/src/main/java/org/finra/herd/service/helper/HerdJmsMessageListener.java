@@ -35,7 +35,7 @@ import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.service.SqsNotificationEventService;
+import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.UploadDownloadService;
 import org.finra.herd.service.impl.UploadDownloadServiceImpl.CompleteUploadSingleMessageResult;
 
@@ -51,7 +51,7 @@ public class HerdJmsMessageListener
     private JsonHelper jsonHelper;
 
     @Autowired
-    private SqsNotificationEventService sqsNotificationEventService;
+    private MessageNotificationEventService sqsNotificationEventService;
 
     @Autowired
     private UploadDownloadService uploadDownloadService;

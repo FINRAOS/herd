@@ -15,15 +15,26 @@
 */
 package org.finra.herd.dao;
 
-import com.amazonaws.ClientConfiguration;
+import java.util.Map;
+
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 
 /**
- * AWS SQS Operations Service.
+ * A service for AWS SQS operations.
  */
 public interface SqsOperations
 {
     /**
-     * Sends a text message to the specified AWS SQS queue.
+     * Delivers a message to the specified queue.
+     *
+     * @param queueName the name of the Amazon SQS queue to which a message is sent
+     * @param messageText the text of the message
+     * @param messageAttributes the optional SQS message attributes
+     * @param amazonSQS the client for accessing AWS SQS
+     *
+     * @return the result the send message operation returned by the service
      */
-    public void sendSqsTextMessage(ClientConfiguration client, String queueName, String messageText);
+    public SendMessageResult sendMessage(String queueName, String messageText, Map<String, MessageAttributeValue> messageAttributes, AmazonSQS amazonSQS);
 }

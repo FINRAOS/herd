@@ -16,42 +16,64 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpert;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpertCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpertKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpertKeys;
-import org.finra.herd.model.jpa.BusinessObjectDefinitionSubjectMatterExpertEntity;
+import org.finra.herd.service.BusinessObjectDefinitionSubjectMatterExpertService;
 
 /**
  * This class tests various functionality within the business object definition subject matter expert REST controller.
  */
 public class BusinessObjectDefinitionSubjectMatterExpertRestControllerTest extends AbstractRestTest
 {
+    @InjectMocks
+    private BusinessObjectDefinitionSubjectMatterExpertRestController businessObjectDefinitionSubjectMatterExpertRestController;
+
+    @Mock
+    private BusinessObjectDefinitionSubjectMatterExpertService businessObjectDefinitionSubjectMatterExpertService;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testCreateBusinessObjectDefinitionSubjectMatterExpert()
     {
         // Create a business object definition subject matter expert key.
         BusinessObjectDefinitionSubjectMatterExpertKey key = new BusinessObjectDefinitionSubjectMatterExpertKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
 
-        // Create and persist the relative database entities.
-        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, DESCRIPTION);
+        BusinessObjectDefinitionSubjectMatterExpertCreateRequest request = new BusinessObjectDefinitionSubjectMatterExpertCreateRequest(key);
 
+        BusinessObjectDefinitionSubjectMatterExpert businessObjectDefinitionSubjectMatterExpert = new BusinessObjectDefinitionSubjectMatterExpert(ID, key);
+
+        when(businessObjectDefinitionSubjectMatterExpertService.createBusinessObjectDefinitionSubjectMatterExpert(request))
+            .thenReturn(businessObjectDefinitionSubjectMatterExpert);
         // Create a business object definition subject matter expert.
         BusinessObjectDefinitionSubjectMatterExpert resultBusinessObjectDefinitionSubjectMatterExpert =
-            businessObjectDefinitionSubjectMatterExpertRestController
-                .createBusinessObjectDefinitionSubjectMatterExpert(new BusinessObjectDefinitionSubjectMatterExpertCreateRequest(key));
+            businessObjectDefinitionSubjectMatterExpertRestController.createBusinessObjectDefinitionSubjectMatterExpert(request);
 
+        // Verify the external calls.
+        verify(businessObjectDefinitionSubjectMatterExpertService).createBusinessObjectDefinitionSubjectMatterExpert(request);
+        verifyNoMoreInteractions(businessObjectDefinitionSubjectMatterExpertService);
         // Validate the returned object.
-        assertEquals(new BusinessObjectDefinitionSubjectMatterExpert(resultBusinessObjectDefinitionSubjectMatterExpert.getId(), key),
-            resultBusinessObjectDefinitionSubjectMatterExpert);
+        assertEquals(businessObjectDefinitionSubjectMatterExpert, resultBusinessObjectDefinitionSubjectMatterExpert);
     }
 
     @Test
@@ -60,23 +82,20 @@ public class BusinessObjectDefinitionSubjectMatterExpertRestControllerTest exten
         // Create a business object definition subject matter expert key.
         BusinessObjectDefinitionSubjectMatterExpertKey key = new BusinessObjectDefinitionSubjectMatterExpertKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
 
-        // Create and persist the relative database entities.
-        BusinessObjectDefinitionSubjectMatterExpertEntity businessObjectDefinitionSubjectMatterExpertEntity =
-            businessObjectDefinitionSubjectMatterExpertDaoTestHelper.createBusinessObjectDefinitionSubjectMatterExpertEntity(key);
+        BusinessObjectDefinitionSubjectMatterExpert businessObjectDefinitionSubjectMatterExpert = new BusinessObjectDefinitionSubjectMatterExpert(ID, key);
 
-        // Validate that this business object definition subject matter expert exists.
-        assertNotNull(businessObjectDefinitionSubjectMatterExpertDao.getBusinessObjectDefinitionSubjectMatterExpertByKey(key));
+        when(businessObjectDefinitionSubjectMatterExpertService.deleteBusinessObjectDefinitionSubjectMatterExpert(key))
+            .thenReturn(businessObjectDefinitionSubjectMatterExpert);
 
         // Delete this business object definition subject matter expert.
         BusinessObjectDefinitionSubjectMatterExpert deletedBusinessObjectDefinitionSubjectMatterExpert =
             businessObjectDefinitionSubjectMatterExpertRestController.deleteBusinessObjectDefinitionSubjectMatterExpert(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
 
+        // Verify the external calls.
+        verify(businessObjectDefinitionSubjectMatterExpertService).deleteBusinessObjectDefinitionSubjectMatterExpert(key);
+        verifyNoMoreInteractions(businessObjectDefinitionSubjectMatterExpertService);
         // Validate the returned object.
-        assertEquals(new BusinessObjectDefinitionSubjectMatterExpert(businessObjectDefinitionSubjectMatterExpertEntity.getId(), key),
-            deletedBusinessObjectDefinitionSubjectMatterExpert);
-
-        // Ensure that this business object definition subject matter expert is no longer there.
-        assertNull(businessObjectDefinitionSubjectMatterExpertDao.getBusinessObjectDefinitionSubjectMatterExpertByKey(key));
+        assertEquals(businessObjectDefinitionSubjectMatterExpert, deletedBusinessObjectDefinitionSubjectMatterExpert);
     }
 
     @Test
@@ -87,19 +106,24 @@ public class BusinessObjectDefinitionSubjectMatterExpertRestControllerTest exten
             .asList(new BusinessObjectDefinitionSubjectMatterExpertKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID_2),
                 new BusinessObjectDefinitionSubjectMatterExpertKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID));
 
-        // Create and persist the relative database entities.
-        for (BusinessObjectDefinitionSubjectMatterExpertKey key : keys)
-        {
-            businessObjectDefinitionSubjectMatterExpertDaoTestHelper.createBusinessObjectDefinitionSubjectMatterExpertEntity(key);
-        }
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
 
+        BusinessObjectDefinitionSubjectMatterExpertKeys businessObjectDefinitionSubjectMatterExpertKeys =
+            new BusinessObjectDefinitionSubjectMatterExpertKeys(keys);
+
+        when(businessObjectDefinitionSubjectMatterExpertService
+            .getBusinessObjectDefinitionSubjectMatterExpertsByBusinessObjectDefinition(businessObjectDefinitionKey))
+            .thenReturn(businessObjectDefinitionSubjectMatterExpertKeys);
         // Get a list of business object definition subject matter expert keys for the specified business object definition.
         BusinessObjectDefinitionSubjectMatterExpertKeys resultBusinessObjectDefinitionSubjectMatterExperts =
             businessObjectDefinitionSubjectMatterExpertRestController
                 .getBusinessObjectDefinitionSubjectMatterExpertsByBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME);
 
+        // Verify the external calls.
+        verify(businessObjectDefinitionSubjectMatterExpertService)
+            .getBusinessObjectDefinitionSubjectMatterExpertsByBusinessObjectDefinition(businessObjectDefinitionKey);
+        verifyNoMoreInteractions(businessObjectDefinitionSubjectMatterExpertService);
         // Validate the returned object.
-        assertEquals(new BusinessObjectDefinitionSubjectMatterExpertKeys(Arrays.asList(keys.get(1), keys.get(0))),
-            resultBusinessObjectDefinitionSubjectMatterExperts);
+        assertEquals(businessObjectDefinitionSubjectMatterExpertKeys, resultBusinessObjectDefinitionSubjectMatterExperts);
     }
 }

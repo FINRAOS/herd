@@ -37,7 +37,7 @@ import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.ParameterHelper;
 
 /**
- * The business object data finalize restore job.
+ * The business object data finalize restore system job.
  */
 @Component(BusinessObjectDataFinalizeRestoreJob.JOB_NAME)
 @DisallowConcurrentExecution
@@ -78,14 +78,14 @@ public class BusinessObjectDataFinalizeRestoreJob extends AbstractSystemJob
         int finalizedRestores = 0;
         if (maxBusinessObjectDataInstancesToFinalize > 0)
         {
-            // Get restoring business object data.
+            // Get business object data that is currently being restored.
             List<StorageUnitAlternateKeyDto> storageUnitKeys =
-                businessObjectDataFinalizeRestoreService.getGlacierStorageUnitsToRestore(maxBusinessObjectDataInstancesToFinalize);
+                businessObjectDataFinalizeRestoreService.getS3StorageUnitsToRestore(maxBusinessObjectDataInstancesToFinalize);
 
-            // Log the number of Glacier storage units selected for processing.
-            LOGGER.info("Selected for processing Glacier storage units. systemJobName=\"{}\" storageUnitCount={}", JOB_NAME, storageUnitKeys.size());
+            // Log the number of storage units selected for processing.
+            LOGGER.info("Selected for processing S3 storage units. systemJobName=\"{}\" storageUnitCount={}", JOB_NAME, storageUnitKeys.size());
 
-            // Try to finalize restore for each of the selected Glacier storage units.
+            // Try to finalize restore for each of the selected storage units.
             for (StorageUnitAlternateKeyDto storageUnitKey : storageUnitKeys)
             {
                 try
@@ -97,9 +97,8 @@ public class BusinessObjectDataFinalizeRestoreJob extends AbstractSystemJob
                 {
                     // Log the exception.
                     LOGGER.error("Failed to finalize a business object data restore from the Glacier storage. " +
-                        "systemJobName=\"{}\" storageName=\"{}\" businessObjectDataKey={}", JOB_NAME,
-                        jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataKeyFromStorageUnitKey(storageUnitKey)),
-                        storageUnitKey.getStorageName(), runtimeException);
+                        "systemJobName=\"{}\" storageName=\"{}\" businessObjectDataKey={}", JOB_NAME, storageUnitKey.getStorageName(),
+                        jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataKeyFromStorageUnitKey(storageUnitKey)), runtimeException);
                 }
             }
         }

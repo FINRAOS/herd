@@ -15,44 +15,57 @@
 */
 package org.finra.herd.rest;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.FileTypeKey;
 import org.finra.herd.model.api.xml.FileTypeKeys;
+import org.finra.herd.service.FileTypeService;
 
 /**
  * This class tests various functionality within the file type REST controller.
  */
 public class FileTypeRestControllerTest extends AbstractRestTest
 {
+    @InjectMocks
+    private FileTypeRestController fileTypeRestController;
+
+    @Mock
+    private FileTypeService fileTypeService;
+
+    @Before()
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testGetFileTypes() throws Exception
     {
         // Get a list of test file type keys.
         List<FileTypeKey> testFileTypeKeys = Arrays.asList(new FileTypeKey(FORMAT_FILE_TYPE_CODE), new FileTypeKey(FORMAT_FILE_TYPE_CODE_2));
-
+        FileTypeKeys fileTypeKeys = new FileTypeKeys(testFileTypeKeys);
         // Create and persist file type entities.
-        for (FileTypeKey key : testFileTypeKeys)
-        {
-            fileTypeDaoTestHelper.createFileTypeEntity(key.getFileTypeCode());
-        }
+        when(fileTypeService.getFileTypes()).thenReturn(fileTypeKeys);
 
         // Retrieve a list of file type keys.
         FileTypeKeys resultFileTypeKeys = fileTypeRestController.getFileTypes();
 
+        // Verify the external calls.
+        verify(fileTypeService).getFileTypes();
+        verifyNoMoreInteractions(fileTypeService);
         // Validate the returned object.
-        assertNotNull(resultFileTypeKeys);
-        assertNotNull(resultFileTypeKeys.getFileTypeKeys());
-        assertTrue(resultFileTypeKeys.getFileTypeKeys().size() >= testFileTypeKeys.size());
-        for (FileTypeKey key : testFileTypeKeys)
-        {
-            assertTrue(resultFileTypeKeys.getFileTypeKeys().contains(key));
-        }
+        assertEquals(fileTypeKeys, resultFileTypeKeys);
     }
 }

@@ -20,8 +20,10 @@ import org.springframework.context.annotation.Configuration;
 
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.S3Operations;
+import org.finra.herd.dao.StsOperations;
 import org.finra.herd.dao.impl.HttpClientOperationsImpl;
 import org.finra.herd.dao.impl.S3OperationsImpl;
+import org.finra.herd.dao.impl.StsOperationsImpl;
 
 /**
  * Data Bridge environment specific Spring module configuration.
@@ -33,6 +35,12 @@ public class DataBridgeEnvSpringModuleConfig
     public S3Operations s3Operations()
     {
         return new S3OperationsImpl();
+    }
+
+    @Bean
+    public StsOperations stsOperations()
+    {
+        return new StsOperationsImpl();
     }
 
     @Bean

@@ -26,6 +26,14 @@ import java.util.List;
  */
 public class SecurityFunctions
 {
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_ALL_GET = "FN_ATTRIBUTE_VALUE_LISTS_GET_ALL";
+
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_DELETE = "FN_ATTRIBUTE_VALUE_LISTS_DELETE";
+
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_GET = "FN_ATTRIBUTE_VALUE_LISTS_GET";
+
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_POST = "FN_ATTRIBUTE_VALUE_LISTS_POST";
+
     public static final String FN_BUILD_INFO_GET = "FN_BUILD_INFO_GET";
 
     public static final String FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_GET = "FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_GET";
@@ -108,8 +116,6 @@ public class SecurityFunctions
 
     public static final String FN_BUSINESS_OBJECT_DEFINITIONS_SEARCH_POST = "FN_BUSINESS_OBJECT_DEFINITIONS_SEARCH_POST";
 
-    public static final String FN_BUSINESS_OBJECT_DEFINITIONS_VALIDATE_INDEX_GET = "FN_BUSINESS_OBJECT_DEFINITIONS_VALIDATE_INDEX_GET";
-
     public static final String FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_ALL_GET = "FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_ALL_GET";
 
     public static final String FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_DELETE = "FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_DELETE";
@@ -151,6 +157,10 @@ public class SecurityFunctions
     public static final String FN_BUSINESS_OBJECT_FORMATS_POST = "FN_BUSINESS_OBJECT_FORMATS_POST";
 
     public static final String FN_BUSINESS_OBJECT_FORMATS_PUT = "FN_BUSINESS_OBJECT_FORMATS_PUT";
+
+    public static final String FN_BUSINESS_OBJECT_FORMAT_ATTRIBUTES_PUT = "FN_BUSINESS_OBJECT_FORMAT_ATTRIBUTES_PUT";
+
+    public static final String FN_BUSINESS_OBJECT_FORMAT_PARENTS_PUT = "FN_BUSINESS_OBJECT_FORMAT_PARENTS_PUT";
 
     public static final String FN_CUSTOM_DDLS_ALL_GET = "FN_CUSTOM_DDLS_ALL_GET";
 
@@ -198,10 +208,6 @@ public class SecurityFunctions
 
     public static final String FN_EMR_MASTER_SECURITY_GROUPS_POST = "FN_EMR_MASTER_SECURITY_GROUPS_POST";
 
-    public static final String FN_EMR_OOZIE_STEPS_POST = "FN_EMR_OOZIE_STEPS_POST";
-
-    public static final String FN_EMR_OOZIE_WORKFLOW_GET = "FN_EMR_OOZIE_WORKFLOW_GET";
-
     public static final String FN_EMR_PIG_STEPS_POST = "FN_EMR_PIG_STEPS_POST";
 
     public static final String FN_EMR_SHELL_STEPS_POST = "FN_EMR_SHELL_STEPS_POST";
@@ -213,6 +219,14 @@ public class SecurityFunctions
     public static final String FN_EXPECTED_PARTITION_VALUES_POST = "FN_EXPECTED_PARTITION_VALUES_POST";
 
     public static final String FN_FILE_TYPES_ALL_GET = "FN_FILE_TYPES_ALL_GET";
+
+    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_ALL_GET = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_ALL_GET";
+
+    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_GET = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_GET";
+    
+    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE";
+
+    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_POST = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_POST";
 
     public static final String FN_INDEX_SEARCH_POST = "FN_INDEX_SEARCH_POST";
 
@@ -269,6 +283,8 @@ public class SecurityFunctions
     public static final String FN_SEARCH_INDEXES_GET = "FN_SEARCH_INDEXES_GET";
 
     public static final String FN_SEARCH_INDEXES_POST = "FN_SEARCH_INDEXES_POST";
+
+    public static final String FN_SEARCH_INDEXES_VALIDATION_POST = "FN_SEARCH_INDEXES_VALIDATION_POST";
 
     public static final String FN_STORAGES_ALL_GET = "FN_STORAGES_ALL_GET";
 
@@ -352,6 +368,12 @@ public class SecurityFunctions
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_POST = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
 
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_PUT = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
+
+    public static final String FN_ALLOWED_ATTRIBUTE_VALUES_DELETE = "FN_ALLOWED_ATTRIBUTE_VALUES_DELETE";
+
+    public static final String FN_ALLOWED_ATTRIBUTE_VALUES_ALL_GET = "FN_ALLOWED_ATTRIBUTE_VALUES_ALL_GET";
+
+    public static final String FN_ALLOWED_ATTRIBUTE_VALUES_POST = "FN_ALLOWED_ATTRIBUTE_VALUES_POST";
 
     /**
      * Returns all the functions sorted by function name.

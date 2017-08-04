@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -94,11 +95,11 @@ public abstract class AbstractCoreTest
     protected ResourceLoader resourceLoader;
 
     /**
-     * Returns a random suffix.
+     * Returns a random big decimal.
      */
-    public static String getRandomSuffix()
+    public static BigDecimal getRandomBigDecimal()
     {
-        return String.format("%.5f", Math.random()).substring(2, 7);
+        return new BigDecimal(Math.random() * Integer.MAX_VALUE).setScale(2, BigDecimal.ROUND_HALF_UP);
     }
 
     /**
@@ -108,6 +109,22 @@ public abstract class AbstractCoreTest
     {
         Random rnd = new Random();
         return new Date(Math.abs(System.currentTimeMillis() - rnd.nextLong()));
+    }
+
+    /**
+     * Returns a random integer.
+     */
+    public static Integer getRandomInteger()
+    {
+        return (int) (Math.random() * Integer.MAX_VALUE);
+    }
+
+    /**
+     * Returns a random suffix.
+     */
+    public static String getRandomSuffix()
+    {
+        return String.format("%.5f", Math.random()).substring(2, 7);
     }
 
     @Before

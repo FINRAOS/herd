@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd</artifactId>
-      <version>0.39.0-SNAPSHOT</version>
+      <version>0.49.0-SNAPSHOT</version>
    </parent>
 
    <name>herd code</name>
@@ -204,15 +204,18 @@
                       you previously built will still exist in the clover database and will still
                       be listed in the report. We are excluding the implementation of AWSOperations
                       and S3Operations, since unit tests use a mock implementation. We are also excluding
-                      system jobs, since they would not be called directly from the unit tests.
+                      system jobs, since they would not be called directly from the unit tests. We are excluding
+                      deprecated activiti tasks.
                      -->
                   <excludes>
+                     <exclude>com/kscs/util/jaxb/**</exclude>
                      <exclude>org/finra/herd/model/**</exclude>
                      <exclude>org/finra/herd/**/config/**</exclude>
                      <exclude>org/finra/herd/dao/**/*OperationsImpl.class</exclude>
                      <exclude>org/finra/herd/service/systemjobs/**</exclude>
                      <exclude>org/finra/herd/sdk/**</exclude>
                      <exclude>org/finra/herd/dao/credstash/**</exclude>
+                     <exclude>org/finra/dm/service/activiti/**</exclude>
                   </excludes>
                </instrumentation>
             </configuration>
@@ -318,7 +321,6 @@
       <module>herd-app</module>
       <module>herd-war</module>
       <module>herd-tools</module>
-      <module>herd-web-assets</module>
       <module>herd-sdk</module>
    </modules>
 

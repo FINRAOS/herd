@@ -15,28 +15,35 @@
 */
 package org.finra.herd.dao;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Collections;
+
+import com.amazonaws.services.sqs.model.SendMessageResult;
 import org.junit.Test;
 
 import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.MessageHeader;
 
 /**
- * This class tests the functionality of SqsDao.
+ * This class tests the functionality of DAO for Amazon AWS SQS.
  */
 public class SqsDaoTest extends AbstractDaoTest
 {
     @Test
-    public void testSendSqsTextMessage() throws Exception
+    public void testSendMessage()
     {
-        // Send a text message to the specified AWS SQS queue.
-        // There is nothing to assert since not having an exception thrown is sufficient.
-        AwsParamsDto testAwsParamsDto = new AwsParamsDto();
-        testAwsParamsDto.setHttpProxyHost(HTTP_PROXY_HOST);
-        testAwsParamsDto.setHttpProxyPort(HTTP_PROXY_PORT);
-        sqsDao.sendSqsTextMessage(testAwsParamsDto, JMS_QUEUE_NAME, MESSAGE_TEXT);
+        // Send an SQS message.
+        assertEquals(new SendMessageResult().withMessageId(MESSAGE_ID),
+            sqsDao.sendMessage(new AwsParamsDto(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
 
-        // Send a text message to the specified AWS SQS queue without specifying HTTP proxy settings.
-        testAwsParamsDto.setHttpProxyHost(null);
-        testAwsParamsDto.setHttpProxyPort(null);
-        sqsDao.sendSqsTextMessage(testAwsParamsDto, JMS_QUEUE_NAME, MESSAGE_TEXT);
+        // Send an SQS message using proxy settings.
+        assertEquals(new SendMessageResult().withMessageId(MESSAGE_ID), sqsDao
+            .sendMessage(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT), AWS_SQS_QUEUE_NAME,
+                MESSAGE_TEXT, NO_MESSAGE_HEADERS));
+
+        // Publish an SQS message with message headers.
+        assertEquals(new SendMessageResult().withMessageId(MESSAGE_ID),
+            sqsDao.sendMessage(new AwsParamsDto(), AWS_SNS_TOPIC_ARN, MESSAGE_TEXT, Collections.singletonList(new MessageHeader(KEY, VALUE))));
     }
 }

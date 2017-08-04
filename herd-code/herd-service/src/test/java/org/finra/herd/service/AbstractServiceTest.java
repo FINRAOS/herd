@@ -15,6 +15,8 @@
  */
 package org.finra.herd.service;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -55,6 +57,7 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
@@ -70,6 +73,7 @@ import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.service.activiti.ActivitiHelper;
 import org.finra.herd.service.activiti.task.ExecuteJdbcTestHelper;
 import org.finra.herd.service.config.ServiceTestSpringModuleConfig;
@@ -78,14 +82,18 @@ import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
+import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
 import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionColumnDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
+import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
 import org.finra.herd.service.helper.JobDefinitionHelper;
+import org.finra.herd.service.helper.MessageTypeDaoHelper;
 import org.finra.herd.service.helper.NotificationActionFactory;
+import org.finra.herd.service.helper.NotificationMessageBuilder;
 import org.finra.herd.service.helper.NotificationRegistrationDaoHelper;
 import org.finra.herd.service.helper.NotificationRegistrationStatusDaoHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
@@ -93,7 +101,6 @@ import org.finra.herd.service.helper.S3PropertiesLocationHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.SearchIndexStatusDaoHelper;
 import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
-import org.finra.herd.service.helper.SqsMessageBuilder;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
@@ -115,9 +122,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ACTIVITI_XML_ADD_EMR_STEPS_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowAddEmrStep.bpmn20.xml";
 
-    public static final String ACTIVITI_XML_CHECK_CLUSTER_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCheckEmrCluster.bpmn20.xml";
+    public static final String ACTIVITI_XML_CHECK_CLUSTER_AND_RECEIVE_TASK_WITH_CLASSPATH =
+        "classpath:org/finra/herd/service/activitiWorkflowCheckEmrClusterAndReceiveTask.bpmn20.xml";
 
-    public static final String ACTIVITI_XML_CHECK_OOZIE_WORKFLOW_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCheckOozieJob.bpmn20.xml";
+    public static final String ACTIVITI_XML_CHECK_CLUSTER_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCheckEmrCluster.bpmn20.xml";
 
     public static final String ACTIVITI_XML_CREATE_CLUSTER_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCreateEmrCluster.bpmn20.xml";
 
@@ -140,8 +148,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ACTIVITI_XML_LOG_VARIABLES_WITH_CLASSPATH_DM = "classpath:org/finra/herd/service/activitiWorkflowLogVariablesDm.bpmn20.xml";
 
-    public static final String ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowRunOozieJob.bpmn20.xml";
-
     public static final String ACTIVITI_XML_TERMINATE_CLUSTER_WITH_CLASSPATH =
         "classpath:org/finra/herd/service/activitiWorkflowTerminateEmrCluster.bpmn20.xml";
 
@@ -153,9 +159,111 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH = "classpath:org/finra/herd/service/testHerdUserTaskWorkflow.bpmn20.xml";
 
+    public static final String ALLOWED_ATTRIBUTE_VALUE = "Attribute_Value_1";
+
+    public static final String ALLOWED_ATTRIBUTE_VALUE_2 = "Attribute_Value_2";
+
     public static final Boolean ALLOW_MISSING_DATA = true;
 
+    public static final String AWS_SECURITY_GROUP_ID = "UT_AwsSecurityGroupId_" + RANDOM_SUFFIX;
+
+    public static final String AWS_SQS_QUEUE_NAME = "AWS_SQS_QUEUE_NAME";
+
+    public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
+
+    public static final String BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
+        "  \"eventDate\" : \"$current_time\",\n" +
+        "  \"businessObjectDataKey\" : {\n" +
+        "    \"namespace\" : \"$businessObjectDataKey.namespace\",\n" +
+        "    \"businessObjectDefinitionName\" : \"$businessObjectDataKey.businessObjectDefinitionName\",\n" +
+        "    \"businessObjectFormatUsage\" : \"$businessObjectDataKey.businessObjectFormatUsage\",\n" +
+        "    \"businessObjectFormatFileType\" : \"$businessObjectDataKey.businessObjectFormatFileType\",\n" +
+        "    \"businessObjectFormatVersion\" : $businessObjectDataKey.businessObjectFormatVersion,\n" +
+        "    \"partitionValue\" : \"$businessObjectDataKey.partitionValue\",\n" +
+        "#if($CollectionUtils.isNotEmpty($businessObjectDataKey.subPartitionValues))    \"subPartitionValues\" : [ " +
+        "\"$businessObjectDataKey.subPartitionValues.get(0)\"" +
+        "#foreach ($subPartitionValue in $businessObjectDataKey.subPartitionValues.subList(1, $businessObjectDataKey.subPartitionValues.size())), \"$subPartitionValue\"" +
+        "#end\n" +
+        " ],\n" +
+        "#end\n" +
+        "    \"businessObjectDataVersion\" : $businessObjectDataKey.businessObjectDataVersion\n" +
+        "  },\n" +
+        "  \"newBusinessObjectDataStatus\" : \"$newBusinessObjectDataStatus\"" +
+        "#if($StringUtils.isNotEmpty($oldBusinessObjectDataStatus)),\n  \"oldBusinessObjectDataStatus\" : \"$oldBusinessObjectDataStatus\"" +
+        "#end\n" +
+        "#if($CollectionUtils.isNotEmpty($businessObjectDataAttributes.keySet())),\n" +
+        "  \"attributes\" : {\n" +
+        "#set ($keys = $Collections.list($Collections.enumeration($businessObjectDataAttributes.keySet())))\n" +
+        "    \"$keys.get(0)\" : \"$!businessObjectDataAttributes.get($keys.get(0))\"" +
+        "#foreach($key in $keys.subList(1, $keys.size()))\n" +
+        ",\n    \"$key\" : \"$!businessObjectDataAttributes.get($key)\"" +
+        "#end\n" +
+        "\n  }\n" +
+        "#end\n" +
+        "}\n";
+
+    public static final String BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML = "<?xml version=\"1.1\" encoding=\"UTF-8\"?>\n" +
+        "<datamgt:TestApplicationEvent xmlns:datamgt=\"http://testDomain/testApplication/testApplication-event\">\n" +
+        "   <header>\n" +
+        "      <producer>\n" +
+        "         <name>testDomain/testApplication</name>\n" +
+        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "      </producer>\n" +
+        "      <creation>\n" +
+        "         <datetime>$current_time</datetime>\n" +
+        "      </creation>\n" +
+        "      <correlation-id>BusinessObjectData_$businessObjectDataId</correlation-id>\n" +
+        "      <context-message-type>testDomain/testApplication/BusinessObjectDataStatusChanged</context-message-type>\n" +
+        "      <system-message-type>NoError</system-message-type>\n" +
+        "      <xsd>http://testDomain/testApplication/testApplication-event.xsd</xsd>\n" +
+        "      <event-id>\n" +
+        "         <system-name>testDomain/testApplication</system-name>\n" +
+        "         <system-unique-id>$uuid</system-unique-id>\n" +
+        "      </event-id>\n" +
+        "   </header>\n" +
+        "   <payload>\n" +
+        "      <eventDate>$current_time</eventDate>\n" +
+        "      <datamgtEvent>\n" +
+        "         <businessObjectDataStatusChanged>\n" +
+        "            <businessObjectDataKey>\n" +
+        "               <namespace>$businessObjectDataKey.namespace</namespace>\n" +
+        "               <businessObjectDefinitionName>$businessObjectDataKey.businessObjectDefinitionName</businessObjectDefinitionName>\n" +
+        "               <businessObjectFormatUsage>$businessObjectDataKey.businessObjectFormatUsage</businessObjectFormatUsage>\n" +
+        "               <businessObjectFormatFileType>$businessObjectDataKey.businessObjectFormatFileType</businessObjectFormatFileType>\n" +
+        "               <businessObjectFormatVersion>$businessObjectDataKey.businessObjectFormatVersion</businessObjectFormatVersion>\n" +
+        "               <partitionValue>$businessObjectDataKey.partitionValue</partitionValue>\n" +
+        "#if($CollectionUtils.isNotEmpty($businessObjectDataKey.subPartitionValues))               <subPartitionValues>\n" +
+        "#foreach ($subPartitionValue in $businessObjectDataKey.subPartitionValues)                  <partitionValue>$subPartitionValue</partitionValue>\n" +
+        "#end" +
+        "               </subPartitionValues>\n" +
+        "#end" +
+        "               <businessObjectDataVersion>$businessObjectDataKey.businessObjectDataVersion</businessObjectDataVersion>\n" +
+        "            </businessObjectDataKey>\n" +
+        "            <newBusinessObjectDataStatus>$newBusinessObjectDataStatus</newBusinessObjectDataStatus>\n" +
+        "#if($StringUtils.isNotEmpty($oldBusinessObjectDataStatus))            <oldBusinessObjectDataStatus>$oldBusinessObjectDataStatus</oldBusinessObjectDataStatus>\n" +
+        "#end" +
+        "#if($CollectionUtils.isNotEmpty($businessObjectDataAttributes.keySet()))" +
+        "            <attributes>\n" +
+        "#foreach($attributeName in $businessObjectDataAttributes.keySet())" +
+        "                <attribute name=\"$attributeName\">$!businessObjectDataAttributes.get($attributeName)</attribute>\n" +
+        "#end" +
+        "            </attributes>\n" +
+        "#end" +
+        "         </businessObjectDataStatusChanged>\n" +
+        "      </datamgtEvent>\n" +
+        "   </payload>\n" +
+        "   <soa-audit>\n" +
+        "      <triggered-date-time>$current_time</triggered-date-time>\n" +
+        "      <triggered-by-username>$username</triggered-by-username>\n" +
+        "      <transmission-id>$uuid</transmission-id>\n" +
+        "   </soa-audit>\n" +
+        "</datamgt:TestApplicationEvent>";
+
+    public static final Boolean CONTINUE_ON_ERROR = true;
+
     public static final Boolean CREATE_NEW_VERSION = true;
+
+    public static final Boolean DELETE_FILES = true;
 
     public static final String DIRECTORY_PATH = "UT_Directory_Path/Some_Path_1/" + RANDOM_SUFFIX + "/";
 
@@ -163,9 +271,37 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean DISCOVER_STORAGE_FILES = true;
 
+    public static final Boolean DRY_RUN = true;
+
+    public static final String EC2_PRICING_LIST_URL = "UT_Ec2PricingListUrl_" + RANDOM_SUFFIX;
+
+    public static final String EC2_PRODUCT_KEY = "UT_EC2_ProductKey_1_" + RANDOM_SUFFIX;
+
+    public static final String EC2_PRODUCT_KEY_2 = "UT_EC2_ProductKey_2_" + RANDOM_SUFFIX;
+
+    public static final String EMR_CLUSTER_ID = "UT_EMR_Cluster_ID_" + RANDOM_SUFFIX;
+
+    public static final String EMR_CLUSTER_NAME = "UT_EMR_Cluster_Name_" + RANDOM_SUFFIX;
+
+    public static final Boolean EMR_CLUSTER_VERBOSE_FLAG = true;
+
+    public static final String EMR_STEP_ID = "UT_EMR_Step_ID_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_JAR_LOCATION = "UT_EMR_Step_JAR_Location_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_MAIN_CLASS = "UT_EMR_Step_MainClass_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_NAME = "UT_EMR_Step_Name_" + RANDOM_SUFFIX;
+
+    public static final String EMR_STEP_SCRIPT_LOCATION = "UT_EMR_Step_Script_Location_" + RANDOM_SUFFIX;
+
     public static final String END_PARTITION_VALUE = "2014-04-08";
 
+    public static final DateTime END_TIME = getRandomDateTime();
+
     public static final String ERROR_MESSAGE = "UT_ErrorMessage_" + RANDOM_SUFFIX;
+
+    public static final Boolean EXCLUSION_SEARCH_FILTER = true;
 
     public static final int EXPECTED_UUID_SIZE = 36;
 
@@ -194,7 +330,17 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long FILE_SIZE_2 = (long) (Math.random() * Long.MAX_VALUE);
 
+    public static final String HERD_OUTGOING_QUEUE = "HERD_OUTGOING_QUEUE";
+
     public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
+
+    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
+
+    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
+
+    public static final Integer ID = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final Integer ID_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
@@ -205,6 +351,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean INCLUDE_DROP_TABLE_STATEMENT = true;
 
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
+
+    public static final String MESSAGE_VERSION = "UT_MessageVersion" + RANDOM_SUFFIX;
+
+    public static final String METHOD_NAME = "UT_MethodName_1_" + RANDOM_SUFFIX;
+
+    public static final String METHOD_NAME_2 = "UT_MethodName_2_" + RANDOM_SUFFIX;
 
     public static final String NEGATIVE_COLUMN_SIZE = "-1" + RANDOM_SUFFIX;
 
@@ -224,6 +376,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<BusinessObjectDataStatusChangeEvent> NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY = null;
 
+    public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
+
     public static final String NO_COLUMN_DEFAULT_VALUE = null;
 
     public static final String NO_COLUMN_DESCRIPTION = null;
@@ -234,6 +388,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_CREATE_NEW_VERSION = false;
 
+    public static final Boolean NO_DELETE_FILES = false;
+
     public static final DescriptiveBusinessObjectFormat NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT = null;
 
     public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
@@ -241,6 +397,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
     public static final DateTime NO_END_TIME = null;
+
+    public static final Exception NO_EXCEPTION = null;
+
+    public static final Boolean NO_EXCLUSION_SEARCH_FILTER = false;
 
     public static final Long NO_FILE_SIZE = null;
 
@@ -278,6 +438,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
 
+    public static final String NO_SKU = null;
+
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;
 
     public static final DateTime NO_START_TIME = null;
@@ -294,17 +456,29 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String NO_USER_ID = null;
 
+    public static final Boolean OVERRIDE_TERMINATION_PROTECTION = true;
+
+    public static final String PARAMETER_NAME = "UT_ParameterName_" + RANDOM_SUFFIX;
+
+    public static final String PARAMETER_VALUE = "UT_ParameterValue_" + RANDOM_SUFFIX;
+
     public static final List<String> PROCESS_DATE_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-08");
 
     public static final List<String> PROCESS_DATE_NOT_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-04", "2014-04-07");
 
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
 
+    public static final Boolean RETRIEVE_INSTANCE_FLEETS = true;
+
     public static final Long ROW_COUNT = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final Long ROW_COUNT_2 = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final String ROW_FORMAT = "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' NULL DEFINED AS '\\N'";
+
+    public static final String S3_ARCHIVE_TO_GLACIER_TAG_KEY = "UT_S3_Archive_To_Glacier_Tag_Key_" + RANDOM_SUFFIX;
+
+    public static final String S3_ARCHIVE_TO_GLACIER_TAG_VALUE = "UT_S3_Archive_To_Glacier_Tag_Value_" + RANDOM_SUFFIX;
 
     public static final String S3_KEY_PREFIX_VELOCITY_TEMPLATE =
         "$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName" +
@@ -329,13 +503,38 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     public static final int SHORT_DESCRIPTION_LENGTH = 300;
 
-    public static final String SQS_QUEUE_NAME = "UT_Sqs_Queue_Name_" + RANDOM_SUFFIX;
+    public static final String SKU = "UT_SKU_Value_" + RANDOM_SUFFIX;
+
+    public static final String SOURCE_SYSTEM = "UT_SourceSystem" + RANDOM_SUFFIX;
 
     public static final String START_PARTITION_VALUE = "2014-04-02";
+
+    public static final DateTime START_TIME = getRandomDateTime();
 
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
 
     public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
+
+    public static final String SYSTEM_MONITOR_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML = "<?xml version=\"1.1\" encoding=\"UTF-8\"?>\n" +
+        "<datamgt:monitor xmlns:datamgt=\"http://testDomain/system-monitor\">\n" +
+        "   <header>\n" +
+        "      <producer>\n" +
+        "         <name>testDomain/testApplication</name>\n" +
+        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "      </producer>\n" +
+        "      <creation>\n" +
+        "         <datetime>$current_time</datetime>\n" +
+        "      </creation>\n" +
+        "#if($StringUtils.isNotEmpty($incoming_message_correlation_id))      <correlation-id>$incoming_message_correlation_id</correlation-id>\n" +
+        "#end\n" +
+        "      <context-message-type>$incoming_message_context_message_type</context-message-type>\n" +
+        "      <system-message-type>NoError</system-message-type>\n" +
+        "      <xsd>http://testDomain/system-monitor.xsd</xsd>\n" +
+        "   </header>\n" +
+        "   <payload>\n" +
+        "      <contextMessageTypeToPublish />\n" +
+        "   </payload>\n" +
+        "</datamgt:monitor>";
 
     /**
      * The test job name as per the above workflow XML file.
@@ -357,6 +556,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String TEST_SQS_ENVIRONMENT = "testEnvironment";
 
     public static final String TEST_SQS_MESSAGE_CORRELATION_ID = "testCorrelationId";
+
+    public static final String UUID_VALUE = "UT_UUID_Value_" + RANDOM_SUFFIX;
+
+    public static final Boolean VERBOSE = true;
 
     public static final String ZERO_COLUMN_SIZE = "0";
 
@@ -386,6 +589,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected TaskService activitiTaskService;
+
+    @Autowired
+    protected AttributeValueListService attributeValueListService;
 
     @Autowired
     protected AwsHelper awsHelper;
@@ -424,7 +630,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected BusinessObjectDataNotificationRegistrationService businessObjectDataNotificationRegistrationService;
 
     @Autowired
-    protected BusinessObjectDataRetryStoragePolicyTransitionHelperService businessObjectDataRetryStoragePolicyTransitionHelperService;
+    protected BusinessObjectDataRetryStoragePolicyTransitionHelper businessObjectDataRetryStoragePolicyTransitionHelper;
 
     @Autowired
     protected BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
@@ -517,10 +723,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected Hive13DdlGenerator hive13DdlGenerator;
 
     @Autowired
-    protected JdbcService jdbcService;
+    protected IndexSearchResultTypeHelper indexSearchResultTypeHelper;
 
     @Autowired
-    protected JmsPublishingService jmsPublishingService;
+    protected JdbcService jdbcService;
 
     @Autowired
     protected JobDefinitionHelper jobDefinitionHelper;
@@ -541,6 +747,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected JsonHelper jsonHelper;
 
     @Autowired
+    protected MessageNotificationEventService messageNotificationEventService;
+
+    @Autowired
+    protected MessageTypeDaoHelper messageTypeDaoHelper;
+
+    @Autowired
     protected NamespaceService namespaceService;
 
     @Autowired
@@ -551,6 +763,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected NotificationEventService notificationEventService;
+
+    @Autowired
+    protected NotificationMessagePublishingService notificationMessagePublishingService;
 
     @Autowired
     protected NotificationRegistrationDaoHelper notificationRegistrationDaoHelper;
@@ -589,10 +804,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
 
     @Autowired
-    protected SqsMessageBuilder sqsMessageBuilder;
-
-    @Autowired
-    protected SqsNotificationEventService sqsNotificationEventService;
+    protected NotificationMessageBuilder sqsMessageBuilder;
 
     @Autowired
     protected StorageDaoHelper storageDaoHelper;
@@ -674,6 +886,26 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected XmlHelper xmlHelper;
+
+    /**
+     * Returns S3 key prefix constructed according to the S3 Naming Convention Wiki page.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param dataProviderName the data provider name
+     * @param partitionKey the format partition key
+     * @param subPartitionKeys the list of subpartition keys for the business object data
+     *
+     * @return the S3 key prefix constructed according to the S3 Naming Convention
+     */
+    public static String getExpectedS3KeyPrefix(BusinessObjectDataKey businessObjectDataKey, String dataProviderName, String partitionKey,
+        SchemaColumn[] subPartitionKeys)
+    {
+        return getExpectedS3KeyPrefix(businessObjectDataKey.getNamespace(), dataProviderName, businessObjectDataKey.getBusinessObjectDefinitionName(),
+            businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+            businessObjectDataKey.getBusinessObjectFormatVersion(), partitionKey, businessObjectDataKey.getPartitionValue(), subPartitionKeys,
+            businessObjectDataKey.getSubPartitionValues().toArray(new String[businessObjectDataKey.getSubPartitionValues().size()]),
+            businessObjectDataKey.getBusinessObjectDataVersion());
+    }
 
     /**
      * Returns S3 key prefix constructed according to the S3 Naming Convention Wiki page.
@@ -940,18 +1172,28 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     /**
      * Validates that the specified system monitor response message is valid. If not, an exception will be thrown.
      *
-     * @param systemMonitorResponseMessage the system monitor response message.
+     * @param expectedMessageType the expected message type
+     * @param expectedMessageDestination the expected message destination
+     * @param notificationMessage the system monitor response message
      */
-    protected void validateSystemMonitorResponse(String systemMonitorResponseMessage)
+    protected void validateSystemMonitorResponseNotificationMessage(String expectedMessageType, String expectedMessageDestination,
+        NotificationMessage notificationMessage)
     {
-        // Validate the message.
+        assertNotNull(notificationMessage);
+
+        assertEquals(expectedMessageType, notificationMessage.getMessageType());
+        assertEquals(expectedMessageDestination, notificationMessage.getMessageDestination());
+
+        String messageText = notificationMessage.getMessageText();
+
+        // Validate the message text.
         assertTrue("Correlation Id \"" + TEST_SQS_MESSAGE_CORRELATION_ID + "\" expected, but not found.",
-            systemMonitorResponseMessage.contains("<correlation-id>" + TEST_SQS_MESSAGE_CORRELATION_ID + "</correlation-id>"));
+            messageText.contains("<correlation-id>" + TEST_SQS_MESSAGE_CORRELATION_ID + "</correlation-id>"));
         assertTrue("Context Message Type \"" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "\" expected, but not found.",
-            systemMonitorResponseMessage.contains("<context-message-type>" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "</context-message-type>"));
+            messageText.contains("<context-message-type>" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "</context-message-type>"));
 
         // Note that we don't response with the environment that was specified in the request message. Instead, we respond with the environment configured
         // in our configuration table.
-        assertTrue("Environment \"Development\" expected, but not found.", systemMonitorResponseMessage.contains("<environment>Development</environment>"));
+        assertTrue("Environment \"Development\" expected, but not found.", messageText.contains("<environment>Development</environment>"));
     }
 }

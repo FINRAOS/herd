@@ -16,15 +16,16 @@
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,7 @@ import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
+import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -58,10 +60,11 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
 
     @Autowired
     StoragePolicyProcessorJmsMessageListener storagePolicyProcessorJmsMessageListener;
-    
-    
+
+
     @Configuration
-    static class ContextConfiguration {        
+    static class ContextConfiguration
+    {
         @Bean(name = "org.springframework.jms.config.internalJmsListenerEndpointRegistry")
         JmsListenerEndpointRegistry registry()
         {
@@ -76,7 +79,7 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
             }
 
             return Mockito.mock(JmsListenerEndpointRegistry.class);
-        } 
+        }
     }
 
     @Test
@@ -87,24 +90,22 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
             getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, null, null, DATA_VERSION);
 
-        // Create S3FileTransferRequestParamsDto to access the source and destination S3 bucket locations.
+        // Create S3FileTransferRequestParamsDto to access the source S3 bucket location.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
         S3FileTransferRequestParamsDto sourceS3FileTransferRequestParamsDto =
-            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(s3KeyPrefix + "/").build();
-        S3FileTransferRequestParamsDto destinationS3FileTransferRequestParamsDto =
-            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME_2).s3KeyPrefix(S3_BUCKET_NAME + "/" + s3KeyPrefix + "/").build();
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(s3KeyPrefix + "/").build();
 
         // Create and persist the relative database entities.
         storagePolicyServiceTestHelper
             .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(StoragePolicyTransitionTypeEntity.GLACIER));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
-        // Create and persist a storage unit in the source storage.
+        // Create and persist an ENABLED storage unit in the source storage.
         StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
@@ -124,7 +125,14 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
+
+        // Override configuration to specify some settings required for testing.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN.getKey(), S3_OBJECT_TAGGER_ROLE_ARN);
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        modifyPropertySourceInEnvironment(overrideMap);
 
         try
         {
@@ -140,32 +148,19 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
                 .processMessage(jsonHelper.objectToJson(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION)), null);
 
             // Validate the status of the source storage unit.
-            assertEquals(StorageUnitStatusEntity.DISABLED, sourceStorageUnitEntity.getStatus().getCode());
-
-            // Retrieve and validate the destination storage unit.
-            StorageUnitEntity destinationStorageUnitEntity =
-                storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(sourceStorageUnitEntity.getBusinessObjectData(), STORAGE_NAME_2);
-            assertEquals(StorageUnitStatusEntity.ENABLED, destinationStorageUnitEntity.getStatus().getCode());
-            assertEquals(0, destinationStorageUnitEntity.getStorageFiles().size());
-
-            // Validate that source S3 data is deleted.
-            assertTrue(s3Dao.listDirectory(sourceS3FileTransferRequestParamsDto).isEmpty());
-
-            // Validate that we have the copied S3 files at the expected S3 location.
-            assertEquals(sourceStorageFiles.size(), s3Dao.listDirectory(destinationS3FileTransferRequestParamsDto).size());
+            assertEquals(StorageUnitStatusEntity.ARCHIVED, sourceStorageUnitEntity.getStatus().getCode());
         }
         finally
         {
             // Delete test files from S3 storage.
-            for (S3FileTransferRequestParamsDto params : Arrays.asList(sourceS3FileTransferRequestParamsDto, destinationS3FileTransferRequestParamsDto))
+            if (!s3Dao.listDirectory(sourceS3FileTransferRequestParamsDto).isEmpty())
             {
-                if (!s3Dao.listDirectory(params).isEmpty())
-                {
-                    s3Dao.deleteDirectory(params);
-                }
+                s3Dao.deleteDirectory(sourceS3FileTransferRequestParamsDto);
             }
-
             s3Operations.rollback();
+
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
         }
     }
 
@@ -186,10 +181,10 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
                 .processMessage(jsonHelper.objectToJson(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION)), null);
         });
     }
-    
+
     @Test
     public void testControlListener()
-   {
+    {
         configurationHelper = Mockito.mock(ConfigurationHelper.class);
 
         ReflectionTestUtils.setField(storagePolicyProcessorJmsMessageListener, "configurationHelper", configurationHelper);
@@ -198,8 +193,9 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
         //The listener is not enabled
         when(configurationHelper.getProperty(ConfigurationValue.STORAGE_POLICY_PROCESSOR_JMS_LISTENER_ENABLED)).thenReturn("false");
         JmsListenerEndpointRegistry registry = ApplicationContextHolder.getApplicationContext()
-                .getBean("org.springframework.jms.config.internalJmsListenerEndpointRegistry", JmsListenerEndpointRegistry.class);
-        when(registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE)).thenReturn(mockMessageListenerContainer);
+            .getBean("org.springframework.jms.config.internalJmsListenerEndpointRegistry", JmsListenerEndpointRegistry.class);
+        when(registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE))
+            .thenReturn(mockMessageListenerContainer);
         //the listener is not running, nothing happened
         when(mockMessageListenerContainer.isRunning()).thenReturn(false);
         storagePolicyProcessorJmsMessageListener.controlStoragePolicyProcessorJmsMessageListener();
@@ -209,13 +205,13 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
         when(mockMessageListenerContainer.isRunning()).thenReturn(true);
         storagePolicyProcessorJmsMessageListener.controlStoragePolicyProcessorJmsMessageListener();
         verify(mockMessageListenerContainer).stop();
-        
+
         //The listener is enabled
         when(configurationHelper.getProperty(ConfigurationValue.STORAGE_POLICY_PROCESSOR_JMS_LISTENER_ENABLED)).thenReturn("true");
         //the listener is running, should not call the start method
         when(mockMessageListenerContainer.isRunning()).thenReturn(true);
         storagePolicyProcessorJmsMessageListener.controlStoragePolicyProcessorJmsMessageListener();
-        verify(mockMessageListenerContainer, Mockito.times(0)).start();     
+        verify(mockMessageListenerContainer, Mockito.times(0)).start();
         // the listener is not running, but it is enabled, should start        
         when(mockMessageListenerContainer.isRunning()).thenReturn(false);
         storagePolicyProcessorJmsMessageListener.controlStoragePolicyProcessorJmsMessageListener();

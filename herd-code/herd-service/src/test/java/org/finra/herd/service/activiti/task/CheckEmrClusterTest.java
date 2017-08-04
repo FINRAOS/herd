@@ -28,6 +28,7 @@ import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FieldExtension;
 import org.activiti.bpmn.model.ServiceTask;
 import org.activiti.engine.history.HistoricProcessInstance;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.dao.impl.MockEmrOperationsImpl;
@@ -42,6 +43,14 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 public class CheckEmrClusterTest extends AbstractServiceTest
 {
     public static final String taskName = "checkClusterServiceTask";
+
+    @Before
+    public void createDatabaseEntities()
+    {
+        // Create EC2 on-demand pricing entities required for testing.
+        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
+    }
+
     /**
      * This method tests the check EMR cluster activiti task with cluster Id and step Id specified
      */
@@ -56,7 +65,8 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         fieldExtensions.add(fieldExtension);
 
         // Run a job with Activiti XML that will start cluster, check status and terminate.
-        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(true, "false"));
+        Job job =
+            jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(true, "false", "false"));
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
@@ -91,7 +101,8 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         fieldExtension.setExpression("${addHiveStepServiceTask_emrStepId}");
         fieldExtensions.add(fieldExtension);
 
-        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(true, "true"));
+        Job job =
+            jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(true, "true", "false"));
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
@@ -123,7 +134,8 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         fieldExtensions.add(fieldExtension);
 
         // Run a job with Activiti XML that will start cluster, check status and terminate.
-        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(false, "false"));
+        Job job =
+            jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(false, "false", "false"));
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
@@ -141,7 +153,7 @@ public class CheckEmrClusterTest extends AbstractServiceTest
     public void testCheckCluster() throws Exception
     {
         // Run a job with Activiti XML that will start cluster, check status and terminate.
-        Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_CHECK_CLUSTER_WITH_CLASSPATH, getParameters(true, ""));
+        Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_CHECK_CLUSTER_WITH_CLASSPATH, getParameters(true, "", "false"));
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
@@ -154,14 +166,35 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_CREATION_TIME));
         assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_READY_TIME));
         assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_END_TIME));
-        assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE));
-        assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE));
-
-
-
+        assertTrue(
+            variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE));
+        assertTrue(
+            variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE));
     }
 
-    private List<Parameter> getParameters(boolean isShellStepRunning, String verbose)
+    @Test
+    public void testCheckClusterByRetrieveInstanceFleets() throws Exception
+    {
+        // Run a job with Activiti XML that will start cluster, check status and terminate.
+        List<FieldExtension> fieldExtensions = getOptionalFieldExtensions();
+
+        FieldExtension fieldExtension = new FieldExtension();
+        fieldExtension.setFieldName("emrStepId");
+        fieldExtension.setExpression("${addHiveStepServiceTask_emrStepId}");
+        fieldExtensions.add(fieldExtension);
+
+        Job job =
+            jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(true, "true", "true"));
+        assertNotNull(job);
+
+        HistoricProcessInstance hisInstance =
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+        Map<String, Object> variables = hisInstance.getProcessVariables();
+        String emrClusterInstanceFleetJson = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "instance_fleets");
+        assertNotNull(emrClusterInstanceFleetJson);
+    }
+
+    private List<Parameter> getParameters(boolean isShellStepRunning, String verbose, String retrieveInstanceFleets)
     {
         List<Parameter> parameters = new ArrayList<>();
 
@@ -171,7 +204,7 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         parameters.add(new Parameter("shellStepName", isShellStepRunning ? MockEmrOperationsImpl.MOCK_STEP_RUNNING_NAME : "a_shell_step"));
         parameters.add(new Parameter("shellScriptLocation", "a_shell_step_location"));
         parameters.add(new Parameter("verbose", verbose));
-
+        parameters.add(new Parameter("retrieveInstanceFleets", retrieveInstanceFleets));
         return parameters;
     }
 
@@ -198,6 +231,11 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         fieldExtension = new FieldExtension();
         fieldExtension.setFieldName("verbose");
         fieldExtension.setExpression("${verbose}");
+        fieldExtensionList.add(fieldExtension);
+
+        fieldExtension = new FieldExtension();
+        fieldExtension.setFieldName("retrieveInstanceFleets");
+        fieldExtension.setExpression("${retrieveInstanceFleets}");
         fieldExtensionList.add(fieldExtension);
 
         return fieldExtensionList;

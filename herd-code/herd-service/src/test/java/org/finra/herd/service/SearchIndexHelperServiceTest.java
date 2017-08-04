@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -30,7 +31,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import org.elasticsearch.client.transport.TransportClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -38,12 +38,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
 import org.finra.herd.model.jpa.TagEntity;
-import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
@@ -61,7 +61,7 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
     @Mock
-    private SearchFunctions searchFunctions;
+    private IndexFunctionsDao indexFunctionsDao;
 
     @Mock
     private SearchIndexDaoHelper searchIndexDaoHelper;
@@ -74,9 +74,6 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
 
     @Mock
     private TagHelper tagHelper;
-
-    @Mock
-    private TransportClient transportClient;
 
     @Before
     public void before()
@@ -103,9 +100,8 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
         // Mock the external calls. Please note that we mock index size is set to be equal to the business object definition entity list size.
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions(0, chunkSize)).thenReturn(businessObjectDefinitionEntities);
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions(chunkSize, chunkSize)).thenReturn(new ArrayList<>());
-        when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) -> {
-        });
-        when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 2L);
+
+        when(indexFunctionsDao.getNumberOfTypesInIndex(any(), any())).thenReturn(2L);
 
         // Index all business object definitions defined in the system.
         Future<Void> response = searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
@@ -113,14 +109,12 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
         // Verify the external calls.
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitions(0, chunkSize);
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitions(chunkSize, chunkSize);
-        verify(searchFunctions).getIndexFunction();
         verify(businessObjectDefinitionHelper)
             .executeFunctionForBusinessObjectDefinitionEntities(eq(SEARCH_INDEX_NAME), eq(SEARCH_INDEX_DOCUMENT_TYPE), eq(businessObjectDefinitionEntities),
                 any());
-        verify(searchFunctions).getNumberOfTypesInIndexFunction();
+        verify(indexFunctionsDao).getNumberOfTypesInIndex(any(), any());
         verify(searchIndexDaoHelper).updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
-        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, tagDao, tagHelper,
-            transportClient);
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchIndexDaoHelper, tagDao, tagHelper);
 
         // Validate the results.
         assertNotNull(response);
@@ -140,21 +134,20 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
 
         // Mock the external calls. Please note that we mock index size is set to be equal to the tag entity list size.
         when(tagDao.getTags()).thenReturn(tagEntities);
-        when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) -> {
-        });
-        when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 2L);
+        doNothing().when(indexFunctionsDao).createIndexDocument(any(), any(), any(), any());
+
+        when(indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(2L);
 
         // Index all tags defined in the system.
         Future<Void> response = searchIndexHelperService.indexAllTags(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
 
         // Verify the external calls.
         verify(tagDao).getTags();
-        verify(searchFunctions).getIndexFunction();
+        //verify(indexFunctionsDao).createIndexDocument(any(), any(), any(), any());
         verify(tagHelper).executeFunctionForTagEntities(eq(SEARCH_INDEX_NAME), eq(SEARCH_INDEX_DOCUMENT_TYPE), eq(tagEntities), any());
-        verify(searchFunctions).getNumberOfTypesInIndexFunction();
+        verify(indexFunctionsDao).getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE);
         verify(searchIndexDaoHelper).updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
-        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, tagDao, tagHelper,
-            transportClient);
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchIndexDaoHelper, tagDao, tagHelper);
 
         // Validate the results.
         assertNotNull(response);

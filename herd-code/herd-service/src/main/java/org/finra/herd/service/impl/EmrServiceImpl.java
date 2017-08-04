@@ -15,7 +15,6 @@
 */
 package org.finra.herd.service.impl;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -25,12 +24,14 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.Step;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
-import org.apache.oozie.client.WorkflowAction;
-import org.apache.oozie.client.WorkflowJob;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -41,13 +42,12 @@ import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.HerdDao;
-import org.finra.herd.dao.OozieDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.EmrPricingHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
-import org.finra.herd.dao.impl.OozieDaoImpl;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.EmrCluster;
@@ -57,9 +57,6 @@ import org.finra.herd.model.api.xml.EmrMasterSecurityGroup;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroupAddRequest;
 import org.finra.herd.model.api.xml.EmrStep;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
-import org.finra.herd.model.api.xml.OozieWorkflowAction;
-import org.finra.herd.model.api.xml.OozieWorkflowJob;
-import org.finra.herd.model.api.xml.RunOozieWorkflowRequest;
 import org.finra.herd.model.api.xml.StatusChangeReason;
 import org.finra.herd.model.api.xml.StatusTimeline;
 import org.finra.herd.model.dto.AwsParamsDto;
@@ -76,7 +73,6 @@ import org.finra.herd.service.helper.EmrStepHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
-import org.finra.herd.service.helper.ParameterHelper;
 
 /**
  * The EMR service implementation.
@@ -85,6 +81,8 @@ import org.finra.herd.service.helper.ParameterHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class EmrServiceImpl implements EmrService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmrServiceImpl.class);
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -122,33 +120,23 @@ public class EmrServiceImpl implements EmrService
     private NamespaceIamRoleAuthorizationHelper namespaceIamRoleAuthorizationHelper;
 
     @Autowired
-    private OozieDao oozieDao;
-
-    @Autowired
-    private ParameterHelper parameterHelper;
-
-    @Autowired
     private XmlHelper xmlHelper;
 
+    @Autowired
+    private JsonHelper jsonHelper;
+
     /**
-     * Gets details of an existing EMR Cluster. Creates its own transaction.
-     *
-     * @param emrClusterId the cluster id of the cluster to get details
-     * @param emrStepId the step id of the step to get details
-     * @param verbose parameter for whether to return detailed information
-     * @param retrieveOozieJobs parameter for whether to retrieve oozie job information
-     * @param emrClusterAlternateKeyDto the EMR cluster alternate key
-     *
-     * @return the EMR Cluster object with details.
-     * @throws Exception
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
      */
     @NamespacePermission(fields = "#emrClusterAlternateKeyDto?.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose,
-        boolean retrieveOozieJobs, String accountId) throws Exception
+    public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose, String accountId,
+        Boolean retrieveInstanceFleets) throws Exception
     {
-        return getClusterImpl(emrClusterAlternateKeyDto, emrClusterId, emrStepId, verbose, retrieveOozieJobs, accountId);
+        return getClusterImpl(emrClusterAlternateKeyDto, emrClusterId, emrStepId, verbose, accountId, retrieveInstanceFleets);
     }
 
     /**
@@ -158,16 +146,16 @@ public class EmrServiceImpl implements EmrService
      * @param emrClusterId the cluster id of the cluster to get details
      * @param emrStepId the step id of the step to get details
      * @param verbose parameter for whether to return detailed information
-     * @param retrieveOozieJobs parameter for whether to retrieve oozie job information
      * @param accountId the optional AWS account that EMR cluster is running in
+     * @param retrieveInstanceFleets parameter for whether to retrieve instance fleets
      *
      * @return the EMR Cluster object with details.
-     * @throws Exception if an error occurred while getting the cluster.
+     * @throws Exception if an error occurred while getting the cluster
      */
     protected EmrCluster getClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose,
-        boolean retrieveOozieJobs, String accountId) throws Exception
+        String accountId, Boolean retrieveInstanceFleets) throws Exception
     {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
 
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
@@ -240,10 +228,11 @@ public class EmrServiceImpl implements EmrService
                 emrCluster.setStep(buildEmrStepFromAwsStep(step, verbose));
             }
 
-            // Get oozie job details if requested.
-            if (retrieveOozieJobs && (emrCluster.getStatus().equalsIgnoreCase("RUNNING") || emrCluster.getStatus().equalsIgnoreCase("WAITING")))
+            // Get instance fleet if true
+            if (BooleanUtils.isTrue(retrieveInstanceFleets))
             {
-                emrCluster.setOozieWorkflowJobs(retrieveOozieJobs(emrCluster.getId(), accountId));
+                ListInstanceFleetsResult listInstanceFleetsResult = emrDao.getListInstanceFleetsResult(emrCluster.getId(), awsParamsDto);
+                emrCluster.setInstanceFleets(emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
             }
         }
         catch (AmazonServiceException ex)
@@ -252,55 +241,6 @@ public class EmrServiceImpl implements EmrService
         }
 
         return emrCluster;
-    }
-
-    /**
-     * Retrieves the List of running oozie workflow jobs on the cluster.
-     *
-     * @param clusterId the cluster Id
-     * @param accountId the account Id
-     *
-     * @return the List of running oozie workflow jobs on the cluster.
-     * @throws Exception
-     */
-    private List<OozieWorkflowJob> retrieveOozieJobs(String clusterId, String accountId) throws Exception
-    {
-        // Retrieve cluster's master instance IP
-        String masterIpAddress = getEmrClusterMasterIpAddress(clusterId, accountId);
-
-        // Number of jobs to be included in the response.
-        int jobsToInclude = herdStringHelper.getConfigurationValueAsInteger(ConfigurationValue.EMR_OOZIE_JOBS_TO_INCLUDE_IN_CLUSTER_STATUS);
-
-        // List of wrapper jobs that have been found.
-        List<WorkflowJob> jobsFound = oozieDao.getRunningEmrOozieJobsByName(masterIpAddress, OozieDaoImpl.HERD_OOZIE_WRAPPER_WORKFLOW_NAME, 1, jobsToInclude);
-
-        // Construct the response
-        List<OozieWorkflowJob> oozieWorkflowJobs = new ArrayList<>();
-
-        for (WorkflowJob workflowJob : jobsFound)
-        {
-            // Get the client Workflow id.
-            WorkflowAction clientWorkflowAction = emrHelper.getClientWorkflowAction(workflowJob);
-
-            OozieWorkflowJob resultOozieWorkflowJob = new OozieWorkflowJob();
-            resultOozieWorkflowJob.setId(workflowJob.getId());
-
-            // If client workflow is null means that herd wrapper workflow has not started the client workflow yet.
-            // Hence return status that it is still in preparation.
-            if (clientWorkflowAction == null)
-            {
-                resultOozieWorkflowJob.setStatus(OozieDaoImpl.OOZIE_WORKFLOW_JOB_STATUS_DM_PREP);
-            }
-            else
-            {
-                resultOozieWorkflowJob.setStartTime(toXmlGregorianCalendar(clientWorkflowAction.getStartTime()));
-                resultOozieWorkflowJob.setStatus(workflowJob.getStatus().toString());
-            }
-
-            oozieWorkflowJobs.add(resultOozieWorkflowJob);
-        }
-
-        return oozieWorkflowJobs;
     }
 
     /**
@@ -365,12 +305,9 @@ public class EmrServiceImpl implements EmrService
     }
 
     /**
-     * Creates a new EMR Cluster. Creates its own transaction.
-     *
-     * @param request the EMR cluster create request
-     *
-     * @return the created EMR cluster object
-     * @throws Exception if there were any errors while creating the cluster.
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
      */
     @NamespacePermission(fields = "#request?.namespace", permissions = NamespacePermissionEnum.EXECUTE)
     @Override
@@ -433,10 +370,13 @@ public class EmrServiceImpl implements EmrService
         namespaceIamRoleAuthorizationHelper.checkPermissions(emrClusterDefinitionEntity.getNamespace(), emrClusterDefinition.getServiceIamRole(),
             emrClusterDefinition.getEc2NodeIamProfileName());
 
-        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(emrClusterDefinition.getAccountId());
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(emrClusterDefinition.getAccountId());
 
-        // Find best price and update definition.
-        emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+        // If instance group definitions are specified, find best price and update definition.
+        if (!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()))
+        {
+            emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+        }
 
         String clusterId = null; // The cluster ID record.
         String emrClusterStatus = null;
@@ -592,6 +532,10 @@ public class EmrServiceImpl implements EmrService
             {
                 emrClusterDefinition.setInstanceDefinitions(emrClusterDefinitionOverride.getInstanceDefinitions());
             }
+            if (emrClusterDefinitionOverride.getInstanceFleets() != null)
+            {
+                emrClusterDefinition.setInstanceFleets(emrClusterDefinitionOverride.getInstanceFleets());
+            }
             if (emrClusterDefinitionOverride.getNodeTags() != null)
             {
                 emrClusterDefinition.setNodeTags(emrClusterDefinitionOverride.getNodeTags());
@@ -632,18 +576,21 @@ public class EmrServiceImpl implements EmrService
             {
                 emrClusterDefinition.setSecurityConfiguration(emrClusterDefinitionOverride.getSecurityConfiguration());
             }
+            if (emrClusterDefinitionOverride.getMasterSecurityGroup() != null)
+            {
+                emrClusterDefinition.setMasterSecurityGroup(emrClusterDefinitionOverride.getMasterSecurityGroup());
+            }
+            if (emrClusterDefinitionOverride.getSlaveSecurityGroup() != null)
+            {
+                emrClusterDefinition.setSlaveSecurityGroup(emrClusterDefinitionOverride.getSlaveSecurityGroup());
+            }
         }
     }
 
-
     /**
-     * Terminates the EMR Cluster. Creates its own transaction.
-     *
-     * @param emrClusterAlternateKeyDto the EMR cluster alternate key
-     * @param overrideTerminationProtection parameter for whether to override termination protection
-     *
-     * @return the terminated EMR cluster object
-     * @throws Exception if there were any errors while terminating the cluster.
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
      */
     @NamespacePermission(fields = "#emrClusterAlternateKeyDto?.namespace", permissions = NamespacePermissionEnum.EXECUTE)
     @Override
@@ -663,12 +610,12 @@ public class EmrServiceImpl implements EmrService
      * @param accountId The account Id
      *
      * @return the terminated EMR cluster object
-     * @throws Exception if there were any errors while terminating the cluster.
+     * @throws Exception if there were any errors while terminating the cluster
      */
     protected EmrCluster terminateClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId,
         String accountId) throws Exception
     {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
 
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
@@ -706,8 +653,8 @@ public class EmrServiceImpl implements EmrService
      */
     private EmrClusterAlternateKeyDto getEmrClusterAlternateKey(EmrClusterCreateRequest emrClusterCreateRequest)
     {
-        return EmrClusterAlternateKeyDto.builder().namespace(emrClusterCreateRequest.getNamespace())
-            .emrClusterDefinitionName(emrClusterCreateRequest.getEmrClusterDefinitionName()).emrClusterName(emrClusterCreateRequest.getEmrClusterName())
+        return EmrClusterAlternateKeyDto.builder().withNamespace(emrClusterCreateRequest.getNamespace())
+            .withEmrClusterDefinitionName(emrClusterCreateRequest.getEmrClusterDefinitionName()).withEmrClusterName(emrClusterCreateRequest.getEmrClusterName())
             .build();
     }
 
@@ -744,15 +691,9 @@ public class EmrServiceImpl implements EmrService
     }
 
     /**
-     * Adds step to an existing EMR Cluster. Creates its own transaction.
+     * {@inheritDoc}
      * <p/>
-     * There are five serializable objects supported currently. They are 1: ShellStep - For shell scripts 2: OozieStep - For Oozie workflow xml files 3:
-     * HiveStep - For hive scripts 4: HadoopJarStep - For Custom Map Reduce Jar files and 5: PigStep - For Pig scripts.
-     *
-     * @param request the EMR steps add request
-     *
-     * @return the EMR steps add object with added steps
-     * @throws Exception if there were any errors while adding a step to the cluster.
+     * This implementation starts a new transaction.
      */
     @NamespacePermission(fields = "#request?.namespace", permissions = NamespacePermissionEnum.EXECUTE)
     @Override
@@ -782,7 +723,7 @@ public class EmrServiceImpl implements EmrService
 
         //get accountId and awsParamDto
         String accountId = stepHelper.getRequestAccountId(request);
-        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
 
         // Get the namespace and ensure it exists.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(stepHelper.getRequestNamespace(request));
@@ -847,12 +788,9 @@ public class EmrServiceImpl implements EmrService
     }
 
     /**
-     * Adds security groups to the master node of an existing EMR Cluster. Creates its own transaction.
-     *
-     * @param request the EMR master security group add request
-     *
-     * @return the added EMR master security groups
-     * @throws Exception if there were any errors adding the security groups to the cluster master.
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
      */
     @NamespacePermission(fields = "#request?.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
@@ -877,7 +815,7 @@ public class EmrServiceImpl implements EmrService
 
         // Get account and AwsParamDto
         String accountId = request.getAccountId();
-        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
 
         // Get the namespace and ensure it exists.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(request.getNamespace());
@@ -957,284 +895,6 @@ public class EmrServiceImpl implements EmrService
         return emrMasterSecurityGroup;
     }
 
-
-    /**
-     * Runs oozie job on an existing EMR Cluster. Creates its own transaction.
-     *
-     * @param request the Run oozie workflow request
-     *
-     * @return the oozie workflow job that was submitted.
-     * @throws Exception if there were any errors while submitting the job.
-     */
-    @NamespacePermission(fields = "#request?.namespace", permissions = NamespacePermissionEnum.EXECUTE)
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public OozieWorkflowJob runOozieWorkflow(RunOozieWorkflowRequest request) throws Exception
-    {
-        return runOozieWorkflowImpl(request);
-    }
-
-    /**
-     * Runs oozie job on an existing EMR Cluster.
-     *
-     * @param request the Run oozie workflow request
-     *
-     * @return the oozie workflow job that was submitted.
-     * @throws Exception if there were any errors while submitting the job.
-     */
-    protected OozieWorkflowJob runOozieWorkflowImpl(RunOozieWorkflowRequest request) throws Exception
-    {
-        // Perform the request validation.
-        validateRunOozieWorkflowRequest(request);
-
-        String namespace = request.getNamespace();
-        String emrClusterDefinitionName = request.getEmrClusterDefinitionName();
-        String emrClusterName = request.getEmrClusterName();
-        String emrClusterId = request.getEmrClusterId();
-        String accountId = request.getAccountId();
-
-        String clusterId = getRunningOrWaitingEmrCluster(namespace, emrClusterDefinitionName, emrClusterName, emrClusterId, accountId);
-
-        String emrClusterPrivateIpAddress = getEmrClusterMasterIpAddress(clusterId, accountId);
-
-        String jobId = oozieDao.runOozieWorkflow(emrClusterPrivateIpAddress, request.getWorkflowLocation(), request.getParameters());
-
-        OozieWorkflowJob oozieWorkflowJob = new OozieWorkflowJob();
-        oozieWorkflowJob.setId(jobId);
-        oozieWorkflowJob.setNamespace(namespace);
-        oozieWorkflowJob.setEmrClusterDefinitionName(emrClusterDefinitionName);
-        oozieWorkflowJob.setEmrClusterName(emrClusterName);
-        return oozieWorkflowJob;
-    }
-
-    /**
-     * Get the EMR master private IP address.
-     *
-     * @param emrClusterId the cluster id
-     * @param accountId the optional AWS account that EMR cluster is running in
-     *
-     * @return the master node private IP address
-     * @throws Exception Exception
-     */
-    private String getEmrClusterMasterIpAddress(String emrClusterId, String accountId) throws Exception
-    {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
-        return emrDao.getEmrMasterInstance(emrClusterId, awsParamsDto).getPrivateIpAddress();
-    }
-
-    /**
-     * Get the cluster in RUNNING or WAITING status.
-     *
-     * @param namespace namespace
-     * @param emrClusterDefinitionName emrClusterDefinitionName
-     * @param emrClusterName emrClusterName
-     * @param emrClusterId The EMR cluster ID
-     * @param accountId The account Id
-     *
-     * @return The actual EMR cluster ID
-     */
-    private String getRunningOrWaitingEmrCluster(String namespace, String emrClusterDefinitionName, String emrClusterName, String emrClusterId,
-        String accountId)
-    {
-        // Get the namespace and ensure it exists.
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespace);
-
-        // Get the AwsParamsDto
-        AwsParamsDto awsParamDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
-
-        // Get the EMR cluster definition and ensure it exists.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity =
-            emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(namespace, emrClusterDefinitionName);
-
-        String clusterName = emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterName);
-
-        String actualEmrClusterId = null;
-        String emrClusterState = null;
-        if (StringUtils.isNotBlank(emrClusterId))
-        {
-            try
-            {
-                Cluster cluster = emrDao.getEmrClusterById(emrClusterId, awsParamDto);
-                if (cluster != null)
-                {
-                    actualEmrClusterId = cluster.getId();
-                    emrClusterState = cluster.getStatus().getState();
-                }
-            }
-            catch (AmazonServiceException amazonServiceException)
-            {
-                handleAmazonException(amazonServiceException, "Unable to get EMR cluster.");
-            }
-        }
-        else
-        {
-            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(clusterName, awsParamDto);
-            if (clusterSummary != null)
-            {
-                actualEmrClusterId = clusterSummary.getId();
-                emrClusterState = clusterSummary.getStatus().getState();
-            }
-        }
-
-        // We can only run oozie job when the cluster is up (RUNNING or WAITING). Can not submit job otherwise like bootstraping.
-        // Make sure that cluster exists and is in RUNNING or WAITING state.
-        if (actualEmrClusterId == null || !(emrClusterState.equalsIgnoreCase("RUNNING") || emrClusterState.equalsIgnoreCase("WAITING")))
-        {
-            throw new ObjectNotFoundException(String.format("Either the cluster \"%s\" does not exist or not in RUNNING or WAITING state.", clusterName));
-        }
-
-        return actualEmrClusterId;
-    }
-
-    /**
-     * Get the oozie workflow. Starts a new transaction.
-     *
-     * @param namespace the namespace
-     * @param emrClusterDefinitionName the EMR cluster definition name
-     * @param emrClusterName the EMR cluster name
-     * @param oozieWorkflowJobId the ooxie workflow Id.
-     * @param verbose the flag to indicate whether to return verbose information
-     * @param emrClusterId The EMR cluster ID
-     *
-     * @return OozieWorkflowJob OozieWorkflowJob
-     * @throws Exception Exception
-     */
-    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.READ)
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public OozieWorkflowJob getEmrOozieWorkflowJob(String namespace, String emrClusterDefinitionName, String emrClusterName, String oozieWorkflowJobId,
-        Boolean verbose, String emrClusterId, String accountId) throws Exception
-    {
-        return getEmrOozieWorkflowJobImpl(namespace, emrClusterDefinitionName, emrClusterName, oozieWorkflowJobId, verbose, emrClusterId, accountId);
-    }
-
-    /**
-     * Get the oozie workflow.
-     *
-     * @param namespace the namespace
-     * @param emrClusterDefinitionName the EMR cluster definition name
-     * @param emrClusterName the EMR cluster name
-     * @param oozieWorkflowJobId the ooxie workflow Id.
-     * @param verbose the flag to indicate whether to return verbose information
-     * @param emrClusterId The EMR cluster ID
-     * @param accountId The account Id
-     *
-     * @return OozieWorkflowJob OozieWorkflowJob
-     * @throws Exception Exception
-     */
-    protected OozieWorkflowJob getEmrOozieWorkflowJobImpl(String namespace, String emrClusterDefinitionName, String emrClusterName, String oozieWorkflowJobId,
-        Boolean verbose, String emrClusterId, String accountId) throws Exception
-    {
-        // Validate parameters
-        Assert.isTrue(StringUtils.isNotBlank(namespace), "Namespace is required");
-        Assert.isTrue(StringUtils.isNotBlank(emrClusterDefinitionName), "EMR cluster definition name is required");
-        Assert.isTrue(StringUtils.isNotBlank(emrClusterName), "EMR cluster name is required");
-        Assert.isTrue(StringUtils.isNotBlank(oozieWorkflowJobId), "Oozie workflow job ID is required");
-
-        // Trim string parameters
-        String namespaceTrimmed = namespace.trim();
-        String emrClusterDefinitionNameTrimmed = emrClusterDefinitionName.trim();
-        String emrClusterNameTrimmed = emrClusterName.trim();
-        String oozieWorkflowJobIdTrimmed = oozieWorkflowJobId.trim();
-
-        // Retrieve cluster's master instance IP
-        String clusterId = getRunningOrWaitingEmrCluster(namespaceTrimmed, emrClusterDefinitionNameTrimmed, emrClusterNameTrimmed, emrClusterId, accountId);
-        String masterIpAddress = getEmrClusterMasterIpAddress(clusterId, null);
-
-        // Retrieve the wrapper oozie workflow. This workflow is the workflow that herd wraps the client's workflow to help copy client workflow definition from
-        // S3 to HDFS.
-        WorkflowJob wrapperWorkflowJob = oozieDao.getEmrOozieWorkflow(masterIpAddress, oozieWorkflowJobIdTrimmed);
-
-        // Check to make sure that the workflow job is a herd wrapper workflow.
-        Assert.isTrue(wrapperWorkflowJob.getAppName().equals(OozieDaoImpl.HERD_OOZIE_WRAPPER_WORKFLOW_NAME),
-            "The oozie workflow with job ID '" + oozieWorkflowJobIdTrimmed +
-                "' is not created by herd. Please ensure that the workflow was created through herd.");
-
-        // Retrieve the client workflow's job action by navigating through the actions of the wrapper workflow. The client's workflow job ID is represented as
-        // the action's external ID.
-        WorkflowAction clientWorkflowAction = emrHelper.getClientWorkflowAction(wrapperWorkflowJob);
-
-        WorkflowJob clientWorkflowJob = null;
-        String clientWorkflowStatus = null;
-        boolean hasClientWorkflowInfo = false;
-        WorkflowAction errorWrapperWorkflowAction = null;
-        /*
-         * If the client workflow action is not found,  there are three possibilities:
-         * 1. DM_PREP: The client workflow has not yet been run.
-         * 2. DM_FAILED : herd wrapper workflow failed to run successfully.
-         * 3. If client workflow action is found but does not have the external ID, means that it failed to kick off the client workflow. Possible causes:
-         *    3.1 workflow.xml is not present in the location provided.
-         *    3.2 workflow.xml is not a valid workflow.
-         */
-        if (clientWorkflowAction == null || clientWorkflowAction.getExternalId() == null)
-        {
-            // If wrapper workflow is FAILED/KILLED, means wrapper failed without running client workflow
-            // else DM_PREP
-            if (wrapperWorkflowJob.getStatus().equals(WorkflowJob.Status.KILLED) || wrapperWorkflowJob.getStatus().equals(WorkflowJob.Status.FAILED))
-            {
-                clientWorkflowStatus = OozieDaoImpl.OOZIE_WORKFLOW_JOB_STATUS_DM_FAILED;
-                // Get error information.
-                errorWrapperWorkflowAction = emrHelper.getFirstWorkflowActionInError(wrapperWorkflowJob);
-            }
-            else
-            {
-                clientWorkflowStatus = OozieDaoImpl.OOZIE_WORKFLOW_JOB_STATUS_DM_PREP;
-            }
-        }
-        else
-        {
-            // Retrieve the client workflow
-            clientWorkflowJob = oozieDao.getEmrOozieWorkflow(masterIpAddress, clientWorkflowAction.getExternalId());
-            hasClientWorkflowInfo = true;
-        }
-
-        // Construct result
-        OozieWorkflowJob resultOozieWorkflowJob = new OozieWorkflowJob();
-        resultOozieWorkflowJob.setId(oozieWorkflowJobId);
-        resultOozieWorkflowJob.setNamespace(namespace);
-        resultOozieWorkflowJob.setEmrClusterDefinitionName(emrClusterDefinitionName);
-        resultOozieWorkflowJob.setEmrClusterName(emrClusterName);
-
-        // If client workflow is information is not available that herd wrapper workflow has not started the client workflow yet or failed to start.
-        // Hence return status that it is still in preparation.
-        if (!hasClientWorkflowInfo)
-        {
-            resultOozieWorkflowJob.setStatus(clientWorkflowStatus);
-            if (errorWrapperWorkflowAction != null)
-            {
-                resultOozieWorkflowJob.setErrorCode(errorWrapperWorkflowAction.getErrorCode());
-                resultOozieWorkflowJob.setErrorMessage(errorWrapperWorkflowAction.getErrorMessage());
-            }
-        }
-        else
-        {
-            resultOozieWorkflowJob.setStartTime(toXmlGregorianCalendar(clientWorkflowJob.getStartTime()));
-            resultOozieWorkflowJob.setEndTime(toXmlGregorianCalendar(clientWorkflowJob.getEndTime()));
-            resultOozieWorkflowJob.setStatus(clientWorkflowJob.getStatus().toString());
-
-            // Construct actions in the result if verbose flag is explicitly true, default to false
-            if (Boolean.TRUE.equals(verbose))
-            {
-                List<OozieWorkflowAction> oozieWorkflowActions = new ArrayList<>();
-                for (WorkflowAction workflowAction : clientWorkflowJob.getActions())
-                {
-                    OozieWorkflowAction resultOozieWorkflowAction = new OozieWorkflowAction();
-                    resultOozieWorkflowAction.setId(workflowAction.getId());
-                    resultOozieWorkflowAction.setName(workflowAction.getName());
-                    resultOozieWorkflowAction.setStartTime(toXmlGregorianCalendar(workflowAction.getStartTime()));
-                    resultOozieWorkflowAction.setEndTime(toXmlGregorianCalendar(workflowAction.getEndTime()));
-                    resultOozieWorkflowAction.setStatus(workflowAction.getStatus().toString());
-                    resultOozieWorkflowAction.setErrorCode(workflowAction.getErrorCode());
-                    resultOozieWorkflowAction.setErrorMessage(workflowAction.getErrorMessage());
-                    oozieWorkflowActions.add(resultOozieWorkflowAction);
-                }
-                resultOozieWorkflowJob.setWorkflowActions(oozieWorkflowActions);
-            }
-        }
-
-        return resultOozieWorkflowJob;
-    }
-
     /**
      * Builds the {@link XMLGregorianCalendar} for the given {@link Date}
      *
@@ -1250,30 +910,6 @@ public class EmrServiceImpl implements EmrService
             result = HerdDateUtils.getXMLGregorianCalendarValue(date);
         }
         return result;
-    }
-
-    /**
-     * Validates the run oozie workflow request.
-     *
-     * @param request the request.
-     *
-     * @throws IllegalArgumentException if any validation errors were found.
-     */
-    private void validateRunOozieWorkflowRequest(RunOozieWorkflowRequest request)
-    {
-        // Validate required elements
-        Assert.hasText(request.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(request.getEmrClusterDefinitionName(), "An EMR cluster definition name must be specified.");
-        Assert.hasText(request.getEmrClusterName(), "An EMR cluster name must be specified.");
-        Assert.hasText(request.getWorkflowLocation(), "An oozie workflow location must be specified.");
-
-        // Validate that parameter names are there and not duplicate
-        parameterHelper.validateParameters(request.getParameters());
-
-        // Remove leading and trailing spaces.
-        request.setNamespace(request.getNamespace().trim());
-        request.setEmrClusterDefinitionName(request.getEmrClusterDefinitionName().trim());
-        request.setEmrClusterName(request.getEmrClusterName().trim());
     }
 
     /**
@@ -1307,13 +943,22 @@ public class EmrServiceImpl implements EmrService
         key.setEmrClusterName(alternateKeyHelper.validateStringParameter("An", "EMR cluster name", key.getEmrClusterName()));
     }
 
-    private void setEmrClusterStatus(EmrCluster cl, ClusterStatus amazonClusterStatus)
+    /**
+     * Updates EMR cluster model object with the specified EMR cluster status information.
+     *
+     * @param emrCluster the EMR cluster
+     * @param clusterStatus the EMR cluster status information
+     */
+    private void setEmrClusterStatus(EmrCluster emrCluster, ClusterStatus clusterStatus)
     {
-        cl.setStatus(amazonClusterStatus.getState());
-        cl.setStatusChangeReason(
-            new StatusChangeReason(amazonClusterStatus.getStateChangeReason().getCode(), amazonClusterStatus.getStateChangeReason().getMessage()));
-        cl.setStatusTimeline(new StatusTimeline(toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getCreationDateTime()),
-            toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getReadyDateTime()),
-            toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getEndDateTime())));
+        // Log cluster status information.
+        LOGGER.info("emrClusterId=\"{}\" emrClusterStatus={}", emrCluster.getId(), jsonHelper.objectToJson(clusterStatus));
+
+        // Update the EMR cluster with the status information.
+        emrCluster.setStatus(clusterStatus.getState());
+        emrCluster
+            .setStatusChangeReason(new StatusChangeReason(clusterStatus.getStateChangeReason().getCode(), clusterStatus.getStateChangeReason().getMessage()));
+        emrCluster.setStatusTimeline(new StatusTimeline(toXmlGregorianCalendar(clusterStatus.getTimeline().getCreationDateTime()),
+            toXmlGregorianCalendar(clusterStatus.getTimeline().getReadyDateTime()), toXmlGregorianCalendar(clusterStatus.getTimeline().getEndDateTime())));
     }
 }
