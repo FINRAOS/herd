@@ -1187,6 +1187,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             // Set the from index to the toIndex
             fromIndex = toIndex;
         }
+
+        LOGGER.info("Finished processing {} documents", ids.size());
     }
 
     /**
