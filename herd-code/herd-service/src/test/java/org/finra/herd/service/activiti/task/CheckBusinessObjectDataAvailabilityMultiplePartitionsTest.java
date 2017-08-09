@@ -61,6 +61,34 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
     }
 
     @Test
+    public void testCheckBusinessObjectDataAvailabilityMultiplePartitionsXmlAllDataAvailable() throws Exception
+    {
+        // Prepare test data.
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
+
+        // Prepare a check business object data availability request that should result in response with the all business object data being available.
+        BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(STORAGE_1_AVAILABLE_PARTITION_VALUES);
+
+        List<FieldExtension> fieldExtensionList = new ArrayList<>();
+
+        fieldExtensionList.add(buildFieldExtension("contentType", "${contentType}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDataAvailabilityRequest", "${businessObjectDataAvailabilityRequest}"));
+
+        List<Parameter> parameters = new ArrayList<>();
+
+        parameters.add(buildParameter("contentType", "xml"));
+        parameters.add(buildParameter("businessObjectDataAvailabilityRequest", xmlHelper.objectToXml(businessObjectDataAvailabilityRequest)));
+
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(CheckBusinessObjectDataAvailabilityMultiplePartitions.VARIABLE_IS_ALL_DATA_AVAILABLE, true);
+        variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, VARIABLE_VALUE_NOT_NULL);
+
+        testActivitiServiceTaskSuccess(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters,
+            variableValuesToValidate);
+    }
+
+    @Test
     public void testCheckBusinessObjectDataAvailabilityMultiplePartitionsJson() throws Exception
     {
         // Prepare test data.

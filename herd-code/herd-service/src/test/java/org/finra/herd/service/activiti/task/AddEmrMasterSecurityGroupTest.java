@@ -15,70 +15,95 @@
 */
 package org.finra.herd.service.activiti.task;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.bpmn.model.FieldExtension;
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
-import org.finra.herd.model.api.xml.Job;
+import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
+import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.Parameter;
-import org.finra.herd.service.AbstractServiceTest;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 /**
- * Tests the AddEmrMasterSecurityGroup class.
+ * Tests the AddEmrMasterSecurityGroup Activiti task wrapper.
  */
-public class AddEmrMasterSecurityGroupTest extends AbstractServiceTest
+public class AddEmrMasterSecurityGroupTest extends HerdActivitiServiceTaskTest
 {
-    /**
-     * This method tests the happy path scenario to add Security Groups.
-     */
     @Test
-    public void testAddSecurityGroup() throws Exception
+    public void testAddEmrMasterSecurityGroup() throws Exception
     {
+        // Create a pipe-separated list of security group IDs.
+        final String securityGroupIds = EC2_SECURITY_GROUP_1 + "|" + EC2_SECURITY_GROUP_2;
+
+        // Create EC2 on-demand pricing entities required for testing.
+        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
+
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Create a trusting AWS account.
+        trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
+
+        // Create an EMR cluster definition.
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+
+        // Create an EMR cluster definition override with an AWS account ID.
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        emrClusterDefinitionOverride.setAccountId(AWS_ACCOUNT_ID);
+
+        // Create an EMR cluster.
+        emrService
+            .createCluster(new EmrClusterCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME, NO_DRY_RUN, emrClusterDefinitionOverride));
+
+        List<FieldExtension> fieldExtensionList = new ArrayList<>();
+        fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));
+        fieldExtensionList.add(buildFieldExtension("emrClusterDefinitionName", "${emrClusterDefinitionName}"));
+        fieldExtensionList.add(buildFieldExtension("emrClusterName", "${emrClusterName}"));
+        fieldExtensionList.add(buildFieldExtension("securityGroupIds", "${securityGroupIds}"));
+        fieldExtensionList.add(buildFieldExtension("accountId", "${accountId}"));
+
         List<Parameter> parameters = new ArrayList<>();
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("emrClusterDefinitionName", EMR_CLUSTER_DEFINITION_NAME));
+        parameters.add(buildParameter("emrClusterName", EMR_CLUSTER_NAME));
+        parameters.add(buildParameter("securityGroupIds", securityGroupIds));
+        parameters.add(buildParameter("accountId", AWS_ACCOUNT_ID));
 
-        Parameter parameter = new Parameter("clusterName", "testCluster1");
-        parameters.add(parameter);
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(AddEmrMasterSecurityGroup.VARIABLE_EMR_MASTER_SECURITY_GROUPS, securityGroupIds);
 
-        parameter = new Parameter("securityGroupIds", "sg-12345|sg-54321");
-        parameters.add(parameter);
-
-        // Run a job with Activiti XML that will add SecurityGroups EMR master node.
-        Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH, parameters);
-        assertNotNull(job);
+        testActivitiServiceTaskSuccess(AddEmrMasterSecurityGroup.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
 
-    /**
-     * This method tests the scenario where no security groups are passed.
-     */
     @Test
-    public void testAddSecurityGroupNoGroups() throws Exception
+    public void testAddEmrMasterSecurityGroupMissingSecurityGroupIds() throws Exception
     {
+        List<FieldExtension> fieldExtensionList = new ArrayList<>();
+        fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));
+        fieldExtensionList.add(buildFieldExtension("emrClusterDefinitionName", "${emrClusterDefinitionName}"));
+        fieldExtensionList.add(buildFieldExtension("emrClusterName", "${emrClusterName}"));
+        fieldExtensionList.add(buildFieldExtension("securityGroupIds", "${securityGroupIds}"));
+        fieldExtensionList.add(buildFieldExtension("accountId", "${accountId}"));
+
         List<Parameter> parameters = new ArrayList<>();
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("emrClusterDefinitionName", EMR_CLUSTER_DEFINITION_NAME));
+        parameters.add(buildParameter("emrClusterName", EMR_CLUSTER_NAME));
+        parameters.add(buildParameter("securityGroupIds", BLANK_TEXT));
+        parameters.add(buildParameter("accountId", AWS_ACCOUNT_ID));
 
-        Parameter parameter = new Parameter("clusterName", "testCluster1");
-        parameters.add(parameter);
-
-        parameter = new Parameter("securityGroupIds", "");
-        parameters.add(parameter);
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "At least one security group must be specified.");
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
-            // Run a job with Activiti XML that will add SecurityGroups EMR master node.
-            Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH, parameters);
-
-            HistoricProcessInstance hisInstance =
-                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
-            Map<String, Object> variables = hisInstance.getProcessVariables();
-            String securityGroupTaskStatus =
-                (String) variables.get("addSecurityGroupServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
-
-            assertEquals(securityGroupTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
+            testActivitiServiceTaskFailure(AddEmrMasterSecurityGroup.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
         });
     }
 }
