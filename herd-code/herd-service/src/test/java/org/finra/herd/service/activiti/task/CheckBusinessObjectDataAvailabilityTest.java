@@ -129,6 +129,31 @@ public class CheckBusinessObjectDataAvailabilityTest extends HerdActivitiService
     }
 
     /**
+     * This method tests scenario when partition range is specified without start partition value.
+     */
+    @Test
+    public void testAvailabilityTaskWithPartitionRangeWithoutStartPartitionValue() throws Exception
+    {
+        List<FieldExtension> fieldExtensionList = new ArrayList<>(getMandatoryFields());
+
+        fieldExtensionList.add(buildFieldExtension("startPartitionValue", "${startPartitionValue}"));
+        fieldExtensionList.add(buildFieldExtension("endPartitionValue", "${endPartitionValue}"));
+
+        List<Parameter> parameters = new ArrayList<>(getMandatoryParameters());
+
+        parameters.add(buildParameter("startPartitionValue", BLANK_TEXT));
+        parameters.add(buildParameter("endPartitionValue", END_PARTITION_VALUE));
+
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A start partition value for the partition value range must be specified.");
+
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailability.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
+    }
+
+    /**
      * Gets the mandatory fields for task
      *
      * @return List<FieldExtension>, mandatory fields

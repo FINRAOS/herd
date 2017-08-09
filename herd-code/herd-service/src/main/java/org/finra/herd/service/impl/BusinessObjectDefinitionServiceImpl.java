@@ -1130,8 +1130,24 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateSearchIndexDocumentBusinessObjectDefinition(SearchIndexUpdateDto searchIndexUpdateDto)
+    {
+        updateSearchIndexDocumentBusinessObjectDefinitionImpl(searchIndexUpdateDto);
+    }
+
+    /**
+     * Updates the search index document representation of the business object definition.
+     *
+     * @param searchIndexUpdateDto the SearchIndexUpdateDto object
+     */
+    protected void updateSearchIndexDocumentBusinessObjectDefinitionImpl(SearchIndexUpdateDto searchIndexUpdateDto)
     {
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
@@ -1173,6 +1189,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             // Set the from index to the toIndex
             fromIndex = toIndex;
         }
+
+        LOGGER.info("Finished processing {} documents", ids.size());
     }
 
     /**
@@ -1184,9 +1202,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private Map<String, String> convertBusinessObjectDefinitionEntityListToJSONStringMap(List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities)
     {
+        LOGGER.info("List size is {}.", businessObjectDefinitionEntities.size());
+
         Map<String, String> businessObjectDefinitionJSONMap = new HashMap<>();
 
-        LOGGER.debug("convertBusinessObjectDefinitionEntityListToJSONStringMap bdef size is {}.", businessObjectDefinitionEntities.size());
         businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();

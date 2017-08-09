@@ -5300,7 +5300,13 @@
                <xs:documentation>The slave security group to use instead of the account default value</xs:documentation>
             </xs:annotation>
          </xs:element>
-
+         <xs:element name="scaleDownBehavior" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies the way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an instance
+                  group is resized. One of the following values: TERMINATE_AT_INSTANCE_HOUR or TERMINATE_AT_TASK_COMPLETION
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
