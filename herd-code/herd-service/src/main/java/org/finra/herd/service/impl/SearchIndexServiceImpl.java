@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.impl;
 
+import java.sql.Timestamp;
+
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.shard.DocsStats;
@@ -30,7 +32,6 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.SearchIndexDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.SearchIndex;
 import org.finra.herd.model.api.xml.SearchIndexCreateRequest;
 import org.finra.herd.model.api.xml.SearchIndexKey;
@@ -88,14 +89,6 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Perform validation and trim.
         validateSearchIndexCreateRequest(request);
 
-        // Ensure that search index with the specified search index key doesn't already exist.
-        SearchIndexEntity searchIndexEntity = searchIndexDao.getSearchIndexByKey(request.getSearchIndexKey());
-        if (searchIndexEntity != null)
-        {
-            throw new AlreadyExistsException(
-                String.format("Unable to create search index with name \"%s\" because it already exists.", request.getSearchIndexKey().getSearchIndexName()));
-        }
-
         // Get the search index type and ensure it exists.
         SearchIndexTypeEntity searchIndexTypeEntity = searchIndexTypeDaoHelper.getSearchIndexTypeEntity(request.getSearchIndexType());
 
@@ -104,13 +97,17 @@ public class SearchIndexServiceImpl implements SearchIndexService
             searchIndexStatusDaoHelper.getSearchIndexStatusEntity(SearchIndexStatusEntity.SearchIndexStatuses.BUILDING.name());
 
         // Creates the relative search index entity from the request information.
-        searchIndexEntity = createSearchIndexEntity(request, searchIndexTypeEntity, searchIndexStatusEntity);
+        SearchIndexEntity searchIndexEntity = createSearchIndexEntity(request, searchIndexTypeEntity, searchIndexStatusEntity);
 
         // Persist the new entity.
         searchIndexEntity = searchIndexDao.saveAndRefresh(searchIndexEntity);
 
+        // Create search index key with the auto-generated search index name
+        SearchIndexKey searchIndexKey = new SearchIndexKey();
+        searchIndexKey.setSearchIndexName(searchIndexEntity.getName());
+
         // Create the search index.
-        createSearchIndexHelper(request.getSearchIndexKey(), searchIndexTypeEntity.getCode());
+        createSearchIndexHelper(searchIndexKey, searchIndexTypeEntity.getCode());
 
         // Create and return the search index object from the persisted entity.
         return createSearchIndexFromEntity(searchIndexEntity);
@@ -196,7 +193,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         SearchIndexStatusEntity searchIndexStatusEntity)
     {
         SearchIndexEntity searchIndexEntity = new SearchIndexEntity();
-        searchIndexEntity.setName(request.getSearchIndexKey().getSearchIndexName());
+        searchIndexEntity.setName(setSearchIndexName(request.getSearchIndexType()));
         searchIndexEntity.setType(searchIndexTypeEntity);
         searchIndexEntity.setStatus(searchIndexStatusEntity);
         return searchIndexEntity;
@@ -215,6 +212,14 @@ public class SearchIndexServiceImpl implements SearchIndexService
         searchIndex.setSearchIndexKey(new SearchIndexKey(searchIndexEntity.getName()));
         searchIndex.setSearchIndexType(searchIndexEntity.getType().getCode());
         searchIndex.setSearchIndexStatus(searchIndexEntity.getStatus().getCode());
+        if (searchIndexEntity.getActive() != null)
+        {
+            searchIndex.setActive(searchIndexEntity.getActive());
+        }
+        else
+        {
+            searchIndex.setActive(Boolean.FALSE);
+        }
         searchIndex.setCreatedByUserId(searchIndexEntity.getCreatedBy());
         searchIndex.setCreatedOn(HerdDateUtils.getXMLGregorianCalendarValue(searchIndexEntity.getCreatedOn()));
         searchIndex.setLastUpdatedOn(HerdDateUtils.getXMLGregorianCalendarValue(searchIndexEntity.getUpdatedOn()));
@@ -232,6 +237,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         String documentType;
         String mapping;
         String settings;
+        String alias;
 
         // Currently, only search index for business object definitions and tag are supported.
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
@@ -239,24 +245,22 @@ public class SearchIndexServiceImpl implements SearchIndexService
             documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
             mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
             settings = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey());
+            alias = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         }
         else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
         {
             documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_DOCUMENT_TYPE, String.class);
             mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey());
             settings = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_SETTINGS_JSON.getKey());
+            alias = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_INDEX_NAME, String.class);
         }
         else
         {
             throw new IllegalArgumentException(String.format("Search index type with code \"%s\" is not supported.", searchIndexType));
         }
 
-        // Delete the index if it already exists.
-        deleteSearchIndexHelper(searchIndexKey.getSearchIndexName());
-
         // Create the index.
-        //searchFunctions.getCreateIndexFunction().accept(searchIndexKey.getSearchIndexName(), documentType, mapping, settings);
-        indexFunctionsDao.createIndex(searchIndexKey.getSearchIndexName(), documentType, mapping, settings);
+        indexFunctionsDao.createIndex(searchIndexKey.getSearchIndexName(), documentType, mapping, settings, alias);
 
         //Fetch data from database and index them
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
@@ -322,8 +326,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
      */
     private void validateSearchIndexCreateRequest(SearchIndexCreateRequest request) throws IllegalArgumentException
     {
-        Assert.notNull(request, "A search create request must be specified.");
-        validateSearchIndexKey(request.getSearchIndexKey());
+        Assert.notNull(request, "A search index create request must be specified.");
         request.setSearchIndexType(alternateKeyHelper.validateStringParameter("Search index type", request.getSearchIndexType()));
     }
 
@@ -338,5 +341,28 @@ public class SearchIndexServiceImpl implements SearchIndexService
     {
         Assert.notNull(key, "A search index key must be specified.");
         key.setSearchIndexName(alternateKeyHelper.validateStringParameter("Search index name", key.getSearchIndexName()));
+    }
+
+    /**
+     * Constructs a search index key with name followed by current timestamp
+     *
+     * @param searchIndexType the type of the search index
+     *
+     * @return indexName the name of the index
+     */
+    private String setSearchIndexName(String searchIndexType)
+    {
+
+        String indexName;
+        if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
+        {
+            indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        }
+        else
+        {
+            indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_INDEX_NAME, String.class);
+        }
+        indexName += "_" + new Timestamp(System.currentTimeMillis()).getTime();
+        return indexName;
     }
 }

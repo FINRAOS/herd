@@ -104,29 +104,29 @@ public interface TagService
 
     /**
      * Checks the count of tags in the database against the count of tags in the index.
-     *
+     * @param indexName the name of the index
      * @return boolean value true for valid, false otherwise
      */
-    public boolean indexSizeCheckValidationTags();
+    public boolean indexSizeCheckValidationTags(String indexName);
 
     /**
      * Spot check a random percentage of tags in the search index
-     *
+     * @param indexName the name of the index
      * @return boolean value true for valid, false otherwise
      */
-    public boolean indexSpotCheckPercentageValidationTags();
+    public boolean indexSpotCheckPercentageValidationTags(String indexName);
 
     /**
      * Spot check the most recent tags in the search index
-     *
+     * @param indexName the name of the index
      * @return boolean value true for valid, false otherwise
      */
-    public boolean indexSpotCheckMostRecentValidationTags();
+    public boolean indexSpotCheckMostRecentValidationTags(String indexName);
 
     /**
      * Validate that the search index contains all tags
-     *
+     * @param indexName the name of the index
      * @return result of an asynchronous computation
      */
-    public Future<Void> indexValidateAllTags();
+    public Future<Void> indexValidateAllTags(String indexName);
 }

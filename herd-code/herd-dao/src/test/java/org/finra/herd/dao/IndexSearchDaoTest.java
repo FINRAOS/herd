@@ -480,7 +480,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(termsAggregation.getBuckets()).thenReturn(buckets);
 
         // Call the method under test
-        IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields);
+        IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         List<IndexSearchResult> indexSearchResults = indexSearchResponse.getIndexSearchResults();
 
         assertThat("Index search results list is null.", indexSearchResults, not(nullValue()));

@@ -53,9 +53,11 @@ import org.finra.herd.model.api.xml.IndexSearchResult;
 import org.finra.herd.model.api.xml.IndexSearchResultKey;
 import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
+import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.impl.IndexSearchServiceImpl;
@@ -91,6 +93,9 @@ public class IndexSearchServiceTest extends AbstractServiceTest
 
     @Mock
     private TagDaoHelper tagDaoHelper;
+
+    @Mock
+    private SearchIndexDaoHelper searchIndexDaoHelper;
 
     @Before
     public void before()
@@ -129,15 +134,23 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Construct an index search response
         final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
 
+        // Construct a search index entity
+        SearchIndexTypeEntity searchIndexTypeEntity = new SearchIndexTypeEntity();
+        searchIndexTypeEntity.setCode(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+
         // Mock the call to the index search service
-        when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
 
         // Call the method under test
         IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequest, fields);
 
         // Verify the method call to indexSearchService.indexSearch()
-        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
-        verifyNoMoreInteractions(indexSearchDao);
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+        verifyNoMoreInteractions(indexSearchDao, searchIndexDaoHelper);
 
         // Validate the returned object.
         assertThat("Index search response was null.", indexSearchResponseFromService, not(nullValue()));
@@ -203,17 +216,22 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         when(tagDaoHelper.getTagEntity(tagKey)).thenReturn(tagEntity);
 
         // Mock the call to the index search service
-        when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
+
 
         // Call the method under test
         IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequest, fields);
 
         // Verify the method call to tagHelper
         verify(tagHelper, times(ONE_TIME)).validateTagKey(tagKey);
-        verifyNoMoreInteractions(tagHelper);
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+        verifyNoMoreInteractions(tagHelper, searchIndexDaoHelper);
 
         // Verify the method call to indexSearchService.indexSearch()
-        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         verifyNoMoreInteractions(indexSearchDao);
 
         // Validate the returned object.
@@ -283,17 +301,22 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         when(tagDaoHelper.getTagEntity(tagKey)).thenReturn(tagEntity);
 
         // Mock the call to the index search service
-        when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
+
 
         // Call the method under test
         IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequest, fields);
 
         // Verify the method call to tagHelper
         verify(tagHelper, times(ONE_TIME)).validateTagKey(tagKey);
-        verifyNoMoreInteractions(tagHelper);
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+        verifyNoMoreInteractions(tagHelper, searchIndexDaoHelper);
 
         // Verify the method call to indexSearchService.indexSearch()
-        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         verifyNoMoreInteractions(indexSearchDao);
 
         // Validate the returned object.
@@ -349,17 +372,21 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
 
         // Mock the call to the index search service
-        when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
 
         // Call the method under test
         IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequest, fields);
 
         // Verify the method call to index search result type helper
         verify(indexSearchResultTypeHelper, times(ONE_TIME)).validateIndexSearchResultTypeKey(resultTypeKey);
-        verifyNoMoreInteractions(indexSearchResultTypeHelper);
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+        verifyNoMoreInteractions(indexSearchResultTypeHelper, searchIndexDaoHelper);
 
         // Verify the method call to indexSearchService.indexSearch()
-        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         verifyNoMoreInteractions(indexSearchDao);
 
         // Validate the returned object.
@@ -418,17 +445,22 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
 
         // Mock the call to the index search service
-        when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
+
 
         // Call the method under test
         IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequest, fields);
 
         // Verify the method call to index search result type helper
         verify(indexSearchResultTypeHelper, times(ONE_TIME)).validateIndexSearchResultTypeKey(resultTypeKey);
-        verifyNoMoreInteractions(indexSearchResultTypeHelper);
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+        verifyNoMoreInteractions(indexSearchResultTypeHelper, searchIndexDaoHelper);
 
         // Verify the method call to indexSearchService.indexSearch()
-        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         verifyNoMoreInteractions(indexSearchDao);
 
         // Validate the returned object.
@@ -476,14 +508,19 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, facets);
 
         // Mock the call to the index search service
-        when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
 
         // Call the method under test
         IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequest, fields);
 
         // Verify the method call to indexSearchService.indexSearch()
-        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
-        verifyNoMoreInteractions(indexSearchDao);
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+
+        verifyNoMoreInteractions(indexSearchDao, searchIndexDaoHelper);
 
         // Validate the returned object.
         assertThat("Index search response was null.", indexSearchResponseFromService, not(nullValue()));
@@ -600,17 +637,21 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         when(tagDaoHelper.getTagEntity(tagKey)).thenReturn(tagEntity);
 
         // Mock the call to the index search service
-        when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
 
         // Call the method under test
         IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequest, fields);
 
         // Verify the method call to tagHelper
         verify(tagHelper, times(TWO_TIMES)).validateTagKey(any());
-        verifyNoMoreInteractions(tagHelper);
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+        verifyNoMoreInteractions(tagHelper, searchIndexDaoHelper);
 
         // Verify the method call to indexSearchService.indexSearch()
-        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         verifyNoMoreInteractions(indexSearchDao);
 
         // Validate the returned object.
@@ -727,14 +768,18 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
 
         // Mock the call to the index search service
-        when(indexSearchDao.indexSearch(indexSearchRequestHighlightingEnabled, fields)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequestHighlightingEnabled, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
+        when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
 
         // Call the method under test
         IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequestHighlightingEnabled, fields);
 
         // Verify the method call to indexSearchService.indexSearch()
-        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequestHighlightingEnabled, fields);
-        verifyNoMoreInteractions(indexSearchDao);
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequestHighlightingEnabled, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+        verifyNoMoreInteractions(indexSearchDao, searchIndexDaoHelper);
 
         // Validate the returned object.
         assertThat("Index search response was null.", indexSearchResponseFromService, not(nullValue()));
@@ -744,10 +789,11 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Create index search request with highlighting disabled
         final IndexSearchRequest indexSearchRequestHighlightingDisabled = new IndexSearchRequest(SEARCH_TERM, null, null, HIT_HIGHLIGHTING_DISABLED);
 
-        when(indexSearchDao.indexSearch(indexSearchRequestHighlightingDisabled, fields)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequestHighlightingDisabled, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2))
+            .thenReturn(indexSearchResponse);
 
         // Verify the method call to indexSearchService.indexSearch()
-        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequestHighlightingEnabled, fields);
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequestHighlightingEnabled, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         verifyNoMoreInteractions(indexSearchDao);
 
         // Validate the returned object.

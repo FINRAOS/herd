@@ -35,8 +35,14 @@ public class SearchIndexStatusDaoTestHelper
      */
     public SearchIndexStatusEntity createSearchIndexStatusEntity(String statusCode)
     {
-        SearchIndexStatusEntity storageUnitStatusEntity = new SearchIndexStatusEntity();
-        storageUnitStatusEntity.setCode(statusCode);
-        return searchIndexStatusDao.saveAndRefresh(storageUnitStatusEntity);
+        SearchIndexStatusEntity searchIndexStatusEntity;
+        searchIndexStatusEntity = searchIndexStatusDao.getSearchIndexStatusByCode(statusCode);
+        if (searchIndexStatusEntity == null)
+        {
+            searchIndexStatusEntity = new SearchIndexStatusEntity();
+            searchIndexStatusEntity.setCode(statusCode);
+            searchIndexStatusEntity = searchIndexStatusDao.saveAndRefresh(searchIndexStatusEntity);
+        }
+        return searchIndexStatusEntity;
     }
 }

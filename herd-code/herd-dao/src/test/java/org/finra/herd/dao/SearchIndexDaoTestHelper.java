@@ -49,4 +49,5 @@ public class SearchIndexDaoTestHelper
         searchIndexEntity.setStatus(searchIndexStatusDaoTestHelper.createSearchIndexStatusEntity(statusCode));
         return searchIndexDao.saveAndRefresh(searchIndexEntity);
     }
+
 }

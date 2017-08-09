@@ -34,5 +34,5 @@ public interface IndexSearchDao
      *
      * @return the index search response containing the search results
      */
-    IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields);
+    IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields, String bdefActiveIndex, String tagActiveIndex);
 }
