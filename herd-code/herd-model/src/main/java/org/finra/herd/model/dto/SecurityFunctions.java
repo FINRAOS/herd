@@ -292,6 +292,8 @@ public class SecurityFunctions
 
     public static final String FN_SEARCH_INDEXES_POST = "FN_SEARCH_INDEXES_POST";
 
+    public static final String FN_SEARCH_INDEXES_ACTIVATION_POST = "FN_SEARCH_INDEXES_ACTIVATION_POST";
+
     public static final String FN_SEARCH_INDEXES_VALIDATION_POST = "FN_SEARCH_INDEXES_VALIDATION_POST";
 
     public static final String FN_STORAGES_ALL_GET = "FN_STORAGES_ALL_GET";

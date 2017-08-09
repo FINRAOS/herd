@@ -91,8 +91,9 @@ public interface IndexFunctionsDao extends BaseJpaDao
      * @param documentType document type
      * @param mapping mapping
      * @param settings setting
+      * @param alias alias
      */
-    public void createIndex(String indexName, String documentType, String mapping, String settings);
+     public void createIndex(String indexName, String documentType, String mapping, String settings, String alias);
 
     /**
      * The delete document by id function will delete a document in the index by the document id.

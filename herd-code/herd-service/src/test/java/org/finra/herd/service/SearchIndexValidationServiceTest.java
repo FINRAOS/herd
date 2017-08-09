@@ -91,15 +91,15 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
         // Mock the external calls.
         when(alternateKeyHelper.validateStringParameter("Search index name", SEARCH_INDEX_NAME)).thenReturn(SEARCH_INDEX_NAME);
         when(searchIndexDaoHelper.getSearchIndexEntity(searchIndexKey)).thenReturn(searchIndexEntity);
-        when(businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions()).thenReturn(new AsyncResult<>(null));
-        when(businessObjectDefinitionService.indexSizeCheckValidationBusinessObjectDefinitions()).thenReturn(sizeCheck);
-        when(businessObjectDefinitionService.indexSpotCheckPercentageValidationBusinessObjectDefinitions()).thenReturn(spotCheckPercentage);
-        when(businessObjectDefinitionService.indexSpotCheckMostRecentValidationBusinessObjectDefinitions()).thenReturn(spotCheckMostRecent);
+        when(businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions(SEARCH_INDEX_NAME)).thenReturn(new AsyncResult<>(null));
+        when(businessObjectDefinitionService.indexSizeCheckValidationBusinessObjectDefinitions(SEARCH_INDEX_NAME)).thenReturn(sizeCheck);
+        when(businessObjectDefinitionService.indexSpotCheckPercentageValidationBusinessObjectDefinitions(SEARCH_INDEX_NAME)).thenReturn(spotCheckPercentage);
+        when(businessObjectDefinitionService.indexSpotCheckMostRecentValidationBusinessObjectDefinitions(SEARCH_INDEX_NAME)).thenReturn(spotCheckMostRecent);
 
-        when(tagService.indexValidateAllTags()).thenReturn(new AsyncResult<>(null));
-        when(tagService.indexSizeCheckValidationTags()).thenReturn(sizeCheck);
-        when(tagService.indexSpotCheckPercentageValidationTags()).thenReturn(spotCheckPercentage);
-        when(tagService.indexSpotCheckMostRecentValidationTags()).thenReturn(spotCheckMostRecent);
+        when(tagService.indexValidateAllTags(SEARCH_INDEX_NAME)).thenReturn(new AsyncResult<>(null));
+        when(tagService.indexSizeCheckValidationTags(SEARCH_INDEX_NAME)).thenReturn(sizeCheck);
+        when(tagService.indexSpotCheckPercentageValidationTags(SEARCH_INDEX_NAME)).thenReturn(spotCheckPercentage);
+        when(tagService.indexSpotCheckMostRecentValidationTags(SEARCH_INDEX_NAME)).thenReturn(spotCheckMostRecent);
 
         // Create a search index.
         SearchIndexValidation response = searchIndexValidationService.createSearchIndexValidation(searchIndexValidationCreateRequest);
@@ -113,15 +113,15 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
             // verify that full validation is invoked only if specified in the request
             if (searchIndexValidationCreateRequest.isPerformFullSearchIndexValidation())
             {
-                verify(tagService, times(1)).indexValidateAllTags();
+                verify(tagService, times(1)).indexValidateAllTags(SEARCH_INDEX_NAME);
             }
             else
             {
-                verify(tagService, times(0)).indexValidateAllTags();
+                verify(tagService, times(0)).indexValidateAllTags(SEARCH_INDEX_NAME);
             }
-            verify(tagService).indexSizeCheckValidationTags();
-            verify(tagService).indexSpotCheckPercentageValidationTags();
-            verify(tagService).indexSpotCheckMostRecentValidationTags();
+            verify(tagService).indexSizeCheckValidationTags(SEARCH_INDEX_NAME);
+            verify(tagService).indexSpotCheckPercentageValidationTags(SEARCH_INDEX_NAME);
+            verify(tagService).indexSpotCheckMostRecentValidationTags(SEARCH_INDEX_NAME);
             verifyNoMoreInteractions(alternateKeyHelper, searchIndexDaoHelper, tagService);
             // Validate the returned object.
             assertEquals(new SearchIndexValidation(searchIndexKey, response.getValidateStartTime(), sizeCheck, spotCheckPercentage, spotCheckMostRecent),
@@ -133,15 +133,15 @@ public class SearchIndexValidationServiceTest extends AbstractServiceTest
             // verify that full validation is invoked only if specified in the request
             if (searchIndexValidationCreateRequest.isPerformFullSearchIndexValidation())
             {
-                verify(businessObjectDefinitionService, times(1)).indexValidateAllBusinessObjectDefinitions();
+                verify(businessObjectDefinitionService, times(1)).indexValidateAllBusinessObjectDefinitions(SEARCH_INDEX_NAME);
             }
             else
             {
-                verify(businessObjectDefinitionService, times(0)).indexValidateAllBusinessObjectDefinitions();
+                verify(businessObjectDefinitionService, times(0)).indexValidateAllBusinessObjectDefinitions(SEARCH_INDEX_NAME);
             }
-            verify(businessObjectDefinitionService).indexSizeCheckValidationBusinessObjectDefinitions();
-            verify(businessObjectDefinitionService).indexSpotCheckPercentageValidationBusinessObjectDefinitions();
-            verify(businessObjectDefinitionService).indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
+            verify(businessObjectDefinitionService).indexSizeCheckValidationBusinessObjectDefinitions(SEARCH_INDEX_NAME);
+            verify(businessObjectDefinitionService).indexSpotCheckPercentageValidationBusinessObjectDefinitions(SEARCH_INDEX_NAME);
+            verify(businessObjectDefinitionService).indexSpotCheckMostRecentValidationBusinessObjectDefinitions(SEARCH_INDEX_NAME);
             verifyNoMoreInteractions(alternateKeyHelper, searchIndexDaoHelper, businessObjectDefinitionService);
             // Validate the returned object.
             assertEquals(new SearchIndexValidation(searchIndexKey, response.getValidateStartTime(), sizeCheck, spotCheckPercentage, spotCheckMostRecent),

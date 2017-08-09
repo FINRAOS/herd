@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.SearchIndexEntity;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
 public interface SearchIndexDao extends BaseJpaDao
 {
@@ -37,4 +38,11 @@ public interface SearchIndexDao extends BaseJpaDao
      * @return the list of search index keys
      */
     public List<SearchIndexKey> getSearchIndexes();
+
+    /**
+     * Gets a list of search index entities by index type
+     *
+     * @return the list of search index entities
+     */
+    public List<SearchIndexEntity> getSearchIndexEntities(SearchIndexTypeEntity searchIndexTypeEntity);
 }

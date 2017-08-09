@@ -55,11 +55,12 @@ public class SearchIndexRestControllerTest extends AbstractRestTest
     public void testCreateSearchIndex()
     {
         // Create a search index create request.
-        SearchIndexCreateRequest searchIndexCreateRequest = new SearchIndexCreateRequest(new SearchIndexKey(SEARCH_INDEX_NAME), SEARCH_INDEX_TYPE);
+        SearchIndexCreateRequest searchIndexCreateRequest = new SearchIndexCreateRequest(SEARCH_INDEX_TYPE);
 
         // Create a search index create response.
         SearchIndex searchIndex =
-            new SearchIndex(new SearchIndexKey(SEARCH_INDEX_NAME), SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_STATISTICS, USER_ID, CREATED_ON,
+            new SearchIndex(new SearchIndexKey(SEARCH_INDEX_NAME), SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, SEARCH_INDEX_DEFAULT_ACTIVE_FLAG,
+                NO_SEARCH_INDEX_STATISTICS, USER_ID, CREATED_ON,
                 UPDATED_ON);
 
         // Mock the call to the search index service.
@@ -83,7 +84,8 @@ public class SearchIndexRestControllerTest extends AbstractRestTest
 
         // Create a search index delete response.
         SearchIndex searchIndex =
-            new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_STATISTICS, USER_ID, CREATED_ON, UPDATED_ON);
+            new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, SEARCH_INDEX_DEFAULT_ACTIVE_FLAG, NO_SEARCH_INDEX_STATISTICS, USER_ID,
+                CREATED_ON, UPDATED_ON);
 
         // Mock the call to the search index service.
         when(searchIndexService.deleteSearchIndex(searchIndexKey)).thenReturn(searchIndex);
@@ -106,7 +108,8 @@ public class SearchIndexRestControllerTest extends AbstractRestTest
 
         // Create a search index get response.
         SearchIndex searchIndex =
-            new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_STATISTICS, USER_ID, CREATED_ON, UPDATED_ON);
+            new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, SEARCH_INDEX_DEFAULT_ACTIVE_FLAG, NO_SEARCH_INDEX_STATISTICS, USER_ID,
+                CREATED_ON, UPDATED_ON);
 
         // Mock the call to the search index service.
         when(searchIndexService.getSearchIndex(searchIndexKey)).thenReturn(searchIndex);

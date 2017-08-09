@@ -656,6 +656,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_BDEF_INDEX_NAME("elasticsearch.bdef.index.name", "bdef"),
 
     /**
+     * The elasticsearch index name
+     */
+    ELASTICSEARCH_TAG_INDEX_NAME("elasticsearch.tag.index.name", "tag"),
+
+    /**
      * The elasticsearch document type
      */
     ELASTICSEARCH_BDEF_DOCUMENT_TYPE("elasticsearch.bdef.document.type", "doc"),

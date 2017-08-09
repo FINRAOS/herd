@@ -35,8 +35,14 @@ public class SearchIndexTypeDaoTestHelper
      */
     public SearchIndexTypeEntity createSearchIndexTypeEntity(String typeCode)
     {
-        SearchIndexTypeEntity storageUnitTypeEntity = new SearchIndexTypeEntity();
-        storageUnitTypeEntity.setCode(typeCode);
-        return searchIndexTypeDao.saveAndRefresh(storageUnitTypeEntity);
+        SearchIndexTypeEntity searchIndexTypeEntity;
+        searchIndexTypeEntity = searchIndexTypeDao.getSearchIndexTypeByCode(typeCode);
+        if (searchIndexTypeEntity == null)
+        {
+            searchIndexTypeEntity = new SearchIndexTypeEntity();
+            searchIndexTypeEntity.setCode(typeCode);
+            searchIndexTypeEntity = searchIndexTypeDao.saveAndRefresh(searchIndexTypeEntity);
+        }
+        return searchIndexTypeEntity;
     }
 }

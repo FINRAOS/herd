@@ -15,6 +15,9 @@
 */
 package org.finra.herd.service.helper;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +26,7 @@ import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.SearchIndexEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
 /**
  * Helper for search index related operations which require DAO.
@@ -35,6 +39,9 @@ public class SearchIndexDaoHelper
 
     @Autowired
     private SearchIndexStatusDaoHelper searchIndexStatusDaoHelper;
+
+    @Autowired
+    private SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
 
     /**
      * Gets a search index entity by its key and ensure it exists.
@@ -78,4 +85,59 @@ public class SearchIndexDaoHelper
         // Persist the entity.
         searchIndexDao.saveAndRefresh(searchIndexEntity);
     }
+
+
+    /**
+     * Activates a search index entity and de-activates the others
+     *
+     * @param currentSearchIndexEntity the search index key (case sensitive)
+     *
+     * @throws org.finra.herd.model.ObjectNotFoundException if the search index entity
+     */
+    public void activateSearchIndex(SearchIndexEntity currentSearchIndexEntity)
+    {
+
+        // Get all the search index entities of the respective type.
+        List<SearchIndexEntity> searchIndexEntities = searchIndexDao.getSearchIndexEntities(currentSearchIndexEntity.getType());
+
+        // Exclude the current search index entity and de-activate the other entities.
+        searchIndexEntities.stream().filter(searchIndexEntity -> !currentSearchIndexEntity.equals(searchIndexEntity)).collect(Collectors.toList())
+            .forEach(searchIndexEntity -> {
+                searchIndexEntity.setActive(Boolean.FALSE);
+                searchIndexDao.saveAndRefresh(searchIndexEntity);
+            });
+
+        // Set the current search index entity to active.
+        currentSearchIndexEntity.setActive(Boolean.TRUE);
+        searchIndexDao.saveAndRefresh(currentSearchIndexEntity);
+    }
+
+    /**
+     * Fetches the name of the active index for the specified type
+     *
+     * @param indexType the type of the search index
+     */
+    public String getActiveSearchIndex(String indexType)
+    {
+
+        // Get the search index type and ensure it exists.
+        SearchIndexTypeEntity searchIndexTypeEntity = searchIndexTypeDaoHelper.getSearchIndexTypeEntity(indexType);
+
+        // Fetch the list of all search index entities for the specified type and get the active entity
+        List<SearchIndexEntity> searchIndexEntities = searchIndexDao.getSearchIndexEntities(searchIndexTypeEntity);
+
+        searchIndexEntities = searchIndexEntities.stream()
+            .filter(searchIndexEntity -> searchIndexEntity.getActive() != null && searchIndexEntity.getActive().equals(Boolean.TRUE))
+            .collect(Collectors.toList());
+
+        if (searchIndexEntities.size() == 0)
+        {
+            throw new ObjectNotFoundException(String.format("No active search index found for type \"%s\".", indexType));
+        }
+
+        return searchIndexEntities.get(0).getName();
+    }
+
+
+
 }

@@ -65,6 +65,7 @@ public class SearchIndexValidationServiceImpl implements SearchIndexValidationSe
         // Ensure that search index for the specified search index key exists. Fetch the type
         SearchIndexEntity searchIndexEntity = searchIndexDaoHelper.getSearchIndexEntity(request.getSearchIndexKey());
         String searchIndexType = searchIndexEntity.getType().getCode();
+        String indexName = request.getSearchIndexKey().getSearchIndexName();
 
         boolean sizeCheck = false;
         boolean spotCheckPercentage = false;
@@ -76,22 +77,22 @@ public class SearchIndexValidationServiceImpl implements SearchIndexValidationSe
             // only perform full validation if specified in the request
             if (BooleanUtils.isTrue(request.isPerformFullSearchIndexValidation()))
             {
-                businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions();
+                businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions(indexName);
             }
-            sizeCheck = businessObjectDefinitionService.indexSizeCheckValidationBusinessObjectDefinitions();
-            spotCheckPercentage = businessObjectDefinitionService.indexSpotCheckPercentageValidationBusinessObjectDefinitions();
-            spotCheckMostRecent = businessObjectDefinitionService.indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
+            sizeCheck = businessObjectDefinitionService.indexSizeCheckValidationBusinessObjectDefinitions(indexName);
+            spotCheckPercentage = businessObjectDefinitionService.indexSpotCheckPercentageValidationBusinessObjectDefinitions(indexName);
+            spotCheckMostRecent = businessObjectDefinitionService.indexSpotCheckMostRecentValidationBusinessObjectDefinitions(indexName);
         }
         else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
         {
             // only perform full validation if specified in the request
             if (BooleanUtils.isTrue(request.isPerformFullSearchIndexValidation()))
             {
-                tagService.indexValidateAllTags();
+                tagService.indexValidateAllTags(indexName);
             }
-            sizeCheck = tagService.indexSizeCheckValidationTags();
-            spotCheckPercentage = tagService.indexSpotCheckPercentageValidationTags();
-            spotCheckMostRecent = tagService.indexSpotCheckMostRecentValidationTags();
+            sizeCheck = tagService.indexSizeCheckValidationTags(indexName);
+            spotCheckPercentage = tagService.indexSpotCheckPercentageValidationTags(indexName);
+            spotCheckMostRecent = tagService.indexSpotCheckMostRecentValidationTags(indexName);
         }
 
         return new SearchIndexValidation(request.getSearchIndexKey(), getXMLGregorianCalendarValue(new Date()), sizeCheck, spotCheckPercentage,

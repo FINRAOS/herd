@@ -88,11 +88,6 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private static final float BEST_FIELDS_QUERY_BOOST = 1f;
 
     /**
-     * The business object definition index
-     */
-    private static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
-
-    /**
      * String to select the tag type code and namespace code
      */
     private static final String CODE = "code";
@@ -158,11 +153,6 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private static final String TAG_CODE_SOURCE = "tagCode";
 
     /**
-     * The tag index
-     */
-    private static final String TAG_INDEX = "tag";
-
-    /**
      * String to select the tag type
      */
     private static final String TAG_TYPE = "tagType";
@@ -201,8 +191,10 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private JestClientHelper jestClientHelper;
 
     @Override
-    public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
+    public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields, final String bdefActiveIndex,
+        final String tagActiveIndex)
     {
+
         final Integer tagShortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
         final Integer businessObjectDefinitionShortDescMaxLength =
             configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
@@ -247,7 +239,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
         // Create a indexSearch request builder
         SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(new ElasticsearchClientImpl(), SearchAction.INSTANCE);
-        searchRequestBuilder.setIndices(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX);
+        searchRequestBuilder.setIndices(bdefActiveIndex, tagActiveIndex);
         searchRequestBuilder.setSource(searchSourceBuilder).setSize(SEARCH_RESULT_SIZE).addSort(SortBuilders.scoreSort());
 
         String preTag = null;
@@ -273,7 +265,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         LOGGER.info("indexSearchRequest={}", searchRequestBuilder.toString());
 
         // Retrieve the indexSearch response
-        final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString()).addIndex(Arrays.asList("bdef", "tag"));
+        final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString()).addIndex(Arrays.asList(bdefActiveIndex, tagActiveIndex));
         final SearchResult searchResult = jestClientHelper.searchExecute(searchBuilder.build());
         final List<SearchResult.Hit<Map, Void>> searchHitList = searchResult.getHits(Map.class);
 
@@ -300,7 +292,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             }
 
             // Populate tag index specific key
-            if (index.equals(TAG_INDEX))
+            if (index.equals(tagActiveIndex))
             {
                 if (fields.contains(SHORT_DESCRIPTION_FIELD))
                 {
@@ -314,7 +306,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
                 indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(tagKey, null));
             }
             // Populate business object definition key
-            else if (index.equals(BUSINESS_OBJECT_DEFINITION_INDEX))
+            else if (index.equals(bdefActiveIndex))
             {
                 if (fields.contains(SHORT_DESCRIPTION_FIELD))
                 {
