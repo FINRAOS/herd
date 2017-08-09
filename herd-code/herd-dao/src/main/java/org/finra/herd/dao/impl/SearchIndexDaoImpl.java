@@ -102,7 +102,7 @@ public class SearchIndexDaoImpl extends AbstractHerdDao implements SearchIndexDa
         // Add all clauses to the query.
         criteria.select(searchIndexEntityRoot).where(predicate);
 
-        // Returned the list of entities.
+        // Return the list of entities.
         return entityManager.createQuery(criteria).getResultList();
     }
 }

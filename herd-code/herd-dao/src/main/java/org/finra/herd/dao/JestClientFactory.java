@@ -106,21 +106,6 @@ public class JestClientFactory
         return jestClientFactory.getObject();
     }
 
-    //    public JestClient getJestClient()
-    //    {
-    //        // Retrieve the configuration values used for setting up an Elasticsearch JEST client.
-    //        final String hostname = "localhost";
-    //        final int port = 9200;
-    //        final String scheme = "http";
-    //        final String serverUri = String.format("%s://%s:%d", scheme, hostname, port);
-    //
-    //        io.searchbox.client.JestClientFactory jestClientFactory = new io.searchbox.client.JestClientFactory();
-    //
-    //        jestClientFactory.setHttpClientConfig(new HttpClientConfig.Builder(serverUri).multiThreaded(false).build());
-    //
-    //        return jestClientFactory.getObject();
-    //    }
-
     /**
      * get password from credstash
      *

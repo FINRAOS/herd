@@ -92,11 +92,9 @@ public class SearchIndexDaoHelper
      *
      * @param currentSearchIndexEntity the search index key (case sensitive)
      *
-     * @throws org.finra.herd.model.ObjectNotFoundException if the search index entity
      */
     public void activateSearchIndex(SearchIndexEntity currentSearchIndexEntity)
     {
-
         // Get all the search index entities of the respective type.
         List<SearchIndexEntity> searchIndexEntities = searchIndexDao.getSearchIndexEntities(currentSearchIndexEntity.getType());
 
@@ -116,10 +114,10 @@ public class SearchIndexDaoHelper
      * Fetches the name of the active index for the specified type
      *
      * @param indexType the type of the search index
+     * @return the name of the active index
      */
     public String getActiveSearchIndex(String indexType)
     {
-
         // Get the search index type and ensure it exists.
         SearchIndexTypeEntity searchIndexTypeEntity = searchIndexTypeDaoHelper.getSearchIndexTypeEntity(indexType);
 
@@ -134,10 +132,6 @@ public class SearchIndexDaoHelper
         {
             throw new ObjectNotFoundException(String.format("No active search index found for type \"%s\".", indexType));
         }
-
         return searchIndexEntities.get(0).getName();
     }
-
-
-
 }

@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Joiner;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -169,8 +168,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     @Override
     public void createIndexDocuments(String indexName, String documentType, Map<String, String> documentMap)
     {
-        LOGGER.info("Creating Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", indexName, documentType,
-            Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
+        LOGGER.info("Creating Elasticsearch index documents, indexName={}, documentType={}", indexName, documentType);
 
         List<String> allIndices = getAliases(indexName);
 
@@ -192,11 +190,6 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         if (!jestResult.isSucceeded())
         {
             LOGGER.error("Bulk response error = {}", jestResult.getErrorMessage());
-        }
-        else
-        {
-            LOGGER.info("Created Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", index, documentType,
-                Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
         }
         });
     }
@@ -272,11 +265,6 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Bulk response error = {}", jestResult.getErrorMessage());
         }
-        else
-        {
-            LOGGER.info("Deleted Elasticsearch documents from index, indexName={}, documentType={}, ids={}.", index, documentType,
-                ids.stream().map(Object::toString).collect(Collectors.joining(",")));
-        }
         });
 
     }
@@ -337,8 +325,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     @Override
     public final void updateIndexDocuments(String indexName, String documentType, Map<String, String> documentMap)
     {
-        LOGGER.info("Updating Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", indexName, documentType,
-            Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
+        LOGGER.info("Updating Elasticsearch index documents, indexName={}, documentType={}.", indexName, documentType);
 
         List<String> allIndices = getAliases(indexName);
 
@@ -358,11 +345,6 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
             if (!jestResult.isSucceeded())
             {
                 LOGGER.error("Bulk response error = {}", jestResult.getErrorMessage());
-            }
-            else
-            {
-                LOGGER.info("Updated Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", index, documentType,
-                    Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
             }
         });
     }
