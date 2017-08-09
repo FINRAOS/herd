@@ -25,6 +25,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
+import org.finra.herd.model.dto.SearchIndexUpdateDto;
 
 /**
  * This is a Business Object Definition service implementation for testing.
@@ -89,5 +90,16 @@ public class TestBusinessObjectDefinitionServiceImpl extends BusinessObjectDefin
         BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         return updateBusinessObjectDefinitionDescriptiveInformationImpl(businessObjectDefinitionKey, request);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public void updateSearchIndexDocumentBusinessObjectDefinition(SearchIndexUpdateDto searchIndexUpdateDto)
+    {
+        updateSearchIndexDocumentBusinessObjectDefinitionImpl(searchIndexUpdateDto);
     }
 }

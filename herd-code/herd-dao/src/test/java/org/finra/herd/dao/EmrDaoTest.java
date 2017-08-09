@@ -510,6 +510,7 @@ public class EmrDaoTest extends AbstractDaoTest
         emrClusterDefinition.setHadoopJarSteps(Arrays.asList(new HadoopJarStep("stepName", "jarLocation", "mainClass", null, true)));
         emrClusterDefinition.setSupportedProduct("supportedProduct");
         emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
+        emrClusterDefinition.setScaleDownBehavior("scaleDownBehavior");
 
         emrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP);
         emrClusterDefinition.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP);
@@ -621,6 +622,7 @@ public class EmrDaoTest extends AbstractDaoTest
                 }
                 assertEquals(Arrays.asList("supportedProduct"), runJobFlowRequest.getSupportedProducts());
                 assertEquals("securityConfiguration", runJobFlowRequest.getSecurityConfiguration());
+                assertEquals("scaleDownBehavior", runJobFlowRequest.getScaleDownBehavior());
                 assertEquals(EMR_MASTER_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedMasterSecurityGroup());
                 assertEquals(EMR_SLAVE_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedSlaveSecurityGroup());
                 return clusterId;
