@@ -396,6 +396,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
+    public static final Boolean NO_DRY_RUN = false;
+
     public static final DateTime NO_END_TIME = null;
 
     public static final Exception NO_EXCEPTION = null;
@@ -430,6 +432,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final PartitionValueRange NO_PARTITION_VALUE_RANGE = null;
 
+    public static final boolean NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.FALSE;
+
     public static final Long NO_ROW_COUNT = null;
 
     public static final SearchIndexStatistics NO_SEARCH_INDEX_STATISTICS = null;
@@ -462,6 +466,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String PARAMETER_VALUE = "UT_ParameterValue_" + RANDOM_SUFFIX;
 
+    public static final boolean PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.TRUE;
+
     public static final List<String> PROCESS_DATE_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-08");
 
     public static final List<String> PROCESS_DATE_NOT_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-04", "2014-04-07");
@@ -487,10 +493,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             "#foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)" +
             "#end" +
             "#end";
-
-    public static final boolean PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.TRUE;
-
-    public static final boolean NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.FALSE;
 
     public static final XMLGregorianCalendar SEARCH_INDEX_STATISTICS_CREATION_DATE = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 

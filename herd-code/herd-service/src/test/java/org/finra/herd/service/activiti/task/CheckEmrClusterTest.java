@@ -80,6 +80,52 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         assertNull(emrStepJarLocation);
 
         String shellStepId = (String) variables.get("addShellStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        assertNotNull(shellStepId);
+        String activeStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_id");
+        assertEquals(shellStepId, activeStepId);
+        String activeStepJarLocation =
+            (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_jarLocation");
+        assertNull(activeStepJarLocation);
+    }
+
+    /**
+     * This method tests the check EMR cluster activiti task with cluster Id and step Id specified and requested step contains no id in response
+     */
+    @Test
+    public void testCheckClusterByClusterIdStepIdRequestedStepHasNoId() throws Exception
+    {
+        List<FieldExtension> fieldExtensions = getOptionalFieldExtensions();
+        FieldExtension fieldExtension = new FieldExtension();
+        fieldExtension.setFieldName("emrStepId");
+        fieldExtension.setExpression("${addHiveStepServiceTask_emrStepId}");
+        fieldExtensions.add(fieldExtension);
+
+        List<Parameter> parameters = new ArrayList<>();
+        parameters.add(new Parameter("clusterName", "testCluster1"));
+        parameters.add(new Parameter("hiveStepName", MockEmrOperationsImpl.MOCK_STEP_WITHOUT_ID_NAME));
+        parameters.add(new Parameter("hiveScriptLocation", "a_hive_step_location"));
+        parameters.add(new Parameter("shellStepName", MockEmrOperationsImpl.MOCK_STEP_RUNNING_NAME));
+        parameters.add(new Parameter("shellScriptLocation", "a_shell_step_location"));
+        parameters.add(new Parameter("verbose", "false"));
+        parameters.add(new Parameter("retrieveInstanceFleets", "false"));
+
+        // Run a job with Activiti XML that will start cluster, check status and terminate.
+        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), parameters);
+        assertNotNull(job);
+
+        HistoricProcessInstance hisInstance =
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+        Map<String, Object> variables = hisInstance.getProcessVariables();
+
+        String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        assertNotNull(hiveStepId);
+        String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_id");
+        assertNull(emrStepId);
+        String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
+        assertNull(emrStepJarLocation);
+
+        String shellStepId = (String) variables.get("addShellStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        assertNotNull(shellStepId);
         String activeStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_id");
         assertEquals(shellStepId, activeStepId);
         String activeStepJarLocation =
@@ -110,12 +156,14 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         Map<String, Object> variables = hisInstance.getProcessVariables();
 
         String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        assertNotNull(hiveStepId);
         String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_id");
         assertEquals(hiveStepId, emrStepId);
         String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
         assertNotNull(emrStepJarLocation);
 
         String shellStepId = (String) variables.get("addShellStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        assertNotNull(shellStepId);
         String activeStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_id");
         assertEquals(shellStepId, activeStepId);
         String activeStepJarLocation =
@@ -143,10 +191,51 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         Map<String, Object> variables = hisInstance.getProcessVariables();
 
         String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        assertNotNull(hiveStepId);
         String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_id");
         assertEquals(hiveStepId, emrStepId);
         String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
         assertNull(emrStepJarLocation);
+
+        String activeStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_id");
+        assertNull(activeStepId);
+    }
+
+    @Test
+    public void testCheckClusterByClusterIdStepIdActiveStepHasNoId() throws Exception
+    {
+        List<FieldExtension> fieldExtensions = getOptionalFieldExtensions();
+        FieldExtension fieldExtension = new FieldExtension();
+        fieldExtension.setFieldName("emrStepId");
+        fieldExtension.setExpression("${addHiveStepServiceTask_emrStepId}");
+        fieldExtensions.add(fieldExtension);
+
+        List<Parameter> parameters = new ArrayList<>();
+        parameters.add(new Parameter("clusterName", "testCluster1"));
+        parameters.add(new Parameter("hiveStepName", "a_hive_step"));
+        parameters.add(new Parameter("hiveScriptLocation", "a_hive_step_location"));
+        parameters.add(new Parameter("shellStepName", MockEmrOperationsImpl.MOCK_STEP_RUNNING_WITHOUT_ID_NAME));
+        parameters.add(new Parameter("shellScriptLocation", "a_shell_step_location"));
+        parameters.add(new Parameter("verbose", "false"));
+        parameters.add(new Parameter("retrieveInstanceFleets", "false"));
+
+        // Run a job with Activiti XML that will start cluster, check status and terminate.
+        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), parameters);
+        assertNotNull(job);
+
+        HistoricProcessInstance hisInstance =
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+        Map<String, Object> variables = hisInstance.getProcessVariables();
+
+        String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        assertNotNull(hiveStepId);
+        String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_id");
+        assertEquals(hiveStepId, emrStepId);
+        String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
+        assertNull(emrStepJarLocation);
+
+        String activeStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_id");
+        assertNull(activeStepId);
     }
 
     @Test
@@ -205,6 +294,7 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         parameters.add(new Parameter("shellScriptLocation", "a_shell_step_location"));
         parameters.add(new Parameter("verbose", verbose));
         parameters.add(new Parameter("retrieveInstanceFleets", retrieveInstanceFleets));
+
         return parameters;
     }
 
