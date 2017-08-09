@@ -223,7 +223,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         }
 
         // Get function score query builder
-        FunctionScoreQueryBuilder functionScoreQueryBuilder = getFunctionScoreQueryBuilder(queryBuilder);
+        FunctionScoreQueryBuilder functionScoreQueryBuilder = getFunctionScoreQueryBuilder(queryBuilder, bdefActiveIndex);
 
         // The fields in the search indexes to return
         final String[] searchSources =
@@ -349,10 +349,10 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      *
      * @return the function score query builder
      */
-    private FunctionScoreQueryBuilder getFunctionScoreQueryBuilder(QueryBuilder queryBuilder)
+    private FunctionScoreQueryBuilder getFunctionScoreQueryBuilder(QueryBuilder queryBuilder, String bdefActiveIndex)
     {
         // Script for tag search score multiplier. If bdef set to tag search score multiplier else set to a default value.
-        String inlineScript = "_score * (doc['_index'].value == 'bdef' ? doc['" + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER + "']: 1)";
+        String inlineScript = "_score * (doc['_index'].value == '" + bdefActiveIndex + "' ? doc['" + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER + "']: 1)";
 
         // Set the lang to groovy
         Script script = new Script(ScriptType.INLINE, "groovy", inlineScript, Collections.emptyMap());
