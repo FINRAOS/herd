@@ -437,7 +437,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
         when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);
         when(elasticsearchHelper.getFacetsResponse(any(ElasticsearchResponseDto.class), any(Boolean.class))).thenCallRealMethod();
-        when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(List.class))).thenCallRealMethod();
+        when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(List.class), any(), any())).thenCallRealMethod();
         when(elasticsearchHelper.addFacetFieldAggregations(any(Set.class), any(SearchRequestBuilder.class))).thenReturn(searchRequestBuilder);
 
         SearchResult searchResult = mock(SearchResult.class);

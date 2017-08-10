@@ -175,7 +175,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         indexSearchFilters.add(indexSearchFilter1);
         indexSearchFilters.add(indexSearchFilter2);
-        BoolQueryBuilder result = elasticsearchHelper.addIndexSearchFilterBooleanClause(indexSearchFilters);
+        BoolQueryBuilder result = elasticsearchHelper.addIndexSearchFilterBooleanClause(indexSearchFilters, "bdefIndex", "tagIndex");
         assertThat("Result is null.", result, is(notNullValue()));
     }
 

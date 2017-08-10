@@ -280,15 +280,17 @@ public class ElasticsearchHelper
      * Navigates the specified index search filters and adds boolean filter clauses to a given {@link SearchRequestBuilder}
      *
      * @param indexSearchFilters the specified search filters
+     * @param bdefActiveIndex the active bdef index name
+     * @param tagActiveIndex the active tag index name
      *
      * @return boolean query with the filters applied
      */
-    public BoolQueryBuilder addIndexSearchFilterBooleanClause(List<IndexSearchFilter> indexSearchFilters)
+    public BoolQueryBuilder addIndexSearchFilterBooleanClause(List<IndexSearchFilter> indexSearchFilters, String bdefActiveIndex, String tagActiveIndex)
     {
         BoolQueryBuilder compoundBoolQueryBuilder = new BoolQueryBuilder();
         for (IndexSearchFilter indexSearchFilter : indexSearchFilters)
         {
-            BoolQueryBuilder indexSearchFilterClauseBuilder = applySearchFilterClause(indexSearchFilter);
+            BoolQueryBuilder indexSearchFilterClauseBuilder = applySearchFilterClause(indexSearchFilter, bdefActiveIndex, tagActiveIndex);
 
             // If the search filter is marked with the exclusion flag then apply the entire compound filter clause on the request builder within a MUST NOT
             // clause.
@@ -310,10 +312,11 @@ public class ElasticsearchHelper
      * Resolves the search filters into an Elasticsearch {@link BoolQueryBuilder}
      *
      * @param indexSearchFilter the specified search filter
-     *
+     * @param bdefActiveIndex the name of the bdef active index
+     * @param tagActiveIndex the name of the tag active index
      * @return {@link BoolQueryBuilder} the resolved filter query
      */
-    private BoolQueryBuilder applySearchFilterClause(IndexSearchFilter indexSearchFilter)
+    private BoolQueryBuilder applySearchFilterClause(IndexSearchFilter indexSearchFilter, String bdefActiveIndex, String tagActiveIndex)
     {
         BoolQueryBuilder indexSearchFilterClauseBuilder = new BoolQueryBuilder();
 
@@ -333,9 +336,12 @@ public class ElasticsearchHelper
             }
             if (null != indexSearchKey.getIndexSearchResultTypeKey())
             {
+                String resultType = indexSearchKey.getIndexSearchResultTypeKey().getIndexSearchResultType().toLowerCase();
+                String indexName = resultType.equals("tag") ? tagActiveIndex : bdefActiveIndex;
+
                 // Add constant-score term queries for tagType-code and tag-code from the tag-key.
                 ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery()
-                    .must(QueryBuilders.termQuery(RESULT_TYPE_FIELD, indexSearchKey.getIndexSearchResultTypeKey().getIndexSearchResultType().toLowerCase())));
+                    .must(QueryBuilders.termQuery(RESULT_TYPE_FIELD, indexName)));
 
                 // Individual index search keys are OR-ed
                 indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);

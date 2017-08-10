@@ -210,7 +210,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         // Add filter clauses if index search filters are specified in the request
         if (CollectionUtils.isNotEmpty(request.getIndexSearchFilters()))
         {
-            BoolQueryBuilder indexSearchQueryBuilder = elasticsearchHelper.addIndexSearchFilterBooleanClause(request.getIndexSearchFilters());
+            BoolQueryBuilder indexSearchQueryBuilder =
+                elasticsearchHelper.addIndexSearchFilterBooleanClause(request.getIndexSearchFilters(), bdefActiveIndex, tagActiveIndex);
 
             // Add the multi match queries to a dis max query and wrap within a bool query, then apply filters to it
             queryBuilder = QueryBuilders.boolQuery().must(disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder))
