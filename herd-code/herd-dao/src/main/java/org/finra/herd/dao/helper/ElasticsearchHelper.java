@@ -337,7 +337,7 @@ public class ElasticsearchHelper
             if (null != indexSearchKey.getIndexSearchResultTypeKey())
             {
                 String resultType = indexSearchKey.getIndexSearchResultTypeKey().getIndexSearchResultType().toLowerCase();
-                String indexName = resultType.equals("tag") ? tagActiveIndex : bdefActiveIndex;
+                String indexName = resultType.equals(TAG_RESULT_TYPE) ? tagActiveIndex : bdefActiveIndex;
 
                 // Add constant-score term queries for tagType-code and tag-code from the tag-key.
                 ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery()
