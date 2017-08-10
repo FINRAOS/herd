@@ -194,7 +194,6 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields, final String bdefActiveIndex,
         final String tagActiveIndex)
     {
-
         final Integer tagShortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
         final Integer businessObjectDefinitionShortDescMaxLength =
             configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
@@ -528,33 +527,31 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             @SuppressWarnings("unchecked")
             IndexSearchHighlightFields highlightFieldsConfig = jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsValue);
 
-            highlightFieldsConfig.getHighlightFields().forEach(
-                highlightFieldConfig -> {
+            highlightFieldsConfig.getHighlightFields().forEach(highlightFieldConfig -> {
 
-                    // set the field name to the configured value
-                    HighlightBuilder.Field highlightField = new HighlightBuilder.Field(highlightFieldConfig.getFieldName());
+                // set the field name to the configured value
+                HighlightBuilder.Field highlightField = new HighlightBuilder.Field(highlightFieldConfig.getFieldName());
 
-                    // set matched_fields to the configured list of fields, this accounts for 'multifields' that analyze the same string in different ways
-                    if (CollectionUtils.isNotEmpty(highlightFieldConfig.getMatchedFields()))
-                    {
-                        highlightField.matchedFields(highlightFieldConfig.getMatchedFields().toArray(new String[0]));
-                    }
-
-                    // set fragment size to the configured value
-                    if (highlightFieldConfig.getFragmentSize() != null)
-                    {
-                        highlightField.fragmentSize(highlightFieldConfig.getFragmentSize());
-                    }
-
-                    // set the number of desired fragments to the configured value
-                    if (highlightFieldConfig.getNumOfFragments() != null)
-                    {
-                        highlightField.numOfFragments(highlightFieldConfig.getNumOfFragments());
-                    }
-
-                    highlightBuilder.field(highlightField);
+                // set matched_fields to the configured list of fields, this accounts for 'multifields' that analyze the same string in different ways
+                if (CollectionUtils.isNotEmpty(highlightFieldConfig.getMatchedFields()))
+                {
+                    highlightField.matchedFields(highlightFieldConfig.getMatchedFields().toArray(new String[0]));
                 }
-            );
+
+                // set fragment size to the configured value
+                if (highlightFieldConfig.getFragmentSize() != null)
+                {
+                    highlightField.fragmentSize(highlightFieldConfig.getFragmentSize());
+                }
+
+                // set the number of desired fragments to the configured value
+                if (highlightFieldConfig.getNumOfFragments() != null)
+                {
+                    highlightField.numOfFragments(highlightFieldConfig.getNumOfFragments());
+                }
+
+                highlightBuilder.field(highlightField);
+            });
 
         }
         catch (IOException e)
