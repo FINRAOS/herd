@@ -682,8 +682,9 @@ public class ElasticsearchHelper
             //construct a list of facet information
             for (ResultTypeIndexSearchResponseDto resultTypeIndexSearchResponseDto : elasticsearchResponseDto.getResultTypeIndexSearchResponseDtos())
             {
-                Facet resultTypeFacet = new Facet(resultTypeIndexSearchResponseDto.getResultTypeDisplayName(), resultTypeIndexSearchResponseDto.getCount(),
-                    FacetTypeEnum.RESULT_TYPE.value(), resultTypeIndexSearchResponseDto.getResultTypeCode(), null);
+                String facetId =
+                    resultTypeIndexSearchResponseDto.getResultTypeDisplayName().startsWith(TAG_RESULT_TYPE) ? TAG_RESULT_TYPE : BUS_OBJCT_DFNTN_RESULT_TYPE;
+                Facet resultTypeFacet = new Facet(facetId, resultTypeIndexSearchResponseDto.getCount(), FacetTypeEnum.RESULT_TYPE.value(), facetId, null);
                 resultTypeFacets.add(resultTypeFacet);
             }
             facets.addAll(resultTypeFacets);
