@@ -437,7 +437,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
         when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);
         when(elasticsearchHelper.getFacetsResponse(any(ElasticsearchResponseDto.class), any(Boolean.class))).thenCallRealMethod();
-        when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(List.class))).thenCallRealMethod();
+        when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(List.class), any(), any())).thenCallRealMethod();
         when(elasticsearchHelper.addFacetFieldAggregations(any(Set.class), any(SearchRequestBuilder.class))).thenReturn(searchRequestBuilder);
 
         SearchResult searchResult = mock(SearchResult.class);
@@ -480,7 +480,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(termsAggregation.getBuckets()).thenReturn(buckets);
 
         // Call the method under test
-        IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields);
+        IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         List<IndexSearchResult> indexSearchResults = indexSearchResponse.getIndexSearchResults();
 
         assertThat("Index search results list is null.", indexSearchResults, not(nullValue()));

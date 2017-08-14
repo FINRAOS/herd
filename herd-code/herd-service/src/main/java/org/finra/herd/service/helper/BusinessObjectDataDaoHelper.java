@@ -52,7 +52,6 @@ import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -80,6 +79,9 @@ public class BusinessObjectDataDaoHelper
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private AttributeDaoHelper attributeDaoHelper;
 
     @Autowired
     private AttributeHelper attributeHelper;
@@ -249,7 +251,8 @@ public class BusinessObjectDataDaoHelper
             new BusinessObjectFormatKey(request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
                 request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()));
 
-        validateAttributesAgainstFormat(request, businessObjectFormatEntity);
+        attributeDaoHelper
+            .validateAttributesAgainstBusinessObjectDataAttributeDefinitions(request.getAttributes(), businessObjectFormatEntity.getAttributeDefinitions());
 
         // Ensure the specified partition key matches what's configured within the business object format.
         Assert.isTrue(businessObjectFormatEntity.getPartitionKey().equalsIgnoreCase(request.getPartitionKey()), String
@@ -1140,39 +1143,6 @@ public class BusinessObjectDataDaoHelper
                 partitionValueRange.getEndPartitionValue()));
 
         return resultPartitionValues;
-    }
-
-    /**
-     * Validates that the attributes specified in the request are consistent with the attribute definitions in the format.
-     *
-     * @param request the business object create request.
-     * @param businessObjectFormatEntity the business object format entity.
-     */
-    private void validateAttributesAgainstFormat(BusinessObjectDataCreateRequest request, BusinessObjectFormatEntity businessObjectFormatEntity)
-    {
-        // Build a map of the specified attributes in the request where the key is lower case for case insensitive checks.
-        Map<String, String> attributeMap = new HashMap<>();
-        if (!org.apache.commons.collections4.CollectionUtils.isEmpty(request.getAttributes()))
-        {
-            for (Attribute attribute : request.getAttributes())
-            {
-                attributeMap.put(attribute.getName().toLowerCase(), attribute.getValue());
-            }
-        }
-
-        // Loop through each attribute definition (i.e. the required attributes) and verify that each definition was specified in the request
-        // and that the specified value has non-blank data.
-        for (BusinessObjectDataAttributeDefinitionEntity attributeDefinitionEntity : businessObjectFormatEntity.getAttributeDefinitions())
-        {
-            String attributeDefinitionName = attributeDefinitionEntity.getName().toLowerCase();
-            if ((attributeDefinitionEntity.isRequired()) &&
-                ((!attributeMap.containsKey(attributeDefinitionName)) || (StringUtils.isBlank(attributeMap.get(attributeDefinitionName)))))
-            {
-                throw new IllegalArgumentException(String
-                    .format("The business object format has a required attribute \"%s\" which was not specified or has a value which is blank.",
-                        attributeDefinitionEntity.getName()));
-            }
-        }
     }
 
     /**

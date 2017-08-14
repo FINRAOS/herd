@@ -77,6 +77,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = true;
 
+    public static final String ATTRIBUTE_NAME = "UT_AttributeName_1_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_NAME_2 = "UT_AttributeName_2_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_NAME_3 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_NAME_4 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
+
     public static final String ATTRIBUTE_NAME_1_MIXED_CASE = "Attribute Name 1";
 
     public static final String ATTRIBUTE_NAME_2_MIXED_CASE = "Attribute Name 2";
@@ -84,6 +92,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String ATTRIBUTE_NAME_3_MIXED_CASE = "Attribute Name 3";
 
     public static final String ATTRIBUTE_NAME_4_MIXED_CASE = "Attribute Name 4";
+
+    public static final String ATTRIBUTE_VALUE = "UT_AttributeValue_1_" + RANDOM_SUFFIX;
 
     public static final String ATTRIBUTE_VALUE_1 = "Attribute Value 1";
 
@@ -739,6 +749,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_STATUS = "UT_SearchIndexStatus_1_" + RANDOM_SUFFIX;
 
+    public static final Boolean SEARCH_INDEX_ACTIVE_FLAG = true;
+
+    public static final Boolean SEARCH_INDEX_DEFAULT_ACTIVE_FLAG = false;
+
     public static final String SEARCH_INDEX_STATUS_2 = "UT_SearchIndexStatus_2_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_TYPE = "UT_SearchIndexType_1_" + RANDOM_SUFFIX;
@@ -746,6 +760,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SEARCH_INDEX_TYPE_2 = "UT_SearchIndexType_2_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_TYPE_BDEF = SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name();
+
+    public static final String SEARCH_INDEX_TYPE_TAG = SearchIndexTypeEntity.SearchIndexTypes.TAG.name();
+
+    public static final String SEARCH_INDEX_ALIAS_BDEF = "bdef";
+
+    public static final String SEARCH_INDEX_ALIAS_TAG = "tag";
 
     public static final String SEARCH_RESPONSE_JSON_STRING = "UT_SearchResponseJsonString_" + RANDOM_SUFFIX;
 

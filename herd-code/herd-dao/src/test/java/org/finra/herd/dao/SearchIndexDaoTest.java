@@ -54,4 +54,18 @@ public class SearchIndexDaoTest extends AbstractDaoTest
         // Retrieve the search index keys and validate the results.
         assertEquals(Arrays.asList(new SearchIndexKey(SEARCH_INDEX_NAME), new SearchIndexKey(SEARCH_INDEX_NAME_2)), searchIndexDao.getSearchIndexes());
     }
+
+
+    @Test
+    public void testGetSearchIndexEntities()
+    {
+        // Create database entities required for testing
+        SearchIndexEntity searchIndexEntity = searchIndexDaoTestHelper.createSearchIndexEntity(SEARCH_INDEX_NAME, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS);
+        SearchIndexEntity searchIndexEntity1 =
+            searchIndexDaoTestHelper.createSearchIndexEntity(SEARCH_INDEX_NAME_2, SEARCH_INDEX_TYPE_2, SEARCH_INDEX_STATUS_2);
+
+        // Retrieve the search index keys and validate the results.
+        assertEquals(Arrays.asList(searchIndexEntity), searchIndexDao.getSearchIndexEntities(searchIndexEntity.getType()));
+        assertEquals(Arrays.asList(searchIndexEntity1), searchIndexDao.getSearchIndexEntities(searchIndexEntity1.getType()));
+    }
 }

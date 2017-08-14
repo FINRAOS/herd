@@ -88,11 +88,6 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private static final float BEST_FIELDS_QUERY_BOOST = 1f;
 
     /**
-     * The business object definition index
-     */
-    private static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
-
-    /**
      * String to select the tag type code and namespace code
      */
     private static final String CODE = "code";
@@ -158,11 +153,6 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private static final String TAG_CODE_SOURCE = "tagCode";
 
     /**
-     * The tag index
-     */
-    private static final String TAG_INDEX = "tag";
-
-    /**
      * String to select the tag type
      */
     private static final String TAG_TYPE = "tagType";
@@ -201,7 +191,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private JestClientHelper jestClientHelper;
 
     @Override
-    public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
+    public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields, final String bdefActiveIndex,
+        final String tagActiveIndex)
     {
         final Integer tagShortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
         final Integer businessObjectDefinitionShortDescMaxLength =
@@ -218,7 +209,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         // Add filter clauses if index search filters are specified in the request
         if (CollectionUtils.isNotEmpty(request.getIndexSearchFilters()))
         {
-            BoolQueryBuilder indexSearchQueryBuilder = elasticsearchHelper.addIndexSearchFilterBooleanClause(request.getIndexSearchFilters());
+            BoolQueryBuilder indexSearchQueryBuilder =
+                elasticsearchHelper.addIndexSearchFilterBooleanClause(request.getIndexSearchFilters(), bdefActiveIndex, tagActiveIndex);
 
             // Add the multi match queries to a dis max query and wrap within a bool query, then apply filters to it
             queryBuilder = QueryBuilders.boolQuery().must(disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder))
@@ -231,7 +223,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         }
 
         // Get function score query builder
-        FunctionScoreQueryBuilder functionScoreQueryBuilder = getFunctionScoreQueryBuilder(queryBuilder);
+        FunctionScoreQueryBuilder functionScoreQueryBuilder = getFunctionScoreQueryBuilder(queryBuilder, bdefActiveIndex);
 
         // The fields in the search indexes to return
         final String[] searchSources =
@@ -247,7 +239,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
         // Create a indexSearch request builder
         SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(new ElasticsearchClientImpl(), SearchAction.INSTANCE);
-        searchRequestBuilder.setIndices(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX);
+        searchRequestBuilder.setIndices(bdefActiveIndex, tagActiveIndex);
         searchRequestBuilder.setSource(searchSourceBuilder).setSize(SEARCH_RESULT_SIZE).addSort(SortBuilders.scoreSort());
 
         String preTag = null;
@@ -273,7 +265,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         LOGGER.info("indexSearchRequest={}", searchRequestBuilder.toString());
 
         // Retrieve the indexSearch response
-        final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString()).addIndex(Arrays.asList("bdef", "tag"));
+        final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString()).addIndex(Arrays.asList(bdefActiveIndex, tagActiveIndex));
         final SearchResult searchResult = jestClientHelper.searchExecute(searchBuilder.build());
         final List<SearchResult.Hit<Map, Void>> searchHitList = searchResult.getHits(Map.class);
 
@@ -300,7 +292,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             }
 
             // Populate tag index specific key
-            if (index.equals(TAG_INDEX))
+            if (index.equals(tagActiveIndex))
             {
                 if (fields.contains(SHORT_DESCRIPTION_FIELD))
                 {
@@ -314,7 +306,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
                 indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(tagKey, null));
             }
             // Populate business object definition key
-            else if (index.equals(BUSINESS_OBJECT_DEFINITION_INDEX))
+            else if (index.equals(bdefActiveIndex))
             {
                 if (fields.contains(SHORT_DESCRIPTION_FIELD))
                 {
@@ -357,10 +349,10 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      *
      * @return the function score query builder
      */
-    private FunctionScoreQueryBuilder getFunctionScoreQueryBuilder(QueryBuilder queryBuilder)
+    private FunctionScoreQueryBuilder getFunctionScoreQueryBuilder(QueryBuilder queryBuilder, String bdefActiveIndex)
     {
         // Script for tag search score multiplier. If bdef set to tag search score multiplier else set to a default value.
-        String inlineScript = "_score * (doc['_index'].value == 'bdef' ? doc['" + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER + "']: 1)";
+        String inlineScript = "_score * (doc['_index'].value == '" + bdefActiveIndex + "' ? doc['" + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER + "']: 1)";
 
         // Set the lang to groovy
         Script script = new Script(ScriptType.INLINE, "groovy", inlineScript, Collections.emptyMap());
@@ -535,33 +527,31 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             @SuppressWarnings("unchecked")
             IndexSearchHighlightFields highlightFieldsConfig = jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsValue);
 
-            highlightFieldsConfig.getHighlightFields().forEach(
-                highlightFieldConfig -> {
+            highlightFieldsConfig.getHighlightFields().forEach(highlightFieldConfig -> {
 
-                    // set the field name to the configured value
-                    HighlightBuilder.Field highlightField = new HighlightBuilder.Field(highlightFieldConfig.getFieldName());
+                // set the field name to the configured value
+                HighlightBuilder.Field highlightField = new HighlightBuilder.Field(highlightFieldConfig.getFieldName());
 
-                    // set matched_fields to the configured list of fields, this accounts for 'multifields' that analyze the same string in different ways
-                    if (CollectionUtils.isNotEmpty(highlightFieldConfig.getMatchedFields()))
-                    {
-                        highlightField.matchedFields(highlightFieldConfig.getMatchedFields().toArray(new String[0]));
-                    }
-
-                    // set fragment size to the configured value
-                    if (highlightFieldConfig.getFragmentSize() != null)
-                    {
-                        highlightField.fragmentSize(highlightFieldConfig.getFragmentSize());
-                    }
-
-                    // set the number of desired fragments to the configured value
-                    if (highlightFieldConfig.getNumOfFragments() != null)
-                    {
-                        highlightField.numOfFragments(highlightFieldConfig.getNumOfFragments());
-                    }
-
-                    highlightBuilder.field(highlightField);
+                // set matched_fields to the configured list of fields, this accounts for 'multifields' that analyze the same string in different ways
+                if (CollectionUtils.isNotEmpty(highlightFieldConfig.getMatchedFields()))
+                {
+                    highlightField.matchedFields(highlightFieldConfig.getMatchedFields().toArray(new String[0]));
                 }
-            );
+
+                // set fragment size to the configured value
+                if (highlightFieldConfig.getFragmentSize() != null)
+                {
+                    highlightField.fragmentSize(highlightFieldConfig.getFragmentSize());
+                }
+
+                // set the number of desired fragments to the configured value
+                if (highlightFieldConfig.getNumOfFragments() != null)
+                {
+                    highlightField.numOfFragments(highlightFieldConfig.getNumOfFragments());
+                }
+
+                highlightBuilder.field(highlightField);
+            });
 
         }
         catch (IOException e)

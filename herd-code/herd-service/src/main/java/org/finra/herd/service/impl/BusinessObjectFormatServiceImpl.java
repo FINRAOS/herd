@@ -453,7 +453,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the business object format DDL information
      */
-    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectFormatDdl generateBusinessObjectFormatDdl(BusinessObjectFormatDdlRequest request)

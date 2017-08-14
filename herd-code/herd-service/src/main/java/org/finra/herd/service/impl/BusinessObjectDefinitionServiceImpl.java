@@ -88,6 +88,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
@@ -100,6 +101,7 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
@@ -162,6 +164,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
+
+    @Autowired
+    private SearchIndexDaoHelper searchIndexDaoHelper;
 
     @Autowired
     private BusinessObjectDefinitionIndexSearchDao businessObjectDefinitionIndexSearchDao;
@@ -234,9 +239,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     @Override
-    public boolean indexSizeCheckValidationBusinessObjectDefinitions()
+    public boolean indexSizeCheckValidationBusinessObjectDefinitions(String indexName)
     {
-        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Simple count validation, index size should equal entity list size
@@ -252,7 +256,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     @Override
-    public boolean indexSpotCheckPercentageValidationBusinessObjectDefinitions()
+    public boolean indexSpotCheckPercentageValidationBusinessObjectDefinitions(String indexName)
     {
         final Double spotCheckPercentage = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SPOT_CHECK_PERCENTAGE, Double.class);
 
@@ -260,11 +264,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
             Collections.unmodifiableList(businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(spotCheckPercentage));
 
-        return indexValidateBusinessObjectDefinitionsList(businessObjectDefinitionEntityList);
+        return indexValidateBusinessObjectDefinitionsList(businessObjectDefinitionEntityList, indexName);
     }
 
     @Override
-    public boolean indexSpotCheckMostRecentValidationBusinessObjectDefinitions()
+    public boolean indexSpotCheckMostRecentValidationBusinessObjectDefinitions(String indexName)
     {
         final Integer spotCheckMostRecentNumber =
             configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
@@ -273,14 +277,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
             Collections.unmodifiableList(businessObjectDefinitionDao.getMostRecentBusinessObjectDefinitions(spotCheckMostRecentNumber));
 
-        return indexValidateBusinessObjectDefinitionsList(businessObjectDefinitionEntityList);
+        return indexValidateBusinessObjectDefinitionsList(businessObjectDefinitionEntityList, indexName);
     }
 
     @Override
     @Async
-    public Future<Void> indexValidateAllBusinessObjectDefinitions()
+    public Future<Void> indexValidateAllBusinessObjectDefinitions(String indexName)
     {
-        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Get a list of all business object definitions
@@ -331,9 +334,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @return true all of the business object definitions are valid in the index
      */
-    private boolean indexValidateBusinessObjectDefinitionsList(final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList)
+    private boolean indexValidateBusinessObjectDefinitionsList(final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList, String indexName)
     {
-        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity -> {
@@ -566,7 +568,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         Set<String> fieldsRequested)
     {
         // Get the configured values for index name and document type
-        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        final String indexName = searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Validate the business object definition search fields
@@ -1128,8 +1130,24 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation starts a new transaction.
+     */
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateSearchIndexDocumentBusinessObjectDefinition(SearchIndexUpdateDto searchIndexUpdateDto)
+    {
+        updateSearchIndexDocumentBusinessObjectDefinitionImpl(searchIndexUpdateDto);
+    }
+
+    /**
+     * Updates the search index document representation of the business object definition.
+     *
+     * @param searchIndexUpdateDto the SearchIndexUpdateDto object
+     */
+    protected void updateSearchIndexDocumentBusinessObjectDefinitionImpl(SearchIndexUpdateDto searchIndexUpdateDto)
     {
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
@@ -1171,6 +1189,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             // Set the from index to the toIndex
             fromIndex = toIndex;
         }
+
+        LOGGER.info("Finished processing {} documents", ids.size());
     }
 
     /**
@@ -1182,9 +1202,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private Map<String, String> convertBusinessObjectDefinitionEntityListToJSONStringMap(List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities)
     {
+        LOGGER.info("List size is {}.", businessObjectDefinitionEntities.size());
+
         Map<String, String> businessObjectDefinitionJSONMap = new HashMap<>();
 
-        LOGGER.debug("convertBusinessObjectDefinitionEntityListToJSONStringMap bdef size is {}.", businessObjectDefinitionEntities.size());
         businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();

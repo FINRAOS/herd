@@ -3286,6 +3286,19 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDataAttributesUpdateRequest" type="businessObjectDataAttributesUpdateRequest"/>
+   <xs:complexType name="businessObjectDataAttributesUpdateRequest">
+      <xs:all>
+         <xs:element name="attributes" type="attributes" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Custom user-defined metadata associated with this Business Object Data. "name" is the attribute name (i.e. the key) and
+                  "value" is the attribute value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="businessObjectDataAttributeKeys" type="businessObjectDataAttributeKeys"/>
    <xs:complexType name="businessObjectDataAttributeKeys">
       <xs:sequence>
@@ -5287,7 +5300,13 @@
                <xs:documentation>The slave security group to use instead of the account default value</xs:documentation>
             </xs:annotation>
          </xs:element>
-
+         <xs:element name="scaleDownBehavior" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies the way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an instance
+                  group is resized. One of the following values: TERMINATE_AT_INSTANCE_HOUR or TERMINATE_AT_TASK_COMPLETION
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -6894,6 +6913,11 @@
                <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="performFullSearchIndexValidation" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if full-validation should be run on the index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -6940,14 +6964,20 @@
    <xs:element name="searchIndexCreateRequest" type="searchIndexCreateRequest"/>
    <xs:complexType name="searchIndexCreateRequest">
       <xs:all>
-         <xs:element name="searchIndexKey" type="searchIndexKey">
-            <xs:annotation>
-               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
-            </xs:annotation>
-         </xs:element>
          <xs:element name="searchIndexType" type="xs:string">
             <xs:annotation>
                <xs:documentation>The type of this Search Index. One of the following values: BUS_OBJCT_DFNTN, TAG</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="searchIndexActivationCreateRequest" type="searchIndexActivationCreateRequest"/>
+   <xs:complexType name="searchIndexActivationCreateRequest">
+      <xs:all>
+         <xs:element name="searchIndexKey" type="searchIndexKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -6971,9 +7001,57 @@
                <xs:documentation>The status of this Search Index. One of the following values: BUILDING, READY</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="active" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A flag to indicate if the index is active or not. If the index is active it will be included in the search results.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="searchIndexStatistics" type="searchIndexStatistics" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A wrapper for the search index information retrieved from the index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="createdByUserId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who created this Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="createdOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp when this Search Index was created on</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="lastUpdatedOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp when this Search Index was last updated on</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="searchIndexActivation" type="searchIndexActivation"/>
+   <xs:complexType name="searchIndexActivation">
+      <xs:all>
+         <xs:element name="searchIndexKey" type="searchIndexKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchIndexType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The type of this Search Index. One of the following values: BUS_OBJCT_DFNTN, TAG</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchIndexStatus" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of this Search Index. One of the following values: BUILDING, READY</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="active" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A flag to indicate if the index is active or not. If the index is active it will be included in the search results.
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="createdByUserId" type="xs:string" minOccurs="0">

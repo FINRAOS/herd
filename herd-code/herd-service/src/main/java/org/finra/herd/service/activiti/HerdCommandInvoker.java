@@ -80,8 +80,9 @@ public class HerdCommandInvoker extends CommandInvoker
 
     /**
      * Gets the JobEntity from the given ExecuteAsyncJobCmd.
-     * 
+     *
      * @param executeAsyncJobCmd The ExecuteAsyncJobCmd
+     *
      * @return The JobEntity
      */
     private JobEntity getJobEntity(ExecuteAsyncJobCmd executeAsyncJobCmd)
@@ -96,7 +97,9 @@ public class HerdCommandInvoker extends CommandInvoker
         {
             Field field = ExecuteAsyncJobCmd.class.getDeclaredField("job");
             ReflectionUtils.makeAccessible(field);
-            return Context.getCommandContext().getJobEntityManager().findJobById(((JobEntity) ReflectionUtils.getField(field, executeAsyncJobCmd)).getId());
+            String jobId = ((JobEntity) ReflectionUtils.getField(field, executeAsyncJobCmd)).getId();
+
+            return Context.getCommandContext().getJobEntityManager().findJobById(jobId);
         }
         catch (NoSuchFieldException | SecurityException e)
         {

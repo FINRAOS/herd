@@ -77,6 +77,10 @@ public class MockEmrOperationsImpl implements EmrOperations
 
     public static final String MOCK_STEP_RUNNING_NAME = "mock_step_running_name";
 
+    public static final String MOCK_STEP_WITHOUT_ID_NAME = "mock_step_without_id_name";
+
+    public static final String MOCK_STEP_RUNNING_WITHOUT_ID_NAME = "mock_step_running_without_id_name";
+
     @Autowired
     protected ConfigurationHelper configurationHelper;
 
@@ -277,9 +281,12 @@ public class MockEmrOperationsImpl implements EmrOperations
         }
 
         MockEmrJobFlow mockStep = new MockEmrJobFlow();
-        mockStep.setJobFlowId(getNewJobFlowId());
+        if (!step.getName().equalsIgnoreCase(MOCK_STEP_RUNNING_WITHOUT_ID_NAME))
+        {
+            mockStep.setJobFlowId(getNewJobFlowId());
+        }
         mockStep.setJobFlowName(step.getName());
-        if (step.getName().equalsIgnoreCase(MOCK_STEP_RUNNING_NAME))
+        if (step.getName().equalsIgnoreCase(MOCK_STEP_RUNNING_NAME) || step.getName().equalsIgnoreCase(MOCK_STEP_RUNNING_WITHOUT_ID_NAME))
         {
             mockStep.setStatus(StepState.RUNNING.toString());
         }
@@ -392,6 +399,12 @@ public class MockEmrOperationsImpl implements EmrOperations
                 HadoopStepConfig hadoopStepConfig = new HadoopStepConfig().withJar(step.getJarLocation());
                 stepResult = new Step().withId(step.getJobFlowId()).withName(step.getJobFlowName()).withStatus(new StepStatus().withState(step.getStatus()))
                     .withConfig(hadoopStepConfig);
+
+                if (stepResult.getName().equalsIgnoreCase(MOCK_STEP_WITHOUT_ID_NAME))
+                {
+                    stepResult.setId(null);
+                }
+
                 break;
             }
         }

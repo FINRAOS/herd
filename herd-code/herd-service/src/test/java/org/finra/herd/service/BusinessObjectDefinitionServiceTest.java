@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +54,7 @@ import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.TagEntity;
@@ -1131,6 +1133,10 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         {
             assertEquals("A namespace must be specified.", e.getMessage());
         }
+
+        businessObjectDefinitionServiceImpl.updateSearchIndexDocumentBusinessObjectDefinition(
+            new SearchIndexUpdateDto(SearchIndexUpdateDto.MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, new ArrayList<>(),
+                SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_CREATE));
     }
 
     @Test
