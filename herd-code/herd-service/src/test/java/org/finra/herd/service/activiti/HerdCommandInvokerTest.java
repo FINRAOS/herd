@@ -17,6 +17,8 @@ package org.finra.herd.service.activiti;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.EndEvent;
@@ -25,6 +27,9 @@ import org.activiti.bpmn.model.ScriptTask;
 import org.activiti.bpmn.model.SequenceFlow;
 import org.activiti.bpmn.model.StartEvent;
 import org.activiti.engine.history.HistoricVariableInstance;
+import org.activiti.engine.impl.cmd.ExecuteAsyncJobCmd;
+import org.activiti.engine.impl.interceptor.CommandConfig;
+import org.activiti.engine.impl.persistence.entity.JobEntity;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.junit.Test;
 import org.springframework.transaction.annotation.Propagation;
@@ -35,13 +40,12 @@ import org.finra.herd.service.activiti.task.HerdActivitiServiceTaskTest;
 public class HerdCommandInvokerTest extends HerdActivitiServiceTaskTest
 {
     /**
-     * Tests the error handling behavior for asynchronous tasks.
-     * This test proves 2 behaviors: when a asynchronous task is executed, and an error occurs, any variables written by the tasks are persisted, and the error
-     * message and stack trace is recorded in the JobEntity which belongs to the execution.
-     * Writing the exception in JobEntity ensures that we are able to retrieve the exception message in our GetJob API.
-     * 
+     * Tests the error handling behavior for asynchronous tasks. This test proves 2 behaviors: when a asynchronous task is executed, and an error occurs, any
+     * variables written by the tasks are persisted, and the error message and stack trace is recorded in the JobEntity which belongs to the execution. Writing
+     * the exception in JobEntity ensures that we are able to retrieve the exception message in our GetJob API.
+     * <p/>
      * This test must run outside of a transaction since the workflow will be executing asynchronously.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -116,12 +120,54 @@ public class HerdCommandInvokerTest extends HerdActivitiServiceTaskTest
             assertEquals("bar", persistedVariable.getValue());
 
             // Assert exception message is logged
-            assertEquals("ActivitiException: problem evaluating script: Error in <eval> at line number 1 at column number 0", activitiManagementService
-                .createJobQuery().executionId(processInstance.getProcessInstanceId()).singleResult().getExceptionMessage());
+            assertEquals("ActivitiException: problem evaluating script: Error in <eval> at line number 1 at column number 0",
+                activitiManagementService.createJobQuery().executionId(processInstance.getProcessInstanceId()).singleResult().getExceptionMessage());
         }
         finally
         {
             deleteActivitiDeployments();
+        }
+    }
+
+    @Test
+    public void testExecuteWithExceptionAndGetJobEntityWithNoSuchFieldException()
+    {
+        // Mock dependencies.
+        CommandConfig config = mock(CommandConfig.class);
+        JobEntity jobEntity = mock(JobEntity.class);
+        ExecuteAsyncJobCmd command = new ExecuteAsyncJobCmd(jobEntity);
+        doThrow(NoSuchFieldException.class).when(jobEntity).getId();
+
+        // Try to call the method under test.
+        try
+        {
+            herdCommandInvoker.execute(config, command);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(NoSuchFieldException.class.getName(), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testExecuteWithExceptionAndGetJobEntityWithSecurityException()
+    {
+        // Mock dependencies.
+        CommandConfig config = mock(CommandConfig.class);
+        JobEntity jobEntity = mock(JobEntity.class);
+        ExecuteAsyncJobCmd command = new ExecuteAsyncJobCmd(jobEntity);
+        doThrow(SecurityException.class).when(jobEntity).getId();
+
+        // Try to call the method under test.
+        try
+        {
+            herdCommandInvoker.execute(config, command);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(SecurityException.class.getName(), e.getMessage());
         }
     }
 }

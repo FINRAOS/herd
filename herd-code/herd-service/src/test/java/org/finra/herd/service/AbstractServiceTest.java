@@ -75,6 +75,8 @@ import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.service.activiti.ActivitiHelper;
+import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
+import org.finra.herd.service.activiti.HerdCommandInvoker;
 import org.finra.herd.service.activiti.task.ExecuteJdbcTestHelper;
 import org.finra.herd.service.config.ServiceTestSpringModuleConfig;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeDaoHelper;
@@ -168,6 +170,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String AWS_SECURITY_GROUP_ID = "UT_AwsSecurityGroupId_" + RANDOM_SUFFIX;
 
     public static final String AWS_SQS_QUEUE_NAME = "AWS_SQS_QUEUE_NAME";
+
+    public static final Boolean BOOLEAN_DEFAULT_VALUE = false;
+
+    public static final Boolean BOOLEAN_VALUE = true;
 
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
 
@@ -368,6 +374,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<BusinessObjectDataStatus> NO_AVAILABLE_STATUSES = new ArrayList<>();
 
+    public static final Boolean NO_BOOLEAN_DEFAULT_VALUE = null;
+
     public static final List<BusinessObjectDataKey> NO_BUSINESS_OBJECT_DATA_CHILDREN = new ArrayList<>();
 
     public static final List<BusinessObjectDataKey> NO_BUSINESS_OBJECT_DATA_PARENTS = new ArrayList<>();
@@ -459,6 +467,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
 
     public static final String NO_USER_ID = null;
+
+    public static final Boolean NO_VARIABLE_REQUIRED = false;
 
     public static final Boolean OVERRIDE_TERMINATION_PROTECTION = true;
 
@@ -565,6 +575,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String UUID_VALUE = "UT_UUID_Value_" + RANDOM_SUFFIX;
 
+    public static final String VARIABLE_NAME = "UT_Variable_Name_" + RANDOM_SUFFIX;
+
+    public static final Boolean VARIABLE_REQUIRED = true;
+
     public static final Boolean VERBOSE = true;
 
     public static final String ZERO_COLUMN_SIZE = "0";
@@ -586,6 +600,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected RepositoryService activitiRepositoryService;
+
+    @Autowired
+    protected ActivitiRuntimeHelper activitiRuntimeHelper;
 
     @Autowired
     protected RuntimeService activitiRuntimeService;
@@ -721,6 +738,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected FileUploadCleanupService fileUploadCleanupService;
+
+    @Autowired
+    protected HerdCommandInvoker herdCommandInvoker;
 
     @Autowired
     protected HerdStringHelper herdStringHelper;
