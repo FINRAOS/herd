@@ -205,6 +205,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
 
+    public static final Boolean NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY = false;
+
+    public static final Boolean INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY = true;
+
     public static final float BUSINESS_OBJECT_DEFINITION_INDEX_BOOST = 1f;
 
     public static final String CODE = "code";

@@ -381,7 +381,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2, null,
             BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES, descriptiveBusinessObjectFormat, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
-            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())),
+                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
 
         //create a new version of the business object format, the associated bdef descriptive format should be updated to the new version
@@ -393,7 +394,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2, null,
             BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES, descriptiveBusinessObjectFormat, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
-            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())),
+                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
 
