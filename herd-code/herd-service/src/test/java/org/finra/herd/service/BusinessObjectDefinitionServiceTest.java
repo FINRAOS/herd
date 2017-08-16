@@ -39,6 +39,7 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -90,6 +91,24 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
             NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
+            resultBusinessObjectDefinition);
+
+        // Retrieve the business object definition with include update history flag set to true.
+        resultBusinessObjectDefinition = businessObjectDefinitionService
+            .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
+
+        // Create business object definition change event.
+        List<BusinessObjectDefinitionChangeEvent> businessObjectDefinitionChangeEvents = new ArrayList<>();
+        businessObjectDefinitionChangeEvents.add(
+            new BusinessObjectDefinitionChangeEvent(BDEF_DISPLAY_NAME, BDEF_DESCRIPTION, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST,
+                resultBusinessObjectDefinition.getBusinessObjectDefinitionChangeEvents().get(0).getEventTime(),
+                resultBusinessObjectDefinition.getBusinessObjectDefinitionChangeEvents().get(0).getUserId()));
+
+        // Validate the result.
+        assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), businessObjectDefinitionChangeEvents),
             resultBusinessObjectDefinition);
     }
 
@@ -191,6 +210,17 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, null,
             Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
             businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
+            resultBusinessObjectDefinition);
+
+        // Retrieve the business object definition with include update history flag set to true.
+        resultBusinessObjectDefinition = businessObjectDefinitionService
+            .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
+
+        // Validate the result.
+        assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, null,
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
     }
@@ -460,6 +490,24 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                 businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
                 NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
+
+        // Retrieve the business object definition with include update history flag set to true.
+        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService
+            .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
+
+        // Create business object definition change event.
+        List<BusinessObjectDefinitionChangeEvent> businessObjectDefinitionChangeEvents = new ArrayList<>();
+        businessObjectDefinitionChangeEvents.add(
+            new BusinessObjectDefinitionChangeEvent(BDEF_DISPLAY_NAME_2, BDEF_DESCRIPTION_2, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST,
+                resultBusinessObjectDefinition.getBusinessObjectDefinitionChangeEvents().get(0).getEventTime(),
+                resultBusinessObjectDefinition.getBusinessObjectDefinitionChangeEvents().get(0).getUserId()));
+
+        // Validate the result.
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
+            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2(),
+            NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+            businessObjectDefinitionChangeEvents), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -659,7 +707,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
-        // Perform an update by changing the description and updating the attributes.
+        // Perform an update by changing the description and updating the descriptive format.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
             .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME),
                 new BusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
@@ -672,6 +720,25 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
+
+        // Retrieve the business object definition with include update history flag set to true.
+        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService
+            .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
+
+        // Create business object definition change event
+        List<BusinessObjectDefinitionChangeEvent> businessObjectDefinitionChangeEvents = new ArrayList<>();
+        businessObjectDefinitionChangeEvents.add(new BusinessObjectDefinitionChangeEvent(BDEF_DISPLAY_NAME_2, BDEF_DESCRIPTION_2,
+            new DescriptiveBusinessObjectFormatUpdateRequest(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE),
+            resultBusinessObjectDefinition.getBusinessObjectDefinitionChangeEvents().get(0).getEventTime(),
+            resultBusinessObjectDefinition.getBusinessObjectDefinitionChangeEvents().get(0).getUserId()));
+
+        // Validate the result.
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES,
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), businessObjectDefinitionChangeEvents),
+            resultBusinessObjectDefinition);
     }
 
     @Test
@@ -932,8 +999,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles());
 
         // Retrieve the business object definition.
-        BusinessObjectDefinition resultBusinessObjectDefinition =
-            businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
+        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService
+            .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
@@ -950,7 +1017,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Try to get a business object definition instance when object definition name is not specified.
         try
         {
-            businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BLANK_TEXT));
+            businessObjectDefinitionService
+                .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BLANK_TEXT), NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -968,8 +1036,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                 businessObjectDefinitionServiceTestHelper.getNewAttributes());
 
         // Retrieve the business object definition using input parameters with leading and trailing empty spaces.
-        BusinessObjectDefinition resultBusinessObjectDefinition =
-            businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME)));
+        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService
+            .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME)),
+                NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
@@ -988,8 +1057,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                 BDEF_DESCRIPTION.toLowerCase(), BDEF_DISPLAY_NAME.toLowerCase(), businessObjectDefinitionServiceTestHelper.getNewAttributes());
 
         // Retrieve the business object definition using upper case input parameters.
-        BusinessObjectDefinition resultBusinessObjectDefinition =
-            businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase()));
+        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService
+            .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase()),
+                NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
@@ -1009,8 +1079,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                 BDEF_DESCRIPTION.toUpperCase(), BDEF_DISPLAY_NAME.toUpperCase(), businessObjectDefinitionServiceTestHelper.getNewAttributes());
 
         // Retrieve the business object definition using lower case input parameters.
-        BusinessObjectDefinition resultBusinessObjectDefinition =
-            businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase()));
+        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService
+            .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase()),
+                NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
@@ -1049,7 +1120,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Try to get a non-existing business object definition.
         try
         {
-            businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
+            businessObjectDefinitionService
+                .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
             fail("Should throw an ObjectNotFoundException when business object definition doesn't exist.");
         }
         catch (ObjectNotFoundException e)
@@ -1068,8 +1140,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_SAMPLE_DATA_FILES);
 
         // Retrieve the business object definition.
-        BusinessObjectDefinition resultBusinessObjectDefinition =
-            businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
+        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService
+            .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
@@ -1090,8 +1162,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                     new SampleDataFile(DIRECTORY_PATH, FILE_NAME)));
 
         // Retrieve the business object definition.
-        BusinessObjectDefinition resultBusinessObjectDefinition =
-            businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
+        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService
+            .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
@@ -1131,7 +1203,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectDefinitionServiceImpl.getBusinessObjectDefinition(new BusinessObjectDefinitionKey());
+            businessObjectDefinitionServiceImpl
+                .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(), NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -1771,7 +1844,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
         businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
 
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        BusinessObjectDefinition updatedBusinessObjectDefinition =
+            businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         List<SampleDataFile> sampleDataFiles = Arrays.asList(new SampleDataFile(NAMESPACE + "/" + BDEF_NAME + "/", fileName));
 
@@ -1805,7 +1879,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
         businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
 
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        BusinessObjectDefinition updatedBusinessObjectDefinition =
+            businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
         List<SampleDataFile> updatedSampleDataFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
         updatedSampleDataFileList.add(new SampleDataFile(NAMESPACE + "/" + BDEF_NAME + "/", fileName));
 
@@ -1849,7 +1924,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         sampleFileUpdateDto.setFileSize(fileSize);
         businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
 
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        BusinessObjectDefinition updatedBusinessObjectDefinition =
+            businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         List<SampleDataFile> sampleDataFiles = Arrays.asList(new SampleDataFile(NAMESPACE + "/" + BDEF_NAME + "/", fileName));
 

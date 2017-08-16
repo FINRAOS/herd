@@ -124,7 +124,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
         @RequestParam(value = "includeBusinessObjectDefinitionUpdateHistory", required = false) Boolean includeBusinessObjectDefinitionUpdateHistory)
     {
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
-        return businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        return businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, includeBusinessObjectDefinitionUpdateHistory);
     }
 
     /**

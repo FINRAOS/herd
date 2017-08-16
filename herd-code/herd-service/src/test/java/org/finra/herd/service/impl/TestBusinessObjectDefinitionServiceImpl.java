@@ -63,9 +63,10 @@ public class TestBusinessObjectDefinitionServiceImpl extends BusinessObjectDefin
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        Boolean includeBusinessObjectDefinitionUpdateHistory)
     {
-        return getBusinessObjectDefinitionImpl(businessObjectDefinitionKey);
+        return getBusinessObjectDefinitionImpl(businessObjectDefinitionKey, includeBusinessObjectDefinitionUpdateHistory);
     }
 
     /**

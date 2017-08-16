@@ -144,14 +144,15 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
                 Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
-        when(businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey)).thenReturn(businessObjectDefinition);
+        when(businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY))
+            .thenReturn(businessObjectDefinition);
 
         // Call the method under test.
         BusinessObjectDefinition result = businessObjectDefinitionRestController
             .getBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME, NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         // Verify the external calls.
-        verify(businessObjectDefinitionService).getBusinessObjectDefinition(businessObjectDefinitionKey);
+        verify(businessObjectDefinitionService).getBusinessObjectDefinition(businessObjectDefinitionKey, NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
         verifyNoMoreInteractions(businessObjectDefinitionService);
 
         // Validate the results.

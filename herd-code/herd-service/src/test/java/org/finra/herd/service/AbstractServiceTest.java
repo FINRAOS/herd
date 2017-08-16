@@ -403,7 +403,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
 
-    public static final List<BusinessObjectDefinitionChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS = null;
+    public static final List<BusinessObjectDefinitionChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS = new ArrayList<>();
 
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
