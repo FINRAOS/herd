@@ -483,7 +483,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * Gets a business object definition for the specified key.
      *
      * @param businessObjectDefinitionKey the business object definition key
-     *
+     * @param includeBusinessObjectDefinitionUpdateHistory a flag to include change event information or not
      * @return the business object definition.
      */
     protected BusinessObjectDefinition getBusinessObjectDefinitionImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey,
