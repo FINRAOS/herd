@@ -87,7 +87,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
         when(businessObjectDefinitionService.createBusinessObjectDefinition(request)).thenReturn(businessObjectDefinition);
@@ -114,7 +114,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
         when(businessObjectDefinitionService.deleteBusinessObjectDefinition(businessObjectDefinitionKey)).thenReturn(businessObjectDefinition);
@@ -141,13 +141,14 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
         when(businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey)).thenReturn(businessObjectDefinition);
 
         // Call the method under test.
-        BusinessObjectDefinition result = businessObjectDefinitionRestController.getBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME);
+        BusinessObjectDefinition result = businessObjectDefinitionRestController
+            .getBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME, NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         // Verify the external calls.
         verify(businessObjectDefinitionService).getBusinessObjectDefinition(businessObjectDefinitionKey);
@@ -212,7 +213,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Create a business object definition search response.
         BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse =
@@ -252,7 +253,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
         when(businessObjectDefinitionService.updateBusinessObjectDefinition(businessObjectDefinitionKey, businessObjectDefinitionUpdateRequest))
@@ -286,7 +287,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
         when(businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInformation(businessObjectDefinitionKey, request))

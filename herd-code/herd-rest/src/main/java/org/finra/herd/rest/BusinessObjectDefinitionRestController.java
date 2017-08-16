@@ -120,7 +120,8 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
         method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_GET)
     public BusinessObjectDefinition getBusinessObjectDefinition(@PathVariable("namespace") String namespace,
-        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName)
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @RequestParam(value = "includeBusinessObjectDefinitionUpdateHistory", required = false) Boolean includeBusinessObjectDefinitionUpdateHistory)
     {
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
         return businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
