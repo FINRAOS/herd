@@ -31,6 +31,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 /**
@@ -107,6 +108,11 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
 
     @Transient
     private BigDecimal tagSearchScoreMultiplier;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("createdOn DESC")
+    private Collection<BusinessObjectDefinitionChangeEventEntity> changeEvents;
 
     public BigDecimal getTagSearchScoreMultiplier()
     {
@@ -247,4 +253,15 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     {
         this.subjectMatterExperts = subjectMatterExperts;
     }
+
+    public Collection<BusinessObjectDefinitionChangeEventEntity> getChangeEvents()
+    {
+        return changeEvents;
+    }
+
+    public void setChangeEvents(Collection<BusinessObjectDefinitionChangeEventEntity> changeEvents)
+    {
+        this.changeEvents = changeEvents;
+    }
+
 }
