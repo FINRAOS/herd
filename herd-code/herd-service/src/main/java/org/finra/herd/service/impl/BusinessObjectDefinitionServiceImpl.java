@@ -1043,7 +1043,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Add change events.
         final List<BusinessObjectDefinitionChangeEvent> businessObjectDefinitionChangeEvents = new ArrayList<>();
-        if (includeBusinessObjectDefinitionUpdateHistory)
+        if (BooleanUtils.isTrue(includeBusinessObjectDefinitionUpdateHistory))
         {
             businessObjectDefinitionEntity.getChangeEvents().forEach(businessObjectDefinitionChangeEventEntity -> {
                 DescriptiveBusinessObjectFormatUpdateRequest descriptiveBusinessObjectFormatUpdateRequest = null;
