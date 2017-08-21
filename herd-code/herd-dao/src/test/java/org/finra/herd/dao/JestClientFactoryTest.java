@@ -15,17 +15,19 @@
 */
 package org.finra.herd.dao;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.amazonaws.ClientConfiguration;
 import io.searchbox.client.JestClient;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -34,20 +36,16 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.credstash.CredStash;
+import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 
-/**
- * JestClientFactoryTest
- */
-public class JestClientFactoryTest
+public class JestClientFactoryTest extends AbstractDaoTest
 {
-    private List<Object> createdMocks;
-
-    @InjectMocks
-    private JestClientFactory jestClientFactory;
+    @Mock
+    private AwsHelper awsHelper;
 
     @Mock
     private ConfigurationHelper configurationHelper;
@@ -55,8 +53,8 @@ public class JestClientFactoryTest
     @Mock
     private CredStashFactory credStashFactory;
 
-    @Mock
-    private AwsHelper awsHelper;
+    @InjectMocks
+    private JestClientFactory jestClientFactory;
 
     @Mock
     private JsonHelper jsonHelper;
@@ -68,119 +66,230 @@ public class JestClientFactoryTest
     }
 
     @Test
-    public void testGetJestClient() throws Exception
+    public void testGetJestClientCredStashException() throws Exception
     {
-        String credStashName = "credStashName";
-        String userName = "userName";
-        String password = "password";
         // Build AWS parameters.
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
 
         // Build AWS client configuration.
         ClientConfiguration clientConfiguration = new ClientConfiguration();
-        Map<String, String> credstashEncryptionContextMap = new HashMap<>();
-        credstashEncryptionContextMap.put("testKey", "testValue");
-        // Mock
+
+        // Create CredStash encryption context map.
+        Map<String, String> credStashEncryptionContextMap = new HashMap<>();
+        credStashEncryptionContextMap.put(KEY, VALUE);
+
+        // Mock the CredStash.
         CredStash credStash = mock(CredStash.class);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn("localhost");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(9200);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("http");
+        when(credStash.getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap)).thenThrow(new Exception(ERROR_MESSAGE));
 
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn("credstashEncryptionContext");
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn("us-east-1");
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn("table");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME)).thenReturn(credStashName);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME)).thenReturn(userName);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(1000);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(1000);
-
-        when(credStashFactory.getCredStash("us-east-1", "table", clientConfiguration)).thenReturn(credStash);
-
+        // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("https");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(READ_TIMEOUT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(CONNECTION_TIMEOUT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME)).thenReturn(USERNAME);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME)).thenReturn(USER_CREDENTIAL_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn(TABLE_NAME);
         when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
         when(awsHelper.getClientConfiguration(awsParamsDto)).thenReturn(clientConfiguration);
+        when(credStashFactory.getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration)).thenReturn(credStash);
+        when(jsonHelper.unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(credStashEncryptionContextMap);
 
-        when(jsonHelper.unmarshallJsonToObject(Map.class, "credstashEncryptionContext")).thenReturn(credstashEncryptionContextMap);
-        when(credStash.getCredential(credStashName, credstashEncryptionContextMap)).thenReturn(password);
+        // Try to call the method under test.
+        try
+        {
+            jestClientFactory.getJestClient();
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String
+                .format("%s: Failed to obtain the keystore or truststore credential from cred stash.", CredStashGetCredentialFailedException.class.getName()),
+                e.getMessage());
+        }
 
-        // Test
-        JestClient jestClient = jestClientFactory.getJestClient();
-        verify(credStashFactory).getCredStash("us-east-1", "table", clientConfiguration);
-        verify(awsHelper).getAwsParamsDto();
-        verify(awsHelper).getClientConfiguration(awsParamsDto);
-
-        verify(jsonHelper).unmarshallJsonToObject(Map.class, "credstashEncryptionContext");
-        verify(credStash).getCredential(credStashName, credstashEncryptionContextMap);
+        // Verify the external calls.
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
-
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
+        verify(awsHelper).getAwsParamsDto();
+        verify(awsHelper).getClientConfiguration(awsParamsDto);
+        verify(credStashFactory).getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration);
+        verify(jsonHelper).unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT);
+        verify(credStash).getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap);
+        verifyNoMoreInteractions(credStash);
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
-    public void testGetJestClientCredstashException() throws Exception
+    public void testGetJestClientHttp()
     {
-        String credStashName = "credStashName";
-        String userName = "userName";
-        String password = null;
-        // Build AWS parameters.
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-
-        // Build AWS client configuration.
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-        Map<String, String> credstashEncryptionContextMap = new HashMap<>();
-        credstashEncryptionContextMap.put("testKey", "testValue");
-        // Mock
+        // Mock the CredStash.
         CredStash credStash = mock(CredStash.class);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn("localhost");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(9200);
+
+        // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("http");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(READ_TIMEOUT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(CONNECTION_TIMEOUT);
 
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn("credstashEncryptionContext");
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn("us-east-1");
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn("table");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME)).thenReturn(credStashName);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME)).thenReturn(userName);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(1000);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(1000);
+        // Call the method under test.
+        JestClient jestClient = jestClientFactory.getJestClient();
 
-        when(credStashFactory.getCredStash("us-east-1", "table", clientConfiguration)).thenReturn(credStash);
-
-        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
-        when(awsHelper.getClientConfiguration(awsParamsDto)).thenReturn(clientConfiguration);
-
-        when(jsonHelper.unmarshallJsonToObject(Map.class, "credstashEncryptionContext")).thenReturn(credstashEncryptionContextMap);
-        when(credStash.getCredential(credStashName, credstashEncryptionContextMap)).thenReturn(password);
-
-        // Test
-        try
-        {
-            JestClient jestClient = jestClientFactory.getJestClient();
-            Assert.fail("should throw exception before");
-        } catch (Exception e)
-        {
-        }
-
-        verify(credStashFactory).getCredStash("us-east-1", "table", clientConfiguration);
-        verify(awsHelper).getAwsParamsDto();
-        verify(awsHelper).getClientConfiguration(awsParamsDto);
-        verify(jsonHelper).unmarshallJsonToObject(Map.class, "credstashEncryptionContext");
-        verify(credStash).getCredential(credStashName, credstashEncryptionContextMap);
+        // Verify the external calls.
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
+        verifyNoMoreInteractions(credStash);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the result.
+        assertNotNull(jestClient);
+    }
+
+    @Test
+    public void testGetJestClientHttps() throws Exception
+    {
+        // Build AWS parameters.
+        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+
+        // Build AWS client configuration.
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+
+        // Create CredStash encryption context map.
+        Map<String, String> credStashEncryptionContextMap = new HashMap<>();
+        credStashEncryptionContextMap.put(KEY, VALUE);
+
+        // Mock the CredStash.
+        CredStash credStash = mock(CredStash.class);
+        when(credStash.getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap)).thenReturn(PASSWORD);
+
+        // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("https");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(READ_TIMEOUT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(CONNECTION_TIMEOUT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME)).thenReturn(USERNAME);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME)).thenReturn(USER_CREDENTIAL_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn(TABLE_NAME);
+        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
+        when(awsHelper.getClientConfiguration(awsParamsDto)).thenReturn(clientConfiguration);
+        when(credStashFactory.getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration)).thenReturn(credStash);
+        when(jsonHelper.unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(credStashEncryptionContextMap);
+
+        // Call the method under test.
+        JestClient jestClient = jestClientFactory.getJestClient();
+
+        // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
+        verify(awsHelper).getAwsParamsDto();
+        verify(awsHelper).getClientConfiguration(awsParamsDto);
+        verify(credStashFactory).getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration);
+        verify(jsonHelper).unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT);
+        verify(credStash).getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap);
+        verifyNoMoreInteractions(credStash);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the result.
+        assertNotNull(jestClient);
+    }
+
+    @Test
+    public void testGetJestClientPasswordIsNull() throws Exception
+    {
+        // Build AWS parameters.
+        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+
+        // Build AWS client configuration.
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+
+        // Create CredStash encryption context map.
+        Map<String, String> credStashEncryptionContextMap = new HashMap<>();
+        credStashEncryptionContextMap.put(KEY, VALUE);
+
+        // Mock the CredStash.
+        CredStash credStash = mock(CredStash.class);
+        when(credStash.getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap)).thenReturn(null);
+
+        // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("https");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(READ_TIMEOUT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(CONNECTION_TIMEOUT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME)).thenReturn(USERNAME);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME)).thenReturn(USER_CREDENTIAL_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn(TABLE_NAME);
+        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
+        when(awsHelper.getClientConfiguration(awsParamsDto)).thenReturn(clientConfiguration);
+        when(credStashFactory.getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration)).thenReturn(credStash);
+        when(jsonHelper.unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(credStashEncryptionContextMap);
+
+        // Try to call the method under test.
+        try
+        {
+            jestClientFactory.getJestClient();
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String
+                .format("%s: Failed to obtain the keystore or truststore credential from cred stash.", CredStashGetCredentialFailedException.class.getName()),
+                e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
+        verify(awsHelper).getAwsParamsDto();
+        verify(awsHelper).getClientConfiguration(awsParamsDto);
+        verify(credStashFactory).getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration);
+        verify(jsonHelper).unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT);
+        verify(credStash).getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap);
+        verifyNoMoreInteractions(credStash);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    /**
+     * Checks if any of the mocks has any interaction.
+     */
+    private void verifyNoMoreInteractionsHelper()
+    {
+        verifyNoMoreInteractions(awsHelper, configurationHelper, credStashFactory, jsonHelper);
     }
 }
