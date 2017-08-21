@@ -40,20 +40,16 @@ import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
 
-
-/**
- * JestClientFactory
- */
 @Component
 public class JestClientFactory
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(JestClientFactory.class);
 
     @Autowired
-    private ConfigurationHelper configurationHelper;
+    private AwsHelper awsHelper;
 
     @Autowired
-    private AwsHelper awsHelper;
+    private ConfigurationHelper configurationHelper;
 
     @Autowired
     private CredStashFactory credStashFactory;
@@ -62,7 +58,7 @@ public class JestClientFactory
     private JsonHelper jsonHelper;
 
     /**
-     * Method to configure and build and return a JEST client.
+     * Builds and returns a JEST client.
      *
      * @return the configured JEST client
      */
@@ -73,46 +69,57 @@ public class JestClientFactory
         final int port = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
         final String scheme = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
         final String serverUri = String.format("%s://%s:%d", scheme, hostname, port);
-        final String userName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
-        final String credentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
         final int connectionTimeout = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
         final int readTimeout = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
-        String password;
-        try
-        {
-            password = getCredentialFromCredStash(credentialName);
-        }
-        catch (CredStashGetCredentialFailedException e)
-        {
-            throw new RuntimeException(e); //NOPMD
-        }
 
         LOGGER.info("Elasticsearch REST Client Settings:  scheme={}, hostname={}, port={}, serverUri={}", scheme, hostname, port, serverUri);
 
-        SSLConnectionSocketFactory sslSocketFactory;
-        try
+        io.searchbox.client.JestClientFactory jestClientFactory = new io.searchbox.client.JestClientFactory();
+
+        if (StringUtils.equalsIgnoreCase(scheme, "https"))
         {
-            sslSocketFactory = new SSLConnectionSocketFactory(SSLContext.getDefault(), NoopHostnameVerifier.INSTANCE);
+            final String userName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
+            final String credentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
+
+            String password;
+            try
+            {
+                password = getCredentialFromCredStash(credentialName);
+            }
+            catch (CredStashGetCredentialFailedException e)
+            {
+                throw new IllegalStateException(e);
+            }
+
+            SSLConnectionSocketFactory sslSocketFactory;
+            try
+            {
+                sslSocketFactory = new SSLConnectionSocketFactory(SSLContext.getDefault(), NoopHostnameVerifier.INSTANCE);
+            }
+            catch (NoSuchAlgorithmException e)
+            {
+                throw new IllegalStateException(e);
+            }
+
+            jestClientFactory.setHttpClientConfig(new HttpClientConfig.Builder(serverUri).connTimeout(connectionTimeout).readTimeout(readTimeout).
+                defaultCredentials(userName, password).sslSocketFactory(sslSocketFactory).multiThreaded(true).build());
         }
-        catch (NoSuchAlgorithmException e)
+        else
         {
-            throw new RuntimeException(e); //NOPMD
+            jestClientFactory.setHttpClientConfig(
+                new HttpClientConfig.Builder(serverUri).connTimeout(connectionTimeout).readTimeout(readTimeout).multiThreaded(true).build());
         }
 
-        io.searchbox.client.JestClientFactory jestClientFactory = new io.searchbox.client.JestClientFactory();
-        jestClientFactory.setHttpClientConfig(
-            new HttpClientConfig.Builder(serverUri).connTimeout(connectionTimeout).readTimeout(readTimeout).
-                defaultCredentials(userName, password).sslSocketFactory(sslSocketFactory).multiThreaded(true).build());
         return jestClientFactory.getObject();
     }
 
     /**
-     * get password from credstash
+     * Gets a password from the credstash.
      *
-     * @param credentialName credential name
+     * @param credentialName the credential name
      *
-     * @throws CredStashGetCredentialFailedException
-     * @returnpassword
+     * @return the password
+     * @throws CredStashGetCredentialFailedException if CredStash fails to get a credential
      */
     @Retryable(maxAttempts = 3, value = CredStashGetCredentialFailedException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
     private String getCredentialFromCredStash(String credentialName) throws CredStashGetCredentialFailedException
@@ -157,6 +164,4 @@ public class JestClientFactory
         // Return the keystore and truststore passwords in a map
         return password;
     }
-
-
 }

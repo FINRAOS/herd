@@ -749,27 +749,6 @@ public enum ConfigurationValue
     ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.tag.spot.check.most.recent.number", 10),
 
     /**
-     * The elasticsearch search guard enabled
-     */
-    ELASTICSEARCH_SEARCH_GUARD_ENABLED("elasticsearch.search.guard.enabled", "false"),
-
-    /**
-     * The elasticsearch search guard keystore credential name
-     */
-    ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME("elasticsearch.search.guard.keystore.credential.name", "AGS.component.sdlc.keystoreCredentialName"),
-
-    /**
-     * The elasticsearch search guard truststore credential name
-     */
-    ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME("elasticsearch.search.guard.truststore.credential.name",
-        "AGS.component.sdlc.truststoreCredentialName"),
-
-    /**
-     * The elasticsearch search guard keystore path
-     */
-    ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH("elasticsearch.search.guard.keystore.path", "/path/to/keystore.jks"),
-
-    /**
      * The elasticsearch search rest client hostname
      */
     ELASTICSEARCH_REST_CLIENT_HOSTNAME("elasticsearch.rest.client.hostname", "localhost"),
@@ -787,12 +766,12 @@ public enum ConfigurationValue
     /*
      * The elasticsearch search rest client user name
      */
-    ELASTICSEARCH_REST_CLIENT_USERNAME("elasticsearch.rest.client.username",  null),
+    ELASTICSEARCH_REST_CLIENT_USERNAME("elasticsearch.rest.client.username", null),
 
     /*
      * The elasticsearch search rest client user credential name
      */
-    ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname",  null),
+    ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname", null),
 
     /*
      * The elasticsearch search rest client timeout
@@ -803,11 +782,6 @@ public enum ConfigurationValue
      * The elasticsearch search rest client read timeout
      */
     ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT("elasticsearch.rest.client.read.timeout", 60000),
-
-    /**
-     * The elasticsearch search guard truststore file path
-     */
-    ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH("elasticsearch.search.guard.truststore.path", "/path/to/truststore.jks"),
 
     /**
      * The search index update queue name

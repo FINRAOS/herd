@@ -79,17 +79,17 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ATTRIBUTE_NAME = "UT_AttributeName_1_" + RANDOM_SUFFIX;
 
-    public static final String ATTRIBUTE_NAME_2 = "UT_AttributeName_2_" + RANDOM_SUFFIX;
-
-    public static final String ATTRIBUTE_NAME_3 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
-
-    public static final String ATTRIBUTE_NAME_4 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
-
     public static final String ATTRIBUTE_NAME_1_MIXED_CASE = "Attribute Name 1";
+
+    public static final String ATTRIBUTE_NAME_2 = "UT_AttributeName_2_" + RANDOM_SUFFIX;
 
     public static final String ATTRIBUTE_NAME_2_MIXED_CASE = "Attribute Name 2";
 
+    public static final String ATTRIBUTE_NAME_3 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
+
     public static final String ATTRIBUTE_NAME_3_MIXED_CASE = "Attribute Name 3";
+
+    public static final String ATTRIBUTE_NAME_4 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
 
     public static final String ATTRIBUTE_NAME_4_MIXED_CASE = "Attribute Name 4";
 
@@ -205,10 +205,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
 
-    public static final Boolean NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY = false;
-
-    public static final Boolean INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY = true;
-
     public static final float BUSINESS_OBJECT_DEFINITION_INDEX_BOOST = 1f;
 
     public static final String CODE = "code";
@@ -243,6 +239,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CONFIGURATION_VALUE = "UT_Configuration_Value_" + RANDOM_SUFFIX;
 
+    public static final Integer CONNECTION_TIMEOUT = (int) (Math.random() * (Short.MAX_VALUE << 1));
+
     public static final String CORRELATION_DATA = "UT_Correlation_Data" + RANDOM_SUFFIX;
 
     public static final String CORRELATION_DATA_2 = "UT_Correlation_Data_2" + RANDOM_SUFFIX;
@@ -252,6 +250,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String CREATED_BY = "UT_CreatedBy_" + RANDOM_SUFFIX;
 
     public static final XMLGregorianCalendar CREATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
+
+    public static final String CREDSTASH_ENCRYPTION_CONTEXT = "UT_CredStashEncryptionContext_" + RANDOM_SUFFIX;
 
     public static final String CUSTOM_DDL_NAME = "UT_CustomDdl" + RANDOM_SUFFIX;
 
@@ -297,6 +297,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String EC2_SUBNET = "UT_EC2_Subnet_1_" + RANDOM_SUFFIX;
 
     public static final String EC2_SUBNET_2 = "UT_EC2_Subnet_2_" + RANDOM_SUFFIX;
+
+    public static final String ELASTICSEARCH_HOSTNAME = "UT_Elasticsearch_Hostname" + RANDOM_SUFFIX;
+
+    public static final Integer ELASTICSEARCH_PORT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final List<String> EMPTY_ROLES = new ArrayList<>();
 
@@ -397,6 +401,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Integer HTTP_PROXY_PORT_2 = (int) (Math.random() * (Short.MAX_VALUE << 1));
+
+    public static final Boolean INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY = true;
 
     public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 
@@ -506,6 +512,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NOTIFICATION_NAME_2 = "UT_Ntfcn_Name_2" + RANDOM_SUFFIX;
 
     public static final String NOTIFICATION_REGISTRATION_STATUS = "UT_NotificationRegistrationStatus_1_" + RANDOM_SUFFIX;
+
+    public static final Boolean NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY = false;
 
     public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
 
@@ -678,7 +686,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String PARTITION_VALUE_3 = "UT_2015-08-20" + RANDOM_SUFFIX;
 
+    public static final String PASSWORD = "UT_Password_" + RANDOM_SUFFIX;
+
     public static final Boolean PUBLISH_ATTRIBUTE = true;
+
+    public static final Integer READ_TIMEOUT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final String REASON = "UT_Reason_1_" + RANDOM_SUFFIX;
 
@@ -741,6 +753,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_PARTITION_COLUMN_NAME_PREFIX = "Prtn-Clmn-Name";
 
+    public static final Boolean SEARCH_INDEX_ACTIVE_FLAG = true;
+
+    public static final String SEARCH_INDEX_ALIAS_BDEF = "bdef";
+
+    public static final String SEARCH_INDEX_ALIAS_TAG = "tag";
+
+    public static final Boolean SEARCH_INDEX_DEFAULT_ACTIVE_FLAG = false;
+
     public static final String SEARCH_INDEX_DOCUMENT_TYPE = "UT_SearchIndex_DocumentType_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
@@ -753,10 +773,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_STATUS = "UT_SearchIndexStatus_1_" + RANDOM_SUFFIX;
 
-    public static final Boolean SEARCH_INDEX_ACTIVE_FLAG = true;
-
-    public static final Boolean SEARCH_INDEX_DEFAULT_ACTIVE_FLAG = false;
-
     public static final String SEARCH_INDEX_STATUS_2 = "UT_SearchIndexStatus_2_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_TYPE = "UT_SearchIndexType_1_" + RANDOM_SUFFIX;
@@ -766,10 +782,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SEARCH_INDEX_TYPE_BDEF = SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name();
 
     public static final String SEARCH_INDEX_TYPE_TAG = SearchIndexTypeEntity.SearchIndexTypes.TAG.name();
-
-    public static final String SEARCH_INDEX_ALIAS_BDEF = "bdef";
-
-    public static final String SEARCH_INDEX_ALIAS_TAG = "tag";
 
     public static final String SEARCH_RESPONSE_JSON_STRING = "UT_SearchResponseJsonString_" + RANDOM_SUFFIX;
 
@@ -993,6 +1005,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final XMLGregorianCalendar UPDATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
+
+    public static final String USERNAME = "UT_Username_" + RANDOM_SUFFIX;
+
+    public static final String USER_CREDENTIAL_NAME = "UT_User_Credential_Name_" + RANDOM_SUFFIX;
 
     public static final String USER_EMAIL_ADDRESS = "UT_User_Email_Address_" + RANDOM_SUFFIX;
 
