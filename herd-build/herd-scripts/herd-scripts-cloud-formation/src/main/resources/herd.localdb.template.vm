@@ -8,7 +8,7 @@
     "InstanceType" : {
       "Description" : "Herd Application and Database Server EC2 instance type",
       "Type" : "String",
-      "Default" : "t1.micro",
+      "Default" : "m1.large",
       "AllowedValues" : [ "t1.micro", "t2.micro", "t2.small", "t2.medium",
                           "m1.small", "m1.medium", "m1.large", "m1.xlarge",
                           "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "m3.medium",
@@ -158,12 +158,39 @@
       "Metadata" : {
         "Comment" : "Install Herd",
         "AWS::CloudFormation::Init" : {
-          "config": {
+          "configSets" : {
+            "PreInstallAndInstall" : [ "PreInstall", "Install" ]
+          },
+          "PreInstall": {
+            "files": {
+              "/etc/yum.repos.d/elasticsearch.repo": {
+                "content": {
+                  "Fn::Join": [
+                    "\n", [
+                      "[elasticsearch-5.x]",
+                      "name=Elasticsearch repository for 5.x packages",
+                      "baseurl=https://artifacts.elastic.co/packages/5.x/yum",
+                      "gpgcheck=1",
+                      "gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch",
+                      "enabled=1",
+                      "autorefresh=1",
+                      "type=rpm-md\n"
+                    ]
+                  ]
+                },
+                "mode": "000644",
+                "owner": "root",
+                "group": "root"
+              }
+            }
+          },
+          "Install": {
             "packages": {
               "yum": {
                 "java-1.8.0-openjdk": [],
                 "postgresql9*": [],
-                "tomcat8": []
+                "tomcat8": [],
+                "elasticsearch": []
               }
             },
             "commands": {
@@ -196,6 +223,7 @@
                       "action=/opt/aws/bin/cfn-init -v ",
                       "         --stack ", {"Ref": "AWS::StackName"},
                       "         --resource herdApplicationServer ",
+                      "         --configsets PreInstallAndInstall ",
                       "         --region ", {"Ref": "AWS::Region"}, "\n",
                       "runas=root\n"
                     ]
@@ -435,6 +463,7 @@
             },
             "services": {
               "sysvinit": {
+                "elasticsearch"  : { "enabled" : "true", "ensureRunning" : "true" },
                 "cfn-hup": {
                   "enabled": "true", "ensureRunning": "true",
                   "files": ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"]
@@ -459,10 +488,14 @@
           "/opt/aws/bin/cfn-init -v ",
           "         --stack ", { "Ref" : "AWS::StackName" },
           "         --resource herdApplicationServer ",
+          "         --configsets PreInstallAndInstall ",
           "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
           "set -x\n",
           "exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1\n",
+
+          "# Ensure Elasticsearch is running\n",
+          "/usr/bin/curl -XGET http://localhost:9200\n",
 
           "# Configure Postgresql\n",
           "service postgresql initdb\n",
