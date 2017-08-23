@@ -320,7 +320,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      * @return A {@link List} of {@link IndexSearchResult} which represent the search response
      */
     private List<IndexSearchResult> buildIndexSearchResults(Set<String> fields, String tagActiveIndex, String bdefActiveIndex, SearchResult searchResult,
-        boolean isHighlightingEnabled)
+        Boolean isHighlightingEnabled)
     {
         final Integer tagShortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
         final Integer businessObjectDefinitionShortDescMaxLength =
