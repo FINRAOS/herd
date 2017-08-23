@@ -711,22 +711,22 @@ public enum ConfigurationValue
     /**
      * Searchable 'shingles' fields, defaults to all shingles fields with no boost
      */
-    ELASTICSEARCH_SEARCHABLE_FIELDS_SHINGLES("elasticsearch.searchable.field.shingles", "{\"*.shingles\": \"1.0\"}"),
+    ELASTICSEARCH_SEARCHABLE_FIELDS_SHINGLES("elasticsearch.searchable.fields.shingles", "{\"*.shingles\": \"1.0\"}"),
 
     /**
      * Phrase prefix query boost value
      */
-    ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST("elasticsearch.phrase.prefix.query.boost", "1.0"),
+    ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST("elasticsearch.phrase.prefix.query.boost", 1.0f),
 
     /**
      * Phrase query boost value
      */
-    ELASTICSEARCH_PHRASE_QUERY_BOOST("elasticsearch.phrase.query.boost", "1.0"),
+    ELASTICSEARCH_PHRASE_QUERY_BOOST("elasticsearch.phrase.query.boost", 1.0f),
 
     /**
      * Best fields query boost value
      */
-    ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST("elasticsearch.best.fields.query.boost", "1.0"),
+    ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST("elasticsearch.best.fields.query.boost", 1.0f),
 
     /**
      * Pre-tags used for highlighting
