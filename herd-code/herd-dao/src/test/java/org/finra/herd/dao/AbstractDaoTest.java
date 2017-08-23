@@ -787,7 +787,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final int SEARCH_RESULT_SIZE = 200;
 
-    public static final String SEARCH_TERM = "Search Term";
+    public static final String SEARCH_TERM = "Search Term -foo foo-bar";
 
     public static final Integer SECOND_DATA_VERSION = 1;
 

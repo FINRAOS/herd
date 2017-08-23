@@ -709,6 +709,26 @@ public enum ConfigurationValue
     ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS("elasticsearch.searchable.fields.ngrams", "{\"*.ngrams\": \"1.0\"}"),
 
     /**
+     * Searchable 'shingles' fields, defaults to all shingles fields with no boost
+     */
+    ELASTICSEARCH_SEARCHABLE_FIELDS_SHINGLES("elasticsearch.searchable.field.shingles", "{\"*.shingles\": \"1.0\"}"),
+
+    /**
+     * Phrase prefix query boost value
+     */
+    ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST("elasticsearch.phrase.prefix.query.boost", "1.0"),
+
+    /**
+     * Phrase query boost value
+     */
+    ELASTICSEARCH_PHRASE_QUERY_BOOST("elasticsearch.phrase.query.boost", "1.0"),
+
+    /**
+     * Best fields query boost value
+     */
+    ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST("elasticsearch.best.fields.query.boost", "1.0"),
+
+    /**
      * Pre-tags used for highlighting
      */
     ELASTICSEARCH_HIGHLIGHT_PRETAGS("elasticsearch.highlight.pretags", "<hlt class=\"highlight\">"),
