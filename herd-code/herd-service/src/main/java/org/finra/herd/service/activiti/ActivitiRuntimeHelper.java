@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 /**
  * A helper for activiti's {@link RuntimeService}.
  * <p/>
- * This class is distinguised from {@link ActivitiHelper} in that it has direct access to a RuntimeService. This class was separated from ActivitiHelper
+ * This class is distinguished from {@link ActivitiHelper} in that it has direct access to a RuntimeService. This class was separated from ActivitiHelper
  * implementation due to a circular dependency introduced if RuntimeService is autowired into ActivitiHelper. The circular dependency is as thus:
  * <p/>
  * RuntimeService -> ProcessEngine -> ProcessEngineConfiguration -> HerdCommandInvoker -> ActivitiHelper -> RuntimeService
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
  * <p/>
  * RuntimeService -> ProcessEngine -> ProcessEngineConfiguration -> HerdCommandInvoker -> ActivitiHelper ActivitiRuntimeHelper -> RuntimeService
  * <p/>
- * Due to historical reasons, some methods that were previously in ActivitiHelper has been moved into this class.
+ * Due to historical reasons, some methods that were previously in ActivitiHelper have been moved into this class.
  */
 @Component
 public class ActivitiRuntimeHelper

@@ -196,21 +196,22 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     {
         boolean negationTermsExist = herdSearchQueryHelper.determineNegationTermsPresent(indexSearchRequest);
 
-        BoolQueryBuilder negationQueryBuilder = QueryBuilders.boolQuery();
+        // Build a basic Boolean query upon which add all the necessary clauses as needed
+        BoolQueryBuilder indexSearchQueryBuilder = QueryBuilders.boolQuery();
+
         String searchPhrase = indexSearchRequest.getSearchTerm();
 
-        // Check if negation terms exist in the search phrase
+        // Add the negation queries builder within a 'must-not' clause to the parent bool query if negation terms exist
         if (negationTermsExist)
         {
-            // Build negation query- each term is added to the query with a 'must' clause,
-            // then this needs to be added to the final index search query as a 'must-not' clause.
+            // Build negation queries- each term is added to the query with a 'must-not' clause,
             List<String> negationTerms = herdSearchQueryHelper.extractNegationTerms(indexSearchRequest);
 
             if (CollectionUtils.isNotEmpty(negationTerms))
             {
                 negationTerms.forEach(term ->
                 {
-                    negationQueryBuilder.must(buildMultiMatchQuery(term, PHRASE, 1f, FIELD_TYPE_STEMMED));
+                    indexSearchQueryBuilder.mustNot(buildMultiMatchQuery(term, PHRASE, 100f, FIELD_TYPE_STEMMED));
                 });
             }
 
@@ -233,18 +234,9 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             buildMultiMatchQuery(searchPhrase, PHRASE, configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class),
                 FIELD_TYPE_SHINGLES);
 
-        // Build a basic Boolean query upon which add all the necessary clauses as needed
-        BoolQueryBuilder indexSearchQueryBuilder = QueryBuilders.boolQuery();
-
         // Add the multi match queries to a dis max query and add to the parent bool query within a 'must' clause
         indexSearchQueryBuilder
             .must(disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder).add(phraseMultiMatchQueryBuilder));
-
-        // Add the negation query builder within a 'must-not' clause to the parent bool query if negation terms exist
-        if (negationTermsExist)
-        {
-            indexSearchQueryBuilder.mustNot(negationQueryBuilder);
-        }
 
         // Add filter clauses if index search filters are specified in the request
         if (CollectionUtils.isNotEmpty(indexSearchRequest.getIndexSearchFilters()))
