@@ -35,8 +35,3 @@ alter table bus_objct_dfntn_chg add constraint bus_objct_dfntn_chg_fk1 foreign k
 create index bus_objct_dfntn_chg_ix1 ON bus_objct_dfntn_chg(bus_objct_dfntn_id);
 
 create sequence bus_objct_dfntn_chg_seq;
-grant all on sequence bus_objct_dfntn_chg_seq TO dmrowner;
-grant select, update on sequence bus_objct_dfntn_chg_seq TO dmr_rw_role;
-
-grant select, insert, update, delete on bus_objct_dfntn_chg to dmr_rw_role;
-grant select on bus_objct_dfntn_chg to dmr_ro_role;
