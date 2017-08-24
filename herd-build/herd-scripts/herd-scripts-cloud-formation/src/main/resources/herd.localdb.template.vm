@@ -146,6 +146,10 @@
       "Type" : "AWS::SQS::Queue"
     },
 
+    "searchIndexUpdateSqsQueue" : {
+      "Type" : "AWS::SQS::Queue"
+    },
+
     "herdS3Bucket" : {
       "Type" : "AWS::S3::Bucket",
       "Properties" : {
@@ -190,7 +194,8 @@
                 "java-1.8.0-openjdk": [],
                 "postgresql9*": [],
                 "tomcat8": [],
-                "elasticsearch": []
+                "elasticsearch": [],
+                "jq": []
               }
             },
             "commands": {
@@ -495,7 +500,7 @@
           "exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1\n",
 
           "# Ensure Elasticsearch is running\n",
-          "/usr/bin/curl -XGET http://localhost:9200\n",
+          "/usr/bin/curl -s -XGET http://localhost:9200\n",
 
           "# Configure Postgresql\n",
           "service postgresql initdb\n",
@@ -528,15 +533,19 @@
           "psql -c \"INSERT INTO cnfgn VALUES ('s3.managed.bucket.name','",{"Ref": "herdS3Bucket" },"', NULL);\"\n",
           "psql -c \"DELETE FROM cnfgn WHERE cnfgn_key_nm = 'herd.notification.sqs.incoming.queue.name';\"\n",
           "psql -c \"INSERT INTO cnfgn VALUES ('herd.notification.sqs.incoming.queue.name','",{"Fn::GetAtt": ["herdQueueIn", "QueueName"]},"', NULL);\"\n",
+          "psql -c \"DELETE FROM cnfgn WHERE cnfgn_key_nm = 'search.index.update.sqs.queue.name';\"\n",
+          "psql -c \"INSERT INTO cnfgn VALUES ('search.index.update.sqs.queue.name','",{"Fn::GetAtt": ["searchIndexUpdateSqsQueue", "QueueName"]},"', NULL);\"\n",
 
           "service tomcat8 start\n",
           "\nsleep 15\n",
 
           "/usr/bin/wget http://localhost:8080/herd-app/rest/buildInfo -t12 --retry-connrefused -qO-\n",
           "\n",
+
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
           "\"namespaceCode\": \"Demo_App_A\"",
           "}' http://localhost:8080/herd-app/rest/namespaces\n",
+
 #set($H = '#')
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
           "\"attributes\": [",
@@ -570,7 +579,23 @@
           "\"namespace\":\"Demo_App_A\",\"businessObjectDefinitionName\":\"Data_Object_A\",\"businessObjectFormatUsage\":\"Source\",\"businessObjectFormatFileType\":\"BZ\",\"businessObjectFormatVersion\":0,\"partitionKey\":\"Transaction_Date\",\"partitionValue\":\"2015-06-01\",\"storageUnits\":[",
           "{\"storageName\":\"Demo_Storage\",\"storageFiles\":[",
           "{\"filePath\":\"demo-app-a\/exchange\/source\/bz\/data-object-a\/frmt-v0\/data-v0\/transaction-date=2015-06-01\/object_a.gz\",\"fileSizeBytes\":\"9511\",\"rowCount\":\"1000\"}","]}","],\"attributes\":[","{\"name\":\"Processor_Id\",\"value\":\"8801\"}","]",
-          "}' http://localhost:8080/herd-app/rest/businessObjectData\n ",
+          "}' http://localhost:8080/herd-app/rest/businessObjectData\n",
+
+          "bdef_index_name=$(/usr/bin/curl -s -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{",
+          "\"searchIndexType\": \"BUS_OBJCT_DFNTN\"",
+          "}' http://localhost:8080/herd-app/rest/searchIndexes | jq -r '.searchIndexKey.searchIndexName')\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{",
+          "\"searchIndexKey\": { \"searchIndexName\": \"${bdef_index_name}\" }",
+          "}' http://localhost:8080/herd-app/rest/searchIndexActivations\n",
+
+          "tag_index_name=$(/usr/bin/curl -s -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{",
+          "\"searchIndexType\": \"TAG\"",
+          "}' http://localhost:8080/herd-app/rest/searchIndexes | jq -r '.searchIndexKey.searchIndexName')\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{",
+          "\"searchIndexKey\": { \"searchIndexName\": \"${tag_index_name}\" }",
+          "}' http://localhost:8080/herd-app/rest/searchIndexActivations\n",
 
           "# If all went well, signal success\n",
           "/opt/aws/bin/cfn-signal -e $? -r 'Herd Server configuration' '", { "Ref" : "herdServerWaitHandle" }, "'\n"
@@ -615,6 +640,10 @@
     },
     "SQSQueueName" : {
       "Value" : {"Fn::GetAtt": ["herdQueueIn", "QueueName"]},
+      "Description" : "Name of Herd SQS in queue"
+    },
+    "SearchIndexUpdateSqsQueueName" : {
+      "Value" : {"Fn::GetAtt": ["searchIndexUpdateSqsQueue", "QueueName"]},
       "Description" : "Name of Herd SQS in queue"
     }
   }
