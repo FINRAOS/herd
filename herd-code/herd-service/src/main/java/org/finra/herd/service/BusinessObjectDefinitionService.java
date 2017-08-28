@@ -71,10 +71,11 @@ public interface BusinessObjectDefinitionService
      * Gets a business object definition for the specified key. This method starts a new transaction.
      *
      * @param businessObjectDefinitionKey the business object definition key
-     *
+     * @param includeBusinessObjectDefinitionUpdateHistory a flag to indicate if change events are to be included or not
      * @return the business object definition.
      */
-    public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
+    public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        Boolean includeBusinessObjectDefinitionUpdateHistory);
 
     /**
      * Deletes a business object definition for the specified name.
@@ -103,31 +104,31 @@ public interface BusinessObjectDefinitionService
 
     /**
      * Checks the count of business object definitions in the database against the count of business object definitions in the index.
-     *
+     * @param indexName the name of the index
      * @return boolean value true for valid, false otherwise
      */
-    public boolean indexSizeCheckValidationBusinessObjectDefinitions();
+    public boolean indexSizeCheckValidationBusinessObjectDefinitions(String indexName);
 
     /**
      * Spot check a random percentage of business object definitions in the search index
-     *
+     * @param indexName the index name
      * @return boolean value true for valid, false otherwise
      */
-    public boolean indexSpotCheckPercentageValidationBusinessObjectDefinitions();
+    public boolean indexSpotCheckPercentageValidationBusinessObjectDefinitions(String indexName);
 
     /**
      * Spot check the most recent business object definitions in the search index
-     *
+     * @param indexName the name of the index
      * @return boolean value true for valid, false otherwise
      */
-    public boolean indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
+    public boolean indexSpotCheckMostRecentValidationBusinessObjectDefinitions(String indexName);
 
     /**
      * Validate that the search index contains all business object definitions
-     *
+     * @param  indexName the name of the index
      * @return result of an asynchronous computation
      */
-    public Future<Void> indexValidateAllBusinessObjectDefinitions();
+    public Future<Void> indexValidateAllBusinessObjectDefinitions(String indexName);
 
     /**
      * Searches across all business object definitions that are defined in the system per specified search filters and keys

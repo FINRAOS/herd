@@ -66,6 +66,7 @@ import org.mockito.internal.progress.ThreadSafeMockingProgress;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
+import org.finra.herd.dao.helper.HerdSearchQueryHelper;
 import org.finra.herd.dao.helper.JestClientHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.IndexSearchDaoImpl;
@@ -109,6 +110,9 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
     @Mock
     private JsonHelper jsonHelper;
+
+    @Mock
+    private HerdSearchQueryHelper herdSearchQueryHelper;
 
     @Before
     public void before()
@@ -365,9 +369,13 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class)).thenReturn(300);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS)).thenReturn("{\"displayName\":\"1.0\"}");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED)).thenReturn("{\"displayName\":\"1.0\"}");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_SHINGLES)).thenReturn("{\"displayName\":\"1.0\"}");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS)).thenReturn("<hlt class=\"highlight\">");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS)).thenReturn("</hlt>");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS)).thenReturn(highlightFieldsConfigValue);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class)).thenReturn(1f);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class)).thenReturn(1f);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class)).thenReturn(1f);
 
         Map<String, String> fieldsBoostMap = new HashMap<>();
         fieldsBoostMap.put("displayName", "1.0");
@@ -437,8 +445,12 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
         when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);
         when(elasticsearchHelper.getFacetsResponse(any(ElasticsearchResponseDto.class), any(Boolean.class))).thenCallRealMethod();
-        when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(List.class))).thenCallRealMethod();
+        when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(List.class), any(), any())).thenCallRealMethod();
         when(elasticsearchHelper.addFacetFieldAggregations(any(Set.class), any(SearchRequestBuilder.class))).thenReturn(searchRequestBuilder);
+
+        when(herdSearchQueryHelper.determineNegationTermsPresent(any(IndexSearchRequest.class))).thenCallRealMethod();
+        when(herdSearchQueryHelper.extractNegationTerms(any(IndexSearchRequest.class))).thenCallRealMethod();
+        when(herdSearchQueryHelper.extractSearchPhrase(any(IndexSearchRequest.class))).thenCallRealMethod();
 
         SearchResult searchResult = mock(SearchResult.class);
         when(jestClientHelper.searchExecute(any())).thenReturn(searchResult);
@@ -480,7 +492,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(termsAggregation.getBuckets()).thenReturn(buckets);
 
         // Call the method under test
-        IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields);
+        IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         List<IndexSearchResult> indexSearchResults = indexSearchResponse.getIndexSearchResults();
 
         assertThat("Index search results list is null.", indexSearchResults, not(nullValue()));
@@ -506,10 +518,10 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         if (isHitHighlightingEnabled)
         {
             // verify interactions with the helpers which is required to fetch highlighting config
-            verify(jsonHelper, times(2)).unmarshallJsonToObject(eq(Map.class), any(String.class));
+            verify(jsonHelper, times(4)).unmarshallJsonToObject(eq(Map.class), any(String.class));
             verify(jsonHelper, times(1)).unmarshallJsonToObject(eq(IndexSearchHighlightFields.class), any(String.class));
-            verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
-            verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
+            verify(configurationHelper, times(3)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
+            verify(configurationHelper, times(3)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
             verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS);
         }
         else

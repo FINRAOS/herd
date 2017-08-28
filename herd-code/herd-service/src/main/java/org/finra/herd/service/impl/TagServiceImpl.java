@@ -637,9 +637,8 @@ public class TagServiceImpl implements TagService, SearchableService
     }
 
     @Override
-    public boolean indexSizeCheckValidationTags()
+    public boolean indexSizeCheckValidationTags(String indexName)
     {
-        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Simple count validation, index size should equal entity list size
@@ -655,7 +654,7 @@ public class TagServiceImpl implements TagService, SearchableService
     }
 
     @Override
-    public boolean indexSpotCheckPercentageValidationTags()
+    public boolean indexSpotCheckPercentageValidationTags(String indexName)
     {
         final Double spotCheckPercentage = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class);
 
@@ -666,7 +665,7 @@ public class TagServiceImpl implements TagService, SearchableService
     }
 
     @Override
-    public boolean indexSpotCheckMostRecentValidationTags()
+    public boolean indexSpotCheckMostRecentValidationTags(String indexName)
     {
         final Integer spotCheckMostRecentNumber =
             configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
@@ -679,9 +678,8 @@ public class TagServiceImpl implements TagService, SearchableService
 
     @Override
     @Async
-    public Future<Void> indexValidateAllTags()
+    public Future<Void> indexValidateAllTags(String indexName)
     {
-        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Get a list of all tags

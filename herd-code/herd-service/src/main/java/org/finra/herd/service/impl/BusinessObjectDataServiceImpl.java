@@ -39,7 +39,9 @@ import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
+import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailability;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionResponse;
@@ -80,6 +82,8 @@ import org.finra.herd.service.BusinessObjectDataInitiateRestoreHelperService;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.S3Service;
+import org.finra.herd.service.helper.AttributeDaoHelper;
+import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
@@ -110,6 +114,12 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     public static final String REASON_NOT_REGISTERED = "NOT_REGISTERED";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataServiceImpl.class);
+
+    @Autowired
+    private AttributeDaoHelper attributeDaoHelper;
+
+    @Autowired
+    private AttributeHelper attributeHelper;
 
     @Autowired
     private BusinessObjectDataDao businessObjectDataDao;
@@ -494,6 +504,39 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         result.setBusinessObjectDataElements(businessObjectDataList);
 
         return result;
+    }
+
+    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public BusinessObjectData updateBusinessObjectDataAttributes(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataAttributesUpdateRequest businessObjectDataAttributesUpdateRequest)
+    {
+        // Validate and trim the business object data key.
+        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+
+        // Validate the update request.
+        Assert.notNull(businessObjectDataAttributesUpdateRequest, "A business object data attributes update request must be specified.");
+        Assert.notNull(businessObjectDataAttributesUpdateRequest.getAttributes(), "A list of business object data attributes must be specified.");
+        List<Attribute> attributes = businessObjectDataAttributesUpdateRequest.getAttributes();
+
+        // Validate attributes. This is also going to trim the attribute names.
+        attributeHelper.validateAttributes(attributes);
+
+        // Retrieve the business object data and ensure it exists.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+
+        // Validate attributes against attribute definitions.
+        attributeDaoHelper.validateAttributesAgainstBusinessObjectDataAttributeDefinitions(attributes,
+            businessObjectDataEntity.getBusinessObjectFormat().getAttributeDefinitions());
+
+        // Update the attributes.
+        attributeDaoHelper.updateBusinessObjectDataAttributes(businessObjectDataEntity, attributes);
+
+        // Persist and refresh the entity.
+        businessObjectDataEntity = businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+
+        // Create and return the business object data object from the persisted entity.
+        return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);
     }
 
     /**

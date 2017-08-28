@@ -16,12 +16,14 @@
 package org.finra.herd.service.activiti;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
-import org.activiti.engine.impl.el.FixedValue;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.service.AbstractServiceTest;
 
@@ -30,39 +32,227 @@ import org.finra.herd.service.AbstractServiceTest;
  */
 public class ActivitiHelperTest extends AbstractServiceTest
 {
+    @Test
+    public void testGetExpressionVariableAsBoolean()
+    {
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(BOOLEAN_VALUE.toString());
 
-    @Autowired
-    protected ActivitiHelper activitiHelper;
+        // Call the method under test.
+        Boolean result = activitiHelper.getExpressionVariableAsBoolean(expression, execution, VARIABLE_NAME, NO_VARIABLE_REQUIRED, NO_BOOLEAN_DEFAULT_VALUE);
+
+        // Validate the result.
+        assertEquals(BOOLEAN_VALUE, result);
+    }
 
     @Test
-    public void testGetExpressionVariableAsIntegerRequiredError()
+    public void testGetExpressionVariableAsBooleanBlankValue()
     {
-        Expression fixedValue = new FixedValue("");
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(BLANK_TEXT);
 
+        // Call the method under test.
+        Boolean result = activitiHelper.getExpressionVariableAsBoolean(expression, execution, VARIABLE_NAME, NO_VARIABLE_REQUIRED, BOOLEAN_DEFAULT_VALUE);
+
+        // Validate the result.
+        assertEquals(BOOLEAN_DEFAULT_VALUE, result);
+    }
+
+    @Test
+    public void testGetExpressionVariableAsBooleanInvalidValue()
+    {
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(INVALID_VALUE);
+
+        // Try to call the method under test.
         try
         {
-            activitiHelper.getExpressionVariableAsInteger(fixedValue, null, "fixedValue", true);
-            fail("Should throw an IllegalArgumentException.");
+            activitiHelper.getExpressionVariableAsBoolean(expression, execution, VARIABLE_NAME, NO_VARIABLE_REQUIRED, NO_BOOLEAN_DEFAULT_VALUE);
+            fail();
         }
-        catch (IllegalArgumentException ex)
+        catch (IllegalArgumentException e)
         {
-            assertEquals("\"fixedValue\" must be specified.", ex.getMessage());
+            assertEquals(String.format("\"%s\" must be a valid boolean value of \"true\" or \"false\".", VARIABLE_NAME), e.getMessage());
         }
     }
 
     @Test
-    public void testGetExpressionVariableAsBooleanRequiredError()
+    public void testGetExpressionVariableAsBooleanRequired()
     {
-        Expression fixedValue = new FixedValue("");
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(BOOLEAN_VALUE.toString());
 
+        // Call the method under test.
+        Boolean result = activitiHelper.getExpressionVariableAsBoolean(expression, execution, VARIABLE_NAME, VARIABLE_REQUIRED, NO_BOOLEAN_DEFAULT_VALUE);
+
+        // Validate the result.
+        assertEquals(BOOLEAN_VALUE, result);
+    }
+
+    @Test
+    public void testGetExpressionVariableAsBooleanRequiredBlankValue()
+    {
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(BLANK_TEXT);
+
+        // Try to call the method under test.
         try
         {
-            activitiHelper.getExpressionVariableAsBoolean(fixedValue, null, "fixedValue", true, false);
-            fail("Should throw an IllegalArgumentException.");
+            activitiHelper.getExpressionVariableAsBoolean(expression, execution, VARIABLE_NAME, VARIABLE_REQUIRED, NO_BOOLEAN_DEFAULT_VALUE);
+            fail();
         }
-        catch (IllegalArgumentException ex)
+        catch (IllegalArgumentException e)
         {
-            assertEquals("\"fixedValue\" must be specified.", ex.getMessage());
+            assertEquals(String.format("\"%s\" must be specified.", VARIABLE_NAME), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetExpressionVariableAsInteger()
+    {
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(INTEGER_VALUE.toString());
+
+        // Call the method under test.
+        Integer result = activitiHelper.getExpressionVariableAsInteger(expression, execution, VARIABLE_NAME, NO_VARIABLE_REQUIRED);
+
+        // Validate the result.
+        assertEquals(INTEGER_VALUE, result);
+    }
+
+    @Test
+    public void testGetExpressionVariableAsIntegerBlankValue()
+    {
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(BLANK_TEXT);
+
+        // Call the method under test.
+        Integer result = activitiHelper.getExpressionVariableAsInteger(expression, execution, VARIABLE_NAME, NO_VARIABLE_REQUIRED);
+
+        // Validate the result.
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetExpressionVariableAsIntegerInvalidValue()
+    {
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(INVALID_VALUE);
+
+        // Try to call the method under test.
+        try
+        {
+            activitiHelper.getExpressionVariableAsInteger(expression, execution, VARIABLE_NAME, VARIABLE_REQUIRED);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("\"%s\" must be a valid integer value.", VARIABLE_NAME), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetExpressionVariableAsIntegerRequired()
+    {
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(INTEGER_VALUE.toString());
+
+        // Call the method under test.
+        Integer result = activitiHelper.getExpressionVariableAsInteger(expression, execution, VARIABLE_NAME, VARIABLE_REQUIRED);
+
+        // Validate the result.
+        assertEquals(INTEGER_VALUE, result);
+    }
+
+    @Test
+    public void testGetExpressionVariableAsIntegerRequiredBlankValue()
+    {
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(BLANK_TEXT);
+
+        // Try to call the method under test.
+        try
+        {
+            activitiHelper.getExpressionVariableAsInteger(expression, execution, VARIABLE_NAME, VARIABLE_REQUIRED);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("\"%s\" must be specified.", VARIABLE_NAME), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetProcessIdentifyingInformation()
+    {
+        // Create variables required for testing.
+        final String processDefinitionId = STRING_VALUE;
+        final String processInstanceId = STRING_VALUE_2;
+
+        // Mock dependencies.
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(execution.getProcessDefinitionId()).thenReturn(processDefinitionId);
+        when(execution.getProcessInstanceId()).thenReturn(processInstanceId);
+
+        // Call the method under test.
+        String result = activitiHelper.getProcessIdentifyingInformation(execution);
+
+        // Validate the result.
+        assertEquals(String.format("[ activitiProcessDefinitionId=\"%s\" activitiProcessInstanceId=\"%s\" ]", processDefinitionId, processInstanceId), result);
+    }
+
+    @Test
+    public void testGetRequiredExpressionVariableAsString()
+    {
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(STRING_VALUE);
+
+        // Call the method under test.
+        String result = activitiHelper.getRequiredExpressionVariableAsString(expression, execution, VARIABLE_NAME);
+
+        // Validate the result.
+        assertEquals(STRING_VALUE, result);
+    }
+
+    @Test
+    public void testGetRequiredExpressionVariableAsStringBlankValue()
+    {
+        // Mock dependencies.
+        Expression expression = mock(Expression.class);
+        DelegateExecution execution = mock(DelegateExecution.class);
+        when(expression.getValue(execution)).thenReturn(BLANK_TEXT);
+
+        // Try to call the method under test.
+        try
+        {
+            activitiHelper.getRequiredExpressionVariableAsString(expression, execution, VARIABLE_NAME);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("\"%s\" must be specified.", VARIABLE_NAME), e.getMessage());
         }
     }
 }

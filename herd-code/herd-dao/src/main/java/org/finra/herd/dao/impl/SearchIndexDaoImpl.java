@@ -30,6 +30,7 @@ import org.finra.herd.dao.SearchIndexDao;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.SearchIndexEntity;
 import org.finra.herd.model.jpa.SearchIndexEntity_;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
 @Repository
 public class SearchIndexDaoImpl extends AbstractHerdDao implements SearchIndexDao
@@ -82,5 +83,26 @@ public class SearchIndexDaoImpl extends AbstractHerdDao implements SearchIndexDa
 
         // Returned the list of keys.
         return searchIndexKeys;
+    }
+
+
+    @Override
+    public List<SearchIndexEntity> getSearchIndexEntities(SearchIndexTypeEntity searchIndexTypeEntity)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<SearchIndexEntity> criteria = builder.createQuery(SearchIndexEntity.class);
+
+        // The criteria root is the search index.
+        Root<SearchIndexEntity> searchIndexEntityRoot = criteria.from(SearchIndexEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate predicate = builder.equal(searchIndexEntityRoot.get(SearchIndexEntity_.type), searchIndexTypeEntity);
+
+        // Add all clauses to the query.
+        criteria.select(searchIndexEntityRoot).where(predicate);
+
+        // Return the list of entities.
+        return entityManager.createQuery(criteria).getResultList();
     }
 }

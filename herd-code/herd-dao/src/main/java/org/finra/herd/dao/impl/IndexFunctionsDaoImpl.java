@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Joiner;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -38,6 +37,9 @@ import io.searchbox.indices.CreateIndex;
 import io.searchbox.indices.DeleteIndex;
 import io.searchbox.indices.IndicesExists;
 import io.searchbox.indices.Stats;
+import io.searchbox.indices.aliases.AddAliasMapping;
+import io.searchbox.indices.aliases.GetAliases;
+import io.searchbox.indices.aliases.ModifyAliases;
 import io.searchbox.indices.mapping.PutMapping;
 import io.searchbox.indices.settings.GetSettings;
 import io.searchbox.params.Parameters;
@@ -166,19 +168,21 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     @Override
     public void createIndexDocuments(String indexName, String documentType, Map<String, String> documentMap)
     {
-        LOGGER.info("Creating Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", indexName, documentType,
-            Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
+        LOGGER.info("Creating Elasticsearch index documents, indexName={}, documentType={}", indexName, documentType);
 
+        List<String> allIndices = getAliases(indexName);
+
+        allIndices.forEach((index) -> {
         // Prepare a bulk request builder
         //final BulkRequestBuilder bulkRequestBuilder = new BulkRequestBuilder(new ElasticsearchClientImpl(), BulkAction.INSTANCE);
         Bulk.Builder bulkBuilder = new Bulk.Builder();
         // For each document prepare an insert request and add it to the bulk request builder
         documentMap.forEach((id, jsonString) ->
         {
-            BulkableAction createIndex =  new Index.Builder(jsonString).index(indexName).type(documentType).id(id).build();
+            BulkableAction createIndex = new Index.Builder(jsonString).index(index).type(documentType).id(id).build();
             bulkBuilder.addAction(createIndex);
-        });
 
+        });
 
         JestResult jestResult = jestClientHelper.executeAction(bulkBuilder.build());
 
@@ -187,25 +191,33 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Bulk response error = {}", jestResult.getErrorMessage());
         }
+        });
     }
 
     /**
      * The create index function will take as arguments the index name, document type, and mapping and will create a new index.
      */
     @Override
-    public final void createIndex(String indexName, String documentType, String mapping, String settings)
+    public final void createIndex(String indexName, String documentType, String mapping, String settings, String alias)
     {
         LOGGER.info("Creating Elasticsearch index, indexName={}, documentType={}.", indexName, documentType);
 
         CreateIndex createIndex = new CreateIndex.Builder(indexName).settings(Settings.builder().loadFromSource(settings).build()).build();
         PutMapping putMapping = new PutMapping.Builder(indexName, documentType, mapping).build();
+        ModifyAliases modifyAliases = new ModifyAliases.Builder(new AddAliasMapping.Builder(indexName, alias).build()).build();
 
         JestResult jestResult = jestClientHelper.executeAction(createIndex);
         LOGGER.info("Creating Elasticsearch index, indexName={}, documentType={} successful={}", indexName, documentType, jestResult.isSucceeded());
         jestResult = jestClientHelper.executeAction(putMapping);
         LOGGER
             .info("Creating Elasticsearch index put mappings, indexName={}, documentType={} successful={}", indexName, documentType, jestResult.isSucceeded());
-        //SearchResult searchResult = jestClientHelper.searchExecute(new Search.Builder(searchBuilder.toString()).build());
+        jestResult = jestClientHelper.executeAction(modifyAliases);
+        LOGGER.info("Creating Elasticsearch index alias, indexName={}, alias={}", indexName, alias, jestResult.isSucceeded());
+        // If there are failures log them
+        if (!jestResult.isSucceeded())
+        {
+            LOGGER.error("Error in index creation= {}", jestResult.getErrorMessage());
+        }
    }
 
     /**
@@ -233,6 +245,9 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         LOGGER.info("Deleting Elasticsearch documents from index, indexName={}, documentType={}, ids={}.", indexName, documentType,
             ids.stream().map(Object::toString).collect(Collectors.joining(",")));
 
+        List<String> allIndices = getAliases(indexName);
+
+        allIndices.forEach((index) -> {
         // Prepare a bulk request builder
         Bulk.Builder bulkBuilder = new Bulk.Builder();
 
@@ -240,17 +255,17 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         // For each document prepare a delete request and add it to the bulk request builder
         ids.forEach(id ->
         {
-            BulkableAction action = new Delete.Builder(id.toString()).index(indexName).type(documentType).build();
+            BulkableAction action = new Delete.Builder(id.toString()).index(index).type(documentType).build();
             bulkBuilder.addAction(action);
         });
 
         JestResult jestResult = jestClientHelper.executeAction(bulkBuilder.build());
-
         // If there are failures log them
         if (!jestResult.isSucceeded())
         {
             LOGGER.error("Bulk response error = {}", jestResult.getErrorMessage());
         }
+        });
 
     }
 
@@ -310,25 +325,28 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     @Override
     public final void updateIndexDocuments(String indexName, String documentType, Map<String, String> documentMap)
     {
-        LOGGER.info("Updating Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", indexName, documentType,
-            Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
+        LOGGER.info("Updating Elasticsearch index documents, indexName={}, documentType={}.", indexName, documentType);
 
-        // Prepare a bulk request builder
-        Bulk.Builder bulkBuilder = new Bulk.Builder();
-        // For each document prepare an update request and add it to the bulk request builder
-        documentMap.forEach((id, jsonString) ->
-        {
-            BulkableAction updateIndex = new Index.Builder(jsonString).index(indexName).type(documentType).id(id).build();
-            bulkBuilder.addAction(updateIndex);
+        List<String> allIndices = getAliases(indexName);
+
+        allIndices.forEach((index) -> {
+            // Prepare a bulk request builder
+            Bulk.Builder bulkBuilder = new Bulk.Builder();
+            // For each document prepare an update request and add it to the bulk request builder
+            documentMap.forEach((id, jsonString) -> {
+                BulkableAction updateIndex = new Index.Builder(jsonString).index(index).type(documentType).id(id).build();
+                bulkBuilder.addAction(updateIndex);
+            });
+
+            // Execute the bulk update request
+            JestResult jestResult = jestClientHelper.executeAction(bulkBuilder.build());
+
+            // If there are failures log them
+            if (!jestResult.isSucceeded())
+            {
+                LOGGER.error("Bulk response error = {}", jestResult.getErrorMessage());
+            }
         });
-
-        // Execute the bulk update request
-        JestResult jestResult = jestClientHelper.executeAction(bulkBuilder.build());
-        // If there are failures log them
-        if (!jestResult.isSucceeded())
-        {
-            LOGGER.error("Bulk response error = {}", jestResult.getErrorMessage());
-        }
     }
 
     @Override
@@ -350,5 +368,15 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         JsonObject statsJson = jestResult.getJsonObject().getAsJsonObject("indices").getAsJsonObject(indexName).getAsJsonObject("primaries");
         JsonObject docsJson = statsJson.getAsJsonObject("docs");
         return new DocsStats(docsJson.get("count").getAsLong(), docsJson.get("deleted").getAsLong());
+    }
+
+    private List<String> getAliases(String aliasName)
+    {
+        GetAliases getAliases = new GetAliases.Builder().build();
+        JestResult jestResult = jestClientHelper.executeAction(getAliases);
+        Assert.isTrue(jestResult.isSucceeded(), jestResult.getErrorMessage());
+        List<String> indexNameList =
+            jestResult.getJsonObject().entrySet().stream().filter(e -> e.getKey().startsWith(aliasName)).map(Map.Entry::getKey).collect(Collectors.toList());
+        return indexNameList;
     }
 }

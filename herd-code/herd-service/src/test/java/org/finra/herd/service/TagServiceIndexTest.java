@@ -279,7 +279,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
 
         // Call the method under test
-        Future<Void> future = tagService.indexValidateAllTags();
+        Future<Void> future = tagService.indexValidateAllTags(SEARCH_INDEX_TYPE_TAG);
 
         assertThat("Tag service index all tags method returned null value.", future, not(nullValue()));
         assertThat("Tag service index all tags method return value is not instance of future.", future, instanceOf(Future.class));
@@ -287,7 +287,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Verify the calls to external methods
         verify(tagDao).getTags();
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(tagHelper).executeFunctionForTagEntities(eq("tag"), eq("DOCUMENT_TYPE"), eq(tagEntityList), any());
+        verify(tagHelper).executeFunctionForTagEntities(eq("TAG"), eq("DOCUMENT_TYPE"), eq(tagEntityList), any());
     }
 
     @Test
@@ -299,7 +299,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         when(tagDao.getCountOfAllTags()).thenReturn(100L);
 
         // Call the method under test
-        boolean isIndexSizeValid = tagService.indexSizeCheckValidationTags();
+        boolean isIndexSizeValid = tagService.indexSizeCheckValidationTags(SEARCH_INDEX_TYPE_TAG);
 
         assertThat("Tag service index size validation is false when it should have been true.", isIndexSizeValid, is(true));
 
@@ -319,7 +319,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         when(tagDao.getCountOfAllTags()).thenReturn(200L);
 
         // Call the method under test
-        boolean isIndexSizeValid = tagService.indexSizeCheckValidationTags();
+        boolean isIndexSizeValid = tagService.indexSizeCheckValidationTags(SEARCH_INDEX_TYPE_TAG);
 
         assertThat("Tag service index size validation is true when it should have been false.", isIndexSizeValid, is(false));
 
@@ -348,7 +348,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         when(indexFunctionsDao.isValidDocumentIndex(any(),any(), any(), any())).thenReturn(true);
 
         // Call the method under test
-        boolean isSpotCheckPercentageValid = tagService.indexSpotCheckPercentageValidationTags();
+        boolean isSpotCheckPercentageValid = tagService.indexSpotCheckPercentageValidationTags(SEARCH_INDEX_TYPE_TAG);
 
         assertThat("Tag service index spot check random validation is false when it should have been true.", isSpotCheckPercentageValid, is(true));
 
@@ -380,7 +380,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         when(indexFunctionsDao.isValidDocumentIndex(any(), any(), any(), any())).thenReturn(false);
 
         // Call the method under test
-        boolean isSpotCheckPercentageValid = tagService.indexSpotCheckPercentageValidationTags();
+        boolean isSpotCheckPercentageValid = tagService.indexSpotCheckPercentageValidationTags(SEARCH_INDEX_TYPE_TAG);
 
         assertThat("Tag service index spot check random validation is true when it should have been false.", isSpotCheckPercentageValid, is(false));
 
@@ -411,7 +411,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
             .thenThrow(new IllegalStateException(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
 
         // Call the method under test
-        boolean isSpotCheckPercentageValid = tagService.indexSpotCheckPercentageValidationTags();
+        boolean isSpotCheckPercentageValid = tagService.indexSpotCheckPercentageValidationTags(SEARCH_INDEX_TYPE_TAG);
 
         assertThat("Tag service index spot check random validation is true when it should have been false.", isSpotCheckPercentageValid, is(false));
 
@@ -441,7 +441,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         when(indexFunctionsDao.isValidDocumentIndex(any(), any(), any(), any())).thenReturn(true);
 
         // Call the method under test
-        boolean isSpotCheckMostRecentValid = tagService.indexSpotCheckMostRecentValidationTags();
+        boolean isSpotCheckMostRecentValid = tagService.indexSpotCheckMostRecentValidationTags(SEARCH_INDEX_TYPE_TAG);
 
         assertThat("Tag service index spot check most recent validation is false when it should have been true.", isSpotCheckMostRecentValid, is(true));
 
@@ -470,7 +470,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
         // Call the method under test
-        boolean isSpotCheckMostRecentValid = tagService.indexSpotCheckMostRecentValidationTags();
+        boolean isSpotCheckMostRecentValid = tagService.indexSpotCheckMostRecentValidationTags(SEARCH_INDEX_TYPE_TAG);
 
         assertThat("Tag service index spot check most recent validation is true when it should have been false.", isSpotCheckMostRecentValid, is(false));
 
@@ -501,7 +501,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         when(indexFunctionsDao.isValidDocumentIndex(any(), any(), any(), any())).thenReturn(false);
 
         // Call the method under test
-        boolean isSpotCheckMostRecentValid = tagService.indexSpotCheckMostRecentValidationTags();
+        boolean isSpotCheckMostRecentValid = tagService.indexSpotCheckMostRecentValidationTags(SEARCH_INDEX_TYPE_TAG);
 
         assertThat("Tag service index spot check most recent validation is true when it should have been false.", isSpotCheckMostRecentValid, is(false));
 

@@ -66,4 +66,30 @@ public class SearchIndexDaoHelperTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(SEARCH_INDEX_STATUS_2, searchIndexEntity.getStatus().getCode());
     }
+
+    @Test
+    public void testActivateSearchIndexEntitySingleEntity()
+    {
+        // Create and persist a search index entity.
+        SearchIndexEntity searchIndexEntity = searchIndexDaoTestHelper.createSearchIndexEntity(SEARCH_INDEX_NAME, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS);
+
+        searchIndexDaoHelper.activateSearchIndex(searchIndexEntity);
+
+        assertEquals(Boolean.TRUE, searchIndexEntity.getActive());
+    }
+
+    @Test
+    public void testActivateSearchIndexEntity()
+    {
+        // Create and persist multiple search index entities of the same type.
+        SearchIndexEntity searchIndexEntity = searchIndexDaoTestHelper.createSearchIndexEntity(SEARCH_INDEX_NAME, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS);
+        SearchIndexEntity searchIndexEntity1 = searchIndexDaoTestHelper.createSearchIndexEntity(SEARCH_INDEX_NAME_2, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS);
+
+        // Activate the first search index
+        searchIndexDaoHelper.activateSearchIndex(searchIndexEntity);
+
+        // Validate the results
+        assertEquals(Boolean.TRUE, searchIndexEntity.getActive());
+        assertEquals(Boolean.FALSE, searchIndexEntity1.getActive());
+    }
 }

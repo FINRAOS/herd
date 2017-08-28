@@ -93,7 +93,8 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
 
         sampleDataJmsMessageListener.processMessage(jsonHelper.objectToJson(s3EventNotification), null);
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        BusinessObjectDefinition updatedBusinessObjectDefinition =
+            businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, false);
 
         List<SampleDataFile> sampleDataFiles = Arrays.asList(new SampleDataFile(NAMESPACE + "/" + BDEF_NAME + "/", fileName));
 
@@ -101,7 +102,8 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
         assertEquals(new BusinessObjectDefinition(updatedBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
             NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
             sampleDataFiles, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), updatedBusinessObjectDefinition);
+                HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
+            updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -139,7 +141,8 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
 
         sampleDataJmsMessageListener.processMessage(jsonHelper.objectToJson(s3EventNotification), null);
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        BusinessObjectDefinition updatedBusinessObjectDefinition =
+            businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, false);
 
         List<SampleDataFile> sampleDataFiles = Arrays.asList(new SampleDataFile(namespace + "/" + businessObjectDefinitionName + "/", fileName));
 
@@ -148,7 +151,8 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
             new BusinessObjectDefinition(updatedBusinessObjectDefinition.getId(), namespace, businessObjectDefinitionName, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
                 NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
                 NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, sampleDataFiles, businessObjectDefinitionEntity.getCreatedBy(),
-                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())),
+                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
 

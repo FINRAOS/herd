@@ -55,7 +55,7 @@ public class GetBusinessObjectDefinition extends BaseJavaDelegate
         businessObjectDefinitionKey.setNamespace(namespace);
         businessObjectDefinitionKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
 
-        BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, false);
 
         setJsonResponseAsWorkflowVariable(businessObjectDefinition, execution);
     }

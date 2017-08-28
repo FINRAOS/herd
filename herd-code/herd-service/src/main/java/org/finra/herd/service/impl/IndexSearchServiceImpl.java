@@ -33,11 +33,13 @@ import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.IndexSearchService;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
+import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
@@ -75,6 +77,9 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     @Autowired
     private IndexSearchResultTypeHelper resultTypeHelper;
 
+    @Autowired
+    private SearchIndexDaoHelper searchIndexDaoHelper;
+
     @Override
     public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
     {
@@ -99,7 +104,11 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
             request.setFacetFields(new ArrayList<>(facetFields));
         }
 
-        return indexSearchDao.indexSearch(request, fields);
+        // Fetch the current active indexes
+        String bdefActiveIndex = searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        String tagActiveIndex = searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+
+        return indexSearchDao.indexSearch(request, fields, bdefActiveIndex, tagActiveIndex);
     }
 
     /**

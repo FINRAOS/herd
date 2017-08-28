@@ -16,6 +16,7 @@
 package org.finra.herd.service;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailability;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionResponse;
@@ -75,6 +76,17 @@ public interface BusinessObjectDataService
      * @return the retrieved business object data versions
      */
     public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey);
+
+    /**
+     * Updates attributes for business object data.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param businessObjectDataAttributesUpdateRequest the information needed to update the business object data attributes
+     *
+     * @return the updated business object data information
+     */
+    public BusinessObjectData updateBusinessObjectDataAttributes(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataAttributesUpdateRequest businessObjectDataAttributesUpdateRequest);
 
     /**
      * Deletes an existing business object data.
