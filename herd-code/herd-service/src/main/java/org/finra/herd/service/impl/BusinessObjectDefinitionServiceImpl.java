@@ -56,6 +56,7 @@ import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchRequest;
@@ -83,6 +84,7 @@ import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionChangeEventEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -184,7 +186,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This implementation starts a new transaction.
      */
     @PublishNotificationMessages
@@ -235,7 +237,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Create and return the business object definition object from the persisted entity.
-        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
+        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, false);
     }
 
     @Override
@@ -366,7 +368,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This implementation starts a new transaction.
      */
     @PublishNotificationMessages
@@ -405,12 +407,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition object from the persisted entity.
-        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
+        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, false);
     }
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This implementation starts a new transaction.
      */
     @PublishNotificationMessages
@@ -461,29 +463,31 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition object from the persisted entity.
-        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
+        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, false);
     }
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This implementation starts a new transaction.
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        Boolean includeBusinessObjectDefinitionUpdateHistory)
     {
-        return getBusinessObjectDefinitionImpl(businessObjectDefinitionKey);
+        return getBusinessObjectDefinitionImpl(businessObjectDefinitionKey, includeBusinessObjectDefinitionUpdateHistory);
     }
 
     /**
      * Gets a business object definition for the specified key.
      *
      * @param businessObjectDefinitionKey the business object definition key
-     *
+     * @param includeBusinessObjectDefinitionUpdateHistory a flag to include change event information or not
      * @return the business object definition.
      */
-    protected BusinessObjectDefinition getBusinessObjectDefinitionImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    protected BusinessObjectDefinition getBusinessObjectDefinitionImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        Boolean includeBusinessObjectDefinitionUpdateHistory)
     {
         // Perform validation and trim.
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
@@ -493,12 +497,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         // Create and return the business object definition object from the persisted entity.
-        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
+        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, includeBusinessObjectDefinitionUpdateHistory);
     }
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This implementation starts a new transaction.
      */
     @PublishNotificationMessages
@@ -533,7 +537,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_DELETE);
 
         // Create and return the business object definition object from the deleted entity.
-        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
+        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, false);
     }
 
     @Override
@@ -837,6 +841,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             }
         }
 
+        // Persist the change event entity
+        saveBusinessObjectDefinitionChangeEvents(businessObjectDefinitionEntity);
+
         // Persist and return the new entity.
         return businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
     }
@@ -912,6 +919,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Add all of the newly created business object definition attribute entities.
         businessObjectDefinitionEntity.getAttributes().addAll(createdAttributeEntities);
 
+        // Persist the change event entity
+        saveBusinessObjectDefinitionChangeEvents(businessObjectDefinitionEntity);
+
         // Persist the entity.
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
     }
@@ -929,7 +939,56 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         businessObjectDefinitionEntity.setDescription(request.getDescription());
         businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
 
+        // Persist the change event entity
+        saveBusinessObjectDefinitionChangeEvents(businessObjectDefinitionEntity);
+
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+    }
+
+    /**
+     * Update and persist the business object definition change events
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity
+     */
+    private void saveBusinessObjectDefinitionChangeEvents(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    {
+
+        // Set the change events and add an entry to the change event table
+        List<BusinessObjectDefinitionChangeEventEntity> businessObjectDefinitionChangeEventEntities = new ArrayList<>();
+        BusinessObjectDefinitionChangeEventEntity businessObjectDefinitionChangeEventEntity = new BusinessObjectDefinitionChangeEventEntity();
+        businessObjectDefinitionChangeEventEntity.setBusinessObjectDefinitionEntity(businessObjectDefinitionEntity);
+        businessObjectDefinitionChangeEventEntities.add(businessObjectDefinitionChangeEventEntity);
+        boolean changeEventOccurred = false;
+        if (businessObjectDefinitionEntity.getDisplayName() != null)
+        {
+            businessObjectDefinitionChangeEventEntity.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
+            changeEventOccurred = true;
+        }
+
+        if (businessObjectDefinitionEntity.getDescription() != null)
+        {
+            businessObjectDefinitionChangeEventEntity.setDescription(businessObjectDefinitionEntity.getDescription());
+            changeEventOccurred = true;
+        }
+
+        if (businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat() != null)
+        {
+            businessObjectDefinitionChangeEventEntity.setUsage(businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat().getUsage());
+            businessObjectDefinitionChangeEventEntity.setFileType(businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat().getFileType().getCode());
+            changeEventOccurred = true;
+        }
+
+        if (changeEventOccurred)
+        {
+            if (businessObjectDefinitionEntity.getChangeEvents() != null)
+            {
+                businessObjectDefinitionEntity.getChangeEvents().add(businessObjectDefinitionChangeEventEntity);
+            }
+            else
+            {
+                businessObjectDefinitionEntity.setChangeEvents(businessObjectDefinitionChangeEventEntities);
+            }
+        }
     }
 
     /**
@@ -939,7 +998,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @return the business object definition
      */
-    private BusinessObjectDefinition createBusinessObjectDefinitionFromEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    private BusinessObjectDefinition createBusinessObjectDefinitionFromEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        Boolean includeBusinessObjectDefinitionUpdateHistory)
     {
         // Create a business object definition.
         BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
@@ -981,6 +1041,25 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         businessObjectDefinition.setLastUpdatedByUserId(businessObjectDefinitionEntity.getUpdatedBy());
         businessObjectDefinition.setLastUpdatedOn(HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()));
 
+        // Add change events.
+        final List<BusinessObjectDefinitionChangeEvent> businessObjectDefinitionChangeEvents = new ArrayList<>();
+        if (BooleanUtils.isTrue(includeBusinessObjectDefinitionUpdateHistory))
+        {
+            businessObjectDefinitionEntity.getChangeEvents().forEach(businessObjectDefinitionChangeEventEntity -> {
+                DescriptiveBusinessObjectFormatUpdateRequest descriptiveBusinessObjectFormatUpdateRequest = null;
+                if (businessObjectDefinitionChangeEventEntity.getFileType() != null)
+                {
+                    descriptiveBusinessObjectFormatUpdateRequest =
+                        new DescriptiveBusinessObjectFormatUpdateRequest(businessObjectDefinitionChangeEventEntity.getUsage(),
+                            businessObjectDefinitionChangeEventEntity.getFileType());
+                }
+                businessObjectDefinitionChangeEvents.add(new BusinessObjectDefinitionChangeEvent(businessObjectDefinitionChangeEventEntity.getDisplayName(),
+                    businessObjectDefinitionChangeEventEntity.getDescription(), descriptiveBusinessObjectFormatUpdateRequest,
+                    HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionChangeEventEntity.getCreatedOn()),
+                    businessObjectDefinitionChangeEventEntity.getCreatedBy()));
+            });
+        }
+        businessObjectDefinition.setBusinessObjectDefinitionChangeEvents(businessObjectDefinitionChangeEvents);
         return businessObjectDefinition;
     }
 
@@ -1043,7 +1122,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
-                businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
                 "Exactly one business object definition search key must be specified.");
 
             // Get the tag search key.
@@ -1055,7 +1134,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         else
         {
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
-                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
                 "Exactly one business object definition search filter must be specified.");
         }
     }
@@ -1132,7 +1211,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This implementation starts a new transaction.
      */
     @Override

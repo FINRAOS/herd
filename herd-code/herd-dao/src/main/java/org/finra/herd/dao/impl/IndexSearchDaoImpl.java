@@ -16,6 +16,7 @@
 package org.finra.herd.dao.impl;
 
 import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.BEST_FIELDS;
+import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.PHRASE;
 import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.PHRASE_PREFIX;
 import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
 
@@ -59,6 +60,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.IndexSearchDao;
 import org.finra.herd.dao.helper.ElasticsearchClientImpl;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
+import org.finra.herd.dao.helper.HerdSearchQueryHelper;
 import org.finra.herd.dao.helper.JestClientHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -81,11 +83,6 @@ import org.finra.herd.model.dto.IndexSearchHighlightFields;
 public class IndexSearchDaoImpl implements IndexSearchDao
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexSearchDaoImpl.class);
-
-    /**
-     * Best fields query boost
-     */
-    private static final float BEST_FIELDS_QUERY_BOOST = 1f;
 
     /**
      * String to select the tag type code and namespace code
@@ -123,16 +120,6 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private static final String NAME_SOURCE = "name";
 
     /**
-     * N-Grams field type
-     */
-    private static final String FIELD_TYPE_NGRAMS = "ngrams";
-
-    /**
-     * Phrase prefix query boost
-     */
-    private static final float PHRASE_PREFIX_QUERY_BOOST = 10f;
-
-    /**
      * The number of the indexSearch results to return
      */
     private static final int SEARCH_RESULT_SIZE = 200;
@@ -141,6 +128,16 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      * Constant to hold the short description option for the business object definition search
      */
     private static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
+
+    /**
+     * N-Grams field type
+     */
+    private static final String FIELD_TYPE_NGRAMS = "ngrams";
+
+    /**
+     * Shingles field type
+     */
+    private static final String FIELD_TYPE_SHINGLES = "shingles";
 
     /**
      * Stemmed field type
@@ -190,40 +187,66 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     @Autowired
     private JestClientHelper jestClientHelper;
 
+    @Autowired
+    private HerdSearchQueryHelper herdSearchQueryHelper;
+
     @Override
-    public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields, final String bdefActiveIndex,
+    public IndexSearchResponse indexSearch(final IndexSearchRequest indexSearchRequest, final Set<String> fields, final String bdefActiveIndex,
         final String tagActiveIndex)
     {
-        final Integer tagShortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
-        final Integer businessObjectDefinitionShortDescMaxLength =
-            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        boolean negationTermsExist = herdSearchQueryHelper.determineNegationTermsPresent(indexSearchRequest);
 
-        // Build two multi match queries, one with phrase prefix, and one with best fields, but boost the phrase prefix
-        final MultiMatchQueryBuilder phrasePrefixMultiMatchQueryBuilder =
-            buildMultiMatchQuery(request.getSearchTerm(), PHRASE_PREFIX, PHRASE_PREFIX_QUERY_BOOST, FIELD_TYPE_STEMMED);
-        final MultiMatchQueryBuilder bestFieldsMultiMatchQueryBuilder =
-            buildMultiMatchQuery(request.getSearchTerm(), BEST_FIELDS, BEST_FIELDS_QUERY_BOOST, FIELD_TYPE_NGRAMS);
+        // Build a basic Boolean query upon which add all the necessary clauses as needed
+        BoolQueryBuilder indexSearchQueryBuilder = QueryBuilders.boolQuery();
 
-        QueryBuilder queryBuilder;
+        String searchPhrase = indexSearchRequest.getSearchTerm();
+
+        // Add the negation queries builder within a 'must-not' clause to the parent bool query if negation terms exist
+        if (negationTermsExist)
+        {
+            // Build negation queries- each term is added to the query with a 'must-not' clause,
+            List<String> negationTerms = herdSearchQueryHelper.extractNegationTerms(indexSearchRequest);
+
+            if (CollectionUtils.isNotEmpty(negationTerms))
+            {
+                negationTerms.forEach(term ->
+                {
+                    indexSearchQueryBuilder.mustNot(buildMultiMatchQuery(term, PHRASE, 100f, FIELD_TYPE_STEMMED));
+                });
+            }
+
+            // Remove the negation terms from the search phrase
+            searchPhrase = herdSearchQueryHelper.extractSearchPhrase(indexSearchRequest);
+        }
+
+        // Build a Dismax query with three primary components (multi-match queries) with boost values, these values can be configured in the
+        // DB which provides a way to dynamically tune search behavior at runtime:
+        //  1. Phrase match query on shingles fields.
+        //  2. Phrase prefix query on stemmed fields.
+        //  3. Best fields query on ngrams fields.
+        final MultiMatchQueryBuilder phrasePrefixMultiMatchQueryBuilder = buildMultiMatchQuery(searchPhrase, PHRASE_PREFIX,
+            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class), FIELD_TYPE_STEMMED);
+
+        final MultiMatchQueryBuilder bestFieldsMultiMatchQueryBuilder = buildMultiMatchQuery(searchPhrase, BEST_FIELDS,
+            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class), FIELD_TYPE_NGRAMS);
+
+        final MultiMatchQueryBuilder phraseMultiMatchQueryBuilder =
+            buildMultiMatchQuery(searchPhrase, PHRASE, configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class),
+                FIELD_TYPE_SHINGLES);
+
+        // Add the multi match queries to a dis max query and add to the parent bool query within a 'must' clause
+        indexSearchQueryBuilder
+            .must(disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder).add(phraseMultiMatchQueryBuilder));
 
         // Add filter clauses if index search filters are specified in the request
-        if (CollectionUtils.isNotEmpty(request.getIndexSearchFilters()))
+        if (CollectionUtils.isNotEmpty(indexSearchRequest.getIndexSearchFilters()))
         {
-            BoolQueryBuilder indexSearchQueryBuilder =
-                elasticsearchHelper.addIndexSearchFilterBooleanClause(request.getIndexSearchFilters(), bdefActiveIndex, tagActiveIndex);
-
-            // Add the multi match queries to a dis max query and wrap within a bool query, then apply filters to it
-            queryBuilder = QueryBuilders.boolQuery().must(disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder))
-                .filter(indexSearchQueryBuilder);
-        }
-        else
-        {
-            // Add only the multi match queries to a dis max query if no filters are specified
-            queryBuilder = disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder);
+            indexSearchQueryBuilder
+                .filter(elasticsearchHelper.addIndexSearchFilterBooleanClause(indexSearchRequest.getIndexSearchFilters(), bdefActiveIndex, tagActiveIndex));
         }
 
         // Get function score query builder
-        FunctionScoreQueryBuilder functionScoreQueryBuilder = getFunctionScoreQueryBuilder(queryBuilder, bdefActiveIndex);
+        FunctionScoreQueryBuilder functionScoreQueryBuilder = getFunctionScoreQueryBuilder(indexSearchQueryBuilder, bdefActiveIndex);
 
         // The fields in the search indexes to return
         final String[] searchSources =
@@ -242,34 +265,62 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         searchRequestBuilder.setIndices(bdefActiveIndex, tagActiveIndex);
         searchRequestBuilder.setSource(searchSourceBuilder).setSize(SEARCH_RESULT_SIZE).addSort(SortBuilders.scoreSort());
 
-        String preTag = null;
-        String postTag = null;
-
         // Add highlighting if specified in the request
-        if (BooleanUtils.isTrue(request.isEnableHitHighlighting()))
+        if (BooleanUtils.isTrue(indexSearchRequest.isEnableHitHighlighting()))
         {
             // Fetch configured 'tag' values for highlighting
-            preTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
-            postTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
+            String preTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
+            String postTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
 
             searchRequestBuilder.highlighter(buildHighlightQuery(preTag, postTag));
         }
 
         // Add facet aggregations if specified in the request
-        if (CollectionUtils.isNotEmpty(request.getFacetFields()))
+        if (CollectionUtils.isNotEmpty(indexSearchRequest.getFacetFields()))
         {
-            searchRequestBuilder = elasticsearchHelper.addFacetFieldAggregations(new HashSet<>(request.getFacetFields()), searchRequestBuilder);
+            searchRequestBuilder = elasticsearchHelper.addFacetFieldAggregations(new HashSet<>(indexSearchRequest.getFacetFields()), searchRequestBuilder);
         }
 
         // Log the actual elasticsearch query when debug is enabled
-        LOGGER.info("indexSearchRequest={}", searchRequestBuilder.toString());
+        LOGGER.debug("indexSearchRequest={}", searchRequestBuilder.toString());
 
         // Retrieve the indexSearch response
         final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString()).addIndex(Arrays.asList(bdefActiveIndex, tagActiveIndex));
         final SearchResult searchResult = jestClientHelper.searchExecute(searchBuilder.build());
-        final List<SearchResult.Hit<Map, Void>> searchHitList = searchResult.getHits(Map.class);
+        final List<IndexSearchResult> indexSearchResults =
+            buildIndexSearchResults(fields, tagActiveIndex, bdefActiveIndex, searchResult, indexSearchRequest.isEnableHitHighlighting());
 
-        final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
+        List<Facet> facets = null;
+        if (CollectionUtils.isNotEmpty(indexSearchRequest.getFacetFields()))
+        {
+            // Extract facets from the search response
+            facets = new ArrayList<>(extractFacets(indexSearchRequest, searchResult));
+        }
+
+        return new IndexSearchResponse(searchResult.getTotal(), indexSearchResults, facets);
+    }
+
+    /**
+     * Extracts and builds a list of {@link IndexSearchResult}s from a given {@link SearchResult}
+     *
+     * @param fields the specified fields to be included in the response
+     * @param tagActiveIndex the name of the active tag index
+     * @param bdefActiveIndex the name of the active business object definition index
+     * @param searchResult the raw search result returned by the elasticsearch client
+     * @param isHighlightingEnabled boolean which specifies if highlighting is requested or not
+     *
+     * @return A {@link List} of {@link IndexSearchResult} which represent the search response
+     */
+    private List<IndexSearchResult> buildIndexSearchResults(Set<String> fields, String tagActiveIndex, String bdefActiveIndex, SearchResult searchResult,
+        Boolean isHighlightingEnabled)
+    {
+        final Integer tagShortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        final Integer businessObjectDefinitionShortDescMaxLength =
+            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+
+        List<IndexSearchResult> indexSearchResults = new ArrayList<>();
+
+        final List<SearchResult.Hit<Map, Void>> searchHitList = searchResult.getHits(Map.class);
 
         // For each indexSearch hit
         for (final SearchResult.Hit<Map, Void> hit : searchHitList)
@@ -320,8 +371,12 @@ public class IndexSearchDaoImpl implements IndexSearchDao
                 indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(null, businessObjectDefinitionKey));
             }
 
-            if (BooleanUtils.isTrue(request.isEnableHitHighlighting()))
+            if (BooleanUtils.isTrue(isHighlightingEnabled))
             {
+                // Fetch configured 'tag' values for highlighting
+                String preTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
+                String postTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
+
                 // Extract highlighted content from the search hit and clean html tags except the pre/post-tags as configured
                 Highlight highlightedContent = extractHighlightedContent(hit, preTag, postTag);
 
@@ -332,14 +387,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             indexSearchResults.add(indexSearchResult);
         }
 
-        List<Facet> facets = null;
-        if (CollectionUtils.isNotEmpty(request.getFacetFields()))
-        {
-            // Extract facets from the search response
-            facets = new ArrayList<>(extractFacets(request, searchResult));
-        }
-
-        return new IndexSearchResponse(searchResult.getTotal(), indexSearchResults, facets);
+        return indexSearchResults;
     }
 
     /**
@@ -444,7 +492,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private MultiMatchQueryBuilder buildMultiMatchQuery(final String searchTerm, final MultiMatchQueryBuilder.Type queryType, final float queryBoost,
         final String fieldType)
     {
-        final MultiMatchQueryBuilder multiMatchQueryBuilder = QueryBuilders.multiMatchQuery(searchTerm).type(queryType);
+        MultiMatchQueryBuilder multiMatchQueryBuilder = QueryBuilders.multiMatchQuery(searchTerm).type(queryType);
         multiMatchQueryBuilder.boost(queryBoost);
 
         if (fieldType.equals(FIELD_TYPE_STEMMED))
@@ -452,22 +500,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             // Get the configured value for 'stemmed' fields and their respective boosts if any
             String stemmedFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED);
 
-            try
-            {
-                @SuppressWarnings("unchecked")
-                final Map<String, String> stemmedFieldsWithBoost = jsonHelper.unmarshallJsonToObject(Map.class, stemmedFieldsValue);
-                final Map<String, Float> fieldsBoosts = new HashMap<>();
-
-                // This additional step is needed because trying to cast an unmarshalled json to a Map of anything other than String key-value pairs won't work
-                stemmedFieldsWithBoost.entrySet().forEach(entry -> fieldsBoosts.put(entry.getKey(), Float.parseFloat(entry.getValue())));
-
-                // Set the fields and their respective boosts to the multi-match query
-                multiMatchQueryBuilder.fields(fieldsBoosts);
-            }
-            catch (IOException e)
-            {
-                LOGGER.warn("Could not parse the configured JSON value for stemmed fields: {}", ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED, e);
-            }
+            // build the query
+            buildMultiMatchQueryWithBoosts(multiMatchQueryBuilder, stemmedFieldsValue);
         }
 
         if (fieldType.equals(FIELD_TYPE_NGRAMS))
@@ -475,26 +509,47 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             // Get the configured value for 'ngrams' fields and their respective boosts if any
             String ngramsFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS);
 
-            try
-            {
-                @SuppressWarnings("unchecked")
-                final Map<String, String> ngramsFieldsWithBoost = jsonHelper.unmarshallJsonToObject(Map.class, ngramsFieldsValue);
+            // build the query
+            buildMultiMatchQueryWithBoosts(multiMatchQueryBuilder, ngramsFieldsValue);
+        }
 
-                final Map<String, Float> fieldsBoosts = new HashMap<>();
+        if (fieldType.equals(FIELD_TYPE_SHINGLES))
+        {
+            // Get the configured value for 'shingles' fields and their respective boosts if any
+            String shinglesFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_SHINGLES);
 
-                // This additional step is needed because trying to cast an unmarshalled json to a Map of anything other than String key-value pairs won't work
-                ngramsFieldsWithBoost.entrySet().forEach(entry -> fieldsBoosts.put(entry.getKey(), Float.parseFloat(entry.getValue())));
-
-                // Set the fields and their respective boosts to the multi-match query
-                multiMatchQueryBuilder.fields(fieldsBoosts);
-            }
-            catch (IOException e)
-            {
-                LOGGER.warn("Could not parse the configured JSON value for ngrams fields: {}", ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS, e);
-            }
+            // build the query
+            buildMultiMatchQueryWithBoosts(multiMatchQueryBuilder, shinglesFieldsValue);
         }
 
         return multiMatchQueryBuilder;
+    }
+
+    /**
+     * Private method to build a multimatch query based on a given set of fields and boost values in json format
+     *
+     * @param multiMatchQueryBuilder A {@link MultiMatchQueryBuilder} which should be constructed
+     * @param fieldsBoostsJsonString A json formatted String which contains individual fields and their boost values
+     */
+    private void buildMultiMatchQueryWithBoosts(MultiMatchQueryBuilder multiMatchQueryBuilder, String fieldsBoostsJsonString)
+    {
+        try
+        {
+            @SuppressWarnings("unchecked")
+            final Map<String, String> ngramsFieldsWithBoost = jsonHelper.unmarshallJsonToObject(Map.class, fieldsBoostsJsonString);
+
+            final Map<String, Float> fieldsBoosts = new HashMap<>();
+
+            // This additional step is needed because trying to cast an unmarshalled json to a Map of anything other than String key-value pairs won't work
+            ngramsFieldsWithBoost.forEach((field, boostValue) -> fieldsBoosts.put(field, Float.parseFloat(boostValue)));
+
+            // Set the fields and their respective boosts to the multi-match query
+            multiMatchQueryBuilder.fields(fieldsBoosts);
+        }
+        catch (IOException e)
+        {
+            LOGGER.warn("Could not parse the configured JSON value for ngrams fields: {}", ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS, e);
+        }
     }
 
     /**
@@ -527,7 +582,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             @SuppressWarnings("unchecked")
             IndexSearchHighlightFields highlightFieldsConfig = jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsValue);
 
-            highlightFieldsConfig.getHighlightFields().forEach(highlightFieldConfig -> {
+            highlightFieldsConfig.getHighlightFields().forEach(highlightFieldConfig ->
+            {
 
                 // set the field name to the configured value
                 HighlightBuilder.Field highlightField = new HighlightBuilder.Field(highlightFieldConfig.getFieldName());

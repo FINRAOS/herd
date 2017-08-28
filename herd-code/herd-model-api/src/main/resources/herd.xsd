@@ -1057,6 +1057,11 @@
                <xs:documentation>The timestamp when this business object definition was last updated on</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectDefinitionChangeEvents" type="businessObjectDefinitionChangeEvents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of business object definition change events</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -1152,6 +1157,48 @@
          <xs:element name="fileName" type="xs:string">
             <xs:annotation>
                <xs:documentation>The name of the sample data file</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionChangeEvents">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionChangeEvent" type="businessObjectDefinitionChangeEvent" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A list of business object definition change events</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionChangeEvent">
+      <xs:all>
+         <xs:element name="displayName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Business friendly name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Description of the Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="descriptiveBusinessObjectFormat" type="descriptiveBusinessObjectFormatUpdateRequest" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Business object definition descriptive format. The descriptive format is the single Business Object Format that
+                  will be used to represent this Business Object Definition to consumers
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="eventTime" type="xs:dateTime">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the business object definition update occured</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who performed business object definition update</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

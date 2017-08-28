@@ -57,6 +57,7 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
@@ -401,6 +402,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final DescriptiveBusinessObjectFormat NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT = null;
 
     public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
+
+    public static final List<BusinessObjectDefinitionChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS = new ArrayList<>();
 
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 

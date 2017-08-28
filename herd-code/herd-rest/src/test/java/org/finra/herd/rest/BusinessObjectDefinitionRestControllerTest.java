@@ -21,7 +21,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -33,6 +35,7 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -87,7 +90,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
         when(businessObjectDefinitionService.createBusinessObjectDefinition(request)).thenReturn(businessObjectDefinition);
@@ -114,7 +117,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
         when(businessObjectDefinitionService.deleteBusinessObjectDefinition(businessObjectDefinitionKey)).thenReturn(businessObjectDefinition);
@@ -131,7 +134,41 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testGetBusinessObjectDefinition()
+    public void testGetBusinessObjectDefinitionIncludeUpdateHistory()
+    {
+        // Create a business object definition key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
+
+        // Create business object definition change event
+        List<BusinessObjectDefinitionChangeEvent> businessObjectDefinitionChangeEvents = new ArrayList<>();
+        businessObjectDefinitionChangeEvents.add(new BusinessObjectDefinitionChangeEvent(BDEF_DISPLAY_NAME, BDEF_DESCRIPTION,
+            new DescriptiveBusinessObjectFormatUpdateRequest(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE), CREATED_ON, CREATED_BY));
+
+        // Create a business object definition.
+        BusinessObjectDefinition businessObjectDefinition =
+            new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, businessObjectDefinitionChangeEvents);
+
+        // Mock the external calls.
+        when(businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY))
+            .thenReturn(businessObjectDefinition);
+
+        // Call the method under test.
+        BusinessObjectDefinition result = businessObjectDefinitionRestController
+            .getBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME, INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
+
+        // Verify the external calls.
+        verify(businessObjectDefinitionService).getBusinessObjectDefinition(businessObjectDefinitionKey, INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
+        verifyNoMoreInteractions(businessObjectDefinitionService);
+
+        // Validate the results.
+        assertEquals(businessObjectDefinition, result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDefinitionNotIncludeUpdateHistory()
     {
         // Create a business object definition key.
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
@@ -141,16 +178,18 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
-        when(businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey)).thenReturn(businessObjectDefinition);
+        when(businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY))
+            .thenReturn(businessObjectDefinition);
 
         // Call the method under test.
-        BusinessObjectDefinition result = businessObjectDefinitionRestController.getBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME);
+        BusinessObjectDefinition result = businessObjectDefinitionRestController
+            .getBusinessObjectDefinition(BDEF_NAMESPACE, BDEF_NAME, NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
 
         // Verify the external calls.
-        verify(businessObjectDefinitionService).getBusinessObjectDefinition(businessObjectDefinitionKey);
+        verify(businessObjectDefinitionService).getBusinessObjectDefinition(businessObjectDefinitionKey, NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
         verifyNoMoreInteractions(businessObjectDefinitionService);
 
         // Validate the results.
@@ -212,7 +251,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Create a business object definition search response.
         BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse =
@@ -252,7 +291,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
         when(businessObjectDefinitionService.updateBusinessObjectDefinition(businessObjectDefinitionKey, businessObjectDefinitionUpdateRequest))
@@ -286,7 +325,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             new BusinessObjectDefinition(ID, BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, SHORT_DESCRIPTION, BDEF_DISPLAY_NAME,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
-                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON);
+                Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)), CREATED_BY, UPDATED_BY, UPDATED_ON, NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS);
 
         // Mock the external calls.
         when(businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInformation(businessObjectDefinitionKey, request))

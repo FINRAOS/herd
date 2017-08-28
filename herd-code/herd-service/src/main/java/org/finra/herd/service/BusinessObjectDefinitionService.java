@@ -71,10 +71,11 @@ public interface BusinessObjectDefinitionService
      * Gets a business object definition for the specified key. This method starts a new transaction.
      *
      * @param businessObjectDefinitionKey the business object definition key
-     *
+     * @param includeBusinessObjectDefinitionUpdateHistory a flag to indicate if change events are to be included or not
      * @return the business object definition.
      */
-    public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
+    public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        Boolean includeBusinessObjectDefinitionUpdateHistory);
 
     /**
      * Deletes a business object definition for the specified name.
