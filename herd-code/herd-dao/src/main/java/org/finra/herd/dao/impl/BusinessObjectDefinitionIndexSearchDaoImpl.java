@@ -311,13 +311,14 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
         //Add aggregation builder if facet fields are present
         if (CollectionUtils.isNotEmpty(facetFieldsList))
         {
-            addFacetFieldAggregations(facetFieldsList, elasticsearchResponseDto, searchRequestBuilder);
+            addFacetFieldAggregations(facetFieldsList, elasticsearchResponseDto, searchRequestBuilder, indexName);
         }
 
         // Log the actual search query
         LOGGER.info("bdefIndexSearchQuery={}", searchRequestBuilder.toString());
 
-        elasticsearchResponseDto.setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
+        elasticsearchResponseDto
+            .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder, indexName));
 
         return elasticsearchResponseDto;
     }
@@ -349,9 +350,10 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
             .addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
 
         //Add aggregation builder if facet fields are present
-        addFacetFieldAggregations(facetFieldsList, elasticsearchResponseDto, searchRequestBuilder);
+        addFacetFieldAggregations(facetFieldsList, elasticsearchResponseDto, searchRequestBuilder, indexName);
 
-        elasticsearchResponseDto.setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
+        elasticsearchResponseDto
+            .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder, indexName));
 
         return elasticsearchResponseDto;
     }
@@ -360,14 +362,14 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
      * Private method to handle scrolling through the results from the search request and adding them to a business object definition entity list.
      *
      * @param searchRequestBuilder the the search request to scroll through
-     *
+     * @param indexName the index name
      * @return list of business object definition entities
      */
     private List<BusinessObjectDefinitionIndexSearchResponseDto> scrollSearchResultsIntoBusinessObjectDefinitionDto(
-        final SearchRequestBuilder searchRequestBuilder)
+        final SearchRequestBuilder searchRequestBuilder, String indexName)
     {
         // Retrieve the search response
-        final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString());
+        final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString()).addIndex(indexName);
 
         searchBuilder.setParameter(Parameters.SIZE, ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
         searchBuilder.setParameter(Parameters.SCROLL, new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME).toString());
@@ -391,7 +393,7 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
     }
 
     private void addFacetFieldAggregations(Set<String> facetFieldsList, ElasticsearchResponseDto elasticsearchResponseDto,
-        SearchRequestBuilder searchRequestBuilder)
+        SearchRequestBuilder searchRequestBuilder, String indexName)
     {
         if (!CollectionUtils.isEmpty(facetFieldsList) && (facetFieldsList.contains(TAG_FACET)))
         {
@@ -406,14 +408,14 @@ public class BusinessObjectDefinitionIndexSearchDaoImpl implements BusinessObjec
                 AggregationBuilders.terms(NAMESPACE_CODE_AGGS).field(NAMESPACE_FIELD)
                     .subAggregation(AggregationBuilders.terms(BDEF_NAME_AGGS).field(BDEF_NAME_FIELD))));
 
-            elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(searchResponseIntoFacetInformation(searchRequestBuilder));
+            elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(searchResponseIntoFacetInformation(searchRequestBuilder, indexName));
         }
     }
 
-    private List<TagTypeIndexSearchResponseDto> searchResponseIntoFacetInformation(final SearchRequestBuilder searchRequestBuilder)
+    private List<TagTypeIndexSearchResponseDto> searchResponseIntoFacetInformation(final SearchRequestBuilder searchRequestBuilder, String indexName)
     {
         // Retrieve the search response
-        final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString());
+        final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString()).addIndex(indexName);
         SearchResult searchResult = jestClientHelper.searchExecute(searchBuilder.build());
         return elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResult);
     }
