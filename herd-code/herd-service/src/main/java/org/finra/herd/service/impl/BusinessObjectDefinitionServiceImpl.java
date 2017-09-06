@@ -53,7 +53,6 @@ import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
-import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionChangeEvent;
@@ -189,7 +188,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * <p>
      * This implementation starts a new transaction.
      */
-    @PublishNotificationMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -371,7 +369,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * <p>
      * This implementation starts a new transaction.
      */
-    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -415,7 +412,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * <p>
      * This implementation starts a new transaction.
      */
-    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
@@ -505,7 +501,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * <p>
      * This implementation starts a new transaction.
      */
-    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -1163,7 +1158,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
     }
 
-    @PublishNotificationMessages
     @Override
     public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto)
