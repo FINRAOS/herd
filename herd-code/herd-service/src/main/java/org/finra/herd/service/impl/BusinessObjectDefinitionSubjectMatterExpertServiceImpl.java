@@ -26,7 +26,6 @@ import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectDefinitionSubjectMatterExpertDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpert;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpertCreateRequest;
@@ -69,7 +68,6 @@ public class BusinessObjectDefinitionSubjectMatterExpertServiceImpl implements B
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
-    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionSubjectMatterExpert createBusinessObjectDefinitionSubjectMatterExpert(
         BusinessObjectDefinitionSubjectMatterExpertCreateRequest request)

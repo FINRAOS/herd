@@ -43,6 +43,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.AbstractServiceTest;
+import org.finra.herd.service.NotificationMessagePublishingService;
 
 public class SearchIndexUpdateHelperTest extends AbstractServiceTest
 {
@@ -53,7 +54,7 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     private JsonHelper jsonHelper;
 
     @Mock
-    private NotificationMessageInMemoryQueue notificationMessageInMemoryQueue;
+    private NotificationMessagePublishingService notificationMessagePublishingService;
 
     @InjectMocks
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
@@ -91,8 +92,8 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
         verify(jsonHelper).objectToJson(searchIndexUpdateDto);
         verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
         verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME);
-        verify(notificationMessageInMemoryQueue)
-            .add(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
+        verify(notificationMessagePublishingService)
+            .addNotificationMessageToDatabaseQueue(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -193,8 +194,8 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
         verify(jsonHelper).objectToJson(searchIndexUpdateDto);
         verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
         verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME);
-        verify(notificationMessageInMemoryQueue)
-            .add(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
+        verify(notificationMessagePublishingService)
+            .addNotificationMessageToDatabaseQueue(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -296,8 +297,8 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
         verify(jsonHelper).objectToJson(searchIndexUpdateDto);
         verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
         verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME);
-        verify(notificationMessageInMemoryQueue)
-            .add(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
+        verify(notificationMessagePublishingService)
+            .addNotificationMessageToDatabaseQueue(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -422,8 +423,8 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
         verify(jsonHelper).objectToJson(searchIndexUpdateDto);
         verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
         verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME);
-        verify(notificationMessageInMemoryQueue)
-            .add(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
+        verify(notificationMessagePublishingService)
+            .addNotificationMessageToDatabaseQueue(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), AWS_SQS_QUEUE_NAME, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -502,6 +503,6 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(configurationHelper, jsonHelper, notificationMessageInMemoryQueue);
+        verifyNoMoreInteractions(configurationHelper, jsonHelper, notificationMessagePublishingService);
     }
 }
