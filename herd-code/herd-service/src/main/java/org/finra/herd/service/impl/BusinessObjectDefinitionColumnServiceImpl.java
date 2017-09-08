@@ -36,7 +36,6 @@ import org.finra.herd.dao.SchemaColumnDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumn;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
@@ -95,7 +94,6 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
-    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionColumn createBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnCreateRequest request)
     {
@@ -172,7 +170,6 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
     }
 
-    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionColumn deleteBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey)
     {
@@ -273,7 +270,6 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             .collect(Collectors.toList()));
     }
 
-    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionColumn updateBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey,
         BusinessObjectDefinitionColumnUpdateRequest request)
