@@ -33,7 +33,6 @@ import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.TagTypeDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.TagType;
 import org.finra.herd.model.api.xml.TagTypeCreateRequest;
 import org.finra.herd.model.api.xml.TagTypeKey;
@@ -175,7 +174,6 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
         return new TagTypeSearchResponse(tagTypes);
     }
 
-    @PublishNotificationMessages
     @Override
     public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest request)
     {
