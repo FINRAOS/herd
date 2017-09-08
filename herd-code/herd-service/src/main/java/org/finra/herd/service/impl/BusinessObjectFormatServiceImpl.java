@@ -44,7 +44,6 @@ import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.NamespacePermissions;
-import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -147,7 +146,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the created business object format.
      */
-    @PublishNotificationMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat createBusinessObjectFormat(BusinessObjectFormatCreateRequest request)
@@ -239,7 +237,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the updated business object format.
      */
-    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey, BusinessObjectFormatUpdateRequest request)
@@ -353,7 +350,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the business object format that was deleted
      */
-    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat deleteBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
@@ -535,7 +531,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the updated business object format.
      */
-    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormatAttributes(BusinessObjectFormatKey businessObjectFormatKey,

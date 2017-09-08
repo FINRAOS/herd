@@ -35,6 +35,7 @@ import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
+import org.finra.herd.service.NotificationMessagePublishingService;
 
 /**
  * SearchIndexUpdateHelper class contains helper methods needed to process a search index update.
@@ -51,7 +52,7 @@ public class SearchIndexUpdateHelper
     private JsonHelper jsonHelper;
 
     @Autowired
-    private NotificationMessageInMemoryQueue notificationMessageInMemoryQueue;
+    private NotificationMessagePublishingService notificationMessagePublishingService;
 
     /**
      * Modify a business object definition
@@ -147,9 +148,11 @@ public class SearchIndexUpdateHelper
             }
             else
             {
-                // Add the JMS message to the "in-memory" JMS message queue to be published by the advice.
-                notificationMessageInMemoryQueue
-                    .add(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), getSqsQueueName(), messageText, null));
+                NotificationMessage notificationMessage =
+                    new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), getSqsQueueName(), messageText, null);
+
+                // Add the notification message to the database JMS message queue to be processed.
+                notificationMessagePublishingService.addNotificationMessageToDatabaseQueue(notificationMessage);
             }
         }
     }
