@@ -92,7 +92,6 @@ import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
-import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
 import org.finra.herd.service.helper.JobDefinitionHelper;
 import org.finra.herd.service.helper.MessageTypeDaoHelper;
 import org.finra.herd.service.helper.NotificationActionFactory;
@@ -341,10 +340,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
 
-    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
-
-    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
-
     public static final Integer ID = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer ID_2 = (int) (Math.random() * Integer.MAX_VALUE);
@@ -358,6 +353,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean INCLUDE_DROP_TABLE_STATEMENT = true;
 
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
+
+    public static final String INDEX_SEARCH_RESULT_TYPE = "UT_IndexSearchResultType" + RANDOM_SUFFIX;
 
     public static final String MESSAGE_VERSION = "UT_MessageVersion" + RANDOM_SUFFIX;
 
@@ -385,6 +382,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<BusinessObjectDataStatusChangeEvent> NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY = null;
 
+    public static final List<BusinessObjectDefinitionChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS = new ArrayList<>();
+
     public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
 
     public static final String NO_COLUMN_DEFAULT_VALUE = null;
@@ -402,8 +401,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final DescriptiveBusinessObjectFormat NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT = null;
 
     public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
-
-    public static final List<BusinessObjectDefinitionChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS = new ArrayList<>();
 
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
@@ -750,9 +747,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected Hive13DdlGenerator hive13DdlGenerator;
-
-    @Autowired
-    protected IndexSearchResultTypeHelper indexSearchResultTypeHelper;
 
     @Autowired
     protected JdbcService jdbcService;
