@@ -47,6 +47,7 @@ import org.finra.herd.model.dto.FacetTypeEnum;
 import org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
 @Component
 public class ElasticsearchHelper
@@ -314,6 +315,7 @@ public class ElasticsearchHelper
      * @param indexSearchFilter the specified search filter
      * @param bdefActiveIndex the name of the bdef active index
      * @param tagActiveIndex the name of the tag active index
+     *
      * @return {@link BoolQueryBuilder} the resolved filter query
      */
     private BoolQueryBuilder applySearchFilterClause(IndexSearchFilter indexSearchFilter, String bdefActiveIndex, String tagActiveIndex)
@@ -322,7 +324,7 @@ public class ElasticsearchHelper
 
         for (IndexSearchKey indexSearchKey : indexSearchFilter.getIndexSearchKeys())
         {
-            if (null != indexSearchKey.getTagKey())
+            if (indexSearchKey.getTagKey() != null)
             {
                 // Add constant-score term queries for tagType-code and tag-code from the tag-key.
                 ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery().should(
@@ -334,14 +336,14 @@ public class ElasticsearchHelper
                 // Individual index search keys are OR-ed
                 indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
             }
-            if (null != indexSearchKey.getIndexSearchResultTypeKey())
+            if (indexSearchKey.getIndexSearchResultTypeKey() != null)
             {
-                String resultType = indexSearchKey.getIndexSearchResultTypeKey().getIndexSearchResultType().toLowerCase();
-                String indexName = resultType.equals(TAG_RESULT_TYPE) ? tagActiveIndex : bdefActiveIndex;
+                String indexSearchResultType = indexSearchKey.getIndexSearchResultTypeKey().getIndexSearchResultType();
+                String indexName = indexSearchResultType.equalsIgnoreCase(SearchIndexTypeEntity.SearchIndexTypes.TAG.name()) ? tagActiveIndex : bdefActiveIndex;
 
                 // Add constant-score term queries for tagType-code and tag-code from the tag-key.
-                ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery()
-                    .must(QueryBuilders.termQuery(RESULT_TYPE_FIELD, indexName)));
+                ConstantScoreQueryBuilder searchKeyQueryBuilder =
+                    QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery(RESULT_TYPE_FIELD, indexName)));
 
                 // Individual index search keys are OR-ed
                 indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
@@ -567,9 +569,11 @@ public class ElasticsearchHelper
     }
 
     /**
-     * get the county by bucket key
+     * get the count by bucket key
+     *
      * @param termsAggregation terms aggregation
      * @param keyName key name
+     *
      * @return count
      */
     private long getCountByBucketKey(TermsAggregation termsAggregation, String keyName)
