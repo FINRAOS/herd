@@ -233,16 +233,6 @@ public class ElasticsearchHelper
     public static final String BDEF_NAME_FIELD = "name.keyword";
 
     /**
-     * business object definition result type
-     */
-    public static final String BUS_OBJCT_DFNTN_RESULT_TYPE = "bdef";
-
-    /**
-     * tag result type
-     */
-    public static final String TAG_RESULT_TYPE = "tag";
-
-    /**
      * Adds facet field aggregations
      *
      * @param facetFieldsList facet field list
@@ -395,6 +385,8 @@ public class ElasticsearchHelper
 
         for (TermsAggregation.Entry entry : buckets)
         {
+            LOGGER.info(String.format("TermsAggregation.Entry=%s"), jsonHelper.objectToJson(entry));
+
             ResultTypeIndexSearchResponseDto dto = new ResultTypeIndexSearchResponseDto();
             dto.setResultTypeCode(entry.getKeyAsString());
             dto.setResultTypeDisplayName(entry.getKeyAsString());
@@ -686,9 +678,8 @@ public class ElasticsearchHelper
             //construct a list of facet information
             for (ResultTypeIndexSearchResponseDto resultTypeIndexSearchResponseDto : elasticsearchResponseDto.getResultTypeIndexSearchResponseDtos())
             {
-                String facetId =
-                    resultTypeIndexSearchResponseDto.getResultTypeDisplayName().startsWith(TAG_RESULT_TYPE) ? TAG_RESULT_TYPE : BUS_OBJCT_DFNTN_RESULT_TYPE;
-                Facet resultTypeFacet = new Facet(facetId, resultTypeIndexSearchResponseDto.getCount(), FacetTypeEnum.RESULT_TYPE.value(), facetId, null);
+                Facet resultTypeFacet = new Facet(resultTypeIndexSearchResponseDto.getResultTypeDisplayName(), resultTypeIndexSearchResponseDto.getCount(),
+                    FacetTypeEnum.RESULT_TYPE.value(), resultTypeIndexSearchResponseDto.getResultTypeCode(), null);
                 resultTypeFacets.add(resultTypeFacet);
             }
             facets.addAll(resultTypeFacets);
