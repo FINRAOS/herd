@@ -78,9 +78,6 @@ import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.IndexSearchHighlightFields;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
-/**
- * IndexSearchDaoImpl
- */
 @Repository
 public class IndexSearchDaoImpl implements IndexSearchDao
 {
@@ -289,7 +286,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         if (CollectionUtils.isNotEmpty(indexSearchRequest.getFacetFields()))
         {
             // Extract facets from the search response
-            facets = new ArrayList<>(extractFacets(indexSearchRequest, searchResult));
+            facets = new ArrayList<>(extractFacets(indexSearchRequest, searchResult, bdefActiveIndex, tagActiveIndex));
         }
 
         return new IndexSearchResponse(searchResult.getTotal(), indexSearchResults, facets);
@@ -466,10 +463,12 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      *
      * @param request The specified {@link IndexSearchRequest}
      * @param searchResult A given {@link SearchResult} to extract the facet information from
+     * @param bdefActiveIndex the name of the active index for business object definitions
+     * @param tagActiveIndex the name os the active index for tags
      *
      * @return A list of {@link Facet} objects
      */
-    private List<Facet> extractFacets(IndexSearchRequest request, SearchResult searchResult)
+    private List<Facet> extractFacets(IndexSearchRequest request, SearchResult searchResult, final String bdefActiveIndex, final String tagActiveIndex)
     {
         ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
         if (request.getFacetFields().contains(ElasticsearchHelper.TAG_FACET))
@@ -482,7 +481,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResult));
         }
 
-        return elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, true);
+        return elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, bdefActiveIndex, tagActiveIndex);
     }
 
     /**
