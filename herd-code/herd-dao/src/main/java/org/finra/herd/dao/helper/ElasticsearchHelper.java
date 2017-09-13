@@ -58,54 +58,9 @@ public class ElasticsearchHelper
     private JsonHelper jsonHelper;
 
     /**
-     * Page size
-     */
-    public static final int ELASTIC_SEARCH_SCROLL_PAGE_SIZE = 100;
-
-    /**
-     * Scroll keep alive in milliseconds
-     */
-    public static final int ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME = 60000;
-
-    /**
-     * Sort the business object definition by name
-     */
-    public static final String BUSINESS_OBJECT_DEFINITION_SORT_FIELD = "name.keyword";
-
-    /**
-     * The business object definition id search index key
-     */
-    public static final String SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_ID_KEY = "id";
-
-    /**
-     * Source string for the dataProvider name
-     */
-    public static final String DATA_PROVIDER_NAME_SOURCE = "dataProvider.name";
-
-    /**
-     * Source string for the description
-     */
-    public static final String DESCRIPTION_SOURCE = "description";
-
-    /**
      * Source string for the display name
      */
     public static final String DISPLAY_NAME_SOURCE = "displayName";
-
-    /**
-     * Source string for the name
-     */
-    public static final String NAME_SOURCE = "name";
-
-    /**
-     * Source string for the namespace code
-     */
-    public static final String NAMESPACE_CODE_SOURCE = "namespace.code";
-
-    /**
-     * Raw field for the namespace code
-     */
-    public static final String NAMESPACE_CODE_SORT_FIELD = "namespace.code.keyword";
 
     /**
      * The nested path of business object definition tags
@@ -203,16 +158,6 @@ public class ElasticsearchHelper
     public static final String TAG_TYPE_FACET_AGGS = "tagTypeFacet";
 
     /**
-     * The namespace code sub agg
-     */
-    public static final String NAMESPACE_CODE_AGGS = "namespaceCodes";
-
-    /**
-     * The business object definition name sub agg
-     */
-    public static final String BDEF_NAME_AGGS = "bdefName";
-
-    /**
      * The result type agg
      */
     public static final String RESULT_TYPE_AGGS = "resultType";
@@ -221,26 +166,6 @@ public class ElasticsearchHelper
      *
      */
     public static final String RESULT_TYPE_FIELD = "_index";
-
-    /**
-     * namespace field
-     */
-    public static final String NAMESPACE_FIELD = "namespace.code.keyword";
-
-    /**
-     * business object definition name field
-     */
-    public static final String BDEF_NAME_FIELD = "name.keyword";
-
-    /**
-     * business object definition result type
-     */
-    public static final String BUS_OBJCT_DFNTN_RESULT_TYPE = "bdef";
-
-    /**
-     * tag result type
-     */
-    public static final String TAG_RESULT_TYPE = "tag";
 
     /**
      * Adds facet field aggregations
@@ -528,7 +453,7 @@ public class ElasticsearchHelper
             TermsAggregation termsAggregationL1 = entryL1.getTermsAggregation(TAGTYPE_NAME_AGGREGATION);
             List<TermsAggregation.Entry> bucketsL1 = termsAggregationL1.getBuckets();
 
-            long count = 0;
+            long count;
             if (tagTypeFacetAggregation != null)
             {
                 count = getCountByBucketKey(tagTypeFacetAggregation, entryL1.getKeyAsString());
@@ -621,15 +546,16 @@ public class ElasticsearchHelper
      * get the facets in the response
      *
      * @param elasticsearchResponseDto elastic search response dto
-     * @param includingTagInCount if include tag in the facet count
+     * @param bdefActiveIndex the name of the active index for business object definitions
+     * @param tagActiveIndex the name os the active index for tags
      *
      * @return facets in the response dto
      */
-    public List<Facet> getFacetsResponse(ElasticsearchResponseDto elasticsearchResponseDto, boolean includingTagInCount)
+    public List<Facet> getFacetsResponse(ElasticsearchResponseDto elasticsearchResponseDto, final String bdefActiveIndex, final String tagActiveIndex)
     {
         List<Facet> facets = new ArrayList<>();
 
-        List<Facet> tagTypeFacets = null;
+        List<Facet> tagTypeFacets;
         if (elasticsearchResponseDto.getNestTagTypeIndexSearchResponseDtos() != null)
         {
             tagTypeFacets = new ArrayList<>();
@@ -686,8 +612,7 @@ public class ElasticsearchHelper
             //construct a list of facet information
             for (ResultTypeIndexSearchResponseDto resultTypeIndexSearchResponseDto : elasticsearchResponseDto.getResultTypeIndexSearchResponseDtos())
             {
-                String facetId =
-                    resultTypeIndexSearchResponseDto.getResultTypeDisplayName().startsWith(TAG_RESULT_TYPE) ? TAG_RESULT_TYPE : BUS_OBJCT_DFNTN_RESULT_TYPE;
+                String facetId = getSearchIndexType(resultTypeIndexSearchResponseDto.getResultTypeDisplayName(), bdefActiveIndex, tagActiveIndex);
                 Facet resultTypeFacet = new Facet(facetId, resultTypeIndexSearchResponseDto.getCount(), FacetTypeEnum.RESULT_TYPE.value(), facetId, null);
                 resultTypeFacets.add(resultTypeFacet);
             }
@@ -774,6 +699,37 @@ public class ElasticsearchHelper
         }
 
         return subAggregation;
+    }
+
+    /**
+     * Return the relative search index type for the index name.
+     *
+     * @param indexName the name of the index
+     * @param bdefActiveIndex the name of the active index for business object definitions
+     * @param tagActiveIndex the name os the active index for tags
+     *
+     * @return the search index type
+     */
+    public String getSearchIndexType(final String indexName, final String bdefActiveIndex, final String tagActiveIndex)
+    {
+        String searchIndexType;
+
+        if (indexName.equals(bdefActiveIndex))
+        {
+            searchIndexType = SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name();
+        }
+        else if (indexName.equals(tagActiveIndex))
+        {
+            searchIndexType = SearchIndexTypeEntity.SearchIndexTypes.TAG.name();
+        }
+        else
+        {
+            throw new IllegalStateException(String
+                .format("Search result index name \"%s\" does not match any of the active search indexes. bdefActiveIndex=%s tagActiveIndex=%s", indexName,
+                    bdefActiveIndex, tagActiveIndex));
+        }
+
+        return searchIndexType;
     }
 
     /**

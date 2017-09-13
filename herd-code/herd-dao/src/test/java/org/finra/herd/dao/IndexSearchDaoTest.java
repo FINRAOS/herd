@@ -492,7 +492,9 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
         when(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
         when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);
-        when(elasticsearchHelper.getFacetsResponse(any(ElasticsearchResponseDto.class), any(Boolean.class))).thenCallRealMethod();
+        when(elasticsearchHelper
+            .getFacetsResponse(any(ElasticsearchResponseDto.class), eq(BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME), eq(TAG_SEARCH_INDEX_NAME)))
+            .thenCallRealMethod();
         when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(), any(), any())).thenCallRealMethod();
         when(elasticsearchHelper.addFacetFieldAggregations(any(), any(SearchRequestBuilder.class))).thenReturn(searchRequestBuilder);
 
@@ -588,7 +590,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
                 verify(elasticsearchHelper).getResultTypeIndexSearchResponseDto(searchResult);
             }
 
-            verify(elasticsearchHelper).getFacetsResponse(any(ElasticsearchResponseDto.class), eq(true));
+            verify(elasticsearchHelper)
+                .getFacetsResponse(any(ElasticsearchResponseDto.class), eq(BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME), eq(TAG_SEARCH_INDEX_NAME));
         }
 
         verify(jestClientHelper).searchExecute(any());
