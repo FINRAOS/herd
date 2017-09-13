@@ -385,7 +385,7 @@ public class ElasticsearchHelper
 
         for (TermsAggregation.Entry entry : buckets)
         {
-            LOGGER.info(String.format("TermsAggregation.Entry=%s"), jsonHelper.objectToJson(entry));
+            LOGGER.info(String.format("TermsAggregation.Entry=%s", jsonHelper.objectToJson(entry)));
 
             ResultTypeIndexSearchResponseDto dto = new ResultTypeIndexSearchResponseDto();
             dto.setResultTypeCode(entry.getKeyAsString());
