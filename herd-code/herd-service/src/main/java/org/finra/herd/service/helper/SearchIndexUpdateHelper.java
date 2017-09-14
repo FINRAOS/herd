@@ -36,6 +36,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.NotificationMessagePublishingService;
+import org.finra.herd.service.advice.ScheduleJmsPublishingJobAdvice;
 
 /**
  * SearchIndexUpdateHelper class contains helper methods needed to process a search index update.
@@ -136,7 +137,7 @@ public class SearchIndexUpdateHelper
         boolean isSearchIndexUpdateSqsNotificationEnabled =
             Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED));
 
-        LOGGER.debug(String.format("searchIndexUpdateSqsNotificationEnabled: %s, messageText:%n%s", isSearchIndexUpdateSqsNotificationEnabled, messageText));
+        LOGGER.info("searchIndexUpdateSqsNotificationEnabled={} messageText={}", isSearchIndexUpdateSqsNotificationEnabled, messageText);
 
         // Only process messages if the service is enabled.
         if (isSearchIndexUpdateSqsNotificationEnabled)
@@ -153,6 +154,9 @@ public class SearchIndexUpdateHelper
 
                 // Add the notification message to the database JMS message queue to be processed.
                 notificationMessagePublishingService.addNotificationMessageToDatabaseQueue(notificationMessage);
+
+                // Set to schedule JMS publishing job.
+                ScheduleJmsPublishingJobAdvice.setScheduleJmsPublishingJob();
             }
         }
     }
