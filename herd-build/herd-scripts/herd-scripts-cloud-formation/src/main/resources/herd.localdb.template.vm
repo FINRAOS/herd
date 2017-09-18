@@ -201,6 +201,9 @@
             "commands": {
               "1-remove-java7": {
                 "command": "yum remove -y java-1.7.0-openjdk"
+              },
+              "2-unzip-herd-scripts-sql": {
+                "command": "unzip -d /home/ec2-user/sql /home/ec2-user/sql/herd-scripts-sql.jar"
               }
             },
             "files": {
@@ -241,52 +244,8 @@
                 "owner": "tomcat",
                 "group": "tomcat"
               },
-              "/home/ec2-user/sql/herd.postgres.create.sql": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/${herdTagVersion}/herd-build/herd-scripts/herd-scripts-sql/src/main/resources/herd.postgres.${herdLastMajorDatabaseReleaseVersion}.create.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-              "/home/ec2-user/sql/herd.postgres.refdata.sql": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/${herdTagVersion}/herd-build/herd-scripts/herd-scripts-sql/src/main/resources/herd.postgres.${herdLastMajorDatabaseReleaseVersion}.refdata.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-              "/home/ec2-user/sql/herd.postgres.cnfgn.sql": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/${herdTagVersion}/herd-build/herd-scripts/herd-scripts-sql/src/main/resources/herd.postgres.${herdLastMajorDatabaseReleaseVersion}.cnfgn.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-#foreach ($fileName in $herdPostgresUpgradeScripts.split(","))
-              "/home/ec2-user/sql/${fileName}": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/${herdTagVersion}/herd-build/herd-scripts/herd-scripts-sql/src/main/resources/${fileName}",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-#end
-              "/home/ec2-user/sql/quartz_tables_postgres.sql": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/${herdTagVersion}/herd-build/herd-scripts/herd-scripts-sql/src/main/resources/quartz_tables_postgres.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-              "/home/ec2-user/sql/activiti.postgres.create.engine.sql": {
-                "source": "https://raw.githubusercontent.com/Activiti/Activiti/activiti-${activitiVersion}/modules/activiti-engine/src/main/resources/org/activiti/db/create/activiti.postgres.create.engine.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-              "/home/ec2-user/sql/activiti.postgres.create.history.sql": {
-                "source": "https://raw.githubusercontent.com/Activiti/Activiti/activiti-${activitiVersion}/modules/activiti-engine/src/main/resources/org/activiti/db/create/activiti.postgres.create.history.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-              "/home/ec2-user/sql/activiti.postgres.create.identity.sql": {
-                "source": "https://raw.githubusercontent.com/Activiti/Activiti/activiti-${activitiVersion}/modules/activiti-engine/src/main/resources/org/activiti/db/create/activiti.postgres.create.identity.sql",
+              "/home/ec2-user/sql/herd-scripts-sql.jar": {
+                "source": "https://oss.sonatype.org/service/local/repositories/releases/content/org/finra/herd/herd-scripts-sql/${project.version}/herd-scripts-sql-${project.version}.jar",
                 "mode": "000664",
                 "owner": "ec2-user",
                 "group": "ec2-user"
@@ -518,9 +477,9 @@
           "export PGUSER=postgres\n",
           "export PGDATABASE=postgres\n",
           "cd /home/ec2-user/sql\n",
-          "psql -f herd.postgres.create.sql\n",
-          "psql -f herd.postgres.refdata.sql\n",
-          "psql -f herd.postgres.cnfgn.sql\n",
+          "psql -f herd.postgres.${herdLastMajorDatabaseReleaseVersion}.create.sql\n",
+          "psql -f herd.postgres.${herdLastMajorDatabaseReleaseVersion}.refdata.sql\n",
+          "psql -f herd.postgres.${herdLastMajorDatabaseReleaseVersion}.cnfgn.sql\n",
 #foreach ($fileName in $herdPostgresUpgradeScripts.split(","))
           "psql -f ${fileName}\n",
 #end
