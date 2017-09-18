@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.quartz.ObjectAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.NotificationMessagePublishingService;
-import org.finra.herd.service.advice.ScheduleJmsPublishingJobAdvice;
+import org.finra.herd.service.systemjobs.JmsPublishingJob;
 
 /**
  * SearchIndexUpdateHelper class contains helper methods needed to process a search index update.
@@ -54,6 +55,9 @@ public class SearchIndexUpdateHelper
 
     @Autowired
     private NotificationMessagePublishingService notificationMessagePublishingService;
+
+    @Autowired
+    private SystemJobHelper systemJobHelper;
 
     /**
      * Modify a business object definition
@@ -155,8 +159,20 @@ public class SearchIndexUpdateHelper
                 // Add the notification message to the database JMS message queue to be processed.
                 notificationMessagePublishingService.addNotificationMessageToDatabaseQueue(notificationMessage);
 
-                // Set to schedule JMS publishing job.
-                ScheduleJmsPublishingJobAdvice.setScheduleJmsPublishingJob();
+                // Schedule JMS publishing job.
+                try
+                {
+                    systemJobHelper.runSystemJob(JmsPublishingJob.JOB_NAME, null);
+                }
+                catch (ObjectAlreadyExistsException objectAlreadyExistsException)
+                {
+                    // Ignore the error when job is already running.
+                    LOGGER.info("Failed to schedule JMS publishing job: ObjectAlreadyExistsException occurred");
+                }
+                catch (Exception e)
+                {
+                    LOGGER.error("Failed to schedule JMS publishing job.", e);
+                }
             }
         }
     }
