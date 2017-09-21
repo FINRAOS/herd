@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +45,14 @@ public class BusinessObjectDataFinalizeRestoreServiceImpl implements BusinessObj
     @Autowired
     private BusinessObjectDataFinalizeRestoreHelperService businessObjectDataFinalizeRestoreHelperService;
 
+    /**
+     * The @Lazy annotation below is added to address the following BeanCreationException: - Error creating bean with name 'notificationEventServiceImpl': Bean
+     * with name 'notificationEventServiceImpl' has been injected into other beans [...] in its raw version as part of a circular reference, but has eventually
+     * been wrapped. This means that said other beans do not use the final version of the bean. This is often the result of over-eager type matching - consider
+     * using 'getBeanNamesOfType' with the 'allowEagerInit' flag turned off, for example.
+     */
     @Autowired
+    @Lazy
     private NotificationEventService notificationEventService;
 
     @Autowired

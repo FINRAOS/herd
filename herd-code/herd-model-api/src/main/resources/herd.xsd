@@ -7267,7 +7267,7 @@
       <xs:all>
          <xs:element name="indexSearchResultType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The index from which search results are fetched. Currently 'bdef' and 'tag' are supported. Only one is allowed
+               <xs:documentation>The type of the index from which search results are fetched. One of the following values: BUS_OBJCT_DFNTN, TAG
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -7313,7 +7313,13 @@
       <xs:all>
          <xs:element name="indexSearchResultType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of the index search result</xs:documentation>
+               <xs:documentation>The type of the index from which search results are fetched. One of the following values: BUS_OBJCT_DFNTN, TAG
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchIndexKey" type="searchIndexKey" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a search index from which search results are fetched.</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="indexSearchResultKey" type="indexSearchResultKey">
