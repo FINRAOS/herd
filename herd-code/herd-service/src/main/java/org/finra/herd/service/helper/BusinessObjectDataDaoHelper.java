@@ -24,12 +24,12 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
@@ -47,6 +47,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
+import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
@@ -308,6 +309,114 @@ public class BusinessObjectDataDaoHelper
     }
 
     /**
+     * Creates a storage unit entity per specified parameters.
+     *
+     * @param businessObjectDataEntity the business object data entity
+     * @param storageEntity the storage entity
+     * @param storageDirectory the storage directory
+     * @param storageFiles the list of storage files
+     * @param isDiscoverStorageFiles specifies if
+     *
+     * @return the newly created storage unit entity
+     */
+    public StorageUnitEntity createStorageUnitEntity(BusinessObjectDataEntity businessObjectDataEntity, StorageEntity storageEntity,
+        StorageDirectory storageDirectory, List<StorageFile> storageFiles, Boolean isDiscoverStorageFiles)
+    {
+        // Get the storage unit status entity for the ENABLED status.
+        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ENABLED);
+
+        // Set up flags which are used to make flow logic easier.
+        boolean isS3StoragePlatform = storageEntity.getStoragePlatform().getName().equals(StoragePlatformEntity.S3);
+        boolean isStorageDirectorySpecified = (storageDirectory != null);
+        boolean validatePathPrefix = storageHelper
+            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), storageEntity,
+                false, true);
+        boolean validateFileExistence = storageHelper
+            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), storageEntity,
+                false, true);
+        boolean validateFileSize = storageHelper
+            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE), storageEntity,
+                false, true);
+
+        // Ensure that file size validation is not enabled without file existence validation.
+        if (validateFileSize)
+        {
+            Assert.isTrue(validateFileExistence,
+                String.format("Storage \"%s\" has file size validation enabled without file existence validation.", storageEntity.getName()));
+        }
+
+        String expectedS3KeyPrefix = null;
+        // Retrieve S3 key prefix velocity template storage attribute value and store it in memory.
+        // Please note that it is not required, so we pass in a "false" flag.
+        String s3KeyPrefixVelocityTemplate = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), storageEntity,
+                false);
+
+        if (StringUtils.isNotBlank(s3KeyPrefixVelocityTemplate))
+        {
+            // If the storage has any validation configured, get the expected S3 key prefix.
+            expectedS3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(s3KeyPrefixVelocityTemplate, businessObjectDataEntity.getBusinessObjectFormat(),
+                businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), storageEntity.getName());
+        }
+
+        if ((validatePathPrefix || validateFileExistence) && isS3StoragePlatform)
+        {
+            // If path prefix validation is enabled, validate that S3 key prefix velocity template is configured.
+            Assert.isTrue(!validatePathPrefix || StringUtils.isNotBlank(s3KeyPrefixVelocityTemplate),
+                String.format("Storage \"%s\" has enabled path validation without S3 key prefix velocity template configured.", storageEntity.getName()));
+        }
+
+        // Create storage unit entity and associated storage file entities.
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setStorage(storageEntity);
+        storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
+        storageUnitEntity.setStatus(storageUnitStatusEntity);
+
+        // Process storage directory path if it is specified.
+        String directoryPath = null;
+        if (isStorageDirectorySpecified)
+        {
+            // Get the specified directory path.
+            directoryPath = storageDirectory.getDirectoryPath();
+
+            // If the validate path prefix flag is configured for this storage, validate the directory path value.
+            if (validatePathPrefix && isS3StoragePlatform)
+            {
+                // Ensure the directory path adheres to the S3 naming convention.
+                Assert.isTrue(directoryPath.equals(expectedS3KeyPrefix),
+                    String.format("Specified directory path \"%s\" does not match the expected S3 key prefix \"%s\".", directoryPath, expectedS3KeyPrefix));
+
+                // Ensure that the directory path is not already registered with another business object data instance.
+                StorageUnitEntity alreadyRegisteredStorageUnitEntity =
+                    storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(storageEntity.getName(), directoryPath);
+                if (alreadyRegisteredStorageUnitEntity != null)
+                {
+                    throw new AlreadyExistsException(String
+                        .format("Storage directory \"%s\" in \"%s\" storage is already registered by the business object data {%s}.", directoryPath,
+                            storageEntity.getName(),
+                            businessObjectDataHelper.businessObjectDataEntityAltKeyToString(alreadyRegisteredStorageUnitEntity.getBusinessObjectData())));
+                }
+            }
+        }
+        else if (Boolean.TRUE.equals(businessObjectDataEntity.getStatus().getPreRegistrationStatus()))
+        {
+            directoryPath = expectedS3KeyPrefix;
+        }
+
+        // Store the directory.
+        storageUnitEntity.setDirectoryPath(directoryPath);
+
+        // Discover storage files if storage file discovery is enabled. Otherwise, get the storage files specified in the request, if any.
+        List<StorageFile> resultStorageFiles = BooleanUtils.isTrue(isDiscoverStorageFiles) ? discoverStorageFiles(storageEntity, directoryPath) : storageFiles;
+
+        // Create the storage file entities.
+        createStorageFileEntitiesFromStorageFiles(resultStorageFiles, storageEntity, BooleanUtils.isTrue(isDiscoverStorageFiles), expectedS3KeyPrefix,
+            storageUnitEntity, directoryPath, validatePathPrefix, validateFileExistence, validateFileSize, isS3StoragePlatform);
+
+        return storageUnitEntity;
+    }
+
+    /**
      * Gets business object data based on the key information.
      *
      * @param businessObjectDataKey the business object data key.
@@ -557,7 +666,7 @@ public class BusinessObjectDataDaoHelper
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
         businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataEntity.setPartitionValue(request.getPartitionValue());
-        int subPartitionValuesCount = org.apache.commons.collections4.CollectionUtils.size(request.getSubPartitionValues());
+        int subPartitionValuesCount = CollectionUtils.size(request.getSubPartitionValues());
         businessObjectDataEntity.setPartitionValue2(subPartitionValuesCount > 0 ? request.getSubPartitionValues().get(0) : null);
         businessObjectDataEntity.setPartitionValue3(subPartitionValuesCount > 1 ? request.getSubPartitionValues().get(1) : null);
         businessObjectDataEntity.setPartitionValue4(subPartitionValuesCount > 2 ? request.getSubPartitionValues().get(2) : null);
@@ -567,14 +676,13 @@ public class BusinessObjectDataDaoHelper
         businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
 
         // Create the storage unit entities.
-        businessObjectDataEntity
-            .setStorageUnits(createStorageUnitEntitiesFromStorageUnits(request.getStorageUnits(), businessObjectFormatEntity, businessObjectDataEntity));
+        businessObjectDataEntity.setStorageUnits(createStorageUnitEntitiesFromStorageUnits(request.getStorageUnits(), businessObjectDataEntity));
 
         // Create the attributes.
         List<BusinessObjectDataAttributeEntity> attributeEntities = new ArrayList<>();
         businessObjectDataEntity.setAttributes(attributeEntities);
 
-        if (!org.apache.commons.collections4.CollectionUtils.isEmpty(request.getAttributes()))
+        if (CollectionUtils.isNotEmpty(request.getAttributes()))
         {
             for (Attribute attribute : request.getAttributes())
             {
@@ -633,7 +741,7 @@ public class BusinessObjectDataDaoHelper
         List<StorageFileEntity> storageFileEntities = null;
 
         // Process storage files if they are specified.
-        if (!org.apache.commons.collections4.CollectionUtils.isEmpty(storageFiles))
+        if (CollectionUtils.isNotEmpty(storageFiles))
         {
             storageFileEntities = new ArrayList<>();
             storageUnitEntity.setStorageFiles(storageFileEntities);
@@ -709,115 +817,26 @@ public class BusinessObjectDataDaoHelper
     /**
      * Creates a list of storage unit entities from a list of storage unit create requests.
      *
-     * @param storageUnitCreateRequests the storage unit create requests.
-     * @param businessObjectFormatEntity the business object format entity.
-     * @param businessObjectDataEntity the business object data entity.
+     * @param storageUnitCreateRequests the storage unit create requests
+     * @param businessObjectDataEntity the business object data entity
      *
      * @return the list of storage unit entities.
      */
     private List<StorageUnitEntity> createStorageUnitEntitiesFromStorageUnits(List<StorageUnitCreateRequest> storageUnitCreateRequests,
-        BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectDataEntity businessObjectDataEntity)
+        BusinessObjectDataEntity businessObjectDataEntity)
     {
         // Create the storage units for the data.
         List<StorageUnitEntity> storageUnitEntities = new ArrayList<>();
-
-        // Get the storage unit status entity for the ENABLED status.
-        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ENABLED);
 
         for (StorageUnitCreateRequest storageUnit : storageUnitCreateRequests)
         {
             // Get the storage entity per request and verify that it exists.
             StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageUnit.getStorageName());
 
-            // Set up flags which are used to make flow logic easier.
-            boolean isS3StoragePlatform = storageEntity.getStoragePlatform().getName().equals(StoragePlatformEntity.S3);
-            boolean isStorageDirectorySpecified = storageUnit.getStorageDirectory() != null;
-            boolean validatePathPrefix = storageHelper
-                .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX),
-                    storageEntity, false, true);
-            boolean validateFileExistence = storageHelper
-                .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE),
-                    storageEntity, false, true);
-            boolean validateFileSize = storageHelper
-                .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE), storageEntity,
-                    false, true);
-
-            // Ensure that file size validation is not enabled without file existence validation.
-            if (validateFileSize)
-            {
-                Assert.isTrue(validateFileExistence,
-                    String.format("Storage \"%s\" has file size validation enabled without file existence validation.", storageEntity.getName()));
-            }
-
-            String expectedS3KeyPrefix = null;
-            // Retrieve S3 key prefix velocity template storage attribute value and store it in memory.
-            // Please note that it is not required, so we pass in a "false" flag.
-            String s3KeyPrefixVelocityTemplate = storageHelper
-                .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
-                    storageEntity, false);
-
-            if (StringUtils.isNotBlank(s3KeyPrefixVelocityTemplate))
-            {
-                // If the storage has any validation configured, get the expected S3 key prefix.
-                expectedS3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(s3KeyPrefixVelocityTemplate, businessObjectFormatEntity,
-                    businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), storageEntity.getName());
-            }
-
-            if ((validatePathPrefix || validateFileExistence) && isS3StoragePlatform)
-            {
-                // If path prefix validation is enabled, validate that S3 key prefix velocity template is configured.
-                Assert.isTrue(!validatePathPrefix || StringUtils.isNotBlank(s3KeyPrefixVelocityTemplate), String
-                    .format("Storage \"%s\" has enabled path validation without S3 key prefix velocity template configured.", storageUnit.getStorageName()));
-            }
-
-            // Create the storage unit and associated storage files.
-            StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
-            storageUnitEntities.add(storageUnitEntity);
-            storageUnitEntity.setStorage(storageEntity);
-            storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
-            storageUnitEntity.setStatus(storageUnitStatusEntity);
-
-            // Process storage directory path if it is specified.
-            String directoryPath = null;
-            if (isStorageDirectorySpecified)
-            {
-                // Get the specified directory path.
-                directoryPath = storageUnit.getStorageDirectory().getDirectoryPath();
-
-                // If the validate path prefix flag is configured for this storage, validate the directory path value.
-                if (validatePathPrefix && isS3StoragePlatform)
-                {
-                    // Ensure the directory path adheres to the S3 naming convention.
-                    Assert.isTrue(directoryPath.equals(expectedS3KeyPrefix),
-                        String.format("Specified directory path \"%s\" does not match the expected S3 key prefix \"%s\".", directoryPath, expectedS3KeyPrefix));
-
-                    // Ensure that the directory path is not already registered with another business object data instance.
-                    StorageUnitEntity alreadyRegisteredStorageUnitEntity =
-                        storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(storageEntity.getName(), directoryPath);
-                    if (alreadyRegisteredStorageUnitEntity != null)
-                    {
-                        throw new AlreadyExistsException(String
-                            .format("Storage directory \"%s\" in \"%s\" storage is already registered by the business object data {%s}.", directoryPath,
-                                storageEntity.getName(),
-                                businessObjectDataHelper.businessObjectDataEntityAltKeyToString(alreadyRegisteredStorageUnitEntity.getBusinessObjectData())));
-                    }
-                }
-            }
-            else if (Boolean.TRUE.equals(businessObjectDataEntity.getStatus().getPreRegistrationStatus()))
-            {
-                directoryPath = expectedS3KeyPrefix;
-            }
-
-            // Store the directory.
-            storageUnitEntity.setDirectoryPath(directoryPath);
-
-            // Discover storage files if storage file discovery is enabled. Otherwise, get the storage files specified in the request, if any.
-            List<StorageFile> storageFiles =
-                BooleanUtils.isTrue(storageUnit.isDiscoverStorageFiles()) ? discoverStorageFiles(storageEntity, directoryPath) : storageUnit.getStorageFiles();
-
-            // Create the storage file entities.
-            createStorageFileEntitiesFromStorageFiles(storageFiles, storageEntity, BooleanUtils.isTrue(storageUnit.isDiscoverStorageFiles()),
-                expectedS3KeyPrefix, storageUnitEntity, directoryPath, validatePathPrefix, validateFileExistence, validateFileSize, isS3StoragePlatform);
+            // Create storage unit and add it to the result list.
+            storageUnitEntities.add(
+                createStorageUnitEntity(businessObjectDataEntity, storageEntity, storageUnit.getStorageDirectory(), storageUnit.getStorageFiles(),
+                    storageUnit.isDiscoverStorageFiles()));
         }
 
         return storageUnitEntities;
@@ -846,7 +865,7 @@ public class BusinessObjectDataDaoHelper
         List<S3ObjectSummary> s3ObjectSummaries = s3Service.listDirectory(params, true);
 
         // Fail registration if no storage files were discovered.
-        if (org.apache.commons.collections4.CollectionUtils.isEmpty(s3ObjectSummaries))
+        if (CollectionUtils.isEmpty(s3ObjectSummaries))
         {
             throw new ObjectNotFoundException(String.format("Found no files at \"s3://%s/%s\" location.", params.getS3BucketName(), params.getS3KeyPrefix()));
         }
@@ -1170,7 +1189,7 @@ public class BusinessObjectDataDaoHelper
         request.setPartitionValue(alternateKeyHelper.validateStringParameter("partition value", request.getPartitionValue()));
         businessObjectDataHelper.validateSubPartitionValues(request.getSubPartitionValues());
 
-        Assert.isTrue(!org.apache.commons.collections4.CollectionUtils.isEmpty(request.getStorageUnits()), "At least one storage unit must be specified.");
+        Assert.isTrue(CollectionUtils.isNotEmpty(request.getStorageUnits()), "At least one storage unit must be specified.");
         for (StorageUnitCreateRequest storageUnit : request.getStorageUnits())
         {
             Assert.notNull(storageUnit, "A storage unit can't be null.");
@@ -1183,14 +1202,13 @@ public class BusinessObjectDataDaoHelper
             {
                 // The auto-discovery of storage files is enabled, thus a storage directory is required and storage files cannot be specified.
                 Assert.isTrue(storageUnit.getStorageDirectory() != null, "A storage directory must be specified when discovery of storage files is enabled.");
-                Assert.isTrue(org.apache.commons.collections4.CollectionUtils.isEmpty(storageUnit.getStorageFiles()),
+                Assert.isTrue(CollectionUtils.isEmpty(storageUnit.getStorageFiles()),
                     "Storage files cannot be specified when discovery of storage files is enabled.");
             }
             else if (!Boolean.TRUE.equals(businessObjectDataStatusEntity.getPreRegistrationStatus()))
             {
                 // Since auto-discovery is disabled, a storage directory or at least one storage file are required for each storage unit.
-                Assert.isTrue(
-                    storageUnit.getStorageDirectory() != null || !org.apache.commons.collections4.CollectionUtils.isEmpty(storageUnit.getStorageFiles()),
+                Assert.isTrue(storageUnit.getStorageDirectory() != null || CollectionUtils.isNotEmpty(storageUnit.getStorageFiles()),
                     "A storage directory or at least one storage file must be specified for each storage unit.");
             }
 
@@ -1201,7 +1219,7 @@ public class BusinessObjectDataDaoHelper
                 storageUnit.getStorageDirectory().setDirectoryPath(storageUnit.getStorageDirectory().getDirectoryPath().trim());
             }
 
-            if (!org.apache.commons.collections4.CollectionUtils.isEmpty(storageUnit.getStorageFiles()))
+            if (CollectionUtils.isNotEmpty(storageUnit.getStorageFiles()))
             {
                 for (StorageFile storageFile : storageUnit.getStorageFiles())
                 {
@@ -1213,7 +1231,7 @@ public class BusinessObjectDataDaoHelper
                         Assert.notNull(storageFile.getFileSizeBytes(), "A file size must be specified.");
                     }
 
-                    // Ensure row count is positive.
+                    // Ensure row count is not negative.
                     if (storageFile.getRowCount() != null)
                     {
                         Assert.isTrue(storageFile.getRowCount() >= 0, "File \"" + storageFile.getFilePath() + "\" has a row count which is < 0.");
@@ -1240,7 +1258,7 @@ public class BusinessObjectDataDaoHelper
         // case-insensitive way.
         List<BusinessObjectDataKey> businessObjectDataLowercaseKeys = new ArrayList<>();
 
-        if (!CollectionUtils.isEmpty(keys))
+        if (CollectionUtils.isNotEmpty(keys))
         {
             for (BusinessObjectDataKey key : keys)
             {
