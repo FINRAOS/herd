@@ -1231,7 +1231,7 @@ public class BusinessObjectDataDaoHelper
                         Assert.notNull(storageFile.getFileSizeBytes(), "A file size must be specified.");
                     }
 
-                    // Ensure row count is positive.
+                    // Ensure row count is not negative.
                     if (storageFile.getRowCount() != null)
                     {
                         Assert.isTrue(storageFile.getRowCount() >= 0, "File \"" + storageFile.getFilePath() + "\" has a row count which is < 0.");
