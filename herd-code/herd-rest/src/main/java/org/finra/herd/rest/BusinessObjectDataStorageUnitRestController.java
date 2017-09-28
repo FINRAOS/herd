@@ -47,7 +47,7 @@ public class BusinessObjectDataStorageUnitRestController extends HerdBaseControl
      *
      * @return the create business object data storage unit create response
      */
-    @RequestMapping(value = "/businessObjectDataStorageUnits", method = RequestMethod.POST)
+    @RequestMapping(value = "/businessObjectDataStorageUnits", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_STORAGE_UNITS_POST)
     public BusinessObjectDataStorageUnitCreateResponse createBusinessObjectDataStorageUnit(@RequestBody BusinessObjectDataStorageUnitCreateRequest request)
     {

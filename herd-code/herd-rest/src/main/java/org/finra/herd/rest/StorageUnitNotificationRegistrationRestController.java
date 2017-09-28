@@ -156,7 +156,7 @@ public class StorageUnitNotificationRegistrationRestController extends HerdBaseC
      * @return the updated storage unit notification registration
      */
     @RequestMapping(value = STORAGE_UNIT_NOTIFICATIONS_URI_PREFIX + "/namespaces/{namespace}/notificationNames/{notificationName}",
-        method = RequestMethod.PUT)
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_STORAGE_UNIT_NOTIFICATION_REGISTRATIONS_PUT)
     public StorageUnitNotificationRegistration updateStorageUnitNotificationRegistration(@PathVariable("namespace") String namespace,
         @PathVariable("notificationName") String notificationName, @RequestBody StorageUnitNotificationRegistrationUpdateRequest request)

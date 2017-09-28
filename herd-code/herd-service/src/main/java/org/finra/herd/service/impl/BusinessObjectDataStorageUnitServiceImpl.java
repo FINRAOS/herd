@@ -68,7 +68,7 @@ public class BusinessObjectDataStorageUnitServiceImpl implements BusinessObjectD
      * <p/>
      * This implementation starts a new transaction.
      */
-    @NamespacePermission(fields = "#request.businessObjectDataBusinessObjectDataStorageUnitKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#request.businessObjectDataStorageUnitKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDataStorageUnitCreateResponse createBusinessObjectDataStorageUnit(BusinessObjectDataStorageUnitCreateRequest request)
