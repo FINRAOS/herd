@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -59,6 +60,38 @@ public class StorageUnitDaoHelperTest extends AbstractServiceTest
         StorageUnitEntity resultStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         assertNotNull(resultStorageUnitEntity);
         assertEquals(storageUnitEntity.getId(), resultStorageUnitEntity.getId());
+    }
+
+    @Test
+    public void testGetStorageUnitEntityByKey()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
+
+        // Try to retrieve a non existing storage unit.
+        try
+        {
+            storageUnitDaoHelper.getStorageUnitEntityByKey(businessObjectDataStorageUnitKey);
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Business object data storage unit {%s, storageName: \"%s\"} doesn't exist.",
+                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), STORAGE_NAME), e.getMessage());
+        }
+
+        // Create and persist test database entities.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper.createStorageUnitEntity(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS);
+
+        // Retrieve an existing storage unit entity by key.
+        assertEquals(storageUnitEntity, storageUnitDaoHelper.getStorageUnitEntityByKey(businessObjectDataStorageUnitKey));
     }
 
     @Test

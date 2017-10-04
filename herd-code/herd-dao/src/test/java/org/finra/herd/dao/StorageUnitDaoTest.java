@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -115,7 +116,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     {
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
         BusinessObjectDataEntity businessObjectDataEntity = storageUnitEntity.getBusinessObjectData();
         StorageEntity storageEntity = storageUnitEntity.getStorage();
 
@@ -133,7 +134,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     {
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
         BusinessObjectDataEntity businessObjectDataEntity = storageUnitEntity.getBusinessObjectData();
 
         // test retrieval by name
@@ -148,12 +149,63 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     }
 
     @Test
+    public void testGetStorageUnitByKey()
+    {
+        // Create and persist the relative database entities.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
+
+        // Get a storage unit.
+        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME)));
+
+        // Test case insensitivity.
+        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+                FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME.toUpperCase())));
+        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+                FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME.toLowerCase())));
+
+        // Try to retrieve storage unit using invalid input parameters.
+        assertNull(storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME)));
+        assertNull(storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME)));
+        assertNull(storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME)));
+        assertNull(storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME)));
+        assertNull(storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME)));
+        assertNull(storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, I_DO_NOT_EXIST,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME)));
+        assertNull(storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES_2, DATA_VERSION, STORAGE_NAME)));
+        assertNull(storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION_2, STORAGE_NAME)));
+        assertNull(storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, I_DO_NOT_EXIST)));
+    }
+
+    @Test
     public void testGetStorageUnitByStorageNameAndDirectoryPath()
     {
         // Create database entities required for testing.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
 
         // Retrieve the relative storage file entities and validate the results.
         assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME, STORAGE_DIRECTORY_PATH));
@@ -273,10 +325,10 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // Create enabled and disabled storage units for different partition values.
         StorageUnitEntity enabledStorageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+                NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
         StorageUnitEntity disabledStorageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
-                NO_SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH);
+                NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Build a list of partition filters to select business object data.
         List<List<String>> partitionFilters = new ArrayList<>();
@@ -326,7 +378,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // Create database entities required for testing.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, TEST_S3_KEY_PREFIX);
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, TEST_S3_KEY_PREFIX);
 
         // Retrieve storage unit entities by storage and business object data.
         List<StorageUnitEntity> resultStorageUnitEntities = storageUnitDao
