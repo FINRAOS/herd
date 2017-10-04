@@ -15,11 +15,14 @@
 */
 package org.finra.herd.service.helper;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -47,9 +50,8 @@ public class StorageUnitDaoHelper
      * @param businessObjectDataEntity the business object data entity
      *
      * @return the storage unit entity
-     * @throws org.finra.herd.model.ObjectNotFoundException if the storage unit couldn't be found.
      */
-    public StorageUnitEntity getStorageUnitEntity(String storageName, BusinessObjectDataEntity businessObjectDataEntity) throws ObjectNotFoundException
+    public StorageUnitEntity getStorageUnitEntity(String storageName, BusinessObjectDataEntity businessObjectDataEntity)
     {
         StorageUnitEntity storageUnitEntity = storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntity, storageName);
 
@@ -57,6 +59,34 @@ public class StorageUnitDaoHelper
         {
             throw new ObjectNotFoundException(String.format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", storageName,
                 businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+        }
+
+        return storageUnitEntity;
+    }
+
+    /**
+     * Retrieves a storage unit entity for the specified business object data storage unit key and makes sure it exists.
+     *
+     * @param businessObjectDataStorageUnitKey the business object data storage unit key
+     *
+     * @return the storage unit entity
+     */
+    public StorageUnitEntity getStorageUnitEntityByKey(BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey)
+    {
+        StorageUnitEntity storageUnitEntity = storageUnitDao.getStorageUnitByKey(businessObjectDataStorageUnitKey);
+
+        if (storageUnitEntity == null)
+        {
+            throw new ObjectNotFoundException(String
+                .format("Business object data storage unit {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
+                    "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d, storageName: \"%s\"} doesn't exist.",
+                    businessObjectDataStorageUnitKey.getNamespace(), businessObjectDataStorageUnitKey.getBusinessObjectDefinitionName(),
+                    businessObjectDataStorageUnitKey.getBusinessObjectFormatUsage(), businessObjectDataStorageUnitKey.getBusinessObjectFormatFileType(),
+                    businessObjectDataStorageUnitKey.getBusinessObjectFormatVersion(), businessObjectDataStorageUnitKey.getPartitionValue(),
+                    CollectionUtils.isEmpty(businessObjectDataStorageUnitKey.getSubPartitionValues()) ? "" :
+                        StringUtils.join(businessObjectDataStorageUnitKey.getSubPartitionValues(), ","),
+                    businessObjectDataStorageUnitKey.getBusinessObjectDataVersion(), businessObjectDataStorageUnitKey.getStorageName()));
         }
 
         return storageUnitEntity;

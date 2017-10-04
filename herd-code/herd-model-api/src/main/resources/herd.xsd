@@ -6543,6 +6543,42 @@
       </xs:all>
    </xs:complexType>
 
+   <!-- ***** Business Object Data Storage Unit Status ***** -->
+
+   <xs:element name="businessObjectDataStorageUnitStatusUpdateRequest" type="businessObjectDataStorageUnitStatusUpdateRequest"/>
+   <xs:complexType name="businessObjectDataStorageUnitStatusUpdateRequest">
+      <xs:all>
+         <xs:element name="status" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data Storage Unit. One of the following values: ENABLED, DISABLED, ARCHIVING, ARCHIVED,
+                  RESTORING, RESTORED, EXPIRING
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStorageUnitStatusUpdateResponse" type="businessObjectDataStorageUnitStatusUpdateResponse"/>
+   <xs:complexType name="businessObjectDataStorageUnitStatusUpdateResponse">
+      <xs:all>
+         <xs:element name="businessObjectDataStorageUnitKey" type="businessObjectDataStorageUnitKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="status" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="previousStatus" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data Storage Unit prior to the update</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** JDBC ***** -->
 
    <xs:element name="jdbcExecutionRequest" type="jdbcExecutionRequest"/>

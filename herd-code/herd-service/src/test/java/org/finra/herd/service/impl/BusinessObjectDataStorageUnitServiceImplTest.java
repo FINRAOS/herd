@@ -42,20 +42,17 @@ import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.AbstractServiceTest;
-import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
+import org.finra.herd.service.helper.StorageUnitHelper;
 
 /**
  * This class tests functionality within the business object data storage unit service implementation.
  */
 public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServiceTest
 {
-    @Mock
-    private AlternateKeyHelper alternateKeyHelper;
-
     @Mock
     private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
 
@@ -71,6 +68,9 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
     @Mock
     private StorageFileHelper storageFileHelper;
 
+    @Mock
+    private StorageUnitHelper storageUnitHelper;
+
     @Before
     public void before()
     {
@@ -85,7 +85,7 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
-        // Create a business object data storage key.
+        // Create a business object data storage unit key.
         BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
             new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
@@ -119,65 +119,94 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
         storageUnitEntity.setDirectoryPath(STORAGE_DIRECTORY_PATH);
         storageUnitEntity.setStorageFiles(storageFileEntities);
 
-        // Create expected business object data storage unit response.
-        BusinessObjectDataStorageUnitCreateResponse businessObjectDataStorageUnitCreateResponse =
+        // Create an expected business object data storage unit response.
+        BusinessObjectDataStorageUnitCreateResponse expectedResponse =
             new BusinessObjectDataStorageUnitCreateResponse(businessObjectDataStorageUnitKey, storageDirectory, storageFiles);
 
         // Mock the external calls.
-        when(alternateKeyHelper.validateStringParameter("namespace", BDEF_NAMESPACE)).thenReturn(BDEF_NAMESPACE);
-        when(alternateKeyHelper.validateStringParameter("business object definition name", BDEF_NAME)).thenReturn(BDEF_NAME);
-        when(alternateKeyHelper.validateStringParameter("business object format usage", FORMAT_USAGE_CODE)).thenReturn(FORMAT_USAGE_CODE);
-        when(alternateKeyHelper.validateStringParameter("business object format file type", FORMAT_FILE_TYPE_CODE)).thenReturn(FORMAT_FILE_TYPE_CODE);
-        when(alternateKeyHelper.validateStringParameter("partition value", PARTITION_VALUE)).thenReturn(PARTITION_VALUE);
-        when(alternateKeyHelper.validateStringParameter("storage name", STORAGE_NAME)).thenReturn(STORAGE_NAME);
+        when(storageUnitHelper.getBusinessObjectDataKey(businessObjectDataStorageUnitKey)).thenReturn(businessObjectDataKey);
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
         when(storageDaoHelper.getStorageEntity(STORAGE_NAME)).thenReturn(storageEntity);
         when(businessObjectDataDaoHelper
             .createStorageUnitEntity(businessObjectDataEntity, storageEntity, storageDirectory, storageFiles, NO_DISCOVER_STORAGE_FILES))
             .thenReturn(storageUnitEntity);
         when(businessObjectDataHelper.createBusinessObjectDataKeyFromEntity(businessObjectDataEntity)).thenReturn(businessObjectDataKey);
+        when(storageUnitHelper.createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME)).thenReturn(businessObjectDataStorageUnitKey);
         when(storageFileHelper.createStorageFilesFromEntities(storageFileEntities)).thenReturn(storageFiles);
 
         // Call the method under test.
         BusinessObjectDataStorageUnitCreateResponse result = businessObjectDataStorageUnitServiceImpl.createBusinessObjectDataStorageUnit(request);
 
         // Verify the external calls.
-        verify(alternateKeyHelper).validateStringParameter("namespace", BDEF_NAMESPACE);
-        verify(alternateKeyHelper).validateStringParameter("business object definition name", BDEF_NAME);
-        verify(alternateKeyHelper).validateStringParameter("business object format usage", FORMAT_USAGE_CODE);
-        verify(alternateKeyHelper).validateStringParameter("business object format file type", FORMAT_FILE_TYPE_CODE);
-        verify(alternateKeyHelper).validateStringParameter("partition value", PARTITION_VALUE);
-        verify(businessObjectDataHelper).validateSubPartitionValues(SUBPARTITION_VALUES);
-        verify(alternateKeyHelper).validateStringParameter("storage name", STORAGE_NAME);
+        verify(storageUnitHelper).validateBusinessObjectDataStorageUnitKey(businessObjectDataStorageUnitKey);
         verify(storageFileHelper).validateCreateRequestStorageFiles(storageFiles);
+        verify(storageUnitHelper).getBusinessObjectDataKey(businessObjectDataStorageUnitKey);
         verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
         verify(storageDaoHelper).getStorageEntity(STORAGE_NAME);
         verify(businessObjectDataDaoHelper)
             .createStorageUnitEntity(businessObjectDataEntity, storageEntity, storageDirectory, storageFiles, NO_DISCOVER_STORAGE_FILES);
         verify(businessObjectDataHelper).createBusinessObjectDataKeyFromEntity(businessObjectDataEntity);
+        verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
         verify(storageFileHelper).createStorageFilesFromEntities(storageFileEntities);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(businessObjectDataStorageUnitCreateResponse, result);
+        assertEquals(expectedResponse, result);
+    }
+
+    @Test
+    public void testCreateBusinessObjectDataStorageUnitCreateResponseDirectoryOnlyRegistration()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
+
+        // Create a storage unit entity.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper.createStorageUnitEntity(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS);
+        storageUnitEntity.setDirectoryPath(STORAGE_DIRECTORY_PATH);
+
+        // Create an expected business object data storage unit response.
+        BusinessObjectDataStorageUnitCreateResponse expectedResponse =
+            new BusinessObjectDataStorageUnitCreateResponse(businessObjectDataStorageUnitKey, new StorageDirectory(STORAGE_DIRECTORY_PATH), null);
+
+        // Mock the external calls.
+        when(businessObjectDataHelper.createBusinessObjectDataKeyFromEntity(storageUnitEntity.getBusinessObjectData())).thenReturn(businessObjectDataKey);
+        when(storageUnitHelper.createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME)).thenReturn(businessObjectDataStorageUnitKey);
+
+        // Call the method under test.
+        BusinessObjectDataStorageUnitCreateResponse result =
+            businessObjectDataStorageUnitServiceImpl.createBusinessObjectDataStorageUnitCreateResponse(storageUnitEntity);
+
+        // Verify the external calls.
+        verify(businessObjectDataHelper).createBusinessObjectDataKeyFromEntity(storageUnitEntity.getBusinessObjectData());
+        verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(expectedResponse, result);
     }
 
     @Test
     public void testValidateBusinessObjectDataStorageUnitCreateRequestDirectoryOnlyRegistration()
     {
-        // Call the method under test.
-        businessObjectDataStorageUnitServiceImpl.validateBusinessObjectDataStorageUnitCreateRequest(new BusinessObjectDataStorageUnitCreateRequest(
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
             new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME), new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, DISCOVER_STORAGE_FILES));
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
+
+        // Call the method under test.
+        businessObjectDataStorageUnitServiceImpl.validateBusinessObjectDataStorageUnitCreateRequest(
+            new BusinessObjectDataStorageUnitCreateRequest(businessObjectDataStorageUnitKey, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES,
+                DISCOVER_STORAGE_FILES));
 
         // Verify the external calls.
-        verify(alternateKeyHelper).validateStringParameter("namespace", BDEF_NAMESPACE);
-        verify(alternateKeyHelper).validateStringParameter("business object definition name", BDEF_NAME);
-        verify(alternateKeyHelper).validateStringParameter("business object format usage", FORMAT_USAGE_CODE);
-        verify(alternateKeyHelper).validateStringParameter("business object format file type", FORMAT_FILE_TYPE_CODE);
-        verify(alternateKeyHelper).validateStringParameter("partition value", PARTITION_VALUE);
-        verify(businessObjectDataHelper).validateSubPartitionValues(SUBPARTITION_VALUES);
-        verify(alternateKeyHelper).validateStringParameter("storage name", STORAGE_NAME);
+        verify(storageUnitHelper).validateBusinessObjectDataStorageUnitKey(businessObjectDataStorageUnitKey);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -249,52 +278,11 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
         }
     }
 
-    @Test
-    public void testValidateBusinessObjectDataStorageUnitKeyInvalidParameters()
-    {
-        // Try to call the method under test when business object data storage unit key is not specified.
-        try
-        {
-            businessObjectDataStorageUnitServiceImpl.validateBusinessObjectDataStorageUnitKey(null);
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals("A business object data storage unit key must be specified.", e.getMessage());
-        }
-
-        // Try to call the method under test when business object format version is not specified.
-        try
-        {
-            businessObjectDataStorageUnitServiceImpl.validateBusinessObjectDataStorageUnitKey(
-                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals("A business object format version must be specified.", e.getMessage());
-        }
-
-        // Try to call the method under test when business object data version is not specified.
-        try
-        {
-            businessObjectDataStorageUnitServiceImpl.validateBusinessObjectDataStorageUnitKey(
-                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, NO_DATA_VERSION, STORAGE_NAME));
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals("A business object data version must be specified.", e.getMessage());
-        }
-    }
-
     /**
      * Checks if any of the mocks has any interaction.
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(alternateKeyHelper, businessObjectDataDaoHelper, businessObjectDataHelper, storageDaoHelper, storageFileHelper);
+        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, storageDaoHelper, storageFileHelper, storageUnitHelper);
     }
 }

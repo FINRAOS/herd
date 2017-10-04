@@ -56,7 +56,7 @@ public class BusinessObjectDataStorageUnitRestControllerTest extends AbstractRes
     @Test
     public void testCreateBusinessObjectDataStorageUnit()
     {
-        // Create a business object data storage key.
+        // Create a business object data storage unit key.
         BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
             new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
