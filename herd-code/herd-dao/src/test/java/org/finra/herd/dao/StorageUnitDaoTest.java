@@ -200,6 +200,20 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     }
 
     @Test
+    public void testGetStorageUnitByKeyNoSubPartitionValues()
+    {
+        // Create and persist the relative database entities.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
+
+        // Get a storage unit.
+        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByKey(
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME)));
+    }
+
+    @Test
     public void testGetStorageUnitByStorageNameAndDirectoryPath()
     {
         // Create database entities required for testing.

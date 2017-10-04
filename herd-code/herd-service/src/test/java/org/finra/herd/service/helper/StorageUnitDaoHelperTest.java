@@ -95,6 +95,29 @@ public class StorageUnitDaoHelperTest extends AbstractServiceTest
     }
 
     @Test
+    public void testGetStorageUnitEntityByKeyNoSubPartitionValuesNoStorageUnitExists()
+    {
+        // Create a business object data key without sub-partition values.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Try to retrieve a non existing storage unit.
+        try
+        {
+            storageUnitDaoHelper.getStorageUnitEntityByKey(
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Business object data storage unit {%s, storageName: \"%s\"} doesn't exist.",
+                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), STORAGE_NAME), e.getMessage());
+        }
+    }
+
+    @Test
     public void testUpdateStorageUnitStatus()
     {
         // Create and persist a storage unit entity.

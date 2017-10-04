@@ -119,8 +119,8 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
         storageUnitEntity.setDirectoryPath(STORAGE_DIRECTORY_PATH);
         storageUnitEntity.setStorageFiles(storageFileEntities);
 
-        // Create expected business object data storage unit response.
-        BusinessObjectDataStorageUnitCreateResponse businessObjectDataStorageUnitCreateResponse =
+        // Create an expected business object data storage unit response.
+        BusinessObjectDataStorageUnitCreateResponse expectedResponse =
             new BusinessObjectDataStorageUnitCreateResponse(businessObjectDataStorageUnitKey, storageDirectory, storageFiles);
 
         // Mock the external calls.
@@ -151,7 +151,45 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(businessObjectDataStorageUnitCreateResponse, result);
+        assertEquals(expectedResponse, result);
+    }
+
+    @Test
+    public void testCreateBusinessObjectDataStorageUnitCreateResponseDirectoryOnlyRegistration()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
+
+        // Create a storage unit entity.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper.createStorageUnitEntity(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS);
+        storageUnitEntity.setDirectoryPath(STORAGE_DIRECTORY_PATH);
+
+        // Create an expected business object data storage unit response.
+        BusinessObjectDataStorageUnitCreateResponse expectedResponse =
+            new BusinessObjectDataStorageUnitCreateResponse(businessObjectDataStorageUnitKey, new StorageDirectory(STORAGE_DIRECTORY_PATH), null);
+
+        // Mock the external calls.
+        when(businessObjectDataHelper.createBusinessObjectDataKeyFromEntity(storageUnitEntity.getBusinessObjectData())).thenReturn(businessObjectDataKey);
+        when(storageUnitHelper.createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME)).thenReturn(businessObjectDataStorageUnitKey);
+
+        // Call the method under test.
+        BusinessObjectDataStorageUnitCreateResponse result =
+            businessObjectDataStorageUnitServiceImpl.createBusinessObjectDataStorageUnitCreateResponse(storageUnitEntity);
+
+        // Verify the external calls.
+        verify(businessObjectDataHelper).createBusinessObjectDataKeyFromEntity(storageUnitEntity.getBusinessObjectData());
+        verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(expectedResponse, result);
     }
 
     @Test
