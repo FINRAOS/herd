@@ -95,7 +95,7 @@ public class BusinessObjectDataNotificationRegistrationRestController extends He
      * @return the updated business object data notification
      */
     @RequestMapping(value = BUSINESS_OBJECT_DATA_NOTIFICATIONS_URI_PREFIX + "/namespaces/{namespace}/notificationNames/{notificationName}",
-        method = RequestMethod.PUT)
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_NOTIFICATION_REGISTRATIONS_PUT)
     public BusinessObjectDataNotificationRegistration updateBusinessObjectDataNotificationRegistration(@PathVariable("namespace") String namespace,
         @PathVariable("notificationName") String notificationName, @RequestBody BusinessObjectDataNotificationRegistrationUpdateRequest request)

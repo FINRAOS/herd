@@ -16,10 +16,8 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -421,27 +419,8 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
             Assert.notEmpty(businessObjectDataStorageFilesCreateRequest.getStorageFiles(),
                 "At least one storage file must be specified when discovery of storage files is not enabled.");
 
-            // Validate each storage file in the request.
-            Set<String> storageFilePathValidationSet = new HashSet<>();
-            for (StorageFile storageFile : businessObjectDataStorageFilesCreateRequest.getStorageFiles())
-            {
-                Assert.hasText(storageFile.getFilePath(), "A file path must be specified.");
-                storageFile.setFilePath(storageFile.getFilePath().trim());
-                Assert.notNull(storageFile.getFileSizeBytes(), "A file size must be specified.");
-
-                // Ensure row count is positive.
-                if (storageFile.getRowCount() != null)
-                {
-                    Assert.isTrue(storageFile.getRowCount() >= 0, "File \"" + storageFile.getFilePath() + "\" has a row count which is < 0.");
-                }
-
-                // Check for duplicates.
-                if (storageFilePathValidationSet.contains(storageFile.getFilePath()))
-                {
-                    throw new IllegalArgumentException(String.format("Duplicate storage file found: %s", storageFile.getFilePath()));
-                }
-                storageFilePathValidationSet.add(storageFile.getFilePath());
-            }
+            // Validate a list of storage files.
+            storageFileHelper.validateCreateRequestStorageFiles(businessObjectDataStorageFilesCreateRequest.getStorageFiles());
         }
     }
 
