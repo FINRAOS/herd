@@ -25,7 +25,10 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitStatusUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitStatusUpdateResponse;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.service.BusinessObjectDataStorageUnitStatusService;
+import org.finra.herd.service.NotificationEventService;
+import org.finra.herd.service.helper.StorageUnitHelper;
 
 /**
  * An Activiti task that updates status for a business object data storage unit.
@@ -49,28 +52,34 @@ import org.finra.herd.service.BusinessObjectDataStorageUnitStatusService;
 @Component
 public class UpdateBusinessObjectDataStorageUnitStatus extends BaseJavaDelegate
 {
-    private Expression namespace;
-
-    private Expression businessObjectDefinitionName;
-
-    private Expression businessObjectFormatUsage;
-
-    private Expression businessObjectFormatFileType;
-
-    private Expression businessObjectFormatVersion;
-
-    private Expression partitionValue;
-
-    private Expression subPartitionValues;
-
-    private Expression businessObjectDataVersion;
-
-    private Expression storageName;
-
     private Expression businessObjectDataStorageUnitStatus;
 
     @Autowired
     private BusinessObjectDataStorageUnitStatusService businessObjectDataStorageUnitStatusService;
+
+    private Expression businessObjectDataVersion;
+
+    private Expression businessObjectDefinitionName;
+
+    private Expression businessObjectFormatFileType;
+
+    private Expression businessObjectFormatUsage;
+
+    private Expression businessObjectFormatVersion;
+
+    private Expression namespace;
+
+    @Autowired
+    private NotificationEventService notificationEventService;
+
+    private Expression partitionValue;
+
+    private Expression storageName;
+
+    @Autowired
+    private StorageUnitHelper storageUnitHelper;
+
+    private Expression subPartitionValues;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -103,6 +112,12 @@ public class UpdateBusinessObjectDataStorageUnitStatus extends BaseJavaDelegate
         BusinessObjectDataStorageUnitStatusUpdateResponse businessObjectDataStorageUnitStatusUpdateResponse = businessObjectDataStorageUnitStatusService
             .updateBusinessObjectDataStorageUnitStatus(businessObjectDataStorageUnitKey,
                 new BusinessObjectDataStorageUnitStatusUpdateRequest(businessObjectDataStorageUnitStatus));
+
+        // Create a storage unit notification.
+        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            storageUnitHelper.getBusinessObjectDataKey(businessObjectDataStorageUnitStatusUpdateResponse.getBusinessObjectDataStorageUnitKey()),
+            businessObjectDataStorageUnitStatusUpdateResponse.getBusinessObjectDataStorageUnitKey().getStorageName(),
+            businessObjectDataStorageUnitStatusUpdateResponse.getStatus(), businessObjectDataStorageUnitStatusUpdateResponse.getPreviousStatus());
 
         setJsonResponseAsWorkflowVariable(businessObjectDataStorageUnitStatusUpdateResponse, execution);
     }
