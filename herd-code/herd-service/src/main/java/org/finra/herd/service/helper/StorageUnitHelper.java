@@ -17,16 +17,16 @@ package org.finra.herd.service.helper;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
@@ -45,10 +45,29 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 public class StorageUnitHelper
 {
     @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
+
+    /**
+     * Creates a business object data storage unit key from business object data key and storage name.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param storageName the storage name
+     *
+     * @return the storage unit key
+     */
+    public BusinessObjectDataStorageUnitKey createBusinessObjectDataStorageUnitKey(BusinessObjectDataKey businessObjectDataKey, String storageName)
+    {
+        return new BusinessObjectDataStorageUnitKey(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+            businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+            businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues(),
+            businessObjectDataKey.getBusinessObjectDataVersion(), storageName);
+    }
 
     /**
      * Creates a storage unit key from a business object data key and a storage name.
@@ -60,19 +79,10 @@ public class StorageUnitHelper
      */
     public StorageUnitAlternateKeyDto createStorageUnitKey(BusinessObjectDataKey businessObjectDataKey, String storageName)
     {
-        // Create and initialize the storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = new StorageUnitAlternateKeyDto();
-        storageUnitKey.setNamespace(businessObjectDataKey.getNamespace());
-        storageUnitKey.setBusinessObjectDefinitionName(businessObjectDataKey.getBusinessObjectDefinitionName());
-        storageUnitKey.setBusinessObjectFormatUsage(businessObjectDataKey.getBusinessObjectFormatUsage());
-        storageUnitKey.setBusinessObjectFormatFileType(businessObjectDataKey.getBusinessObjectFormatFileType());
-        storageUnitKey.setBusinessObjectFormatVersion(businessObjectDataKey.getBusinessObjectFormatVersion());
-        storageUnitKey.setPartitionValue(businessObjectDataKey.getPartitionValue());
-        storageUnitKey.setSubPartitionValues(businessObjectDataKey.getSubPartitionValues());
-        storageUnitKey.setBusinessObjectDataVersion(businessObjectDataKey.getBusinessObjectDataVersion());
-        storageUnitKey.setStorageName(storageName);
-
-        return storageUnitKey;
+        return new StorageUnitAlternateKeyDto(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+            businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+            businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues(),
+            businessObjectDataKey.getBusinessObjectDataVersion(), storageName);
     }
 
     /**
@@ -213,25 +223,18 @@ public class StorageUnitHelper
     }
 
     /**
-     * Creates a set of business object data entities per specified list of storage unit entities. The method ignores duplicate business object entities.
+     * Gets a business object data key from a storage unit key.
      *
-     * @param storageUnitEntities the list of storage unit entities
+     * @param businessObjectDataStorageUnitKey the storage unit key
      *
-     * @return the set of  business object data entities
+     * @return the business object data key
      */
-    public Set<BusinessObjectDataEntity> getBusinessObjectDataEntitiesSet(List<StorageUnitEntity> storageUnitEntities)
+    public BusinessObjectDataKey getBusinessObjectDataKey(BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey)
     {
-        Set<BusinessObjectDataEntity> result = new HashSet<>();
-
-        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
-        {
-            if (!result.contains(storageUnitEntity.getBusinessObjectData()))
-            {
-                result.add(storageUnitEntity.getBusinessObjectData());
-            }
-        }
-
-        return result;
+        return new BusinessObjectDataKey(businessObjectDataStorageUnitKey.getNamespace(), businessObjectDataStorageUnitKey.getBusinessObjectDefinitionName(),
+            businessObjectDataStorageUnitKey.getBusinessObjectFormatUsage(), businessObjectDataStorageUnitKey.getBusinessObjectFormatFileType(),
+            businessObjectDataStorageUnitKey.getBusinessObjectFormatVersion(), businessObjectDataStorageUnitKey.getPartitionValue(),
+            businessObjectDataStorageUnitKey.getSubPartitionValues(), businessObjectDataStorageUnitKey.getBusinessObjectDataVersion());
     }
 
     /**
@@ -251,5 +254,26 @@ public class StorageUnitHelper
         }
 
         return storageUnitIds;
+    }
+
+    /**
+     * Validates the business object data storage unit key. This method also trims the request parameters.
+     *
+     * @param key the business object data storage unit create request
+     */
+    public void validateBusinessObjectDataStorageUnitKey(BusinessObjectDataStorageUnitKey key)
+    {
+        Assert.notNull(key, "A business object data storage unit key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
+        key.setBusinessObjectFormatUsage(alternateKeyHelper.validateStringParameter("business object format usage", key.getBusinessObjectFormatUsage()));
+        key.setBusinessObjectFormatFileType(
+            alternateKeyHelper.validateStringParameter("business object format file type", key.getBusinessObjectFormatFileType()));
+        Assert.notNull(key.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
+        key.setPartitionValue(alternateKeyHelper.validateStringParameter("partition value", key.getPartitionValue()));
+        businessObjectDataHelper.validateSubPartitionValues(key.getSubPartitionValues());
+        Assert.notNull(key.getBusinessObjectDataVersion(), "A business object data version must be specified.");
+        key.setStorageName(alternateKeyHelper.validateStringParameter("storage name", key.getStorageName()));
     }
 }

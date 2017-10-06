@@ -71,14 +71,13 @@ import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResult;
 import org.finra.herd.model.api.xml.IndexSearchResultKey;
+import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.IndexSearchHighlightFields;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
-/**
- * IndexSearchDaoImpl
- */
 @Repository
 public class IndexSearchDaoImpl implements IndexSearchDao
 {
@@ -169,15 +168,9 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      */
     private static final String BDEF_TAGS_SEARCH_SCORE_MULTIPLIER = "tagSearchScoreMultiplier";
 
-    /**
-     * The configuration helper used to retrieve configuration values
-     */
     @Autowired
     private ConfigurationHelper configurationHelper;
 
-    /**
-     * Helper to deserialize JSON values
-     */
     @Autowired
     private JsonHelper jsonHelper;
 
@@ -209,8 +202,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
             if (CollectionUtils.isNotEmpty(negationTerms))
             {
-                negationTerms.forEach(term ->
-                {
+                negationTerms.forEach(term -> {
                     indexSearchQueryBuilder.mustNot(buildMultiMatchQuery(term, PHRASE, 100f, FIELD_TYPE_STEMMED));
                 });
             }
@@ -294,7 +286,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         if (CollectionUtils.isNotEmpty(indexSearchRequest.getFacetFields()))
         {
             // Extract facets from the search response
-            facets = new ArrayList<>(extractFacets(indexSearchRequest, searchResult));
+            facets = new ArrayList<>(extractFacets(indexSearchRequest, searchResult, bdefActiveIndex, tagActiveIndex));
         }
 
         return new IndexSearchResponse(searchResult.getTotal(), indexSearchResults, facets);
@@ -336,7 +328,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             final IndexSearchResult indexSearchResult = new IndexSearchResult();
 
             // Populate the results
-            indexSearchResult.setIndexSearchResultType(index);
+            indexSearchResult.setSearchIndexKey(new SearchIndexKey(index));
             if (fields.contains(DISPLAY_NAME_FIELD))
             {
                 indexSearchResult.setDisplayName((String) sourceMap.get(DISPLAY_NAME_SOURCE));
@@ -354,6 +346,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
                 final TagKey tagKey = new TagKey();
                 tagKey.setTagCode((String) sourceMap.get(TAG_CODE_SOURCE));
                 tagKey.setTagTypeCode((String) ((Map) sourceMap.get(TAG_TYPE)).get(CODE));
+                indexSearchResult.setIndexSearchResultType(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
                 indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(tagKey, null));
             }
             // Populate business object definition key
@@ -368,7 +361,14 @@ public class IndexSearchDaoImpl implements IndexSearchDao
                 final BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
                 businessObjectDefinitionKey.setNamespace((String) ((Map) sourceMap.get(NAMESPACE)).get(CODE));
                 businessObjectDefinitionKey.setBusinessObjectDefinitionName((String) sourceMap.get(NAME_SOURCE));
+                indexSearchResult.setIndexSearchResultType(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
                 indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(null, businessObjectDefinitionKey));
+            }
+            else
+            {
+                throw new IllegalStateException(String
+                    .format("Search result index name \"%s\" does not match any of the active search indexes. tagActiveIndex=%s bdefActiveIndex=%s", index,
+                        tagActiveIndex, bdefActiveIndex));
             }
 
             if (BooleanUtils.isTrue(isHighlightingEnabled))
@@ -463,10 +463,12 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      *
      * @param request The specified {@link IndexSearchRequest}
      * @param searchResult A given {@link SearchResult} to extract the facet information from
+     * @param bdefActiveIndex the name of the active index for business object definitions
+     * @param tagActiveIndex the name os the active index for tags
      *
      * @return A list of {@link Facet} objects
      */
-    private List<Facet> extractFacets(IndexSearchRequest request, SearchResult searchResult)
+    private List<Facet> extractFacets(IndexSearchRequest request, SearchResult searchResult, final String bdefActiveIndex, final String tagActiveIndex)
     {
         ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
         if (request.getFacetFields().contains(ElasticsearchHelper.TAG_FACET))
@@ -479,7 +481,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResult));
         }
 
-        return elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, true);
+        return elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, bdefActiveIndex, tagActiveIndex);
     }
 
     /**
@@ -582,8 +584,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             @SuppressWarnings("unchecked")
             IndexSearchHighlightFields highlightFieldsConfig = jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsValue);
 
-            highlightFieldsConfig.getHighlightFields().forEach(highlightFieldConfig ->
-            {
+            highlightFieldsConfig.getHighlightFields().forEach(highlightFieldConfig -> {
 
                 // set the field name to the configured value
                 HighlightBuilder.Field highlightField = new HighlightBuilder.Field(highlightFieldConfig.getFieldName());

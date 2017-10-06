@@ -48,7 +48,7 @@ public class BusinessObjectDataStorageFileRestController extends HerdBaseControl
      *
      * @return response
      */
-    @RequestMapping(value = "/businessObjectDataStorageFiles", method = RequestMethod.POST)
+    @RequestMapping(value = "/businessObjectDataStorageFiles", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_STORAGES_FILES_POST)
     public BusinessObjectDataStorageFilesCreateResponse createBusinessObjectDataStorageFiles(
         @RequestBody BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest)

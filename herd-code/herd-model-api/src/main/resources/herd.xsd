@@ -6431,6 +6431,154 @@
       </xs:all>
    </xs:complexType>
 
+   <!-- ***** Business Object Data Storage Unit ***** -->
+
+   <xs:element name="businessObjectDataStorageUnitCreateRequest" type="businessObjectDataStorageUnitCreateRequest"/>
+   <xs:complexType name="businessObjectDataStorageUnitCreateRequest">
+      <xs:all>
+         <xs:element name="businessObjectDataStorageUnitKey" type="businessObjectDataStorageUnitKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageDirectory" type="storageDirectory" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container for a Storage Directory that resides within a specific Storage Unit. Required when one
+                  of the following is true: storageFiles element is not present, discoverStorageFiles is enabled
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageFiles" type="storageFiles" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container of various Storage Files that reside within a specific Storage Unit. Required when
+                  storageDirectory is not present. Note: storageFiles cannot be specified when discoverStorageFiles is enabled
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="discoverStorageFiles" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>If true, enables the auto-discovery of all Storage Files in the specified Storage Directory
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStorageUnitCreateResponse" type="businessObjectDataStorageUnitCreateResponse"/>
+   <xs:complexType name="businessObjectDataStorageUnitCreateResponse">
+      <xs:all>
+         <xs:element name="businessObjectDataStorageUnitKey" type="businessObjectDataStorageUnitKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageDirectory" type="storageDirectory" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container for a Storage Directory that resides within a specific Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageFiles" type="storageFiles" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container of various Storage Files that reside within a specific Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataStorageUnitKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Namespace to which a Business Object Format is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the Business Object Definition to which a Business Object Format is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatUsage" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
+                  Object Format. Does not have to be unique in the system, the Usage string is frequently shared across formats for multiple Business Object
+                  Definitions
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatFileType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>A File Type known to the system that describes the file type of data stored under a Business Object Format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="partitionValue" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Partition Value that this Business Object Data is associated with</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Sub-Partition values this Business Object Data is associated with</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the storage</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Data Storage Unit Status ***** -->
+
+   <xs:element name="businessObjectDataStorageUnitStatusUpdateRequest" type="businessObjectDataStorageUnitStatusUpdateRequest"/>
+   <xs:complexType name="businessObjectDataStorageUnitStatusUpdateRequest">
+      <xs:all>
+         <xs:element name="status" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data Storage Unit. One of the following values: ENABLED, DISABLED, ARCHIVING, ARCHIVED,
+                  RESTORING, RESTORED, EXPIRING
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStorageUnitStatusUpdateResponse" type="businessObjectDataStorageUnitStatusUpdateResponse"/>
+   <xs:complexType name="businessObjectDataStorageUnitStatusUpdateResponse">
+      <xs:all>
+         <xs:element name="businessObjectDataStorageUnitKey" type="businessObjectDataStorageUnitKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="status" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="previousStatus" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data Storage Unit prior to the update</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** JDBC ***** -->
 
    <xs:element name="jdbcExecutionRequest" type="jdbcExecutionRequest"/>
@@ -7267,7 +7415,7 @@
       <xs:all>
          <xs:element name="indexSearchResultType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The index from which search results are fetched. Currently 'bdef' and 'tag' are supported. Only one is allowed
+               <xs:documentation>The type of the index from which search results are fetched. One of the following values: BUS_OBJCT_DFNTN, TAG
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -7313,7 +7461,13 @@
       <xs:all>
          <xs:element name="indexSearchResultType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of the index search result</xs:documentation>
+               <xs:documentation>The type of the index from which search results are fetched. One of the following values: BUS_OBJCT_DFNTN, TAG
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchIndexKey" type="searchIndexKey" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a search index from which search results are fetched.</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="indexSearchResultKey" type="indexSearchResultKey">

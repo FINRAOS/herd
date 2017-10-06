@@ -89,9 +89,9 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
 
     /**
      * The @Lazy annotation below is added to address the following BeanCreationException: - Error creating bean with name 'notificationEventServiceImpl': Bean
-     * with name 'notificationEventServiceImpl' has been injected into other beans [fileUploadCleanupServiceImpl] in its raw version as part of a circular
-     * reference, but has eventually been wrapped. This means that said other beans do not use the final version of the bean. This is often the result of
-     * over-eager type matching - consider using 'getBeanNamesOfType' with the 'allowEagerInit' flag turned off, for example.
+     * with name 'notificationEventServiceImpl' has been injected into other beans [...] in its raw version as part of a circular reference, but has eventually
+     * been wrapped. This means that said other beans do not use the final version of the bean. This is often the result of over-eager type matching - consider
+     * using 'getBeanNamesOfType' with the 'allowEagerInit' flag turned off, for example.
      */
     @Autowired
     @Lazy

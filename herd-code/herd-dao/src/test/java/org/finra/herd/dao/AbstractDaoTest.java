@@ -21,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -48,11 +50,14 @@ import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.DataProviderKey;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
+import org.finra.herd.model.api.xml.IndexSearchFilter;
+import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
@@ -203,9 +208,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final BigDecimal BID_PRICE = getRandomBigDecimal();
 
-    public static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
-
     public static final float BUSINESS_OBJECT_DEFINITION_INDEX_BOOST = 1f;
+
+    public static final String BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME = "UT_BusinessObjectDefinitionSearchIndexName_" + RANDOM_SUFFIX;
 
     public static final String CODE = "code";
 
@@ -326,6 +331,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
 
+    public static final boolean ENABLE_HIT_HIGHLIGHTING = true;
+
     public static final String ENVIRONMENT_NAME = "TEST";
 
     public static final String ERROR_CODE = "UT_Error_Code_" + RANDOM_SUFFIX;
@@ -379,10 +386,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME = "UT_GlobalAttributeDefinitionName_1_" + RANDOM_SUFFIX;
 
     public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_2 = "UT_GlobalAttributeDefinitionName_2_" + RANDOM_SUFFIX;
-
-    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
-
-    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
 
     public static final BigDecimal HOURLY_PRICE = getRandomBigDecimal();
 
@@ -563,9 +566,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final EmrClusterDefinitionVolumeSpecification NO_EMR_CLUSTER_DEFINITION_VOLUME_SPECIFICATION = null;
 
+    public static final Boolean NO_ENABLE_HIT_HIGHLIGHTING = false;
+
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
 
     public static final Integer NO_EXPIRATION_IN_DAYS = null;
+
+    public static final Set<String> NO_FIELDS = new HashSet<>();
 
     public static final String NO_FORMAT_DESCRIPTION = null;
 
@@ -576,6 +583,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer NO_FORMAT_VERSION = null;
 
     public static final BigDecimal NO_HOURLY_PRICE = null;
+
+    public static final List<String> NO_INDEX_SEARCH_FACET_FIELDS = new ArrayList<>();
+
+    public static final List<IndexSearchFilter> NO_INDEX_SEARCH_FILTERS = null;
+
+    public static final IndexSearchResultTypeKey NO_INDEX_SEARCH_RESULT_TYPE_KEY = null;
 
     public static final BigDecimal NO_INSTANCE_MAX_SEARCH_PRICE = null;
 
@@ -650,6 +663,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_TAG_DISPLAY_NAME = null;
 
     public static final Boolean NO_TAG_HAS_CHILDREN_FLAG = null;
+
+    public static final TagKey NO_TAG_KEY = null;
 
     public static final BigDecimal NO_TAG_SEARCH_SCORE_MULTIPLIER = null;
 
@@ -942,9 +957,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean TAG_HAS_NO_CHILDREN = false;
 
-    public static final String TAG_INDEX = "tag";
-
     public static final float TAG_INDEX_BOOST = 1000f;
+
+    public static final String TAG_SEARCH_INDEX_NAME = "UT_TagSearchIndexName_" + RANDOM_SUFFIX;
 
     public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER = getRandomBigDecimal();
 
@@ -996,6 +1011,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer THIRD_FORMAT_VERSION = 2;
 
     public static final Integer THIRD_VERSION = 2;
+
+    public static final Long TOTAL_INDEX_SEARCH_RESULTS = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final List<String> UNSORTED_PARTITION_VALUES =
         Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
