@@ -22,15 +22,16 @@ import org.activiti.engine.delegate.Expression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitStatusUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitStatusUpdateResponse;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
-import org.finra.herd.service.BusinessObjectDataStatusService;
+import org.finra.herd.service.BusinessObjectDataStorageUnitStatusService;
 import org.finra.herd.service.NotificationEventService;
+import org.finra.herd.service.helper.StorageUnitHelper;
 
 /**
- * An Activiti task that updates status for a business object data.
+ * An Activiti task that updates status for a business object data storage unit.
  * <p/>
  * <p/>
  * <pre>
@@ -43,17 +44,18 @@ import org.finra.herd.service.NotificationEventService;
  *   <activiti:field name="partitionValue" stringValue=""/>
  *   <activiti:field name="subPartitionValues" stringValue=""/>
  *   <activiti:field name="businessObjectDataVersion" stringValue=""/>
- *   <activiti:field name="businessObjectDataStatus" stringValue=""/>
+ *   <activiti:field name="storageName" stringValue=""/>
+ *   <activiti:field name="businessObjectDataStorageUnitStatus" stringValue=""/>
  * </extensionElements>
  * </pre>
  */
 @Component
-public class UpdateBusinessObjectDataStatus extends BaseJavaDelegate
+public class UpdateBusinessObjectDataStorageUnitStatus extends BaseJavaDelegate
 {
-    private Expression businessObjectDataStatus;
+    private Expression businessObjectDataStorageUnitStatus;
 
     @Autowired
-    private BusinessObjectDataStatusService businessObjectDataStatusService;
+    private BusinessObjectDataStorageUnitStatusService businessObjectDataStorageUnitStatusService;
 
     private Expression businessObjectDataVersion;
 
@@ -72,6 +74,11 @@ public class UpdateBusinessObjectDataStatus extends BaseJavaDelegate
 
     private Expression partitionValue;
 
+    private Expression storageName;
+
+    @Autowired
+    private StorageUnitHelper storageUnitHelper;
+
     private Expression subPartitionValues;
 
     @Override
@@ -86,28 +93,32 @@ public class UpdateBusinessObjectDataStatus extends BaseJavaDelegate
         String partitionValue = activitiHelper.getExpressionVariableAsString(this.partitionValue, execution);
         String subPartitionValuesString = activitiHelper.getExpressionVariableAsString(this.subPartitionValues, execution);
         List<String> subPartitionValues = daoHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValuesString);
+        String storageName = activitiHelper.getExpressionVariableAsString(this.storageName, execution);
         Integer businessObjectDataVersion =
             activitiHelper.getExpressionVariableAsInteger(this.businessObjectDataVersion, execution, "businessObjectDataVersion", true);
-        String businessObjectDataStatus = activitiHelper.getExpressionVariableAsString(this.businessObjectDataStatus, execution);
+        String businessObjectDataStorageUnitStatus = activitiHelper.getExpressionVariableAsString(this.businessObjectDataStorageUnitStatus, execution);
 
-        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
-        businessObjectDataKey.setNamespace(namespace);
-        businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
-        businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectFormatUsage);
-        businessObjectDataKey.setBusinessObjectFormatFileType(businessObjectFormatFileType);
-        businessObjectDataKey.setBusinessObjectFormatVersion(businessObjectFormatVersion);
-        businessObjectDataKey.setPartitionValue(partitionValue);
-        businessObjectDataKey.setSubPartitionValues(subPartitionValues);
-        businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey = new BusinessObjectDataStorageUnitKey();
+        businessObjectDataStorageUnitKey.setNamespace(namespace);
+        businessObjectDataStorageUnitKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
+        businessObjectDataStorageUnitKey.setBusinessObjectFormatUsage(businessObjectFormatUsage);
+        businessObjectDataStorageUnitKey.setBusinessObjectFormatFileType(businessObjectFormatFileType);
+        businessObjectDataStorageUnitKey.setBusinessObjectFormatVersion(businessObjectFormatVersion);
+        businessObjectDataStorageUnitKey.setPartitionValue(partitionValue);
+        businessObjectDataStorageUnitKey.setSubPartitionValues(subPartitionValues);
+        businessObjectDataStorageUnitKey.setBusinessObjectDataVersion(businessObjectDataVersion);
+        businessObjectDataStorageUnitKey.setStorageName(storageName);
 
-        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataStatusService
-            .updateBusinessObjectDataStatus(businessObjectDataKey, new BusinessObjectDataStatusUpdateRequest(businessObjectDataStatus));
+        BusinessObjectDataStorageUnitStatusUpdateResponse businessObjectDataStorageUnitStatusUpdateResponse = businessObjectDataStorageUnitStatusService
+            .updateBusinessObjectDataStorageUnitStatus(businessObjectDataStorageUnitKey,
+                new BusinessObjectDataStorageUnitStatusUpdateRequest(businessObjectDataStorageUnitStatus));
 
-        // Create a business object data notification.
-        notificationEventService.processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG,
-            businessObjectDataStatusUpdateResponse.getBusinessObjectDataKey(), businessObjectDataStatusUpdateResponse.getStatus(),
-            businessObjectDataStatusUpdateResponse.getPreviousStatus());
+        // Create a storage unit notification.
+        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            storageUnitHelper.getBusinessObjectDataKey(businessObjectDataStorageUnitStatusUpdateResponse.getBusinessObjectDataStorageUnitKey()),
+            businessObjectDataStorageUnitStatusUpdateResponse.getBusinessObjectDataStorageUnitKey().getStorageName(),
+            businessObjectDataStorageUnitStatusUpdateResponse.getStatus(), businessObjectDataStorageUnitStatusUpdateResponse.getPreviousStatus());
 
-        setJsonResponseAsWorkflowVariable(businessObjectDataStatusUpdateResponse, execution);
+        setJsonResponseAsWorkflowVariable(businessObjectDataStorageUnitStatusUpdateResponse, execution);
     }
 }

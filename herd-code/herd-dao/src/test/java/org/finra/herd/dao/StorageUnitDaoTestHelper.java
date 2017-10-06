@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
@@ -187,6 +188,24 @@ public class StorageUnitDaoTestHelper
         storageUnitEntity.setDirectoryPath(directoryPath);
         storageUnitEntity.setStatus(storageUnitStatusEntity);
         return storageUnitDao.saveAndRefresh(storageUnitEntity);
+    }
+
+    /**
+     * Creates and persists a new storage unit entity.
+     *
+     * @param businessObjectDataStorageUnitKey the business object data storage unit key
+     * @param storageUnitStatus the storage unit status
+     *
+     * @return the newly created storage unit entity
+     */
+    public StorageUnitEntity createStorageUnitEntity(BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey, String storageUnitStatus)
+    {
+        return createStorageUnitEntity(businessObjectDataStorageUnitKey.getStorageName(), businessObjectDataStorageUnitKey.getNamespace(),
+            businessObjectDataStorageUnitKey.getBusinessObjectDefinitionName(), businessObjectDataStorageUnitKey.getBusinessObjectFormatUsage(),
+            businessObjectDataStorageUnitKey.getBusinessObjectFormatFileType(), businessObjectDataStorageUnitKey.getBusinessObjectFormatVersion(),
+            businessObjectDataStorageUnitKey.getPartitionValue(), businessObjectDataStorageUnitKey.getSubPartitionValues(),
+            businessObjectDataStorageUnitKey.getBusinessObjectDataVersion(), AbstractDaoTest.LATEST_VERSION_FLAG_SET, AbstractDaoTest.BDATA_STATUS,
+            storageUnitStatus, AbstractDaoTest.NO_STORAGE_DIRECTORY_PATH);
     }
 
     /**

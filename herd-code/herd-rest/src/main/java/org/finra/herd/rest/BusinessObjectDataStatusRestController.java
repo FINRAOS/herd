@@ -108,7 +108,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
             "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
             "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
             "/partitionValues/{partitionValue}/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.PUT)
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_STATUS_PUT)
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -150,7 +150,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
             "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
             "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
             "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.PUT)
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_STATUS_PUT)
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -195,7 +195,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
             "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
             "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/subPartition2Values/{subPartition2Value}" +
             "/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.PUT)
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_STATUS_PUT)
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -241,7 +241,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
             "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
             "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/subPartition2Values/{subPartition2Value}" +
             "/subPartition3Values/{subPartition3Value}/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.PUT)
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_STATUS_PUT)
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -290,7 +290,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
             "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
             "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/subPartition2Values/{subPartition2Value}" +
             "/subPartition3Values/{subPartition3Value}/subPartition4Values/{subPartition4Value}/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.PUT)
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_STATUS_PUT)
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,

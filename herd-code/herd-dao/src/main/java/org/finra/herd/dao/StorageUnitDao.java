@@ -17,6 +17,7 @@ package org.finra.herd.dao;
 
 import java.util.List;
 
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -55,7 +56,7 @@ public interface StorageUnitDao extends BaseJpaDao
     public StorageUnitEntity getStorageUnitByBusinessObjectDataAndStorage(BusinessObjectDataEntity businessObjectDataEntity, StorageEntity storageEntity);
 
     /**
-     * Gets a storage unit identified by the given business object data entity and storage name. Returns {@code null} if storage does not exist.
+     * Gets a storage unit identified by the given business object data entity and storage name. Returns {@code null} if storage unit entity does not exist.
      *
      * @param businessObjectDataEntity the business object data entity
      * @param storageName the storage name (case-insensitive)
@@ -63,6 +64,15 @@ public interface StorageUnitDao extends BaseJpaDao
      * @return {@link StorageUnitEntity} or {@code null}
      */
     public StorageUnitEntity getStorageUnitByBusinessObjectDataAndStorageName(BusinessObjectDataEntity businessObjectDataEntity, String storageName);
+
+    /**
+     * Gets a storage unit identified by the given business object data storage unit key. Returns {@code null} if storage unit does not exist.
+     *
+     * @param businessObjectDataStorageUnitKey the business object data storage unit key
+     *
+     * @return {@link StorageUnitEntity} or {@code null}
+     */
+    public StorageUnitEntity getStorageUnitByKey(BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey);
 
     /**
      * Returns a first discovered storage unit in the specified storage that overlaps with the directory path.

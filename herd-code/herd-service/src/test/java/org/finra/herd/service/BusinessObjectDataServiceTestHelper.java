@@ -71,6 +71,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataStatusInformation;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
 import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
@@ -884,6 +886,31 @@ public class BusinessObjectDataServiceTestHelper
         return businessObjectDataKey;
     }
 
+    public BusinessObjectDataStorageUnitCreateRequest getBusinessObjectDataStorageUnitCreateRequest()
+    {
+        // Create business object data and storage entities.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(false);
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity = businessObjectDataStatusDaoTestHelper
+            .createBusinessObjectDataStatusEntity(AbstractServiceTest.BDATA_STATUS, AbstractServiceTest.DESCRIPTION,
+                AbstractServiceTest.BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectFormatEntity, AbstractServiceTest.PARTITION_VALUE, AbstractServiceTest.DATA_VERSION,
+                AbstractServiceTest.LATEST_VERSION_FLAG_SET, businessObjectDataStatusEntity.getCode());
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity();
+
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
+            new BusinessObjectDataStorageUnitKey(businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode(),
+                businessObjectFormatEntity.getBusinessObjectDefinition().getName(), businessObjectFormatEntity.getUsage(),
+                businessObjectFormatEntity.getFileType().getCode(), businessObjectFormatEntity.getBusinessObjectFormatVersion(),
+                businessObjectDataEntity.getPartitionValue(), AbstractServiceTest.NO_SUBPARTITION_VALUES, businessObjectDataEntity.getVersion(),
+                storageEntity.getName());
+
+        // Create and return a business object data storage unit create request.
+        return new BusinessObjectDataStorageUnitCreateRequest(businessObjectDataStorageUnitKey, AbstractServiceTest.NO_STORAGE_DIRECTORY, getStorageFiles(),
+            AbstractServiceTest.NO_DISCOVER_STORAGE_FILES);
+    }
+
     /**
      * Creates an expected business object data availability collection response using hard coded test values.
      *
@@ -1544,7 +1571,7 @@ public class BusinessObjectDataServiceTestHelper
         storageUnitDaoTestHelper
             .createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, AbstractServiceTest.NO_STORAGE_DIRECTORY_PATH);
 
-        // Create a request to create business object data.
+        // Create a business object data storage files create request.
         BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest = new BusinessObjectDataStorageFilesCreateRequest();
         businessObjectDataStorageFilesCreateRequest.setNamespace(businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode());
         businessObjectDataStorageFilesCreateRequest.setBusinessObjectDefinitionName(businessObjectFormatEntity.getBusinessObjectDefinition().getName());
@@ -1553,29 +1580,8 @@ public class BusinessObjectDataServiceTestHelper
         businessObjectDataStorageFilesCreateRequest.setBusinessObjectFormatVersion(businessObjectFormatEntity.getBusinessObjectFormatVersion());
         businessObjectDataStorageFilesCreateRequest.setPartitionValue(businessObjectDataEntity.getPartitionValue());
         businessObjectDataStorageFilesCreateRequest.setBusinessObjectDataVersion(businessObjectDataEntity.getVersion());
-
         businessObjectDataStorageFilesCreateRequest.setStorageName(storageEntity.getName());
-
-        List<StorageFile> storageFiles = new ArrayList<>();
-        businessObjectDataStorageFilesCreateRequest.setStorageFiles(storageFiles);
-
-        StorageFile storageFile1 = new StorageFile();
-        storageFiles.add(storageFile1);
-        storageFile1.setFilePath("Folder/file1.gz");
-        storageFile1.setFileSizeBytes(0L);
-        storageFile1.setRowCount(0L);
-
-        StorageFile storageFile2 = new StorageFile();
-        storageFiles.add(storageFile2);
-        storageFile2.setFilePath("Folder/file2.gz");
-        storageFile2.setFileSizeBytes(2999L);
-        storageFile2.setRowCount(1000L);
-
-        StorageFile storageFile3 = new StorageFile();
-        storageFiles.add(storageFile3);
-        storageFile3.setFilePath("Folder/file3.gz");
-        storageFile3.setFileSizeBytes(Long.MAX_VALUE);
-        storageFile3.setRowCount(Long.MAX_VALUE);
+        businessObjectDataStorageFilesCreateRequest.setStorageFiles(getStorageFiles());
 
         return businessObjectDataStorageFilesCreateRequest;
     }
@@ -2466,6 +2472,36 @@ public class BusinessObjectDataServiceTestHelper
             assertEquals(expectedStorageFile.getFileSizeBytes(), actualStorageFile.getFileSizeBytes());
             assertEquals(expectedStorageFile.getRowCount(), actualStorageFile.getRowCount());
         }
+    }
+
+    /**
+     * Creates and returns a list of test storage files.
+     *
+     * @return the list of storage files
+     */
+    private List<StorageFile> getStorageFiles()
+    {
+        List<StorageFile> storageFiles = new ArrayList<>();
+
+        StorageFile storageFile1 = new StorageFile();
+        storageFiles.add(storageFile1);
+        storageFile1.setFilePath("Folder/file1.gz");
+        storageFile1.setFileSizeBytes(0L);
+        storageFile1.setRowCount(0L);
+
+        StorageFile storageFile2 = new StorageFile();
+        storageFiles.add(storageFile2);
+        storageFile2.setFilePath("Folder/file2.gz");
+        storageFile2.setFileSizeBytes(2999L);
+        storageFile2.setRowCount(1000L);
+
+        StorageFile storageFile3 = new StorageFile();
+        storageFiles.add(storageFile3);
+        storageFile3.setFilePath("Folder/file3.gz");
+        storageFile3.setFileSizeBytes(Long.MAX_VALUE);
+        storageFile3.setRowCount(Long.MAX_VALUE);
+
+        return storageFiles;
     }
 
     /**

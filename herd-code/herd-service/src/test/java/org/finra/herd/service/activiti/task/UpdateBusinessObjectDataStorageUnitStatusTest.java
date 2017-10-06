@@ -23,29 +23,29 @@ import java.util.Map;
 import org.activiti.bpmn.model.FieldExtension;
 import org.junit.Test;
 
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitStatusUpdateResponse;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 /**
- * Test suite for Update Business Object Data Status Activiti wrapper.
+ * Test suite for Update Business Object Data Storage Unit Status Activiti wrapper.
  */
-public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskTest
+public class UpdateBusinessObjectDataStorageUnitStatusTest extends HerdActivitiServiceTaskTest
 {
     @Test
-    public void testUpdateBusinessObjectDataStatus() throws Exception
+    public void testUpdateBusinessObjectDataStorageUnitStatus() throws Exception
     {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
-        // Create a business object data entity.
-        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        // Create a storage unit entity.
+        storageUnitDaoTestHelper.createStorageUnitEntity(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS);
 
-        // Create a business object data status entity.
-        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        // Create a storage unit status entity.
+        storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -57,7 +57,8 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         fieldExtensionList.add(buildFieldExtension("partitionValue", "${partitionValue}"));
         fieldExtensionList.add(buildFieldExtension("subPartitionValues", "${subPartitionValues}"));
         fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
-        fieldExtensionList.add(buildFieldExtension("businessObjectDataStatus", "${businessObjectDataStatus}"));
+        fieldExtensionList.add(buildFieldExtension("storageName", "${storageName}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDataStorageUnitStatus", "${businessObjectDataStorageUnitStatus}"));
 
         List<Parameter> parameters = new ArrayList<>();
 
@@ -69,55 +70,58 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         parameters.add(buildParameter("partitionValue", PARTITION_VALUE));
         parameters.add(buildParameter("subPartitionValues", herdStringHelper.buildStringWithDefaultDelimiter(SUBPARTITION_VALUES)));
         parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
-        parameters.add(buildParameter("businessObjectDataStatus", BDATA_STATUS_2));
+        parameters.add(buildParameter("storageName", STORAGE_NAME));
+        parameters.add(buildParameter("businessObjectDataStorageUnitStatus", STORAGE_UNIT_STATUS_2));
 
         // Build the expected response object.
-        BusinessObjectDataStatusUpdateResponse expectedBusinessObjectDataStatusUpdateResponse =
-            new BusinessObjectDataStatusUpdateResponse(businessObjectDataKey, BDATA_STATUS_2, BDATA_STATUS);
+        BusinessObjectDataStorageUnitStatusUpdateResponse expectedResponse =
+            new BusinessObjectDataStorageUnitStatusUpdateResponse(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS_2, STORAGE_UNIT_STATUS);
 
         // Run the activiti task and validate the returned response object.
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate
-            .put(UpdateBusinessObjectDataStatus.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(expectedBusinessObjectDataStatusUpdateResponse));
-        testActivitiServiceTaskSuccess(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        variableValuesToValidate.put(UpdateBusinessObjectDataStorageUnitStatus.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(expectedResponse));
+        testActivitiServiceTaskSuccess(UpdateBusinessObjectDataStorageUnitStatus.class.getCanonicalName(), fieldExtensionList, parameters,
+            variableValuesToValidate);
     }
 
     @Test
-    public void testUpdateBusinessObjectDataStatusInvalidBusinessObjectDataVersion() throws Exception
+    public void testUpdateBusinessObjectDataStorageUnitStatusInvalidBusinessObjectDataVersion() throws Exception
     {
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
         fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
-        parameters.add(buildParameter("businessObjectDataVersion", "NOT_AN_INTEGER"));
+        parameters.add(buildParameter("businessObjectDataVersion", INVALID_INTEGER_VALUE));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectDataVersion\" must be a valid integer value.");
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
-            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStorageUnitStatus.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
         });
     }
 
     @Test
-    public void testUpdateBusinessObjectDataStatusInvalidBusinessObjectFormatVersion() throws Exception
+    public void testUpdateBusinessObjectDataStorageUnitStatusInvalidBusinessObjectFormatVersion() throws Exception
     {
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
         List<Parameter> parameters = new ArrayList<>();
-        parameters.add(buildParameter("businessObjectFormatVersion", "NOT_AN_INTEGER"));
+        parameters.add(buildParameter("businessObjectFormatVersion", INVALID_INTEGER_VALUE));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
-            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStorageUnitStatus.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
         });
     }
 
     @Test
-    public void testUpdateBusinessObjectDataStatusMissingBusinessObjectDataVersion() throws Exception
+    public void testUpdateBusinessObjectDataStorageUnitStatusMissingBusinessObjectDataVersion() throws Exception
     {
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
@@ -130,12 +134,13 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectDataVersion\" must be specified.");
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
-            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStorageUnitStatus.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
         });
     }
 
     @Test
-    public void testUpdateBusinessObjectDataStatusMissingBusinessObjectFormatVersion() throws Exception
+    public void testUpdateBusinessObjectDataStorageUnitStatusMissingBusinessObjectFormatVersion() throws Exception
     {
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
@@ -146,23 +151,24 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be specified.");
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
-            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStorageUnitStatus.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
         });
     }
 
     @Test
-    public void testUpdateBusinessObjectDataStatusMissingOptionalParameters() throws Exception
+    public void testUpdateBusinessObjectDataStorageUnitStatusMissingOptionalParameters() throws Exception
     {
-        // Create a business object data key without sub-partition values.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, DATA_VERSION);
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
-        // Create a business object data entity.
-        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        // Create a storage unit entity.
+        storageUnitDaoTestHelper.createStorageUnitEntity(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS);
 
-        // Create a business object data status entity.
-        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        // Create a storage unit status entity.
+        storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -173,7 +179,8 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
         fieldExtensionList.add(buildFieldExtension("partitionValue", "${partitionValue}"));
         fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
-        fieldExtensionList.add(buildFieldExtension("businessObjectDataStatus", "${businessObjectDataStatus}"));
+        fieldExtensionList.add(buildFieldExtension("storageName", "${storageName}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDataStorageUnitStatus", "${businessObjectDataStorageUnitStatus}"));
 
         List<Parameter> parameters = new ArrayList<>();
 
@@ -184,32 +191,33 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
         parameters.add(buildParameter("partitionValue", PARTITION_VALUE));
         parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
-        parameters.add(buildParameter("businessObjectDataStatus", BDATA_STATUS_2));
+        parameters.add(buildParameter("storageName", STORAGE_NAME));
+        parameters.add(buildParameter("businessObjectDataStorageUnitStatus", STORAGE_UNIT_STATUS_2));
 
         // Build the expected response object.
-        BusinessObjectDataStatusUpdateResponse expectedBusinessObjectDataStatusUpdateResponse =
-            new BusinessObjectDataStatusUpdateResponse(businessObjectDataKey, BDATA_STATUS_2, BDATA_STATUS);
+        BusinessObjectDataStorageUnitStatusUpdateResponse expectedResponse =
+            new BusinessObjectDataStorageUnitStatusUpdateResponse(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS_2, STORAGE_UNIT_STATUS);
 
         // Run the activiti task and validate the returned response object.
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate
-            .put(UpdateBusinessObjectDataStatus.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(expectedBusinessObjectDataStatusUpdateResponse));
-        testActivitiServiceTaskSuccess(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        variableValuesToValidate.put(UpdateBusinessObjectDataStorageUnitStatus.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(expectedResponse));
+        testActivitiServiceTaskSuccess(UpdateBusinessObjectDataStorageUnitStatus.class.getCanonicalName(), fieldExtensionList, parameters,
+            variableValuesToValidate);
     }
 
     @Test
-    public void testUpdateBusinessObjectDataStatusMissingOptionalParametersSubPartitionValuesAsEmptyString() throws Exception
+    public void testUpdateBusinessObjectDataStorageUnitStatusMissingOptionalParametersSubPartitionValuesAsEmptyString() throws Exception
     {
-        // Create a business object data key without sub-partition values.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, DATA_VERSION);
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
-        // Create a business object data entity.
-        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        // Create a storage unit entity.
+        storageUnitDaoTestHelper.createStorageUnitEntity(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS);
 
-        // Create a business object data status entity.
-        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        // Create a storage unit status entity.
+        storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -219,9 +227,9 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatFileType", "${businessObjectFormatFileType}"));
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
         fieldExtensionList.add(buildFieldExtension("partitionValue", "${partitionValue}"));
-        fieldExtensionList.add(buildFieldExtension("subPartitionValues", "${subPartitionValues}"));
         fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
-        fieldExtensionList.add(buildFieldExtension("businessObjectDataStatus", "${businessObjectDataStatus}"));
+        fieldExtensionList.add(buildFieldExtension("storageName", "${storageName}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDataStorageUnitStatus", "${businessObjectDataStorageUnitStatus}"));
 
         List<Parameter> parameters = new ArrayList<>();
 
@@ -233,23 +241,24 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         parameters.add(buildParameter("partitionValue", PARTITION_VALUE));
         parameters.add(buildParameter("subPartitionValues", EMPTY_STRING));
         parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
-        parameters.add(buildParameter("businessObjectDataStatus", BDATA_STATUS_2));
+        parameters.add(buildParameter("storageName", STORAGE_NAME));
+        parameters.add(buildParameter("businessObjectDataStorageUnitStatus", STORAGE_UNIT_STATUS_2));
 
         // Build the expected response object.
-        BusinessObjectDataStatusUpdateResponse expectedBusinessObjectDataStatusUpdateResponse =
-            new BusinessObjectDataStatusUpdateResponse(businessObjectDataKey, BDATA_STATUS_2, BDATA_STATUS);
+        BusinessObjectDataStorageUnitStatusUpdateResponse expectedResponse =
+            new BusinessObjectDataStorageUnitStatusUpdateResponse(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS_2, STORAGE_UNIT_STATUS);
 
         // Run the activiti task and validate the returned response object.
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate
-            .put(UpdateBusinessObjectDataStatus.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(expectedBusinessObjectDataStatusUpdateResponse));
-        testActivitiServiceTaskSuccess(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        variableValuesToValidate.put(UpdateBusinessObjectDataStorageUnitStatus.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(expectedResponse));
+        testActivitiServiceTaskSuccess(UpdateBusinessObjectDataStorageUnitStatus.class.getCanonicalName(), fieldExtensionList, parameters,
+            variableValuesToValidate);
     }
 
     @Test
-    public void testUpdateBusinessObjectDataStatusMissingRequiredParameter() throws Exception
+    public void testUpdateBusinessObjectDataStorageUnitStatusMissingRequiredParameter() throws Exception
     {
-        // Validate that business object data status service fails when we do not pass a namespace value.
+        // Validate that business object data storage unit status service fails when we do not pass a namespace value.
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
         fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
@@ -261,7 +270,8 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A namespace must be specified.");
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
-            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStorageUnitStatus.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
         });
     }
 }
