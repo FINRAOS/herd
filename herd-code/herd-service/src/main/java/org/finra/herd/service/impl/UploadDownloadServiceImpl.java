@@ -18,8 +18,6 @@ package org.finra.herd.service.impl;
 import java.util.Date;
 import java.util.UUID;
 
-import javax.persistence.OptimisticLockException;
-
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.auth.policy.actions.S3Actions;
 import com.amazonaws.services.securitytoken.model.Credentials;
@@ -353,26 +351,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto = new CompleteUploadSingleParamsDto();
 
         // Prepare for the file move.
-        try
-        {
-            // TODO: To make our implementation Mockito friendly, we need to re-write the upload download
-            // TODO: helper methods to make them return the updated DTO back instead of being void methods.
-            uploadDownloadHelperService.prepareForFileMove(objectKey, completeUploadSingleParamsDto);
-        }
-        // We can get an optimistic lock exception when trying to update source and/or target business object data status from "UPLOADING" to "RE-ENCRYPTING".
-        // The optimistic lock exception is caused by duplicate SQS messages coming from S3 for the same uploaded file. If such exception is caught, we log
-        // a message and exit from the method. This effectively discards any duplicate SQS messages that did not get caught by a business object data status
-        // check that occurs inside the prepareForFileMove() helper method.
-        catch (OptimisticLockException e)
-        {
-            LOGGER.info("Ignoring S3 notification due to an optimistic lock exception caused by duplicate S3 event notifications. " +
-                "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}",
-                jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()),
-                jsonHelper.objectToJson(completeUploadSingleParamsDto.getTargetBusinessObjectDataKey()));
-
-            // Exit from the method without executing any other steps required to complete the upload single message processing.
-            return null;
-        }
+        // TODO: To make our implementation Mockito friendly, we need to re-write the upload download
+        // TODO: helper methods to make them return the updated DTO back instead of being void methods.
+        uploadDownloadHelperService.prepareForFileMove(objectKey, completeUploadSingleParamsDto);
 
         // Create an instance of the result message for complete upload single operation.
         CompleteUploadSingleMessageResult completeUploadSingleMessageResult = new CompleteUploadSingleMessageResult();
