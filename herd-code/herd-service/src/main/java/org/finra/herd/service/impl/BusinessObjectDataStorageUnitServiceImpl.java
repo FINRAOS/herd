@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -58,6 +59,9 @@ public class BusinessObjectDataStorageUnitServiceImpl implements BusinessObjectD
 
     @Autowired
     private StorageFileHelper storageFileHelper;
+
+    @Autowired
+    private StorageUnitDao storageUnitDao;
 
     @Autowired
     private StorageUnitHelper storageUnitHelper;
@@ -133,6 +137,9 @@ public class BusinessObjectDataStorageUnitServiceImpl implements BusinessObjectD
         StorageUnitEntity storageUnitEntity = businessObjectDataDaoHelper
             .createStorageUnitEntity(businessObjectDataEntity, storageEntity, request.getStorageDirectory(), request.getStorageFiles(),
                 request.isDiscoverStorageFiles());
+
+        // Persist the newly created storage unit entity.
+        storageUnitDao.saveAndRefresh(storageUnitEntity);
 
         // Construct and return the response.
         return createBusinessObjectDataStorageUnitCreateResponse(storageUnitEntity);
