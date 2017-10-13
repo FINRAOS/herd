@@ -210,6 +210,12 @@ public enum ConfigurationValue
     STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES("storage.policy.selector.job.max.business.object.data.instances", "1000"),
 
     /**
+     * The maximum number of failed storage policy transition attempts before the relative storage unit gets excluded from being selected per storage policies
+     * by the storage policy selector system job. 0 means the maximum is not set. The default is 3.
+     */
+    STORAGE_POLICY_TRANSITION_MAX_ALLOWED_ATTEMPTS("storage.policy.transition.max.allowed.attempts", 3),
+
+    /**
      * The threshold in days since business object data registration update for business object data to be selectable by a storage policy of the
      * DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE storage policy rule type. The default is 90 days.
      */

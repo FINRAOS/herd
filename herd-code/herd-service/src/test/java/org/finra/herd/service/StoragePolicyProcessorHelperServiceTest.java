@@ -106,15 +106,18 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         try
         {
-            // Initiate a storage policy transition.
-            StoragePolicyTransitionParamsDto result = storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            // Create an empty storage policy transition parameters DTO.
+            StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
 
-            // Validate the returned object.
+            // Initiate a storage policy transition.
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(storagePolicyTransitionParamsDto,
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+
+            // Validate the results.
             assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, s3KeyPrefix,
                 StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED,
                 Arrays.asList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000)), S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
-                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), result);
+                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
         }
         finally
         {
@@ -170,15 +173,18 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         try
         {
-            // Initiate a storage policy transition.
-            StoragePolicyTransitionParamsDto result = storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            // Create an empty storage policy transition parameters DTO.
+            StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
 
-            // Validate the returned object.
+            // Initiate a storage policy transition.
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(storagePolicyTransitionParamsDto,
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+
+            // Validate the results.
             assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, s3KeyPrefix,
                 StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ARCHIVING,
                 Arrays.asList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000)), S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
-                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), result);
+                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
         }
         finally
         {
@@ -201,7 +207,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy selection message is not specified.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(null);
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(), null);
             fail("Should throw an IllegalArgumentException when when storage policy selection message is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -212,7 +218,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when business object data key is not specified.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(null, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(), new StoragePolicySelection(null, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when when business object data key is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -223,7 +230,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when business object definition namespace is not specified.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(), new StoragePolicySelection(
                 new BusinessObjectDataKey(NO_BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when when business object definition namespace is not specified.");
@@ -236,7 +243,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy key is not specified.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, null, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, null, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when when storage policy key is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -247,7 +255,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy namespace is not specified.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
                 new StoragePolicySelection(businessObjectDataKey, new StoragePolicyKey(null, STORAGE_POLICY_NAME), INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when when storage policy namespace is not specified.");
         }
@@ -259,7 +267,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy name is not specified.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
                 new StoragePolicySelection(businessObjectDataKey, new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, null), INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when when storage policy name is not specified.");
         }
@@ -271,7 +279,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy version is not specified.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
                 new StoragePolicySelection(businessObjectDataKey, new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME), null));
             fail("Should throw an IllegalArgumentException when when storage policy version is not specified.");
         }
@@ -295,8 +303,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when business object data does not exist.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an ObjectNotFoundException when business object data does not exist.");
         }
         catch (ObjectNotFoundException e)
@@ -319,11 +327,17 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create a storage policy key.
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
+
         // Try to initiate a storage policy transition when business object data status is not supported by the storage policy feature.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when business object data status is not supported by the storage policy feature.");
         }
         catch (IllegalArgumentException e)
@@ -351,8 +365,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy does not exist.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an ObjectNotFoundException when storage policy does not exist.");
         }
         catch (ObjectNotFoundException e)
@@ -389,8 +403,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy filter storage has a non-S3 storage platform type.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when using non-S3 storage platform for storage policy filter storage.");
         }
         catch (IllegalArgumentException e)
@@ -431,8 +445,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy filter storage has no S3 path prefix validation enabled.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalStateException when storage policy filter storage has no S3 path prefix validation enabled.");
         }
         catch (IllegalStateException e)
@@ -472,8 +486,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy filter storage has no S3 file existence validation enabled.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalStateException when storage policy filter storage has no S3 file existence validation enabled.");
         }
         catch (IllegalStateException e)
@@ -512,8 +526,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy filter storage has no S3 bucket name attribute configured.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalStateException when storage policy filter storage has no S3 bucket name attribute configured.");
         }
         catch (IllegalStateException e)
@@ -557,8 +571,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage unit does not exist.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -609,8 +623,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage unit has an invalid status.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -662,8 +676,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when sub-partition values are used and format has no schema.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when sub-partition values are used and format has no schema.");
         }
         catch (IllegalArgumentException e)
@@ -715,8 +729,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage unit has no storage files registered.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -776,8 +790,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage unit has a storage file that is not matching the expected S3 key prefix.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -846,8 +860,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // business object data storage files matching the expected S3 key prefix.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKey, INITIAL_VERSION));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicyTransitionParamsDto(),
+                new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKey, INITIAL_VERSION));
             fail();
         }
         catch (IllegalStateException e)
@@ -1106,7 +1120,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         try
         {
-            storagePolicyProcessorHelperServiceImpl.initiateStoragePolicyTransition(null);
+            storagePolicyProcessorHelperServiceImpl.initiateStoragePolicyTransition(null, null);
             fail("Should throw an IllegalArgumentException.");
         }
         catch (IllegalArgumentException e)
@@ -1127,6 +1141,16 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         try
         {
             storagePolicyProcessorHelperServiceImpl.completeStoragePolicyTransition(null);
+            fail("Should throw an NullPointerException.");
+        }
+        catch (NullPointerException e)
+        {
+            assertNull(e.getMessage());
+        }
+
+        try
+        {
+            storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(null);
             fail("Should throw an NullPointerException.");
         }
         catch (NullPointerException e)
