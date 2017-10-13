@@ -55,24 +55,37 @@ public class StoragePolicyProcessorServiceImpl implements StoragePolicyProcessor
      */
     protected void processStoragePolicySelectionMessageImpl(StoragePolicySelection storagePolicySelection)
     {
-        // Initiate the storage policy transition.
-        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(storagePolicySelection);
+        // Create a storage policy transition parameters DTO.
+        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
 
-        // Create a storage unit notification for the source storage unit.
-        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-            storagePolicyTransitionParamsDto.getBusinessObjectDataKey(), storagePolicyTransitionParamsDto.getStorageName(),
-            storagePolicyTransitionParamsDto.getNewStorageUnitStatus(), storagePolicyTransitionParamsDto.getOldStorageUnitStatus());
+        try
+        {
+            // Initiate the storage policy transition.
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(storagePolicyTransitionParamsDto, storagePolicySelection);
 
-        // Execute the actual transition using the DAO tier.
-        storagePolicyProcessorHelperService.executeStoragePolicyTransition(storagePolicyTransitionParamsDto);
+            // Create a storage unit notification for the source storage unit.
+            notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+                storagePolicyTransitionParamsDto.getBusinessObjectDataKey(), storagePolicyTransitionParamsDto.getStorageName(),
+                storagePolicyTransitionParamsDto.getNewStorageUnitStatus(), storagePolicyTransitionParamsDto.getOldStorageUnitStatus());
 
-        // Complete the storage policy transition.
-        storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
+            // Execute the actual transition using the DAO tier.
+            storagePolicyProcessorHelperService.executeStoragePolicyTransition(storagePolicyTransitionParamsDto);
 
-        // Create a storage unit notification for the source storage unit.
-        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-            storagePolicyTransitionParamsDto.getBusinessObjectDataKey(), storagePolicyTransitionParamsDto.getStorageName(),
-            storagePolicyTransitionParamsDto.getNewStorageUnitStatus(), storagePolicyTransitionParamsDto.getOldStorageUnitStatus());
+            // Complete the storage policy transition.
+            storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
+
+            // Create a storage unit notification for the source storage unit.
+            notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+                storagePolicyTransitionParamsDto.getBusinessObjectDataKey(), storagePolicyTransitionParamsDto.getStorageName(),
+                storagePolicyTransitionParamsDto.getNewStorageUnitStatus(), storagePolicyTransitionParamsDto.getOldStorageUnitStatus());
+        }
+        catch (RuntimeException e)
+        {
+            // Try to increment the count for failed storage policy transition attempts for the specified storage unit.
+            storagePolicyProcessorHelperService.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
+
+            // Rethrow the original exception.
+            throw e;
+        }
     }
 }

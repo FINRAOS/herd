@@ -2906,6 +2906,11 @@
                <xs:documentation>The status of this Storage Unit. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="storagePolicyTransitionFailedAttempts" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of failed attempts to execute a storage policy transition such as archiving to Glacier</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 

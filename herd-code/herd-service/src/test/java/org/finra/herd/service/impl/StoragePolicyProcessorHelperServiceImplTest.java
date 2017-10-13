@@ -37,7 +37,9 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.ConfigurationValue;
@@ -65,10 +67,8 @@ import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StoragePolicyDaoHelper;
 import org.finra.herd.service.helper.StoragePolicyHelper;
 import org.finra.herd.service.helper.StorageUnitDaoHelper;
+import org.finra.herd.service.helper.StorageUnitHelper;
 
-/**
- * This class tests functionality within the storage policy processor helper service implementation.
- */
 public class StoragePolicyProcessorHelperServiceImplTest extends AbstractServiceTest
 {
     @Mock
@@ -105,7 +105,13 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
     private StoragePolicyProcessorHelperServiceImpl storagePolicyProcessorHelperServiceImpl;
 
     @Mock
+    private StorageUnitDao storageUnitDao;
+
+    @Mock
     private StorageUnitDaoHelper storageUnitDaoHelper;
+
+    @Mock
+    private StorageUnitHelper storageUnitHelper;
 
     @Before
     public void before()
@@ -176,6 +182,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(businessObjectDataHelper, times(2)).businessObjectDataKeyToString(businessObjectDataKey);
         verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.ARCHIVED);
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
@@ -271,6 +278,9 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
     @Test
     public void testInitiateStoragePolicyTransitionImpl()
     {
+        // Create an empty storage policy transition parameters DTO.
+        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
+
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
@@ -365,8 +375,8 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         when(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT)).thenReturn(S3_ENDPOINT);
 
         // Call the method under test.
-        StoragePolicyTransitionParamsDto result = storagePolicyProcessorHelperServiceImpl
-            .initiateStoragePolicyTransitionImpl(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, STORAGE_POLICY_VERSION));
+        storagePolicyProcessorHelperServiceImpl.initiateStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto,
+            new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, STORAGE_POLICY_VERSION));
 
         // Verify the external calls.
         verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
@@ -393,10 +403,120 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(configurationHelper).getProperty(ConfigurationValue.S3_ENDPOINT);
         verifyNoMoreInteractionsHelper();
 
-        // Validate the returned object.
+        // Validate the results.
         assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX,
             StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
-            S3_OBJECT_TAGGER_ROLE_SESSION_NAME), result);
+            S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
+    }
+
+    @Test
+    public void testUpdateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImplFirstFailure()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage unit entity with its storagePolicyTransitionFailedAttempts set to NULL.
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
+
+        // Create a storage policy transition parameters DTO.
+        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
+        storagePolicyTransitionParamsDto.setBusinessObjectDataKey(businessObjectDataKey);
+        storagePolicyTransitionParamsDto.setStorageName(STORAGE_NAME);
+
+        // Mock the external calls.
+        when(storageUnitHelper.createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME)).thenReturn(businessObjectDataStorageUnitKey);
+        when(storageUnitDaoHelper.getStorageUnitEntityByKey(businessObjectDataStorageUnitKey)).thenReturn(storageUnitEntity);
+
+        // Call the method under test.
+        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
+
+        // Verify the external calls.
+        verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        verify(storageUnitDaoHelper).getStorageUnitEntityByKey(businessObjectDataStorageUnitKey);
+        verify(storageUnitDao).saveAndRefresh(storageUnitEntity);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results. The counter value now should be equal to 1.
+        assertEquals(Integer.valueOf(1), storageUnitEntity.getStoragePolicyTransitionFailedAttempts());
+    }
+
+    @Test
+    public void testUpdateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImplNoBusinessObjectDataKey()
+    {
+        // Create a storage policy transition parameters DTO that does not have business object data key specified.
+        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
+        storagePolicyTransitionParamsDto.setStorageName(STORAGE_NAME);
+
+        // Call the method under test.
+        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImplNoStorageName()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage policy transition parameters DTO that does not have storage name specified.
+        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
+        storagePolicyTransitionParamsDto.setBusinessObjectDataKey(businessObjectDataKey);
+
+        // Call the method under test.
+        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImplSecondFailure()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage unit entity with its storagePolicyTransitionFailedAttempts already set to 1.
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setStoragePolicyTransitionFailedAttempts(1);
+
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
+
+        // Create a storage policy transition parameters DTO.
+        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
+        storagePolicyTransitionParamsDto.setBusinessObjectDataKey(businessObjectDataKey);
+        storagePolicyTransitionParamsDto.setStorageName(STORAGE_NAME);
+
+        // Mock the external calls.
+        when(storageUnitHelper.createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME)).thenReturn(businessObjectDataStorageUnitKey);
+        when(storageUnitDaoHelper.getStorageUnitEntityByKey(businessObjectDataStorageUnitKey)).thenReturn(storageUnitEntity);
+
+        // Call the method under test.
+        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
+
+        // Verify the external calls.
+        verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        verify(storageUnitDaoHelper).getStorageUnitEntityByKey(businessObjectDataStorageUnitKey);
+        verify(storageUnitDao).saveAndRefresh(storageUnitEntity);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results. The counter value now should be equal to 2.
+        assertEquals(Integer.valueOf(2), storageUnitEntity.getStoragePolicyTransitionFailedAttempts());
     }
 
     /**
@@ -405,6 +525,6 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, s3KeyPrefixHelper, s3Service, storageFileDaoHelper,
-            storageFileHelper, storageHelper, storagePolicyDaoHelper, storagePolicyHelper, storageUnitDaoHelper);
+            storageFileHelper, storageHelper, storagePolicyDaoHelper, storagePolicyHelper, storageUnitDao, storageUnitDaoHelper, storageUnitHelper);
     }
 }

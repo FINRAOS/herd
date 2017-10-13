@@ -164,13 +164,16 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @param storagePolicyPriorityLevel the storage policy priority level
      * @param supportedBusinessObjectDataStatuses the list of business object data statuses that storage policies apply to
+     * @param storagePolicyTransitionMaxAllowedAttempts the maximum number of failed storage policy transition attempts before the relative storage unit gets
+     * excluded from being selected. 0 means the maximum is not set
      * @param startPosition the position of the first result, numbered from 0
      * @param maxResult the maximum number of results to retrieve
      *
      * @return the map of business object data entities to their corresponding storage policy entities
      */
     public Map<BusinessObjectDataEntity, StoragePolicyEntity> getBusinessObjectDataEntitiesMatchingStoragePolicies(
-        StoragePolicyPriorityLevel storagePolicyPriorityLevel, List<String> supportedBusinessObjectDataStatuses, int startPosition, int maxResult);
+        StoragePolicyPriorityLevel storagePolicyPriorityLevel, List<String> supportedBusinessObjectDataStatuses, int storagePolicyTransitionMaxAllowedAttempts,
+        int startPosition, int maxResult);
 
     /**
      * Retrieves a list of business object data by their partition value.

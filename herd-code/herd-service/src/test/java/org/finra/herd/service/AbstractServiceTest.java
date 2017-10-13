@@ -462,6 +462,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<StorageFile> NO_STORAGE_FILES = new ArrayList<>();
 
+    public static final Integer NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS = null;
+
     public static final List<StorageUnit> NO_STORAGE_UNITS = new ArrayList<>();
 
     public static final Boolean NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = false;
@@ -530,6 +532,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final DateTime START_TIME = getRandomDateTime();
 
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
+
+    public static final Integer STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS = getRandomInteger();
 
     public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
 
