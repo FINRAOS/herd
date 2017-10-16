@@ -171,6 +171,9 @@ public class StorageUnitHelper
 
             // Set the storage unit status.
             storageUnit.setStorageUnitStatus(storageUnitEntity.getStatus().getCode());
+
+            // Set the number of failed attempts to execute a storage policy transition.
+            storageUnit.setStoragePolicyTransitionFailedAttempts(storageUnitEntity.getStoragePolicyTransitionFailedAttempts());
         }
 
         return storageUnits;
