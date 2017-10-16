@@ -53,7 +53,7 @@
       <eclipse.persistence.version>2.7.0</eclipse.persistence.version>
       <findbugs.version>3.0.1</findbugs.version>
       <hibernate.jpa.api>1.0.0.Final</hibernate.jpa.api>
-      <hibernate.validator.version>6.0.2.Final</hibernate.validator.version>
+      <hibernate.validator.version>5.2.2.Final</hibernate.validator.version>
       <hibernate.version>5.0.7.Final</hibernate.version>
       <h2db.version>1.4.196</h2db.version>
       <jackson.mapper.version>1.9.13</jackson.mapper.version>
