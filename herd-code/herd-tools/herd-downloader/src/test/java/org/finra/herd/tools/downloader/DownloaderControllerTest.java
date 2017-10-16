@@ -583,7 +583,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
                     /*
                      * Call the providers' getAwsCredentials(), just like real implementation would.
                      */
-                    S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = invocation.getArgumentAt(0, S3FileTransferRequestParamsDto.class);
+                    S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = invocation.getArgument(0);
                     List<HerdAWSCredentialsProvider> additionalAwsCredentialsProviders = s3FileTransferRequestParamsDto.getAdditionalAwsCredentialsProviders();
                     for (HerdAWSCredentialsProvider herdAWSCredentialsProvider : additionalAwsCredentialsProviders)
                     {

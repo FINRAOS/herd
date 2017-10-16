@@ -53,7 +53,6 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.Headers;
-import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
 import com.amazonaws.services.s3.model.DeleteObjectsResult.DeletedObject;
@@ -89,7 +88,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -170,7 +168,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public MultipartUploadListing answer(InvocationOnMock invocation) throws Throwable
                 {
-                    ListMultipartUploadsRequest listMultipartUploadsRequest = invocation.getArgumentAt(0, ListMultipartUploadsRequest.class);
+                    ListMultipartUploadsRequest listMultipartUploadsRequest = invocation.getArgument(0);
                     assertEquals(s3BucketName, listMultipartUploadsRequest.getBucketName());
 
                     MultipartUploadListing multipartUploadListing = new MultipartUploadListing();
@@ -200,16 +198,10 @@ public class S3DaoTest extends AbstractDaoTest
             /*
              * Assert that S3Operations.abortMultipartUpload is called exactly ONCE with arguments matching the given ArgumentMatcher
              */
-            verify(mockS3Operations).abortMultipartUpload(argThat(new ArgumentMatcher<AbortMultipartUploadRequest>()
-            {
-                @Override
-                public boolean matches(Object argument)
-                {
-                    AbortMultipartUploadRequest abortMultipartUploadRequest = (AbortMultipartUploadRequest) argument;
-                    return Objects.equal(s3BucketName, abortMultipartUploadRequest.getBucketName()) &&
-                        Objects.equal(uploadKey, abortMultipartUploadRequest.getKey()) && Objects.equal(uploadId, abortMultipartUploadRequest.getUploadId());
-                }
-            }), any());
+            verify(mockS3Operations).abortMultipartUpload(argThat(
+                argument -> Objects.equal(s3BucketName, argument.getBucketName()) && Objects.equal(uploadKey, argument.getKey()) &&
+                    Objects.equal(uploadId, argument.getUploadId())), any());
+
             // Assert that no other interactions occur with the mock
             verifyNoMoreInteractions(mockS3Operations);
         }
@@ -280,7 +272,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public MultipartUploadListing answer(InvocationOnMock invocation) throws Throwable
                 {
-                    ListMultipartUploadsRequest listMultipartUploadsRequest = invocation.getArgumentAt(0, ListMultipartUploadsRequest.class);
+                    ListMultipartUploadsRequest listMultipartUploadsRequest = invocation.getArgument(0);
                     String keyMarker = listMultipartUploadsRequest.getKeyMarker();
                     String uploadIdMarker = listMultipartUploadsRequest.getUploadIdMarker();
 
@@ -314,16 +306,10 @@ public class S3DaoTest extends AbstractDaoTest
             /*
              * Assert that S3Operations.abortMultipartUpload is called exactly ONCE with arguments matching the given ArgumentMatcher
              */
-            verify(mockS3Operations).abortMultipartUpload(argThat(new ArgumentMatcher<AbortMultipartUploadRequest>()
-            {
-                @Override
-                public boolean matches(Object argument)
-                {
-                    AbortMultipartUploadRequest abortMultipartUploadRequest = (AbortMultipartUploadRequest) argument;
-                    return Objects.equal(s3BucketName, abortMultipartUploadRequest.getBucketName()) &&
-                        Objects.equal(uploadKey, abortMultipartUploadRequest.getKey()) && Objects.equal(uploadId, abortMultipartUploadRequest.getUploadId());
-                }
-            }), any());
+            verify(mockS3Operations).abortMultipartUpload(argThat(
+                argument -> Objects.equal(s3BucketName, argument.getBucketName()) && Objects.equal(uploadKey, argument.getKey()) &&
+                    Objects.equal(uploadId, argument.getUploadId())), any());
+
             // Assert that no other interactions occur with the mock
             verifyNoMoreInteractions(mockS3Operations);
         }
@@ -503,7 +489,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    PutObjectRequest putObjectRequest = invocation.getArgumentAt(0, PutObjectRequest.class);
+                    PutObjectRequest putObjectRequest = invocation.getArgument(0);
                     assertEquals(s3BucketName, putObjectRequest.getBucketName());
                     assertEquals(s3KeyPrefix, putObjectRequest.getKey());
 
@@ -542,7 +528,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    PutObjectRequest putObjectRequest = invocation.getArgumentAt(0, PutObjectRequest.class);
+                    PutObjectRequest putObjectRequest = invocation.getArgument(0);
                     assertEquals(s3BucketName, putObjectRequest.getBucketName());
                     assertEquals(expectedS3KeyPrefix, putObjectRequest.getKey());
 
@@ -1041,7 +1027,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AmazonS3Client amazonS3Client = invocation.getArgument(1);
                     AWSCredentialsProviderChain awsCredentialsProviderChain =
                         (AWSCredentialsProviderChain) ReflectionTestUtils.getField(amazonS3Client, "awsCredentialsProvider");
                     List<AWSCredentialsProvider> credentialsProviders =
@@ -1102,7 +1088,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AmazonS3Client amazonS3Client = invocation.getArgument(1);
                     AWSCredentialsProviderChain awsCredentialsProviderChain =
                         (AWSCredentialsProviderChain) ReflectionTestUtils.getField(amazonS3Client, "awsCredentialsProvider");
                     List<AWSCredentialsProvider> credentialsProviders =
@@ -1147,7 +1133,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AmazonS3Client amazonS3Client = invocation.getArgument(1);
                     AWSCredentialsProviderChain awsCredentialsProviderChain =
                         (AWSCredentialsProviderChain) ReflectionTestUtils.getField(amazonS3Client, "awsCredentialsProvider");
                     List<AWSCredentialsProvider> credentialsProviders =
@@ -1192,7 +1178,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AmazonS3Client amazonS3Client = invocation.getArgument(1);
                     AWSCredentialsProviderChain awsCredentialsProviderChain =
                         (AWSCredentialsProviderChain) ReflectionTestUtils.getField(amazonS3Client, "awsCredentialsProvider");
                     List<AWSCredentialsProvider> credentialsProviders =
@@ -1242,7 +1228,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AmazonS3Client amazonS3Client = invocation.getArgument(1);
                     ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
                     assertNull(clientConfiguration.getProxyHost());
                     return new PutObjectResult();
@@ -1282,7 +1268,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AmazonS3Client amazonS3Client = invocation.getArgument(1);
                     ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
                     assertNull(clientConfiguration.getProxyHost());
                     return new PutObjectResult();
@@ -1322,7 +1308,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AmazonS3Client amazonS3Client = invocation.getArgument(1);
                     ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
                     assertEquals(httpProxyHost, clientConfiguration.getProxyHost());
                     assertEquals(httpProxyPort.intValue(), clientConfiguration.getProxyPort());
@@ -1361,7 +1347,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AmazonS3Client amazonS3Client = invocation.getArgument(1);
                     assertEquals(new URI("https://" + s3Endpoint), ReflectionTestUtils.getField(amazonS3Client, "endpoint"));
                     return new PutObjectResult();
                 }
@@ -1391,8 +1377,9 @@ public class S3DaoTest extends AbstractDaoTest
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
 
-            when(mockS3Operations.putObject(any(), any())).then((Answer<PutObjectResult>) invocation -> {
-                AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+            when(mockS3Operations.putObject(any(), any())).then(invocation ->
+            {
+                AmazonS3Client amazonS3Client = invocation.getArgument(1);
                 ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
                 assertEquals(S3Dao.SIGNER_OVERRIDE_V4, clientConfiguration.getSignerOverride());
                 return new PutObjectResult();
@@ -1423,7 +1410,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
-                "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null)", TARGET_S3_KEY,
+                    "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null)", TARGET_S3_KEY,
                 MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED), e.getMessage());
         }
     }
@@ -1483,7 +1470,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
-                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)",
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)",
                 s3FileTransferRequestParamsDto.getS3KeyPrefix(), s3FileTransferRequestParamsDto.getS3BucketName()), e.getMessage());
         }
     }
@@ -1508,7 +1495,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
-                "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null)", TARGET_S3_KEY,
+                    "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null)", TARGET_S3_KEY,
                 MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED), e.getMessage());
         }
     }
@@ -1781,7 +1768,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public ObjectListing answer(InvocationOnMock invocation) throws Throwable
                 {
-                    ListObjectsRequest listObjectsRequest = invocation.getArgumentAt(0, ListObjectsRequest.class);
+                    ListObjectsRequest listObjectsRequest = invocation.getArgument(0);
                     assertEquals(s3BucketName, listObjectsRequest.getBucketName());
                     assertEquals(s3KeyPrefix, listObjectsRequest.getPrefix());
 
@@ -1858,7 +1845,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public ObjectListing answer(InvocationOnMock invocation) throws Throwable
                 {
-                    ListObjectsRequest listObjectsRequest = invocation.getArgumentAt(0, ListObjectsRequest.class);
+                    ListObjectsRequest listObjectsRequest = invocation.getArgument(0);
                     String marker = listObjectsRequest.getMarker();
 
                     ObjectListing objectListing = new ObjectListing();
@@ -2029,7 +2016,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public VersionListing answer(InvocationOnMock invocation) throws Throwable
                 {
-                    ListVersionsRequest listVersionsRequest = invocation.getArgumentAt(0, ListVersionsRequest.class);
+                    ListVersionsRequest listVersionsRequest = invocation.getArgument(0);
                     String keyMarker = listVersionsRequest.getKeyMarker();
                     String versionIdMarker = listVersionsRequest.getVersionIdMarker();
 
@@ -2290,7 +2277,7 @@ public class S3DaoTest extends AbstractDaoTest
                 @Override
                 public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
                 {
-                    PutObjectRequest putObjectRequest = invocation.getArgumentAt(0, PutObjectRequest.class);
+                    PutObjectRequest putObjectRequest = invocation.getArgument(0);
                     ObjectMetadata metadata = putObjectRequest.getMetadata();
                     assertEquals("aws:kms", metadata.getSSEAlgorithm());
                     assertEquals(kmsKeyId, metadata.getRawMetadata().get(Headers.SERVER_SIDE_ENCRYPTION_AWS_KMS_KEYID));
@@ -2353,7 +2340,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", testKey,
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", testKey,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -2412,7 +2399,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                "Reason: object is not in Glacier (Service: null; Status Code: 0; Error Code: null; Request ID: null)", TARGET_S3_KEY,
+                    "Reason: object is not in Glacier (Service: null; Status Code: 0; Error Code: null; Request ID: null)", TARGET_S3_KEY,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -2545,7 +2532,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to tag S3 object with \"%s\" key in \"%s\" bucket. " +
-                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", TARGET_S3_KEY,
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", TARGET_S3_KEY,
                 MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR), e.getMessage());
         }
     }
@@ -2873,7 +2860,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Fail to check restore status for \"%s\" key in \"%s\" bucket. " +
-                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", testKey,
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", testKey,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }

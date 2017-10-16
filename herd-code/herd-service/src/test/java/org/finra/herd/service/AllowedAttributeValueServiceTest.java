@@ -108,7 +108,8 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
-        verify(allowedAttributeValueDao, times(2)).saveAndRefresh(any(AllowedAttributeValueEntity.class));
+        verify(allowedAttributeValueDao, times(1)).saveAndRefresh(any(AllowedAttributeValueEntity.class));
+        verify(allowedAttributeValueDao, times(1)).saveAndRefresh(any(AttributeValueListEntity.class));
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
         verify(attributeValueListHelper).validateAttributeValueListKey(attributeValueListKey);
         verifyNoMoreInteractionsHelper();
@@ -244,7 +245,7 @@ public class AllowedAttributeValueServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(attributeValueListDaoHelper).getAttributeValueListEntity(attributeValueListKey);
-        verify(allowedAttributeValueDao).saveAndRefresh(any(AllowedAttributeValueEntity.class));
+        verify(allowedAttributeValueDao).saveAndRefresh(any(AttributeValueListEntity.class));
         verify(alternateKeyHelper).validateStringParameter("An", "allowed attribute value", ALLOWED_ATTRIBUTE_VALUE);
         verify(attributeValueListHelper).validateAttributeValueListKey(attributeValueListKey);
         verifyNoMoreInteractionsHelper();

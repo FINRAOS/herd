@@ -27,19 +27,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.Arrays;
 
 import com.google.common.base.Objects;
 import org.apache.http.HttpVersion;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import org.finra.herd.core.Command;
@@ -233,16 +230,8 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             manifest.setBusinessObjectDataVersion("1");
             assertEquals(expectedBusinessObjectData.getId(), downloaderWebClient.getBusinessObjectData(manifest).getId());
 
-            verify(mockHttpClientOperations).execute(any(), argThat(new ArgumentMatcher<HttpUriRequest>()
-            {
-                @Override
-                public boolean matches(Object argument)
-                {
-                    HttpUriRequest httpUriRequest = (HttpUriRequest) argument;
-                    URI uri = httpUriRequest.getURI();
-                    return Objects.equal(expectedHttpMethod, httpUriRequest.getMethod()) && Objects.equal(expectedUri, uri.toString());
-                }
-            }));
+            verify(mockHttpClientOperations).execute(any(), argThat(httpUriRequest -> Objects.equal(expectedHttpMethod, httpUriRequest.getMethod()) &&
+                Objects.equal(expectedUri, httpUriRequest.getURI().toString())));
         }
         finally
         {
@@ -269,15 +258,7 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             downloaderWebClient.getRegServerAccessParamsDto().setUseSsl(false);
             downloaderWebClient.getBusinessObjectData(manifest);
 
-            verify(mockHttpClientOperations).execute(any(), argThat(new ArgumentMatcher<HttpUriRequest>()
-            {
-                @Override
-                public boolean matches(Object argument)
-                {
-                    HttpUriRequest httpUriRequest = (HttpUriRequest) argument;
-                    return httpUriRequest.getFirstHeader("Authorization") == null;
-                }
-            }));
+            verify(mockHttpClientOperations).execute(any(), argThat(httpUriRequest -> httpUriRequest.getFirstHeader("Authorization") == null));
         }
         finally
         {
@@ -307,14 +288,7 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             downloaderWebClient.getRegServerAccessParamsDto().setUseSsl(useSsl);
             downloaderWebClient.getStorageUnitDownloadCredential(downloaderInputManifestDto, storageName);
 
-            verify(mockHttpClientOperations).execute(any(), argThat(new ArgumentMatcher<HttpUriRequest>()
-            {
-                @Override
-                public boolean matches(Object argument)
-                {
-                    return ((HttpUriRequest) argument).getFirstHeader("Authorization") == null;
-                }
-            }));
+            verify(mockHttpClientOperations).execute(any(), argThat(httpUriRequest -> httpUriRequest.getFirstHeader("Authorization") == null));
         }
         finally
         {

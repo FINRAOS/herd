@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.regex.Pattern;
 
 import javax.servlet.FilterChain;
+import javax.servlet.ReadListener;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -324,6 +325,22 @@ public class RequestLoggingFilter extends OncePerRequestFilter
                         // Read bytes from the previously read payload.
                         return byteArrayInputStream.read();
                     }
+
+                    public boolean isFinished()
+                    {
+                        return true;
+                    }
+
+                    public boolean isReady()
+                    {
+                        return true;
+                    }
+
+                    public void setReadListener(final ReadListener readListener)
+                    {
+                        // Empty method.
+                    }
+
                 };
             }
         }

@@ -30,7 +30,6 @@ import java.util.Arrays;
 import com.google.common.base.Objects;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -131,22 +130,13 @@ public class StorageUnitRestControllerTest
         String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue, Integer businessObjectDataVersion,
         DelimitedFieldValues subPartitionValues)
     {
-        return argThat(new ArgumentMatcher<BusinessObjectDataKey>()
-        {
-            @Override
-            public boolean matches(Object argument)
-            {
-                BusinessObjectDataKey businessObjectDataKey = (BusinessObjectDataKey) argument;
-
-                return Objects.equal(namespace, businessObjectDataKey.getNamespace()) &&
+        return argThat(businessObjectDataKey -> Objects.equal(namespace, businessObjectDataKey.getNamespace()) &&
                     Objects.equal(businessObjectDefinitionName, businessObjectDataKey.getBusinessObjectDefinitionName()) &&
                     Objects.equal(businessObjectFormatUsage, businessObjectDataKey.getBusinessObjectFormatUsage()) &&
                     Objects.equal(businessObjectFormatFileType, businessObjectDataKey.getBusinessObjectFormatFileType()) &&
                     Objects.equal(businessObjectFormatVersion, businessObjectDataKey.getBusinessObjectFormatVersion()) &&
                     Objects.equal(partitionValue, businessObjectDataKey.getPartitionValue()) &&
                     Objects.equal(businessObjectDataVersion, businessObjectDataKey.getBusinessObjectDataVersion()) &&
-                    Objects.equal(subPartitionValues.getValues(), businessObjectDataKey.getSubPartitionValues());
-            }
-        });
+                    Objects.equal(subPartitionValues.getValues(), businessObjectDataKey.getSubPartitionValues()));
     }
 }
