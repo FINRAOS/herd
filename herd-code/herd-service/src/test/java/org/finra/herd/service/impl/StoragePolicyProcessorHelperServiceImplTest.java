@@ -38,6 +38,7 @@ import org.mockito.stubbing.Answer;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.StorageUnitDao;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.StorageFile;
@@ -79,6 +80,9 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
 
     @Mock
     private ConfigurationHelper configurationHelper;
+
+    @Mock
+    private JsonHelper jsonHelper;
 
     @Mock
     private S3KeyPrefixHelper s3KeyPrefixHelper;
@@ -438,9 +442,11 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
 
         // Verify the external calls.
+        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
         verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
         verify(storageUnitDaoHelper).getStorageUnitEntityByKey(businessObjectDataStorageUnitKey);
         verify(storageUnitDao).saveAndRefresh(storageUnitEntity);
+        verify(jsonHelper).objectToJson(businessObjectDataStorageUnitKey);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results. The counter value now should be equal to 1.
@@ -458,6 +464,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
 
         // Verify the external calls.
+        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -477,6 +484,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
 
         // Verify the external calls.
+        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -510,9 +518,11 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
 
         // Verify the external calls.
+        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
         verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
         verify(storageUnitDaoHelper).getStorageUnitEntityByKey(businessObjectDataStorageUnitKey);
         verify(storageUnitDao).saveAndRefresh(storageUnitEntity);
+        verify(jsonHelper).objectToJson(businessObjectDataStorageUnitKey);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results. The counter value now should be equal to 2.
@@ -524,7 +534,8 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, s3KeyPrefixHelper, s3Service, storageFileDaoHelper,
-            storageFileHelper, storageHelper, storagePolicyDaoHelper, storagePolicyHelper, storageUnitDao, storageUnitDaoHelper, storageUnitHelper);
+        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, jsonHelper, s3KeyPrefixHelper, s3Service,
+            storageFileDaoHelper, storageFileHelper, storageHelper, storagePolicyDaoHelper, storagePolicyHelper, storageUnitDao, storageUnitDaoHelper,
+            storageUnitHelper);
     }
 }

@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.StorageFile;
@@ -76,6 +77,9 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
 
     @Autowired
     private ConfigurationHelper configurationHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     @Autowired
     private S3KeyPrefixHelper s3KeyPrefixHelper;
@@ -407,6 +411,9 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
      */
     protected void updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
     {
+        // Log the DTO contents.
+        LOGGER.info("storagePolicyTransitionParamsDto={}", jsonHelper.objectToJson(storagePolicyTransitionParamsDto));
+
         // Continue only when business object data kay and storage name are specified.
         if (storagePolicyTransitionParamsDto.getBusinessObjectDataKey() != null && storagePolicyTransitionParamsDto.getStorageName() != null)
         {
@@ -424,6 +431,11 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
                 storageUnitEntity.setStoragePolicyTransitionFailedAttempts(storageUnitEntity.getStoragePolicyTransitionFailedAttempts() == null ? 1 :
                     storageUnitEntity.getStoragePolicyTransitionFailedAttempts() + 1);
                 storageUnitDao.saveAndRefresh(storageUnitEntity);
+
+                // Log the new value for the storage policy transition failed attempts counter.
+                LOGGER.info("Incremented storage policy transition failed attempts counter. " +
+                    "storagePolicyTransitionFailedAttempts={} businessObjectDataStorageUnitKey={}",
+                    storageUnitEntity.getStoragePolicyTransitionFailedAttempts(), jsonHelper.objectToJson(businessObjectDataStorageUnitKey));
             }
             catch (Exception e)
             {
