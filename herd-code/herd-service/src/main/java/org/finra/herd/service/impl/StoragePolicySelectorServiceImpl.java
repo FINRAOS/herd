@@ -119,7 +119,7 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
         int maxAllowedTransitionAttempts = herdStringHelper.getConfigurationValueAsInteger(ConfigurationValue.STORAGE_POLICY_TRANSITION_MAX_ALLOWED_ATTEMPTS);
 
         LOGGER.info("{}={} {}={}", ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_UPDATED_ON_THRESHOLD_DAYS.getKey(), updatedOnThresholdInDays,
-            ConfigurationValue.STORAGE_POLICY_TRANSITION_MAX_ALLOWED_ATTEMPTS, maxAllowedTransitionAttempts);
+            ConfigurationValue.STORAGE_POLICY_TRANSITION_MAX_ALLOWED_ATTEMPTS.getKey(), maxAllowedTransitionAttempts);
 
         // Compute business object data "updated on" threshold timestamp based on
         // the current database timestamp and the threshold value configured in the system.
