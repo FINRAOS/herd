@@ -331,10 +331,10 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     public void testGetResultTypeIndexSearchResponseDto()
     {
         SearchResponse searchResponse = mock(SearchResponse.class);
-        StringTerms terms = mock(StringTerms.class);
+        Terms terms = mock(Terms.class);
         Aggregations aggregations = mock(Aggregations.class);
-        StringTerms.Bucket bucket = mock(StringTerms.Bucket.class);
-        List<StringTerms.Bucket> buckets = Arrays.asList(bucket);
+        Terms.Bucket bucket = mock(Terms.Bucket.class);
+        List<Terms.Bucket> buckets = Arrays.asList(bucket);
 
         when(searchResponse.getAggregations()).thenReturn(aggregations);
         when(aggregations.get(RESULT_TYPE_AGGS)).thenReturn(terms);
@@ -361,10 +361,10 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     public void testGetTagTagIndexSearchResponseDto()
     {
         SearchResponse searchResponse = mock(SearchResponse.class);
-        StringTerms terms = mock(StringTerms.class);
+        Terms terms = mock(Terms.class);
         Aggregations aggregations = mock(Aggregations.class);
-        StringTerms.Bucket tagTypeCodeEntry = mock(StringTerms.Bucket.class);
-        List<StringTerms.Bucket> tagTypeCodeEntryList = Arrays.asList(tagTypeCodeEntry);
+        Terms.Bucket tagTypeCodeEntry = mock(Terms.Bucket.class);
+        List<Terms.Bucket> tagTypeCodeEntryList = Arrays.asList(tagTypeCodeEntry);
 
         when(searchResponse.getAggregations()).thenReturn(aggregations);
         when(aggregations.get(TAG_TYPE_FACET_AGGS)).thenReturn(terms);
@@ -373,9 +373,9 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         when(tagTypeCodeEntry.getDocCount()).thenReturn((long) TAG_TYPE_CODE_COUNT);
         when(tagTypeCodeEntry.getAggregations()).thenReturn(aggregations);
 
-        StringTerms tagTypeDisplayNameAggs = mock(StringTerms.class);
-        StringTerms.Bucket tagTypeDisplayNameEntry = mock(StringTerms.Bucket.class);
-        List<StringTerms.Bucket> tagTypeDisplayNameEntryList = Arrays.asList(tagTypeDisplayNameEntry);
+        Terms tagTypeDisplayNameAggs = mock(Terms.class);
+        Terms.Bucket tagTypeDisplayNameEntry = mock(Terms.Bucket.class);
+        List<Terms.Bucket> tagTypeDisplayNameEntryList = Arrays.asList(tagTypeDisplayNameEntry);
         when(aggregations.get(TAGTYPE_NAME_AGGREGATION)).thenReturn(tagTypeDisplayNameAggs);
         when(tagTypeDisplayNameEntry.getAggregations()).thenReturn(aggregations);
         when(tagTypeDisplayNameAggs.getBuckets()).thenReturn(tagTypeDisplayNameEntryList);
@@ -383,16 +383,16 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         StringTerms tagCodeAggs = mock(StringTerms.class);
         StringTerms.Bucket tagCodeEntry = mock(StringTerms.Bucket.class);
-        List<StringTerms.Bucket> tagCodeEntryList = Arrays.asList(tagCodeEntry);
+        List<Terms.Bucket> tagCodeEntryList = Arrays.asList(tagCodeEntry);
 
         when(aggregations.get(TAG_CODE_AGGREGATION)).thenReturn(tagCodeAggs);
         when(tagCodeAggs.getBuckets()).thenReturn(tagCodeEntryList);
         when(tagCodeEntry.getAggregations()).thenReturn(aggregations);
         when(tagCodeEntry.getKeyAsString()).thenReturn(TAG_CODE);
         when(tagCodeEntry.getDocCount()).thenReturn((long) TAG_CODE_COUNT);
-        StringTerms tagNameAggs = mock(StringTerms.class);
-        StringTerms.Bucket tagNameEntry = mock(StringTerms.Bucket.class);
-        List<StringTerms.Bucket> tagNameEntryList = Arrays.asList(tagNameEntry);
+        Terms tagNameAggs = mock(Terms.class);
+        Terms.Bucket tagNameEntry = mock(Terms.Bucket.class);
+        List<Terms.Bucket> tagNameEntryList = Arrays.asList(tagNameEntry);
         when(tagNameEntry.getAggregations()).thenReturn(aggregations);
         when(aggregations.get(TAG_NAME_AGGREGATION)).thenReturn(tagNameAggs);
         when(tagNameAggs.getBuckets()).thenReturn(tagNameEntryList);
