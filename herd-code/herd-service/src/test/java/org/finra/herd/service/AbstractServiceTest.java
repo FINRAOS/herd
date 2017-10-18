@@ -452,6 +452,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
 
+    public static final List<String> NO_SECURITY_FUNCTIONS = null;
+
+    public static final List<String> NO_SECURITY_ROLES = null;
+
     public static final String NO_SKU = null;
 
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;

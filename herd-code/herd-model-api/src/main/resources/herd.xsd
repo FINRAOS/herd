@@ -302,6 +302,11 @@
                <xs:documentation>The list of security roles</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="securityFunctions" type="securityFunctions">
+            <xs:annotation>
+               <xs:documentation>The list of security functions</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -357,6 +362,17 @@
          <xs:element name="securityRole" type="xs:string" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
                <xs:documentation>The security role</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="securityFunctions" type="securityFunctions"/>
+   <xs:complexType name="securityFunctions">
+      <xs:sequence>
+         <xs:element name="securityFunction" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The security function</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
