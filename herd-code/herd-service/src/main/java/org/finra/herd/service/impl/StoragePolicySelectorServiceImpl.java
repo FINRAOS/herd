@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,7 @@ import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.AbstractHerdDao;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
@@ -55,9 +57,6 @@ import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
 import org.finra.herd.service.StoragePolicySelectorService;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 
-/**
- * The file upload cleanup service implementation.
- */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorService
@@ -105,7 +104,7 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
     public List<StoragePolicySelection> execute(String sqsQueueName, int maxResult)
     {
         // Create a result list.
-        List<StoragePolicySelection> resultStoragePolicySelections = new ArrayList<>();
+        List<StoragePolicySelection> storagePolicySelections = new ArrayList<>();
 
         // Get the current timestamp from the database.
         Timestamp currentTimestamp = herdDao.getCurrentTimestamp();
@@ -114,6 +113,13 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
         // by a storage policy with DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE storage policy rule type.
         int updatedOnThresholdInDays =
             herdStringHelper.getConfigurationValueAsInteger(ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_UPDATED_ON_THRESHOLD_DAYS);
+
+        // Get the maximum number of failed storage policy transition attempts before the relative storage unit gets excluded from
+        // being selected per storage policies by the storage policy selector system job. 0 means the maximum is not set.
+        int maxAllowedTransitionAttempts = herdStringHelper.getConfigurationValueAsInteger(ConfigurationValue.STORAGE_POLICY_TRANSITION_MAX_ALLOWED_ATTEMPTS);
+
+        LOGGER.info("{}={} {}={}", ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_UPDATED_ON_THRESHOLD_DAYS.getKey(), updatedOnThresholdInDays,
+            ConfigurationValue.STORAGE_POLICY_TRANSITION_MAX_ALLOWED_ATTEMPTS.getKey(), maxAllowedTransitionAttempts);
 
         // Compute business object data "updated on" threshold timestamp based on
         // the current database timestamp and the threshold value configured in the system.
@@ -134,8 +140,8 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
             while (true)
             {
                 Map<BusinessObjectDataEntity, StoragePolicyEntity> map = businessObjectDataDao
-                    .getBusinessObjectDataEntitiesMatchingStoragePolicies(storagePolicyPriorityLevel, SUPPORTED_BUSINESS_OBJECT_DATA_STATUSES, startPosition,
-                        maxResult);
+                    .getBusinessObjectDataEntitiesMatchingStoragePolicies(storagePolicyPriorityLevel, SUPPORTED_BUSINESS_OBJECT_DATA_STATUSES,
+                        maxAllowedTransitionAttempts, startPosition, maxResult);
 
                 for (Map.Entry<BusinessObjectDataEntity, StoragePolicyEntity> entry : map.entrySet())
                 {
@@ -144,7 +150,6 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                     // Process this storage policy selection, only if this business object data has not been selected earlier.
                     if (!selectedBusinessObjectDataEntities.contains(businessObjectDataEntity))
                     {
-                        // Initialize a flag.
                         boolean createStoragePolicySelection = false;
 
                         // Remember that we got this business object data entity as matching to a storage policy.
@@ -154,28 +159,24 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                         // Get the storage policy entity, so we can validate the storage policy rule against this business object data.
                         StoragePolicyEntity storagePolicyEntity = entry.getValue();
 
-                        // Check if business object data matches the storage policy rule.
-                        if (StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED.equals(storagePolicyEntity.getStoragePolicyRuleType().getCode()))
+                        // Get a storage policy rule type and value.
+                        String storagePolicyRuleType = storagePolicyEntity.getStoragePolicyRuleType().getCode();
+                        Integer storagePolicyRuleValue = storagePolicyEntity.getStoragePolicyRuleValue();
+
+                        // For DAYS_SINCE_BDATA_REGISTERED storage policy rule type, select business object data based on it's "created on" timestamp.
+                        if (StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED.equals(storagePolicyRuleType))
                         {
-                            // For DAYS_SINCE_BDATA_REGISTERED storage policy rule type, select business object data based on it's "created on" timestamp.
+                            // Compute "created on" threshold timestamp based on the current timestamp and storage policy rule value.
+                            Timestamp createdOnThresholdTimestamp = HerdDateUtils.addDays(currentTimestamp, -storagePolicyRuleValue);
 
-                            // Compute the business object data "created on " threshold timestamp
-                            // based on the current database timestamp and storage policy rule value.
-                            Timestamp createdOnThresholdTimestamp = HerdDateUtils.addDays(currentTimestamp, -storagePolicyEntity.getStoragePolicyRuleValue());
-
-                            // Select this business object data per this storage policy if it has
-                            // "created on" timestamp before or equal to the threshold timestamp.
+                            // Select this business object data if it has "created on" timestamp before or equal to the threshold timestamp.
                             createStoragePolicySelection = (businessObjectDataEntity.getCreatedOn().compareTo(createdOnThresholdTimestamp) <= 0);
                         }
-                        else if (StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE
-                            .equals(storagePolicyEntity.getStoragePolicyRuleType().getCode()))
+                        // For DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE storage policy rule type, select business object data based on both it's primary
+                        // partition value compared against storage policy rule value and "updated on" timestamp being below the threshold.
+                        else if (StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE.equals(storagePolicyRuleType))
                         {
-                            // For DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE storage policy rule type, select business object
-                            // data based on both it's primary partition value compared against storage policy rule value
-                            // and "updated on" timestamp being below the threshold configured in the system.
-
-                            // For this storage policy rule, we ignore this business object data
-                            // if it was updated earlier than the threshold value of days ago.
+                            // For this storage policy rule, we ignore this business object data if it was updated earlier than the threshold value of days ago.
                             if (businessObjectDataEntity.getUpdatedOn().compareTo(updatedOnThresholdTimestamp) <= 0)
                             {
                                 // Try to convert business object data primary partition value to a timestamp.
@@ -185,43 +186,37 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                                 // For this storage policy rule, we ignore this business data if primary partition value is not a date.
                                 if (primaryPartitionValue != null)
                                 {
-                                    // Compute the relative primary partition value threshold date
-                                    // based on the current database timestamp and storage policy rule value.
-                                    Date primaryPartitionValueThresholdDate =
-                                        new Date(HerdDateUtils.addDays(currentTimestamp, -storagePolicyEntity.getStoragePolicyRuleValue()).getTime());
+                                    // Compute the relative primary partition value threshold date based on the current timestamp and storage policy rule value.
+                                    Date primaryPartitionValueThreshold = new Date(HerdDateUtils.addDays(currentTimestamp, -storagePolicyRuleValue).getTime());
 
-                                    // Select this business object data per this storage policy if it has
-                                    // primary partition value before or equal to the threshold date.
-                                    createStoragePolicySelection = (primaryPartitionValue.compareTo(primaryPartitionValueThresholdDate) <= 0);
+                                    // Select this business object data if it has it's primary partition value before or equal to the threshold date.
+                                    createStoragePolicySelection = (primaryPartitionValue.compareTo(primaryPartitionValueThreshold) <= 0);
                                 }
                             }
                         }
                         // Fail on an un-supported storage policy rule type.
                         else
                         {
-                            throw new IllegalStateException(
-                                String.format("Storage policy type \"%s\" is not supported.", storagePolicyEntity.getStoragePolicyRuleType().getCode()));
+                            throw new IllegalStateException(String.format("Storage policy type \"%s\" is not supported.", storagePolicyRuleType));
                         }
 
                         // If this business object data got selected, create a storage policy selection and add it to the result list.
                         if (createStoragePolicySelection)
                         {
+                            // Create business object data key and storage policy key per selected entities.
+                            BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+                            StoragePolicyKey storagePolicyKey =
+                                new StoragePolicyKey(storagePolicyEntity.getNamespace().getCode(), storagePolicyEntity.getName());
+
                             // Create and add a storage policy selection to the result list.
-                            StoragePolicySelection storagePolicySelection = new StoragePolicySelection();
-                            resultStoragePolicySelections.add(storagePolicySelection);
-                            storagePolicySelection.setBusinessObjectDataKey(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity));
-                            storagePolicySelection
-                                .setStoragePolicyKey(new StoragePolicyKey(storagePolicyEntity.getNamespace().getCode(), storagePolicyEntity.getName()));
-                            storagePolicySelection.setStoragePolicyVersion(storagePolicyEntity.getVersion());
+                            storagePolicySelections.add(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, storagePolicyEntity.getVersion()));
 
-                            // Log the storage policy selection.
                             LOGGER.info("Selected business object data for storage policy processing: " +
-                                "businessObjectDataKey={} storagePolicyKey={} storagePolicyVersion={}",
-                                jsonHelper.objectToJson(storagePolicySelection.getBusinessObjectDataKey()),
-                                jsonHelper.objectToJson(storagePolicySelection.getStoragePolicyKey()), storagePolicySelection.getStoragePolicyVersion());
+                                "businessObjectDataKey={} storagePolicyKey={} storagePolicyVersion={}", jsonHelper.objectToJson(businessObjectDataKey),
+                                jsonHelper.objectToJson(storagePolicyKey), storagePolicyEntity.getVersion());
 
-                            // Stop adding storage policy selections to the result list if we reached the max result limit.
-                            if (resultStoragePolicySelections.size() >= maxResult)
+                            // Stop adding storage policy selections to the result list if we reached the maximum results limit.
+                            if (storagePolicySelections.size() >= maxResult)
                             {
                                 break;
                             }
@@ -230,26 +225,26 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                 }
 
                 // Stop processing storage policies if we reached the max result limit or there are no more business object data to select.
-                if (resultStoragePolicySelections.size() >= maxResult || map.isEmpty())
+                if (storagePolicySelections.size() >= maxResult || map.isEmpty())
                 {
                     break;
                 }
 
-                // Increase the start position for the next select.
+                // Increment start position for the next select.
                 startPosition += maxResult;
             }
 
             // Stop processing storage policies if we reached the max result limit.
-            if (resultStoragePolicySelections.size() >= maxResult)
+            if (storagePolicySelections.size() >= maxResult)
             {
                 break;
             }
         }
 
         // Send all storage policy selections to the specified SQS queue.
-        sendStoragePolicySelectionToSqsQueue(sqsQueueName, resultStoragePolicySelections);
+        sendStoragePolicySelectionToSqsQueue(sqsQueueName, storagePolicySelections);
 
-        return resultStoragePolicySelections;
+        return storagePolicySelections;
     }
 
     /**
@@ -293,21 +288,25 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
      */
     private void sendStoragePolicySelectionToSqsQueue(String sqsQueueName, List<StoragePolicySelection> storagePolicySelections)
     {
-        AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
-        for (StoragePolicySelection storagePolicySelection : storagePolicySelections)
+        if (CollectionUtils.isNotEmpty(storagePolicySelections))
         {
-            String messageText = null;
-            try
-            {
-                messageText = jsonHelper.objectToJson(storagePolicySelection);
-                sqsDao.sendMessage(awsParamsDto, sqsQueueName, messageText, null);
-            }
-            catch (Exception e)
-            {
-                LOGGER.error("Failed to publish message to the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}", sqsQueueName, messageText);
+            AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
 
-                // Throw the exception up.
-                throw new IllegalStateException(e.getMessage(), e);
+            for (StoragePolicySelection storagePolicySelection : storagePolicySelections)
+            {
+                String messageText = null;
+
+                try
+                {
+                    messageText = jsonHelper.objectToJson(storagePolicySelection);
+                    sqsDao.sendMessage(awsParamsDto, sqsQueueName, messageText, null);
+                }
+                catch (Exception e)
+                {
+                    // Log the error and throw the exception up.
+                    LOGGER.error("Failed to publish message to the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}", sqsQueueName, messageText);
+                    throw new IllegalStateException(e.getMessage(), e);
+                }
             }
         }
     }

@@ -628,8 +628,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
 
-    public static final List<String> NO_ROLES = null;
-
     public static final String NO_S3_BUCKET_NAME = null;
 
     public static final AmazonS3 NO_S3_CLIENT = null;

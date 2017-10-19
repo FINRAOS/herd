@@ -35,6 +35,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.junit.Before;
 import org.junit.Test;
@@ -380,8 +381,8 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         when(tagTypeDisplayNameAggs.getBuckets()).thenReturn(tagTypeDisplayNameEntryList);
         when(tagTypeDisplayNameEntry.getKeyAsString()).thenReturn(TAG_TYPE_DISPLAY_NAME);
 
-        Terms tagCodeAggs = mock(Terms.class);
-        Terms.Bucket tagCodeEntry = mock(Terms.Bucket.class);
+        StringTerms tagCodeAggs = mock(StringTerms.class);
+        StringTerms.Bucket tagCodeEntry = mock(StringTerms.Bucket.class);
         List<Terms.Bucket> tagCodeEntryList = Arrays.asList(tagCodeEntry);
 
         when(aggregations.get(TAG_CODE_AGGREGATION)).thenReturn(tagCodeAggs);

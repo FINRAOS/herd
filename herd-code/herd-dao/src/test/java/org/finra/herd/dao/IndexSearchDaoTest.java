@@ -37,7 +37,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,9 +64,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.internal.listeners.CollectCreatedMocks;
-import org.mockito.internal.progress.MockingProgress;
-import org.mockito.internal.progress.ThreadSafeMockingProgress;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
@@ -100,8 +96,6 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
     private static final String TAG_TYPE = "tagType";
 
-    private List<Object> createdMocks;
-
     @InjectMocks
     private IndexSearchDaoImpl indexSearchDao;
 
@@ -124,9 +118,6 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     public void before()
     {
         MockitoAnnotations.initMocks(this);
-        createdMocks = new LinkedList<>();
-        final MockingProgress progress = new ThreadSafeMockingProgress();
-        progress.setListener(new CollectCreatedMocks(createdMocks));
     }
 
     @Test
@@ -528,7 +519,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         searchHitList.add(hit2);
 
         when(searchResult.getHits(Map.class)).thenReturn(searchHitList);
-        when(searchResult.getTotal()).thenReturn(200);
+        when(searchResult.getTotal()).thenReturn(200L);
 
         MetricAggregation metricAggregation = mock(MetricAggregation.class);
         TermsAggregation termsAggregation = mock(TermsAggregation.class);
@@ -597,7 +588,9 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         verify(jestClientHelper).searchExecute(any());
         verify(searchResult).getTotal();
         verify(searchResult).getHits(Map.class);
-        verifyNoMoreInteractions(createdMocks.toArray());
+        verifyNoMoreInteractions(searchRequestBuilder, searchRequestBuilderWithSource, searchRequestBuilderWithSize, searchRequestBuilderWithSorting,
+            searchRequestBuilderWithHighlighting, searchResponse, searchHits, searchHit1, searchHit2, searchShardTarget1, searchShardTarget2, highlightField,
+            listenableActionFuture, searchResult, metricAggregation, termsAggregation, entry1, entry2);
         verifyNoMoreInteractionsHelper();
     }
 

@@ -123,8 +123,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to delete keys/key versions with prefix \"%s\" from bucket \"%s\". " +
-                "Reason: One or more objects could not be deleted (Service: null; Status Code: 0; Error Code: null; Request ID: null)", S3_KEY_PREFIX,
-                S3_BUCKET_NAME), e.getMessage());
+                    "Reason: One or more objects could not be deleted (Service: null; Status Code: 0; Error Code: null; Request ID: null; S3 Extended Request ID: null)",
+                S3_KEY_PREFIX, S3_BUCKET_NAME), e.getMessage());
         }
 
         // Verify the external calls.

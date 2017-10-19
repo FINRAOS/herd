@@ -31,6 +31,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitCreateResponse;
@@ -67,6 +68,9 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
 
     @Mock
     private StorageFileHelper storageFileHelper;
+
+    @Mock
+    private StorageUnitDao storageUnitDao;
 
     @Mock
     private StorageUnitHelper storageUnitHelper;
@@ -148,6 +152,7 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
         verify(businessObjectDataHelper).createBusinessObjectDataKeyFromEntity(businessObjectDataEntity);
         verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
         verify(storageFileHelper).createStorageFilesFromEntities(storageFileEntities);
+        verify(storageUnitDao).saveAndRefresh(storageUnitEntity);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -283,6 +288,6 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, storageDaoHelper, storageFileHelper, storageUnitHelper);
+        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, storageDaoHelper, storageFileHelper, storageUnitDao, storageUnitHelper);
     }
 }
