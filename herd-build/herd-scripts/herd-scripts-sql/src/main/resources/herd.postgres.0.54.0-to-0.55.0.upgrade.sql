@@ -14,6 +14,4 @@
 * limitations under the License.
 */
 
--- DM-10312: strge_unit table alteration
-
 alter table strge_unit add column strge_plcy_trnsn_faild_atmpts_nb bigint NULL;
