@@ -29,8 +29,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.ConfigurationValue;
@@ -55,6 +58,7 @@ import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StoragePolicyDaoHelper;
 import org.finra.herd.service.helper.StoragePolicyHelper;
 import org.finra.herd.service.helper.StorageUnitDaoHelper;
+import org.finra.herd.service.helper.StorageUnitHelper;
 
 /**
  * An implementation of the helper service class for the storage policy processor service.
@@ -73,6 +77,9 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
 
     @Autowired
     private ConfigurationHelper configurationHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     @Autowired
     private S3KeyPrefixHelper s3KeyPrefixHelper;
@@ -96,23 +103,31 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
     private StoragePolicyHelper storagePolicyHelper;
 
     @Autowired
+    private StorageUnitDao storageUnitDao;
+
+    @Autowired
     private StorageUnitDaoHelper storageUnitDaoHelper;
+
+    @Autowired
+    private StorageUnitHelper storageUnitHelper;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public StoragePolicyTransitionParamsDto initiateStoragePolicyTransition(StoragePolicySelection storagePolicySelection)
+    public void initiateStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
+        StoragePolicySelection storagePolicySelection)
     {
-        return initiateStoragePolicyTransitionImpl(storagePolicySelection);
+        initiateStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto, storagePolicySelection);
     }
 
     /**
-     * Initiates a storage policy transition as per specified storage policy selection.
+     * Initiates a storage policy transition as per specified storage policy selection. This method also updates storage policy transition DTO with parameters
+     * needed to perform a storage policy transition.
      *
+     * @param storagePolicyTransitionParamsDto the storage policy transition DTO to be updated with parameters needed to perform a storage policy transition
      * @param storagePolicySelection the storage policy selection message
-     *
-     * @return the storage policy transition DTO that contains parameters needed to perform a storage policy transition
      */
-    protected StoragePolicyTransitionParamsDto initiateStoragePolicyTransitionImpl(StoragePolicySelection storagePolicySelection)
+    protected void initiateStoragePolicyTransitionImpl(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
+        StoragePolicySelection storagePolicySelection)
     {
         // Validate and trim the storage policy selection message content.
         validateStoragePolicySelection(storagePolicySelection);
@@ -125,14 +140,18 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         // Retrieve the business object data entity and ensure it exists.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
 
-        // Validate the business object data.
-        validateBusinessObjectData(businessObjectDataEntity, businessObjectDataKey);
-
         // Retrieve the storage policy and ensure it exists.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoHelper.getStoragePolicyEntityByKeyAndVersion(storagePolicyKey, storagePolicyVersion);
 
         // Get the storage name.
         String storageName = storagePolicyEntity.getStorage().getName();
+
+        // Initialize the storage policy transition parameters DTO by setting business object data key and storage name.
+        storagePolicyTransitionParamsDto.setBusinessObjectDataKey(businessObjectDataKey);
+        storagePolicyTransitionParamsDto.setStorageName(storageName);
+
+        // Validate the business object data.
+        validateBusinessObjectData(businessObjectDataEntity, businessObjectDataKey);
 
         // Validate the storage.
         validateStorage(storagePolicyEntity.getStorage(), storagePolicyKey, storagePolicyVersion);
@@ -183,10 +202,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         String oldStorageUnitStatus = storageUnitEntity.getStatus().getCode();
         storageUnitDaoHelper.updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVING, reason);
 
-        // Build the storage policy transition parameters DTO.
-        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
-        storagePolicyTransitionParamsDto.setBusinessObjectDataKey(businessObjectDataKey);
-        storagePolicyTransitionParamsDto.setStorageName(storageName);
+        // Update the policy transition parameters DTO.
         storagePolicyTransitionParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
         storagePolicyTransitionParamsDto.setS3BucketName(s3BucketName);
         storagePolicyTransitionParamsDto.setS3KeyPrefix(s3KeyPrefix);
@@ -197,8 +213,6 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setS3ObjectTagValue(s3ObjectTagValue);
         storagePolicyTransitionParamsDto.setS3ObjectTaggerRoleArn(s3ObjectTaggerRoleArn);
         storagePolicyTransitionParamsDto.setS3ObjectTaggerRoleSessionName(s3ObjectTaggerRoleSessionName);
-
-        return storagePolicyTransitionParamsDto;
     }
 
     /**
@@ -379,5 +393,54 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setOldStorageUnitStatus(storageUnitEntity.getStatus().getCode());
         storageUnitDaoHelper.updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVED, reason);
         storagePolicyTransitionParamsDto.setNewStorageUnitStatus(storageUnitEntity.getStatus().getCode());
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateStoragePolicyTransitionFailedAttemptsIgnoreException(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
+    {
+        updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(storagePolicyTransitionParamsDto);
+    }
+
+    /**
+     * Increments the count for failed storage policy transition attempts for the specified storage unit. This method does not fail in case storage unit entity
+     * update is unsuccessful, but simply logs the exception information as a warning.
+     *
+     * @param storagePolicyTransitionParamsDto the storage policy transition DTO that contains parameters needed to complete a storage policy transition. The
+     * business object data key and storage name identify the storage unit to be updated
+     */
+    protected void updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
+    {
+        // Log the DTO contents.
+        LOGGER.info("storagePolicyTransitionParamsDto={}", jsonHelper.objectToJson(storagePolicyTransitionParamsDto));
+
+        // Continue only when business object data kay and storage name are specified.
+        if (storagePolicyTransitionParamsDto.getBusinessObjectDataKey() != null && storagePolicyTransitionParamsDto.getStorageName() != null)
+        {
+            try
+            {
+                // Create a storage unit key.
+                BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey = storageUnitHelper
+                    .createBusinessObjectDataStorageUnitKey(storagePolicyTransitionParamsDto.getBusinessObjectDataKey(),
+                        storagePolicyTransitionParamsDto.getStorageName());
+
+                // Retrieve the storage unit entity and make sure it exists.
+                StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntityByKey(businessObjectDataStorageUnitKey);
+
+                // Update the storage policy transition failed attempts count.
+                storageUnitEntity.setStoragePolicyTransitionFailedAttempts(storageUnitEntity.getStoragePolicyTransitionFailedAttempts() == null ? 1 :
+                    storageUnitEntity.getStoragePolicyTransitionFailedAttempts() + 1);
+                storageUnitDao.saveAndRefresh(storageUnitEntity);
+
+                // Log the new value for the storage policy transition failed attempts counter.
+                LOGGER.info("Incremented storage policy transition failed attempts counter. " +
+                    "storagePolicyTransitionFailedAttempts={} businessObjectDataStorageUnitKey={}",
+                    storageUnitEntity.getStoragePolicyTransitionFailedAttempts(), jsonHelper.objectToJson(businessObjectDataStorageUnitKey));
+            }
+            catch (Exception e)
+            {
+                LOGGER.warn(e.getMessage(), e);
+            }
+        }
     }
 }

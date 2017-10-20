@@ -24,13 +24,14 @@ import org.finra.herd.model.dto.StoragePolicyTransitionParamsDto;
 public interface StoragePolicyProcessorHelperService
 {
     /**
-     * Initiates a storage policy transition as per specified storage policy selection.
+     * Initiates a storage policy transition as per specified storage policy selection. This method also updates storage policy transition DTO with parameters
+     * needed to perform a storage policy transition.
      *
+     * @param storagePolicyTransitionParamsDto the storage policy transition DTO to be updated with parameters needed to perform a storage policy transition
      * @param storagePolicySelection the storage policy selection message
-     *
-     * @return the storage policy transition DTO that contains parameters needed to perform a storage policy transition
      */
-    public StoragePolicyTransitionParamsDto initiateStoragePolicyTransition(StoragePolicySelection storagePolicySelection);
+    public void initiateStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
+        StoragePolicySelection storagePolicySelection);
 
     /**
      * Executes a storage policy transition as per specified storage policy selection.
@@ -45,4 +46,13 @@ public interface StoragePolicyProcessorHelperService
      * @param storagePolicyTransitionParamsDto the storage policy transition DTO that contains parameters needed to complete a storage policy transition
      */
     public void completeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto);
+
+    /**
+     * Increments the count for failed storage policy transition attempts for the specified storage unit. This method does not fail in case storage unit entity
+     * update is unsuccessful, but simply logs the exception information as a warning.
+     *
+     * @param storagePolicyTransitionParamsDto the storage policy transition DTO that contains parameters needed to complete a storage policy transition. The
+     * business object data key and storage name identify the storage unit to be updated
+     */
+    public void updateStoragePolicyTransitionFailedAttemptsIgnoreException(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto);
 }

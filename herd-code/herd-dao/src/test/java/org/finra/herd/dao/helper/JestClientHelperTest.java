@@ -24,9 +24,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.internal.listeners.CollectCreatedMocks;
-import org.mockito.internal.progress.MockingProgress;
-import org.mockito.internal.progress.ThreadSafeMockingProgress;
 
 import org.finra.herd.dao.JestClientFactory;
 
@@ -49,8 +46,6 @@ public class JestClientHelperTest
         MockitoAnnotations.initMocks(this);
         createdMocks = new LinkedList<>();
         createdMocks.add(jestClientFactory);
-        final MockingProgress progress = new ThreadSafeMockingProgress();
-        progress.setListener(new CollectCreatedMocks(createdMocks));
     }
 
     @Test

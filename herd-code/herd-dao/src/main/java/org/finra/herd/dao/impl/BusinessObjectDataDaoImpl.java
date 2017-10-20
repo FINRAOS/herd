@@ -411,7 +411,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     @Override
     public Map<BusinessObjectDataEntity, StoragePolicyEntity> getBusinessObjectDataEntitiesMatchingStoragePolicies(
-        StoragePolicyPriorityLevel storagePolicyPriorityLevel, List<String> supportedBusinessObjectDataStatuses, int startPosition, int maxResult)
+        StoragePolicyPriorityLevel storagePolicyPriorityLevel, List<String> supportedBusinessObjectDataStatuses, int storagePolicyTransitionMaxAllowedAttempts,
+        int startPosition, int maxResult)
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -468,7 +469,15 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // Add a restriction as per storage policy transition type.
         mainQueryPredicates.add(builder
             .and(builder.equal(storagePolicyTransitionTypeEntityJoin.get(StoragePolicyTransitionTypeEntity_.code), StoragePolicyTransitionTypeEntity.GLACIER),
-                builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.ENABLED)));
+                builder.or(builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.ENABLED),
+                    builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.ARCHIVING))));
+
+        // If specified, add restriction on maximum allowed attempts for a storage policy transition.
+        if (storagePolicyTransitionMaxAllowedAttempts > 0)
+        {
+            mainQueryPredicates.add(builder.or(builder.isNull(storageUnitEntityJoin.get(StorageUnitEntity_.storagePolicyTransitionFailedAttempts)), builder
+                .lessThan(storageUnitEntityJoin.get(StorageUnitEntity_.storagePolicyTransitionFailedAttempts), storagePolicyTransitionMaxAllowedAttempts)));
+        }
 
         // Order the results by business object data "created on" value.
         Order orderByCreatedOn = builder.asc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.createdOn));
