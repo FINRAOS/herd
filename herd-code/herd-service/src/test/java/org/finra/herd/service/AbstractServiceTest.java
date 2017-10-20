@@ -175,7 +175,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean BOOLEAN_VALUE = true;
 
-    public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
+    public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_1_" + RANDOM_SUFFIX;
+
+    public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING_2 = "UT_BusinessObjectDataKeyAsString_2_" + RANDOM_SUFFIX;
 
     public static final String BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
         "  \"eventDate\" : \"$current_time\",\n" +
@@ -450,6 +452,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
 
+    public static final List<String> NO_SECURITY_FUNCTIONS = null;
+
+    public static final List<String> NO_SECURITY_ROLES = null;
+
     public static final String NO_SKU = null;
 
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;
@@ -459,6 +465,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final StorageDirectory NO_STORAGE_DIRECTORY = null;
 
     public static final List<StorageFile> NO_STORAGE_FILES = new ArrayList<>();
+
+    public static final Integer NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS = null;
 
     public static final List<StorageUnit> NO_STORAGE_UNITS = new ArrayList<>();
 
@@ -528,6 +536,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final DateTime START_TIME = getRandomDateTime();
 
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
+
+    public static final Integer STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS = getRandomInteger();
 
     public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
 

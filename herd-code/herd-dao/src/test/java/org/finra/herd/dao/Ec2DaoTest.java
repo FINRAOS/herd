@@ -35,7 +35,6 @@ import com.amazonaws.services.ec2.model.SpotPrice;
 import com.google.common.base.Objects;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -159,34 +158,10 @@ public class Ec2DaoTest extends AbstractDaoTest
     private DescribeSpotPriceHistoryRequest equalsDescribeSpotPriceHistoryRequest(String availabilityZone, Collection<String> instanceTypes,
         Collection<String> productDescriptions)
     {
-        return argThat(new EqualsDescribeSpotPriceHistoryRequest(availabilityZone, instanceTypes, productDescriptions));
-    }
-
-    /**
-     * Argument matcher which matches a DescribeSpotPriceHistoryRequest
-     */
-    private static class EqualsDescribeSpotPriceHistoryRequest extends ArgumentMatcher<DescribeSpotPriceHistoryRequest>
-    {
-        private String availabilityZone;
-
-        private Collection<String> instanceTypes;
-
-        private Collection<String> productDescriptions;
-
-        public EqualsDescribeSpotPriceHistoryRequest(String availabilityZone, Collection<String> instanceTypes, Collection<String> productDescriptions)
-        {
-            this.availabilityZone = availabilityZone;
-            this.instanceTypes = instanceTypes;
-            this.productDescriptions = productDescriptions;
-        }
-
-        @Override
-        public boolean matches(Object argument)
-        {
-            DescribeSpotPriceHistoryRequest describeSpotPriceHistoryRequest = (DescribeSpotPriceHistoryRequest) argument;
-            return Objects.equal(availabilityZone, describeSpotPriceHistoryRequest.getAvailabilityZone()) &&
+        return argThat(describeSpotPriceHistoryRequest ->
+            Objects.equal(availabilityZone, describeSpotPriceHistoryRequest.getAvailabilityZone()) &&
                 Objects.equal(instanceTypes, describeSpotPriceHistoryRequest.getInstanceTypes()) &&
-                Objects.equal(productDescriptions, describeSpotPriceHistoryRequest.getProductDescriptions());
-        }
+                Objects.equal(productDescriptions, describeSpotPriceHistoryRequest.getProductDescriptions())
+        );
     }
 }

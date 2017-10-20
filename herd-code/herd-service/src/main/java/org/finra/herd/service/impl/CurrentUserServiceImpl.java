@@ -16,6 +16,7 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,6 +66,16 @@ public class CurrentUserServiceImpl implements CurrentUserService
             if (CollectionUtils.isNotEmpty(applicationUser.getRoles()))
             {
                 userAuthorizations.setSecurityRoles(new ArrayList<>(getValidSecurityRoles(applicationUser.getRoles())));
+            }
+
+            // Get all granted authorities for this user.
+            Collection<GrantedAuthority> grantedAuthorities = securityUserWrapper.getAuthorities();
+
+            // Add relative security functions as per granted authorities, if any are present.
+            if (CollectionUtils.isNotEmpty(grantedAuthorities))
+            {
+                userAuthorizations.setSecurityFunctions(
+                    grantedAuthorities.stream().map(grantedAuthority -> new String(grantedAuthority.getAuthority())).collect(Collectors.toList()));
             }
 
             userAuthorizations.setNamespaceAuthorizations(new ArrayList<>(applicationUser.getNamespaceAuthorizations()));

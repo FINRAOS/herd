@@ -34,7 +34,11 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
+import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageDirectory;
+import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
@@ -108,6 +112,31 @@ public class StorageUnitHelperTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
             SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME), result);
+    }
+
+    @Test
+    public void testCreateStorageUnitsFromEntities()
+    {
+        // Create a business object data storage unit key.
+        BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
+
+        // Create a storage unit entity.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper.createStorageUnitEntity(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS);
+        storageUnitEntity.setDirectoryPath(STORAGE_DIRECTORY_PATH);
+        storageUnitEntity.setStoragePolicyTransitionFailedAttempts(STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS);
+
+        // Call the method under test.
+        List<StorageUnit> result = storageUnitHelper.createStorageUnitsFromEntities(Arrays.asList(storageUnitEntity));
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(Arrays.asList(
+            new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), new StorageDirectory(STORAGE_DIRECTORY_PATH), null, STORAGE_UNIT_STATUS,
+                STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS)), result);
     }
 
     @Test
