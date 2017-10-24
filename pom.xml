@@ -53,18 +53,14 @@
       <eclipse.persistence.version>2.7.0</eclipse.persistence.version>
       <findbugs.version>3.0.1</findbugs.version>
       <hibernate.jpa.api>1.0.0.Final</hibernate.jpa.api>
-      <hibernate.validator.version>5.2.2.Final</hibernate.validator.version>
-      <hibernate.version>5.0.7.Final</hibernate.version>
+      <hibernate.validator.version>6.0.3.Final</hibernate.validator.version>
+      <hibernate.version>5.2.12.Final</hibernate.version>
       <h2db.version>1.4.196</h2db.version>
       <jackson.mapper.version>1.9.13</jackson.mapper.version>
       <jackson.version>2.9.1</jackson.version>
       <javax.servlet.version>4.0.0</javax.servlet.version>
       <jodatime.version>2.9.9</jodatime.version>
       <jstl-impl.version>1.2.4</jstl-impl.version>
-      <!--
-      TODO: This explicit dependency will be needed when we migrate to Hibernate 5.
-      <jta.version>1.1</jta.version>
-      -->
       <junit.version>4.12</junit.version>
       <log4j.version>2.9.1</log4j.version>
       <maven.artifact.version>3.5.0</maven.artifact.version>
@@ -80,7 +76,7 @@
       <slf4j.version>1.7.25</slf4j.version>
       <spring.ldap.version>2.3.2.RELEASE</spring.ldap.version>
       <spring.security.version>4.2.3.RELEASE</spring.security.version>
-      <spring.version>4.2.4.RELEASE</spring.version>
+      <spring.version>4.3.12.RELEASE</spring.version>
       <spring-retry.version>1.2.1.RELEASE</spring-retry.version>
       <sun.jersey.version>1.19.4</sun.jersey.version>
       <swagger.version>1.5.9</swagger.version>
