@@ -33,11 +33,14 @@ import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.IndexSearchService;
 import org.finra.herd.service.SearchableService;
-import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
+import org.finra.herd.service.helper.AlternateKeyHelper;
+import org.finra.herd.service.helper.SearchIndexDaoHelper;
+import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
@@ -49,31 +52,37 @@ import org.finra.herd.service.helper.TagHelper;
 public class IndexSearchServiceImpl implements IndexSearchService, SearchableService, FacetFieldValidationService
 {
     /**
-     * Constant to hold the display name option for the indexSearch
+     * Constant to hold the display name option for the index search
      */
-    private static final String DISPLAY_NAME_FIELD = "displayname";
+    public static final String DISPLAY_NAME_FIELD = "displayname";
 
     /**
-     * The minimum allowable length of a search term
+     * The minimum allowable length of a search term.
      */
-    private static final int SEARCH_TERM_MINIMUM_ALLOWABLE_LENGTH = 3;
+    public static final int SEARCH_TERM_MINIMUM_ALLOWABLE_LENGTH = 3;
 
     /**
-     * Constant to hold the short description option for the indexSearch
+     * Constant to hold the short description option for the index search.
      */
-    private static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
+    public static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
+
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
 
     @Autowired
     private IndexSearchDao indexSearchDao;
 
     @Autowired
-    private TagHelper tagHelper;
+    private SearchIndexDaoHelper searchIndexDaoHelper;
+
+    @Autowired
+    private SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
 
     @Autowired
     private TagDaoHelper tagDaoHelper;
 
     @Autowired
-    private IndexSearchResultTypeHelper resultTypeHelper;
+    private TagHelper tagHelper;
 
     @Override
     public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
@@ -99,7 +108,11 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
             request.setFacetFields(new ArrayList<>(facetFields));
         }
 
-        return indexSearchDao.indexSearch(request, fields);
+        // Fetch the current active indexes
+        String bdefActiveIndex = searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        String tagActiveIndex = searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+
+        return indexSearchDao.indexSearch(request, fields, bdefActiveIndex, tagActiveIndex);
     }
 
     /**
@@ -131,20 +144,19 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         for (IndexSearchFilter searchFilter : indexSearchFilters)
         {
             // Silently skip a search filter which is null
-            if (null != searchFilter)
+            if (searchFilter != null)
             {
                 // Validate that each search filter has at least one index search key
                 Assert.notEmpty(searchFilter.getIndexSearchKeys(), "At least one index search key must be specified.");
 
                 // Guard against a single null element in the index search keys list
-                if (null != searchFilter.getIndexSearchKeys().get(0))
+                if (searchFilter.getIndexSearchKeys().get(0) != null)
                 {
                     // Get the instance type of the key in the search filter, match all other keys with this
                     Class<?> expectedInstanceType =
                         searchFilter.getIndexSearchKeys().get(0).getIndexSearchResultTypeKey() != null ? IndexSearchResultTypeKey.class : TagKey.class;
 
-                    searchFilter.getIndexSearchKeys().forEach(indexSearchKey ->
-                    {
+                    searchFilter.getIndexSearchKeys().forEach(indexSearchKey -> {
                         // Validate that each search key has either an index search result type key or a tag key
                         Assert.isTrue((indexSearchKey.getIndexSearchResultTypeKey() != null) ^ (indexSearchKey.getTagKey() != null),
                             "Exactly one instance of index search result type key or tag key must be specified.");
@@ -172,7 +184,10 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
                         // Validate search result type key if present
                         if (indexSearchKey.getIndexSearchResultTypeKey() != null)
                         {
-                            resultTypeHelper.validateIndexSearchResultTypeKey(indexSearchKey.getIndexSearchResultTypeKey());
+                            validateIndexSearchResultTypeKey(indexSearchKey.getIndexSearchResultTypeKey());
+
+                            // Ensure that specified search index type exists.
+                            searchIndexTypeDaoHelper.getSearchIndexTypeEntity(indexSearchKey.getIndexSearchResultTypeKey().getIndexSearchResultType());
                         }
                     });
                 }
@@ -190,5 +205,16 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     public Set<String> getValidFacetFields()
     {
         return ImmutableSet.of(ElasticsearchHelper.TAG_FACET, ElasticsearchHelper.RESULT_TYPE_FACET);
+    }
+
+    /**
+     * Validates an index search result type key. This method also trims the key parameters.
+     *
+     * @param indexSearchResultTypeKey the specified index search result type key
+     */
+    private void validateIndexSearchResultTypeKey(IndexSearchResultTypeKey indexSearchResultTypeKey)
+    {
+        indexSearchResultTypeKey.setIndexSearchResultType(
+            alternateKeyHelper.validateStringParameter("An", "index search result type", indexSearchResultTypeKey.getIndexSearchResultType()));
     }
 }

@@ -25,7 +25,9 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.service.BusinessObjectDataStatusService;
+import org.finra.herd.service.NotificationEventService;
 
 /**
  * An Activiti task that updates status for a business object data.
@@ -48,18 +50,29 @@ import org.finra.herd.service.BusinessObjectDataStatusService;
 @Component
 public class UpdateBusinessObjectDataStatus extends BaseJavaDelegate
 {
-    private Expression namespace;
-    private Expression businessObjectDefinitionName;
-    private Expression businessObjectFormatUsage;
-    private Expression businessObjectFormatFileType;
-    private Expression businessObjectFormatVersion;
-    private Expression partitionValue;
-    private Expression subPartitionValues;
-    private Expression businessObjectDataVersion;
     private Expression businessObjectDataStatus;
 
     @Autowired
     private BusinessObjectDataStatusService businessObjectDataStatusService;
+
+    private Expression businessObjectDataVersion;
+
+    private Expression businessObjectDefinitionName;
+
+    private Expression businessObjectFormatFileType;
+
+    private Expression businessObjectFormatUsage;
+
+    private Expression businessObjectFormatVersion;
+
+    private Expression namespace;
+
+    @Autowired
+    private NotificationEventService notificationEventService;
+
+    private Expression partitionValue;
+
+    private Expression subPartitionValues;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -69,12 +82,12 @@ public class UpdateBusinessObjectDataStatus extends BaseJavaDelegate
         String businessObjectFormatUsage = activitiHelper.getExpressionVariableAsString(this.businessObjectFormatUsage, execution);
         String businessObjectFormatFileType = activitiHelper.getExpressionVariableAsString(this.businessObjectFormatFileType, execution);
         Integer businessObjectFormatVersion =
-            activitiHelper.getExpressionVariableAsInteger(this.businessObjectFormatVersion, execution, "businessObjectFormatVersion", false);
+            activitiHelper.getExpressionVariableAsInteger(this.businessObjectFormatVersion, execution, "businessObjectFormatVersion", true);
         String partitionValue = activitiHelper.getExpressionVariableAsString(this.partitionValue, execution);
         String subPartitionValuesString = activitiHelper.getExpressionVariableAsString(this.subPartitionValues, execution);
         List<String> subPartitionValues = daoHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValuesString);
         Integer businessObjectDataVersion =
-            activitiHelper.getExpressionVariableAsInteger(this.businessObjectDataVersion, execution, "businessObjectDataVersion", false);
+            activitiHelper.getExpressionVariableAsInteger(this.businessObjectDataVersion, execution, "businessObjectDataVersion", true);
         String businessObjectDataStatus = activitiHelper.getExpressionVariableAsString(this.businessObjectDataStatus, execution);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
@@ -89,6 +102,11 @@ public class UpdateBusinessObjectDataStatus extends BaseJavaDelegate
 
         BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataStatusService
             .updateBusinessObjectDataStatus(businessObjectDataKey, new BusinessObjectDataStatusUpdateRequest(businessObjectDataStatus));
+
+        // Create a business object data notification.
+        notificationEventService.processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG,
+            businessObjectDataStatusUpdateResponse.getBusinessObjectDataKey(), businessObjectDataStatusUpdateResponse.getStatus(),
+            businessObjectDataStatusUpdateResponse.getPreviousStatus());
 
         setJsonResponseAsWorkflowVariable(businessObjectDataStatusUpdateResponse, execution);
     }

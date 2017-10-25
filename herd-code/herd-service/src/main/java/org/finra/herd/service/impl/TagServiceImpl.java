@@ -49,7 +49,6 @@ import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagCreateRequest;
@@ -126,7 +125,6 @@ public class TagServiceImpl implements TagService, SearchableService
     @Autowired
     private TagTypeDaoHelper tagTypeDaoHelper;
 
-    @PublishNotificationMessages
     @Override
     public Tag createTag(TagCreateRequest request)
     {
@@ -169,7 +167,6 @@ public class TagServiceImpl implements TagService, SearchableService
         return createTagFromEntity(tagEntity);
     }
 
-    @PublishNotificationMessages
     @Override
     public Tag deleteTag(TagKey tagKey)
     {
@@ -334,7 +331,6 @@ public class TagServiceImpl implements TagService, SearchableService
         }
     }
 
-    @PublishNotificationMessages
     @Override
     public Tag updateTag(TagKey tagKey, TagUpdateRequest tagUpdateRequest)
     {
@@ -637,9 +633,8 @@ public class TagServiceImpl implements TagService, SearchableService
     }
 
     @Override
-    public boolean indexSizeCheckValidationTags()
+    public boolean indexSizeCheckValidationTags(String indexName)
     {
-        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Simple count validation, index size should equal entity list size
@@ -655,7 +650,7 @@ public class TagServiceImpl implements TagService, SearchableService
     }
 
     @Override
-    public boolean indexSpotCheckPercentageValidationTags()
+    public boolean indexSpotCheckPercentageValidationTags(String indexName)
     {
         final Double spotCheckPercentage = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class);
 
@@ -666,7 +661,7 @@ public class TagServiceImpl implements TagService, SearchableService
     }
 
     @Override
-    public boolean indexSpotCheckMostRecentValidationTags()
+    public boolean indexSpotCheckMostRecentValidationTags(String indexName)
     {
         final Integer spotCheckMostRecentNumber =
             configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
@@ -679,9 +674,8 @@ public class TagServiceImpl implements TagService, SearchableService
 
     @Override
     @Async
-    public Future<Void> indexValidateAllTags()
+    public Future<Void> indexValidateAllTags(String indexName)
     {
-        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Get a list of all tags

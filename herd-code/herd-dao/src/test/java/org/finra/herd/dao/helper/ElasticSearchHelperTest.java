@@ -35,6 +35,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +55,7 @@ import org.finra.herd.model.dto.FacetTypeEnum;
 import org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
 public class ElasticSearchHelperTest extends AbstractDaoTest
 {
@@ -175,7 +177,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         indexSearchFilters.add(indexSearchFilter1);
         indexSearchFilters.add(indexSearchFilter2);
-        BoolQueryBuilder result = elasticsearchHelper.addIndexSearchFilterBooleanClause(indexSearchFilters);
+        BoolQueryBuilder result = elasticsearchHelper.addIndexSearchFilterBooleanClause(indexSearchFilters, "bdefIndex", "tagIndex");
         assertThat("Result is null.", result, is(notNullValue()));
     }
 
@@ -195,9 +197,8 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     public void testGetFacetsResponseWithEmptyResponseDto()
     {
         ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
-        List<Facet> facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
-        Assert.isTrue(facets.size() == 0);
-        facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, true);
+        List<Facet> facets =
+            elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
         Assert.isTrue(facets.size() == 0);
     }
 
@@ -215,7 +216,8 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         elasticsearchResponseDto.setNestTagTypeIndexSearchResponseDtos(nestTagTypeIndexSearchResponseDtos);
 
-        List<Facet> facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
+        List<Facet> facets =
+            elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
         List<Facet> expectedFacets = new ArrayList<>();
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, (long) TAG_TYPE_CODE_COUNT, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
@@ -245,7 +247,8 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         tagTypeIndexSearchResponseDtos.add(tagType3);
         elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(tagTypeIndexSearchResponseDtos);
 
-        List<Facet> facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
+        List<Facet> facets =
+            elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
         List<Facet> expectedFacets = new ArrayList<>();
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, (long) TAG_TYPE_CODE_COUNT, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
@@ -275,7 +278,8 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         tagTypeIndexSearchResponseDtos.add(tagType3);
         elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(tagTypeIndexSearchResponseDtos);
 
-        List<Facet> facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
+        List<Facet> facets =
+            elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
         List<Facet> expectedFacets = new ArrayList<>();
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, (long) TAG_TYPE_CODE_COUNT, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
@@ -306,7 +310,8 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         tagTypeIndexSearchResponseDtos.add(tagType3);
         elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(tagTypeIndexSearchResponseDtos);
 
-        List<Facet> facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
+        List<Facet> facets =
+            elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
         List<Facet> expectedFacets = new ArrayList<>();
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, (long) TAG_TYPE_CODE_COUNT, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
@@ -376,8 +381,8 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         when(tagTypeDisplayNameAggs.getBuckets()).thenReturn(tagTypeDisplayNameEntryList);
         when(tagTypeDisplayNameEntry.getKeyAsString()).thenReturn(TAG_TYPE_DISPLAY_NAME);
 
-        Terms tagCodeAggs = mock(Terms.class);
-        Terms.Bucket tagCodeEntry = mock(Terms.Bucket.class);
+        StringTerms tagCodeAggs = mock(StringTerms.class);
+        StringTerms.Bucket tagCodeEntry = mock(StringTerms.Bucket.class);
         List<Terms.Bucket> tagCodeEntryList = Arrays.asList(tagCodeEntry);
 
         when(aggregations.get(TAG_CODE_AGGREGATION)).thenReturn(tagCodeAggs);
@@ -611,6 +616,26 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         // Verify the external calls.
         verify(jsonHelper).objectToJson(searchResponse);
         verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testGetSearchIndexType()
+    {
+        assertEquals(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name(), elasticsearchHelper
+            .getSearchIndexType(BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME));
+
+        assertEquals(SearchIndexTypeEntity.SearchIndexTypes.TAG.name(),
+            elasticsearchHelper.getSearchIndexType(TAG_SEARCH_INDEX_NAME, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME));
+
+        try
+        {
+            elasticsearchHelper.getSearchIndexType(SEARCH_INDEX_NAME, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Search result index name \"%s\" does not match any of the active search indexes. bdefActiveIndex=%s tagActiveIndex=%s",
+                SEARCH_INDEX_NAME, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME), e.getMessage());
+        }
     }
 
     /**

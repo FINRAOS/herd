@@ -23,25 +23,27 @@ import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.dto.StoragePolicyTransitionParamsDto;
 
-/**
- * An implementation of the helper service class for the storage policy processor service for testing.
- */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 @Primary
 public class TestStoragePolicyProcessorHelperServiceImpl extends StoragePolicyProcessorHelperServiceImpl
 {
     /**
-     * Overwrites the base class method to change transactional attributes.
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
      */
     @Override
-    public StoragePolicyTransitionParamsDto initiateStoragePolicyTransition(StoragePolicySelection storagePolicySelection)
+    public void initiateStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
+        StoragePolicySelection storagePolicySelection)
     {
-        return initiateStoragePolicyTransitionImpl(storagePolicySelection);
+        initiateStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto, storagePolicySelection);
     }
 
     /**
-     * Overwrites the base class method to change transactional attributes.
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
      */
     @Override
     public void executeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
@@ -50,11 +52,24 @@ public class TestStoragePolicyProcessorHelperServiceImpl extends StoragePolicyPr
     }
 
     /**
-     * Overwrites the base class method to change transactional attributes.
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
      */
     @Override
     public void completeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
     {
         completeStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public void updateStoragePolicyTransitionFailedAttemptsIgnoreException(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
+    {
+        updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(storagePolicyTransitionParamsDto);
     }
 }

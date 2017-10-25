@@ -145,4 +145,5 @@
    <additionalSlaveSecurityGroups>
       <additionalSlaveSecurityGroup>additionalSlaveSecurityGroup</additionalSlaveSecurityGroup>
    </additionalSlaveSecurityGroups>
+   <scaleDownBehavior>scaleDownBehavior</scaleDownBehavior>
 </emrClusterDefinition>

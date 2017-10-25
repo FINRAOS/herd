@@ -8,7 +8,7 @@
     "InstanceType" : {
       "Description" : "Herd Application and Database Server EC2 instance type",
       "Type" : "String",
-      "Default" : "t1.micro",
+      "Default" : "m1.large",
       "AllowedValues" : [ "t1.micro", "t2.micro", "t2.small", "t2.medium",
                           "m1.small", "m1.medium", "m1.large", "m1.xlarge",
                           "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "m3.medium",
@@ -146,6 +146,10 @@
       "Type" : "AWS::SQS::Queue"
     },
 
+    "searchIndexUpdateSqsQueue" : {
+      "Type" : "AWS::SQS::Queue"
+    },
+
     "herdS3Bucket" : {
       "Type" : "AWS::S3::Bucket",
       "Properties" : {
@@ -158,17 +162,48 @@
       "Metadata" : {
         "Comment" : "Install Herd",
         "AWS::CloudFormation::Init" : {
-          "config": {
+          "configSets" : {
+            "PreInstallAndInstall" : [ "PreInstall", "Install" ]
+          },
+          "PreInstall": {
+            "files": {
+              "/etc/yum.repos.d/elasticsearch.repo": {
+                "content": {
+                  "Fn::Join": [
+                    "\n", [
+                      "[elasticsearch-5.x]",
+                      "name=Elasticsearch repository for 5.x packages",
+                      "baseurl=https://artifacts.elastic.co/packages/5.x/yum",
+                      "gpgcheck=1",
+                      "gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch",
+                      "enabled=1",
+                      "autorefresh=1",
+                      "type=rpm-md\n"
+                    ]
+                  ]
+                },
+                "mode": "000644",
+                "owner": "root",
+                "group": "root"
+              }
+            }
+          },
+          "Install": {
             "packages": {
               "yum": {
                 "java-1.8.0-openjdk": [],
                 "postgresql9*": [],
-                "tomcat8": []
+                "tomcat8": [],
+                "elasticsearch": [],
+                "jq": []
               }
             },
             "commands": {
               "1-remove-java7": {
                 "command": "yum remove -y java-1.7.0-openjdk"
+              },
+              "2-unzip-herd-scripts-sql": {
+                "command": "unzip -d /home/ec2-user/sql /home/ec2-user/sql/herd-scripts-sql.jar"
               }
             },
             "files": {
@@ -196,6 +231,7 @@
                       "action=/opt/aws/bin/cfn-init -v ",
                       "         --stack ", {"Ref": "AWS::StackName"},
                       "         --resource herdApplicationServer ",
+                      "         --configsets PreInstallAndInstall ",
                       "         --region ", {"Ref": "AWS::Region"}, "\n",
                       "runas=root\n"
                     ]
@@ -208,52 +244,8 @@
                 "owner": "tomcat",
                 "group": "tomcat"
               },
-              "/home/ec2-user/sql/herd.postgres.create.sql": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/${herdTagVersion}/herd-build/herd-scripts/herd-scripts-sql/src/main/resources/herd.postgres.${herdLastMajorDatabaseReleaseVersion}.create.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-              "/home/ec2-user/sql/herd.postgres.refdata.sql": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/${herdTagVersion}/herd-build/herd-scripts/herd-scripts-sql/src/main/resources/herd.postgres.${herdLastMajorDatabaseReleaseVersion}.refdata.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-              "/home/ec2-user/sql/herd.postgres.cnfgn.sql": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/${herdTagVersion}/herd-build/herd-scripts/herd-scripts-sql/src/main/resources/herd.postgres.${herdLastMajorDatabaseReleaseVersion}.cnfgn.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-#foreach ($fileName in $herdPostgresUpgradeScripts.split(","))
-              "/home/ec2-user/sql/${fileName}": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/${herdTagVersion}/herd-build/herd-scripts/herd-scripts-sql/src/main/resources/${fileName}",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-#end
-              "/home/ec2-user/sql/quartz_tables_postgres.sql": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/${herdTagVersion}/herd-build/herd-scripts/herd-scripts-sql/src/main/resources/quartz_tables_postgres.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-              "/home/ec2-user/sql/activiti.postgres.create.engine.sql": {
-                "source": "https://raw.githubusercontent.com/Activiti/Activiti/activiti-${activitiVersion}/modules/activiti-engine/src/main/resources/org/activiti/db/create/activiti.postgres.create.engine.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-              "/home/ec2-user/sql/activiti.postgres.create.history.sql": {
-                "source": "https://raw.githubusercontent.com/Activiti/Activiti/activiti-${activitiVersion}/modules/activiti-engine/src/main/resources/org/activiti/db/create/activiti.postgres.create.history.sql",
-                "mode": "000664",
-                "owner": "ec2-user",
-                "group": "ec2-user"
-              },
-              "/home/ec2-user/sql/activiti.postgres.create.identity.sql": {
-                "source": "https://raw.githubusercontent.com/Activiti/Activiti/activiti-${activitiVersion}/modules/activiti-engine/src/main/resources/org/activiti/db/create/activiti.postgres.create.identity.sql",
+              "/home/ec2-user/sql/herd-scripts-sql.jar": {
+                "source": "https://oss.sonatype.org/service/local/repositories/releases/content/org/finra/herd/herd-scripts-sql/${project.version}/herd-scripts-sql-${project.version}.jar",
                 "mode": "000664",
                 "owner": "ec2-user",
                 "group": "ec2-user"
@@ -435,6 +427,7 @@
             },
             "services": {
               "sysvinit": {
+                "elasticsearch"  : { "enabled" : "true", "ensureRunning" : "true" },
                 "cfn-hup": {
                   "enabled": "true", "ensureRunning": "true",
                   "files": ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"]
@@ -459,10 +452,14 @@
           "/opt/aws/bin/cfn-init -v ",
           "         --stack ", { "Ref" : "AWS::StackName" },
           "         --resource herdApplicationServer ",
+          "         --configsets PreInstallAndInstall ",
           "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
           "set -x\n",
           "exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1\n",
+
+          "# Ensure Elasticsearch is running\n",
+          "/usr/bin/curl -s -XGET http://localhost:9200\n",
 
           "# Configure Postgresql\n",
           "service postgresql initdb\n",
@@ -480,9 +477,9 @@
           "export PGUSER=postgres\n",
           "export PGDATABASE=postgres\n",
           "cd /home/ec2-user/sql\n",
-          "psql -f herd.postgres.create.sql\n",
-          "psql -f herd.postgres.refdata.sql\n",
-          "psql -f herd.postgres.cnfgn.sql\n",
+          "psql -f herd.postgres.${herdLastMajorDatabaseReleaseVersion}.create.sql\n",
+          "psql -f herd.postgres.${herdLastMajorDatabaseReleaseVersion}.refdata.sql\n",
+          "psql -f herd.postgres.${herdLastMajorDatabaseReleaseVersion}.cnfgn.sql\n",
 #foreach ($fileName in $herdPostgresUpgradeScripts.split(","))
           "psql -f ${fileName}\n",
 #end
@@ -495,15 +492,19 @@
           "psql -c \"INSERT INTO cnfgn VALUES ('s3.managed.bucket.name','",{"Ref": "herdS3Bucket" },"', NULL);\"\n",
           "psql -c \"DELETE FROM cnfgn WHERE cnfgn_key_nm = 'herd.notification.sqs.incoming.queue.name';\"\n",
           "psql -c \"INSERT INTO cnfgn VALUES ('herd.notification.sqs.incoming.queue.name','",{"Fn::GetAtt": ["herdQueueIn", "QueueName"]},"', NULL);\"\n",
+          "psql -c \"DELETE FROM cnfgn WHERE cnfgn_key_nm = 'search.index.update.sqs.queue.name';\"\n",
+          "psql -c \"INSERT INTO cnfgn VALUES ('search.index.update.sqs.queue.name','",{"Fn::GetAtt": ["searchIndexUpdateSqsQueue", "QueueName"]},"', NULL);\"\n",
 
           "service tomcat8 start\n",
           "\nsleep 15\n",
 
           "/usr/bin/wget http://localhost:8080/herd-app/rest/buildInfo -t12 --retry-connrefused -qO-\n",
           "\n",
+
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
           "\"namespaceCode\": \"Demo_App_A\"",
           "}' http://localhost:8080/herd-app/rest/namespaces\n",
+
 #set($H = '#')
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
           "\"attributes\": [",
@@ -537,7 +538,23 @@
           "\"namespace\":\"Demo_App_A\",\"businessObjectDefinitionName\":\"Data_Object_A\",\"businessObjectFormatUsage\":\"Source\",\"businessObjectFormatFileType\":\"BZ\",\"businessObjectFormatVersion\":0,\"partitionKey\":\"Transaction_Date\",\"partitionValue\":\"2015-06-01\",\"storageUnits\":[",
           "{\"storageName\":\"Demo_Storage\",\"storageFiles\":[",
           "{\"filePath\":\"demo-app-a\/exchange\/source\/bz\/data-object-a\/frmt-v0\/data-v0\/transaction-date=2015-06-01\/object_a.gz\",\"fileSizeBytes\":\"9511\",\"rowCount\":\"1000\"}","]}","],\"attributes\":[","{\"name\":\"Processor_Id\",\"value\":\"8801\"}","]",
-          "}' http://localhost:8080/herd-app/rest/businessObjectData\n ",
+          "}' http://localhost:8080/herd-app/rest/businessObjectData\n",
+
+          "bdef_index_name=$(/usr/bin/curl -s -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{",
+          "\"searchIndexType\": \"BUS_OBJCT_DFNTN\"",
+          "}' http://localhost:8080/herd-app/rest/searchIndexes | jq -r '.searchIndexKey.searchIndexName')\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{",
+          "\"searchIndexKey\": { \"searchIndexName\": \"${bdef_index_name}\" }",
+          "}' http://localhost:8080/herd-app/rest/searchIndexActivations\n",
+
+          "tag_index_name=$(/usr/bin/curl -s -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{",
+          "\"searchIndexType\": \"TAG\"",
+          "}' http://localhost:8080/herd-app/rest/searchIndexes | jq -r '.searchIndexKey.searchIndexName')\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{",
+          "\"searchIndexKey\": { \"searchIndexName\": \"${tag_index_name}\" }",
+          "}' http://localhost:8080/herd-app/rest/searchIndexActivations\n",
 
           "# If all went well, signal success\n",
           "/opt/aws/bin/cfn-signal -e $? -r 'Herd Server configuration' '", { "Ref" : "herdServerWaitHandle" }, "'\n"
@@ -582,6 +599,10 @@
     },
     "SQSQueueName" : {
       "Value" : {"Fn::GetAtt": ["herdQueueIn", "QueueName"]},
+      "Description" : "Name of Herd SQS in queue"
+    },
+    "SearchIndexUpdateSqsQueueName" : {
+      "Value" : {"Fn::GetAtt": ["searchIndexUpdateSqsQueue", "QueueName"]},
       "Description" : "Name of Herd SQS in queue"
     }
   }

@@ -52,7 +52,8 @@ public class SearchIndexValidationRestControllerTest extends AbstractRestTest
     public void testCreateSearchIndexValidation()
     {
         // Create a search index validation create request.
-        SearchIndexValidationCreateRequest searchIndexValidationCreateRequest = new SearchIndexValidationCreateRequest(new SearchIndexKey(SEARCH_INDEX_NAME));
+        SearchIndexValidationCreateRequest searchIndexValidationCreateRequest =
+            new SearchIndexValidationCreateRequest(new SearchIndexKey(SEARCH_INDEX_NAME), PERFORM_FULL_SEARCH_INDEX_VALIDATION);
 
         // Create a search index validation response.
         SearchIndexValidation searchIndexValidation =

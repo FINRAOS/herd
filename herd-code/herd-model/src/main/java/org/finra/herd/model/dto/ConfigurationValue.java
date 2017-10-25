@@ -210,6 +210,12 @@ public enum ConfigurationValue
     STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES("storage.policy.selector.job.max.business.object.data.instances", "1000"),
 
     /**
+     * The maximum number of failed storage policy transition attempts before the relative storage unit gets excluded from being selected per storage policies
+     * by the storage policy selector system job. 0 means the maximum is not set. The default is 3.
+     */
+    STORAGE_POLICY_TRANSITION_MAX_ALLOWED_ATTEMPTS("storage.policy.transition.max.allowed.attempts", 3),
+
+    /**
      * The threshold in days since business object data registration update for business object data to be selectable by a storage policy of the
      * DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE storage policy rule type. The default is 90 days.
      */
@@ -656,6 +662,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_BDEF_INDEX_NAME("elasticsearch.bdef.index.name", "bdef"),
 
     /**
+     * The elasticsearch index name
+     */
+    ELASTICSEARCH_TAG_INDEX_NAME("elasticsearch.tag.index.name", "tag"),
+
+    /**
      * The elasticsearch document type
      */
     ELASTICSEARCH_BDEF_DOCUMENT_TYPE("elasticsearch.bdef.document.type", "doc"),
@@ -704,6 +715,26 @@ public enum ConfigurationValue
     ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS("elasticsearch.searchable.fields.ngrams", "{\"*.ngrams\": \"1.0\"}"),
 
     /**
+     * Searchable 'shingles' fields, defaults to all shingles fields with no boost
+     */
+    ELASTICSEARCH_SEARCHABLE_FIELDS_SHINGLES("elasticsearch.searchable.fields.shingles", "{\"*.shingles\": \"1.0\"}"),
+
+    /**
+     * Phrase prefix query boost value
+     */
+    ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST("elasticsearch.phrase.prefix.query.boost", 1.0f),
+
+    /**
+     * Phrase query boost value
+     */
+    ELASTICSEARCH_PHRASE_QUERY_BOOST("elasticsearch.phrase.query.boost", 1.0f),
+
+    /**
+     * Best fields query boost value
+     */
+    ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST("elasticsearch.best.fields.query.boost", 1.0f),
+
+    /**
      * Pre-tags used for highlighting
      */
     ELASTICSEARCH_HIGHLIGHT_PRETAGS("elasticsearch.highlight.pretags", "<hlt class=\"highlight\">"),
@@ -744,27 +775,6 @@ public enum ConfigurationValue
     ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.tag.spot.check.most.recent.number", 10),
 
     /**
-     * The elasticsearch search guard enabled
-     */
-    ELASTICSEARCH_SEARCH_GUARD_ENABLED("elasticsearch.search.guard.enabled", "false"),
-
-    /**
-     * The elasticsearch search guard keystore credential name
-     */
-    ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME("elasticsearch.search.guard.keystore.credential.name", "AGS.component.sdlc.keystoreCredentialName"),
-
-    /**
-     * The elasticsearch search guard truststore credential name
-     */
-    ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME("elasticsearch.search.guard.truststore.credential.name",
-        "AGS.component.sdlc.truststoreCredentialName"),
-
-    /**
-     * The elasticsearch search guard keystore path
-     */
-    ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH("elasticsearch.search.guard.keystore.path", "/path/to/keystore.jks"),
-
-    /**
      * The elasticsearch search rest client hostname
      */
     ELASTICSEARCH_REST_CLIENT_HOSTNAME("elasticsearch.rest.client.hostname", "localhost"),
@@ -782,12 +792,12 @@ public enum ConfigurationValue
     /*
      * The elasticsearch search rest client user name
      */
-    ELASTICSEARCH_REST_CLIENT_USERNAME("elasticsearch.rest.client.username",  null),
+    ELASTICSEARCH_REST_CLIENT_USERNAME("elasticsearch.rest.client.username", null),
 
     /*
      * The elasticsearch search rest client user credential name
      */
-    ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname",  null),
+    ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname", null),
 
     /*
      * The elasticsearch search rest client timeout
@@ -798,11 +808,6 @@ public enum ConfigurationValue
      * The elasticsearch search rest client read timeout
      */
     ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT("elasticsearch.rest.client.read.timeout", 60000),
-
-    /**
-     * The elasticsearch search guard truststore file path
-     */
-    ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH("elasticsearch.search.guard.truststore.path", "/path/to/truststore.jks"),
 
     /**
      * The search index update queue name

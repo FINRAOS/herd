@@ -20,10 +20,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.io.FileUtils;
@@ -246,6 +248,38 @@ public class StorageFileHelper
         BusinessObjectDataKey businessObjectDataKey)
     {
         validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "copied");
+    }
+
+    /**
+     * Validates a list of storage files. This will validate and trim appropriate fields.
+     *
+     * @param storageFiles the list of storage files
+     */
+    public void validateCreateRequestStorageFiles(List<StorageFile> storageFiles)
+    {
+        Set<String> storageFilePathValidationSet = new HashSet<>();
+
+        for (StorageFile storageFile : storageFiles)
+        {
+            Assert.hasText(storageFile.getFilePath(), "A file path must be specified.");
+            storageFile.setFilePath(storageFile.getFilePath().trim());
+
+            Assert.notNull(storageFile.getFileSizeBytes(), "A file size must be specified.");
+
+            // Ensure row count is not negative.
+            if (storageFile.getRowCount() != null)
+            {
+                Assert.isTrue(storageFile.getRowCount() >= 0, "File \"" + storageFile.getFilePath() + "\" has a row count which is < 0.");
+            }
+
+            // Check for duplicates.
+            if (storageFilePathValidationSet.contains(storageFile.getFilePath()))
+            {
+                throw new IllegalArgumentException(String.format("Duplicate storage file found: %s", storageFile.getFilePath()));
+            }
+
+            storageFilePathValidationSet.add(storageFile.getFilePath());
+        }
     }
 
     /**

@@ -21,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -48,11 +50,14 @@ import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.DataProviderKey;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
+import org.finra.herd.model.api.xml.IndexSearchFilter;
+import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
@@ -77,13 +82,23 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = true;
 
+    public static final String ATTRIBUTE_NAME = "UT_AttributeName_1_" + RANDOM_SUFFIX;
+
     public static final String ATTRIBUTE_NAME_1_MIXED_CASE = "Attribute Name 1";
+
+    public static final String ATTRIBUTE_NAME_2 = "UT_AttributeName_2_" + RANDOM_SUFFIX;
 
     public static final String ATTRIBUTE_NAME_2_MIXED_CASE = "Attribute Name 2";
 
+    public static final String ATTRIBUTE_NAME_3 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
+
     public static final String ATTRIBUTE_NAME_3_MIXED_CASE = "Attribute Name 3";
 
+    public static final String ATTRIBUTE_NAME_4 = "UT_AttributeName_3_" + RANDOM_SUFFIX;
+
     public static final String ATTRIBUTE_NAME_4_MIXED_CASE = "Attribute Name 4";
+
+    public static final String ATTRIBUTE_VALUE = "UT_AttributeValue_1_" + RANDOM_SUFFIX;
 
     public static final String ATTRIBUTE_VALUE_1 = "Attribute Value 1";
 
@@ -193,9 +208,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final BigDecimal BID_PRICE = getRandomBigDecimal();
 
-    public static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
-
     public static final float BUSINESS_OBJECT_DEFINITION_INDEX_BOOST = 1f;
+
+    public static final String BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME = "UT_BusinessObjectDefinitionSearchIndexName_" + RANDOM_SUFFIX;
 
     public static final String CODE = "code";
 
@@ -229,6 +244,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CONFIGURATION_VALUE = "UT_Configuration_Value_" + RANDOM_SUFFIX;
 
+    public static final Integer CONNECTION_TIMEOUT = (int) (Math.random() * (Short.MAX_VALUE << 1));
+
     public static final String CORRELATION_DATA = "UT_Correlation_Data" + RANDOM_SUFFIX;
 
     public static final String CORRELATION_DATA_2 = "UT_Correlation_Data_2" + RANDOM_SUFFIX;
@@ -238,6 +255,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String CREATED_BY = "UT_CreatedBy_" + RANDOM_SUFFIX;
 
     public static final XMLGregorianCalendar CREATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
+
+    public static final String CREDSTASH_ENCRYPTION_CONTEXT = "UT_CredStashEncryptionContext_" + RANDOM_SUFFIX;
 
     public static final String CUSTOM_DDL_NAME = "UT_CustomDdl" + RANDOM_SUFFIX;
 
@@ -284,6 +303,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EC2_SUBNET_2 = "UT_EC2_Subnet_2_" + RANDOM_SUFFIX;
 
+    public static final String ELASTICSEARCH_HOSTNAME = "UT_Elasticsearch_Hostname" + RANDOM_SUFFIX;
+
+    public static final Integer ELASTICSEARCH_PORT = (int) (Math.random() * (Short.MAX_VALUE << 1));
+
     public static final List<String> EMPTY_ROLES = new ArrayList<>();
 
     public static final String EMPTY_S3_BUCKET_NAME = "";
@@ -307,6 +330,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String EMR_SLAVE_SECURITY_GROUP = "UT_EMR_SLAVE_SECURITY_GROUP" + RANDOM_SUFFIX;
 
     public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
+
+    public static final boolean ENABLE_HIT_HIGHLIGHTING = true;
 
     public static final String ENVIRONMENT_NAME = "TEST";
 
@@ -362,10 +387,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_2 = "UT_GlobalAttributeDefinitionName_2_" + RANDOM_SUFFIX;
 
-    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
-
-    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
-
     public static final BigDecimal HOURLY_PRICE = getRandomBigDecimal();
 
     public static final BigDecimal HOURLY_PRICE_2 = getRandomBigDecimal();
@@ -383,6 +404,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Integer HTTP_PROXY_PORT_2 = (int) (Math.random() * (Short.MAX_VALUE << 1));
+
+    public static final Boolean INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY = true;
 
     public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 
@@ -493,6 +516,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NOTIFICATION_REGISTRATION_STATUS = "UT_NotificationRegistrationStatus_1_" + RANDOM_SUFFIX;
 
+    public static final Boolean NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY = false;
+
     public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
 
     public static final List<String> NO_ALLOWED_ATTRIBUTE_VALUES = new ArrayList<>();
@@ -541,9 +566,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final EmrClusterDefinitionVolumeSpecification NO_EMR_CLUSTER_DEFINITION_VOLUME_SPECIFICATION = null;
 
+    public static final Boolean NO_ENABLE_HIT_HIGHLIGHTING = false;
+
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
 
     public static final Integer NO_EXPIRATION_IN_DAYS = null;
+
+    public static final Set<String> NO_FIELDS = new HashSet<>();
 
     public static final String NO_FORMAT_DESCRIPTION = null;
 
@@ -554,6 +583,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer NO_FORMAT_VERSION = null;
 
     public static final BigDecimal NO_HOURLY_PRICE = null;
+
+    public static final List<String> NO_INDEX_SEARCH_FACET_FIELDS = new ArrayList<>();
+
+    public static final List<IndexSearchFilter> NO_INDEX_SEARCH_FILTERS = null;
+
+    public static final IndexSearchResultTypeKey NO_INDEX_SEARCH_RESULT_TYPE_KEY = null;
 
     public static final BigDecimal NO_INSTANCE_MAX_SEARCH_PRICE = null;
 
@@ -593,8 +628,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
 
-    public static final List<String> NO_ROLES = null;
-
     public static final String NO_S3_BUCKET_NAME = null;
 
     public static final AmazonS3 NO_S3_CLIENT = null;
@@ -628,6 +661,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_TAG_DISPLAY_NAME = null;
 
     public static final Boolean NO_TAG_HAS_CHILDREN_FLAG = null;
+
+    public static final TagKey NO_TAG_KEY = null;
 
     public static final BigDecimal NO_TAG_SEARCH_SCORE_MULTIPLIER = null;
 
@@ -664,7 +699,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String PARTITION_VALUE_3 = "UT_2015-08-20" + RANDOM_SUFFIX;
 
+    public static final String PASSWORD = "UT_Password_" + RANDOM_SUFFIX;
+
     public static final Boolean PUBLISH_ATTRIBUTE = true;
+
+    public static final Integer READ_TIMEOUT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final String REASON = "UT_Reason_1_" + RANDOM_SUFFIX;
 
@@ -727,6 +766,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_PARTITION_COLUMN_NAME_PREFIX = "Prtn-Clmn-Name";
 
+    public static final Boolean SEARCH_INDEX_ACTIVE_FLAG = true;
+
+    public static final String SEARCH_INDEX_ALIAS_BDEF = "bdef";
+
+    public static final String SEARCH_INDEX_ALIAS_TAG = "tag";
+
+    public static final Boolean SEARCH_INDEX_DEFAULT_ACTIVE_FLAG = false;
+
     public static final String SEARCH_INDEX_DOCUMENT_TYPE = "UT_SearchIndex_DocumentType_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
@@ -747,11 +794,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_TYPE_BDEF = SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name();
 
+    public static final String SEARCH_INDEX_TYPE_TAG = SearchIndexTypeEntity.SearchIndexTypes.TAG.name();
+
     public static final String SEARCH_RESPONSE_JSON_STRING = "UT_SearchResponseJsonString_" + RANDOM_SUFFIX;
 
     public static final int SEARCH_RESULT_SIZE = 200;
 
-    public static final String SEARCH_TERM = "Search Term";
+    public static final String SEARCH_TERM = "Search Term -foo foo-bar";
 
     public static final Integer SECOND_DATA_VERSION = 1;
 
@@ -906,9 +955,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean TAG_HAS_NO_CHILDREN = false;
 
-    public static final String TAG_INDEX = "tag";
-
     public static final float TAG_INDEX_BOOST = 1000f;
+
+    public static final String TAG_SEARCH_INDEX_NAME = "UT_TagSearchIndexName_" + RANDOM_SUFFIX;
 
     public static final BigDecimal TAG_SEARCH_SCORE_MULTIPLIER = getRandomBigDecimal();
 
@@ -961,6 +1010,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer THIRD_VERSION = 2;
 
+    public static final Long TOTAL_INDEX_SEARCH_RESULTS = (long) (Math.random() * Long.MAX_VALUE);
+
     public static final List<String> UNSORTED_PARTITION_VALUES =
         Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
 
@@ -969,6 +1020,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final XMLGregorianCalendar UPDATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
+
+    public static final String USERNAME = "UT_Username_" + RANDOM_SUFFIX;
+
+    public static final String USER_CREDENTIAL_NAME = "UT_User_Credential_Name_" + RANDOM_SUFFIX;
 
     public static final String USER_EMAIL_ADDRESS = "UT_User_Email_Address_" + RANDOM_SUFFIX;
 

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.quartz.ObjectAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,8 @@ import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
+import org.finra.herd.service.NotificationMessagePublishingService;
+import org.finra.herd.service.systemjobs.JmsPublishingJob;
 
 /**
  * SearchIndexUpdateHelper class contains helper methods needed to process a search index update.
@@ -51,7 +54,10 @@ public class SearchIndexUpdateHelper
     private JsonHelper jsonHelper;
 
     @Autowired
-    private NotificationMessageInMemoryQueue notificationMessageInMemoryQueue;
+    private NotificationMessagePublishingService notificationMessagePublishingService;
+
+    @Autowired
+    private SystemJobHelper systemJobHelper;
 
     /**
      * Modify a business object definition
@@ -135,7 +141,7 @@ public class SearchIndexUpdateHelper
         boolean isSearchIndexUpdateSqsNotificationEnabled =
             Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED));
 
-        LOGGER.debug(String.format("searchIndexUpdateSqsNotificationEnabled: %s, messageText:%n%s", isSearchIndexUpdateSqsNotificationEnabled, messageText));
+        LOGGER.info("searchIndexUpdateSqsNotificationEnabled={} messageText={}", isSearchIndexUpdateSqsNotificationEnabled, messageText);
 
         // Only process messages if the service is enabled.
         if (isSearchIndexUpdateSqsNotificationEnabled)
@@ -147,9 +153,26 @@ public class SearchIndexUpdateHelper
             }
             else
             {
-                // Add the JMS message to the "in-memory" JMS message queue to be published by the advice.
-                notificationMessageInMemoryQueue
-                    .add(new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), getSqsQueueName(), messageText, null));
+                NotificationMessage notificationMessage =
+                    new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), getSqsQueueName(), messageText, null);
+
+                // Add the notification message to the database JMS message queue to be processed.
+                notificationMessagePublishingService.addNotificationMessageToDatabaseQueue(notificationMessage);
+
+                // Schedule JMS publishing job.
+                try
+                {
+                    systemJobHelper.runSystemJob(JmsPublishingJob.JOB_NAME, null);
+                }
+                catch (ObjectAlreadyExistsException objectAlreadyExistsException)
+                {
+                    // Ignore the error when job is already running.
+                    LOGGER.info("Failed to schedule JMS publishing job: ObjectAlreadyExistsException occurred");
+                }
+                catch (Exception e)
+                {
+                    LOGGER.error("Failed to schedule JMS publishing job.", e);
+                }
             }
         }
     }

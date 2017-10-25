@@ -65,7 +65,7 @@ public class CreateEmrCluster extends BaseEmrCluster
         {
             throw new IllegalArgumentException("contentType is required when emrClusterDefinitionOverride is specified");
         }
-        else if (StringUtils.isNotBlank(contentTypeString) && StringUtils.isNotBlank(emrClusterDefinitionOverrideString))
+        else if (StringUtils.isNotBlank(contentTypeString))
         {
             EmrClusterDefinition emrClusterDefinitionOverride =
                 getRequestObject(contentTypeString, emrClusterDefinitionOverrideString, EmrClusterDefinition.class);

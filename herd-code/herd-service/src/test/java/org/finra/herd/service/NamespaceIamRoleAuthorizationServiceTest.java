@@ -33,7 +33,6 @@ import java.util.List;
 import com.google.common.base.Objects;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -863,19 +862,8 @@ public class NamespaceIamRoleAuthorizationServiceTest
     private NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntityEq(String expectedNamespace, String expectedIamRoleName,
         String expectedDescription)
     {
-        return argThat(new ArgumentMatcher<NamespaceIamRoleAuthorizationEntity>()
-        {
-            @Override
-            public boolean matches(Object argument)
-            {
-                NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity = (NamespaceIamRoleAuthorizationEntity) argument;
-                String namespace = namespaceIamRoleAuthorizationEntity.getNamespace().getCode();
-                String iamRoleName = namespaceIamRoleAuthorizationEntity.getIamRoleName();
-                String description = namespaceIamRoleAuthorizationEntity.getDescription();
-
-                return Objects.equal(namespace, expectedNamespace) && Objects.equal(iamRoleName, expectedIamRoleName) &&
-                    Objects.equal(description, expectedDescription);
-            }
-        });
+        return argThat(namespaceIamRoleAuthorizationEntity -> Objects.equal(namespaceIamRoleAuthorizationEntity.getNamespace().getCode(), expectedNamespace) &&
+            Objects.equal(namespaceIamRoleAuthorizationEntity.getIamRoleName(), expectedIamRoleName) &&
+            Objects.equal(namespaceIamRoleAuthorizationEntity.getDescription(), expectedDescription));
     }
 }

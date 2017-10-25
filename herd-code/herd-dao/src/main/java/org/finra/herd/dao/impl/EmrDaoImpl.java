@@ -1021,6 +1021,12 @@ public class EmrDaoImpl implements EmrDao
             runJobFlowRequest.setSecurityConfiguration(emrClusterDefinition.getSecurityConfiguration());
         }
 
+        // Assign scale down behavior.
+        if (StringUtils.isNotBlank(emrClusterDefinition.getScaleDownBehavior()))
+        {
+            runJobFlowRequest.setScaleDownBehavior(emrClusterDefinition.getScaleDownBehavior());
+        }
+
         // Return the object
         return runJobFlowRequest;
     }

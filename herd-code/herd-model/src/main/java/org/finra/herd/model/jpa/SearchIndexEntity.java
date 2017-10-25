@@ -22,6 +22,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Type;
+
 /**
  * A search index.
  */
@@ -49,6 +51,23 @@ public class SearchIndexEntity extends AuditableEntity
     @ManyToOne
     @JoinColumn(name = "srch_idx_stts_cd", referencedColumnName = "srch_idx_stts_cd", nullable = false)
     private SearchIndexStatusEntity status;
+
+    /**
+     * The search index active column.
+     */
+    @Column(name = "actv_fl")
+    @Type(type = "yes_no")
+    private Boolean active;
+
+    public Boolean getActive()
+    {
+        return active;
+    }
+
+    public void setActive(Boolean active)
+    {
+        this.active = active;
+    }
 
     public String getName()
     {

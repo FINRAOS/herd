@@ -164,7 +164,7 @@ public class EmrDaoTest extends AbstractDaoTest
             @Override
             public List<String> answer(InvocationOnMock invocation) throws Throwable
             {
-                AddJobFlowStepsRequest addJobFlowStepsRequest = invocation.getArgumentAt(1, AddJobFlowStepsRequest.class);
+                AddJobFlowStepsRequest addJobFlowStepsRequest = invocation.getArgument(1);
                 assertEquals(clusterId, addJobFlowStepsRequest.getJobFlowId());
                 List<StepConfig> steps = addJobFlowStepsRequest.getSteps();
                 assertEquals(1, steps.size());
@@ -254,7 +254,7 @@ public class EmrDaoTest extends AbstractDaoTest
                 /*
                  * Assert correct parameters are used when calling this method.
                  */
-                ListInstancesRequest listInstancesRequest = invocation.getArgumentAt(1, ListInstancesRequest.class);
+                ListInstancesRequest listInstancesRequest = invocation.getArgument(1);
                 assertEquals(clusterId, listInstancesRequest.getClusterId());
                 List<String> instanceGroupTypes = listInstancesRequest.getInstanceGroupTypes();
                 assertEquals(1, instanceGroupTypes.size());
@@ -315,7 +315,7 @@ public class EmrDaoTest extends AbstractDaoTest
                 /*
                  * Assert that the given EMR cluster definition produced the correct RunJobFlowRequest
                  */
-                RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
+                RunJobFlowRequest runJobFlowRequest = invocation.getArgument(1);
                 JobFlowInstancesConfig jobFlowInstancesConfig = runJobFlowRequest.getInstances();
                 List<InstanceGroupConfig> instanceGroupConfigs = jobFlowInstancesConfig.getInstanceGroups();
                 assertEquals(2, instanceGroupConfigs.size());
@@ -378,7 +378,7 @@ public class EmrDaoTest extends AbstractDaoTest
             public String answer(InvocationOnMock invocation) throws Throwable
             {
                 // Assert that the given EMR cluster definition produced the correct RunJobFlowRequest.
-                RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
+                RunJobFlowRequest runJobFlowRequest = invocation.getArgument(1);
                 JobFlowInstancesConfig jobFlowInstancesConfig = runJobFlowRequest.getInstances();
                 assertEquals(0, CollectionUtils.size(jobFlowInstancesConfig.getInstanceGroups()));
                 final List<InstanceTypeConfig> expectedInstanceTypeConfigs = null;
@@ -510,6 +510,7 @@ public class EmrDaoTest extends AbstractDaoTest
         emrClusterDefinition.setHadoopJarSteps(Arrays.asList(new HadoopJarStep("stepName", "jarLocation", "mainClass", null, true)));
         emrClusterDefinition.setSupportedProduct("supportedProduct");
         emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
+        emrClusterDefinition.setScaleDownBehavior("scaleDownBehavior");
 
         emrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP);
         emrClusterDefinition.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP);
@@ -523,7 +524,7 @@ public class EmrDaoTest extends AbstractDaoTest
                 /*
                  * Assert that the given EMR cluster definition produced the correct RunJobFlowRequest
                  */
-                RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
+                RunJobFlowRequest runJobFlowRequest = invocation.getArgument(1);
                 assertEquals(3, runJobFlowRequest.getInstances().getInstanceGroups().size());
                 {
                     InstanceGroupConfig instanceGroupConfig = runJobFlowRequest.getInstances().getInstanceGroups().get(1);
@@ -621,6 +622,7 @@ public class EmrDaoTest extends AbstractDaoTest
                 }
                 assertEquals(Arrays.asList("supportedProduct"), runJobFlowRequest.getSupportedProducts());
                 assertEquals("securityConfiguration", runJobFlowRequest.getSecurityConfiguration());
+                assertEquals("scaleDownBehavior", runJobFlowRequest.getScaleDownBehavior());
                 assertEquals(EMR_MASTER_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedMasterSecurityGroup());
                 assertEquals(EMR_SLAVE_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedSlaveSecurityGroup());
                 return clusterId;
@@ -657,7 +659,7 @@ public class EmrDaoTest extends AbstractDaoTest
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable
             {
-                RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
+                RunJobFlowRequest runJobFlowRequest = invocation.getArgument(1);
                 // No bootstrap action should be added
                 assertEquals(0, runJobFlowRequest.getBootstrapActions().size());
                 return clusterId;
@@ -694,7 +696,7 @@ public class EmrDaoTest extends AbstractDaoTest
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable
             {
-                RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
+                RunJobFlowRequest runJobFlowRequest = invocation.getArgument(1);
                 // The oozie step should be skipped.
                 assertEquals(0, runJobFlowRequest.getSteps().size());
                 return clusterId;
@@ -736,7 +738,7 @@ public class EmrDaoTest extends AbstractDaoTest
             @Override
             public DescribeClusterResult answer(InvocationOnMock invocation) throws Throwable
             {
-                DescribeClusterRequest describeClusterRequest = invocation.getArgumentAt(1, DescribeClusterRequest.class);
+                DescribeClusterRequest describeClusterRequest = invocation.getArgument(1);
                 assertEquals(clusterId, describeClusterRequest.getClusterId());
 
                 DescribeClusterResult describeClusterResult = new DescribeClusterResult();
@@ -788,7 +790,7 @@ public class EmrDaoTest extends AbstractDaoTest
             @Override
             public DescribeClusterResult answer(InvocationOnMock invocation) throws Throwable
             {
-                DescribeClusterRequest describeClusterRequest = invocation.getArgumentAt(1, DescribeClusterRequest.class);
+                DescribeClusterRequest describeClusterRequest = invocation.getArgument(1);
                 assertEquals(clusterId, describeClusterRequest.getClusterId());
 
                 DescribeClusterResult describeClusterResult = new DescribeClusterResult();
@@ -813,7 +815,7 @@ public class EmrDaoTest extends AbstractDaoTest
             @Override
             public DescribeClusterResult answer(InvocationOnMock invocation) throws Throwable
             {
-                DescribeClusterRequest describeClusterRequest = invocation.getArgumentAt(1, DescribeClusterRequest.class);
+                DescribeClusterRequest describeClusterRequest = invocation.getArgument(1);
                 assertEquals(clusterId, describeClusterRequest.getClusterId());
 
                 return new DescribeClusterResult();
@@ -866,7 +868,7 @@ public class EmrDaoTest extends AbstractDaoTest
             @Override
             public ListClustersResult answer(InvocationOnMock invocation) throws Throwable
             {
-                ListClustersRequest listClustersRequest = invocation.getArgumentAt(1, ListClustersRequest.class);
+                ListClustersRequest listClustersRequest = invocation.getArgument(1);
                 String marker = listClustersRequest.getMarker();
 
                 ListClustersResult listClustersResult = new ListClustersResult();
@@ -922,7 +924,7 @@ public class EmrDaoTest extends AbstractDaoTest
             @Override
             public ListStepsResult answer(InvocationOnMock invocation) throws Throwable
             {
-                ListStepsRequest listStepsRequest = invocation.getArgumentAt(1, ListStepsRequest.class);
+                ListStepsRequest listStepsRequest = invocation.getArgument(1);
                 assertEquals(clusterId, listStepsRequest.getClusterId());
                 assertEquals(1, listStepsRequest.getStepStates().size());
                 assertEquals(StepState.RUNNING.toString(), listStepsRequest.getStepStates().get(0));
@@ -973,7 +975,7 @@ public class EmrDaoTest extends AbstractDaoTest
             @Override
             public DescribeStepResult answer(InvocationOnMock invocation) throws Throwable
             {
-                DescribeStepRequest describeStepRequest = invocation.getArgumentAt(1, DescribeStepRequest.class);
+                DescribeStepRequest describeStepRequest = invocation.getArgument(1);
                 assertEquals(clusterId, describeStepRequest.getClusterId());
                 assertEquals(stepId, describeStepRequest.getStepId());
 
