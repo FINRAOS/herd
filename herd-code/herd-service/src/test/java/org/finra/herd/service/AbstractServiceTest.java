@@ -593,6 +593,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ZERO_COLUMN_SIZE = "0";
 
+    public static final Integer NO_RETENTIONPERIODINDAYS = null;
+
+    public static final boolean NO_RECORDFLAG = false;
+
+    public static final String NO_RETENTIONTYPE = null;
+
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
 

@@ -126,6 +126,16 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @ManyToMany(mappedBy = "businessObjectFormatParents")
     private List<BusinessObjectFormatEntity> businessObjectFormatChildren;
 
+    @Column(name = "rec_fl")
+    private boolean recordFlag;
+
+    @Column(name = "rtntn_prd_days")
+    private Integer retentionPeriodInDays;
+
+    @ManyToOne
+    @JoinColumn(name = "rtntn_type_cd", referencedColumnName = "rtntn_type_cd", nullable = true)
+    private RetentionTypeEntity retentionType;
+
     public Integer getId()
     {
         return id;
@@ -294,5 +304,35 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setBusinessObjectFormatChildren(List<BusinessObjectFormatEntity> businessObjectFormatChildren)
     {
         this.businessObjectFormatChildren = businessObjectFormatChildren;
+    }
+
+    public boolean isRecordFlag()
+    {
+        return recordFlag;
+    }
+
+    public void setRecordFlag(boolean recordFlag)
+    {
+        this.recordFlag = recordFlag;
+    }
+
+    public Integer getRetentionPeriodInDays()
+    {
+        return retentionPeriodInDays;
+    }
+
+    public void setRetentionPeriodInDays(Integer retentionPeriodInDays)
+    {
+        this.retentionPeriodInDays = retentionPeriodInDays;
+    }
+
+    public RetentionTypeEntity getRetentionType()
+    {
+        return retentionType;
+    }
+
+    public void setRetentionType(RetentionTypeEntity retentionType)
+    {
+        this.retentionType = retentionType;
     }
 }
