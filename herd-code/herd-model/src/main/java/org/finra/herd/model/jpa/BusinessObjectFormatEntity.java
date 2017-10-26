@@ -127,6 +127,7 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     private List<BusinessObjectFormatEntity> businessObjectFormatChildren;
 
     @Column(name = "rec_fl")
+    @Type(type = "yes_no")
     private boolean recordFlag;
 
     @Column(name = "rtntn_prd_days")

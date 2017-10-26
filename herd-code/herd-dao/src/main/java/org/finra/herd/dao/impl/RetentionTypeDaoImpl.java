@@ -24,6 +24,7 @@ import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.RetentionTypeDao;
 import org.finra.herd.model.jpa.RetentionTypeEntity;
+import org.finra.herd.model.jpa.RetentionTypeEntity_;
 
 @Repository
 public class RetentionTypeDaoImpl extends AbstractHerdDao implements RetentionTypeDao
@@ -35,15 +36,15 @@ public class RetentionTypeDaoImpl extends AbstractHerdDao implements RetentionTy
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<RetentionTypeEntity> criteria = builder.createQuery(RetentionTypeEntity.class);
 
-        // The criteria root is the business object data statuses.
+        // The criteria root is the retention type
         Root<RetentionTypeEntity> retentionType = criteria.from(RetentionTypeEntity.class);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate businessObjectDataStatusCodeRestriction = builder.equal(builder.upper(retentionType.get("")),
+        Predicate businessObjectDataStatusCodeRestriction = builder.equal(builder.upper(retentionType.get(RetentionTypeEntity_.code)),
             code.toUpperCase());
 
         criteria.select(retentionType).where(businessObjectDataStatusCodeRestriction);
 
-        return executeSingleResultQuery(criteria, String.format("Found more than one business object data status with code \"%s\".", code));
+        return executeSingleResultQuery(criteria, String.format("Found more than one retention type with code \"%s\".", code));
     }
 }

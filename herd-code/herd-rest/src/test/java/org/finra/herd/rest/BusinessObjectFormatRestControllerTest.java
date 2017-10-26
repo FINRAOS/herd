@@ -41,6 +41,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
 import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -277,5 +278,29 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         verifyNoMoreInteractions(businessObjectFormatService);
         // Validate the returned object.
         assertEquals(businessObjectFormat, resultBusinessObjectFormat);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectRetentionInformation()
+    {
+        BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null);
+        BusinessObjectFormatRetentionInformationUpdateRequest updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType("PARTITION_VALUE");
+        updateRequest.setRecordFlag(true);
+        updateRequest.setRetentionPeriodInDays(180);
+
+        BusinessObjectFormat businessObjectFormat = new BusinessObjectFormat();
+        when(businessObjectFormatService.updateBusinessObjectFormatRetentionInformation(businessObjectFormatKey, updateRequest))
+            .thenReturn(businessObjectFormat);
+
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatRestController
+            .updateBusinessObjectFormatRetentionInformation(businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
+                businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(), updateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectFormatService).updateBusinessObjectFormatRetentionInformation(businessObjectFormatKey, updateRequest);
+        verifyNoMoreInteractions(businessObjectFormatService);
+        // Validate the returned object.
+        assertEquals(businessObjectFormat, updatedBusinessObjectFormat);
     }
 }

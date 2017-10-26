@@ -260,7 +260,7 @@ public class BusinessObjectFormatRestController extends HerdBaseController
     }
 
     /**
-     * Updates an existing business object format parents by alternate key. <p>Requires WRITE permission on namespace</p>
+     * Updates an existing business object format retention information by alternate key. <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the business object definition name

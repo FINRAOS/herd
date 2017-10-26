@@ -676,7 +676,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     }
 
     /**
-     * Update business object format retention related information
+     * Update business object format retention information
      * @param businessObjectFormatKey the business object format alternate key
      * @param updateRequest business object format retention information update request
      * @return updated business object format
@@ -692,14 +692,16 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
 
         Assert.isNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version must not be specified.");
-        // Perform validation business object format retention information update request
-        validateBusinessObjectFormatRetentionInformationUpdateRequest(updateRequest);
         //Retrieve and ensure that record retention type exists if the request's retention type is not null
         RetentionTypeEntity recordRetentionTypeEntity = null;
         if (updateRequest.getRetentionType() != null)
         {
+            // Perform trim business object format retention in update request
+            updateRequest.setRetentionType(updateRequest.getRetentionType().trim());
+            // Retrieve the retention type entity
             recordRetentionTypeEntity = businessObjectFormatDaoHelper.getRecordRetentionTypeEntity(updateRequest.getRetentionType());
         }
+
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
         businessObjectFormatEntity.setRecordFlag(updateRequest.isRecordFlag());
@@ -713,14 +715,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
 
-
-    private void validateBusinessObjectFormatRetentionInformationUpdateRequest(BusinessObjectFormatRetentionInformationUpdateRequest request)
-    {
-        if (request.getRetentionType() != null)
-        {
-            request.setRetentionType(request.getRetentionType().trim());
-        }
-    }
 
     /**
      * Validates the business object format create request, except for the alternate key values. This method also trims request parameters.

@@ -2070,19 +2070,19 @@
       <xs:all>
          <xs:element name="recordFlag" type="xs:boolean" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>A flag indicates if this is a record
+               <xs:documentation>Indicates if business object data registered with this format is a record
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="retentionPeriodInDays" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Retention period in days.
+               <xs:documentation>Retention period (in days) for business object data registered with this format
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="retentionType" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>retention type, like REGISTRATION_VALID_DATE or PARTITION_VALUE
+               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -2181,19 +2181,19 @@
          </xs:element>
          <xs:element name="recordFlag" type="xs:boolean" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>A flag indicates if this is a record
+               <xs:documentation>Indicates if business object data registered with this format is a record
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="retentionPeriodInDays" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Retention period in days.
+               <xs:documentation>Retention period (in days) for business object data registered with this format.
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="retentionType" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>retention type, like REGISTRATION_VALID_DATE or PARTITION_VALUE
+               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE
                </xs:documentation>
             </xs:annotation>
          </xs:element>
