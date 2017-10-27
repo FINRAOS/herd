@@ -1,0 +1,25 @@
+{
+    "files": [
+        "./index.ts"
+    ],
+    "compilerOptions": {
+        "sourceMap": true,
+        "inlineSources": true,
+        "experimentalDecorators": true,
+        "moduleResolution": "node",
+        "noEmitHelpers": true,
+        "importHelpers": true,
+        "declaration": true,
+        "baseUrl": "../../main/resources",
+        "rootDir": ".",
+        "outDir": "./build",
+        "lib": [
+            "es2015",
+            "dom"
+        ],
+        "skipLibCheck": true,
+        "typeRoots": [
+            "node_modules/@types"
+        ]
+    }
+}

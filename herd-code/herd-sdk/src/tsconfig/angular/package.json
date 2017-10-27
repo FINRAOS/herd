@@ -1,0 +1,45 @@
+{
+  "name": "@herd/angular-client",
+  "version": "@NPM_VERSION@",
+  "description": "swagger client for @herd/angular-client",
+  "author": "Swagger Codegen Contributors",
+  "keywords": [
+    "swagger-client"
+  ],
+  "es2015": "./dist/angular-client.js",
+  "module": "./dist/angular-client.es5.js",
+  "main": "./dist/angular-client.umd.js",
+  "types": "./dist/angular-client.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/core": "^4.1.3",
+    "@angular/http": "^4.1.3",
+    "@angular/common": "^4.1.3",
+    "tslib": "^1.8.0",
+    "core-js": "^2.4.0",
+    "reflect-metadata": "^0.1.3",
+    "rxjs": "^5.4.0",
+    "zone.js": "^0.8.0"
+  },
+  "devDependencies": {
+    "@angular/common": "^4.1.3",
+    "@angular/compiler": "^4.1.3",
+    "@angular/compiler-cli": "^4.1.3",
+    "@angular/core": "^4.1.3",
+    "@angular/http": "^4.1.3",
+    "@angular/platform-browser": "^4.1.3",
+    "core-js": "^2.4.0",
+    "reflect-metadata": "^0.1.3",
+    "rollup": "^0.50.0",
+    "rxjs": "^5.4.0",
+    "tslib": "^1.8.0",
+    "typescript": "^2.1.5",
+    "zone.js": "^0.8.0"
+  }
+}
