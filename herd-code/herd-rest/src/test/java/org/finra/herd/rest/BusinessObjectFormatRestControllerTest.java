@@ -44,6 +44,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.jpa.FileTypeEntity;
+import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.service.AbstractServiceTest;
 import org.finra.herd.service.BusinessObjectFormatService;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
@@ -285,9 +286,9 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
     {
         BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null);
         BusinessObjectFormatRetentionInformationUpdateRequest updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
-        updateRequest.setRetentionType("PARTITION_VALUE");
+        updateRequest.setRetentionType(RetentionTypeEntity.PARTITION_VALUE);
         updateRequest.setRecordFlag(true);
-        updateRequest.setRetentionPeriodInDays(180);
+        updateRequest.setRetentionPeriodInDays(RETENTION_PERIOD_DAYS);
 
         BusinessObjectFormat businessObjectFormat = new BusinessObjectFormat();
         when(businessObjectFormatService.updateBusinessObjectFormatRetentionInformation(businessObjectFormatKey, updateRequest))

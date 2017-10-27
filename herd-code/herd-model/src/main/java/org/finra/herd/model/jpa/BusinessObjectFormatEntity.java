@@ -130,7 +130,7 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Type(type = "yes_no")
     private boolean recordFlag;
 
-    @Column(name = "rtntn_prd_days")
+    @Column(name = "rtntn_prd_days", nullable = true)
     private Integer retentionPeriodInDays;
 
     @ManyToOne

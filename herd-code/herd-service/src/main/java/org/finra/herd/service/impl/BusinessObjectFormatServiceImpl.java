@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.validation.constraints.AssertTrue;
+
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -696,6 +698,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         RetentionTypeEntity recordRetentionTypeEntity = null;
         if (updateRequest.getRetentionType() != null)
         {
+            Assert.notNull(updateRequest.getRetentionPeriodInDays(), "A retention period in days must be specified when retention type is present.");
+            Assert.isTrue(updateRequest.getRetentionPeriodInDays() > 0, "A positive retention period in days must be specified.");
             // Perform trim business object format retention in update request
             updateRequest.setRetentionType(updateRequest.getRetentionType().trim());
             // Retrieve the retention type entity

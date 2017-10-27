@@ -599,6 +599,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String NO_RETENTIONTYPE = null;
 
+    public static final Integer RETENTION_PERIOD_DAYS = getRandomInteger();
+
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
 

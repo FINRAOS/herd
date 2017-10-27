@@ -72,6 +72,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
+import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -4425,8 +4426,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
 
         boolean recordFlag = true;
-        Integer retentionPeriodInDays = new Integer(180);
-        String retentionType = "PARTITION_VALUE";
+        Integer retentionPeriodInDays = new Integer(RETENTION_PERIOD_DAYS);
+        String retentionType = RetentionTypeEntity.PARTITION_VALUE;
 
         BusinessObjectFormatRetentionInformationUpdateRequest updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
         updateRequest.setRetentionType(retentionType);
