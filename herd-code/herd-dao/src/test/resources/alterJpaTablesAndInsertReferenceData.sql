@@ -96,3 +96,6 @@ insert into ntfcn_rgstn_stts_cd_lk (ntfcn_rgstn_stts_cd, ntfcn_rgstn_stts_ds, cr
 -- Message Type
 insert into msg_type_cd_lk (msg_type_cd, creat_ts, creat_user_id, updt_ts, updt_user_id) values ('SQS', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
 insert into msg_type_cd_lk (msg_type_cd, creat_ts, creat_user_id, updt_ts, updt_user_id) values ('SNS', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
+
+-- Retention Type
+insert into rtntn_type_cd_lk(rtntn_type_cd) values ('PARTITION_VALUE');

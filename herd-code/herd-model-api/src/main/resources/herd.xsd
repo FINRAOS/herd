@@ -1975,6 +1975,24 @@
                <xs:documentation>The schema associated with this Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="recordFlag" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Indicates if business object data registered with this format is a record
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionPeriodInDays" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Retention period (in days) for business object data registered with this format
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -2041,6 +2059,30 @@
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Format. "name" is the attribute name (i.e. the key) and
                   "value" is the attribute value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectFormatRetentionInformationUpdateRequest" type="businessObjectFormatRetentionInformationUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatRetentionInformationUpdateRequest">
+      <xs:all>
+         <xs:element name="recordFlag" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Indicates if business object data registered with this format is a record
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionPeriodInDays" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Retention period (in days) for business object data registered with this format
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -2134,6 +2176,24 @@
             <xs:annotation>
                <xs:documentation>A list of Business Object Data children that were creation from this data. This is used for data lineage. Each child consists
                   of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="recordFlag" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Indicates if business object data registered with this format is a record
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionPeriodInDays" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Retention period (in days) for business object data registered with this format.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE
                </xs:documentation>
             </xs:annotation>
          </xs:element>

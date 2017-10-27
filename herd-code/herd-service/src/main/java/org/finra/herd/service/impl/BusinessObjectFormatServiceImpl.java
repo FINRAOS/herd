@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.validation.constraints.AssertTrue;
+
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -57,6 +59,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
 import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
@@ -69,6 +72,7 @@ import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
+import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 import org.finra.herd.service.BusinessObjectFormatService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
@@ -197,6 +201,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
         }
         // latest version business object exists, update its parents and children
+        // latest version business object exists, carry the retention information to the new entity
         if (latestVersionBusinessObjectFormatEntity != null)
         {
             //for each of the previous version's  child, remove the parent link to the previous version and set the parent to the new version
@@ -219,6 +224,17 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             //mark the latest version business object format
             latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatParents(null);
             latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatChildren(null);
+
+            //carry the retention information from the latest entity to the new entity
+            newBusinessObjectFormatEntity.setRetentionPeriodInDays(latestVersionBusinessObjectFormatEntity.getRetentionPeriodInDays());
+            newBusinessObjectFormatEntity.setRecordFlag(latestVersionBusinessObjectFormatEntity.isRecordFlag());
+            newBusinessObjectFormatEntity.setRetentionType(latestVersionBusinessObjectFormatEntity.getRetentionType());
+            businessObjectFormatDao.saveAndRefresh(newBusinessObjectFormatEntity);
+            //reset the retention information of the latest version business object format
+            latestVersionBusinessObjectFormatEntity.setRetentionType(null);
+            latestVersionBusinessObjectFormatEntity.setRecordFlag(false);
+            latestVersionBusinessObjectFormatEntity.setRetentionPeriodInDays(null);
+
             businessObjectFormatDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
         }
 
@@ -407,6 +423,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
                 // Update the previous version business object format entity.
                 previousVersionBusinessObjectFormatEntity.setLatestVersion(true);
+
+                // Update the previous version retention information
+                previousVersionBusinessObjectFormatEntity.setRecordFlag(businessObjectFormatEntity.isRecordFlag());
+                previousVersionBusinessObjectFormatEntity.setRetentionPeriodInDays(businessObjectFormatEntity.getRetentionPeriodInDays());
+                previousVersionBusinessObjectFormatEntity.setRetentionType(businessObjectFormatEntity.getRetentionType());
                 businessObjectFormatDao.saveAndRefresh(previousVersionBusinessObjectFormatEntity);
             }
         }
@@ -655,6 +676,49 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         return businessObjectFormatDdlCollectionResponse;
     }
+
+    /**
+     * Update business object format retention information
+     * @param businessObjectFormatKey the business object format alternate key
+     * @param updateRequest business object format retention information update request
+     * @return updated business object format
+     */
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public BusinessObjectFormat updateBusinessObjectFormatRetentionInformation(BusinessObjectFormatKey businessObjectFormatKey,
+        BusinessObjectFormatRetentionInformationUpdateRequest updateRequest)
+    {
+        Assert.notNull(updateRequest, "A Business Object Format Retention Information Update Request is required.");
+
+        // Perform validation and trim the alternate key parameters.
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
+
+        Assert.isNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version must not be specified.");
+        //Retrieve and ensure that record retention type exists if the request's retention type is not null
+        RetentionTypeEntity recordRetentionTypeEntity = null;
+        if (updateRequest.getRetentionType() != null)
+        {
+            Assert.notNull(updateRequest.getRetentionPeriodInDays(), "A retention period in days must be specified when retention type is present.");
+            Assert.isTrue(updateRequest.getRetentionPeriodInDays() > 0, "A positive retention period in days must be specified.");
+            // Perform trim business object format retention in update request
+            updateRequest.setRetentionType(updateRequest.getRetentionType().trim());
+            // Retrieve the retention type entity
+            recordRetentionTypeEntity = businessObjectFormatDaoHelper.getRecordRetentionTypeEntity(updateRequest.getRetentionType());
+        }
+
+        // Retrieve and ensure that a business object format exists.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+        businessObjectFormatEntity.setRecordFlag(updateRequest.isRecordFlag());
+        businessObjectFormatEntity.setRetentionPeriodInDays(updateRequest.getRetentionPeriodInDays());
+        businessObjectFormatEntity.setRetentionType(recordRetentionTypeEntity);
+
+        // Persist and refresh the entity.
+        businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
+
+        // Create and return the business object format object from the persisted entity.
+        return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
+    }
+
 
     /**
      * Validates the business object format create request, except for the alternate key values. This method also trims request parameters.

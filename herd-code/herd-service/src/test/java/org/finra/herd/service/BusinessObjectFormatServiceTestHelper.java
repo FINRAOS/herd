@@ -755,6 +755,21 @@ public class BusinessObjectFormatServiceTestHelper
     }
 
     /**
+     * Validate retention information
+     * @param expectedRecordFlag the expected record flag
+     * @param expectedRetentionDays the expected retention in days
+     * @param expectedRetentionType the expected retention type
+     * @param actualBusinessObjectFormat the actual business object format
+     */
+    public void validateRetentionInformation(boolean expectedRecordFlag, Integer expectedRetentionDays, String expectedRetentionType,
+        BusinessObjectFormat actualBusinessObjectFormat)
+    {
+        assertEquals(actualBusinessObjectFormat.getRetentionType(), expectedRetentionType);
+        assertEquals(actualBusinessObjectFormat.isRecordFlag(), expectedRecordFlag);
+        assertEquals(actualBusinessObjectFormat.getRetentionPeriodInDays(), expectedRetentionDays);
+    }
+
+    /**
      * Validates business object format ddl object instance against specified parameters.
      *
      * @param expectedNamespaceCode the expected namespace code
