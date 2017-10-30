@@ -4487,6 +4487,35 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testUpdateBusinessObjectFormatRetentionWithWrongRetentionPeriods()
+    {
+        // Create an initial version of a business object format with format description and schema information.
+        BusinessObjectFormat originalBusinessObjectFormat =
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        boolean recordFlag = true;
+        Integer retentionPeriodInDays = new Integer(-180);
+        String retentionType = RetentionTypeEntity.PARTITION_VALUE;;
+
+        BusinessObjectFormatRetentionInformationUpdateRequest updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType(retentionType);
+        updateRequest.setRecordFlag(recordFlag);
+        updateRequest.setRetentionPeriodInDays(retentionPeriodInDays);
+
+        try
+        {
+            businessObjectFormatService
+                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                    updateRequest);
+            fail("should throw ObjectNotFoundException before");
+        }
+        catch(IllegalArgumentException ex)
+        {
+            assertEquals("A positive retention period in days must be specified.", ex.getMessage());
+        }
+    }
+
+    @Test
     public void testUpdateBusinessObjectFormatRetentionWithLatestVersion()
     {
         // Create an initial version of a business object format with format description and schema information.
