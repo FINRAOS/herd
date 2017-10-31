@@ -708,7 +708,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
-        businessObjectFormatEntity.setRecordFlag(updateRequest.isRecordFlag());
+        businessObjectFormatEntity.setRecordFlag(BooleanUtils.isTrue(updateRequest.isRecordFlag()));
         businessObjectFormatEntity.setRetentionPeriodInDays(updateRequest.getRetentionPeriodInDays());
         businessObjectFormatEntity.setRetentionType(recordRetentionTypeEntity);
 

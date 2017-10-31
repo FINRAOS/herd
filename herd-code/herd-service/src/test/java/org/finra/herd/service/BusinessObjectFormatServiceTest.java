@@ -4425,7 +4425,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         BusinessObjectFormat originalBusinessObjectFormat =
             businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
 
-        boolean recordFlag = true;
+        Boolean recordFlag = true;
         Integer retentionPeriodInDays = new Integer(RETENTION_PERIOD_DAYS);
         String retentionType = RetentionTypeEntity.PARTITION_VALUE;
 
@@ -4441,7 +4441,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper.validateRetentionInformation(recordFlag, retentionPeriodInDays, retentionType, updatedBusinessObjectFormat);
 
         //reset the retention information
-        recordFlag = false;
+        recordFlag = null;
         retentionPeriodInDays = null;
         retentionType = null;
 
@@ -4454,7 +4454,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
                 updateRequest);
 
-        businessObjectFormatServiceTestHelper.validateRetentionInformation(recordFlag, retentionPeriodInDays, retentionType, updatedBusinessObjectFormat);
+        businessObjectFormatServiceTestHelper.validateRetentionInformation(false, retentionPeriodInDays, retentionType, updatedBusinessObjectFormat);
     }
 
     @Test
