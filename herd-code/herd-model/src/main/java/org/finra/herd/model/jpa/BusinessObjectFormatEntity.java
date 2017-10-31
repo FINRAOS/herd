@@ -128,7 +128,7 @@ public class BusinessObjectFormatEntity extends AuditableEntity
 
     @Column(name = "rec_fl")
     @Type(type = "yes_no")
-    private boolean recordFlag;
+    private Boolean recordFlag;
 
     @Column(name = "rtntn_prd_days", nullable = true)
     private Integer retentionPeriodInDays;
@@ -307,12 +307,12 @@ public class BusinessObjectFormatEntity extends AuditableEntity
         this.businessObjectFormatChildren = businessObjectFormatChildren;
     }
 
-    public boolean isRecordFlag()
+    public Boolean isRecordFlag()
     {
         return recordFlag;
     }
 
-    public void setRecordFlag(boolean recordFlag)
+    public void setRecordFlag(Boolean recordFlag)
     {
         this.recordFlag = recordFlag;
     }
