@@ -178,7 +178,10 @@ public class JobServiceImpl implements JobService
         Assert.notNull(jobDeleteRequest, "jobDeleteRequest must be specified");
         Assert.hasText(jobDeleteRequest.getDeleteReason(), "deleteReason must be specified");
 
-        ProcessInstance mainProcessInstance = activitiService.getProcessInstanceById(jobId);
+        // Trim input parameters.
+        String localJobId = jobId.trim();
+
+        ProcessInstance mainProcessInstance = activitiService.getProcessInstanceById(localJobId);
 
         if (mainProcessInstance != null)
         {
@@ -216,10 +219,10 @@ public class JobServiceImpl implements JobService
         }
         else
         {
-            throw new ObjectNotFoundException(String.format("Job with ID \"%s\" does not exist or is already completed.", jobId));
+            throw new ObjectNotFoundException(String.format("Job with ID \"%s\" does not exist or is already completed.", localJobId));
         }
 
-        return getJob(jobId, false, false);
+        return getJob(localJobId, false, false);
     }
 
     @Override
