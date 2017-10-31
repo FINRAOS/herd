@@ -83,20 +83,6 @@
          <resource>
             <directory>target/generated-sources/swagger/src/main/java</directory>
          </resource>
-         <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-               <include>**/package.json</include>
-            </includes>
-         </resource>
-         <resource>
-            <directory>src/main/resources</directory>
-            <filtering>false</filtering>
-            <excludes>
-               <exclude>**/package.json</exclude>
-            </excludes>
-         </resource>
       </resources>
 
       <plugins>
@@ -143,57 +129,55 @@
             <groupId>io.swagger</groupId>
             <artifactId>swagger-codegen-maven-plugin</artifactId>
             <executions>
-               <!--<execution>-->
-                  <!--<goals>-->
-                     <!--<goal>generate</goal>-->
-                  <!--</goals>-->
-                  <!--<id>JAVA-Generation</id>-->
-                  <!--<phase>generate-resources</phase>-->
-                  <!--<configuration>-->
-                     <!--<inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>-->
-                     <!--<output>${project.build.directory}/generated-sources/swagger</output>-->
-                     <!--&lt;!&ndash; Don't add the output directory to the project as a source root since we added it as a resource ourselves above. &ndash;&gt;-->
-                     <!--<addCompileSourceRoot>false</addCompileSourceRoot>-->
-                     <!--<language>java</language>-->
-                     <!--<apiPackage>org.finra.herd.sdk.api</apiPackage>-->
-                     <!--<modelPackage>org.finra.herd.sdk.model</modelPackage>-->
-                     <!--<invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>-->
-                     <!--<generateApiTests>false</generateApiTests>-->
-                     <!--<generateModelTests>false</generateModelTests>-->
-                     <!--<configOptions>-->
-                        <!--<library>jersey1</library>-->
-                     <!--</configOptions>-->
-                  <!--</configuration>-->
-               <!--</execution>-->
-
-
-               <!--<execution>-->
-                  <!--<goals>-->
-                     <!--<goal>generate</goal>-->
-                  <!--</goals>-->
-                  <!--<id>TS-NG-JS-Generation</id>-->
-                  <!--<phase>generate-resources</phase>-->
-                  <!--<configuration>-->
-                     <!--<inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>-->
-                     <!--<output>${project.build.directory}/generated-sources/typescript-angularjs</output>-->
-                     <!--<language>typescript-angularjs</language>-->
-                  <!--</configuration>-->
-               <!--</execution>-->
-
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>JAVA-Generation</id>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <output>${project.build.directory}/generated-sources/swagger</output>
+                     <!-- Don't add the output directory to the project as a source root since we added it as a resource ourselves above. -->
+                     <addCompileSourceRoot>false</addCompileSourceRoot>
+                     <language>java</language>
+                     <apiPackage>org.finra.herd.sdk.api</apiPackage>
+                     <modelPackage>org.finra.herd.sdk.model</modelPackage>
+                     <invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>
+                     <generateApiTests>false</generateApiTests>
+                     <generateModelTests>false</generateModelTests>
+                     <configOptions>
+                        <licenseName>Apache-2.0</licenseName>
+                        <licenseUrl>https://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+                        <library>jersey1</library>
+                        <dateLibrary>joda</dateLibrary>
+                     </configOptions>
+                  </configuration>
+               </execution>
 
                <execution>
                   <goals>
                      <goal>generate</goal>
                   </goals>
-                  <id>TS-Generation</id>
+                  <id>AngularJS-Generation</id>
+                  <phase>install</phase>
+                  <configuration>
+                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <output>${project.build.directory}/angularjs-client</output>
+                     <language>typescript-angularjs</language>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>Angular-Generation</id>
                   <phase>install</phase>
                   <configuration>
                      <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
                      <output>${project.build.directory}/angular-client</output>
                      <language>typescript-angular</language>
-                     <!--<configHelp>-->
-                        <!--true-->
-                     <!--</configHelp>-->
                      <configOptions>
                         <ngVersion>4.1.3</ngVersion>
                      </configOptions>
@@ -203,66 +187,66 @@
          </plugin>
 
          <!-- Exclude the auto-generated java files from the main jar. -->
-         <!--<plugin>-->
-            <!--<groupId>org.apache.maven.plugins</groupId>-->
-            <!--<artifactId>maven-jar-plugin</artifactId>-->
-            <!--<configuration>-->
-               <!--<excludes>-->
-                  <!--<excludes>**/*.java</excludes>-->
-               <!--</excludes>-->
-            <!--</configuration>-->
-         <!--</plugin>-->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+               <excludes>
+                  <excludes>**/*.java</excludes>
+               </excludes>
+            </configuration>
+         </plugin>
 
          <!-- Add in the sources. -->
-         <!--<plugin>-->
-            <!--<groupId>org.apache.maven.plugins</groupId>-->
-            <!--<artifactId>maven-source-plugin</artifactId>-->
-            <!--<executions>-->
-               <!--<execution>-->
-                  <!--<id>attach-sources</id>-->
-                  <!--<goals>-->
-                     <!--<goal>jar</goal>-->
-                  <!--</goals>-->
-               <!--</execution>-->
-            <!--</executions>-->
-            <!--<configuration>-->
-               <!--&lt;!&ndash; Include only the java files and not the other stuff the Swagger plug-in generates. &ndash;&gt;-->
-               <!--<includes>-->
-                  <!--<include>**/*.java</include>-->
-               <!--</includes>-->
-               <!--&lt;!&ndash; Exclude the 2nd set of java code that the Swagger plug-in generates. &ndash;&gt;-->
-               <!--<excludes>-->
-                  <!--<excludes>swagger/src/main/java/**</excludes>-->
-               <!--</excludes>-->
-            <!--</configuration>-->
-         <!--</plugin>-->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>attach-sources</id>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <!-- Include only the java files and not the other stuff the Swagger plug-in generates. -->
+               <includes>
+                  <include>**/*.java</include>
+               </includes>
+               <!-- Exclude the 2nd set of java code that the Swagger plug-in generates. -->
+               <excludes>
+                  <excludes>swagger/src/main/java/**</excludes>
+               </excludes>
+            </configuration>
+         </plugin>
 
-         <!--<plugin>-->
-            <!--<groupId>org.apache.maven.plugins</groupId>-->
-            <!--<artifactId>maven-javadoc-plugin</artifactId>-->
-            <!--<executions>-->
-               <!--<execution>-->
-                  <!--<id>jar</id>-->
-                  <!--<goals>-->
-                     <!--<goal>jar</goal>-->
-                  <!--</goals>-->
-               <!--</execution>-->
-            <!--</executions>-->
-            <!--<configuration>-->
-               <!--&lt;!&ndash; Specify the location where the swagger plugin generated the sources. &ndash;&gt;-->
-               <!--<sourcepath>${project.build.directory}/generated-sources/swagger/src/main/java</sourcepath>-->
-            <!--</configuration>-->
-         <!--</plugin>-->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>jar</id>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <!-- Specify the location where the swagger plugin generated the sources. -->
+               <sourcepath>${project.build.directory}/generated-sources/swagger/src/main/java</sourcepath>
+            </configuration>
+         </plugin>
 
          <!-- Configure the Maven compiler to use JDK 1.5 to produce the appropriate class files that can be used with JDK 1.5 and up. -->
-         <!--<plugin>-->
-            <!--<groupId>org.apache.maven.plugins</groupId>-->
-            <!--<artifactId>maven-compiler-plugin</artifactId>-->
-            <!--<configuration>-->
-               <!--<source>1.5</source>-->
-               <!--<target>1.5</target>-->
-            <!--</configuration>-->
-         <!--</plugin>-->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+               <source>1.5</source>
+               <target>1.5</target>
+            </configuration>
+         </plugin>
 
 
          <plugin>
@@ -270,7 +254,7 @@
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
                <execution>
-                  <id>copy-ts-config</id>
+                  <id>copy-angular-ts-config</id>
                   <phase>process-resources</phase>
                   <configuration>
                      <target>
@@ -279,6 +263,23 @@
                             <filterset>
                                 <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
                             </filterset>
+                        </copy>
+                     </target>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+               <execution>
+                  <id>copy-angularjs-ts-config</id>
+                  <phase>process-resources</phase>
+                  <configuration>
+                     <target>
+                        <copy todir="${project.build.directory}/angularjs-client">
+                           <fileset dir="${project.basedir}/src/tsconfig/angularjs"/>
+                           <filterset>
+                              <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
+                           </filterset>
                         </copy>
                      </target>
                   </configuration>

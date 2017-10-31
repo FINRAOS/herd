@@ -1,7 +1,7 @@
 {
   "name": "@herd/angular-client",
   "version": "@NPM_VERSION@",
-  "description": "swagger client for @herd/angular-client",
+  "description": "Swagger generated client for @herd/angular-client",
   "author": "Swagger Codegen Contributors",
   "keywords": [
     "swagger-client"
@@ -13,6 +13,7 @@
   "files": [
     "dist"
   ],
+  "license": "Apache-2.0",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"

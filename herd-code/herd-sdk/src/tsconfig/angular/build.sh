@@ -17,7 +17,6 @@ $ROLLUP build/angular-client.js --output.file dist/angular-client.js --output.fo
 $NGC -p tsconfig-build.es5.json
 $ROLLUP build/angular-client.js --output.file dist/angular-client.es5.js --output.format es --external $ROLLUP_EXTERNALS
 
-$NGC -p tsconfig-build.umd.json
-$ROLLUP build/angular-client.js --output.file dist/angular-client.umd.js --output.format umd --external $ROLLUP_EXTERNALS
+$ROLLUP build/angular-client.js --name "clientBundle" --output.file dist/angular-client.umd.js --output.format umd --external $ROLLUP_EXTERNALS
 
 rsync -a --exclude=*.js build/ dist

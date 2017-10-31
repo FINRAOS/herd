@@ -10,7 +10,7 @@
         "noEmitHelpers": true,
         "importHelpers": true,
         "declaration": true,
-        "baseUrl": "../../main/resources",
+        "baseUrl": ".",
         "rootDir": ".",
         "outDir": "./build",
         "lib": [
