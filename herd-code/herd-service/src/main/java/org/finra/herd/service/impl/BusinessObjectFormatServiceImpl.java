@@ -1098,6 +1098,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setLatestVersion(Boolean.TRUE);
         businessObjectFormatEntity.setPartitionKey(request.getPartitionKey());
         businessObjectFormatEntity.setDescription(request.getDescription());
+        businessObjectFormatEntity.setRecordFlag(Boolean.FALSE);
 
         // Create the attributes if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributes()))
