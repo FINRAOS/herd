@@ -126,7 +126,7 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @ManyToMany(mappedBy = "businessObjectFormatParents")
     private List<BusinessObjectFormatEntity> businessObjectFormatChildren;
 
-    @Column(name = "rec_fl")
+    @Column(name = "rec_fl", nullable = true)
     @Type(type = "yes_no")
     private Boolean recordFlag;
 
