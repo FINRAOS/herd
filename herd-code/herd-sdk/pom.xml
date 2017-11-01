@@ -159,6 +159,19 @@
                   <goals>
                      <goal>generate</goal>
                   </goals>
+                  <id>Node-Generation</id>
+                  <phase>install</phase>
+                  <configuration>
+                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <output>${project.build.directory}/node-client</output>
+                     <language>typescript-node</language>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
                   <id>AngularJS-Generation</id>
                   <phase>install</phase>
                   <configuration>
@@ -179,6 +192,7 @@
                      <output>${project.build.directory}/angular-client</output>
                      <language>typescript-angular</language>
                      <configOptions>
+                        <npmName>@herd/angular-client</npmName>
                         <ngVersion>4.1.3</ngVersion>
                      </configOptions>
                   </configuration>
@@ -277,6 +291,23 @@
                      <target>
                         <copy todir="${project.build.directory}/angularjs-client">
                            <fileset dir="${project.basedir}/src/tsconfig/angularjs"/>
+                           <filterset>
+                              <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
+                           </filterset>
+                        </copy>
+                     </target>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+               <execution>
+                  <id>copy-node-ts-config</id>
+                  <phase>process-resources</phase>
+                  <configuration>
+                     <target>
+                        <copy todir="${project.build.directory}/node-client">
+                           <fileset dir="${project.basedir}/src/tsconfig/node"/>
                            <filterset>
                               <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
                            </filterset>
