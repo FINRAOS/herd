@@ -390,7 +390,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         //create a new version of the business object format, the associated bdef descriptive format should be updated to the new version
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION, PARTITION_KEY, null, null,
-                null, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                null));
         descriptiveBusinessObjectFormat = new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION);
         updatedBusinessObjectDefinition = businessObjectDefinitionService
             .getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), NOT_INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY);
@@ -422,12 +422,12 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial version of the business object format.
         BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
         // Create a second version of the business object format with the schema columns having updated descriptions.
         BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
 
         // Validate the returned object.
         BusinessObjectFormat expectedBusinessObjectFormat = (BusinessObjectFormat) initialBusinessObjectFormat.clone();
@@ -463,12 +463,12 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             // Create an initial version of the business object format.
             BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
                 new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, formatUsage, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
-                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
             // Create a second version of the business object format having increased column sizes for both regular and partition columns.
             BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
                 new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, formatUsage, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
-                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
 
             // Validate the returned object.
             BusinessObjectFormat expectedBusinessObjectFormat = (BusinessObjectFormat) initialBusinessObjectFormat.clone();
@@ -867,7 +867,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial version of the business object format.
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
         // Create an updated schema having a regular column size decreased.
         Schema updatedSchema = (Schema) initialSchema.clone();
@@ -878,7 +878,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             // Try to create a second version of the business object format with a new schema having regular column size decreased.
             businessObjectFormatService.createBusinessObjectFormat(
                 new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
             fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
         }
         catch (IllegalArgumentException e)
@@ -902,7 +902,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial version of the business object format.
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
         // Create an updated schema having a regular column size increased.
         Schema updatedSchema = (Schema) initialSchema.clone();
@@ -914,7 +914,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             // having regular column size increased but for a non-allowed column data type.
             businessObjectFormatService.createBusinessObjectFormat(
                 new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
             fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
         }
         catch (IllegalArgumentException e)
@@ -944,7 +944,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             // Create an initial version of the business object format.
             businessObjectFormatService.createBusinessObjectFormat(
                 new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, formatUsage, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
             // Create an updated schema having a regular column size set to a positive integer.
             Schema updatedSchema = (Schema) initialSchema.clone();
@@ -956,7 +956,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 // having regular column size changed from a non-integer to a positive integer.
                 businessObjectFormatService.createBusinessObjectFormat(
                     new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, formatUsage, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                        NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                        NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
                 fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
             }
             catch (IllegalArgumentException e)
@@ -981,7 +981,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial version of the business object format.
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
         for (String updatedColumnSize : Arrays.asList("NOT_AN_INTEGER", NEGATIVE_COLUMN_SIZE, ZERO_COLUMN_SIZE))
         {
@@ -995,7 +995,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 // having regular column size changed from a positive integer to a non-integer value.
                 businessObjectFormatService.createBusinessObjectFormat(
                     new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                        NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE));
+                        NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
                 fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
             }
             catch (IllegalArgumentException e)
@@ -4441,7 +4441,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper.validateRetentionInformation(recordFlag, retentionPeriodInDays, retentionType, updatedBusinessObjectFormat);
 
         //reset the retention information
-        recordFlag = null;
+        recordFlag = false;
         retentionPeriodInDays = null;
         retentionType = null;
 
@@ -4487,14 +4487,28 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateBusinessObjectFormatRetentionWithWrongRetentionPeriods()
+    public void testUpdateBusinessObjectFormatRetentionValidation()
     {
         // Create an initial version of a business object format with format description and schema information.
         BusinessObjectFormat originalBusinessObjectFormat =
             businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
 
-        boolean recordFlag = true;
-        Integer retentionPeriodInDays = new Integer(-180);
+        //withNullUpdateRequest
+        try
+        {
+            businessObjectFormatService
+                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                    null);
+            fail("should throw IllegalArgumentException before");
+        }
+        catch(IllegalArgumentException ex)
+        {
+            assertEquals("A Business Object Format Retention Information Update Request is required.", ex.getMessage());
+        }
+
+        //withNullRetenionPeriods
+        Boolean recordFlag = true;
+        Integer retentionPeriodInDays = null;
         String retentionType = RetentionTypeEntity.PARTITION_VALUE;;
 
         BusinessObjectFormatRetentionInformationUpdateRequest updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
@@ -4507,11 +4521,56 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             businessObjectFormatService
                 .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
                     updateRequest);
-            fail("should throw ObjectNotFoundException before");
+            fail("should throw IllegalArgumentException before");
+        }
+        catch(IllegalArgumentException ex)
+        {
+            assertEquals("A retention period in days must be specified when retention type is present.", ex.getMessage());
+        }
+
+
+        //withWrongRetentionPeriods
+        recordFlag = true;
+        retentionPeriodInDays = new Integer(-180);
+        retentionType = RetentionTypeEntity.PARTITION_VALUE;;
+
+        updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType(retentionType);
+        updateRequest.setRecordFlag(recordFlag);
+        updateRequest.setRetentionPeriodInDays(retentionPeriodInDays);
+
+        try
+        {
+            businessObjectFormatService
+                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                    updateRequest);
+            fail("should throw IllegalArgumentException before");
         }
         catch(IllegalArgumentException ex)
         {
             assertEquals("A positive retention period in days must be specified.", ex.getMessage());
+        }
+
+        //withNullRecordFlag
+        recordFlag = null;
+        retentionPeriodInDays = new Integer(180);
+        retentionType = RetentionTypeEntity.PARTITION_VALUE;;
+
+        updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType(retentionType);
+        updateRequest.setRecordFlag(recordFlag);
+        updateRequest.setRetentionPeriodInDays(retentionPeriodInDays);
+
+        try
+        {
+            businessObjectFormatService
+                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                    updateRequest);
+            fail("should throw IllegalArgumentException before");
+        }
+        catch(IllegalArgumentException ex)
+        {
+            assertEquals("A Record Flag in Business Object Format Retention Information Update Request is required.", ex.getMessage());
         }
     }
 

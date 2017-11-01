@@ -689,7 +689,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         BusinessObjectFormatRetentionInformationUpdateRequest updateRequest)
     {
         Assert.notNull(updateRequest, "A Business Object Format Retention Information Update Request is required.");
-
+        Assert.notNull(updateRequest.isRecordFlag(), "A Record Flag in Business Object Format Retention Information Update Request is required.");
         // Perform validation and trim the alternate key parameters.
         businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
 
@@ -1098,7 +1098,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setLatestVersion(Boolean.TRUE);
         businessObjectFormatEntity.setPartitionKey(request.getPartitionKey());
         businessObjectFormatEntity.setDescription(request.getDescription());
-        businessObjectFormatEntity.setRecordFlag(Boolean.FALSE);
 
         // Create the attributes if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributes()))
