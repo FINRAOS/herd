@@ -13,8 +13,8 @@ if [ ! -d "node_modules" ]; then
   npm install
 fi
 
-# Variable pointing to NGC
-TSC="node_modules/.bin/ngc"
+# Variable pointing to TSC
+TSC="node_modules/.bin/tsc"
 ROLLUP="node_modules/.bin/rollup"
 
 echo "Running TSC on tsconfig-build.json"
