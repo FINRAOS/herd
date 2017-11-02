@@ -303,12 +303,6 @@
                               <include name="**/generated-sources/herd-swaggergen/herd.swagger.yaml"/>
                            </fileset>
                         </copy>
-                        <!-- Copy the generated Swagger YAML file from the herd-docs-swagger project to this project in javadoc-swagger. -->
-                        <copy todir="${project.build.directory}/javadoc-swagger">
-                           <fileset dir="../herd-docs-swagger/target/generated-sources/herd-swaggergen">
-                              <include name="herd.swagger.yaml"/>
-                           </fileset>
-                        </copy>
                      </target>
                   </configuration>
                   <goals>
@@ -323,30 +317,6 @@
                   <version>${project.version}</version>
                </dependency>
             </dependencies>
-         </plugin>
-
-         <!-- Generate the SDK files from the YAML file. -->
-         <plugin>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-codegen-maven-plugin</artifactId>
-            <executions>
-               <execution>
-                  <goals>
-                     <goal>generate</goal>
-                  </goals>
-                  <phase>generate-resources</phase>
-                  <configuration>
-                     <inputSpec>${project.build.directory}/javadoc-swagger/herd.swagger.yaml</inputSpec>
-                     <!-- Output the generated herd-sdk source files in javadoc-swagger. -->
-                     <output>${project.build.directory}/javadoc-swagger</output>
-                     <addCompileSourceRoot>false</addCompileSourceRoot>
-                     <language>java</language>
-                     <apiPackage>org.finra.herd.sdk.api</apiPackage>
-                     <modelPackage>org.finra.herd.sdk.model</modelPackage>
-                     <invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>
-                  </configuration>
-               </execution>
-            </executions>
          </plugin>
 
          <!-- Use the maven-jaxb2-plugin to auto-generate our Java model classes from the XSD and XJB resources. -->
@@ -476,7 +446,7 @@
                       The source directories are all the copied and generated sources file in the main javadoc-work directory as well as
                       the herd-sdk auto-generated files in the javadoc-swagger directory.
                       -->
-                     <sourcepath>${project.build.directory}/javadoc-work:${project.build.directory}/javadoc-swagger/src/main/java</sourcepath>
+                     <sourcepath>${project.build.directory}/javadoc-work</sourcepath>
                      <notimestamp>true</notimestamp>
                   </configuration>
                </execution>
