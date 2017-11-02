@@ -3,7 +3,7 @@
   "version": "@NPM_VERSION@",
   "description": "Swagger generated client for @herd/angularjs-client",
   "es2015": "./dist/index.js",
-  "main": "./dist/index.es5.js",
+  "module": "./dist/index.es5.js",
   "main": "./dist/index.umd.js",
   "types": "./dist/index.d.ts",
   "scripts": {

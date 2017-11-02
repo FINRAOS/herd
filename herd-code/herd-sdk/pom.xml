@@ -144,9 +144,16 @@
                      <apiPackage>org.finra.herd.sdk.api</apiPackage>
                      <modelPackage>org.finra.herd.sdk.model</modelPackage>
                      <invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>
+                     <!--This generation can be refactored to generate its own tests and pom configuration-->
+                     <!--When that happens these should be set to true and other config options need to be set-->
                      <generateApiTests>false</generateApiTests>
                      <generateModelTests>false</generateModelTests>
+                     <generateApiDocumentation>false</generateApiDocumentation>
+                     <generateModelDocumentation>false</generateModelDocumentation>
+                     <!--uncomment next line in order to see all possible <configOptions> for the selected language-->
+                     <!--<configHelp>true</configHelp>-->
                      <configOptions>
+                        <!--these are the options specific to the java generation language-->
                         <licenseName>Apache-2.0</licenseName>
                         <licenseUrl>https://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
                         <library>jersey1</library>
@@ -160,7 +167,7 @@
                      <goal>generate</goal>
                   </goals>
                   <id>Node-Generation</id>
-                  <phase>install</phase>
+                  <phase>prepare-package</phase>
                   <configuration>
                      <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
                      <output>${project.build.directory}/node-client</output>
@@ -173,7 +180,7 @@
                      <goal>generate</goal>
                   </goals>
                   <id>AngularJS-Generation</id>
-                  <phase>install</phase>
+                  <phase>prepare-package</phase>
                   <configuration>
                      <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
                      <output>${project.build.directory}/angularjs-client</output>
@@ -186,13 +193,12 @@
                      <goal>generate</goal>
                   </goals>
                   <id>Angular-Generation</id>
-                  <phase>install</phase>
+                  <phase>prepare-package</phase>
                   <configuration>
                      <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
                      <output>${project.build.directory}/angular-client</output>
                      <language>typescript-angular</language>
                      <configOptions>
-                        <npmName>@herd/angular-client</npmName>
                         <ngVersion>4.1.3</ngVersion>
                      </configOptions>
                   </configuration>
@@ -269,10 +275,10 @@
             <executions>
                <execution>
                   <id>copy-angular-ts-config</id>
-                  <phase>process-resources</phase>
+                  <phase>package</phase>
                   <configuration>
                      <target>
-                        <copy todir="${project.build.directory}/angular-client">
+                        <copy overwrite="true" todir="${project.build.directory}/angular-client">
                            <fileset dir="${project.basedir}/src/tsconfig/angular"/>
                             <filterset>
                                 <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
@@ -286,10 +292,10 @@
                </execution>
                <execution>
                   <id>copy-angularjs-ts-config</id>
-                  <phase>process-resources</phase>
+                  <phase>package</phase>
                   <configuration>
                      <target>
-                        <copy todir="${project.build.directory}/angularjs-client">
+                        <copy overwrite="true" todir="${project.build.directory}/angularjs-client">
                            <fileset dir="${project.basedir}/src/tsconfig/angularjs"/>
                            <filterset>
                               <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
@@ -303,10 +309,10 @@
                </execution>
                <execution>
                   <id>copy-node-ts-config</id>
-                  <phase>process-resources</phase>
+                  <phase>package</phase>
                   <configuration>
                      <target>
-                        <copy todir="${project.build.directory}/node-client">
+                        <copy overwrite="true" todir="${project.build.directory}/node-client">
                            <fileset dir="${project.basedir}/src/tsconfig/node"/>
                            <filterset>
                               <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
