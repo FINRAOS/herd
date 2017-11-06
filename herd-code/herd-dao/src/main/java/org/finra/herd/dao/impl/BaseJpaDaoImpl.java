@@ -126,7 +126,7 @@ public class BaseJpaDaoImpl implements BaseJpaDao
         // Add the clauses for the query.
         criteria.select(builder.currentTimestamp()).from(ConfigurationEntity.class);
 
-        return entityManager.createQuery(criteria).getSingleResult();
+        return entityManager.createQuery(criteria).setMaxResults(1).getSingleResult();
     }
 
     @Override

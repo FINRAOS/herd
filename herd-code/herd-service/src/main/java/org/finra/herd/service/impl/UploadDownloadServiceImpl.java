@@ -559,6 +559,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, null, businessObjectDataVersion);
 
+        // Validate and trim the business object data key.
+        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+
         // Get the business object data for the key.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
 

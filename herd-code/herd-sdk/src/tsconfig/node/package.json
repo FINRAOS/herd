@@ -1,0 +1,32 @@
+{
+  "name": "@herd/node-client",
+  "version": "@NPM_VERSION@",
+  "description": "Swagger generated client for @herd/node-client",
+  "es2015": "./dist/api.js",
+  "main": "./dist/api.es5.js",
+  "types": "./dist/api.d.ts",
+  "scripts": {
+    "clean": "rm -Rf node_modules/"
+  },
+  "author": "Swagger Codegen Contributors",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "bluebird": "^3.0.0",
+    "request": "^2.83.0",
+    "rewire": "^2.5.2"
+  },
+  "devDependencies": {
+    "typescript": "^2.0.0",
+    "rollup": "^0.50.0",
+    "@types/core-js": "^0.9.0",
+    "@types/bluebird": "^3.5.5",
+    "@types/request": "^2.0.6"
+  }
+}
