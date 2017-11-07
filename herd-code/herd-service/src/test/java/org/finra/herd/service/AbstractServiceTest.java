@@ -358,6 +358,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String INDEX_SEARCH_RESULT_TYPE = "UT_IndexSearchResultType" + RANDOM_SUFFIX;
 
+    /**
+     * Constant to hold the column match option for the index search
+     */
+    public static final String MATCH_COLUMN = "column";
+
     public static final String MESSAGE_VERSION = "UT_MessageVersion" + RANDOM_SUFFIX;
 
     public static final String METHOD_NAME = "UT_MethodName_1_" + RANDOM_SUFFIX;

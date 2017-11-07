@@ -145,17 +145,17 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         when(alternateKeyHelper.validateStringParameter("An", "index search result type", INDEX_SEARCH_RESULT_TYPE)).thenReturn(INDEX_SEARCH_RESULT_TYPE);
         when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
         when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
-        when(indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields, NO_MATCH, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
 
         // Call the method under test.
-        IndexSearchResponse result = indexSearchService.indexSearch(indexSearchRequest, fields);
+        IndexSearchResponse result = indexSearchService.indexSearch(indexSearchRequest, fields, NO_MATCH);
 
         // Verify the external calls.
         verify(tagHelper).validateTagKey(tagKey);
         verify(tagDaoHelper).getTagEntity(tagKey);
         verify(alternateKeyHelper).validateStringParameter("An", "index search result type", INDEX_SEARCH_RESULT_TYPE);
         verify(searchIndexTypeDaoHelper).getSearchIndexTypeEntity(INDEX_SEARCH_RESULT_TYPE);
-        verify(indexSearchDao).indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
+        verify(indexSearchDao).indexSearch(indexSearchRequest, fields, NO_MATCH, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
         verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
         verifyNoMoreInteractionsHelper();
@@ -177,7 +177,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Try to call the method under test.
         try
         {
-            indexSearchService.indexSearch(indexSearchRequest, fields);
+            indexSearchService.indexSearch(indexSearchRequest, fields, NO_MATCH);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -199,7 +199,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Try to call the method under test.
         try
         {
-            indexSearchService.indexSearch(indexSearchRequest, fields);
+            indexSearchService.indexSearch(indexSearchRequest, fields, NO_MATCH);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -241,7 +241,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Try to call the method under test.
         try
         {
-            indexSearchService.indexSearch(indexSearchRequest, fields);
+            indexSearchService.indexSearch(indexSearchRequest, fields, NO_MATCH);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -274,7 +274,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Try to call the method under test.
         try
         {
-            indexSearchService.indexSearch(indexSearchRequest, fields);
+            indexSearchService.indexSearch(indexSearchRequest, fields, NO_MATCH);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -296,7 +296,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Try to call the method under test.
         try
         {
-            indexSearchService.indexSearch(indexSearchRequest, fields);
+            indexSearchService.indexSearch(indexSearchRequest, fields, NO_MATCH);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -343,13 +343,13 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Mock the call to the index search service
         when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
         when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
-        when(indexSearchDao.indexSearch(indexSearchRequest, NO_FIELDS, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequest, NO_FIELDS, NO_MATCH, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
 
         // Call the method under test.
-        IndexSearchResponse result = indexSearchService.indexSearch(indexSearchRequest, NO_FIELDS);
+        IndexSearchResponse result = indexSearchService.indexSearch(indexSearchRequest, NO_FIELDS, NO_MATCH);
 
         // Verify the external calls.
-        verify(indexSearchDao).indexSearch(indexSearchRequest, NO_FIELDS, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
+        verify(indexSearchDao).indexSearch(indexSearchRequest, NO_FIELDS, NO_MATCH, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
         verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
         verifyNoMoreInteractionsHelper();
@@ -371,7 +371,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Try to call the method under test.
         try
         {
-            indexSearchService.indexSearch(indexSearchRequest, fields);
+            indexSearchService.indexSearch(indexSearchRequest, fields, NO_MATCH);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -432,17 +432,17 @@ public class IndexSearchServiceTest extends AbstractServiceTest
             .thenReturn(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
         when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name())).thenReturn(SEARCH_INDEX_NAME);
         when(searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name())).thenReturn(SEARCH_INDEX_NAME_2);
-        when(indexSearchDao.indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields, NO_MATCH, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2)).thenReturn(indexSearchResponse);
 
         // Call the method under test.
-        IndexSearchResponse result = indexSearchService.indexSearch(indexSearchRequest, fields);
+        IndexSearchResponse result = indexSearchService.indexSearch(indexSearchRequest, fields, NO_MATCH);
 
         // Verify the external calls.
         verify(alternateKeyHelper).validateStringParameter("An", "index search result type", SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
         verify(searchIndexTypeDaoHelper).getSearchIndexTypeEntity(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
         verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
         verify(searchIndexDaoHelper).getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
-        verify(indexSearchDao).indexSearch(indexSearchRequest, fields, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
+        verify(indexSearchDao).indexSearch(indexSearchRequest, fields, NO_MATCH, SEARCH_INDEX_NAME, SEARCH_INDEX_NAME_2);
         verifyNoMoreInteractionsHelper();
 
         // Validate the result.

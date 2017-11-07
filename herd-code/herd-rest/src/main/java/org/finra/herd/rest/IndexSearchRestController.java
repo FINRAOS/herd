@@ -44,11 +44,19 @@ public class IndexSearchRestController extends HerdBaseController
     @Autowired
     private IndexSearchService indexSearchService;
 
+    /**
+     * The index search POST method.
+     *
+     * @param fields the set of fields that are to be returned in the index search response (accepts: description and schemaColumnName)
+     * @param match the set of match fields that the search will be restricted to (accepts: column)
+     * @param request the index search request
+     * @return the index search response
+     */
     @RequestMapping(value = "/indexSearch", method = POST, consumes = {"application/xml", "application/json"})
     @Secured(FN_INDEX_SEARCH_POST)
     public IndexSearchResponse indexSearch(@RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields,
-        @RequestBody IndexSearchRequest request)
+        @RequestParam(value = "match", required = false, defaultValue = "") Set<String> match, @RequestBody IndexSearchRequest request)
     {
-        return indexSearchService.indexSearch(request, fields);
+        return indexSearchService.indexSearch(request, fields, match);
     }
 }

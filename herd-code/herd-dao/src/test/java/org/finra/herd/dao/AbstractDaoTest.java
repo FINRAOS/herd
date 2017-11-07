@@ -604,6 +604,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_LATEST_VERSION_FLAG_SET = false;
 
+    public static final Set<String> NO_MATCH = new HashSet<>();
+
     public static final Integer NO_MAX_RESULTS = null;
 
     public static final String NO_MESSAGE_DESTINATION = null;

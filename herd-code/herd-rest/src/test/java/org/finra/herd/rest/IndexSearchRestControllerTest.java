@@ -64,14 +64,17 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
         // Create a set of search optional fields.
         Set<String> fields = Sets.newHashSet(FIELD_SHORT_DESCRIPTION);
 
+        // Create a set of search match fields.
+        Set<String> match = Sets.newHashSet(MATCH_COLUMN);
+
         // Mock the external calls.
-        when(indexSearchService.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+        when(indexSearchService.indexSearch(indexSearchRequest, fields, match)).thenReturn(indexSearchResponse);
 
         // Call the method under test.
-        IndexSearchResponse result = indexSearchRestController.indexSearch(fields, indexSearchRequest);
+        IndexSearchResponse result = indexSearchRestController.indexSearch(fields, match, indexSearchRequest);
 
         // Verify the external calls.
-        verify(indexSearchService).indexSearch(indexSearchRequest, fields);
+        verify(indexSearchService).indexSearch(indexSearchRequest, fields, match);
         verifyNoMoreInteractions(indexSearchService);
 
         // Validate the result.

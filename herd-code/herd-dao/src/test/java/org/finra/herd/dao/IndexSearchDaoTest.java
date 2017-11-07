@@ -534,7 +534,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
         // Call the method under test
         IndexSearchResponse indexSearchResponse =
-            indexSearchDao.indexSearch(indexSearchRequest, fields, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
+            indexSearchDao.indexSearch(indexSearchRequest, fields, NO_MATCH, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
         List<IndexSearchResult> indexSearchResults = indexSearchResponse.getIndexSearchResults();
 
         assertThat("Index search results list is null.", indexSearchResults, not(nullValue()));

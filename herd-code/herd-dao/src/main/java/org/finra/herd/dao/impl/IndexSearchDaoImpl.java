@@ -104,6 +104,11 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private static final String DISPLAY_NAME_SOURCE = "displayName";
 
     /**
+     * String to signify the match field is column
+     */
+    private static final String MATCH_COLUMN = "column";
+
+    /**
      * String to select the namespace
      */
     private static final String NAMESPACE = "namespace";
@@ -184,8 +189,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private HerdSearchQueryHelper herdSearchQueryHelper;
 
     @Override
-    public IndexSearchResponse indexSearch(final IndexSearchRequest indexSearchRequest, final Set<String> fields, final String bdefActiveIndex,
-        final String tagActiveIndex)
+    public IndexSearchResponse indexSearch(final IndexSearchRequest indexSearchRequest, final Set<String> fields, final Set<String> match,
+        final String bdefActiveIndex, final String tagActiveIndex)
     {
         boolean negationTermsExist = herdSearchQueryHelper.determineNegationTermsPresent(indexSearchRequest);
 
@@ -202,8 +207,9 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
             if (CollectionUtils.isNotEmpty(negationTerms))
             {
-                negationTerms.forEach(term -> {
-                    indexSearchQueryBuilder.mustNot(buildMultiMatchQuery(term, PHRASE, 100f, FIELD_TYPE_STEMMED));
+                negationTerms.forEach(term ->
+                {
+                    indexSearchQueryBuilder.mustNot(buildMultiMatchQuery(term, PHRASE, 100f, FIELD_TYPE_STEMMED, match));
                 });
             }
 
@@ -217,14 +223,14 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         //  2. Phrase prefix query on stemmed fields.
         //  3. Best fields query on ngrams fields.
         final MultiMatchQueryBuilder phrasePrefixMultiMatchQueryBuilder = buildMultiMatchQuery(searchPhrase, PHRASE_PREFIX,
-            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class), FIELD_TYPE_STEMMED);
+            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class), FIELD_TYPE_STEMMED, match);
 
         final MultiMatchQueryBuilder bestFieldsMultiMatchQueryBuilder = buildMultiMatchQuery(searchPhrase, BEST_FIELDS,
-            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class), FIELD_TYPE_NGRAMS);
+            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class), FIELD_TYPE_NGRAMS, match);
 
         final MultiMatchQueryBuilder phraseMultiMatchQueryBuilder =
             buildMultiMatchQuery(searchPhrase, PHRASE, configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class),
-                FIELD_TYPE_SHINGLES);
+                FIELD_TYPE_SHINGLES, match);
 
         // Add the multi match queries to a dis max query and add to the parent bool query within a 'must' clause
         indexSearchQueryBuilder
@@ -488,11 +494,15 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      * Private method to build a multi match query.
      *
      * @param searchTerm the term on which to search
+     * @param queryType the query type for this multi match query
+     * @param queryBoost the query boost for this multi match query
+     * @param fieldType the field type for this multi match query
+     * @param match the set of match fields that are to be searched upon in the index search
      *
      * @return the multi match query
      */
     private MultiMatchQueryBuilder buildMultiMatchQuery(final String searchTerm, final MultiMatchQueryBuilder.Type queryType, final float queryBoost,
-        final String fieldType)
+        final String fieldType, Set<String> match)
     {
         MultiMatchQueryBuilder multiMatchQueryBuilder = QueryBuilders.multiMatchQuery(searchTerm).type(queryType);
         multiMatchQueryBuilder.boost(queryBoost);
@@ -503,7 +513,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             String stemmedFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED);
 
             // build the query
-            buildMultiMatchQueryWithBoosts(multiMatchQueryBuilder, stemmedFieldsValue);
+            buildMultiMatchQueryWithBoosts(multiMatchQueryBuilder, stemmedFieldsValue, match);
         }
 
         if (fieldType.equals(FIELD_TYPE_NGRAMS))
@@ -512,7 +522,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             String ngramsFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS);
 
             // build the query
-            buildMultiMatchQueryWithBoosts(multiMatchQueryBuilder, ngramsFieldsValue);
+            buildMultiMatchQueryWithBoosts(multiMatchQueryBuilder, ngramsFieldsValue, match);
         }
 
         if (fieldType.equals(FIELD_TYPE_SHINGLES))
@@ -521,7 +531,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             String shinglesFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_SHINGLES);
 
             // build the query
-            buildMultiMatchQueryWithBoosts(multiMatchQueryBuilder, shinglesFieldsValue);
+            buildMultiMatchQueryWithBoosts(multiMatchQueryBuilder, shinglesFieldsValue, match);
         }
 
         return multiMatchQueryBuilder;
@@ -532,18 +542,37 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      *
      * @param multiMatchQueryBuilder A {@link MultiMatchQueryBuilder} which should be constructed
      * @param fieldsBoostsJsonString A json formatted String which contains individual fields and their boost values
+     * @param match the set of match fields that are to be searched upon in the index search
      */
-    private void buildMultiMatchQueryWithBoosts(MultiMatchQueryBuilder multiMatchQueryBuilder, String fieldsBoostsJsonString)
+    private void buildMultiMatchQueryWithBoosts(MultiMatchQueryBuilder multiMatchQueryBuilder, String fieldsBoostsJsonString, Set<String> match)
     {
         try
         {
             @SuppressWarnings("unchecked")
-            final Map<String, String> ngramsFieldsWithBoost = jsonHelper.unmarshallJsonToObject(Map.class, fieldsBoostsJsonString);
+            final Map<String, String> fieldsBoostsMap = jsonHelper.unmarshallJsonToObject(Map.class, fieldsBoostsJsonString);
+
+            final Map<String, String> fieldsBoostsMatchMap = new HashMap<>();
+
+            // Handle the match fields if any
+            if (!match.isEmpty())
+            {
+                // If the match column is included
+                if (match.contains(MATCH_COLUMN))
+                {
+                    // Remove the other fields except match from the fields boost map
+                    fieldsBoostsMap.forEach((field, boostValue) -> {
+                        if (field.contains("column.name") || field.contains("schemaColumns.name"))
+                        {
+                            fieldsBoostsMatchMap.put(field, boostValue);
+                        }
+                    });
+                }
+            }
 
             final Map<String, Float> fieldsBoosts = new HashMap<>();
 
             // This additional step is needed because trying to cast an unmarshalled json to a Map of anything other than String key-value pairs won't work
-            ngramsFieldsWithBoost.forEach((field, boostValue) -> fieldsBoosts.put(field, Float.parseFloat(boostValue)));
+            fieldsBoostsMap.forEach((field, boostValue) -> fieldsBoosts.put(field, Float.parseFloat(boostValue)));
 
             // Set the fields and their respective boosts to the multi-match query
             multiMatchQueryBuilder.fields(fieldsBoosts);
@@ -584,7 +613,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             @SuppressWarnings("unchecked")
             IndexSearchHighlightFields highlightFieldsConfig = jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsValue);
 
-            highlightFieldsConfig.getHighlightFields().forEach(highlightFieldConfig -> {
+            highlightFieldsConfig.getHighlightFields().forEach(highlightFieldConfig ->
+            {
 
                 // set the field name to the configured value
                 HighlightBuilder.Field highlightField = new HighlightBuilder.Field(highlightFieldConfig.getFieldName());
