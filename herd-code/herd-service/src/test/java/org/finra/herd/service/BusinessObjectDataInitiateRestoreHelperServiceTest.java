@@ -18,8 +18,10 @@ package org.finra.herd.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +31,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
@@ -97,6 +100,10 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         BusinessObjectDataEntity businessObjectDataEntity =
             businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
 
+        // Get the current time and compute the expected timestamp value.
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        Timestamp expectedTimestamp = HerdDateUtils.addDays(currentTime, EXPIRATION_IN_DAYS);
+
         // Execute a before step for the initiate a business object data restore request.
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS);
@@ -107,9 +114,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         // Validate that restore expiration time is set correctly on the storage unit.
         StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         assertNotNull(storageUnitEntity.getRestoreExpirationOn());
-        Long differenceInDays =
-            TimeUnit.DAYS.convert(storageUnitEntity.getRestoreExpirationOn().getTime() - storageUnitEntity.getCreatedOn().getTime(), TimeUnit.MILLISECONDS);
-        assertEquals(Long.valueOf(EXPIRATION_IN_DAYS), differenceInDays);
+        Long differenceInMilliseconds = storageUnitEntity.getRestoreExpirationOn().getTime() - expectedTimestamp.getTime();
+        assertTrue(Math.abs(differenceInMilliseconds) < 1000);
     }
 
     @Test

@@ -321,7 +321,9 @@
       <module>herd-app</module>
       <module>herd-war</module>
       <module>herd-tools</module>
-      <module>herd-sdk</module>
+      <!--TODO: UNCOMMENT PLUGINS AFTER 0.56.0 BRANCH HAS OCCURRED currently taken out due to travis ci not able to get
+      one of its dependencies-->
+      <!--<module>herd-sdk</module>-->
    </modules>
 
 </project>
