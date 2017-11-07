@@ -33,7 +33,6 @@ import javax.validation.constraints.AssertTrue;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.finra.herd.model.api.xml.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -47,6 +46,26 @@ import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.NamespacePermissions;
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.AttributeDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.BusinessObjectFormatAttributeDefinitionsUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
+import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionResponse;
+import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
+import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
+import org.finra.herd.model.api.xml.CustomDdlKey;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.api.xml.Schema;
+import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatAttributeEntity;
@@ -125,13 +144,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
-    /**
-     * Creates a new business object format.
-     *
-     * @param request the business object format create request.
-     *
-     * @return the created business object format.
-     */
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat createBusinessObjectFormat(BusinessObjectFormatCreateRequest request)
@@ -227,15 +239,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(newBusinessObjectFormatEntity);
     }
 
-    /**
-     * Updates a business object format.
-     *
-     * @param businessObjectFormatKey the business object format key
-     * @param request the business object format update request
-     *
-     * @return the updated business object format.
-     */
-    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey, BusinessObjectFormatUpdateRequest request)
     {
@@ -301,13 +305,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
 
-    /**
-     * Gets a business object format for the specified key. This method starts a new transaction.
-     *
-     * @param businessObjectFormatKey the business object format key
-     *
-     * @return the business object format
-     */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectFormat getBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
@@ -341,13 +338,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity, checkLatestVersion);
     }
 
-    /**
-     * Deletes a business object format.
-     *
-     * @param businessObjectFormatKey the business object format alternate key
-     *
-     * @return the business object format that was deleted
-     */
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat deleteBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
@@ -420,14 +410,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return deletedBusinessObjectFormat;
     }
 
-    /**
-     * Gets a list of business object formats for the specified business object definition name.
-     *
-     * @param businessObjectDefinitionKey the business object definition key
-     * @param latestBusinessObjectFormatVersion specifies is only the latest (maximum) versions of the business object formats are returned
-     *
-     * @return the list of business object formats.
-     */
     @Override
     public BusinessObjectFormatKeys getBusinessObjectFormats(BusinessObjectDefinitionKey businessObjectDefinitionKey, boolean latestBusinessObjectFormatVersion)
     {
@@ -444,14 +426,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatKeys;
     }
 
-    /**
-     * Retrieves the DDL to initialize the specified type of the database system (e.g. Hive) by creating a table for the requested business object format. This
-     * method starts a new transaction.
-     *
-     * @param request the business object format DDL request
-     *
-     * @return the business object format DDL information
-     */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectFormatDdl generateBusinessObjectFormatDdl(BusinessObjectFormatDdlRequest request)
@@ -459,14 +433,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return generateBusinessObjectFormatDdlImpl(request, false);
     }
 
-    /**
-     * Retrieves the DDL to initialize the specified type of the database system (e.g. Hive) by creating tables for a collection of business object formats.
-     * This method starts a new transaction.
-     *
-     * @param request the business object format DDL collection request
-     *
-     * @return the business object format DDL information
-     */
     @NamespacePermission(fields = "#request?.businessObjectFormatDdlRequests?.![namespace]", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -475,14 +441,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return generateBusinessObjectFormatDdlCollectionImpl(request);
     }
 
-    /**
-     * Update business object format parents
-     *
-     * @param businessObjectFormatKey business object format key
-     * @param businessObjectFormatParentsUpdateRequest business object format parents update request
-     *
-     * @return business object format
-     */
     @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE),
         @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]",
             permissions = NamespacePermissionEnum.READ)})
@@ -526,14 +484,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
 
-    /**
-     * Updates a business object format attributes.
-     *
-     * @param businessObjectFormatKey the business object format key
-     * @param businessObjectFormatAttributesUpdateRequest the business object format attributes update request
-     *
-     * @return the updated business object format.
-     */
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormatAttributes(BusinessObjectFormatKey businessObjectFormatKey,
@@ -560,14 +510,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
 
-    /**
-     * Replaces the list of attribute definitions for an existing business object format.
-     *
-     * @param businessObjectFormatKey the business object format key
-     * @param businessObjectFormatAttributeDefinitionsUpdateRequest the business object format attribute definitions update request
-     *
-     * @return the updated business object format.
-     */
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormatAttributeDefinitions(BusinessObjectFormatKey businessObjectFormatKey, BusinessObjectFormatAttributeDefinitionsUpdateRequest businessObjectFormatAttributeDefinitionsUpdateRequest) {
@@ -688,12 +630,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatDdlCollectionResponse;
     }
 
-    /**
-     * Update business object format retention information
-     * @param businessObjectFormatKey the business object format alternate key
-     * @param updateRequest business object format retention information update request
-     * @return updated business object format
-     */
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormatRetentionInformation(BusinessObjectFormatKey businessObjectFormatKey,

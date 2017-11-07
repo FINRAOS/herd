@@ -2052,8 +2052,7 @@
       <xs:all>
          <xs:element name="attributeDefinitions" type="attributeDefinitions" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Custom user-defined metadata associated with this Business Object Format. "name" is the attributeDefinition name (i.e. the key) and
-                  "value" is the attributeDefinition value
+               <xs:documentation>Replaces the list of attribute definitions for an existing business object format based on the specified usage, file type, version and a business object definition.
                </xs:documentation>
             </xs:annotation>
          </xs:element>
