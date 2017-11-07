@@ -95,8 +95,8 @@ public class BusinessObjectDataFinalizeRestoreJob extends AbstractSystemJob
                 }
                 catch (RuntimeException runtimeException)
                 {
-                    // Log the exception.
-                    LOGGER.error("Failed to finalize a business object data restore from the Glacier storage. " +
+                    // Log the exception as a warning.
+                    LOGGER.warn("Failed to finalize a business object data restore from the Glacier storage. " +
                         "systemJobName=\"{}\" storageName=\"{}\" businessObjectDataKey={}", JOB_NAME, storageUnitKey.getStorageName(),
                         jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataKeyFromStorageUnitKey(storageUnitKey)), runtimeException);
                 }
