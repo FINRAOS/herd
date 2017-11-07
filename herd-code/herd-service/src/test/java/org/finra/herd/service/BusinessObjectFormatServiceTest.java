@@ -59,6 +59,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
 import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
@@ -71,6 +72,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
+import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -4415,7 +4417,207 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 attributes, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
                 businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
     }
-    
+
+    @Test
+    public void testUpdateBusinessObjectFormatRetention()
+    {
+        // Create an initial version of a business object format with format description and schema information.
+        BusinessObjectFormat originalBusinessObjectFormat =
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        Boolean recordFlag = true;
+        Integer retentionPeriodInDays = new Integer(RETENTION_PERIOD_DAYS);
+        String retentionType = RetentionTypeEntity.PARTITION_VALUE;
+
+        BusinessObjectFormatRetentionInformationUpdateRequest updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType(retentionType);
+        updateRequest.setRecordFlag(recordFlag);
+        updateRequest.setRetentionPeriodInDays(retentionPeriodInDays);
+
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService
+            .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                updateRequest);
+
+        businessObjectFormatServiceTestHelper.validateRetentionInformation(recordFlag, retentionPeriodInDays, retentionType, updatedBusinessObjectFormat);
+
+        //reset the retention information
+        recordFlag = false;
+        retentionPeriodInDays = null;
+        retentionType = null;
+
+        updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType(retentionType);
+        updateRequest.setRecordFlag(recordFlag);
+        updateRequest.setRetentionPeriodInDays(retentionPeriodInDays);
+
+        updatedBusinessObjectFormat = businessObjectFormatService
+            .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                updateRequest);
+
+        businessObjectFormatServiceTestHelper.validateRetentionInformation(false, retentionPeriodInDays, retentionType, updatedBusinessObjectFormat);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatRetentionWithWrongRetentionType()
+    {
+        // Create an initial version of a business object format with format description and schema information.
+        BusinessObjectFormat originalBusinessObjectFormat =
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        boolean recordFlag = true;
+        Integer retentionPeriodInDays = new Integer(180);
+        String retentionType = "NOTFOUND";
+
+        BusinessObjectFormatRetentionInformationUpdateRequest updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType(retentionType);
+        updateRequest.setRecordFlag(recordFlag);
+        updateRequest.setRetentionPeriodInDays(retentionPeriodInDays);
+
+        try
+        {
+            businessObjectFormatService
+                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                    updateRequest);
+            fail("should throw ObjectNotFoundException before");
+        }
+        catch(ObjectNotFoundException ex)
+        {
+            assertEquals(String.format("Record retention type with code \"%s\" doesn't exist.", retentionType), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatRetentionValidation()
+    {
+        // Create an initial version of a business object format with format description and schema information.
+        BusinessObjectFormat originalBusinessObjectFormat =
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        //withNullUpdateRequest
+        try
+        {
+            businessObjectFormatService
+                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                    null);
+            fail("should throw IllegalArgumentException before");
+        }
+        catch(IllegalArgumentException ex)
+        {
+            assertEquals("A Business Object Format Retention Information Update Request is required.", ex.getMessage());
+        }
+
+        //withNullRetenionPeriods
+        Boolean recordFlag = true;
+        Integer retentionPeriodInDays = null;
+        String retentionType = RetentionTypeEntity.PARTITION_VALUE;;
+
+        BusinessObjectFormatRetentionInformationUpdateRequest updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType(retentionType);
+        updateRequest.setRecordFlag(recordFlag);
+        updateRequest.setRetentionPeriodInDays(retentionPeriodInDays);
+
+        try
+        {
+            businessObjectFormatService
+                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                    updateRequest);
+            fail("should throw IllegalArgumentException before");
+        }
+        catch(IllegalArgumentException ex)
+        {
+            assertEquals("A retention period in days must be specified when retention type is present.", ex.getMessage());
+        }
+
+
+        //withWrongRetentionPeriods
+        recordFlag = true;
+        retentionPeriodInDays = new Integer(-180);
+        retentionType = RetentionTypeEntity.PARTITION_VALUE;;
+
+        updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType(retentionType);
+        updateRequest.setRecordFlag(recordFlag);
+        updateRequest.setRetentionPeriodInDays(retentionPeriodInDays);
+
+        try
+        {
+            businessObjectFormatService
+                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                    updateRequest);
+            fail("should throw IllegalArgumentException before");
+        }
+        catch(IllegalArgumentException ex)
+        {
+            assertEquals("A positive retention period in days must be specified.", ex.getMessage());
+        }
+
+        //withNullRecordFlag
+        recordFlag = null;
+        retentionPeriodInDays = new Integer(180);
+        retentionType = RetentionTypeEntity.PARTITION_VALUE;;
+
+        updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType(retentionType);
+        updateRequest.setRecordFlag(recordFlag);
+        updateRequest.setRetentionPeriodInDays(retentionPeriodInDays);
+
+        try
+        {
+            businessObjectFormatService
+                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                    updateRequest);
+            fail("should throw IllegalArgumentException before");
+        }
+        catch(IllegalArgumentException ex)
+        {
+            assertEquals("A Record Flag in Business Object Format Retention Information Update Request is required.", ex.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatRetentionWithLatestVersion()
+    {
+        // Create an initial version of a business object format with format description and schema information.
+        BusinessObjectFormat originalBusinessObjectFormat =
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        boolean recordFlag = true;
+        Integer retentionPeriodInDays = new Integer(180);
+        String retentionType = "PARTITION_VALUE";
+
+        BusinessObjectFormatRetentionInformationUpdateRequest updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
+        updateRequest.setRetentionType(retentionType);
+        updateRequest.setRecordFlag(recordFlag);
+        updateRequest.setRetentionPeriodInDays(retentionPeriodInDays);
+
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService
+            .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                updateRequest);
+
+        businessObjectFormatServiceTestHelper.validateRetentionInformation(recordFlag, retentionPeriodInDays, retentionType, updatedBusinessObjectFormat);
+
+        BusinessObjectFormatCreateRequest createRequest = new BusinessObjectFormatCreateRequest();
+        createRequest.setNamespace(NAMESPACE);
+        createRequest.setBusinessObjectDefinitionName(BDEF_NAME);
+        createRequest.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        createRequest.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        createRequest.setPartitionKey(originalBusinessObjectFormat.getPartitionKey());
+        createRequest.setSchema(originalBusinessObjectFormat.getSchema());
+
+        BusinessObjectFormat newVersionBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(createRequest);
+
+        //the new version of business object format should have the retention information
+        businessObjectFormatServiceTestHelper.validateRetentionInformation(recordFlag, retentionPeriodInDays, retentionType, newVersionBusinessObjectFormat);
+        BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 1);
+        // now delete the oldest version
+        businessObjectFormatService.deleteBusinessObjectFormat(businessObjectFormatKey);
+        // now the old version 0, should have the retention information
+        businessObjectFormatKey.setBusinessObjectFormatVersion(0);
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKey);
+        businessObjectFormatServiceTestHelper.validateRetentionInformation(recordFlag, retentionPeriodInDays, retentionType, businessObjectFormat);
+    }
+
+
     private GlobalAttributeDefinitionEntity createGlobalAttributeDefinitionEntityWithAllowedAttributeValues()
     {
         // Create attribute value list key.

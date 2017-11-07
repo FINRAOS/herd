@@ -1372,6 +1372,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     @Autowired
     protected UserNamespaceAuthorizationDaoTestHelper userNamespaceAuthorizationDaoTestHelper;
 
+    @Autowired
+    protected RetentionTypeDao retentionTypeDao;
+
+    @Autowired
+    protected RetentionTypeDaoTestHelper retentionTypeDaoTestHelper;
+
     /**
      * Returns a random timestamp.
      */

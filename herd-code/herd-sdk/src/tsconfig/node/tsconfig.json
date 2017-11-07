@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "moduleResolution": "node",
+    "declaration": true,
+    "rootDir": ".",
+    "outDir": "./build",
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "skipLibCheck": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ]
+  },
+  "files" : [
+    "api.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

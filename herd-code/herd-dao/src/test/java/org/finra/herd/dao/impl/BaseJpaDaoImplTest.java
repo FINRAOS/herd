@@ -27,7 +27,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.jpa.criteria.predicate.InPredicate;
+import org.hibernate.query.criteria.internal.predicate.InPredicate;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -53,8 +53,8 @@ public class BaseJpaDaoImplTest extends AbstractDaoTest
         Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
 
         // Get the predicate for the "in" clause with 1000 values.
-        Predicate predicate =
-            baseJpaDaoImpl.getPredicateForInClause(builder, businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), getPartitionValueList(1000));
+        Predicate predicate = baseJpaDaoImpl
+            .getPredicateForInClause(builder, businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), getPartitionValueList(1000));
 
         // We expect to get back an "in" predicate with a single chunk of 1000 partition values.
         assertTrue(predicate instanceof InPredicate);
@@ -70,8 +70,8 @@ public class BaseJpaDaoImplTest extends AbstractDaoTest
         Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
 
         // Get the predicate for the "in" clause with 1001 values (1 greater than the default chunking size).
-        Predicate predicate =
-            baseJpaDaoImpl.getPredicateForInClause(builder, businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), getPartitionValueList(1001));
+        Predicate predicate = baseJpaDaoImpl
+            .getPredicateForInClause(builder, businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), getPartitionValueList(1001));
 
         // We expect to get back an "or" of 2 "in" expressions where each "in" expression is a list of chunked partition values.
         assertEquals(Predicate.BooleanOperator.OR, predicate.getOperator());
