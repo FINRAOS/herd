@@ -544,11 +544,9 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
      */
     private int getRefreshIntervalSeconds(String xmlConfigurationString) throws IOException
     {
-        final LoggerContext loggerContext = Configurator.initialize(null, defaultResourceLocation);
-
         // Create the Log4J configuration object from the configuration string and get the refresh interval in seconds from the configuration.
         XmlConfiguration xmlConfiguration =
-            new XmlConfiguration(loggerContext, new ConfigurationSource(new ByteArrayInputStream(xmlConfigurationString.getBytes(StandardCharsets.UTF_8))));
+            new XmlConfiguration(new ConfigurationSource(new ByteArrayInputStream(xmlConfigurationString.getBytes(StandardCharsets.UTF_8))));
         return xmlConfiguration.getWatchManager().getIntervalSeconds();
     }
 
