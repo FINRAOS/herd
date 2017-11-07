@@ -33,6 +33,7 @@ import javax.validation.constraints.AssertTrue;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.finra.herd.model.api.xml.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -46,25 +47,6 @@ import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.NamespacePermissions;
-import org.finra.herd.model.api.xml.Attribute;
-import org.finra.herd.model.api.xml.AttributeDefinition;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.herd.model.api.xml.BusinessObjectFormat;
-import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionResponse;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
-import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
-import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
-import org.finra.herd.model.api.xml.CustomDdlKey;
-import org.finra.herd.model.api.xml.NamespacePermissionEnum;
-import org.finra.herd.model.api.xml.Schema;
-import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatAttributeEntity;
@@ -578,6 +560,35 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
 
+    /**
+     * Replaces the list of attribute definitions for an existing business object format.
+     *
+     * @param businessObjectFormatKey the business object format key
+     * @param businessObjectFormatAttributeDefinitionsUpdateRequest the business object format attribute definitions update request
+     *
+     * @return the updated business object format.
+     */
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public BusinessObjectFormat updateBusinessObjectFormatAttributeDefinitions(BusinessObjectFormatKey businessObjectFormatKey, BusinessObjectFormatAttributeDefinitionsUpdateRequest businessObjectFormatAttributeDefinitionsUpdateRequest) {
+        // Perform validation and trim the alternate key parameters.
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
+
+        Assert.notNull(businessObjectFormatAttributeDefinitionsUpdateRequest, "A business object format attribute definitions update request is required.");
+        Assert.notNull(businessObjectFormatAttributeDefinitionsUpdateRequest.getAttributeDefinitions(), "A business object format attribute definitions list is required.");
+        List<AttributeDefinition> attributeDefinitions = businessObjectFormatAttributeDefinitionsUpdateRequest.getAttributeDefinitions();
+
+        // Retrieve and ensure that a business object format exists.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+        // Update the business object format attributes
+        updateBusinessObjectFormatAttributeDefinitionsHelper(businessObjectFormatEntity, attributeDefinitions);
+
+        // Persist and refresh the entity.
+        businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
+
+        // Create and return the business object format object from the persisted entity.
+        return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
+    }
 
     /**
      * Retrieves the DDL to initialize the specified type of the database system (e.g. Hive) by creating a table for the requested business object format.
@@ -1344,5 +1355,70 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Add all of the newly created business object definition attribute entities.
         businessObjectFormatEntity.getAttributes().addAll(createdAttributeEntities);
+    }
+
+    /**
+     * Updates business object format attribute definitions
+     *
+     * @param businessObjectFormatEntity the business object format entity
+     * @param attributeDefinitions the attributes
+     */
+    private void updateBusinessObjectFormatAttributeDefinitionsHelper(BusinessObjectFormatEntity businessObjectFormatEntity, List<AttributeDefinition> attributeDefinitions)
+    {
+        // Update the attribute definitions.
+        // Load all existing attribute definition entities in a map with a "lowercase" attribute definition name as the key for case insensitivity.
+        Map<String, BusinessObjectDataAttributeDefinitionEntity> existingAttributeDefinitionEntities = new HashMap<>();
+        for (BusinessObjectDataAttributeDefinitionEntity attributeDefinitionEntity : businessObjectFormatEntity.getAttributeDefinitions())
+        {
+            String mapKey = attributeDefinitionEntity.getName().toLowerCase();
+            if (existingAttributeDefinitionEntities.containsKey(mapKey))
+            {
+                throw new IllegalStateException(String.format("Found duplicate attribute definition with name \"%s\" for business object format {%s}.", mapKey,
+                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
+            }
+            existingAttributeDefinitionEntities.put(mapKey, attributeDefinitionEntity);
+        }
+        // Process the list of attribute definitions to determine that business object definition attribute entities should be created, updated, or deleted.
+        List<BusinessObjectDataAttributeDefinitionEntity> createdAttributeDefinitionEntities = new ArrayList<>();
+        List<BusinessObjectDataAttributeDefinitionEntity> retainedAttributeDefinitionEntities = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(attributeDefinitions))
+        {
+            for (AttributeDefinition attributeDefinition : attributeDefinitions)
+            {
+                // Use a "lowercase" attribute name for case insensitivity.
+                String lowercaseAttributeName = attributeDefinition.getName().toLowerCase();
+                if (existingAttributeDefinitionEntities.containsKey(lowercaseAttributeName))
+                {
+                    // Check if the attribute definition value needs to be updated.
+                    BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity = existingAttributeDefinitionEntities.get(lowercaseAttributeName);
+                    if (!attributeDefinition.isPublish().equals(businessObjectDataAttributeDefinitionEntity.getPublish()))
+                    {
+                        // Update the business object attribute entity.
+                        businessObjectDataAttributeDefinitionEntity.setPublish(attributeDefinition.isPublish());
+                    }
+
+                    // Add this entity to the list of business object definition attribute entities to be retained.
+                    retainedAttributeDefinitionEntities.add(businessObjectDataAttributeDefinitionEntity);
+                }
+                else
+                {
+                    // Create a new business object attribute entity.
+                    BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity = new BusinessObjectDataAttributeDefinitionEntity();
+                    businessObjectFormatEntity.getAttributeDefinitions().add(businessObjectDataAttributeDefinitionEntity);
+                    businessObjectDataAttributeDefinitionEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+                    businessObjectDataAttributeDefinitionEntity.setName(attributeDefinition.getName());
+                    businessObjectDataAttributeDefinitionEntity.setPublish(attributeDefinition.isPublish());
+
+                    // Add this entity to the list of the newly created business object definition attribute entities.
+                    createdAttributeDefinitionEntities.add(businessObjectDataAttributeDefinitionEntity);
+                }
+            }
+        }
+
+        // Remove any of the currently existing attribute entities that did not get onto the retained entities list.
+        businessObjectFormatEntity.getAttributeDefinitions().retainAll(retainedAttributeDefinitionEntities);
+
+        // Add all of the newly created business object definition attribute entities.
+        businessObjectFormatEntity.getAttributeDefinitions().addAll(createdAttributeDefinitionEntities);
     }
 }

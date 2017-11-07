@@ -15,19 +15,7 @@
 */
 package org.finra.herd.service;
 
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.herd.model.api.xml.BusinessObjectFormat;
-import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionResponse;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
-import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
-import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
+import org.finra.herd.model.api.xml.*;
 
 /**
  * The business object definition format.
@@ -56,6 +44,9 @@ public interface BusinessObjectFormatService
 
     public BusinessObjectFormat updateBusinessObjectFormatAttributes(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatAttributesUpdateRequest businessObjectFormatAttributesUpdateRequest);
+
+    public BusinessObjectFormat updateBusinessObjectFormatAttributeDefinitions(BusinessObjectFormatKey businessObjectFormatKey,
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest businessObjectFormatAttributeDefinitionsUpdateRequest);
 
     public BusinessObjectFormat updateBusinessObjectFormatRetentionInformation(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatRetentionInformationUpdateRequest businessObjectFormatRetentionInformationUpdateRequest);

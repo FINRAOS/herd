@@ -2047,6 +2047,19 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectFormatAttributeDefinitionsUpdateRequest" type="businessObjectFormatAttributeDefinitionsUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatAttributeDefinitionsUpdateRequest">
+      <xs:all>
+         <xs:element name="attributeDefinitions" type="attributeDefinitions" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Custom user-defined metadata associated with this Business Object Format. "name" is the attributeDefinition name (i.e. the key) and
+                  "value" is the attributeDefinition value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="businessObjectFormatRetentionInformationUpdateRequest" type="businessObjectFormatRetentionInformationUpdateRequest"/>
    <xs:complexType name="businessObjectFormatRetentionInformationUpdateRequest">
       <xs:all>

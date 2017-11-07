@@ -17,6 +17,7 @@ package org.finra.herd.rest;
 
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.BooleanUtils;
+import org.finra.herd.model.api.xml.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,19 +27,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.herd.model.api.xml.BusinessObjectFormat;
-import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionResponse;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
-import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
-import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.BusinessObjectFormatService;
 import org.finra.herd.ui.constants.UiConstants;
@@ -257,6 +245,36 @@ public class BusinessObjectFormatRestController extends HerdBaseController
             new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion);
         return businessObjectFormatService.updateBusinessObjectFormatAttributes(businessObjectFormatKey, request);
+    }
+
+    /**
+     * Replaces the list of attribute definitions for an existing business object format based on the specified usage, file type, version and a business object definition. <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace code
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param request the information needed to update the business object format attribute definitions
+     *
+     * @return the updated business object format attribute definitions.
+     */
+    @RequestMapping(
+        value = "/businessObjectFormatAttributeDefinitions/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+            "/businessObjectFormatVersions/{businessObjectFormatVersion}",
+        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMAT_ATTRIBUTES_PUT)
+    public BusinessObjectFormat updateBusinessObjectFormatAttributeDefinitions(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @RequestBody BusinessObjectFormatAttributeDefinitionsUpdateRequest request)
+    {
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion);
+        return businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(businessObjectFormatKey, request);
     }
 
     /**
