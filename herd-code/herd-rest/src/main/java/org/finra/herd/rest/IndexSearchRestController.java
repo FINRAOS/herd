@@ -47,7 +47,7 @@ public class IndexSearchRestController extends HerdBaseController
     /**
      * The index search POST method.
      *
-     * @param fields the set of fields that are to be returned in the index search response (accepts: description and schemaColumnName)
+     * @param fields the set of fields that are to be returned in the index search response (accepts: displayname and shortdescription)
      * @param match the set of match fields that the search will be restricted to (accepts: column)
      * @param request the index search request
      * @return the index search response

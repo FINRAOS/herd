@@ -89,6 +89,11 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private static final String CODE = "code";
 
     /**
+     * String that represents the column name field
+     */
+    private static final String COLUMNS_NAME_FIELD = "columns.name";
+
+    /**
      * Source string for the description
      */
     private static final String DESCRIPTION_SOURCE = "description";
@@ -127,6 +132,11 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      * The number of the indexSearch results to return
      */
     private static final int SEARCH_RESULT_SIZE = 200;
+
+    /**
+     * String that represents the schemaColumn name field
+     */
+    private static final String SCHEMA_COLUMNS_NAME_FIELD = "schemaColumns.name";
 
     /**
      * Constant to hold the short description option for the business object definition search
@@ -551,28 +561,25 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             @SuppressWarnings("unchecked")
             final Map<String, String> fieldsBoostsMap = jsonHelper.unmarshallJsonToObject(Map.class, fieldsBoostsJsonString);
 
-            final Map<String, String> fieldsBoostsMatchMap = new HashMap<>();
-
-            // Handle the match fields if any
-            if (!match.isEmpty())
-            {
-                // If the match column is included
-                if (match.contains(MATCH_COLUMN))
-                {
-                    // Remove the other fields except match from the fields boost map
-                    fieldsBoostsMap.forEach((field, boostValue) -> {
-                        if (field.contains("column.name") || field.contains("schemaColumns.name"))
-                        {
-                            fieldsBoostsMatchMap.put(field, boostValue);
-                        }
-                    });
-                }
-            }
-
+            // This additional step is needed because trying to cast an unmarshalled json to a Map of anything other than String key-value pairs won't work
             final Map<String, Float> fieldsBoosts = new HashMap<>();
 
-            // This additional step is needed because trying to cast an unmarshalled json to a Map of anything other than String key-value pairs won't work
-            fieldsBoostsMap.forEach((field, boostValue) -> fieldsBoosts.put(field, Float.parseFloat(boostValue)));
+            // If the match column is included
+            if (match != null && match.contains(MATCH_COLUMN))
+            {
+                // Add only the column.name and schemaColumn.name fields to the fieldsBoosts map
+                fieldsBoostsMap.forEach((field, boostValue) ->
+                {
+                    if (field.contains(COLUMNS_NAME_FIELD) || field.contains(SCHEMA_COLUMNS_NAME_FIELD))
+                    {
+                        fieldsBoosts.put(field, Float.parseFloat(boostValue));
+                    }
+                });
+            }
+            else
+            {
+                fieldsBoostsMap.forEach((field, boostValue) -> fieldsBoosts.put(field, Float.parseFloat(boostValue)));
+            }
 
             // Set the fields and their respective boosts to the multi-match query
             multiMatchQueryBuilder.fields(fieldsBoosts);
