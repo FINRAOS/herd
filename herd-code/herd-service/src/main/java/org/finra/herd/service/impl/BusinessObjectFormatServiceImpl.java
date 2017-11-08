@@ -519,6 +519,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         Assert.notNull(businessObjectFormatAttributeDefinitionsUpdateRequest, "A business object format attribute definitions update request is required.");
         Assert.notNull(businessObjectFormatAttributeDefinitionsUpdateRequest.getAttributeDefinitions(), "A business object format attribute definitions list is required.");
         List<AttributeDefinition> attributeDefinitions = businessObjectFormatAttributeDefinitionsUpdateRequest.getAttributeDefinitions();
+        // Validate and trim optional attribute definitions. This is also going to trim the attribute definition names.
+        validateAndTrimBusinessObjectFormatAttributeDefinitionsHelper(attributeDefinitions);
 
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
@@ -1356,5 +1358,32 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Add all of the newly created business object definition attribute entities.
         businessObjectFormatEntity.getAttributeDefinitions().addAll(createdAttributeDefinitionEntities);
+    }
+
+    /**
+     * Validates business object format attribute definitions
+     *
+     * @param attributeDefinitions the attribute definitions
+     */
+    private void validateAndTrimBusinessObjectFormatAttributeDefinitionsHelper(List<AttributeDefinition> attributeDefinitions)
+    {
+        // Validate attribute definitions if they are specified.
+        if (!CollectionUtils.isEmpty(attributeDefinitions))
+        {
+            Map<String, AttributeDefinition> attributeNameValidationMap = new HashMap<>();
+            for (AttributeDefinition attributeDefinition : attributeDefinitions)
+            {
+                Assert.hasText(attributeDefinition.getName(), "An attribute definition name must be specified.");
+                attributeDefinition.setName(attributeDefinition.getName().trim());
+
+                // Ensure the attribute defination key isn't a duplicate by using a map with a "lowercase" name as the key for case insensitivity.
+                String lowercaseAttributeDefinitionName = attributeDefinition.getName().toLowerCase();
+                if (attributeNameValidationMap.containsKey(lowercaseAttributeDefinitionName))
+                {
+                    throw new IllegalArgumentException(String.format("Duplicate attribute definition name \"%s\" found.", attributeDefinition.getName()));
+                }
+                attributeNameValidationMap.put(lowercaseAttributeDefinitionName, attributeDefinition);
+            }
+        }
     }
 }
