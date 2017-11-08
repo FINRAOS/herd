@@ -50,6 +50,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.BusinessObjectFormatAttributeDefinitionsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
@@ -4231,7 +4232,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
         attributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME, "test attribute 1"));
-        
+
         // Create an initial version of a business object format.
         BusinessObjectFormat businessObjectFormat =
             businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
@@ -4256,7 +4257,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial version of a business object format.
         BusinessObjectFormat businessObjectFormat =
             businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
-        
+
         // Create a new partition key group for the update request.
         partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
@@ -4314,7 +4315,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create a new partition key group for the update request.
         partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
-  
+
         List<Attribute> newAttributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
         newAttributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME, "test attribute 2"));
 
@@ -4353,7 +4354,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             assertEquals(String.format("The business object format attribute \"%s\" value \"%s\" is not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME, invalidAttributeValue), ex.getMessage());
         }
     }
-    
+
     @Test
     public void testCreateBusinessObjectFormatWithGlobalAttributesAndAllowedAttributeValuesNegative2()
     {
@@ -4376,7 +4377,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             assertEquals(String.format("The business object format attribute \"%s\" value \"%s\" is not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME, ALLOWED_ATTRIBUTE_VALUE.toLowerCase()), ex.getMessage());
         }
     }
-    
+
     @Test
     public void testCreateBusinessObjectFormatWithGlobalAttributesAndAllowedAttributeValues()
     {
@@ -4415,6 +4416,32 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION,
                 attributes, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitions()
+    {
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        // Create an initial version of a business object format with format description and schema information.
+        // Attributes are passed rather attribute definations as this method also set attribute definition by default and no need to create another method
+        BusinessObjectFormat originalBusinessObjectFormat =
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+
+
+        List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2();
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+
+        // Perform an update by changing the description and schema.
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService
+            .updateBusinessObjectFormatAttributeDefinitions(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                request);
+
+        // Validate the returned object.
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION,
+                attributes, attributeDefinitions,
                 businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
     }
 
@@ -4633,7 +4660,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
         globalAttributeDefinitionEntity.setAttributeValueList(attributeValueListEntity);
-        
+
         return globalAttributeDefinitionEntity;
     }
 }
