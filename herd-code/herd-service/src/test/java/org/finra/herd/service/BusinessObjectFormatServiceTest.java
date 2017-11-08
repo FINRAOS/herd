@@ -4443,6 +4443,32 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION,
                 attributes, attributeDefinitions,
                 businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
+
+        // Perform an update by changing the attribute definition to null.
+        request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(null);
+        try {
+            businessObjectFormatService
+                .updateBusinessObjectFormatAttributeDefinitions(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                    request);
+        }
+        catch(IllegalArgumentException ex)
+        {
+            assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
+        }
+
+        // Check for the duplicate attribute definition.
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
+        request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+        try {
+            businessObjectFormatService
+                .updateBusinessObjectFormatAttributeDefinitions(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                    request);
+        }
+        catch(IllegalArgumentException ex)
+        {
+            assertEquals(String.format("Duplicate attribute definition name \"%s\" found.", ATTRIBUTE_NAME_1_MIXED_CASE), ex.getMessage());
+        }
+
     }
 
     @Test
