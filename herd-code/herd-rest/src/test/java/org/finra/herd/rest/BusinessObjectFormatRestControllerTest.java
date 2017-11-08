@@ -271,14 +271,14 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
 
         when(businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(businessObjectFormatKey, request)).thenReturn(businessObjectFormat);
 
-        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatRestController
+        BusinessObjectFormat result = businessObjectFormatRestController
             .updateBusinessObjectFormatAttributeDefinitions(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, request);
 
         // Verify the external calls.
         verify(businessObjectFormatService).updateBusinessObjectFormatAttributeDefinitions(businessObjectFormatKey, request);
         verifyNoMoreInteractions(businessObjectFormatService);
         // Validate the returned object.
-        assertEquals(businessObjectFormat, updatedBusinessObjectFormat);
+        assertEquals(businessObjectFormat, result);
     }
 
     @Test
