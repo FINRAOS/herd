@@ -232,7 +232,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             businessObjectFormatDao.saveAndRefresh(newBusinessObjectFormatEntity);
             //reset the retention information of the latest version business object format
             latestVersionBusinessObjectFormatEntity.setRetentionType(null);
-            latestVersionBusinessObjectFormatEntity.setRecordFlag(false);
+            latestVersionBusinessObjectFormatEntity.setRecordFlag(null);
             latestVersionBusinessObjectFormatEntity.setRetentionPeriodInDays(null);
 
             businessObjectFormatDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
