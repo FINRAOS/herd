@@ -384,9 +384,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2, null,
             BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES, descriptiveBusinessObjectFormat, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
-                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
-                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
-            updatedBusinessObjectDefinition);
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+            NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS), updatedBusinessObjectDefinition);
 
         //create a new version of the business object format, the associated bdef descriptive format should be updated to the new version
         businessObjectFormatService.createBusinessObjectFormat(
@@ -398,9 +397,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2, null,
             BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES, descriptiveBusinessObjectFormat, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
-                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
-                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
-            updatedBusinessObjectDefinition);
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+            NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS), updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -1867,8 +1865,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Can not delete a business object format that has business object data associated with it. " +
-                "Business object format: {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                    "Business object format: {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION), e.getMessage());
         }
     }
@@ -1929,7 +1927,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
                 e.getMessage());
         }
 
@@ -1943,7 +1941,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", INITIAL_FORMAT_VERSION),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", INITIAL_FORMAT_VERSION),
                 e.getMessage());
         }
 
@@ -2235,8 +2233,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(request.getNamespace(), request.getBusinessObjectDefinitionName(),
-                    request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(request.getNamespace(), request.getBusinessObjectDefinitionName(),
+                        request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()),
                 e.getMessage());
         }
 
@@ -2251,7 +2249,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Custom DDL with name \"%s\" does not exist for business object format with namespace \"%s\", " +
-                "business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%d\".", request.getCustomDdlName(),
+                    "business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%d\".", request.getCustomDdlName(),
                 request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
                 request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -2513,8 +2511,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Partition column name \"%s\" can not contain a '/' character. Business object format: " +
-                "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}", invalidPartitionColumnName, request.getNamespace(),
+                    "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}", invalidPartitionColumnName, request.getNamespace(),
                 request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
                 request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -2627,7 +2625,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Unsupported format file type for business object format {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
-                "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", request.getNamespace(),
+                    "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", request.getNamespace(),
                 request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
                 request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -2657,8 +2655,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Column \"%s\" has an unsupported data type \"%s\" in the schema for business object format " +
-                "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", schemaColumn.getName(), schemaColumn.getType(),
+                    "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", schemaColumn.getName(), schemaColumn.getType(),
                 request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
                 request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -2830,26 +2828,14 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatDdlRequest.setIncludeIfNotExistsOption(false);
         BusinessObjectFormatDdl result = businessObjectFormatService.generateBusinessObjectFormatDdl(businessObjectFormatDdlRequest);
 
-        Assert.assertEquals("result DDL", result.getDdl(), "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n" +
-            "    `COLUMN001` TINYINT,\n" +
-            "    `COLUMN002` SMALLINT COMMENT 'This is \\'COLUMN002\\' column. Here are \\'single\\' and \"double\" quotes along with a backslash \\.',\n" +
-            "    `COLUMN003` INT,\n" +
-            "    `COLUMN004` BIGINT,\n" +
-            "    `COLUMN005` FLOAT,\n" +
-            "    `COLUMN006` DOUBLE,\n" +
-            "    `COLUMN007` DECIMAL,\n" +
-            "    `COLUMN008` DECIMAL(p,s),\n" +
-            "    `COLUMN009` DECIMAL,\n" +
-            "    `COLUMN010` DECIMAL(p),\n" +
-            "    `COLUMN011` DECIMAL(p,s),\n" +
-            "    `COLUMN012` TIMESTAMP,\n" +
-            "    `COLUMN013` DATE,\n" +
-            "    `COLUMN014` STRING,\n" +
-            "    `COLUMN015` VARCHAR(n),\n" +
-            "    `COLUMN016` VARCHAR(n),\n" +
-            "    `COLUMN017` CHAR(n),\n" +
-            "    `COLUMN018` BOOLEAN,\n" +
-            "    `COLUMN019` BINARY);");
+        Assert.assertEquals("result DDL", result.getDdl(),
+            "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n" + "    `COLUMN001` TINYINT,\n" +
+                "    `COLUMN002` SMALLINT COMMENT 'This is \\'COLUMN002\\' column. Here are \\'single\\' and \"double\" quotes along with a backslash \\.',\n" +
+                "    `COLUMN003` INT,\n" + "    `COLUMN004` BIGINT,\n" + "    `COLUMN005` FLOAT,\n" + "    `COLUMN006` DOUBLE,\n" +
+                "    `COLUMN007` DECIMAL,\n" + "    `COLUMN008` DECIMAL(p,s),\n" + "    `COLUMN009` DECIMAL,\n" + "    `COLUMN010` DECIMAL(p),\n" +
+                "    `COLUMN011` DECIMAL(p,s),\n" + "    `COLUMN012` TIMESTAMP,\n" + "    `COLUMN013` DATE,\n" + "    `COLUMN014` STRING,\n" +
+                "    `COLUMN015` VARCHAR(n),\n" + "    `COLUMN016` VARCHAR(n),\n" + "    `COLUMN017` CHAR(n),\n" + "    `COLUMN018` BOOLEAN,\n" +
+                "    `COLUMN019` BINARY);");
     }
 
     /**
@@ -2926,26 +2912,14 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatDdlRequest.setIncludeIfNotExistsOption(null);
         BusinessObjectFormatDdl result = businessObjectFormatService.generateBusinessObjectFormatDdl(businessObjectFormatDdlRequest);
 
-        Assert.assertEquals("result DDL", result.getDdl(), "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n" +
-            "    `COLUMN001` TINYINT,\n" +
-            "    `COLUMN002` SMALLINT COMMENT 'This is \\'COLUMN002\\' column. Here are \\'single\\' and \"double\" quotes along with a backslash \\.',\n" +
-            "    `COLUMN003` INT,\n" +
-            "    `COLUMN004` BIGINT,\n" +
-            "    `COLUMN005` FLOAT,\n" +
-            "    `COLUMN006` DOUBLE,\n" +
-            "    `COLUMN007` DECIMAL,\n" +
-            "    `COLUMN008` DECIMAL(p,s),\n" +
-            "    `COLUMN009` DECIMAL,\n" +
-            "    `COLUMN010` DECIMAL(p),\n" +
-            "    `COLUMN011` DECIMAL(p,s),\n" +
-            "    `COLUMN012` TIMESTAMP,\n" +
-            "    `COLUMN013` DATE,\n" +
-            "    `COLUMN014` STRING,\n" +
-            "    `COLUMN015` VARCHAR(n),\n" +
-            "    `COLUMN016` VARCHAR(n),\n" +
-            "    `COLUMN017` CHAR(n),\n" +
-            "    `COLUMN018` BOOLEAN,\n" +
-            "    `COLUMN019` BINARY);");
+        Assert.assertEquals("result DDL", result.getDdl(),
+            "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n" + "    `COLUMN001` TINYINT,\n" +
+                "    `COLUMN002` SMALLINT COMMENT 'This is \\'COLUMN002\\' column. Here are \\'single\\' and \"double\" quotes along with a backslash \\.',\n" +
+                "    `COLUMN003` INT,\n" + "    `COLUMN004` BIGINT,\n" + "    `COLUMN005` FLOAT,\n" + "    `COLUMN006` DOUBLE,\n" +
+                "    `COLUMN007` DECIMAL,\n" + "    `COLUMN008` DECIMAL(p,s),\n" + "    `COLUMN009` DECIMAL,\n" + "    `COLUMN010` DECIMAL(p),\n" +
+                "    `COLUMN011` DECIMAL(p,s),\n" + "    `COLUMN012` TIMESTAMP,\n" + "    `COLUMN013` DATE,\n" + "    `COLUMN014` STRING,\n" +
+                "    `COLUMN015` VARCHAR(n),\n" + "    `COLUMN016` VARCHAR(n),\n" + "    `COLUMN017` CHAR(n),\n" + "    `COLUMN018` BOOLEAN,\n" +
+                "    `COLUMN019` BINARY);");
     }
 
     @Test
@@ -3023,7 +2997,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
                 e.getMessage());
         }
 
@@ -3037,7 +3011,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", INITIAL_FORMAT_VERSION),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", INITIAL_FORMAT_VERSION),
                 e.getMessage());
         }
 
@@ -3389,8 +3363,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, Arrays
-                .asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1),
-                    new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_2)));
+                    .asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1),
+                        new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_2)));
 
         // Try to update a business object format instance that already has duplicate attributes.
         try
@@ -3420,8 +3394,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             businessObjectFormatService
                 .updateBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                     businessObjectFormatServiceTestHelper.createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, Arrays
-                        .asList(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_3),
-                            new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_3)),
+                            .asList(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_3),
+                                new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_3)),
                         businessObjectFormatServiceTestHelper.getTestSchema2()));
             fail("Should throw an IllegalArgumentException when duplicate attributes are specified.");
         }
@@ -3544,7 +3518,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
                 e.getMessage());
         }
 
@@ -3559,7 +3533,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", INITIAL_FORMAT_VERSION),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", INITIAL_FORMAT_VERSION),
                 e.getMessage());
         }
 
@@ -4234,14 +4208,12 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         attributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME, "test attribute 1"));
 
         // Create an initial version of a business object format.
-        BusinessObjectFormat businessObjectFormat =
-            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
         // Validate the returned object.
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
-                FORMAT_DESCRIPTION, attributes,
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
-                businessObjectFormat);
+                FORMAT_DESCRIPTION, attributes, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                businessObjectFormatServiceTestHelper.getTestSchema(), businessObjectFormat);
     }
 
     @Test
@@ -4255,8 +4227,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         attributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME, "test attribute 1"));
 
         // Create an initial version of a business object format.
-        BusinessObjectFormat businessObjectFormat =
-            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
 
         // Create a new partition key group for the update request.
         partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
@@ -4271,9 +4242,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 .updateBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
                     request);
             fail("should throw exception before");
-        }  catch (IllegalArgumentException ex){
+        }
+        catch (IllegalArgumentException ex)
+        {
             assertEquals(String.format("The business object format has a required attribute \"%s\" which was not specified or has a value which is blank.",
-                 GLOBAL_ATTRIBUTE_DEFINITON_NAME), ex.getMessage());
+                GLOBAL_ATTRIBUTE_DEFINITON_NAME), ex.getMessage());
         }
     }
 
@@ -4288,11 +4261,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         try
         {
             // Create an initial version of a business object format.
-            BusinessObjectFormat businessObjectFormat =
-                businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+            BusinessObjectFormat businessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
             fail("Should throw exception before");
         }
-        catch (IllegalArgumentException ex){
+        catch (IllegalArgumentException ex)
+        {
             assertEquals(String.format("The business object format has a required attribute \"%s\" which was not specified or has a value which is blank.",
                 GLOBAL_ATTRIBUTE_DEFINITON_NAME), ex.getMessage());
         }
@@ -4309,8 +4282,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         attributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME, "test attribute 1"));
 
         // Create an initial version of a business object format.
-        BusinessObjectFormat businessObjectFormat =
-            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
 
         // Create a new partition key group for the update request.
         partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
@@ -4321,18 +4293,17 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Perform an update by changing the description and schema.
         BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, newAttributes,
-                businessObjectFormatServiceTestHelper.getTestSchema2());
+            .createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, newAttributes, businessObjectFormatServiceTestHelper.getTestSchema2());
         BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService
             .updateBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
                 request);
 
         // Validate the returned object.
         businessObjectFormatServiceTestHelper
-            .validateBusinessObjectFormat(businessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION_2,
-                newAttributes, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema2(), updatedBusinessObjectFormat);
+            .validateBusinessObjectFormat(businessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION_2, newAttributes,
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema2(),
+                updatedBusinessObjectFormat);
     }
 
     @Test
@@ -4346,12 +4317,14 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         try
         {
             // Create an initial version of a business object format.
-            BusinessObjectFormat businessObjectFormat =
-                businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+            BusinessObjectFormat businessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
             fail("Should throw exception before");
         }
-        catch (IllegalArgumentException ex){
-            assertEquals(String.format("The business object format attribute \"%s\" value \"%s\" is not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME, invalidAttributeValue), ex.getMessage());
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(String
+                .format("The business object format attribute \"%s\" value \"%s\" is not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME,
+                    invalidAttributeValue), ex.getMessage());
         }
     }
 
@@ -4369,12 +4342,14 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         try
         {
             // Create an initial version of a business object format.
-            BusinessObjectFormat businessObjectFormat =
-                businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+            BusinessObjectFormat businessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
             fail("Should throw exception before");
         }
-        catch (IllegalArgumentException ex){
-            assertEquals(String.format("The business object format attribute \"%s\" value \"%s\" is not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME, ALLOWED_ATTRIBUTE_VALUE.toLowerCase()), ex.getMessage());
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(String
+                .format("The business object format attribute \"%s\" value \"%s\" is not from allowed attribute values.", GLOBAL_ATTRIBUTE_DEFINITON_NAME,
+                    ALLOWED_ATTRIBUTE_VALUE.toLowerCase()), ex.getMessage());
         }
     }
 
@@ -4386,14 +4361,12 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         attributes.add(new Attribute(GLOBAL_ATTRIBUTE_DEFINITON_NAME.toLowerCase(), ALLOWED_ATTRIBUTE_VALUE_2));
 
         // Create an initial version of a business object format.
-        BusinessObjectFormat businessObjectFormat =
-            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
         // Validate the returned object.
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
-                FORMAT_DESCRIPTION, attributes,
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
-                businessObjectFormat);
+                FORMAT_DESCRIPTION, attributes, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                businessObjectFormatServiceTestHelper.getTestSchema(), businessObjectFormat);
     }
 
     @Test
@@ -4407,16 +4380,15 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         BusinessObjectFormatAttributesUpdateRequest request = new BusinessObjectFormatAttributesUpdateRequest(attributes);
 
         // Perform an update by changing the description and schema.
-        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService
-            .updateBusinessObjectFormatAttributes(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
-                request);
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService.updateBusinessObjectFormatAttributes(
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
 
         // Validate the returned object.
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION,
-                attributes, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, attributes,
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
+                updatedBusinessObjectFormat);
     }
 
     @Test
@@ -4425,48 +4397,156 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
         // Create an initial version of a business object format with format description and schema information.
         // Attributes are passed rather attribute definations as this method also set attribute definition by default and no need to create another method
-        BusinessObjectFormat originalBusinessObjectFormat =
-            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
 
 
         List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2();
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
         // Perform an update by changing the description and schema.
-        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService
-            .updateBusinessObjectFormatAttributeDefinitions(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
-                request);
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
 
         // Validate the returned object.
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION,
-                attributes, attributeDefinitions,
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, attributes, attributeDefinitions,
                 businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
 
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitionsMissingRequiredParameters()
+    {
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+        attributeDefinitions.add(new AttributeDefinition(null, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
         // Perform an update by changing the attribute definition to null.
-        request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(null);
-        try {
-            businessObjectFormatService
-                .updateBusinessObjectFormatAttributeDefinitions(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
-                    request);
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(null);
+
+        try
+        {
+            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
         }
-        catch(IllegalArgumentException ex)
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitionsNullAsParameters()
+    {
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+        // null check for attribute definitions value
+        // Perform an update by changing the attribute definition to null.
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(null);
+
+        try
+        {
+            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+        }
+        catch (IllegalArgumentException ex)
         {
             assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
         }
 
+        // null check for attribute definition list value
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+        request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+
+        try
+        {
+            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
+        }
+
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitionsMissingOptionalParameters()
+    {
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+
+        // white space, trim, upper case, lower case
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+        attributeDefinitions.add(new AttributeDefinition("", AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
+        // Perform an update by changing the attribute definition to null.
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(null);
+
+        try
+        {
+            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
+        }
+
+        attributeDefinitions = new ArrayList<>();
+        // List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2();
+        // Perform an update by changing the attribute definition with an empty list.
+        request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+
+        try
+        {
+            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
+        }
+
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitionsDuplicateAttributeDefintions()
+    {
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
         // Check for the duplicate attribute definition.
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
-        request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
-        try {
-            businessObjectFormatService
-                .updateBusinessObjectFormatAttributeDefinitions(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
-                    request);
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+        try
+        {
+            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
         }
-        catch(IllegalArgumentException ex)
+        catch (IllegalArgumentException ex)
         {
             assertEquals(String.format("Duplicate attribute definition name \"%s\" found.", ATTRIBUTE_NAME_1_MIXED_CASE), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitionsBusinessObjectFormatNoExists()
+    {
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request =
+            new BusinessObjectFormatAttributeDefinitionsUpdateRequest(businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2());
+        try
+        {
+            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+            // fail("Business object format does not exist: No update con be performed if the format does not exists.");
+        }
+        catch (ObjectNotFoundException ex)
+        {
+            assertEquals(String.format(
+                "Business object format with namespace \"%s\", business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%s\" doesn't exist.",
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), ex.getMessage());
         }
 
     }
@@ -4528,12 +4608,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectFormatService
-                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
-                    updateRequest);
+            businessObjectFormatService.updateBusinessObjectFormatRetentionInformation(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), updateRequest);
             fail("should throw ObjectNotFoundException before");
         }
-        catch(ObjectNotFoundException ex)
+        catch (ObjectNotFoundException ex)
         {
             assertEquals(String.format("Record retention type with code \"%s\" doesn't exist.", retentionType), ex.getMessage());
         }
@@ -4549,12 +4628,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         //withNullUpdateRequest
         try
         {
-            businessObjectFormatService
-                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
-                    null);
+            businessObjectFormatService.updateBusinessObjectFormatRetentionInformation(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null);
             fail("should throw IllegalArgumentException before");
         }
-        catch(IllegalArgumentException ex)
+        catch (IllegalArgumentException ex)
         {
             assertEquals("A Business Object Format Retention Information Update Request is required.", ex.getMessage());
         }
@@ -4562,7 +4640,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         //withNullRetenionPeriods
         Boolean recordFlag = true;
         Integer retentionPeriodInDays = null;
-        String retentionType = RetentionTypeEntity.PARTITION_VALUE;;
+        String retentionType = RetentionTypeEntity.PARTITION_VALUE;
+        ;
 
         BusinessObjectFormatRetentionInformationUpdateRequest updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
         updateRequest.setRetentionType(retentionType);
@@ -4571,12 +4650,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectFormatService
-                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
-                    updateRequest);
+            businessObjectFormatService.updateBusinessObjectFormatRetentionInformation(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), updateRequest);
             fail("should throw IllegalArgumentException before");
         }
-        catch(IllegalArgumentException ex)
+        catch (IllegalArgumentException ex)
         {
             assertEquals("A retention period in days must be specified when retention type is present.", ex.getMessage());
         }
@@ -4585,7 +4663,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         //withWrongRetentionPeriods
         recordFlag = true;
         retentionPeriodInDays = new Integer(-180);
-        retentionType = RetentionTypeEntity.PARTITION_VALUE;;
+        retentionType = RetentionTypeEntity.PARTITION_VALUE;
+        ;
 
         updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
         updateRequest.setRetentionType(retentionType);
@@ -4594,12 +4673,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectFormatService
-                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
-                    updateRequest);
+            businessObjectFormatService.updateBusinessObjectFormatRetentionInformation(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), updateRequest);
             fail("should throw IllegalArgumentException before");
         }
-        catch(IllegalArgumentException ex)
+        catch (IllegalArgumentException ex)
         {
             assertEquals("A positive retention period in days must be specified.", ex.getMessage());
         }
@@ -4607,7 +4685,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         //withNullRecordFlag
         recordFlag = null;
         retentionPeriodInDays = new Integer(180);
-        retentionType = RetentionTypeEntity.PARTITION_VALUE;;
+        retentionType = RetentionTypeEntity.PARTITION_VALUE;
+        ;
 
         updateRequest = new BusinessObjectFormatRetentionInformationUpdateRequest();
         updateRequest.setRetentionType(retentionType);
@@ -4616,12 +4695,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectFormatService
-                .updateBusinessObjectFormatRetentionInformation(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
-                    updateRequest);
+            businessObjectFormatService.updateBusinessObjectFormatRetentionInformation(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), updateRequest);
             fail("should throw IllegalArgumentException before");
         }
-        catch(IllegalArgumentException ex)
+        catch (IllegalArgumentException ex)
         {
             assertEquals("A Record Flag in Business Object Format Retention Information Update Request is required.", ex.getMessage());
         }
@@ -4678,13 +4756,16 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         List<String> allowedAttributeValueList = Arrays.asList(ALLOWED_ATTRIBUTE_VALUE, ALLOWED_ATTRIBUTE_VALUE_2);
 
         // Create and persist a attribute value list key entity.
-        AttributeValueListEntity attributeValueListEntity= attributeValueListDaoTestHelper.createAttributeValueListEntity(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
+        AttributeValueListEntity attributeValueListEntity =
+            attributeValueListDaoTestHelper.createAttributeValueListEntity(NAMESPACE_CODE, ATTRIBUTE_VALUE_LIST_NAME);
 
         // Create and persist a list of allowed attribute values.
-        List<AllowedAttributeValueEntity> allowedAttributeValueEntities = allowedAttributeValueDaoTestHelper.createAllowedAttributeValueEntities(attributeValueListKey, allowedAttributeValueList);
+        List<AllowedAttributeValueEntity> allowedAttributeValueEntities =
+            allowedAttributeValueDaoTestHelper.createAllowedAttributeValueEntities(attributeValueListKey, allowedAttributeValueList);
         attributeValueListEntity.getAllowedAttributeValues().addAll(allowedAttributeValueEntities);
 
-        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
+        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
+            globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
         globalAttributeDefinitionEntity.setAttributeValueList(attributeValueListEntity);
 
         return globalAttributeDefinitionEntity;

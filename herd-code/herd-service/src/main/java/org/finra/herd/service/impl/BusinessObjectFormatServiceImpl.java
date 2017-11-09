@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.validation.constraints.AssertTrue;
 
@@ -239,7 +240,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(newBusinessObjectFormatEntity);
     }
 
-     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey, BusinessObjectFormatUpdateRequest request)
     {
@@ -442,8 +443,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     }
 
     @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE),
-        @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]",
-            permissions = NamespacePermissionEnum.READ)})
+        @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]", permissions = NamespacePermissionEnum.READ)})
     @Override
     public BusinessObjectFormat updateBusinessObjectFormatParents(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatParentsUpdateRequest businessObjectFormatParentsUpdateRequest)
@@ -512,12 +512,14 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    public BusinessObjectFormat updateBusinessObjectFormatAttributeDefinitions(BusinessObjectFormatKey businessObjectFormatKey, BusinessObjectFormatAttributeDefinitionsUpdateRequest businessObjectFormatAttributeDefinitionsUpdateRequest) {
+    public BusinessObjectFormat updateBusinessObjectFormatAttributeDefinitions(BusinessObjectFormatKey businessObjectFormatKey,
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest businessObjectFormatAttributeDefinitionsUpdateRequest)
+    {
         // Perform validation and trim the alternate key parameters.
         businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
 
         Assert.notNull(businessObjectFormatAttributeDefinitionsUpdateRequest, "A business object format attribute definitions update request is required.");
-        Assert.notNull(businessObjectFormatAttributeDefinitionsUpdateRequest.getAttributeDefinitions(), "A business object format attribute definitions list is required.");
+
         List<AttributeDefinition> attributeDefinitions = businessObjectFormatAttributeDefinitionsUpdateRequest.getAttributeDefinitions();
         // Validate and trim optional attribute definitions. This is also going to trim the attribute definition names.
         validateAndTrimBusinessObjectFormatAttributeDefinitionsHelper(attributeDefinitions);
@@ -848,13 +850,13 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Validate that there are no changes to the delimiter character, which is a an optional parameter.
         // Please note that null and an empty string values are both stored in the database as NULL.
         Assert.isTrue(oldSchema.getDelimiter() == null ? newSchema.getDelimiter() == null || newSchema.getDelimiter().isEmpty() :
-            oldSchema.getDelimiter().equals(newSchema.getDelimiter()),
+                oldSchema.getDelimiter().equals(newSchema.getDelimiter()),
             String.format("%s New format version delimiter character does not match to the previous format version delimiter character.", mainErrorMessage));
 
         // Validate that there are no changes to the escape character, which is a an optional parameter.
         // Please note that null and an empty string values are both stored in the database as NULL.
         Assert.isTrue(oldSchema.getEscapeCharacter() == null ? newSchema.getEscapeCharacter() == null || newSchema.getEscapeCharacter().isEmpty() :
-            oldSchema.getEscapeCharacter().equals(newSchema.getEscapeCharacter()),
+                oldSchema.getEscapeCharacter().equals(newSchema.getEscapeCharacter()),
             String.format("%s New format version escape character does not match to the previous format version escape character.", mainErrorMessage));
 
         // Validate that there are no non-additive changes to partition columns.
@@ -864,7 +866,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Validate that there are no non-additive changes to the previous format version regular columns.
         // No null check is needed on schema columns, since at least one column is required if format schema is specified.
         Assert.isTrue((oldSchema.getColumns().size() <= newSchema.getColumns().size()) &&
-            validateNewSchemaColumnsAreAdditiveToOldSchemaColumns(newSchema.getColumns().subList(0, oldSchema.getColumns().size()), oldSchema.getColumns()),
+                validateNewSchemaColumnsAreAdditiveToOldSchemaColumns(newSchema.getColumns().subList(0, oldSchema.getColumns().size()), oldSchema.getColumns()),
             String.format("%s Non-additive changes detected to the previously defined regular (non-partitioning) columns.", mainErrorMessage));
     }
 
@@ -1301,21 +1303,14 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      * @param businessObjectFormatEntity the business object format entity
      * @param attributeDefinitions the attributes
      */
-    private void updateBusinessObjectFormatAttributeDefinitionsHelper(BusinessObjectFormatEntity businessObjectFormatEntity, List<AttributeDefinition> attributeDefinitions)
+    private void updateBusinessObjectFormatAttributeDefinitionsHelper(BusinessObjectFormatEntity businessObjectFormatEntity,
+        List<AttributeDefinition> attributeDefinitions)
     {
         // Update the attribute definitions.
         // Load all existing attribute definition entities in a map with a "lowercase" attribute definition name as the key for case insensitivity.
-        Map<String, BusinessObjectDataAttributeDefinitionEntity> existingAttributeDefinitionEntities = new HashMap<>();
-        for (BusinessObjectDataAttributeDefinitionEntity attributeDefinitionEntity : businessObjectFormatEntity.getAttributeDefinitions())
-        {
-            String mapKey = attributeDefinitionEntity.getName().toLowerCase();
-            if (existingAttributeDefinitionEntities.containsKey(mapKey))
-            {
-                throw new IllegalStateException(String.format("Found duplicate attribute definition with name \"%s\" for business object format {%s}.", mapKey,
-                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
-            }
-            existingAttributeDefinitionEntities.put(mapKey, attributeDefinitionEntity);
-        }
+        Map<String, BusinessObjectDataAttributeDefinitionEntity> existingAttributeDefinitionEntities =
+            businessObjectFormatEntity.getAttributeDefinitions().stream()
+                .collect(Collectors.toMap(attributeDefinition -> attributeDefinition.getName().toLowerCase(), attributeDefinition -> attributeDefinition));
         // Process the list of attribute definitions to determine that business object definition attribute entities should be created, updated, or deleted.
         List<BusinessObjectDataAttributeDefinitionEntity> createdAttributeDefinitionEntities = new ArrayList<>();
         List<BusinessObjectDataAttributeDefinitionEntity> retainedAttributeDefinitionEntities = new ArrayList<>();
@@ -1328,7 +1323,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 if (existingAttributeDefinitionEntities.containsKey(lowercaseAttributeName))
                 {
                     // Check if the attribute definition value needs to be updated.
-                    BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity = existingAttributeDefinitionEntities.get(lowercaseAttributeName);
+                    BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity =
+                        existingAttributeDefinitionEntities.get(lowercaseAttributeName);
                     if (!attributeDefinition.isPublish().equals(businessObjectDataAttributeDefinitionEntity.getPublish()))
                     {
                         // Update the business object attribute entity.
@@ -1367,10 +1363,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      */
     private void validateAndTrimBusinessObjectFormatAttributeDefinitionsHelper(List<AttributeDefinition> attributeDefinitions)
     {
+        Assert.notNull(attributeDefinitions, "A business object format attribute definitions list is required.");
         // Validate attribute definitions if they are specified.
         if (!CollectionUtils.isEmpty(attributeDefinitions))
         {
-            Map<String, AttributeDefinition> attributeNameValidationMap = new HashMap<>();
+            Map<String, AttributeDefinition> attributeDefinitionNameValidationMap = new HashMap<>();
             for (AttributeDefinition attributeDefinition : attributeDefinitions)
             {
                 Assert.hasText(attributeDefinition.getName(), "An attribute definition name must be specified.");
@@ -1378,11 +1375,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
                 // Ensure the attribute defination key isn't a duplicate by using a map with a "lowercase" name as the key for case insensitivity.
                 String lowercaseAttributeDefinitionName = attributeDefinition.getName().toLowerCase();
-                if (attributeNameValidationMap.containsKey(lowercaseAttributeDefinitionName))
+                if (attributeDefinitionNameValidationMap.containsKey(lowercaseAttributeDefinitionName))
                 {
                     throw new IllegalArgumentException(String.format("Duplicate attribute definition name \"%s\" found.", attributeDefinition.getName()));
                 }
-                attributeNameValidationMap.put(lowercaseAttributeDefinitionName, attributeDefinition);
+                attributeDefinitionNameValidationMap.put(lowercaseAttributeDefinitionName, attributeDefinition);
             }
         }
     }
