@@ -22,6 +22,7 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -57,6 +58,11 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     public static final String DISPLAY_NAME_FIELD = "displayname";
 
     /**
+     * Constant to hold the column match field option for the index search.
+     */
+    public static final String MATCH_COLUMN_FIELD = "column";
+
+    /**
      * The minimum allowable length of a search term.
      */
     public static final int SEARCH_TERM_MINIMUM_ALLOWABLE_LENGTH = 3;
@@ -85,10 +91,13 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     private TagHelper tagHelper;
 
     @Override
-    public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
+    public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields, final Set<String> match)
     {
         // Validate the search response fields
         validateSearchResponseFields(fields);
+
+        // Validate the search response match
+        validateSearchMatchFields(match);
 
         // Validate the search term
         validateIndexSearchRequestSearchTerm(request.getSearchTerm());
@@ -112,7 +121,7 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         String bdefActiveIndex = searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
         String tagActiveIndex = searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
 
-        return indexSearchDao.indexSearch(request, fields, bdefActiveIndex, tagActiveIndex);
+        return indexSearchDao.indexSearch(request, fields, match, bdefActiveIndex, tagActiveIndex);
     }
 
     /**
@@ -201,6 +210,11 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         return ImmutableSet.of(SHORT_DESCRIPTION_FIELD, DISPLAY_NAME_FIELD);
     }
 
+    private Set<String> getValidSearchMatchFields()
+    {
+        return ImmutableSet.of(MATCH_COLUMN_FIELD);
+    }
+
     @Override
     public Set<String> getValidFacetFields()
     {
@@ -216,5 +230,26 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     {
         indexSearchResultTypeKey.setIndexSearchResultType(
             alternateKeyHelper.validateStringParameter("An", "index search result type", indexSearchResultTypeKey.getIndexSearchResultType()));
+    }
+
+    /**
+     * Validates a set of search match fields. This method also trims and lowers the match fields.
+     *
+     * @param match the search match fields to be validated
+     */
+    private void validateSearchMatchFields(Set<String> match)
+    {
+        // Create a local copy of the match fields set so that we can stream it to modify the match fields set
+        Set<String> localCopy = new HashSet<>(match);
+
+        // Clear the match set
+        match.clear();
+
+        // Add to the match set field the strings both trimmed and lower cased and filter out empty and null strings
+        localCopy.stream().filter(StringUtils::isNotBlank).map(String::trim).map(String::toLowerCase).forEachOrdered(match::add);
+
+        // Validate the field names
+        match.forEach(
+            field -> Assert.isTrue(getValidSearchMatchFields().contains(field), String.format("Search match field \"%s\" is not supported.", field)));
     }
 }
