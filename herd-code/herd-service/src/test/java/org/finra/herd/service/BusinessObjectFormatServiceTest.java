@@ -4511,6 +4511,52 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitionsTrimUpperAndLowerCase()
+    {
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+
+        // trim, upper case, lower case
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+        List<AttributeDefinition> validateAttributeDefinitions = new ArrayList<>();
+        validateAttributeDefinitions
+            .add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE));
+        attributeDefinitions
+            .add(new AttributeDefinition(" " + AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE + " ", AbstractServiceTest.PUBLISH_ATTRIBUTE));
+        // Perform an update by changing the attribute definition to null.
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+
+            BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+
+        // Validate the returned object.
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, attributes, validateAttributeDefinitions,
+                businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
+
+        // upper case and lower case
+        attributeDefinitions = new ArrayList<>();
+        // List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2();
+        attributeDefinitions
+            .add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), AbstractServiceTest.PUBLISH_ATTRIBUTE));
+        attributeDefinitions
+            .add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), AbstractServiceTest.PUBLISH_ATTRIBUTE));
+        // Perform an update by changing the attribute definition with an empty list.
+        request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+
+        try
+        {
+            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(String.format("Duplicate attribute definition name \"%s\" found.", ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase()), ex.getMessage());
+        }
+    }
+
+    @Test
     public void testUpdateBusinessObjectFormatAttributeDefinitionsDuplicateAttributeDefintions()
     {
         List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
