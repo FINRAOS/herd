@@ -4420,19 +4420,39 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     {
         List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
         BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+
+        // Null as required parameter
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
         attributeDefinitions.add(new AttributeDefinition(null, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
         // Perform an update by changing the attribute definition to null.
-        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(null);
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
         try
         {
             businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
                 new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+            fail("Should throw an IllegalArgumentException.");
         }
         catch (IllegalArgumentException ex)
         {
-            assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
+            assertEquals(String.format("An attribute definition name must be specified."), ex.getMessage());
+        }
+
+        // Blank string as required parameter
+        attributeDefinitions = new ArrayList<>();
+        attributeDefinitions.add(new AttributeDefinition("", AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
+        // Perform an update by changing the attribute definition to null.
+        request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+
+        try
+        {
+            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+            fail("Should throw an IllegalArgumentException.");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(String.format("An attribute definition name must be specified."), ex.getMessage());
         }
     }
 
@@ -4441,6 +4461,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     {
         List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
         BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+
         // null check for attribute definitions value
         // Perform an update by changing the attribute definition to null.
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(null);
@@ -4449,26 +4470,12 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         {
             businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
                 new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+            fail("Should throw an IllegalArgumentException.");
         }
         catch (IllegalArgumentException ex)
         {
             assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
         }
-
-        // null check for attribute definition list value
-        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
-        request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
-
-        try
-        {
-            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
-                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
-        }
-        catch (IllegalArgumentException ex)
-        {
-            assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
-        }
-
     }
 
     @Test
@@ -4477,46 +4484,60 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
         BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
 
-        // white space, trim, upper case, lower case
+        // Passing null as optional parameter
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
-        attributeDefinitions.add(new AttributeDefinition("", AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
-        // Perform an update by changing the attribute definition to null.
-        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(null);
-
-        try
-        {
-            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
-                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
-        }
-        catch (IllegalArgumentException ex)
-        {
-            assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
-        }
-
-        attributeDefinitions = new ArrayList<>();
-        // List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2();
+        attributeDefinitions
+            .add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, null));
         // Perform an update by changing the attribute definition with an empty list.
-        request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
         try
         {
             businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
                 new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+            fail("Should throw an IllegalArgumentException.");
         }
-        catch (IllegalArgumentException ex)
+        catch (NullPointerException ex)
         {
-            assertEquals(String.format("A business object format attribute definitions list is required."), ex.getMessage());
+            assertEquals(null, ex.getMessage());
         }
 
     }
 
     @Test
-    public void testUpdateBusinessObjectFormatAttributeDefinitionsTrimUpperAndLowerCase()
+    public void testUpdateBusinessObjectFormatAttributeDefinitionsTrim()
     {
         List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
         BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
 
-        // trim, upper case, lower case
+        // Trim should work on required parameter
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+        List<AttributeDefinition> validateAttributeDefinitions = new ArrayList<>();
+        validateAttributeDefinitions
+            .add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE));
+        attributeDefinitions
+            .add(new AttributeDefinition(" " + AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE + " ", AbstractServiceTest.PUBLISH_ATTRIBUTE));
+
+        // Perform an update by changing the attribute definition to null.
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+
+            BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+
+        // Validate the returned object.
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, attributes, validateAttributeDefinitions,
+                businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
+    }
+
+   @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitionsUpperAndLowerCase()
+    {
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+
+        // Upper case and lower case
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
         List<AttributeDefinition> validateAttributeDefinitions = new ArrayList<>();
         validateAttributeDefinitions
@@ -4549,6 +4570,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         {
             businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
                 new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+            fail("Should throw an IllegalArgumentException.");
         }
         catch (IllegalArgumentException ex)
         {
@@ -4562,7 +4584,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
         BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
 
-        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+        List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2();
         // Check for the duplicate attribute definition.
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
@@ -4570,6 +4592,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         {
             businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
                 new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+            fail("Should throw an IllegalArgumentException.");
         }
         catch (IllegalArgumentException ex)
         {
@@ -4586,7 +4609,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         {
             businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
                 new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
-            // fail("Business object format does not exist: No update con be performed if the format does not exists.");
+            fail("Business object format does not exist: No update con be performed if the format does not exists.");
         }
         catch (ObjectNotFoundException ex)
         {
