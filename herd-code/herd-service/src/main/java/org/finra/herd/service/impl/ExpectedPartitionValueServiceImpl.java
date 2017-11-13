@@ -114,7 +114,7 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
             expectedPartitionValueEntity.setPartitionValue(expectedPartitionValue);
             expectedPartitionValueDao.saveAndRefresh(expectedPartitionValueEntity);
         }
-        expectedPartitionValueDao.saveAndRefresh(partitionKeyGroupEntity);
+        partitionKeyGroupEntity.getExpectedPartitionValues().addAll(createdExpectedPartitionValueEntities);
 
         return createExpectedPartitionValuesInformationFromEntities(partitionKeyGroupEntity, createdExpectedPartitionValueEntities);
     }
