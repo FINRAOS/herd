@@ -269,8 +269,8 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
         for (ExpectedPartitionValueEntity expectedPartitionValueEntity : deletedExpectedPartitionValueEntities)
         {
             partitionKeyGroupEntity.getExpectedPartitionValues().remove(expectedPartitionValueEntity);
+            expectedPartitionValueDao.delete(expectedPartitionValueEntity);
         }
-        expectedPartitionValueDao.saveAndRefresh(partitionKeyGroupEntity);
 
         return createExpectedPartitionValuesInformationFromEntities(partitionKeyGroupEntity, deletedExpectedPartitionValueEntities);
     }
