@@ -1315,38 +1315,36 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Process the list of attribute definitions to determine that business object definition attribute entities should be created, updated, or deleted.
         List<BusinessObjectDataAttributeDefinitionEntity> createdAttributeDefinitionEntities = new ArrayList<>();
         List<BusinessObjectDataAttributeDefinitionEntity> retainedAttributeDefinitionEntities = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(attributeDefinitions))
+
+        for (AttributeDefinition attributeDefinition : attributeDefinitions)
         {
-            for (AttributeDefinition attributeDefinition : attributeDefinitions)
+            // Use a "lowercase" attribute name for case insensitivity.
+            String lowercaseAttributeName = attributeDefinition.getName().toLowerCase();
+            if (existingAttributeDefinitionEntities.containsKey(lowercaseAttributeName))
             {
-                // Use a "lowercase" attribute name for case insensitivity.
-                String lowercaseAttributeName = attributeDefinition.getName().toLowerCase();
-                if (existingAttributeDefinitionEntities.containsKey(lowercaseAttributeName))
+                // Check if the attribute definition value needs to be updated.
+                BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity =
+                    existingAttributeDefinitionEntities.get(lowercaseAttributeName);
+                if (!attributeDefinition.isPublish().equals(businessObjectDataAttributeDefinitionEntity.getPublish()))
                 {
-                    // Check if the attribute definition value needs to be updated.
-                    BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity =
-                        existingAttributeDefinitionEntities.get(lowercaseAttributeName);
-                    if (!attributeDefinition.isPublish().equals(businessObjectDataAttributeDefinitionEntity.getPublish()))
-                    {
-                        // Update the business object attribute entity.
-                        businessObjectDataAttributeDefinitionEntity.setPublish(attributeDefinition.isPublish());
-                    }
-
-                    // Add this entity to the list of business object definition attribute entities to be retained.
-                    retainedAttributeDefinitionEntities.add(businessObjectDataAttributeDefinitionEntity);
-                }
-                else
-                {
-                    // Create a new business object attribute entity.
-                    BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity = new BusinessObjectDataAttributeDefinitionEntity();
-                    businessObjectFormatEntity.getAttributeDefinitions().add(businessObjectDataAttributeDefinitionEntity);
-                    businessObjectDataAttributeDefinitionEntity.setBusinessObjectFormat(businessObjectFormatEntity);
-                    businessObjectDataAttributeDefinitionEntity.setName(attributeDefinition.getName());
+                    // Update the business object attribute entity.
                     businessObjectDataAttributeDefinitionEntity.setPublish(attributeDefinition.isPublish());
-
-                    // Add this entity to the list of the newly created business object definition attribute entities.
-                    createdAttributeDefinitionEntities.add(businessObjectDataAttributeDefinitionEntity);
                 }
+
+                // Add this entity to the list of business object definition attribute entities to be retained.
+                retainedAttributeDefinitionEntities.add(businessObjectDataAttributeDefinitionEntity);
+            }
+            else
+            {
+                // Create a new business object attribute entity.
+                BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity = new BusinessObjectDataAttributeDefinitionEntity();
+                businessObjectFormatEntity.getAttributeDefinitions().add(businessObjectDataAttributeDefinitionEntity);
+                businessObjectDataAttributeDefinitionEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+                businessObjectDataAttributeDefinitionEntity.setName(attributeDefinition.getName());
+                businessObjectDataAttributeDefinitionEntity.setPublish(BooleanUtils.isTrue(attributeDefinition.isPublish()));
+
+                // Add this entity to the list of the newly created business object definition attribute entities.
+                createdAttributeDefinitionEntities.add(businessObjectDataAttributeDefinitionEntity);
             }
         }
 
@@ -1365,23 +1363,20 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     private void validateAndTrimBusinessObjectFormatAttributeDefinitionsHelper(List<AttributeDefinition> attributeDefinitions)
     {
         Assert.notNull(attributeDefinitions, "A business object format attribute definitions list is required.");
-        // Validate attribute definitions if they are specified.
-        if (!CollectionUtils.isEmpty(attributeDefinitions))
-        {
-            Map<String, AttributeDefinition> attributeDefinitionNameValidationMap = new HashMap<>();
-            for (AttributeDefinition attributeDefinition : attributeDefinitions)
-            {
-                Assert.hasText(attributeDefinition.getName(), "An attribute definition name must be specified.");
-                attributeDefinition.setName(attributeDefinition.getName().trim());
 
-                // Ensure the attribute defination key isn't a duplicate by using a map with a "lowercase" name as the key for case insensitivity.
-                String lowercaseAttributeDefinitionName = attributeDefinition.getName().toLowerCase();
-                if (attributeDefinitionNameValidationMap.containsKey(lowercaseAttributeDefinitionName))
-                {
-                    throw new IllegalArgumentException(String.format("Duplicate attribute definition name \"%s\" found.", attributeDefinition.getName()));
-                }
-                attributeDefinitionNameValidationMap.put(lowercaseAttributeDefinitionName, attributeDefinition);
+        Map<String, AttributeDefinition> attributeDefinitionNameValidationMap = new HashMap<>();
+        for (AttributeDefinition attributeDefinition : attributeDefinitions)
+        {
+            Assert.hasText(attributeDefinition.getName(), "An attribute definition name must be specified.");
+            attributeDefinition.setName(attributeDefinition.getName().trim());
+
+            // Ensure the attribute defination key isn't a duplicate by using a map with a "lowercase" name as the key for case insensitivity.
+            String lowercaseAttributeDefinitionName = attributeDefinition.getName().toLowerCase();
+            if (attributeDefinitionNameValidationMap.containsKey(lowercaseAttributeDefinitionName))
+            {
+                throw new IllegalArgumentException(String.format("Duplicate attribute definition name \"%s\" found.", attributeDefinition.getName()));
             }
+            attributeDefinitionNameValidationMap.put(lowercaseAttributeDefinitionName, attributeDefinition);
         }
     }
 }
