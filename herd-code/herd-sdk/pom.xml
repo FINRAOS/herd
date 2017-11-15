@@ -21,12 +21,12 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.56.0-SNAPSHOT</version>
+      <version>0.57.0-SNAPSHOT</version>
    </parent>
 
-    <properties>
-        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
-    </properties>
+   <properties>
+      <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+   </properties>
 
    <name>herd sdk</name>
 
@@ -280,9 +280,9 @@
                      <target>
                         <copy overwrite="true" todir="${project.build.directory}/angular-client">
                            <fileset dir="${project.basedir}/src/tsconfig/angular"/>
-                            <filterset>
-                                <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
-                            </filterset>
+                           <filterset>
+                              <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
+                           </filterset>
                         </copy>
                      </target>
                   </configuration>

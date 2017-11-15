@@ -556,6 +556,22 @@ public class BusinessObjectFormatServiceTestHelper
     }
 
     /**
+     * Returns a list of attribute definitions that use hard coded test values.
+     *
+     * @return the list of test attribute definitions
+     */
+    public List<AttributeDefinition> getTestAttributeDefinitions2()
+    {
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3, AbstractServiceTest.PUBLISH_ATTRIBUTE));
+
+        return attributeDefinitions;
+    }
+
+    /**
      * Creates a generate business object format ddl collection request using hard coded test values.
      *
      * @return the business object format ddl collection request

@@ -27,12 +27,14 @@ public interface IndexSearchService
 {
     /**
      * The index indexSearch method will take as parameters an index indexSearch request that contains a indexSearch term string, and a set of field strings.
-     * It will perform an index indexSearch on the indexSearch term and return the fields specified in the index indexSearch response.
+     * It will perform an index indexSearch on the indexSearch term and return the fields specified in the index indexSearch response. The search may be
+     * constrained by a set of match fields that will limit the search to the fields specified.
      *
      * @param request the index indexSearch request that contains a indexSearch term string
      * @param fields the set of fields that are to be returned in the index indexSearch response
+     * @param match the set of match fields that are to be searched upon in the index search
      *
      * @return an index indexSearch response object containing the total index indexSearch results and index indexSearch results
      */
-    IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields);
+    IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields, final Set<String> match);
 }
