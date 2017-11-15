@@ -111,11 +111,11 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
             ExpectedPartitionValueEntity expectedPartitionValueEntity = new ExpectedPartitionValueEntity();
             createdExpectedPartitionValueEntities.add(expectedPartitionValueEntity);
             expectedPartitionValueEntity.setPartitionKeyGroup(partitionKeyGroupEntity);
+            partitionKeyGroupEntity.getExpectedPartitionValues().add(expectedPartitionValueEntity);
             expectedPartitionValueEntity.setPartitionValue(expectedPartitionValue);
             expectedPartitionValueDao.saveAndRefresh(expectedPartitionValueEntity);
         }
-        expectedPartitionValueDao.saveAndRefresh(partitionKeyGroupEntity);
-
+        
         return createExpectedPartitionValuesInformationFromEntities(partitionKeyGroupEntity, createdExpectedPartitionValueEntities);
     }
 
@@ -269,8 +269,8 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
         for (ExpectedPartitionValueEntity expectedPartitionValueEntity : deletedExpectedPartitionValueEntities)
         {
             partitionKeyGroupEntity.getExpectedPartitionValues().remove(expectedPartitionValueEntity);
+            expectedPartitionValueDao.delete(expectedPartitionValueEntity);
         }
-        expectedPartitionValueDao.saveAndRefresh(partitionKeyGroupEntity);
 
         return createExpectedPartitionValuesInformationFromEntities(partitionKeyGroupEntity, deletedExpectedPartitionValueEntities);
     }

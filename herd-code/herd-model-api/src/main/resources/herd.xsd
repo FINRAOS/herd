@@ -2047,6 +2047,19 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectFormatAttributeDefinitionsUpdateRequest" type="businessObjectFormatAttributeDefinitionsUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatAttributeDefinitionsUpdateRequest">
+      <xs:all>
+         <xs:element name="attributeDefinitions" type="attributeDefinitions" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of attribute definitions that specify attributes which are required to be specified when registering Business Object
+                  Data against this format. Providing a list with no elements will remove all existing attributes for the business object format
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="businessObjectFormatRetentionInformationUpdateRequest" type="businessObjectFormatRetentionInformationUpdateRequest"/>
    <xs:complexType name="businessObjectFormatRetentionInformationUpdateRequest">
       <xs:all>
@@ -5255,7 +5268,8 @@
                   &lt;li&gt;When multiple subnets are specified, the subnet in the AZ with the best price will be used.&lt;/li&gt;
                   &lt;li&gt;When multiple subnets belong to the same AZ, the subnet with the largest amount of available IP's will be used.&lt;/li&gt;
                   &lt;/ul&gt;
-                  &lt;p&gt;Cross-VPC access in PROD will only accept internal/emr subnets at this time.&lt;/p&gt;</xs:documentation>
+                  &lt;p&gt;Cross-VPC access in PROD will only accept internal/emr subnets at this time.&lt;/p&gt;
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="logBucket" type="xs:string" minOccurs="0">
@@ -5604,7 +5618,8 @@
                <xs:documentation>&lt;p&gt;The amount, in USD, you are willing to pay over the lowest spot price for an on-demand instance. Use this to
                   dynamically balance the cost vs. stability of your instances.&lt;/p&gt;
                   &lt;p&gt;If not specified, the search will not attempt to find an on-demand instance when a spot is found. This is the same behavior as when
-                  this parameter is set to $0.&lt;/p&gt;</xs:documentation>
+                  this parameter is set to $0.&lt;/p&gt;
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5632,7 +5647,8 @@
                <xs:documentation>&lt;p&gt;The amount, in USD, you are willing to pay over the lowest spot price for an on-demand instance. Use this to
                   dynamically balance the cost vs. stability of your instances.&lt;/p&gt;
                   &lt;p&gt;If not specified, the search will not attempt to find an on-demand instance when a spot is found. This is the same behavior as when
-                  this parameter is set to $0.&lt;/p&gt;</xs:documentation>
+                  this parameter is set to $0.&lt;/p&gt;
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

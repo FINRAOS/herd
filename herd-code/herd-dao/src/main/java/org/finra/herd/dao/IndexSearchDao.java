@@ -28,10 +28,12 @@ public interface IndexSearchDao
      *
      * @param request the index search request containing the search term
      * @param fields the set of fields that are to be returned in the index indexSearch response
+     * @param match the set of match fields that are to be searched upon in the index search
      * @param bdefActiveIndex the name of the active index for business object definitions
      * @param tagActiveIndex the name os the active index for tags
      *
      * @return the index search response containing the search results
      */
-    IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields, final String bdefActiveIndex, final String tagActiveIndex);
+    IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields, final Set<String> match, final String bdefActiveIndex,
+        final String tagActiveIndex);
 }

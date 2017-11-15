@@ -234,6 +234,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String COLUMN_NAME_2 = "UT_Column_Name_2_" + RANDOM_SUFFIX;
 
+    public static final String COLUMNS_NAME_FIELD = "columns.name";
+
     public static final Boolean COLUMN_REQUIRED = true;
 
     public static final String COLUMN_SIZE = "1" + RANDOM_SUFFIX;
@@ -276,6 +278,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String DESCRIPTION = "UT_Description_1_" + RANDOM_SUFFIX;
 
     public static final String DESCRIPTION_2 = "UT_Description_2_" + RANDOM_SUFFIX;
+
+    public static final boolean DISABLE_COLUMN_FIELDS = false;
 
     public static final String DISPLAY_NAME_FIELD = "displayname";
 
@@ -330,6 +334,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String EMR_SLAVE_SECURITY_GROUP = "UT_EMR_SLAVE_SECURITY_GROUP" + RANDOM_SUFFIX;
 
     public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
+
+    public static final boolean ENABLE_COLUMN_FIELDS = true;
 
     public static final boolean ENABLE_HIT_HIGHLIGHTING = true;
 
@@ -464,6 +470,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Long LONG_VALUE = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final String MARKER = "UT_Marker_" + RANDOM_SUFFIX;
+
+    public static final String MATCH_COLUMN = "column";
 
     public static final Integer MAX_COLUMNS = 10;
 
@@ -603,6 +611,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_JOB_NAMESPACE = null;
 
     public static final Boolean NO_LATEST_VERSION_FLAG_SET = false;
+
+    public static final Set<String> NO_MATCH = new HashSet<>();
 
     public static final Integer NO_MAX_RESULTS = null;
 
@@ -749,6 +759,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
         new String[][] {{"TINYINT", null}, {"SMALLINT", null}, {"INT", null}, {"BIGINT", null}, {"FLOAT", null}, {"DOUBLE", null}, {"DECIMAL", null},
             {"DECIMAL", "p,s"}, {"NUMBER", null}, {"NUMBER", "p"}, {"NUMBER", "p,s"}, {"TIMESTAMP", null}, {"DATE", null}, {"STRING", null}, {"VARCHAR", "n"},
             {"VARCHAR2", "n"}, {"CHAR", "n"}, {"BOOLEAN", null}, {"BINARY", null}};
+
+    public static final String SCHEMA_COLUMNS_NAME_FIELD = "schemaColumns.name";
 
     public static final String SCHEMA_COLUMN_NAME_PREFIX = "Clmn-Name";
 

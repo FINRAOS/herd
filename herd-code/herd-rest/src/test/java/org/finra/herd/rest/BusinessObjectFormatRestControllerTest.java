@@ -30,8 +30,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.BusinessObjectFormatAttributeDefinitionsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
@@ -254,6 +256,29 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         verifyNoMoreInteractions(businessObjectFormatService);
         // Validate the returned object.
         assertEquals(businessObjectFormat, updatedBusinessObjectFormat);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitions()
+    {
+        List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions();
+        BusinessObjectFormat businessObjectFormat = new BusinessObjectFormat();
+        businessObjectFormat.setAttributeDefinitions(attributeDefinitions);
+
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION);
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+
+        when(businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(businessObjectFormatKey, request)).thenReturn(businessObjectFormat);
+
+        BusinessObjectFormat result = businessObjectFormatRestController
+            .updateBusinessObjectFormatAttributeDefinitions(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, request);
+
+        // Verify the external calls.
+        verify(businessObjectFormatService).updateBusinessObjectFormatAttributeDefinitions(businessObjectFormatKey, request);
+        verifyNoMoreInteractions(businessObjectFormatService);
+        // Validate the returned object.
+        assertEquals(businessObjectFormat, result);
     }
 
     @Test

@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.BusinessObjectFormatAttributeDefinitionsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
@@ -80,11 +81,9 @@ public class BusinessObjectFormatRestController extends HerdBaseController
      *
      * @return the updated business object format.
      */
-    @RequestMapping(
-        value = "/businessObjectFormats/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
-            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
-            "/businessObjectFormatVersions/{businessObjectFormatVersion}",
-        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = "/businessObjectFormats/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+        "/businessObjectFormatVersions/{businessObjectFormatVersion}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMATS_PUT)
     public BusinessObjectFormat updateBusinessObjectFormat(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -109,9 +108,8 @@ public class BusinessObjectFormatRestController extends HerdBaseController
      *
      * @return the retrieved business object format.
      */
-    @RequestMapping(
-        value = "/businessObjectFormats/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
-            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}", method = RequestMethod.GET)
+    @RequestMapping(value = "/businessObjectFormats/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMATS_GET)
     public BusinessObjectFormat getBusinessObjectFormat(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -136,11 +134,9 @@ public class BusinessObjectFormatRestController extends HerdBaseController
      *
      * @return the business object format that was deleted
      */
-    @RequestMapping(
-        value = "/businessObjectFormats/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
-            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
-            "/businessObjectFormatVersions/{businessObjectFormatVersion}",
-        method = RequestMethod.DELETE)
+    @RequestMapping(value = "/businessObjectFormats/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+        "/businessObjectFormatVersions/{businessObjectFormatVersion}", method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMATS_DELETE)
     public BusinessObjectFormat deleteBusinessObjectFormat(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -214,9 +210,8 @@ public class BusinessObjectFormatRestController extends HerdBaseController
      *
      * @return the updated business object format.
      */
-    @RequestMapping(
-        value = "/businessObjectFormatParents/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
-            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}",
+    @RequestMapping(value = "/businessObjectFormatParents/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}",
         method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMAT_PARENTS_PUT)
     public BusinessObjectFormat updateBusinessObjectFormatParents(@PathVariable("namespace") String namespace,
@@ -241,11 +236,9 @@ public class BusinessObjectFormatRestController extends HerdBaseController
      *
      * @return the updated business object format.
      */
-    @RequestMapping(
-        value = "/businessObjectFormatAttributes/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
-            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
-            "/businessObjectFormatVersions/{businessObjectFormatVersion}",
-        method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = "/businessObjectFormatAttributes/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+        "/businessObjectFormatVersions/{businessObjectFormatVersion}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMAT_ATTRIBUTES_PUT)
     public BusinessObjectFormat updateBusinessObjectFormatAttributes(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -260,6 +253,36 @@ public class BusinessObjectFormatRestController extends HerdBaseController
     }
 
     /**
+     * Replaces the list of attribute definitions for an existing business object format based on the specified usage, file type, version and a business object
+     * definition. <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace code
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param request the information needed to update the business object format attribute definitions
+     *
+     * @return the updated business object format attribute definitions.
+     */
+    @RequestMapping(value = "/businessObjectFormatAttributeDefinitions/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+        "/businessObjectFormatVersions/{businessObjectFormatVersion}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_DEFINITIONS_PUT)
+    public BusinessObjectFormat updateBusinessObjectFormatAttributeDefinitions(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion,
+        @RequestBody BusinessObjectFormatAttributeDefinitionsUpdateRequest request)
+    {
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion);
+        return businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(businessObjectFormatKey, request);
+    }
+
+    /**
      * Updates an existing business object format retention information by alternate key. <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace code
@@ -270,16 +293,15 @@ public class BusinessObjectFormatRestController extends HerdBaseController
      *
      * @return the updated business object format.
      */
-    @RequestMapping(
-        value = "/businessObjectFormatRetentionInformation/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
-            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}",
+    @RequestMapping(value = "/businessObjectFormatRetentionInformation/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}",
         method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMAT_RETENTION_INFORMATION_PUT)
     public BusinessObjectFormat updateBusinessObjectFormatRetentionInformation(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
-        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType, @RequestBody
-        BusinessObjectFormatRetentionInformationUpdateRequest request)
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @RequestBody BusinessObjectFormatRetentionInformationUpdateRequest request)
     {
         BusinessObjectFormatKey businessObjectFormatKey =
             new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType, null);
