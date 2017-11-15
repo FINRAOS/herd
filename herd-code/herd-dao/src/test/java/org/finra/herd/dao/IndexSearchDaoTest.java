@@ -133,7 +133,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(DISPLAY_NAME_FIELD, SHORT_DESCRIPTION_FIELD);
-        testIndexSearch(fields, null, null, NO_ENABLE_HIT_HIGHLIGHTING, true, false);
+        testIndexSearch(fields, NO_MATCH, null, null, NO_ENABLE_HIT_HIGHLIGHTING, true, false, DISABLE_COLUMN_FIELDS);
     }
 
     @Test
@@ -141,7 +141,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(DISPLAY_NAME_FIELD, SHORT_DESCRIPTION_FIELD);
-        testIndexSearch(fields, null, null, NO_ENABLE_HIT_HIGHLIGHTING, true, false);
+        testIndexSearch(fields, NO_MATCH, null, null, NO_ENABLE_HIT_HIGHLIGHTING, true, false, DISABLE_COLUMN_FIELDS);
     }
 
     @Test
@@ -149,7 +149,31 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(DISPLAY_NAME_FIELD, SHORT_DESCRIPTION_FIELD);
-        testIndexSearch(fields, null, null, ENABLE_HIT_HIGHLIGHTING, true, false);
+        testIndexSearch(fields, NO_MATCH, null, null, ENABLE_HIT_HIGHLIGHTING, true, false, DISABLE_COLUMN_FIELDS);
+    }
+
+    @Test
+    public void indexSearchTestWithMatchWithColumnFields() throws IOException
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = Sets.newHashSet(DISPLAY_NAME_FIELD, SHORT_DESCRIPTION_FIELD);
+
+        // Create a set of match fields.
+        final Set<String> match = Sets.newHashSet(MATCH_COLUMN);
+
+        testIndexSearch(fields, match, null, null, NO_ENABLE_HIT_HIGHLIGHTING, false, false, ENABLE_COLUMN_FIELDS);
+    }
+
+    @Test
+    public void indexSearchTestWithMatchNoColumnFields() throws IOException
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = Sets.newHashSet(DISPLAY_NAME_FIELD, SHORT_DESCRIPTION_FIELD);
+
+        // Create a set of match fields.
+        final Set<String> match = Sets.newHashSet(MATCH_COLUMN);
+
+        testIndexSearch(fields, match, null, null, NO_ENABLE_HIT_HIGHLIGHTING, false, false, DISABLE_COLUMN_FIELDS);
     }
 
     @Test
@@ -161,7 +185,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         // Try to call the method under test.
         try
         {
-            testIndexSearch(fields, null, null, NO_ENABLE_HIT_HIGHLIGHTING, false, true);
+            testIndexSearch(fields, NO_MATCH, null, null, NO_ENABLE_HIT_HIGHLIGHTING, false, true, DISABLE_COLUMN_FIELDS);
             fail();
         }
         catch (IllegalStateException e)
@@ -368,11 +392,11 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     private void testIndexSearch(Set<String> fields, List<IndexSearchFilter> searchFilters, List<String> facetList, boolean isHitHighlightingEnabled)
         throws IOException
     {
-        testIndexSearch(fields, searchFilters, facetList, isHitHighlightingEnabled, false, false);
+        testIndexSearch(fields, NO_MATCH, searchFilters, facetList, isHitHighlightingEnabled, false, false, DISABLE_COLUMN_FIELDS);
     }
 
-    private void testIndexSearch(Set<String> fields, List<IndexSearchFilter> searchFilters, List<String> facetList, boolean isHitHighlightingEnabled,
-        boolean testExceptions, boolean setInvalidSearchResultIndexName) throws IOException
+    private void testIndexSearch(Set<String> fields, Set<String> match, List<IndexSearchFilter> searchFilters, List<String> facetList,
+        boolean isHitHighlightingEnabled, boolean testExceptions, boolean setInvalidSearchResultIndexName, boolean isColumnFields) throws IOException
     {
         // Build the mocks
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
@@ -418,6 +442,12 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
         Map<String, String> fieldsBoostMap = new HashMap<>();
         fieldsBoostMap.put("displayName", "1.0");
+
+        if (isColumnFields)
+        {
+            fieldsBoostMap.put(COLUMNS_NAME_FIELD, "1.0");
+            fieldsBoostMap.put(SCHEMA_COLUMNS_NAME_FIELD, "1.0");
+        }
 
         if (testExceptions)
         {
@@ -534,7 +564,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
         // Call the method under test
         IndexSearchResponse indexSearchResponse =
-            indexSearchDao.indexSearch(indexSearchRequest, fields, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
+            indexSearchDao.indexSearch(indexSearchRequest, fields, match, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
         List<IndexSearchResult> indexSearchResults = indexSearchResponse.getIndexSearchResults();
 
         assertThat("Index search results list is null.", indexSearchResults, not(nullValue()));
