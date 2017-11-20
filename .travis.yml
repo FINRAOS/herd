@@ -13,3 +13,5 @@ before_script:
   - echo $MAVEN_OPTS
 script:
   - mvn clean install -q 2> /dev/null
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
