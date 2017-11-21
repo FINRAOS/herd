@@ -243,4 +243,40 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
         // Validate the returned object.
         assertEquals(businessObjectFormatDaoTestHelper.getExpectedBusinessObjectFormatLatestVersionKeys(), resultKeys);
     }
+
+    @Test
+    public void getBusinessObjectFormatEntities()
+    {
+        // Create relative database entities.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION);
+        fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE.toLowerCase(), "Description of " + FORMAT_FILE_TYPE_CODE);
+
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE_2.toLowerCase(), BDEF_NAME_2.toLowerCase(), DATA_PROVIDER_NAME_2.toLowerCase(), BDEF_DESCRIPTION_2);
+
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE_2, BDEF_NAME_2.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
+                INITIAL_FORMAT_VERSION, "Test format 0", Boolean.FALSE, PARTITION_KEY);
+
+        BusinessObjectFormatEntity businessObjectFormatEntityV0 = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
+                INITIAL_FORMAT_VERSION, "Test format 0", Boolean.FALSE, PARTITION_KEY);
+
+        BusinessObjectFormatEntity businessObjectFormatEntityV1 = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
+                SECOND_FORMAT_VERSION, "Test format 0", Boolean.TRUE, PARTITION_KEY);
+
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+
+        // Retrieve business object format entity by specifying values for all text alternate key fields in upper case.
+        List<BusinessObjectFormatEntity> businessObjectFormatList = businessObjectFormatDao.getBusinessObjectFormatEntities(businessObjectDefinitionKey, true);
+        assertEquals(businessObjectFormatList.size(), 1);
+        assertEquals(businessObjectFormatList.get(0), businessObjectFormatEntityV1);
+
+        businessObjectFormatList = businessObjectFormatDao.getBusinessObjectFormatEntities(businessObjectDefinitionKey, false);
+        assertEquals(businessObjectFormatList.size(), 2);
+        businessObjectFormatList.contains(businessObjectFormatEntityV0);
+        businessObjectFormatList.contains(businessObjectFormatEntityV1);
+    }
 }
