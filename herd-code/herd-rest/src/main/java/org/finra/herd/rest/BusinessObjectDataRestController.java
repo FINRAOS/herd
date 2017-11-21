@@ -327,6 +327,42 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
+     * Initiates destruction process for an existing business object data. This endpoint uses S3 tagging to mark the relative S3 files for deletion. The S3 data
+     * then gets deleted by S3 bucket lifecycle policy that deletes data based on S3 tagging. This endpoint to be used to delete records that are selected and
+     * approved for destruction as per retention information specified for the relative business object format. <p> Requires WRITE permission on namespace </p>
+     *
+     * @param namespace the namespace of the business object definition
+     * @param businessObjectDefinitionName the name of the business object definition
+     * @param businessObjectFormatUsage the usage of the business object format
+     * @param businessObjectFormatFileType the file type of the business object format
+     * @param businessObjectFormatVersion the version of the business object format
+     * @param partitionValue the primary partition value
+     * @param subPartitionValues the list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
+     * @param businessObjectDataVersion the version of the business object data
+     *
+     * @return the business object data information
+     */
+    @RequestMapping(
+        value = "/businessObjectData/destroy/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+            "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}" +
+            "/businessObjectDataVersions/{businessObjectDataVersion}",
+        method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_DESTROY_POST)
+    public BusinessObjectData destroyBusinessObjectData(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
+        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
+    {
+        return businessObjectDataService.destroyBusinessObjectData(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion));
+    }
+
+    /**
      * Retrieves the DDL to initialize the specified type of the database system to perform queries for a range of requested business object data in the
      * specified storage. <p> Requires READ permission on namespace </p>
      *

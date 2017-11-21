@@ -250,6 +250,11 @@ public enum ConfigurationValue
     BDATA_RESTORE_EXPIRATION_IN_DAYS_DEFAULT("business.object.data.restore.expiration.in.days.default", 30),
 
     /**
+     * The delay time in days to complete the business object data destroy operation. The default is 15 days
+     */
+    BDATA_FINAL_DESTROY_DELAY_IN_DAYS("business.object.data.final.destroy.delay.in.days", 15),
+
+    /**
      * The tokenized template of the Activiti Id. The default is computed dynamically so it is not listed here.
      */
     ACTIVITI_JOB_DEFINITION_ID_TEMPLATE("activiti.job.definition.id.template", null),
@@ -857,7 +862,27 @@ public enum ConfigurationValue
     /**
      * The session identifier for the assumed role to be used when tagging S3 objects to trigger archiving to Glacier.
      */
-    S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME("s3.archive.to.glacier.role.session.name", null);
+    S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME("s3.archive.to.glacier.role.session.name", null),
+
+    /**
+     * The S3 object tag key to be used to trigger S3 object deletion.
+     */
+    S3_OBJECT_DELETE_TAG_KEY("s3.object.delete.tag.key", "HerdDelete"),
+
+    /**
+     * The S3 object tag value to be used to trigger S3 object deletion.
+     */
+    S3_OBJECT_DELETE_TAG_VALUE("s3.object.delete.tag.value", "true"),
+
+    /**
+     * The Amazon Resource Name (ARN) of the role to assume when tagging S3 objects to trigger S3 object deletion.
+     */
+    S3_OBJECT_DELETE_ROLE_ARN("s3.object.delete.role.arn", null),
+
+    /**
+     * The session identifier for the assumed role to be used when tagging S3 objects to trigger S3 object deletion.
+     */
+    S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null);
 
     private Object defaultValue;
 
