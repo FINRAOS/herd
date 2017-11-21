@@ -112,10 +112,10 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      */
     @Override
     public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory)
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory)
     {
         return getBusinessObjectDataImpl(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus,
-            includeBusinessObjectDataStatusHistory);
+            includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
     }
 
     /**

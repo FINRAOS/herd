@@ -415,10 +415,10 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory)
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory)
     {
         return getBusinessObjectDataImpl(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus,
-            includeBusinessObjectDataStatusHistory);
+            includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
     }
 
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.READ)
@@ -867,11 +867,12 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * @param businessObjectFormatPartitionKey the business object format partition key, may be null
      * @param businessObjectDataStatus the business object data status, may be null
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
+     * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
      *
      * @return the retrieved business object data information
      */
     protected BusinessObjectData getBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory)
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory)
     {
         // Validate and trim the business object data key.
         businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, false, false);
@@ -901,7 +902,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         }
 
         // Create and return the business object definition object from the persisted entity.
-        return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity, includeBusinessObjectDataStatusHistory);
+        return businessObjectDataHelper
+            .createBusinessObjectDataFromEntity(businessObjectDataEntity, includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
     }
 
     /**

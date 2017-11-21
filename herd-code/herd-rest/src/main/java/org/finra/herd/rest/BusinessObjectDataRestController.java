@@ -430,6 +430,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @param businessObjectDataStatus the status of the business object data. When business object data version is specified, this parameter is ignored.
      * Default value is "VALID"
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
+     * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
      *
      * @return the retrieved business object data information
      */
@@ -448,12 +449,13 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam(value = "businessObjectFormatVersion", required = false) Integer businessObjectFormatVersion,
         @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
         @RequestParam(value = "businessObjectDataStatus", required = false) String businessObjectDataStatus,
-        @RequestParam(value = "includeBusinessObjectDataStatusHistory", required = false) Boolean includeBusinessObjectDataStatusHistory)
+        @RequestParam(value = "includeBusinessObjectDataStatusHistory", required = false) Boolean includeBusinessObjectDataStatusHistory,
+        @RequestParam(value = "includeStorageUnitStatusHistory", required = false) Boolean includeStorageUnitStatusHistory)
     {
         return businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), businessObjectFormatPartitionKey,
-            businessObjectDataStatus, includeBusinessObjectDataStatusHistory);
+            businessObjectDataStatus, includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
     }
 
     /**
