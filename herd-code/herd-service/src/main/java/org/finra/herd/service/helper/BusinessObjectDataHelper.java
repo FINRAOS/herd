@@ -200,7 +200,7 @@ public class BusinessObjectDataHelper
      */
     public BusinessObjectData createBusinessObjectDataFromEntity(BusinessObjectDataEntity businessObjectDataEntity)
     {
-        return createBusinessObjectDataFromEntity(businessObjectDataEntity, false);
+        return createBusinessObjectDataFromEntity(businessObjectDataEntity, false, false);
     }
 
     /**
@@ -208,11 +208,12 @@ public class BusinessObjectDataHelper
      *
      * @param businessObjectDataEntity the newly persisted business object data entity.
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
+     * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
      *
      * @return the business object data.
      */
     public BusinessObjectData createBusinessObjectDataFromEntity(BusinessObjectDataEntity businessObjectDataEntity,
-        Boolean includeBusinessObjectDataStatusHistory)
+        Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory)
     {
         // Make the business object format associated with this data easily accessible.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectDataEntity.getBusinessObjectFormat();
@@ -233,7 +234,8 @@ public class BusinessObjectDataHelper
         businessObjectData.setLatestVersion(businessObjectDataEntity.getLatestVersion());
 
         // Add in the storage units.
-        businessObjectData.setStorageUnits(storageUnitHelper.createStorageUnitsFromEntities(businessObjectDataEntity.getStorageUnits()));
+        businessObjectData
+            .setStorageUnits(storageUnitHelper.createStorageUnitsFromEntities(businessObjectDataEntity.getStorageUnits(), includeStorageUnitStatusHistory));
 
         // Add in the attributes.
         List<Attribute> attributes = new ArrayList<>();

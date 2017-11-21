@@ -128,7 +128,7 @@ public class StorageUnitHelperTest extends AbstractServiceTest
         storageUnitEntity.setStoragePolicyTransitionFailedAttempts(STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS);
 
         // Call the method under test.
-        List<StorageUnit> result = storageUnitHelper.createStorageUnitsFromEntities(Arrays.asList(storageUnitEntity));
+        List<StorageUnit> result = storageUnitHelper.createStorageUnitsFromEntities(Arrays.asList(storageUnitEntity), NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
@@ -136,7 +136,7 @@ public class StorageUnitHelperTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(Arrays.asList(
             new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), new StorageDirectory(STORAGE_DIRECTORY_PATH), null, STORAGE_UNIT_STATUS,
-                STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS)), result);
+                NO_STORAGE_UNIT_STATUS_HISTORY, STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS)), result);
     }
 
     @Test

@@ -219,13 +219,13 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
         sourceBusinessObjectData.setStatus(BDATA_STATUS);
         sourceBusinessObjectData.setStorageUnits(Arrays.asList(
             new StorageUnit(new Storage(STORAGE_NAME, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES), NO_STORAGE_DIRECTORY, NO_STORAGE_FILES, STORAGE_UNIT_STATUS,
-                NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS)));
+                NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS)));
         BusinessObjectData targetBusinessObjectData = new BusinessObjectData();
         targetBusinessObjectData.setId(ID_2);
         targetBusinessObjectData.setStatus(BDATA_STATUS_2);
         targetBusinessObjectData.setStorageUnits(Arrays.asList(
             new StorageUnit(new Storage(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES), NO_STORAGE_DIRECTORY, NO_STORAGE_FILES, STORAGE_UNIT_STATUS_2,
-                NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS)));
+                NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS)));
 
         // Create a response.
         UploadSingleInitiationResponse response =

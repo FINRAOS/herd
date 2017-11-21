@@ -332,17 +332,18 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
         BusinessObjectData businessObjectData = new BusinessObjectData();
 
         // Mock the external calls.
-        when(businessObjectDataService.getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY))
-            .thenReturn(businessObjectData);
+        when(businessObjectDataService.getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+            INCLUDE_STORAGE_UNIT_STATUS_HISTORY)).thenReturn(businessObjectData);
 
         // Call the method under test.
         BusinessObjectData result = businessObjectDataRestController
             .getBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, PARTITION_VALUE,
-                getDelimitedFieldValues(SUBPARTITION_VALUES), FORMAT_VERSION, DATA_VERSION, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
+                getDelimitedFieldValues(SUBPARTITION_VALUES), FORMAT_VERSION, DATA_VERSION, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
 
         // Verify the external calls.
-        verify(businessObjectDataService)
-            .getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
+        verify(businessObjectDataService).getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+            INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.

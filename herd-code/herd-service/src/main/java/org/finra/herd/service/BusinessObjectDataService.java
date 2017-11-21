@@ -62,11 +62,12 @@ public interface BusinessObjectDataService
      * @param businessObjectFormatPartitionKey the business object format partition key
      * @param businessObjectDataStatus the business object data status, may be null
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
+     * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
      *
      * @return the retrieved business object data information
      */
     public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory);
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory);
 
     /**
      * Retrieves a list of existing business object data versions, if any.

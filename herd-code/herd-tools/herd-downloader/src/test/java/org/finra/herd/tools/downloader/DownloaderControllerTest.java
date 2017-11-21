@@ -292,7 +292,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
 
             DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
             BusinessObjectData businessObjectData = new BusinessObjectData();
-            StorageUnit storageUnit = new StorageUnit(new Storage(storageName, null, null), null, null, StorageUnitStatusEntity.ENABLED, null);
+            StorageUnit storageUnit = new StorageUnit(new Storage(storageName, null, null), null, null, StorageUnitStatusEntity.ENABLED, null, null);
             S3KeyPrefixInformation s3KeyPrefixInformation = new S3KeyPrefixInformation();
             s3KeyPrefixInformation.setS3KeyPrefix(s3KeyPrefix);
 
@@ -359,7 +359,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         // Initiate input parameters.
         List<String> subPartitionValues = Arrays.asList("subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4");
         String s3KeyPrefix = "s3KeyPrefix";
-        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", s3KeyPrefix, null), null, null, StorageUnitStatusEntity.ENABLED, null);
+        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", s3KeyPrefix, null), null, null, StorageUnitStatusEntity.ENABLED, null, null);
         Attribute attribute = new Attribute("name", "value");
         BusinessObjectData businessObjectData =
             new BusinessObjectData(1234, "businessObjectDefinitionNamespace", "businessObjectDefinitionName", "formatUsage", "formatFileType", 2345,
@@ -391,7 +391,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
     public void testCreateDownloaderOutputManifestDtoAssertOutputFilesEmptyWhenStorageFilesNull()
     {
         BusinessObjectData businessObjectData = new BusinessObjectData();
-        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", null, null), null, null, StorageUnitStatusEntity.ENABLED, null);
+        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", null, null), null, null, StorageUnitStatusEntity.ENABLED, null, null);
         String s3KeyPrefix = "s3KeyPrefix";
         DownloaderOutputManifestDto actual = downloaderController.createDownloaderOutputManifestDto(businessObjectData, storageUnit, s3KeyPrefix);
         assertEquals(0, actual.getManifestFiles().size());
@@ -403,7 +403,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         BusinessObjectData businessObjectData = new BusinessObjectData();
         businessObjectData.setAttributes(new ArrayList<>());
         businessObjectData.getAttributes().add(new Attribute("name", "value"));
-        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", null, null), null, null, StorageUnitStatusEntity.ENABLED, null);
+        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", null, null), null, null, StorageUnitStatusEntity.ENABLED, null, null);
         String s3KeyPrefix = "s3KeyPrefix";
         DownloaderOutputManifestDto actual = downloaderController.createDownloaderOutputManifestDto(businessObjectData, storageUnit, s3KeyPrefix);
         assertEquals(1, actual.getAttributes().size());
@@ -460,7 +460,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
 
             DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
             BusinessObjectData businessObjectData = new BusinessObjectData();
-            StorageUnit storageUnit = new StorageUnit(new Storage(storageName, null, null), null, null, StorageUnitStatusEntity.ENABLED, null);
+            StorageUnit storageUnit = new StorageUnit(new Storage(storageName, null, null), null, null, StorageUnitStatusEntity.ENABLED, null, null);
             S3KeyPrefixInformation s3KeyPrefixInformation = new S3KeyPrefixInformation();
             s3KeyPrefixInformation.setS3KeyPrefix(s3KeyPrefix);
 
@@ -562,7 +562,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
             DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
             downloaderInputManifestDto.setStorageName(storageName);
             BusinessObjectData businessObjectData = new BusinessObjectData();
-            StorageUnit storageUnit = new StorageUnit(new Storage(storageName, null, null), null, null, StorageUnitStatusEntity.ENABLED, null);
+            StorageUnit storageUnit = new StorageUnit(new Storage(storageName, null, null), null, null, StorageUnitStatusEntity.ENABLED, null, null);
             S3KeyPrefixInformation s3KeyPrefixInformation = new S3KeyPrefixInformation();
             s3KeyPrefixInformation.setS3KeyPrefix(s3KeyPrefix);
 
