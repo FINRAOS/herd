@@ -1069,7 +1069,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         return predicate;
     }
 
-
     /**
      * Creates a predicate for attribute value filters.
      *
