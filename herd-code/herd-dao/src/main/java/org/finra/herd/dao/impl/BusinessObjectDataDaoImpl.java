@@ -19,6 +19,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -1013,34 +1014,34 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         CriteriaBuilder builder, Predicate predicatePram)
     {
         Predicate predicate = predicatePram;
-
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
         businessObjectDefinitionKey.setBusinessObjectDefinitionName(businessDataSearchKey.getBusinessObjectDefinitionName());
         businessObjectDefinitionKey.setNamespace(businessDataSearchKey.getNamespace());
         List<BusinessObjectFormatEntity> businessObjectFormatKeys = businessObjectFormatDao.getBusinessObjectFormatEntities(businessObjectDefinitionKey, true);
         Map<BusinessObjectFormatKey, Integer> businessObjectFormatKeyRetentionDaysMap = new HashMap<>();
-        for (BusinessObjectFormatEntity businessObjectFormatEntity1 : businessObjectFormatKeys)
+        for (BusinessObjectFormatEntity businessObjectformatKeyEntity : businessObjectFormatKeys)
         {
-            if (businessObjectFormatEntity1.getRetentionType() != null && businessObjectFormatEntity1.getRetentionPeriodInDays() != null &&
-                RetentionTypeEntity.PARTITION_VALUE.equals(businessObjectFormatEntity1.getRetentionType().getCode()))
+            if (businessObjectformatKeyEntity.getRetentionType() != null && businessObjectformatKeyEntity.getRetentionPeriodInDays() != null &&
+                RetentionTypeEntity.PARTITION_VALUE.equals(businessObjectformatKeyEntity.getRetentionType().getCode()))
             {
                 BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
-                businessObjectFormatKey.setBusinessObjectFormatFileType(businessObjectFormatEntity1.getFileType().getCode());
-                businessObjectFormatKey.setBusinessObjectFormatUsage(businessObjectFormatEntity1.getUsage());
-                businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectFormatEntity1.getBusinessObjectDefinition().getName());
-                businessObjectFormatKey.setNamespace(businessObjectFormatEntity1.getBusinessObjectDefinition().getNamespace().getCode());
-                businessObjectFormatKeyRetentionDaysMap.put(businessObjectFormatKey, businessObjectFormatEntity1.getRetentionPeriodInDays());
+                businessObjectFormatKey.setBusinessObjectFormatFileType(businessObjectformatKeyEntity.getFileType().getCode());
+                businessObjectFormatKey.setBusinessObjectFormatUsage(businessObjectformatKeyEntity.getUsage());
+                businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectformatKeyEntity.getBusinessObjectDefinition().getName());
+                businessObjectFormatKey.setNamespace(businessObjectformatKeyEntity.getBusinessObjectDefinition().getNamespace().getCode());
+                businessObjectFormatKeyRetentionDaysMap.put(businessObjectFormatKey, businessObjectformatKeyEntity.getRetentionPeriodInDays());
             }
         }
-        Assert.isTrue(businessObjectFormatKeyRetentionDaysMap.size() > 0, "No business object format has retention type PARTITION_VALUE.");
+        Assert.isTrue(businessObjectFormatKeyRetentionDaysMap.size() > 0, String
+            .format("No business object format for business object definition %s %s has retention type %s.", businessObjectDefinitionKey.getNamespace(),
+                businessObjectDefinitionKey.getBusinessObjectDefinitionName(), RetentionTypeEntity.PARTITION_VALUE));
         Predicate retentionPredicate = null;
         for (Map.Entry<BusinessObjectFormatKey, Integer> entry : businessObjectFormatKeyRetentionDaysMap.entrySet())
         {
             BusinessObjectFormatKey businessObjectFormatKey = entry.getKey();
             int retentionPeriod = entry.getValue();
-            java.util.Date date = DateUtils.addDays(new java.util.Date(), -1 * retentionPeriod);
-            String retentionQueryDate = DateFormatUtils.format(date, DEFAULT_SINGLE_DAY_DATE_MASK);
-            // retention Predate for this business object format key
+            String retentionQueryDate = DateFormatUtils.format(DateUtils.addDays(new Date(), -1 * retentionPeriod), DEFAULT_SINGLE_DAY_DATE_MASK);
+            // retention predate for this business object format key
             Predicate retentionPredicateFormat = null;
             retentionPredicateFormat = builder.lessThan(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), retentionQueryDate);
 
