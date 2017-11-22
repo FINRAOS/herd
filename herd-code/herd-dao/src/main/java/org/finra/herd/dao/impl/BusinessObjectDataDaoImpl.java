@@ -912,7 +912,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         countCriteria.select(countBuilder.count(countBusinessObjectDataEntity)).where(countPredicate).distinct(true);
         Long count = entityManager.createQuery(countCriteria).getSingleResult();
-        
         if (count > businessObjectDataSearchMaxResults)
         {
             throw new IllegalArgumentException(String
@@ -1033,10 +1032,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 businessObjectFormatKeyRetentionDaysMap.put(businessObjectFormatKey, businessObjectFormatEntity1.getRetentionPeriodInDays());
             }
         }
-
-        Predicate retentionPredicate = null;
         Assert.isTrue(businessObjectFormatKeyRetentionDaysMap.size() > 0, "No business object format has retention type PARTITION_VALUE.");
-        for (Map.Entry<BusinessObjectFormatKey, Integer> entry: businessObjectFormatKeyRetentionDaysMap.entrySet())
+        Predicate retentionPredicate = null;
+        for (Map.Entry<BusinessObjectFormatKey, Integer> entry : businessObjectFormatKeyRetentionDaysMap.entrySet())
         {
             BusinessObjectFormatKey businessObjectFormatKey = entry.getKey();
             int retentionPeriod = entry.getValue();
@@ -1067,7 +1065,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
         //add the retention predicate
         predicate = builder.and(predicate, retentionPredicate);
-
 
         return predicate;
     }
