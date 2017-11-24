@@ -15,10 +15,14 @@
 */
 package org.finra.herd.service.helper;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -28,6 +32,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
@@ -387,6 +392,39 @@ public class BusinessObjectDataHelper
     }
 
     /**
+     * Gets a date in a date format from a string format or null if one wasn't specified. The format of the date should match
+     * HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.
+     *
+     * @param dateString the date as a string
+     *
+     * @return the date as a date or null if one wasn't specified or the conversion fails
+     */
+    public Date getDateFromString(String dateString)
+    {
+        Date resultDate = null;
+
+        // For strict date parsing, process the date string only if it has the required length.
+        if (dateString.length() == AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.length())
+        {
+            // Try to convert the date string to a Date.
+            try
+            {
+                // Use strict parsing to ensure our date is more definitive.
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK, Locale.US);
+                simpleDateFormat.setLenient(false);
+                resultDate = simpleDateFormat.parse(dateString);
+            }
+            catch (ParseException e)
+            {
+                // This assignment is here to pass PMD checks.
+                resultDate = null;
+            }
+        }
+
+        return resultDate;
+    }
+
+    /**
      * Returns a partition filter that the specified business object data key would match to. The filter is build as per specified sample partition filter.
      *
      * @param businessObjectDataKey the business object data key
@@ -574,26 +612,6 @@ public class BusinessObjectDataHelper
     }
 
     /**
-     * Validates a list of sub-partition values. This method also trims the sub-partition values.
-     *
-     * @param subPartitionValues the list of sub-partition values
-     *
-     * @throws IllegalArgumentException if a sub-partition value is missing or not valid
-     */
-    public void validateSubPartitionValues(List<String> subPartitionValues) throws IllegalArgumentException
-    {
-        int subPartitionValuesCount = CollectionUtils.size(subPartitionValues);
-
-        Assert.isTrue(subPartitionValuesCount <= BusinessObjectDataEntity.MAX_SUBPARTITIONS,
-            String.format("Exceeded maximum number of allowed subpartitions: %d.", BusinessObjectDataEntity.MAX_SUBPARTITIONS));
-
-        for (int i = 0; i < subPartitionValuesCount; i++)
-        {
-            subPartitionValues.set(i, alternateKeyHelper.validateStringParameter("subpartition value", subPartitionValues.get(i)));
-        }
-    }
-
-    /**
      * Validates a list of partition value filters or a standalone partition filter. This method makes sure that a partition value filter contains exactly one
      * partition value range or a non-empty partition value list. This method also makes sure that there is no more than one partition value range specified
      * across all partition value filters.
@@ -715,6 +733,26 @@ public class BusinessObjectDataHelper
                 Assert.hasText(latestAfterPartitionValue.getPartitionValue(), "A partition value must be specified.");
                 latestAfterPartitionValue.setPartitionValue(latestAfterPartitionValue.getPartitionValue().trim());
             }
+        }
+    }
+
+    /**
+     * Validates a list of sub-partition values. This method also trims the sub-partition values.
+     *
+     * @param subPartitionValues the list of sub-partition values
+     *
+     * @throws IllegalArgumentException if a sub-partition value is missing or not valid
+     */
+    public void validateSubPartitionValues(List<String> subPartitionValues) throws IllegalArgumentException
+    {
+        int subPartitionValuesCount = CollectionUtils.size(subPartitionValues);
+
+        Assert.isTrue(subPartitionValuesCount <= BusinessObjectDataEntity.MAX_SUBPARTITIONS,
+            String.format("Exceeded maximum number of allowed subpartitions: %d.", BusinessObjectDataEntity.MAX_SUBPARTITIONS));
+
+        for (int i = 0; i < subPartitionValuesCount; i++)
+        {
+            subPartitionValues.set(i, alternateKeyHelper.validateStringParameter("subpartition value", subPartitionValues.get(i)));
         }
     }
 }

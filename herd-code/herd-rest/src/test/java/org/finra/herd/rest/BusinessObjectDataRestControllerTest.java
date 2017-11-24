@@ -225,6 +225,33 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
     }
 
     @Test
+    public void testDestroyBusinessObjectData()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+
+        // Mock the external calls.
+        when(businessObjectDataService.destroyBusinessObjectData(businessObjectDataKey)).thenReturn(businessObjectData);
+
+        // Call the method under test.
+        BusinessObjectData result = businessObjectDataRestController
+            .destroyBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
+                getDelimitedFieldValues(SUBPARTITION_VALUES));
+
+        // Verify the external calls.
+        verify(businessObjectDataService).destroyBusinessObjectData(businessObjectDataKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectData, result);
+    }
+
+    @Test
     public void testGenerateBusinessObjectDataDdl()
     {
         // Create a business object data ddl request.

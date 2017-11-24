@@ -89,6 +89,17 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      * This implementation keeps the current transaction context.
      */
     @Override
+    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
+    {
+        return destroyBusinessObjectDataImpl(businessObjectDataKey);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
     public BusinessObjectDataDdl generateBusinessObjectDataDdl(BusinessObjectDataDdlRequest request)
     {
         return generateBusinessObjectDataDdlImpl(request, false);

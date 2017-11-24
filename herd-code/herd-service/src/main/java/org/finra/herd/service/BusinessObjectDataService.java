@@ -100,6 +100,16 @@ public interface BusinessObjectDataService
     public BusinessObjectData deleteBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean deleteFiles);
 
     /**
+     * Initiates destruction process for an existing business object data by using S3 tagging to mark the relative S3 files for deletion and updating statuses
+     * of the business object data and its storage unit. The S3 data then gets deleted by S3 bucket lifecycle policy that is based on S3 tagging.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the business object data information
+     */
+    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey);
+
+    /**
      * Performs a search and returns a list of business object data key values and relative statuses for a range of requested business object data. Creates its
      * own transaction.
      *

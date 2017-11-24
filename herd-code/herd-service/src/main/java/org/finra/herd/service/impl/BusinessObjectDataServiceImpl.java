@@ -65,6 +65,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -78,6 +79,7 @@ import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
+import org.finra.herd.service.BusinessObjectDataInitiateDestroyHelperService;
 import org.finra.herd.service.BusinessObjectDataInitiateRestoreHelperService;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.NotificationEventService;
@@ -129,6 +131,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Autowired
+    private BusinessObjectDataInitiateDestroyHelperService businessObjectDataInitiateDestroyHelperService;
 
     @Autowired
     private BusinessObjectDataInitiateRestoreHelperService businessObjectDataInitiateRestoreHelperService;
@@ -352,6 +357,19 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
         // Return the deleted business object data.
         return deletedBusinessObjectData;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation executes non-transactionally, suspends the current transaction if one exists.
+     */
+    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
+    {
+        return destroyBusinessObjectDataImpl(businessObjectDataKey);
     }
 
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.READ)
@@ -745,6 +763,46 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         }
 
         return businessObjectDataAvailability;
+    }
+
+    /**
+     * Initiates destruction process for an existing business object data by using S3 tagging to mark the relative S3 files for deletion and updating statuses
+     * of the business object data and its storage unit. The S3 data then gets deleted by S3 bucket lifecycle policy that is based on S3 tagging.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the business object data information
+     */
+    protected BusinessObjectData destroyBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey)
+    {
+        // Create a business object data destroy parameters DTO.
+        BusinessObjectDataDestroyDto businessObjectDataDestroyDto = new BusinessObjectDataDestroyDto();
+
+        // Prepare to initiate a business object data destroy request.
+        businessObjectDataInitiateDestroyHelperService.prepareToInitiateDestroy(businessObjectDataDestroyDto, businessObjectDataKey);
+
+        // Create a storage unit notification for the storage unit status change event.
+        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            businessObjectDataDestroyDto.getBusinessObjectDataKey(), businessObjectDataDestroyDto.getStorageName(),
+            businessObjectDataDestroyDto.getNewStorageUnitStatus(), businessObjectDataDestroyDto.getOldStorageUnitStatus());
+
+        // Create a business object data notification for the business object data status change event.
+        notificationEventService.processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG,
+            businessObjectDataDestroyDto.getBusinessObjectDataKey(), businessObjectDataDestroyDto.getNewBusinessObjectDataStatus(),
+            businessObjectDataDestroyDto.getOldBusinessObjectDataStatus());
+
+        // Execute S3 specific steps.
+        businessObjectDataInitiateDestroyHelperService.executeS3SpecificSteps(businessObjectDataDestroyDto);
+
+        // Complete the initiation of a business object data destroy request.
+        BusinessObjectData businessObjectData = businessObjectDataInitiateDestroyHelperService.executeInitiateDestroyAfterStep(businessObjectDataDestroyDto);
+
+        // Create a storage unit notification for the storage unit status change event.
+        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            businessObjectDataDestroyDto.getBusinessObjectDataKey(), businessObjectDataDestroyDto.getStorageName(),
+            businessObjectDataDestroyDto.getNewStorageUnitStatus(), businessObjectDataDestroyDto.getOldStorageUnitStatus());
+
+        return businessObjectData;
     }
 
     /**

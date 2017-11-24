@@ -17,6 +17,8 @@ package org.finra.herd.service.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -39,10 +41,15 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity;
+import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
+import org.finra.herd.service.BusinessObjectDataInitiateDestroyHelperService;
 import org.finra.herd.service.BusinessObjectDataInitiateRestoreHelperService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.S3Service;
@@ -84,6 +91,9 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
 
     @Mock
     private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Mock
+    private BusinessObjectDataInitiateDestroyHelperService businessObjectDataInitiateDestroyHelperService;
 
     @Mock
     private BusinessObjectDataInitiateRestoreHelperService businessObjectDataInitiateRestoreHelperService;
@@ -152,6 +162,61 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
     public void before()
     {
         MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testDestroyBusinessObjectData()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create multiple states of business object data destroy parameters DTO.
+        List<BusinessObjectDataDestroyDto> businessObjectDataDestroyDtoStates = Arrays.asList(
+            new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
+                StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_FILES,
+                S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
+            new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
+                StorageUnitStatusEntity.DISABLED, StorageUnitStatusEntity.DISABLING, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_FILES,
+                S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS));
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
+
+        // Mock the external calls.
+        doAnswer(invocation -> {
+            BusinessObjectDataDestroyDto businessObjectDataDestroyDto = (BusinessObjectDataDestroyDto) invocation.getArguments()[0];
+            businessObjectDataDestroyDtoStates.get(0).copyTo(businessObjectDataDestroyDto);
+            return null;
+        }).when(businessObjectDataInitiateDestroyHelperService).prepareToInitiateDestroy(new BusinessObjectDataDestroyDto(), businessObjectDataKey);
+        doAnswer(invocation -> {
+            BusinessObjectDataDestroyDto businessObjectDataDestroyDto = (BusinessObjectDataDestroyDto) invocation.getArguments()[0];
+            businessObjectDataDestroyDtoStates.get(1).copyTo(businessObjectDataDestroyDto);
+            return null;
+        }).when(businessObjectDataInitiateDestroyHelperService).executeInitiateDestroyAfterStep(any(BusinessObjectDataDestroyDto.class));
+        when(businessObjectDataInitiateDestroyHelperService.executeInitiateDestroyAfterStep(any(BusinessObjectDataDestroyDto.class)))
+            .thenReturn(businessObjectData);
+
+        // Call the method under test.
+        BusinessObjectData result = businessObjectDataServiceImpl.destroyBusinessObjectData(businessObjectDataKey);
+
+        // Verify the external calls.
+        verify(businessObjectDataInitiateDestroyHelperService)
+            .prepareToInitiateDestroy(any(BusinessObjectDataDestroyDto.class), any(BusinessObjectDataKey.class));
+        verify(businessObjectDataInitiateDestroyHelperService).executeS3SpecificSteps(any(BusinessObjectDataDestroyDto.class));
+        verify(businessObjectDataInitiateDestroyHelperService).executeInitiateDestroyAfterStep(any(BusinessObjectDataDestroyDto.class));
+        verify(notificationEventService, times(2))
+            .processStorageUnitNotificationEventAsync(any(NotificationEventTypeEntity.EventTypesStorageUnit.class), any(BusinessObjectDataKey.class),
+                any(String.class), any(String.class), any(String.class));
+        verify(notificationEventService)
+            .processBusinessObjectDataNotificationEventAsync(any(NotificationEventTypeEntity.EventTypesBdata.class), any(BusinessObjectDataKey.class),
+                any(String.class), any(String.class));
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectData, result);
     }
 
     @Test
@@ -247,7 +312,7 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(attributeDaoHelper, attributeHelper, businessObjectDataDao, businessObjectDataDaoHelper, businessObjectDataHelper,
-            businessObjectDataInitiateRestoreHelperService, businessObjectDataInvalidateUnregisteredHelper,
+            businessObjectDataInitiateDestroyHelperService, businessObjectDataInitiateRestoreHelperService, businessObjectDataInvalidateUnregisteredHelper,
             businessObjectDataRetryStoragePolicyTransitionHelper, businessObjectDataSearchHelper, businessObjectDataStatusDaoHelper,
             businessObjectDefinitionDaoHelper, businessObjectDefinitionHelper, businessObjectFormatDaoHelper, businessObjectFormatHelper, configurationHelper,
             customDdlDaoHelper, ddlGeneratorFactory, jsonHelper, notificationEventService, s3KeyPrefixHelper, s3Service, storageDaoHelper, storageHelper,

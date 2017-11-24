@@ -160,6 +160,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer BDATA_AGE_IN_DAYS = 1000;
 
+    public static final Integer BDATA_FINAL_DESTROY_DELAY_IN_DAYS = 15;
+
     public static final Integer BDATA_PARTITION_VALUE_AGE_IN_DAYS = 1000;
 
     public static final String BDATA_STATUS = "UT_Status_1_" + RANDOM_SUFFIX;
@@ -214,6 +216,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CODE = "code";
 
+    public static final String COLUMNS_NAME_FIELD = "columns.name";
+
     public static final String COLUMN_DATA_TYPE = "UT_Column_Data_Type_1_" + RANDOM_SUFFIX;
 
     public static final String COLUMN_DATA_TYPE_2 = "UT_Column_Data_Type_2_" + RANDOM_SUFFIX;
@@ -233,8 +237,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String COLUMN_NAME = "UT_Column_Name_1_" + RANDOM_SUFFIX;
 
     public static final String COLUMN_NAME_2 = "UT_Column_Name_2_" + RANDOM_SUFFIX;
-
-    public static final String COLUMNS_NAME_FIELD = "columns.name";
 
     public static final Boolean COLUMN_REQUIRED = true;
 
@@ -1247,6 +1249,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected PartitionKeyGroupDaoTestHelper partitionKeyGroupDaoTestHelper;
 
     @Autowired
+    protected RetentionTypeDao retentionTypeDao;
+
+    @Autowired
+    protected RetentionTypeDaoTestHelper retentionTypeDaoTestHelper;
+
+    @Autowired
     protected S3Dao s3Dao;
 
     @Autowired
@@ -1383,12 +1391,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected UserNamespaceAuthorizationDaoTestHelper userNamespaceAuthorizationDaoTestHelper;
-
-    @Autowired
-    protected RetentionTypeDao retentionTypeDao;
-
-    @Autowired
-    protected RetentionTypeDaoTestHelper retentionTypeDaoTestHelper;
 
     /**
      * Returns a random timestamp.

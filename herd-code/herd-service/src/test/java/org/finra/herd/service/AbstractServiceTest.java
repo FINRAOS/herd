@@ -268,6 +268,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final String BUSINESS_OBJECT_FORMAT_KEY_AS_STRING = "UT_BusinessObjectFormatKeyAsString_" + RANDOM_SUFFIX;
+
     public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
@@ -510,7 +512,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
 
-    public static final Integer RETENTION_PERIOD_DAYS = getRandomInteger();
+    public static final Integer RETENTION_PERIOD_DAYS = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean RETRIEVE_INSTANCE_FLEETS = true;
 
