@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
@@ -178,10 +177,13 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
             storageUnitDaoHelper.getStorageUnitEntity(businessObjectDataDestroyDto.getStorageName(), businessObjectDataEntity);
 
         // Validate that storage unit status is DISABLING.
-        Assert.isTrue(StorageUnitStatusEntity.DISABLING.equals(storageUnitEntity.getStatus().getCode()), String
-            .format("Storage unit status is \"%s\", but must be \"%s\". Storage: {%s}, business object data: {%s}", storageUnitEntity.getStatus().getCode(),
-                StorageUnitStatusEntity.DISABLING, businessObjectDataDestroyDto.getStorageName(),
-                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+        if (!StorageUnitStatusEntity.DISABLING.equals(storageUnitEntity.getStatus().getCode()))
+        {
+            throw new IllegalArgumentException(String
+                .format("Storage unit status is \"%s\", but must be \"%s\". Storage: {%s}, business object data: {%s}", storageUnitEntity.getStatus().getCode(),
+                    StorageUnitStatusEntity.DISABLING, businessObjectDataDestroyDto.getStorageName(),
+                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+        }
 
         // Set timestamp of when it is OK to finalize deletion of the business object data.
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -254,6 +256,26 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
     }
 
     /**
+     * Get and validates configuration value for the delay in days to complete the business object data destroy operation.
+     *
+     * @return the delay in days to complete the business object data destroy operation
+     */
+    protected int getAndValidateFinalDestroyInDays()
+    {
+        // Get the configured delay (in days) for business object data finalize destroy.
+        int finalDestroyInDays = herdStringHelper.getConfigurationValueAsInteger(ConfigurationValue.BDATA_FINAL_DESTROY_DELAY_IN_DAYS);
+
+        // Validate the finalize delay configuration value.
+        if (finalDestroyInDays <= 0)
+        {
+            throw new IllegalStateException(
+                String.format("Configuration \"%s\" must be a positive integer.", ConfigurationValue.BDATA_FINAL_DESTROY_DELAY_IN_DAYS.getKey()));
+        }
+
+        return finalDestroyInDays;
+    }
+
+    /**
      * Retrieves and validates storage unit for the specified business object data. The method makes sure that there is one and only one S3 storage unit.
      *
      * @param businessObjectDataEntity the business object data entity
@@ -271,7 +293,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         if (CollectionUtils.isEmpty(s3StorageUnitEntities))
         {
             throw new IllegalArgumentException(String.format("Business object data has no S3 storage unit. Business object data: {%s}",
-                businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
 
         // Validate that this business object data has no multiple S3 storage units.
@@ -279,7 +301,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         {
             throw new IllegalArgumentException(String
                 .format("Business object data has multiple (%s) %s storage units. Business object data: {%s}", s3StorageUnitEntities.size(),
-                    StoragePlatformEntity.S3, businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+                    StoragePlatformEntity.S3, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
 
         // Get the S3 storage unit.
@@ -289,10 +311,13 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         String storageUnitStatus = storageUnitEntity.getStatus().getCode();
 
         // Validate storage unit status.
-        Assert.isTrue(BusinessObjectDataInitiateDestroyHelperServiceImpl.SUPPORTED_STORAGE_UNIT_STATUSES.contains(storageUnitStatus), String
-            .format("Storage unit status \"%s\" is not supported by the business object data destroy feature. Storage: {%s}, business object data: {%s}",
-                businessObjectDataEntity.getStatus().getCode(), storageUnitEntity.getStorage().getName(),
-                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+        if (!BusinessObjectDataInitiateDestroyHelperServiceImpl.SUPPORTED_STORAGE_UNIT_STATUSES.contains(storageUnitStatus))
+        {
+            throw new IllegalArgumentException(String
+                .format("Storage unit status \"%s\" is not supported by the business object data destroy feature. Storage: {%s}, business object data: {%s}",
+                    storageUnitStatus, storageUnitEntity.getStorage().getName(),
+                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+        }
 
         return storageUnitEntity;
     }
@@ -322,14 +347,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         String s3ObjectTaggerRoleSessionName = configurationHelper.getRequiredProperty(ConfigurationValue.S3_OBJECT_DELETE_ROLE_SESSION_NAME);
 
         // Get the configured delay (in days) for business object data finalize destroy.
-        int finalDestroyInDays = herdStringHelper.getConfigurationValueAsInteger(ConfigurationValue.BDATA_FINAL_DESTROY_DELAY_IN_DAYS);
-
-        // Validate the finalize delay configuration value.
-        if (finalDestroyInDays <= 0)
-        {
-            throw new IllegalStateException(
-                String.format("Configuration \"%s\" must be a positive integer.", ConfigurationValue.BDATA_FINAL_DESTROY_DELAY_IN_DAYS.getKey()));
-        }
+        int finalDestroyInDays = getAndValidateFinalDestroyInDays();
 
         // Retrieve business object data entity and ensure it exists.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
@@ -390,6 +408,72 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
     }
 
     /**
+     * Validate that business object data is supported by the business object data destroy feature.
+     *
+     * @param businessObjectDataEntity the business object data entity
+     * @param businessObjectDataKey the business object data key
+     */
+    protected void validateBusinessObjectData(BusinessObjectDataEntity businessObjectDataEntity, BusinessObjectDataKey businessObjectDataKey)
+    {
+        // Get business object format for this business object data.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectDataEntity.getBusinessObjectFormat();
+
+        // Create a version-less key for the business object format.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(), null);
+
+        // Get the latest version of the format to retrieve retention information.
+        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = businessObjectFormatEntity.getLatestVersion() ? businessObjectFormatEntity :
+            businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
+
+        // Get retention information.
+        String retentionType =
+            latestVersionBusinessObjectFormatEntity.getRetentionType() != null ? latestVersionBusinessObjectFormatEntity.getRetentionType().getCode() : null;
+        Integer retentionPeriodInDays = latestVersionBusinessObjectFormatEntity.getRetentionPeriodInDays();
+
+        // Validate that retention information is specified for this business object format.
+        if (StringUtils.isBlank(retentionType) || retentionPeriodInDays == null)
+        {
+            throw new IllegalArgumentException(String
+                .format("Retention information is not configured for the business object format. Business object format: {%s}",
+                    businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
+        }
+
+        // Validate the retention type.
+        if (!RetentionTypeEntity.PARTITION_VALUE.equals(retentionType))
+        {
+            throw new IllegalArgumentException(String
+                .format("Retention type \"%s\" is not supported by the business object data destroy feature. Business object format: {%s}", retentionType,
+                    businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
+        }
+
+        // Try to convert business object data primary partition value to a timestamp. If conversion is not successful, the method returns a null value.
+        Date primaryPartitionValue = businessObjectDataHelper.getDateFromString(businessObjectDataEntity.getPartitionValue());
+
+        // If primary partition values is not a date, this business object data is not supported by the business object data destroy feature.
+        if (primaryPartitionValue == null)
+        {
+            throw new IllegalArgumentException(String.format("Primary partition value \"%s\" cannot get converted to a valid date. Business object data: {%s}",
+                businessObjectDataEntity.getPartitionValue(), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+        }
+
+        // Get the current timestamp from the database.
+        Timestamp currentTimestamp = herdDao.getCurrentTimestamp();
+
+        // Compute the relative primary partition value threshold date based on the current timestamp and retention period value.
+        Date primaryPartitionValueThreshold = new Date(HerdDateUtils.addDays(currentTimestamp, -retentionPeriodInDays).getTime());
+
+        // Validate that this business object data has it's primary partition value before or equal to the threshold date.
+        if (primaryPartitionValue.compareTo(primaryPartitionValueThreshold) > 0)
+        {
+            throw new IllegalArgumentException(String.format(
+                "Business object data fails retention threshold check for retention type \"%s\" with retention period of %d days. Business object data: {%s}",
+                retentionType, retentionPeriodInDays, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+        }
+    }
+
+    /**
      * Validates the storage.
      *
      * @param storageEntity the storage entity
@@ -411,58 +495,5 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         {
             throw new IllegalStateException(String.format("File existence validation must be enabled on \"%s\" storage.", storageEntity.getName()));
         }
-    }
-
-    /**
-     * Validate that business object data is supported by the business object data destroy feature.
-     *
-     * @param businessObjectDataEntity the business object data entity
-     * @param businessObjectDataKey the business object data key
-     */
-    private void validateBusinessObjectData(BusinessObjectDataEntity businessObjectDataEntity, BusinessObjectDataKey businessObjectDataKey)
-    {
-        // Get business object format for this business object data.
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectDataEntity.getBusinessObjectFormat();
-
-        // Create a version-less key for the business object format.
-        BusinessObjectFormatKey businessObjectFormatKey =
-            new BusinessObjectFormatKey(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(), null);
-
-        // Get the latest version of the format to retrieve retention information.
-        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = businessObjectFormatEntity.getLatestVersion() ? businessObjectFormatEntity :
-            businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
-
-        // Get retention information.
-        String retentionType = latestVersionBusinessObjectFormatEntity.getRetentionType().getCode();
-        Integer retentionPeriodInDays = latestVersionBusinessObjectFormatEntity.getRetentionPeriodInDays();
-
-        // Validate that retention information is specified for this business object format.
-        Assert.isTrue(StringUtils.isNotBlank(retentionType) && retentionPeriodInDays != null, String
-            .format("Retention information is not configured for the business object format. Business object format: {%s}",
-                businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
-
-        // Validate the retention type.
-        Assert.isTrue(RetentionTypeEntity.PARTITION_VALUE.equals(retentionType), String
-            .format("Retention type \"%s\" is not supported by the business object data destroy feature. Business object format: {%s}", retentionType,
-                businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
-
-        // Try to convert business object data primary partition value to a timestamp. If conversion is not successful, the method returns a null value.
-        Date primaryPartitionValue = businessObjectDataHelper.getDateFromString(businessObjectDataEntity.getPartitionValue());
-
-        // If primary partition values is not a date, this business object data is not supported by the business object data destroy feature.
-        Assert.notNull(primaryPartitionValue, String.format("Primary partition value \"%s\" cannot get converted to a valid date. Business object data: {%s}",
-            businessObjectDataEntity.getPartitionValue(), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-
-        // Get the current timestamp from the database.
-        Timestamp currentTimestamp = herdDao.getCurrentTimestamp();
-
-        // Compute the relative primary partition value threshold date based on the current timestamp and retention period value.
-        Date primaryPartitionValueThreshold = new Date(HerdDateUtils.addDays(currentTimestamp, -retentionPeriodInDays).getTime());
-
-        // Validate that this business object data has it's primary partition value before or equal to the threshold date.
-        Assert.isTrue(primaryPartitionValue.compareTo(primaryPartitionValueThreshold) <= 0, String.format(
-            "Business object data fails retention threshold check for retention type \"%s\" with retention period of %d days. Business object data: {%s}",
-            retentionType, retentionPeriodInDays, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
     }
 }

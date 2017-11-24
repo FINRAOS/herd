@@ -786,6 +786,11 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             businessObjectDataDestroyDto.getBusinessObjectDataKey(), businessObjectDataDestroyDto.getStorageName(),
             businessObjectDataDestroyDto.getNewStorageUnitStatus(), businessObjectDataDestroyDto.getOldStorageUnitStatus());
 
+        // Create a business object data notification for the business object data status change event.
+        notificationEventService.processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG,
+            businessObjectDataDestroyDto.getBusinessObjectDataKey(), businessObjectDataDestroyDto.getNewBusinessObjectDataStatus(),
+            businessObjectDataDestroyDto.getOldBusinessObjectDataStatus());
+
         // Execute S3 specific steps.
         businessObjectDataInitiateDestroyHelperService.executeS3SpecificSteps(businessObjectDataDestroyDto);
 
@@ -796,11 +801,6 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
             businessObjectDataDestroyDto.getBusinessObjectDataKey(), businessObjectDataDestroyDto.getStorageName(),
             businessObjectDataDestroyDto.getNewStorageUnitStatus(), businessObjectDataDestroyDto.getOldStorageUnitStatus());
-
-        // Create a business object data notification for the business object data status change event.
-        notificationEventService.processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG,
-            businessObjectDataDestroyDto.getBusinessObjectDataKey(), businessObjectDataDestroyDto.getNewBusinessObjectDataStatus(),
-            businessObjectDataDestroyDto.getOldBusinessObjectDataStatus());
 
         return businessObjectData;
     }
