@@ -22,6 +22,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -123,7 +125,7 @@ public class StorageUnitHelperTest extends AbstractServiceTest
             new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
-        java.sql.Timestamp restoredExpirationOn = new java.sql.Timestamp(new java.util.Date().getTime());
+        Timestamp restoredExpirationOn = new Timestamp(new Date().getTime());
         // Create a storage unit entity.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper.createStorageUnitEntity(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS);
         storageUnitEntity.setDirectoryPath(STORAGE_DIRECTORY_PATH);
