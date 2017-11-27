@@ -679,7 +679,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), NO_STORAGE_DIRECTORY, null, StorageUnitStatusEntity.ENABLED, Arrays
                     .asList(new StorageUnitStatusChangeEvent(StorageUnitStatusEntity.ENABLED,
                         HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(storageUnitEntity.getHistoricalStatuses(), 0).getCreatedOn()),
-                        HerdDaoSecurityHelper.SYSTEM_USER)), NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS)), NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS,
+                        HerdDaoSecurityHelper.SYSTEM_USER)), NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS,
                 NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned response object.
