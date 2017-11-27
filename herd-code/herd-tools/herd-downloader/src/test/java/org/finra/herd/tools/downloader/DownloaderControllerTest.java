@@ -403,7 +403,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         BusinessObjectData businessObjectData = new BusinessObjectData();
         businessObjectData.setAttributes(new ArrayList<>());
         businessObjectData.getAttributes().add(new Attribute("name", "value"));
-        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", null, null), null, null, StorageUnitStatusEntity.ENABLED, null, null);
+        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", null, null), null, null, StorageUnitStatusEntity.ENABLED, null, null, null);
         String s3KeyPrefix = "s3KeyPrefix";
         DownloaderOutputManifestDto actual = downloaderController.createDownloaderOutputManifestDto(businessObjectData, storageUnit, s3KeyPrefix);
         assertEquals(1, actual.getAttributes().size());
