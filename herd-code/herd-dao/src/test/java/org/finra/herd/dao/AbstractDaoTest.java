@@ -536,6 +536,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<Attribute> NO_ATTRIBUTES = new ArrayList<>();
 
+    public static final XMLGregorianCalendar NO_RESTORE_EXPIRATION_ON = null;
+
     public static final List<AttributeDefinition> NO_ATTRIBUTE_DEFINITIONS = new ArrayList<>();
 
     public static final String NO_AWS_ACCESS_KEY = null;

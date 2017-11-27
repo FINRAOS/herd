@@ -22,6 +22,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.Storage;
@@ -122,10 +125,12 @@ public class StorageUnitHelperTest extends AbstractServiceTest
             new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
+        Timestamp restoredExpirationOn = new Timestamp(new Date().getTime());
         // Create a storage unit entity.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper.createStorageUnitEntity(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS);
         storageUnitEntity.setDirectoryPath(STORAGE_DIRECTORY_PATH);
         storageUnitEntity.setStoragePolicyTransitionFailedAttempts(STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS);
+        storageUnitEntity.setRestoreExpirationOn(restoredExpirationOn);
 
         // Call the method under test.
         List<StorageUnit> result = storageUnitHelper.createStorageUnitsFromEntities(Arrays.asList(storageUnitEntity), NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
@@ -136,7 +141,7 @@ public class StorageUnitHelperTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(Arrays.asList(
             new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), new StorageDirectory(STORAGE_DIRECTORY_PATH), null, STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS_HISTORY, STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS)), result);
+                NO_STORAGE_UNIT_STATUS_HISTORY, STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, HerdDateUtils.getXMLGregorianCalendarValue(restoredExpirationOn))), result);
     }
 
     @Test

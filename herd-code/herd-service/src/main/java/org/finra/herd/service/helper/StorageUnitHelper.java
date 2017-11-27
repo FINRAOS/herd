@@ -192,6 +192,11 @@ public class StorageUnitHelper
 
             // Set the number of failed attempts to execute a storage policy transition.
             storageUnit.setStoragePolicyTransitionFailedAttempts(storageUnitEntity.getStoragePolicyTransitionFailedAttempts());
+
+            if (storageUnitEntity.getRestoreExpirationOn() != null)
+            {
+                storageUnit.setRestoreExpirationOn(HerdDateUtils.getXMLGregorianCalendarValue(storageUnitEntity.getRestoreExpirationOn()));
+            }
         }
 
         return storageUnits;

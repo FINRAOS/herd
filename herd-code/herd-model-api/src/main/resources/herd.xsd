@@ -2992,6 +2992,11 @@
                <xs:documentation>The number of failed attempts to execute a storage policy transition such as archiving to Glacier</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="restoreExpirationOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The restore expiration time if restored</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
