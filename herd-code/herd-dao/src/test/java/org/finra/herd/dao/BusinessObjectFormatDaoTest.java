@@ -245,7 +245,7 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getBusinessObjectFormatEntities()
+    public void testGetBusinessObjectFormatEntitiesByBusinessObjectDefinition()
     {
         // Create relative database entities.
         businessObjectDefinitionDaoTestHelper
@@ -270,13 +270,8 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
 
         // Retrieve business object format entity by specifying values for all text alternate key fields in upper case.
-        List<BusinessObjectFormatEntity> businessObjectFormatList = businessObjectFormatDao.getBusinessObjectFormatEntities(businessObjectDefinitionKey, true);
+        List<BusinessObjectFormatEntity> businessObjectFormatList = businessObjectFormatDao.getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(businessObjectDefinitionKey);
         assertEquals(businessObjectFormatList.size(), 1);
         assertEquals(businessObjectFormatList.get(0), businessObjectFormatEntityV1);
-
-        businessObjectFormatList = businessObjectFormatDao.getBusinessObjectFormatEntities(businessObjectDefinitionKey, false);
-        assertEquals(businessObjectFormatList.size(), 2);
-        businessObjectFormatList.contains(businessObjectFormatEntityV0);
-        businessObjectFormatList.contains(businessObjectFormatEntityV1);
     }
 }

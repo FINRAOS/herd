@@ -1017,7 +1017,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
         businessObjectDefinitionKey.setBusinessObjectDefinitionName(businessDataSearchKey.getBusinessObjectDefinitionName());
         businessObjectDefinitionKey.setNamespace(businessDataSearchKey.getNamespace());
-        List<BusinessObjectFormatEntity> businessObjectFormatKeys = businessObjectFormatDao.getBusinessObjectFormatEntities(businessObjectDefinitionKey, true);
+        List<BusinessObjectFormatEntity> businessObjectFormatKeys =
+            businessObjectFormatDao.getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(businessObjectDefinitionKey);
         Map<BusinessObjectFormatKey, Integer> businessObjectFormatKeyRetentionDaysMap = new HashMap<>();
         for (BusinessObjectFormatEntity businessObjectformatKeyEntity : businessObjectFormatKeys)
         {
