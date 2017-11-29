@@ -213,8 +213,8 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
     }
 
     @Override
-    public List<BusinessObjectFormatEntity> getBusinessObjectFormatEntities(BusinessObjectDefinitionKey businessObjectDefinitionKey,
-        boolean latestBusinessObjectFormatVersion)
+    public List<BusinessObjectFormatEntity> getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(
+        BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -240,14 +240,8 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
         orderBy.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
         orderBy.add(builder.asc(fileTypeEntity.get(FileTypeEntity_.code)));
 
-        if (latestBusinessObjectFormatVersion)
-        {
-            queryRestriction = builder.and(queryRestriction, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.latestVersion), true));
-        }
-        else
-        {
-            orderBy.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
-        }
+        queryRestriction = builder.and(queryRestriction, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.latestVersion), true));
+
         criteria.orderBy(orderBy);
         // Add the where clause.
         criteria.where(queryRestriction);
