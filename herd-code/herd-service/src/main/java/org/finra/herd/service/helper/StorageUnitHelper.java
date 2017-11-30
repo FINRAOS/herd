@@ -20,10 +20,12 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
@@ -31,12 +33,14 @@ import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.api.xml.StorageUnitStatusChangeEvent;
 import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageAttributeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
+import org.finra.herd.model.jpa.StorageUnitStatusHistoryEntity;
 
 /**
  * A helper class for storage unit related code.
@@ -116,10 +120,11 @@ public class StorageUnitHelper
      * Creates a list of storage units from the list of storage unit entities.
      *
      * @param storageUnitEntities the storage unit entities.
+     * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
      *
      * @return the list of storage units.
      */
-    public List<StorageUnit> createStorageUnitsFromEntities(Collection<StorageUnitEntity> storageUnitEntities)
+    public List<StorageUnit> createStorageUnitsFromEntities(Collection<StorageUnitEntity> storageUnitEntities, Boolean includeStorageUnitStatusHistory)
     {
         List<StorageUnit> storageUnits = new ArrayList<>();
 
@@ -172,8 +177,26 @@ public class StorageUnitHelper
             // Set the storage unit status.
             storageUnit.setStorageUnitStatus(storageUnitEntity.getStatus().getCode());
 
+            // If specified, add storage unit status history.
+            if (BooleanUtils.isTrue(includeStorageUnitStatusHistory))
+            {
+                List<StorageUnitStatusChangeEvent> storageUnitStatusChangeEvents = new ArrayList<>();
+                storageUnit.setStorageUnitStatusHistory(storageUnitStatusChangeEvents);
+                for (StorageUnitStatusHistoryEntity storageUnitStatusHistoryEntity : storageUnitEntity.getHistoricalStatuses())
+                {
+                    storageUnitStatusChangeEvents.add(new StorageUnitStatusChangeEvent(storageUnitStatusHistoryEntity.getStatus().getCode(),
+                        HerdDateUtils.getXMLGregorianCalendarValue(storageUnitStatusHistoryEntity.getCreatedOn()),
+                        storageUnitStatusHistoryEntity.getCreatedBy()));
+                }
+            }
+
             // Set the number of failed attempts to execute a storage policy transition.
             storageUnit.setStoragePolicyTransitionFailedAttempts(storageUnitEntity.getStoragePolicyTransitionFailedAttempts());
+
+            if (storageUnitEntity.getRestoreExpirationOn() != null)
+            {
+                storageUnit.setRestoreExpirationOn(HerdDateUtils.getXMLGregorianCalendarValue(storageUnitEntity.getRestoreExpirationOn()));
+            }
         }
 
         return storageUnits;

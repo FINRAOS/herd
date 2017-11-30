@@ -211,4 +211,40 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
 
         return businessObjectFormatKeys;
     }
+
+    @Override
+    public List<BusinessObjectFormatEntity> getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(
+        BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectFormatEntity> criteria = builder.createQuery(BusinessObjectFormatEntity.class);
+
+        // The criteria root is the business object format.
+        Root<BusinessObjectFormatEntity> businessObjectFormatEntity = criteria.from(BusinessObjectFormatEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
+        Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity = businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate queryRestriction =
+            builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessObjectDefinitionKey.getNamespace().toUpperCase());
+        queryRestriction = builder.and(queryRestriction, builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
+            businessObjectDefinitionKey.getBusinessObjectDefinitionName().toUpperCase()));
+
+        // Add the order by clause.
+        List<Order> orderBy = new ArrayList<>();
+        orderBy.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
+        orderBy.add(builder.asc(fileTypeEntity.get(FileTypeEntity_.code)));
+
+        queryRestriction = builder.and(queryRestriction, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.latestVersion), true));
+
+        criteria.orderBy(orderBy);
+        // Add the where clause.
+        criteria.where(queryRestriction);
+        return entityManager.createQuery(criteria).getResultList();
+    }
 }

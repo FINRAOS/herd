@@ -79,7 +79,8 @@ public class BusinessObjectDataServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDataServiceImpl
-                .getBusinessObjectData(new BusinessObjectDataKey(), null, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
+                .getBusinessObjectData(new BusinessObjectDataKey(), null, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                    NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
             fail("Should throw an IllegalArgumentException.");
         }
         catch (IllegalArgumentException e)

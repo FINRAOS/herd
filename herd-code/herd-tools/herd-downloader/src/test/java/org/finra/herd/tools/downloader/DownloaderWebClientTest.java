@@ -387,7 +387,8 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         businessObjectData.setPartitionValue(uploaderInputManifestDto.getPartitionValue());
         businessObjectData.setSubPartitionValues(uploaderInputManifestDto.getSubPartitionValues());
         businessObjectData.setVersion(TEST_DATA_VERSION_V0);
-        businessObjectData.setStorageUnits(Arrays.asList(new StorageUnit(new Storage(StorageEntity.MANAGED_STORAGE, null, null), null, null, null, null)));
+        businessObjectData
+            .setStorageUnits(Arrays.asList(new StorageUnit(new Storage(StorageEntity.MANAGED_STORAGE, null, null), null, null, null, null, null, null)));
         return businessObjectData;
     }
 }
