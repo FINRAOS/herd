@@ -89,6 +89,17 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      * This implementation keeps the current transaction context.
      */
     @Override
+    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
+    {
+        return destroyBusinessObjectDataImpl(businessObjectDataKey);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
     public BusinessObjectDataDdl generateBusinessObjectDataDdl(BusinessObjectDataDdlRequest request)
     {
         return generateBusinessObjectDataDdlImpl(request, false);
@@ -112,10 +123,10 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      */
     @Override
     public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory)
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory)
     {
         return getBusinessObjectDataImpl(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus,
-            includeBusinessObjectDataStatusHistory);
+            includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
     }
 
     /**

@@ -73,6 +73,7 @@ import org.finra.herd.model.api.xml.SearchIndexStatistics;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.api.xml.StorageUnitStatusChangeEvent;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.service.activiti.ActivitiHelper;
@@ -267,6 +268,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final String BUSINESS_OBJECT_FORMAT_KEY_AS_STRING = "UT_BusinessObjectFormatKeyAsString_" + RANDOM_SUFFIX;
+
     public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
@@ -356,6 +359,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
 
+    public static final Boolean INCLUDE_STORAGE_UNIT_STATUS_HISTORY = true;
+
     public static final String INDEX_SEARCH_RESULT_TYPE = "UT_IndexSearchResultType" + RANDOM_SUFFIX;
 
     /**
@@ -433,6 +438,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_INCLUDE_IF_NOT_EXISTS_OPTION = false;
 
+    public static final Boolean NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY = false;
+
     public static final LatestAfterPartitionValue NO_LATEST_AFTER_PARTITION_VALUE = null;
 
     public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;
@@ -448,6 +455,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final PartitionValueRange NO_PARTITION_VALUE_RANGE = null;
 
     public static final boolean NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.FALSE;
+
+    public static final boolean NO_RECORDFLAG = false;
+
+    public static final Integer NO_RETENTIONPERIODINDAYS = null;
+
+    public static final String NO_RETENTIONTYPE = null;
 
     public static final Long NO_ROW_COUNT = null;
 
@@ -475,6 +488,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<StorageUnit> NO_STORAGE_UNITS = new ArrayList<>();
 
+    public static final List<StorageUnitStatusChangeEvent> NO_STORAGE_UNIT_STATUS_HISTORY = null;
+
     public static final Boolean NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = false;
 
     public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
@@ -496,6 +511,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<String> PROCESS_DATE_NOT_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-04", "2014-04-07");
 
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
+
+    public static final Integer RETENTION_PERIOD_DAYS = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean RETRIEVE_INSTANCE_FLEETS = true;
 
@@ -598,14 +615,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ZERO_COLUMN_SIZE = "0";
 
-    public static final Integer NO_RETENTIONPERIODINDAYS = null;
-
-    public static final boolean NO_RECORDFLAG = false;
-
-    public static final String NO_RETENTIONTYPE = null;
-
-    public static final Integer RETENTION_PERIOD_DAYS = getRandomInteger();
-
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
 
@@ -692,6 +701,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected BusinessObjectDataStorageFileService businessObjectDataStorageFileService;
+
+    @Autowired
+    protected BusinessObjectDataStorageUnitStatusService businessObjectDataStorageUnitStatusService;
 
     @Autowired
     protected BusinessObjectDefinitionColumnDaoHelper businessObjectDefinitionColumnDaoHelper;

@@ -2982,9 +2982,19 @@
                <xs:documentation>The status of this Storage Unit. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="storageUnitStatusHistory" type="storageUnitStatusHistory" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Lists all storage unit status change events for this storage unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storagePolicyTransitionFailedAttempts" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The number of failed attempts to execute a storage policy transition such as archiving to Glacier</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="restoreExpirationOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The restore expiration time if restored</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3030,6 +3040,33 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
+   </xs:complexType>
+
+   <xs:element name="storageUnitStatusHistory" type="storageUnitStatusHistory"/>
+   <xs:complexType name="storageUnitStatusHistory">
+      <xs:sequence>
+         <xs:element name="storageUnitStatusChangeEvent" type="storageUnitStatusChangeEvent" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnitStatusChangeEvent">
+      <xs:sequence>
+         <xs:element name="status" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="eventTime" type="xs:dateTime">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the storage unit status change occurred</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who performed status update or registration of the Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <xs:complexType name="attributes">
@@ -3247,6 +3284,14 @@
          <xs:element name="filterOnLatestValidVersion" type="xs:boolean" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The business object is the latest valid version</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="filterOnRetentionExpiration" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The filter for expired business object data with its business object format retention type as PARTITION_VALUE and the business
+                  object data partition value plus the retentionPeriodInDays specified in the business object format expired. Retention information specified
+                  in business object format is version less
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

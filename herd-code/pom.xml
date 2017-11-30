@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd</artifactId>
-      <version>0.57.0-SNAPSHOT</version>
+      <version>0.58.0-SNAPSHOT</version>
    </parent>
 
    <name>herd code</name>
@@ -321,8 +321,7 @@
       <module>herd-app</module>
       <module>herd-war</module>
       <module>herd-tools</module>
-      <!--TODO: UNCOMMENT PLUGINS AFTER 0.57.0 BRANCH HAS OCCURRED currently taken out due to travis ci not able to get
-      one of its dependencies-->
+      <!--Uncomment after branch. This is commented out due to issues with travis and Sonatype-->
       <!--<module>herd-sdk</module>-->
    </modules>
 

@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Test;
 import org.springframework.util.Assert;
 
@@ -56,6 +58,7 @@ import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
@@ -2123,5 +2126,142 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         {
             assertEquals(e.getMessage(), expectedErrorMessage);
         }
+    }
+
+    @Test
+    public void testBusinessObjectDataSearchWithRetentionExpirationFilterEmptyResult()
+    {
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        key.setBusinessObjectFormatVersion(FORMAT_VERSION);
+        key.setFilterOnRetentionExpiration(true);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testBusinessObjectDataSearchWithRetentionExpirationFilter()
+    {
+        int retentionPeriod = 180;
+        java.util.Date date = DateUtils.addDays(new java.util.Date(), -1 * retentionPeriod);
+        String partitionValueDate = DateFormatUtils.format(date, AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
+
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "VALID");
+
+        BusinessObjectDataEntity businessObjectDataEntity2 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        RetentionTypeEntity existingRetentionType = retentionTypeDao.getRetentionTypeByCode(RetentionTypeEntity.PARTITION_VALUE);
+        if (existingRetentionType == null)
+        {
+            retentionTypeDaoTestHelper.createRetentionTypeEntity(RetentionTypeEntity.PARTITION_VALUE);
+        }
+        businessObjectDataEntity2.getBusinessObjectFormat().setRetentionType(existingRetentionType);
+        businessObjectDataEntity2.getBusinessObjectFormat().setRetentionPeriodInDays(retentionPeriod - 1);
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        key.setFilterOnRetentionExpiration(true);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void testBusinessObjectDataSearchWithRetentionExpirationFilterMultipleFormats()
+    {
+        int retentionPeriod = 180;
+        java.util.Date date = DateUtils.addDays(new java.util.Date(), -1 * retentionPeriod);
+        String partitionValueDate = DateFormatUtils.format(date, AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
+
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "VALID");
+
+        BusinessObjectDataEntity businessObjectDataEntity2 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        BusinessObjectDataEntity businessObjectDataEntity3 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        BusinessObjectDataEntity businessObjectDataEntity4 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        RetentionTypeEntity existingRetentionType = retentionTypeDao.getRetentionTypeByCode(RetentionTypeEntity.PARTITION_VALUE);
+        if (existingRetentionType == null)
+        {
+            retentionTypeDaoTestHelper.createRetentionTypeEntity(RetentionTypeEntity.PARTITION_VALUE);
+        }
+        businessObjectDataEntity.getBusinessObjectFormat().setRetentionType(existingRetentionType);
+        businessObjectDataEntity.getBusinessObjectFormat().setRetentionPeriodInDays(retentionPeriod - 1);
+
+        businessObjectDataEntity2.getBusinessObjectFormat().setRetentionType(existingRetentionType);
+        businessObjectDataEntity2.getBusinessObjectFormat().setRetentionPeriodInDays(retentionPeriod - 1);
+
+        businessObjectDataEntity3.getBusinessObjectFormat().setRetentionType(existingRetentionType);
+        businessObjectDataEntity3.getBusinessObjectFormat().setRetentionPeriodInDays(null);
+
+        RetentionTypeEntity notFoundRetentionTypeEntity =
+            retentionTypeDaoTestHelper.createRetentionTypeEntity(RetentionTypeEntity.PARTITION_VALUE + "NOTFOUND");
+        businessObjectDataEntity4.getBusinessObjectFormat().setRetentionType(notFoundRetentionTypeEntity);
+        businessObjectDataEntity4.getBusinessObjectFormat().setRetentionPeriodInDays(retentionPeriod);
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        key.setFilterOnRetentionExpiration(true);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(2, result.size());
     }
 }
