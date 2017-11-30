@@ -44,6 +44,7 @@ import org.finra.herd.service.BusinessObjectDataService;
  *   <activiti:field name="businessObjectDataVersion" stringValue=""/>
  *   <activiti:field name="businessObjectDataStatus" stringValue=""/>
  *   <activiti:field name="includeBusinessObjectDataStatusHistory" stringValue=""/>
+ *   <activiti:field name="includeStorageUnitStatusHistory" stringValue=""/>
  * </extensionElements>
  * </pre>
  */
@@ -72,6 +73,8 @@ public class GetBusinessObjectData extends BaseJavaDelegate
 
     private Expression includeBusinessObjectDataStatusHistory;
 
+    private Expression includeStorageUnitStatusHistory;
+
     @Autowired
     private BusinessObjectDataService businessObjectDataService;
 
@@ -93,6 +96,8 @@ public class GetBusinessObjectData extends BaseJavaDelegate
         String businessObjectDataStatus = activitiHelper.getExpressionVariableAsString(this.businessObjectDataStatus, execution);
         Boolean includeBusinessObjectDataStatusHistory = activitiHelper
             .getExpressionVariableAsBoolean(this.includeBusinessObjectDataStatusHistory, execution, "includeBusinessObjectDataStatusHistory", false, false);
+        Boolean includeStorageUnitStatusHistory =
+            activitiHelper.getExpressionVariableAsBoolean(this.includeStorageUnitStatusHistory, execution, "includeStorageUnitStatusHistory", false, false);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
         businessObjectDataKey.setNamespace(namespace);
@@ -105,7 +110,8 @@ public class GetBusinessObjectData extends BaseJavaDelegate
         businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
 
         BusinessObjectData businessObjectData = businessObjectDataService
-            .getBusinessObjectData(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus, includeBusinessObjectDataStatusHistory);
+            .getBusinessObjectData(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus, includeBusinessObjectDataStatusHistory,
+                includeStorageUnitStatusHistory);
 
         setJsonResponseAsWorkflowVariable(businessObjectData, execution);
     }

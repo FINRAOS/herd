@@ -16,15 +16,12 @@
 package org.finra.herd.service.impl;
 
 import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,7 +40,6 @@ import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
-import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.AwsParamsDto;
@@ -181,7 +177,7 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                             {
                                 // Try to convert business object data primary partition value to a timestamp.
                                 // If it is not a date, the storage policy rule is not matching this business object data.
-                                Date primaryPartitionValue = getDateFromString(businessObjectDataEntity.getPartitionValue());
+                                Date primaryPartitionValue = businessObjectDataHelper.getDateFromString(businessObjectDataEntity.getPartitionValue());
 
                                 // For this storage policy rule, we ignore this business data if primary partition value is not a date.
                                 if (primaryPartitionValue != null)
@@ -245,39 +241,6 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
         sendStoragePolicySelectionToSqsQueue(sqsQueueName, storagePolicySelections);
 
         return storagePolicySelections;
-    }
-
-    /**
-     * Gets a date in a date format from a string format or null if one wasn't specified. The format of the date should match
-     * HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.
-     *
-     * @param dateString the date as a string
-     *
-     * @return the date as a date or null if one wasn't specified or the conversion fails
-     */
-    private Date getDateFromString(String dateString)
-    {
-        Date resultDate = null;
-
-        // For strict date parsing, process the date string only if it has the required length.
-        if (dateString.length() == AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.length())
-        {
-            // Try to convert the date string to a Date.
-            try
-            {
-                // Use strict parsing to ensure our date is more definitive.
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK, Locale.US);
-                simpleDateFormat.setLenient(false);
-                resultDate = simpleDateFormat.parse(dateString);
-            }
-            catch (ParseException e)
-            {
-                // This assignment is here to pass PMD checks.
-                resultDate = null;
-            }
-        }
-
-        return resultDate;
     }
 
     /**
