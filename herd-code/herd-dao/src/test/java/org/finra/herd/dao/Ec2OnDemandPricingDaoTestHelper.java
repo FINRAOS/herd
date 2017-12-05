@@ -36,7 +36,11 @@ public class Ec2OnDemandPricingDaoTestHelper
         createEc2OnDemandPricingEntity("REGION_1", "INSTANCE_TYPE_1", new BigDecimal(1.00));
         createEc2OnDemandPricingEntity("REGION_1", "INSTANCE_TYPE_2", new BigDecimal(1.00));
         createEc2OnDemandPricingEntity("REGION_1", "INSTANCE_TYPE_3", new BigDecimal(1.00));
+        createEc2OnDemandPricingEntity("REGION_1", "INSTANCE_TYPE_4", new BigDecimal(1.00));
         createEc2OnDemandPricingEntity("REGION_2", "INSTANCE_TYPE_1", new BigDecimal(0.50));
+        createEc2OnDemandPricingEntity("REGION_2", "INSTANCE_TYPE_2", new BigDecimal(0.50));
+        createEc2OnDemandPricingEntity("REGION_2", "INSTANCE_TYPE_3", new BigDecimal(0.50));
+        createEc2OnDemandPricingEntity("REGION_2", "INSTANCE_TYPE_4", new BigDecimal(0.50));
     }
 
     /**
