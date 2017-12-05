@@ -52,6 +52,7 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import org.finra.herd.core.ApplicationContextHolder;
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.CacheKeyGenerator;
 import org.finra.herd.dao.ReloadablePropertySource;
@@ -332,11 +333,16 @@ public class DaoSpringModuleConfig implements CachingConfigurer
         LOGGER.info("Creating LDAP context source using the following parameters: {}=\"{}\" {}=\"{}\" {}=\"{}\" ...", ConfigurationValue.LDAP_URL.getKey(),
             ldapUrl, ConfigurationValue.LDAP_BASE.getKey(), ldapBase, ConfigurationValue.LDAP_USER_DN.getKey(), ldapUserDn);
 
+        // Retrieve LDAP password configured in the system. If base64 encoded password is not configured, we fall back to a non-encoded configuration value.
+        String ldapPasswordBase64 = configurationHelper.getProperty(ConfigurationValue.LDAP_PASSWORD_BASE64);
+        String ldapPassword = StringUtils.isNotBlank(ldapPasswordBase64) ? HerdStringUtils.decodeBase64(ldapPasswordBase64) :
+            configurationHelper.getProperty(ConfigurationValue.LDAP_PASSWORD);
+
         LdapContextSource contextSource = new LdapContextSource();
         contextSource.setUrl(ldapUrl);
         contextSource.setBase(ldapBase);
         contextSource.setUserDn(ldapUserDn);
-        contextSource.setPassword(configurationHelper.getProperty(ConfigurationValue.LDAP_PASSWORD));
+        contextSource.setPassword(ldapPassword);
         return contextSource;
     }
 

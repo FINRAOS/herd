@@ -915,10 +915,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET = true;
 
-    public static final String STRING_VALUE = "UT_SomeText" + RANDOM_SUFFIX;
-
-    public static final String STRING_VALUE_2 = "UT_SomeText_2_" + RANDOM_SUFFIX;
-
     public static final List<String> SUBPARTITION_VALUES =
         Arrays.asList("Aa" + RANDOM_SUFFIX, "Bb" + RANDOM_SUFFIX, "Cc" + RANDOM_SUFFIX, "Dd" + RANDOM_SUFFIX);
 

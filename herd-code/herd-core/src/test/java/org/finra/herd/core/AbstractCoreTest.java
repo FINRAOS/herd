@@ -78,6 +78,10 @@ public abstract class AbstractCoreTest
 
     public static final long ROW_COUNT_1000 = 1000L;
 
+    public static final String STRING_VALUE = "UT_SomeText" + RANDOM_SUFFIX;
+
+    public static final String STRING_VALUE_2 = "UT_SomeText_2_" + RANDOM_SUFFIX;
+
     @Autowired
     protected ApplicationContext appContext;
 
