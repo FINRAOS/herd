@@ -146,22 +146,13 @@ public class EmrPricingHelper extends AwsHelper
         for (AvailabilityZone availabilityZone : getAvailabilityZones(subnets, awsParamsDto))
         {
             // Create a mapping of instance types to prices for more efficient, in-memory lookup
-            Map<String, BigDecimal> instanceTypeSpotPrices = null;
-
-            // When AWS does not return any spot price history for an instance type in
-            // an availability zone, the algorithm will not use that availability zone
-            // when selecting the lowest price.
-            try
-            {
-                instanceTypeSpotPrices = getInstanceTypeSpotPrices(availabilityZone, requestedInstanceTypes, awsParamsDto);
-            }
-            catch (ObjectNotFoundException objectNotFoundException)
-            {
-                LOGGER.warn(objectNotFoundException.getMessage());
-                LOGGER.warn("Bypassing the availabilityZone=" + availabilityZone + " because a spot price was not found for an instance type.");
-                continue;
-            }
+            // This method also validates that the given instance types are real instance types supported by AWS.
             Map<String, BigDecimal> instanceTypeOnDemandPrices = getInstanceTypeOnDemandPrices(availabilityZone, requestedInstanceTypes);
+
+            // Create a mapping of instance types to prices for more efficient, in-memory lookup
+            // When AWS does not return any spot price history for an instance type in an availability zone, the algorithm will not use that availability zone
+            // when selecting the lowest price.
+            Map<String, BigDecimal> instanceTypeSpotPrices = getInstanceTypeSpotPrices(availabilityZone, requestedInstanceTypes, awsParamsDto);
 
             emrVpcPricingState.getSpotPricesPerAvailabilityZone().put(availabilityZone.getZoneName(), instanceTypeSpotPrices);
             emrVpcPricingState.getOnDemandPricesPerAvailabilityZone().put(availabilityZone.getZoneName(), instanceTypeOnDemandPrices);
@@ -181,12 +172,11 @@ public class EmrPricingHelper extends AwsHelper
                 corePrice = getBestInstancePrice(coreSpotPrice, coreOnDemandPrice, coreInstanceDefinition);
             }
 
+            // Get and compare task price
             Ec2PriceDto taskPrice = null;
             if (taskInstanceDefinition != null)
             {
                 String taskInstanceType = taskInstanceDefinition.getInstanceType();
-
-                // Get and compare task price
                 BigDecimal taskSpotPrice = instanceTypeSpotPrices.get(taskInstanceType);
                 BigDecimal taskOnDemandPrice = instanceTypeOnDemandPrices.get(taskInstanceType);
                 taskPrice = getBestInstancePrice(taskSpotPrice, taskOnDemandPrice, taskInstanceDefinition);
@@ -209,8 +199,9 @@ public class EmrPricingHelper extends AwsHelper
                 emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(),
                 jsonHelper.objectToJson(emrVpcPricingState)));
             throw new ObjectNotFoundException(String.format(
-                "There were no subnets which satisfied your best price search criteria. Try setting the max price " +
-                    "or the on-demand threshold to a higher value.%n%s", emrVpcPricingStateFormatter.format(emrVpcPricingState)));
+                "There were no subnets which satisfied your best price search criteria. If you explicitly opted to use spot EC2 instances, please confirm" +
+                    "that your instance types support spot pricing. Otherwise, try setting the max price or the on-demand threshold to a higher value.%n%s",
+                emrVpcPricingStateFormatter.format(emrVpcPricingState)));
         }
 
         // Find the best prices from the result list
@@ -467,11 +458,20 @@ public class EmrPricingHelper extends AwsHelper
         // spotBidPrice is set. User wants to explicitly use spot pricing
         if (spotBidPrice != null)
         {
-            bestPrice = new Ec2PriceDto();
-            bestPrice.setSpotPricing(true);
-            bestPrice.setInstancePrice(spotPrice);
-            bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
-            bestPrice.setBidPrice(spotBidPrice);
+            // Check if spot price was actually discovered.
+            if (spotPrice != null)
+            {
+                bestPrice = new Ec2PriceDto();
+                bestPrice.setSpotPricing(true);
+                bestPrice.setInstancePrice(spotPrice);
+                bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
+                bestPrice.setBidPrice(spotBidPrice);
+            }
+            // If not, error out.
+            else
+            {
+                bestPrice = null;
+            }
         }
         // spotBidPrice and maxSearchPrice are not specified. User explicitly wants to use on-demand
         else if (maxSearchPrice == null)
@@ -490,33 +490,50 @@ public class EmrPricingHelper extends AwsHelper
             bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
             bestPrice.setInstancePrice(onDemandPrice);
 
-            // No on-demand threshold is equivalent to $0.00 threshold
-            if (onDemandThreshold == null)
+            // If spot price is available, use it to compute the best price
+            if (spotPrice != null)
             {
-                onDemandThreshold = BigDecimal.ZERO;
+                // No on-demand threshold is equivalent to $0.00 threshold
+                if (onDemandThreshold == null)
+                {
+                    onDemandThreshold = BigDecimal.ZERO;
+                }
+
+                BigDecimal onDemandThresholdAbsolute = spotPrice.add(onDemandThreshold);
+
+                // Pre-compute some flags for readability
+                boolean isSpotBelowMax = spotPrice.compareTo(maxSearchPrice) <= 0;
+                boolean isOnDemandBelowMax = onDemandPrice.compareTo(maxSearchPrice) <= 0;
+                boolean isSpotBelowOnDemand = spotPrice.compareTo(onDemandPrice) < 0;
+                boolean isThresholdBelowOnDemand = onDemandThresholdAbsolute.compareTo(onDemandPrice) < 0;
+
+                // Should I use spot?
+                if (isSpotBelowMax && isSpotBelowOnDemand && (isThresholdBelowOnDemand || !isOnDemandBelowMax))
+                {
+                    bestPrice.setSpotPricing(true);
+                    bestPrice.setInstancePrice(spotPrice);
+                    bestPrice.setBidPrice(maxSearchPrice);
+                }
+                // Is there an error?
+                else if (!isOnDemandBelowMax)
+                {
+                    bestPrice = null;
+                }
+                // Otherwise use on-demand
             }
-
-            BigDecimal onDemandThresholdAbsolute = spotPrice.add(onDemandThreshold);
-
-            // Pre-compute some flags for readability
-            boolean isSpotBelowMax = spotPrice.compareTo(maxSearchPrice) <= 0;
-            boolean isOnDemandBelowMax = onDemandPrice.compareTo(maxSearchPrice) <= 0;
-            boolean isSpotBelowOnDemand = spotPrice.compareTo(onDemandPrice) < 0;
-            boolean isThresholdBelowOnDemand = onDemandThresholdAbsolute.compareTo(onDemandPrice) < 0;
-
-            // Should I use spot?
-            if (isSpotBelowMax && isSpotBelowOnDemand && (isThresholdBelowOnDemand || !isOnDemandBelowMax))
+            // Spot price is not available, so only validate that on-demand price is below max search price
+            else
             {
-                bestPrice.setSpotPricing(true);
-                bestPrice.setInstancePrice(spotPrice);
-                bestPrice.setBidPrice(maxSearchPrice);
+                // Pre-compute some flags for readability
+                boolean isOnDemandBelowMax = onDemandPrice.compareTo(maxSearchPrice) <= 0;
+
+                // Error out if on-demand price is below max search price
+                if (!isOnDemandBelowMax)
+                {
+                    bestPrice = null;
+                }
+                // Otherwise use on-demand
             }
-            // Is there an error?
-            else if (!isOnDemandBelowMax)
-            {
-                bestPrice = null;
-            }
-            // Otherwise use on-demand
         }
 
         LOGGER.debug("End. instanceBestPrice={}", jsonHelper.objectToJson(bestPrice));
@@ -575,7 +592,8 @@ public class EmrPricingHelper extends AwsHelper
 
     /**
      * Returns a mapping of instance types to on-demand prices for the given AZ and instance types. The on-demand prices are retrieved from database
-     * configurations. The on-demand prices are looked up by the AZ's region name.
+     * configurations. The on-demand prices are looked up by the AZ's region name. This method also validates that the given instance types are real instance
+     * types supported by AWS.
      *
      * @param availabilityZone the availability zone of the on-demand instances
      * @param instanceTypes the sizes of the on-demand instances
@@ -623,16 +641,6 @@ public class EmrPricingHelper extends AwsHelper
         for (SpotPrice spotPrice : spotPrices)
         {
             instanceTypeSpotPrices.put(spotPrice.getInstanceType(), new BigDecimal(spotPrice.getSpotPrice()));
-        }
-
-        // Ensure that all of the specified instance types were found.
-        // If not found, it probably means user tried to lookup non-existent types.
-        Set<String> difference = new HashSet<>(instanceTypes);
-        difference.removeAll(instanceTypeSpotPrices.keySet());
-
-        if (!difference.isEmpty())
-        {
-            throw new ObjectNotFoundException("Spot prices for instance types " + difference + " not found in AZ " + availabilityZone + ".");
         }
 
         return instanceTypeSpotPrices;
