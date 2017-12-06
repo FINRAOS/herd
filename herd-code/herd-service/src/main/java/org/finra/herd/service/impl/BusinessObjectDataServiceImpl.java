@@ -510,9 +510,11 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         businessObjectDataSearchHelper.validateBusinesObjectDataSearchRequest(request);
 
         // Validate the page number and page size
+        // Set the defaults if pageNum and pageSize are null
         // Page number must be greater than 0
         // Page size must be greater than 0 and less than maximum page size
-        businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestParameters(pageNum, pageSize);
+        pageNum = businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageNumParameter(pageNum);
+        pageSize = businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(pageSize);
 
         // search business object data
         List<BusinessObjectData> businessObjectDataList =

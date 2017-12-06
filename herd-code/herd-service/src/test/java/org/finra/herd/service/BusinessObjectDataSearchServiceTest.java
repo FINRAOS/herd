@@ -18,7 +18,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
 import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
-import org.finra.herd.model.dto.ConfigurationValue;
 
 /**
  * Test Business Object Data Search service
@@ -374,24 +373,4 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
 
         assertTrue(result.getBusinessObjectDataElements().size() == 0);
     }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testSearchBusinessObjectDataWithInvalidPageNum()
-    {
-        businessObjectDataService.searchBusinessObjectData(0, 1,
-            businessObjectDataServiceTestHelper.createSimpleBusinessObjectDataSearchRequest(NAMESPACE, BDEF_NAME));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testSearchBusinessObjectDataWithInvalidPageSize()
-    {
-        businessObjectDataService.searchBusinessObjectData(1, 0,
-            businessObjectDataServiceTestHelper.createSimpleBusinessObjectDataSearchRequest(NAMESPACE, BDEF_NAME));    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testSearchBusinessObjectDataWithPageSizeGreaterThanMaximumPageSize()
-    {
-        int maxPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
-        businessObjectDataService.searchBusinessObjectData(1, maxPageSize + 1,
-            businessObjectDataServiceTestHelper.createSimpleBusinessObjectDataSearchRequest(NAMESPACE, BDEF_NAME));    }
 }

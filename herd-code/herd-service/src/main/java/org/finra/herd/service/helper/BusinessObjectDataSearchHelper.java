@@ -40,7 +40,7 @@ public class BusinessObjectDataSearchHelper
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
-    
+
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
 
@@ -49,14 +49,16 @@ public class BusinessObjectDataSearchHelper
 
     /**
      * validate business object search request
+     *
      * @param request business object DATA search request
+     *
      * @throws IllegalArgumentException when business object data search request is not valid
      */
     public void validateBusinesObjectDataSearchRequest(BusinessObjectDataSearchRequest request) throws IllegalArgumentException
     {
         Assert.notNull(request, "A Business Object Data SearchRequest must be specified");
         List<BusinessObjectDataSearchFilter> businessObjectDataSearchFilters = request.getBusinessObjectDataSearchFilters();
-        Assert.isTrue(businessObjectDataSearchFilters!= null, "Business Object Data Search Filters must be specified");
+        Assert.isTrue(businessObjectDataSearchFilters != null, "Business Object Data Search Filters must be specified");
         Assert.isTrue(businessObjectDataSearchFilters.size() == 1, "Business Object Data Search Filters can only have one filter");
         List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = request.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys();
 
@@ -71,30 +73,54 @@ public class BusinessObjectDataSearchHelper
     }
 
     /**
-     * Validate the business object search request parameters.
+     * Validate the business object search request pageNum parameter.
+     *
      * @param pageNum the page number parameter. Page numbers are one-based - that is the first page number is one.
-     * @param pageSize the page size parameter. From one to maximum page size.
      */
-    public void validateBusinessObjectDataSearchRequestParameters(Integer pageNum, Integer pageSize)
+    public Integer validateBusinessObjectDataSearchRequestPageNumParameter(Integer pageNum)
     {
-        if(pageNum < 1)
+        int firstPage = 1;
+
+        // If the pageNum is null set the pageNum parameter to the default first page
+        if (pageNum == null)
+        {
+            pageNum = firstPage;
+        }
+        // Check if pageNum is less than one
+        else if (pageNum < 1)
         {
             throw new IllegalArgumentException("A pageNum greater than 0 must be specified.");
         }
 
-        if(pageSize < 1)
+        return pageNum;
+    }
+
+    /**
+     * Validate the business object search request pageSize parameter.
+     *
+     * @param pageSize the page size parameter. From one to maximum page size.
+     */
+    public Integer validateBusinessObjectDataSearchRequestPageSizeParameter(Integer pageSize)
+    {
+        int maxPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
+
+        // If the pageSize is null set the pageSize to the maxPageSize default
+        if (pageSize == null)
+        {
+            pageSize = maxPageSize;
+        }
+        // Check for pageSize less than one
+        else if (pageSize < 1)
         {
             throw new IllegalArgumentException("A pageSize greater than 0 must be specified.");
         }
-
-        int maxPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
-
-        if(pageSize > maxPageSize)
+        // Check the pageSize larger than max page size
+        else if (pageSize > maxPageSize)
         {
             throw new IllegalArgumentException("A pageSize less than " + maxPageSize + " must be specified.");
         }
 
-        Assert.isTrue(pageSize <= maxPageSize, "A pageSize greater than 0 must be specified");
+        return pageSize;
     }
 
     /**
@@ -148,12 +174,12 @@ public class BusinessObjectDataSearchHelper
             {
                 String attributeName = attributeValueFilter.getAttributeName();
                 String attributeValue = attributeValueFilter.getAttributeValue();
-                if (attributeName!= null)
-                { 
+                if (attributeName != null)
+                {
                     attributeName = attributeName.trim();
                     attributeValueFilter.setAttributeName(attributeName);
                 }
-                if (StringUtils.isEmpty(attributeName)  && StringUtils.isEmpty(attributeValue))
+                if (StringUtils.isEmpty(attributeName) && StringUtils.isEmpty(attributeValue))
                 {
                     throw new IllegalArgumentException("Either attribute name or value filter must exist.");
                 }

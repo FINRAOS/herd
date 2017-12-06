@@ -40,18 +40,13 @@ import org.finra.herd.service.BusinessObjectDataService;
 @Component
 public class SearchBusinessObjectData extends BaseJavaDelegate
 {
-    /**
-     * The default page number for the business object data search
-     */
-    private static final Integer DEFAULT_PAGE_NUMBER = 1;
-
-    /**
-     * The default page size for the business object data search
-     */
-    private static final Integer DEFAULT_PAGE_SIZE = 1_000;
-
     private Expression contentType;
+
     private Expression businessObjectDataSearchRequest;
+
+    private Expression pageNum;
+
+    private Expression pageSize;
 
     @Autowired
     private BusinessObjectDataService businessObjectDataService;
@@ -60,17 +55,17 @@ public class SearchBusinessObjectData extends BaseJavaDelegate
     public void executeImpl(DelegateExecution execution) throws Exception
     {
         String contentTypeString = activitiHelper.getRequiredExpressionVariableAsString(contentType, execution, "ContentType").trim();
-        String requestString = activitiHelper.getRequiredExpressionVariableAsString(businessObjectDataSearchRequest, execution,
-            "BusinessObjectDataSearchRequest").trim();
+        String requestString =
+            activitiHelper.getRequiredExpressionVariableAsString(businessObjectDataSearchRequest, execution, "BusinessObjectDataSearchRequest").trim();
+        Integer pageNum = activitiHelper.getExpressionVariableAsInteger(this.pageNum, execution, "pageNum", false);
+        Integer pageSize = activitiHelper.getExpressionVariableAsInteger(this.pageSize, execution, "pageSize", false);
 
-        BusinessObjectDataSearchRequest request =
-            getRequestObject(contentTypeString, requestString, BusinessObjectDataSearchRequest.class);
+        BusinessObjectDataSearchRequest request = getRequestObject(contentTypeString, requestString, BusinessObjectDataSearchRequest.class);
 
         // Call the business object data search service
-        BusinessObjectDataSearchResult businessObjectDataSearchResult =
-            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);
+        BusinessObjectDataSearchResult businessObjectDataSearchResult = businessObjectDataService.searchBusinessObjectData(pageNum, pageSize, request);
 
         // Set the JSON response as a workflow variable.
         setJsonResponseAsWorkflowVariable(businessObjectDataSearchResult, execution);
-   }
+    }
 }

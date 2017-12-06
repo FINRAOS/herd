@@ -180,6 +180,18 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING_2 = "UT_BusinessObjectDataKeyAsString_2_" + RANDOM_SUFFIX;
 
+    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_NUMBER = 0;
+
+    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_NO_PAGE_NUMBER = null;
+
+    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE = 1;
+
+    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_SIZE = 0;
+
+    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_NO_PAGE_SIZE = null;
+
+    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND = 1_000;
+
     public static final String BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
         "  \"eventDate\" : \"$current_time\",\n" +
         "  \"businessObjectDataKey\" : {\n" +

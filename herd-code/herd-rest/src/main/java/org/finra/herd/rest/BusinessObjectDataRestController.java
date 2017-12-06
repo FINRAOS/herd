@@ -754,9 +754,8 @@ public class BusinessObjectDataRestController extends HerdBaseController
      */
     @RequestMapping(value = "/businessObjectData/search", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_SEARCH_POST)
-    public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestParam(value = "pageNum", required = false, defaultValue = "1") Integer pageNum,
-        @RequestParam(value = "pageSize", required = false, defaultValue = "1000") Integer pageSize,
-        @RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
+    public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestParam(value = "pageNum", required = false) Integer pageNum,
+        @RequestParam(value = "pageSize", required = false) Integer pageSize, @RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
     {
         return businessObjectDataService.searchBusinessObjectData(pageNum, pageSize, businessObjectDataSearchRequest);
     }
