@@ -632,7 +632,14 @@ public enum ConfigurationValue
     LDAP_USER_DN("ldap.user.dn", ""),
 
     /**
-     * The LDAP password (credentials) to use for getting authenticated contexts.
+     * The LDAP password (credentials) in base64 encoded format to use for getting authenticated contexts. If this value is not configured, the application
+     * falls back to "ldap.password" configuration option.
+     */
+    LDAP_PASSWORD_BASE64("ldap.password.base64", ""),
+
+    /**
+     * The LDAP password (credentials) to use for getting authenticated contexts. This configuration option is ignored when "ldap.password.base64" is
+     * configured.
      */
     LDAP_PASSWORD("ldap.password", ""),
 

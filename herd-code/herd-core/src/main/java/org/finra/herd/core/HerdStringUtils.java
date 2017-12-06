@@ -15,7 +15,9 @@
 */
 package org.finra.herd.core;
 
-import org.apache.commons.lang3.CharEncoding;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -28,6 +30,18 @@ import org.jsoup.safety.Whitelist;
  */
 public class HerdStringUtils
 {
+    /**
+     * Decodes and return the base64 encoded string.
+     *
+     * @param base64EncodedText the base64 encoded string
+     *
+     * @return the decoded string
+     */
+    public static String decodeBase64(String base64EncodedText)
+    {
+        return StringUtils.toEncodedString(Base64.getDecoder().decode(base64EncodedText.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+    }
+
     /**
      * Truncates the description field to a configurable value thereby producing a 'short description'
      *
@@ -72,12 +86,8 @@ public class HerdStringUtils
 
         Cleaner cleaner = new Cleaner(whitelist);
         Document clean = cleaner.clean(dirty);
-        clean.outputSettings()
-            .escapeMode(Entities.EscapeMode.base)
-             // Set character encoding to UTF-8
-            .charset(CharEncoding.UTF_8)
-             // Make sure no line-breaks are added
-            .prettyPrint(false);
+        // Set character encoding to UTF-8 and make sure no line-breaks are added
+        clean.outputSettings().escapeMode(Entities.EscapeMode.base).charset(StandardCharsets.UTF_8).prettyPrint(false);
 
         // return 'cleaned' html body
         return clean.body().html();
