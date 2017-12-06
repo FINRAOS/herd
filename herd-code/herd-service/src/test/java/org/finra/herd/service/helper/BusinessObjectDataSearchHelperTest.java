@@ -20,7 +20,6 @@ import org.finra.herd.service.AbstractServiceTest;
 
 public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
 {
-
     @Test
     public void testValidateBusinessObjectDataSearchRequestFilterNegative()
     {
@@ -220,8 +219,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
     public void testValidateBusinessObjectDataSearchRequestPageNumParameter()
     {
         // Valid test
-        Integer pageNum = businessObjectDataSearchHelper
-            .validateBusinessObjectDataSearchRequestPageNumParameter(BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE);
+        Integer pageNum = businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageNumParameter(BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE);
 
         assertEquals("Page number is not correct.", pageNum, BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE);
 
@@ -231,18 +229,26 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         assertEquals("Page number default value is not set.", pageNum, BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testValidateBusinessObjectDataSearchRequestPageNumParameterWithInvalidPageNum()
     {
-        businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageNumParameter(BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_NUMBER);
+        try
+        {
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageNumParameter(BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_NUMBER);
+            fail();
+        }
+        catch (final IllegalArgumentException illegalArgumentException)
+        {
+            assertEquals("Exception message was not correct.", "A pageNum greater than 0 must be specified.", illegalArgumentException.getMessage());
+        }
     }
 
     @Test
     public void testValidateBusinessObjectDataSearchRequestPageSizeParameter()
     {
         // Valid test
-        Integer pageSize = businessObjectDataSearchHelper
-            .validateBusinessObjectDataSearchRequestPageSizeParameter(BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND);
+        Integer pageSize =
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND);
 
         assertEquals("Page size is not correct.", pageSize, BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND);
 
@@ -253,16 +259,32 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
             configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testValidateBusinessObjectDataSearchRequestPageSizeParameterWithInvalidPageSize()
     {
-        businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_SIZE);
+        try
+        {
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_SIZE);
+            fail();
+        }
+        catch (final IllegalArgumentException illegalArgumentException)
+        {
+            assertEquals("Exception message was not correct.", "A pageSize greater than 0 must be specified.", illegalArgumentException.getMessage());
+        }
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testValidateBusinessObjectDataSearchRequestPageSizeParameterWithPageSizeGreaterThanMaximumPageSize()
     {
         int maxPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
-        businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(maxPageSize + 1);
+        try
+        {
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(maxPageSize + 1);
+            fail();
+        }
+        catch (final IllegalArgumentException illegalArgumentException)
+        {
+            assertEquals("Exception message was not correct.", "A pageSize less than " + maxPageSize + " must be specified.", illegalArgumentException.getMessage());
+        }
     }
 }
