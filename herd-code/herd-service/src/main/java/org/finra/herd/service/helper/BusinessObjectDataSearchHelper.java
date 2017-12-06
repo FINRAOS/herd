@@ -76,6 +76,8 @@ public class BusinessObjectDataSearchHelper
      * Validate the business object search request pageNum parameter.
      *
      * @param pageNum the page number parameter. Page numbers are one-based - that is the first page number is one.
+     *
+     * @return the validated page number
      */
     public Integer validateBusinessObjectDataSearchRequestPageNumParameter(Integer pageNum)
     {
@@ -99,6 +101,8 @@ public class BusinessObjectDataSearchHelper
      * Validate the business object search request pageSize parameter.
      *
      * @param pageSize the page size parameter. From one to maximum page size.
+     *
+     * @return the validated pageSize
      */
     public Integer validateBusinessObjectDataSearchRequestPageSizeParameter(Integer pageSize)
     {
