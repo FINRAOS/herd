@@ -48,7 +48,6 @@
          <xs:element name="s3Endpoint" type="xs:string" minOccurs="0"/>
          <xs:element name="s3BucketName" type="xs:string" minOccurs="0"/>
          <xs:element name="s3KeyPrefix" type="xs:string" minOccurs="0"/>
-         <xs:element name="storageFiles" type="storageFile" minOccurs="0" maxOccurs="unbounded"/>
          <xs:element name="s3ObjectTagKey" type="xs:string" minOccurs="0"/>
          <xs:element name="s3ObjectTagValue" type="xs:string" minOccurs="0"/>
          <xs:element name="s3ObjectTaggerRoleArn" type="xs:string" minOccurs="0"/>

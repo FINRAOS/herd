@@ -142,6 +142,24 @@ public class StorageFileHelper
     }
 
     /**
+     * Retrieves and validates a list of storage files registered with the specified storage unit. This method returns an empty list if storage unit has no
+     * storage files.
+     *
+     * @param storageUnitEntity the storage unit entity the storage file paths to be validated
+     * @param s3KeyPrefix the S3 key prefix that storage file paths are expected to start with
+     * @param storageName the storage name
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the list of storage files
+     */
+    public List<StorageFile> getAndValidateStorageFilesIfPresent(StorageUnitEntity storageUnitEntity, String s3KeyPrefix, String storageName,
+        BusinessObjectDataKey businessObjectDataKey)
+    {
+        return CollectionUtils.isEmpty(storageUnitEntity.getStorageFiles()) ? new ArrayList<>() :
+            getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
+    }
+
+    /**
      * Returns a list of file paths extracted from the specified list of S3 object summaries.
      *
      * @param s3ObjectSummaries the list of of S3 object summaries
