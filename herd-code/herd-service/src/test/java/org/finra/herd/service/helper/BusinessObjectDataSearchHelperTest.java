@@ -1,5 +1,7 @@
 package org.finra.herd.service.helper;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -13,11 +15,11 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.service.AbstractServiceTest;
 
 public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
 {
-
     @Test
     public void testValidateBusinessObjectDataSearchRequestFilterNegative()
     {
@@ -99,7 +101,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         filter.setPartitionKey("NA");
         handleExpectedExceptionValidateSearchRequestKey(key, "Only partition values or partition range are supported in partition value filters.");
     }
-    
+
     @Test
     public void testValidateBusinessObjectDataSearchRequestKeyPositiveWithRequiredFieldsOnly()
     {
@@ -129,9 +131,9 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
             key.setBusinessObjectFormatUsage("PRC");
             key.setBusinessObjectFormatVersion(0);
             businessObjectDataSearchHelper.validateBusinessObjectDataKey(key);
-            
+
             //empty partition value filters
-            key.setPartitionValueFilters(new ArrayList<PartitionValueFilter>());
+            key.setPartitionValueFilters(new ArrayList<>());
             businessObjectDataSearchHelper.validateBusinessObjectDataKey(key);
         }
         catch (IllegalArgumentException ex)
@@ -172,7 +174,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
 
     /**
      * call the validation with expectation of validation failure; if now, the assert the exception message
-     * 
+     *
      * @param request search request
      * @param message message to assert
      */
@@ -193,7 +195,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
 
     /**
      * handleExpectedExceptionValidateSearchRequestKey
-     * 
+     *
      * @param key business data search key
      * @param message assert message
      */
@@ -207,9 +209,82 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         catch (IllegalArgumentException ex)
         {
             caughtException = true;
-            Assert.isTrue(message.equals(ex.getMessage()));
+            assertTrue(message.equals(ex.getMessage()));
         }
         Assert.isTrue(caughtException, "exception should be thrown and caught.");
-       
+
+    }
+
+    @Test
+    public void testValidateBusinessObjectDataSearchRequestPageNumParameter()
+    {
+        // Valid test
+        Integer pageNum = businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageNumParameter(BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE);
+
+        assertEquals("Page number is not correct.", pageNum, BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE);
+
+        // Default test
+        pageNum = businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageNumParameter(BUSINESS_OBJECT_DATA_SEARCH_NO_PAGE_NUMBER);
+
+        assertEquals("Page number default value is not set.", pageNum, BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE);
+    }
+
+    @Test
+    public void testValidateBusinessObjectDataSearchRequestPageNumParameterWithInvalidPageNum()
+    {
+        try
+        {
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageNumParameter(BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_NUMBER);
+            fail();
+        }
+        catch (final IllegalArgumentException illegalArgumentException)
+        {
+            assertEquals("Exception message was not correct.", "A pageNum greater than 0 must be specified.", illegalArgumentException.getMessage());
+        }
+    }
+
+    @Test
+    public void testValidateBusinessObjectDataSearchRequestPageSizeParameter()
+    {
+        // Valid test
+        Integer pageSize =
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND);
+
+        assertEquals("Page size is not correct.", pageSize, BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND);
+
+        // Default test
+        pageSize = businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(BUSINESS_OBJECT_DATA_SEARCH_NO_PAGE_SIZE);
+
+        assertEquals("Page size default value is not set.", pageSize,
+            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class));
+    }
+
+    @Test
+    public void testValidateBusinessObjectDataSearchRequestPageSizeParameterWithInvalidPageSize()
+    {
+        try
+        {
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_SIZE);
+            fail();
+        }
+        catch (final IllegalArgumentException illegalArgumentException)
+        {
+            assertEquals("Exception message was not correct.", "A pageSize greater than 0 must be specified.", illegalArgumentException.getMessage());
+        }
+    }
+
+    @Test
+    public void testValidateBusinessObjectDataSearchRequestPageSizeParameterWithPageSizeGreaterThanMaximumPageSize()
+    {
+        int maxPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
+        try
+        {
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(maxPageSize + 1);
+            fail();
+        }
+        catch (final IllegalArgumentException illegalArgumentException)
+        {
+            assertEquals("Exception message was not correct.", "A pageSize less than " + maxPageSize + " must be specified.", illegalArgumentException.getMessage());
+        }
     }
 }
