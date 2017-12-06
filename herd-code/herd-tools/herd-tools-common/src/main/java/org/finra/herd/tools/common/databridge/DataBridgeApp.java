@@ -45,6 +45,8 @@ public abstract class DataBridgeApp
 
     // The common command line options.
     protected Option s3AccessKeyOpt;
+    protected Option namespace;
+    protected Option businessObjectDefinitionName;
     protected Option s3SecretKeyOpt;
     protected Option s3EndpointOpt;
     protected Option localPathOpt;
@@ -133,6 +135,8 @@ public abstract class DataBridgeApp
         try
         {
             s3AccessKeyOpt = argParser.addArgument("a", "s3AccessKey", true, "S3 access key.", false);
+            namespace = argParser.addArgument("N", "namespace", true, "Namespace.", false);
+            businessObjectDefinitionName = argParser.addArgument("b", "businessObjectDefinitionName", true, "Business object definition.", false);
             s3SecretKeyOpt = argParser.addArgument("p", "s3SecretKey", true, "S3 secret key.", false);
             s3EndpointOpt = argParser.addArgument("e", "s3Endpoint", true, "S3 endpoint.", false);
             localPathOpt = argParser.addArgument("l", "localPath", true, "The path to files on your local file system.", true);
