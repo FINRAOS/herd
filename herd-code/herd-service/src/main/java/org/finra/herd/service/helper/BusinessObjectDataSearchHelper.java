@@ -22,12 +22,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
+import org.finra.herd.model.dto.ConfigurationValue;
 
 
 /*
@@ -41,6 +43,9 @@ public class BusinessObjectDataSearchHelper
     
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Autowired
+    protected ConfigurationHelper configurationHelper;
 
     /**
      * validate business object search request
@@ -63,6 +68,33 @@ public class BusinessObjectDataSearchHelper
         {
             validateBusinessObjectDataKey(key);
         }
+    }
+
+    /**
+     * Validate the business object search request parameters.
+     * @param pageNum the page number parameter. Page numbers are one-based - that is the first page number is one.
+     * @param pageSize the page size parameter. From one to maximum page size.
+     */
+    public void validateBusinessObjectDataSearchRequestParameters(Integer pageNum, Integer pageSize)
+    {
+        if(pageNum < 1)
+        {
+            throw new IllegalArgumentException("A pageNum greater than 0 must be specified.");
+        }
+
+        if(pageSize < 1)
+        {
+            throw new IllegalArgumentException("A pageSize greater than 0 must be specified.");
+        }
+
+        int maxPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
+
+        if(pageSize > maxPageSize)
+        {
+            throw new IllegalArgumentException("A pageSize less than " + maxPageSize + " must be specified.");
+        }
+
+        Assert.isTrue(pageSize <= maxPageSize, "A pageSize greater than 0 must be specified");
     }
 
     /**

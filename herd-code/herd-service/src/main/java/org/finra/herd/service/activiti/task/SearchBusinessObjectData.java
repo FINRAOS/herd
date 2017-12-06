@@ -40,6 +40,15 @@ import org.finra.herd.service.BusinessObjectDataService;
 @Component
 public class SearchBusinessObjectData extends BaseJavaDelegate
 {
+    /**
+     * The default page number for the business object data search
+     */
+    private static final Integer DEFAULT_PAGE_NUMBER = 1;
+
+    /**
+     * The default page size for the business object data search
+     */
+    private static final Integer DEFAULT_PAGE_SIZE = 1_000;
 
     private Expression contentType;
     private Expression businessObjectDataSearchRequest;
@@ -59,7 +68,7 @@ public class SearchBusinessObjectData extends BaseJavaDelegate
 
         // Call the business object data search service
         BusinessObjectDataSearchResult businessObjectDataSearchResult =
-            businessObjectDataService.searchBusinessObjectData(request);
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);
 
         // Set the JSON response as a workflow variable.
         setJsonResponseAsWorkflowVariable(businessObjectDataSearchResult, execution);

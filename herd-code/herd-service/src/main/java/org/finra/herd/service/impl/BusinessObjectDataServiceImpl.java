@@ -500,24 +500,23 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         return businessObjectDataRetryStoragePolicyTransitionHelper.retryStoragePolicyTransition(businessObjectDataKey, request);
     }
 
-    /**
-     * Search business object data based on the request
-     *
-     * @param request search request
-     *
-     * @return business data search result
-     */
     @NamespacePermission(fields = "#request.businessObjectDataSearchFilters[0].BusinessObjectDataSearchKeys[0].namespace",
         permissions = NamespacePermissionEnum.READ)
     @Override
-    public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request)
+    public BusinessObjectDataSearchResult searchBusinessObjectData(Integer pageNum, Integer pageSize, BusinessObjectDataSearchRequest request)
     {
         //TO DO check name space permission for all entries in the request.
         // validate search request
         businessObjectDataSearchHelper.validateBusinesObjectDataSearchRequest(request);
 
+        // Validate the page number and page size
+        // Page number must be greater than 0
+        // Page size must be greater than 0 and less than maximum page size
+        businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestParameters(pageNum, pageSize);
+
         // search business object data
-        List<BusinessObjectData> businessObjectDataList = businessObjectDataDao.searchBusinessObjectData(request.getBusinessObjectDataSearchFilters());
+        List<BusinessObjectData> businessObjectDataList =
+            businessObjectDataDao.searchBusinessObjectData(pageNum, pageSize, request.getBusinessObjectDataSearchFilters());
         BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();
         result.setBusinessObjectDataElements(businessObjectDataList);
 

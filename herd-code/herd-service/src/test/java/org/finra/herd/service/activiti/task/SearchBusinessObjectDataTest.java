@@ -34,6 +34,16 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 public class SearchBusinessObjectDataTest extends HerdActivitiServiceTaskTest
 {
     /**
+     * The default page number for the business object data search
+     */
+    private static final Integer DEFAULT_PAGE_NUMBER = 1;
+
+    /**
+     * The default page size for the business object data search
+     */
+    private static final Integer DEFAULT_PAGE_SIZE = 1_000;
+
+    /**
      * This method tests the search business object data task with xml format
      */
     @Test
@@ -52,7 +62,7 @@ public class SearchBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         parameters.add(buildParameter("businessObjectDataSearchRequest", xmlHelper.objectToXml(searchRequest)));
 
         //the actual result from calling the service directly
-        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(searchRequest);
+        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, searchRequest);
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(result));
@@ -81,7 +91,7 @@ public class SearchBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         parameters.add(buildParameter("businessObjectDataSearchRequest", jsonHelper.objectToJson(searchRequest)));
 
         //the actual result from calling the service directly
-        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(searchRequest);
+        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, searchRequest);
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(result));

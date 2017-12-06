@@ -593,14 +593,18 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
         // Create a business object data search response.
         BusinessObjectDataSearchResult businessObjectDataSearchResult = new BusinessObjectDataSearchResult();
 
+        // Setup the page number and page size parameters
+        int pageNum = 1;
+        int pageSize = 1_000;
+
         // Mock the external calls.
-        when(businessObjectDataService.searchBusinessObjectData(businessObjectDataSearchRequest)).thenReturn(businessObjectDataSearchResult);
+        when(businessObjectDataService.searchBusinessObjectData(pageNum, pageSize, businessObjectDataSearchRequest)).thenReturn(businessObjectDataSearchResult);
 
         // Call the method under test.
-        BusinessObjectDataSearchResult result = businessObjectDataRestController.searchBusinessObjectData(businessObjectDataSearchRequest);
+        BusinessObjectDataSearchResult result = businessObjectDataRestController.searchBusinessObjectData(pageNum, pageSize, businessObjectDataSearchRequest);
 
         // Verify the external calls.
-        verify(businessObjectDataService).searchBusinessObjectData(businessObjectDataSearchRequest);
+        verify(businessObjectDataService).searchBusinessObjectData(pageNum, pageSize, businessObjectDataSearchRequest);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
