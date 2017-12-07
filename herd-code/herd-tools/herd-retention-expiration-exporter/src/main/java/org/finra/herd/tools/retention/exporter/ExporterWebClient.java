@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.dto.RetentionExpirationExporterInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
@@ -93,6 +94,56 @@ public class ExporterWebClient extends DataBridgeWebClient
     }
 
     /**
+     * Retrieves business object definition from the herd registration server.
+     *
+     * @param manifest the retention expiration exporter input manifest dto input manifest file information
+     *
+     * @return the business object data information
+     * @throws JAXBException if a JAXB error was encountered.
+     * @throws IOException if an I/O error was encountered.
+     * @throws URISyntaxException if a URI syntax error was encountered.
+     */
+    public BusinessObjectDefinition getBusinessObjectDefinition(RetentionExpirationExporterInputManifestDto manifest)
+        throws IOException, JAXBException, URISyntaxException
+    {
+        LOGGER.info("Retrieving business object de information from the registration server...");
+
+        StringBuilder uriPathBuilder = new StringBuilder(HERD_APP_REST_URI_PREFIX);
+        uriPathBuilder.append("/businessObjectDefinitions");
+        if (manifest.getNamespace() != null)
+        {
+            uriPathBuilder.append("/namespaces/").append(manifest.getNamespace());
+        }
+        uriPathBuilder.append("/businessObjectDefinitionNames/").append(manifest.getBusinessObjectDefinitionName());
+
+        URIBuilder uriBuilder =
+            new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
+                .setPath(uriPathBuilder.toString());
+
+        URI uri = uriBuilder.build();
+
+        CloseableHttpClient client = httpClientOperations.createHttpClient();
+        HttpGet request = new HttpGet(uri);
+        request.addHeader("Accepts", "application/xml");
+
+        // If SSL is enabled, set the client authentication header.
+        if (regServerAccessParamsDto.isUseSsl())
+        {
+            request.addHeader(getAuthorizationHeader());
+        }
+
+        LOGGER.info(String.format("    HTTP GET URI: %s", request.getURI().toString()));
+        LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(request.getAllHeaders())));
+
+        BusinessObjectDefinition businessObjectDefinition =
+            this.getBusinessObjectDefinition(httpClientOperations.execute(client, request), "retrieve business object data keys from the registration server");
+
+        LOGGER.info("Successfully retrieved business object data keys from the registration server.");
+
+        return businessObjectDefinition;
+    }
+
+    /**
      * Extracts BusinessObjectDataKeys object from the registration server HTTP response.
      *
      * @param httpResponse the response received from the supported options.
@@ -103,5 +154,18 @@ public class ExporterWebClient extends DataBridgeWebClient
     private BusinessObjectDataKeys getBusinessObjectDataKeys(CloseableHttpResponse httpResponse, String actionDescription)
     {
         return (BusinessObjectDataKeys) processXmlHttpResponse(httpResponse, actionDescription, BusinessObjectDataKeys.class);
+    }
+
+    /**
+     * Extracts BusinessObjectDataKeys object from the registration server HTTP response.
+     *
+     * @param httpResponse the response received from the supported options.
+     * @param actionDescription the description of the action being performed with the registration server (to be used in an error message).
+     *
+     * @return the BusinessObjectDataKeys object extracted from the registration server response.
+     */
+    private BusinessObjectDefinition getBusinessObjectDefinition(CloseableHttpResponse httpResponse, String actionDescription)
+    {
+        return (BusinessObjectDefinition) processXmlHttpResponse(httpResponse, actionDescription, BusinessObjectDefinition.class);
     }
 }
