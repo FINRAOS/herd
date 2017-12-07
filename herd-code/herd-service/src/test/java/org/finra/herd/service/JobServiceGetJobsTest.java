@@ -29,7 +29,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -99,7 +98,7 @@ public class JobServiceGetJobsTest extends AbstractServiceTest
      */
     private static <T> Collection<T> equalsCollection(Collection<T> other)
     {
-        return argThat(new EqualsCollection<>(other));
+        return argThat(collection -> collection.size() == other.size() && collection.containsAll(other));
     }
 
     @Before
@@ -497,29 +496,6 @@ public class JobServiceGetJobsTest extends AbstractServiceTest
         {
             assertEquals("Too many jobs found for the specified filter parameters. The maximum number of results allowed is 1 and the number of results " +
                 "returned was 1000.", e.getMessage());
-        }
-    }
-
-    /**
-     * An argument matches which matches when two collections' contents are equal regardless of the type of collection used.
-     *
-     * @param <T> The type of the collection element
-     */
-    private static class EqualsCollection<T> extends ArgumentMatcher<Collection<T>>
-    {
-        private Collection<T> other;
-
-        public EqualsCollection(Collection<T> other)
-        {
-            this.other = other;
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public boolean matches(Object argument)
-        {
-            Collection<T> collection = (Collection<T>) argument;
-            return collection.size() == other.size() && collection.containsAll(other);
         }
     }
 }

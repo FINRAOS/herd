@@ -30,17 +30,24 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.dao.StorageUnitDao;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity_;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity_;
 import org.finra.herd.model.jpa.FileTypeEntity;
+import org.finra.herd.model.jpa.FileTypeEntity_;
+import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.NamespaceEntity_;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageEntity_;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
@@ -163,6 +170,64 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
 
         // return single result or null
         return resultList.size() >= 1 ? resultList.get(0) : null;
+    }
+
+    @Override
+    public StorageUnitEntity getStorageUnitByKey(BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<StorageUnitEntity> criteria = builder.createQuery(StorageUnitEntity.class);
+
+        // The criteria root is the storage unit.
+        Root<StorageUnitEntity> storageUnitEntityRoot = criteria.from(StorageUnitEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<StorageUnitEntity, BusinessObjectDataEntity> businessObjectDataEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.businessObjectData);
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
+            businessObjectDataEntityJoin.join(BusinessObjectDataEntity_.businessObjectFormat);
+        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntityJoin = businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.fileType);
+        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntityJoin =
+            businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+        Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntityJoin =
+            businessObjectDefinitionEntityJoin.join(BusinessObjectDefinitionEntity_.namespace);
+        Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.storage);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates
+            .add(builder.equal(builder.upper(namespaceEntityJoin.get(NamespaceEntity_.code)), businessObjectDataStorageUnitKey.getNamespace().toUpperCase()));
+        predicates.add(builder.equal(builder.upper(businessObjectDefinitionEntityJoin.get(BusinessObjectDefinitionEntity_.name)),
+            businessObjectDataStorageUnitKey.getBusinessObjectDefinitionName().toUpperCase()));
+        predicates.add(builder.equal(builder.upper(businessObjectDefinitionEntityJoin.get(BusinessObjectDefinitionEntity_.name)),
+            businessObjectDataStorageUnitKey.getBusinessObjectDefinitionName().toUpperCase()));
+        predicates.add(builder.equal(builder.upper(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage)),
+            businessObjectDataStorageUnitKey.getBusinessObjectFormatUsage().toUpperCase()));
+        predicates.add(builder.equal(builder.upper(fileTypeEntityJoin.get(FileTypeEntity_.code)),
+            businessObjectDataStorageUnitKey.getBusinessObjectFormatFileType().toUpperCase()));
+        predicates.add(builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
+            businessObjectDataStorageUnitKey.getBusinessObjectFormatVersion()));
+        predicates.add(getQueryRestrictionOnPartitionValues(builder, businessObjectDataEntityJoin, businessObjectDataStorageUnitKey.getPartitionValue(),
+            businessObjectDataStorageUnitKey.getSubPartitionValues()));
+        predicates.add(builder
+            .equal(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.version), businessObjectDataStorageUnitKey.getBusinessObjectDataVersion()));
+        predicates
+            .add(builder.equal(builder.upper(storageEntityJoin.get(StorageEntity_.name)), businessObjectDataStorageUnitKey.getStorageName().toUpperCase()));
+
+        // Add the clauses for the query.
+        criteria.select(storageUnitEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
+
+        // Execute the query and return the result.
+        return executeSingleResultQuery(criteria, String
+            .format("Found more than one business object data storage unit instance with parameters {namespace=\"%s\", businessObjectDefinitionName=\"%s\"," +
+                " businessObjectFormatUsage=\"%s\", businessObjectFormatFileType=\"%s\", businessObjectFormatVersion=\"%d\"," +
+                " businessObjectDataPartitionValue=\"%s\", businessObjectDataSubPartitionValues=\"%s\", businessObjectDataVersion=\"%d\"," +
+                " storageName=\"%s\"}.", businessObjectDataStorageUnitKey.getNamespace(), businessObjectDataStorageUnitKey.getBusinessObjectDefinitionName(),
+                businessObjectDataStorageUnitKey.getBusinessObjectFormatUsage(), businessObjectDataStorageUnitKey.getBusinessObjectFormatFileType(),
+                businessObjectDataStorageUnitKey.getBusinessObjectFormatVersion(), businessObjectDataStorageUnitKey.getPartitionValue(),
+                CollectionUtils.isEmpty(businessObjectDataStorageUnitKey.getSubPartitionValues()) ? "" :
+                    StringUtils.join(businessObjectDataStorageUnitKey.getSubPartitionValues(), ","),
+                businessObjectDataStorageUnitKey.getBusinessObjectDataVersion(), businessObjectDataStorageUnitKey.getStorageName()));
     }
 
     @Override

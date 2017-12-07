@@ -64,8 +64,8 @@ public class JobRestController extends HerdBaseController
     }
 
     /**
-     * <p>Gets a list of job executions based on the specified filter parameters.</p> <p>Jobs' namespace to which
-     * you do not have READ permissions to will be omitted from the result.</p>
+     * <p>Gets a list of job executions based on the specified filter parameters.</p> <p>Jobs' namespace to which you do not have READ permissions to will be
+     * omitted from the result.</p>
      *
      * @param namespace an optional namespace filter
      * @param jobName an optional job name filter
@@ -125,7 +125,7 @@ public class JobRestController extends HerdBaseController
      * @return the job
      * @throws Exception when any exception occurs
      */
-    @RequestMapping(value = "/jobs/ids/{id}", method = RequestMethod.PUT)
+    @RequestMapping(value = "/jobs/ids/{id}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_JOBS_PUT)
     public Job updateJob(@PathVariable("id") String id, @RequestBody JobUpdateRequest jobUpdateRequest) throws Exception
     {

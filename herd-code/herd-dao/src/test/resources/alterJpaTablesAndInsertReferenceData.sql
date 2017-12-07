@@ -81,6 +81,7 @@ insert into STRGE_UNIT_STTS_CD_LK (STRGE_UNIT_STTS_CD, STRGE_UNIT_STTS_DS, AVLBL
 insert into STRGE_UNIT_STTS_CD_LK (STRGE_UNIT_STTS_CD, STRGE_UNIT_STTS_DS, AVLBL_FL, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USER_ID) values ('RESTORING', 'RESTORING', 'N', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
 insert into STRGE_UNIT_STTS_CD_LK (STRGE_UNIT_STTS_CD, STRGE_UNIT_STTS_DS, AVLBL_FL, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USER_ID) values ('RESTORED', 'RESTORED', 'Y', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
 insert into STRGE_UNIT_STTS_CD_LK (STRGE_UNIT_STTS_CD, STRGE_UNIT_STTS_DS, AVLBL_FL, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USER_ID) values ('EXPIRING', 'EXPIRING', 'N', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
+insert into STRGE_UNIT_STTS_CD_LK (STRGE_UNIT_STTS_CD, STRGE_UNIT_STTS_DS, AVLBL_FL, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USER_ID) values ('DISABLING', 'DISABLING', 'N', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
 
 -- Storage Policy Statuses.
 insert into STRGE_PLCY_STTS_CD_LK (STRGE_PLCY_STTS_CD, STRGE_PLCY_STTS_DS, CREAT_TS, CREAT_USER_ID, UPDT_TS, UPDT_USER_ID) values ('ENABLED', 'Enabled', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
@@ -96,3 +97,6 @@ insert into ntfcn_rgstn_stts_cd_lk (ntfcn_rgstn_stts_cd, ntfcn_rgstn_stts_ds, cr
 -- Message Type
 insert into msg_type_cd_lk (msg_type_cd, creat_ts, creat_user_id, updt_ts, updt_user_id) values ('SQS', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
 insert into msg_type_cd_lk (msg_type_cd, creat_ts, creat_user_id, updt_ts, updt_user_id) values ('SNS', DATE '2015-01-01', 'SYSTEM', DATE '2015-01-01', 'SYSTEM');
+
+-- Retention Type
+insert into rtntn_type_cd_lk(rtntn_type_cd) values ('PARTITION_VALUE');

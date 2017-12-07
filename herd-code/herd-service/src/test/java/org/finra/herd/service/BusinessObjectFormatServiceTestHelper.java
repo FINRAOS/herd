@@ -556,6 +556,22 @@ public class BusinessObjectFormatServiceTestHelper
     }
 
     /**
+     * Returns a list of attribute definitions that use hard coded test values.
+     *
+     * @return the list of test attribute definitions
+     */
+    public List<AttributeDefinition> getTestAttributeDefinitions2()
+    {
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3, AbstractServiceTest.PUBLISH_ATTRIBUTE));
+
+        return attributeDefinitions;
+    }
+
+    /**
      * Creates a generate business object format ddl collection request using hard coded test values.
      *
      * @return the business object format ddl collection request
@@ -752,6 +768,21 @@ public class BusinessObjectFormatServiceTestHelper
         {
             assertNull(actualBusinessObjectFormat.getSchema());
         }
+    }
+
+    /**
+     * Validate retention information
+     * @param expectedRecordFlag the expected record flag
+     * @param expectedRetentionDays the expected retention in days
+     * @param expectedRetentionType the expected retention type
+     * @param actualBusinessObjectFormat the actual business object format
+     */
+    public void validateRetentionInformation(boolean expectedRecordFlag, Integer expectedRetentionDays, String expectedRetentionType,
+        BusinessObjectFormat actualBusinessObjectFormat)
+    {
+        assertEquals(actualBusinessObjectFormat.getRetentionType(), expectedRetentionType);
+        assertEquals(actualBusinessObjectFormat.isRecordFlag(), expectedRecordFlag);
+        assertEquals(actualBusinessObjectFormat.getRetentionPeriodInDays(), expectedRetentionDays);
     }
 
     /**

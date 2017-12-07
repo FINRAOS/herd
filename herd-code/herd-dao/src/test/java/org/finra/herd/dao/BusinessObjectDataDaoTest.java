@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Test;
 import org.springframework.util.Assert;
 
@@ -56,6 +58,7 @@ import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
@@ -814,7 +817,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
             // Retrieve the match.
             Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
-                .getBusinessObjectDataEntitiesMatchingStoragePolicies(storagePolicyPriorityLevel, Arrays.asList(BDATA_STATUS), 0, MAX_RESULT);
+                .getBusinessObjectDataEntitiesMatchingStoragePolicies(storagePolicyPriorityLevel, Arrays.asList(BDATA_STATUS), 0, 0, MAX_RESULT);
 
             // Validate the results.
             assertEquals(1, result.size());
@@ -850,7 +853,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         // Try to retrieve both business object data instances as matching to the storage policy, but with max result limit set to 1.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
-            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0, 1);
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0, 0, 1);
 
         // Validate the results. Only the oldest business object data should get selected.
         assertEquals(1, result.size());
@@ -860,7 +863,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Try to retrieve the second business object data instance matching to the storage policy
         // by specifying the relative start position and max result limit set.
         result = businessObjectDataDao
-            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 1, 1);
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0, 1, 1);
 
         // Validate the results. Now, the second oldest business object data should get selected.
         assertEquals(1, result.size());
@@ -886,7 +889,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         // Retrieve business object data matching storage policy.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
-            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0,
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0, 0,
                 MAX_RESULT);
 
         // Validate the results. Only a single match should get returned.
@@ -909,7 +912,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         // Try to retrieve the business object data matching to the storage policy.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
-            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0,
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0, 0,
                 MAX_RESULT);
 
         // Validate the results.
@@ -931,7 +934,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         // Try to retrieve the business object data matching to the storage policy.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
-            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0,
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0, 0,
                 MAX_RESULT);
 
         // Validate the results.
@@ -953,7 +956,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         // Try to retrieve the business object data matching to the storage policy.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
-            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0,
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0, 0,
                 MAX_RESULT);
 
         // Validate the results.
@@ -975,10 +978,79 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         // Try to retrieve the business object data matching to the storage policy.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
-            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0,
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0, 0,
                 MAX_RESULT);
 
         // Validate the results.
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testBusinessObjectDataEntitiesMatchingStoragePoliciesWithStoragePolicyTransitionMaxAllowedAttempts()
+    {
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create and persist a storage unit in the storage policy filter storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        // Retrieve the business object data matching to the storage policy, when storagePolicyTransitionMaxAllowedAttempts is not specified.
+        Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 0, 0,
+                MAX_RESULT);
+
+        // Validate the results. A single match should get returned.
+        assertEquals(1, result.size());
+        assertTrue(result.containsKey(storageUnitEntity.getBusinessObjectData()));
+
+        // Retrieve the business object data matching to the storage policy, when storagePolicyTransitionMaxAllowedAttempts is specified,
+        // storage unit has storagePolicyTransitionFailedAttempts set to NULL.
+        storageUnitEntity.setStoragePolicyTransitionFailedAttempts(null);
+        storageUnitDao.saveAndRefresh(storageUnitEntity);
+        result = businessObjectDataDao
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 1, 0,
+                MAX_RESULT);
+
+        // Validate the results. A single match should get returned.
+        assertEquals(1, result.size());
+        assertTrue(result.containsKey(storageUnitEntity.getBusinessObjectData()));
+
+        // Retrieve the business object data matching to the storage policy, when storagePolicyTransitionMaxAllowedAttempts is specified,
+        // storage unit has storagePolicyTransitionFailedAttempts < storagePolicyTransitionMaxAllowedAttempts.
+        storageUnitEntity.setStoragePolicyTransitionFailedAttempts(0);
+        storageUnitDao.saveAndRefresh(storageUnitEntity);
+        result = businessObjectDataDao
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 1, 0,
+                MAX_RESULT);
+
+        // Validate the results. A single match should get returned.
+        assertEquals(1, result.size());
+        assertTrue(result.containsKey(storageUnitEntity.getBusinessObjectData()));
+
+        // Try to retrieve the business object data matching to the storage policy, when storagePolicyTransitionMaxAllowedAttempts is specified,
+        // storage unit has storagePolicyTransitionFailedAttempts == storagePolicyTransitionMaxAllowedAttempts.
+        storageUnitEntity.setStoragePolicyTransitionFailedAttempts(1);
+        storageUnitDao.saveAndRefresh(storageUnitEntity);
+        result = businessObjectDataDao
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 1, 0,
+                MAX_RESULT);
+
+        // Validate the results. No matches should get returned.
+        assertEquals(0, result.size());
+
+        // Try to retrieve the business object data matching to the storage policy, when storagePolicyTransitionMaxAllowedAttempts is specified,
+        // storage unit has storagePolicyTransitionFailedAttempts > storagePolicyTransitionMaxAllowedAttempts.
+        storageUnitEntity.setStoragePolicyTransitionFailedAttempts(2);
+        storageUnitDao.saveAndRefresh(storageUnitEntity);
+        result = businessObjectDataDao
+            .getBusinessObjectDataEntitiesMatchingStoragePolicies(new StoragePolicyPriorityLevel(false, false, false), Arrays.asList(BDATA_STATUS), 1, 0,
+                MAX_RESULT);
+
+        // Validate the results. No matches should get returned.
         assertEquals(0, result.size());
     }
 
@@ -2054,5 +2126,142 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         {
             assertEquals(e.getMessage(), expectedErrorMessage);
         }
+    }
+
+    @Test
+    public void testBusinessObjectDataSearchWithRetentionExpirationFilterEmptyResult()
+    {
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        key.setBusinessObjectFormatVersion(FORMAT_VERSION);
+        key.setFilterOnRetentionExpiration(true);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testBusinessObjectDataSearchWithRetentionExpirationFilter()
+    {
+        int retentionPeriod = 180;
+        java.util.Date date = DateUtils.addDays(new java.util.Date(), -1 * retentionPeriod);
+        String partitionValueDate = DateFormatUtils.format(date, AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
+
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "VALID");
+
+        BusinessObjectDataEntity businessObjectDataEntity2 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        RetentionTypeEntity existingRetentionType = retentionTypeDao.getRetentionTypeByCode(RetentionTypeEntity.PARTITION_VALUE);
+        if (existingRetentionType == null)
+        {
+            retentionTypeDaoTestHelper.createRetentionTypeEntity(RetentionTypeEntity.PARTITION_VALUE);
+        }
+        businessObjectDataEntity2.getBusinessObjectFormat().setRetentionType(existingRetentionType);
+        businessObjectDataEntity2.getBusinessObjectFormat().setRetentionPeriodInDays(retentionPeriod - 1);
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        key.setFilterOnRetentionExpiration(true);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void testBusinessObjectDataSearchWithRetentionExpirationFilterMultipleFormats()
+    {
+        int retentionPeriod = 180;
+        java.util.Date date = DateUtils.addDays(new java.util.Date(), -1 * retentionPeriod);
+        String partitionValueDate = DateFormatUtils.format(date, AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
+
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "VALID");
+
+        BusinessObjectDataEntity businessObjectDataEntity2 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        BusinessObjectDataEntity businessObjectDataEntity3 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        BusinessObjectDataEntity businessObjectDataEntity4 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionValueDate, null,
+                DATA_VERSION, true, "INVALID");
+
+        RetentionTypeEntity existingRetentionType = retentionTypeDao.getRetentionTypeByCode(RetentionTypeEntity.PARTITION_VALUE);
+        if (existingRetentionType == null)
+        {
+            retentionTypeDaoTestHelper.createRetentionTypeEntity(RetentionTypeEntity.PARTITION_VALUE);
+        }
+        businessObjectDataEntity.getBusinessObjectFormat().setRetentionType(existingRetentionType);
+        businessObjectDataEntity.getBusinessObjectFormat().setRetentionPeriodInDays(retentionPeriod - 1);
+
+        businessObjectDataEntity2.getBusinessObjectFormat().setRetentionType(existingRetentionType);
+        businessObjectDataEntity2.getBusinessObjectFormat().setRetentionPeriodInDays(retentionPeriod - 1);
+
+        businessObjectDataEntity3.getBusinessObjectFormat().setRetentionType(existingRetentionType);
+        businessObjectDataEntity3.getBusinessObjectFormat().setRetentionPeriodInDays(null);
+
+        RetentionTypeEntity notFoundRetentionTypeEntity =
+            retentionTypeDaoTestHelper.createRetentionTypeEntity(RetentionTypeEntity.PARTITION_VALUE + "NOTFOUND");
+        businessObjectDataEntity4.getBusinessObjectFormat().setRetentionType(notFoundRetentionTypeEntity);
+        businessObjectDataEntity4.getBusinessObjectFormat().setRetentionPeriodInDays(retentionPeriod);
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        key.setFilterOnRetentionExpiration(true);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(2, result.size());
     }
 }

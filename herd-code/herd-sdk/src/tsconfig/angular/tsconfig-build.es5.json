@@ -1,0 +1,14 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "module": "es2015",
+        "target": "es5"
+    },
+    "angularCompilerOptions": {
+        "strictMetadataEmit": true,
+        "skipTemplateCodegen": true,
+        "annotateForClosureCompiler": true,
+        "flatModuleOutFile": "angular-client.js",
+        "flatModuleId": "@herd/angular-client"
+    }
+}

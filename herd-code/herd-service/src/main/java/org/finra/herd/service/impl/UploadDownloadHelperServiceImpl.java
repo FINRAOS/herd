@@ -20,6 +20,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import javax.persistence.OptimisticLockException;
+
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -89,9 +91,9 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
 
     /**
      * The @Lazy annotation below is added to address the following BeanCreationException: - Error creating bean with name 'notificationEventServiceImpl': Bean
-     * with name 'notificationEventServiceImpl' has been injected into other beans [fileUploadCleanupServiceImpl] in its raw version as part of a circular
-     * reference, but has eventually been wrapped. This means that said other beans do not use the final version of the bean. This is often the result of
-     * over-eager type matching - consider using 'getBeanNamesOfType' with the 'allowEagerInit' flag turned off, for example.
+     * with name 'notificationEventServiceImpl' has been injected into other beans [...] in its raw version as part of a circular reference, but has eventually
+     * been wrapped. This means that said other beans do not use the final version of the bean. This is often the result of over-eager type matching - consider
+     * using 'getBeanNamesOfType' with the 'allowEagerInit' flag turned off, for example.
      */
     @Autowired
     @Lazy
@@ -200,12 +202,31 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
                 .setTargetFilePath(IterableUtils.get(IterableUtils.get(targetBusinessObjectDataEntity.getStorageUnits(), 0).getStorageFiles(), 0).getPath());
             assertS3ObjectKeyDoesNotExist(completeUploadSingleParamsDto.getTargetBucketName(), completeUploadSingleParamsDto.getTargetFilePath());
 
-            // Change the status of the source business object data to RE-ENCRYPTING.
-            businessObjectDataDaoHelper.updateBusinessObjectDataStatus(sourceBusinessObjectDataEntity, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
-            completeUploadSingleParamsDto.setSourceNewStatus(BusinessObjectDataStatusEntity.RE_ENCRYPTING);
+            try
+            {
+                // Change the status of the source and target business object data to RE-ENCRYPTING.
+                businessObjectDataDaoHelper.updateBusinessObjectDataStatus(sourceBusinessObjectDataEntity, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
+                businessObjectDataDaoHelper.updateBusinessObjectDataStatus(targetBusinessObjectDataEntity, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
+            }
+            // We can get an optimistic lock exception when trying to update source and/or target business object data status from "UPLOADING" to
+            // "RE-ENCRYPTING". The optimistic lock exception is caused by duplicate SQS messages coming from S3 for the same uploaded file. If such
+            // exception is caught, we log a message and exit from the method. This effectively discards any duplicate SQS messages that did not get
+            // caught by a business object data status check that occurs inside the prepareForFileMove() helper method.
+            catch (OptimisticLockException e)
+            {
+                LOGGER.info("Ignoring S3 notification due to an optimistic lock exception caused by duplicate S3 event notifications. " +
+                    "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}",
+                    jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()),
+                    jsonHelper.objectToJson(completeUploadSingleParamsDto.getTargetBusinessObjectDataKey()));
 
-            // Change the status of the target business object data to RE-ENCRYPTING.
-            businessObjectDataDaoHelper.updateBusinessObjectDataStatus(targetBusinessObjectDataEntity, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
+                // Exit from the method without setting the new status values in the completeUploadSingleParamsDto to "RE-ENCRYPTING".
+                // Please note that not having source and target new status values set to "RE-ENCRYPTING" will make the caller
+                // method skip the rest of the steps required to complete the upload single message processing.
+                return;
+            }
+
+            // Set new status for the source and target business object data in the DTO.
+            completeUploadSingleParamsDto.setSourceNewStatus(BusinessObjectDataStatusEntity.RE_ENCRYPTING);
             completeUploadSingleParamsDto.setTargetNewStatus(BusinessObjectDataStatusEntity.RE_ENCRYPTING);
         }
         catch (RuntimeException e)

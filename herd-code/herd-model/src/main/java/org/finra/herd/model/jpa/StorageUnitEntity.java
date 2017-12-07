@@ -77,6 +77,12 @@ public class StorageUnitEntity extends AuditableEntity
     @Column(name = "rstr_xprtn_ts")
     private Timestamp restoreExpirationOn;
 
+    @Column(name = "strge_plcy_trnsn_faild_atmpts_nb")
+    private Integer storagePolicyTransitionFailedAttempts;
+
+    @Column(name = "final_destroy_ts")
+    private Timestamp finalDestroyOn;
+
     public Integer getId()
     {
         return id;
@@ -155,5 +161,25 @@ public class StorageUnitEntity extends AuditableEntity
     public void setRestoreExpirationOn(Timestamp restoreExpirationOn)
     {
         this.restoreExpirationOn = restoreExpirationOn;
+    }
+
+    public Integer getStoragePolicyTransitionFailedAttempts()
+    {
+        return storagePolicyTransitionFailedAttempts;
+    }
+
+    public void setStoragePolicyTransitionFailedAttempts(Integer storagePolicyTransitionFailedAttempts)
+    {
+        this.storagePolicyTransitionFailedAttempts = storagePolicyTransitionFailedAttempts;
+    }
+
+    public Timestamp getFinalDestroyOn()
+    {
+        return finalDestroyOn;
+    }
+
+    public void setFinalDestroyOn(Timestamp finalDestroyOn)
+    {
+        this.finalDestroyOn = finalDestroyOn;
     }
 }

@@ -18,7 +18,6 @@ import org.activiti.engine.repository.ProcessDefinition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -210,15 +209,7 @@ public class BaseJavaDelegateTest extends AbstractServiceTest
      */
     private ApplicationUser applicationUserUserIdEq(String userId)
     {
-        return argThat(new ArgumentMatcher<ApplicationUser>()
-        {
-            @Override
-            public boolean matches(Object argument)
-            {
-                ApplicationUser applicationUser = (ApplicationUser) argument;
-                return Objects.equal(userId, applicationUser.getUserId());
-            }
-        });
+        return argThat(applicationUser -> Objects.equal(userId, applicationUser.getUserId()));
     }
 
     /**

@@ -73,6 +73,7 @@ import org.finra.herd.model.api.xml.SearchIndexStatistics;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.api.xml.StorageUnitStatusChangeEvent;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.service.activiti.ActivitiHelper;
@@ -92,7 +93,6 @@ import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
-import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
 import org.finra.herd.service.helper.JobDefinitionHelper;
 import org.finra.herd.service.helper.MessageTypeDaoHelper;
 import org.finra.herd.service.helper.NotificationActionFactory;
@@ -176,7 +176,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean BOOLEAN_VALUE = true;
 
-    public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_" + RANDOM_SUFFIX;
+    public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING = "UT_BusinessObjectDataKeyAsString_1_" + RANDOM_SUFFIX;
+
+    public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING_2 = "UT_BusinessObjectDataKeyAsString_2_" + RANDOM_SUFFIX;
 
     public static final String BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
         "  \"eventDate\" : \"$current_time\",\n" +
@@ -266,6 +268,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final String BUSINESS_OBJECT_FORMAT_KEY_AS_STRING = "UT_BusinessObjectFormatKeyAsString_" + RANDOM_SUFFIX;
+
     public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
@@ -341,10 +345,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
 
-    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
-
-    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
-
     public static final Integer ID = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer ID_2 = (int) (Math.random() * Integer.MAX_VALUE);
@@ -358,6 +358,15 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean INCLUDE_DROP_TABLE_STATEMENT = true;
 
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
+
+    public static final Boolean INCLUDE_STORAGE_UNIT_STATUS_HISTORY = true;
+
+    public static final String INDEX_SEARCH_RESULT_TYPE = "UT_IndexSearchResultType" + RANDOM_SUFFIX;
+
+    /**
+     * Constant to hold the column match option for the index search
+     */
+    public static final String MATCH_COLUMN = "column";
 
     public static final String MESSAGE_VERSION = "UT_MessageVersion" + RANDOM_SUFFIX;
 
@@ -385,6 +394,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<BusinessObjectDataStatusChangeEvent> NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY = null;
 
+    public static final List<BusinessObjectDefinitionChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS = new ArrayList<>();
+
     public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
 
     public static final String NO_COLUMN_DEFAULT_VALUE = null;
@@ -402,8 +413,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final DescriptiveBusinessObjectFormat NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT = null;
 
     public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
-
-    public static final List<BusinessObjectDefinitionChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS = new ArrayList<>();
 
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
@@ -429,6 +438,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_INCLUDE_IF_NOT_EXISTS_OPTION = false;
 
+    public static final Boolean NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY = false;
+
     public static final LatestAfterPartitionValue NO_LATEST_AFTER_PARTITION_VALUE = null;
 
     public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;
@@ -445,6 +456,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final boolean NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.FALSE;
 
+    public static final boolean NO_RECORDFLAG = false;
+
+    public static final Integer NO_RETENTIONPERIODINDAYS = null;
+
+    public static final String NO_RETENTIONTYPE = null;
+
     public static final Long NO_ROW_COUNT = null;
 
     public static final SearchIndexStatistics NO_SEARCH_INDEX_STATISTICS = null;
@@ -452,6 +469,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final XMLGregorianCalendar NO_SEARCH_INDEX_STATISTICS_CREATION_DATE = null;
 
     public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
+
+    public static final List<String> NO_SECURITY_FUNCTIONS = null;
+
+    public static final List<String> NO_SECURITY_ROLES = null;
 
     public static final String NO_SKU = null;
 
@@ -463,7 +484,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<StorageFile> NO_STORAGE_FILES = new ArrayList<>();
 
+    public static final Integer NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS = null;
+
     public static final List<StorageUnit> NO_STORAGE_UNITS = new ArrayList<>();
+
+    public static final List<StorageUnitStatusChangeEvent> NO_STORAGE_UNIT_STATUS_HISTORY = null;
 
     public static final Boolean NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = false;
 
@@ -486,6 +511,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<String> PROCESS_DATE_NOT_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-04", "2014-04-07");
 
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
+
+    public static final Integer RETENTION_PERIOD_DAYS = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean RETRIEVE_INSTANCE_FLEETS = true;
 
@@ -531,6 +558,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final DateTime START_TIME = getRandomDateTime();
 
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
+
+    public static final Integer STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS = getRandomInteger();
 
     public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
 
@@ -674,6 +703,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected BusinessObjectDataStorageFileService businessObjectDataStorageFileService;
 
     @Autowired
+    protected BusinessObjectDataStorageUnitStatusService businessObjectDataStorageUnitStatusService;
+
+    @Autowired
     protected BusinessObjectDefinitionColumnDaoHelper businessObjectDefinitionColumnDaoHelper;
 
     @Autowired
@@ -750,9 +782,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected Hive13DdlGenerator hive13DdlGenerator;
-
-    @Autowired
-    protected IndexSearchResultTypeHelper indexSearchResultTypeHelper;
 
     @Autowired
     protected JdbcService jdbcService;

@@ -19,6 +19,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,17 +42,23 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.BusinessObjectDataDao;
+import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
@@ -70,6 +78,7 @@ import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.FileTypeEntity_;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.NamespaceEntity_;
+import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity_;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -89,6 +98,9 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 @Repository
 public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements BusinessObjectDataDao
 {
+    @Autowired
+    BusinessObjectFormatDao businessObjectFormatDao;
+
     @Override
     public BusinessObjectDataEntity getBusinessObjectDataByAltKey(BusinessObjectDataKey businessObjectDataKey)
     {
@@ -411,7 +423,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     @Override
     public Map<BusinessObjectDataEntity, StoragePolicyEntity> getBusinessObjectDataEntitiesMatchingStoragePolicies(
-        StoragePolicyPriorityLevel storagePolicyPriorityLevel, List<String> supportedBusinessObjectDataStatuses, int startPosition, int maxResult)
+        StoragePolicyPriorityLevel storagePolicyPriorityLevel, List<String> supportedBusinessObjectDataStatuses, int storagePolicyTransitionMaxAllowedAttempts,
+        int startPosition, int maxResult)
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -468,7 +481,15 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // Add a restriction as per storage policy transition type.
         mainQueryPredicates.add(builder
             .and(builder.equal(storagePolicyTransitionTypeEntityJoin.get(StoragePolicyTransitionTypeEntity_.code), StoragePolicyTransitionTypeEntity.GLACIER),
-                builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.ENABLED)));
+                builder.or(builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.ENABLED),
+                    builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.ARCHIVING))));
+
+        // If specified, add restriction on maximum allowed attempts for a storage policy transition.
+        if (storagePolicyTransitionMaxAllowedAttempts > 0)
+        {
+            mainQueryPredicates.add(builder.or(builder.isNull(storageUnitEntityJoin.get(StorageUnitEntity_.storagePolicyTransitionFailedAttempts)), builder
+                .lessThan(storageUnitEntityJoin.get(StorageUnitEntity_.storagePolicyTransitionFailedAttempts), storagePolicyTransitionMaxAllowedAttempts)));
+        }
 
         // Order the results by business object data "created on" value.
         Order orderByCreatedOn = builder.asc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.createdOn));
@@ -855,6 +876,11 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             predicate = builder.and(predicate, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
         }
 
+        if (BooleanUtils.isTrue(businessDataSearchKey.isFilterOnRetentionExpiration()))
+        {
+            predicate = createRetentionExpirationFilter(businessDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
+        }
+
         return predicate;
     }
 
@@ -874,11 +900,19 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         Root<BusinessObjectDataEntity> countBusinessObjectDataEntity = countCriteria.from(BusinessObjectDataEntity.class);
 
-        Predicate countPredicate = getPredict(countBuilder, criteria, countBusinessObjectDataEntity, businessDataSearchKey, true);
+        Predicate countPredicate = null;
+        try
+        {
+            countPredicate = getPredict(countBuilder, criteria, countBusinessObjectDataEntity, businessDataSearchKey, true);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            // this exception means that there is no record found for the query, no need to run the actual query, return empty list
+            return new ArrayList<BusinessObjectData>();
+        }
 
         countCriteria.select(countBuilder.count(countBusinessObjectDataEntity)).where(countPredicate).distinct(true);
         Long count = entityManager.createQuery(countCriteria).getSingleResult();
-
         if (count > businessObjectDataSearchMaxResults)
         {
             throw new IllegalArgumentException(String
@@ -961,6 +995,78 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 }
             }
         }
+
+        return predicate;
+    }
+
+    /**
+     * Create predicate for retention expiration filter
+     *
+     * @param businessDataSearchKey businessDataSearchKey
+     * @param businessObjectDataEntity businessObjectDataEntity
+     * @param businessObjectFormatEntity businessObjectFormatEntity
+     * @param builder builder
+     * @param predicatePram predicate prameter
+     * @return the predicate
+     */
+    private Predicate createRetentionExpirationFilter(BusinessObjectDataSearchKey businessDataSearchKey,
+        Root<BusinessObjectDataEntity> businessObjectDataEntity, Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity,
+        CriteriaBuilder builder, Predicate predicatePram)
+    {
+        Predicate predicate = predicatePram;
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
+        businessObjectDefinitionKey.setBusinessObjectDefinitionName(businessDataSearchKey.getBusinessObjectDefinitionName());
+        businessObjectDefinitionKey.setNamespace(businessDataSearchKey.getNamespace());
+        List<BusinessObjectFormatEntity> businessObjectFormatKeys =
+            businessObjectFormatDao.getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(businessObjectDefinitionKey);
+        Map<BusinessObjectFormatKey, Integer> businessObjectFormatKeyRetentionDaysMap = new HashMap<>();
+        for (BusinessObjectFormatEntity businessObjectformatKeyEntity : businessObjectFormatKeys)
+        {
+            if (businessObjectformatKeyEntity.getRetentionType() != null && businessObjectformatKeyEntity.getRetentionPeriodInDays() != null &&
+                RetentionTypeEntity.PARTITION_VALUE.equals(businessObjectformatKeyEntity.getRetentionType().getCode()))
+            {
+                BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
+                businessObjectFormatKey.setBusinessObjectFormatFileType(businessObjectformatKeyEntity.getFileType().getCode());
+                businessObjectFormatKey.setBusinessObjectFormatUsage(businessObjectformatKeyEntity.getUsage());
+                businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectformatKeyEntity.getBusinessObjectDefinition().getName());
+                businessObjectFormatKey.setNamespace(businessObjectformatKeyEntity.getBusinessObjectDefinition().getNamespace().getCode());
+                businessObjectFormatKeyRetentionDaysMap.put(businessObjectFormatKey, businessObjectformatKeyEntity.getRetentionPeriodInDays());
+            }
+        }
+        Assert.isTrue(businessObjectFormatKeyRetentionDaysMap.size() > 0, String
+            .format("No business object format for business object definition %s %s has retention type %s.", businessObjectDefinitionKey.getNamespace(),
+                businessObjectDefinitionKey.getBusinessObjectDefinitionName(), RetentionTypeEntity.PARTITION_VALUE));
+        Predicate retentionPredicate = null;
+        for (Map.Entry<BusinessObjectFormatKey, Integer> entry : businessObjectFormatKeyRetentionDaysMap.entrySet())
+        {
+            BusinessObjectFormatKey businessObjectFormatKey = entry.getKey();
+            int retentionPeriod = entry.getValue();
+            String retentionQueryDate = DateFormatUtils.format(DateUtils.addDays(new Date(), -1 * retentionPeriod), DEFAULT_SINGLE_DAY_DATE_MASK);
+            // retention predate for this business object format key
+            Predicate retentionPredicateFormat = null;
+            retentionPredicateFormat = builder.lessThan(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), retentionQueryDate);
+
+            retentionPredicateFormat = builder.and(retentionPredicateFormat, builder
+                .equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
+                    businessObjectFormatKey.getBusinessObjectFormatUsage().toUpperCase()));
+
+            retentionPredicateFormat = builder.and(retentionPredicateFormat, builder
+                .equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType).get(FileTypeEntity_.code)),
+                    businessObjectFormatKey.getBusinessObjectFormatFileType().toUpperCase()));
+
+            // the first retention format predicate
+            if (retentionPredicate == null)
+            {
+                retentionPredicate = retentionPredicateFormat;
+            }
+            // build 'or' query for all the formats
+            else
+            {
+                retentionPredicate = builder.or(retentionPredicate, retentionPredicateFormat);
+            }
+        }
+        //add the retention predicate
+        predicate = builder.and(predicate, retentionPredicate);
 
         return predicate;
     }

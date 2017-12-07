@@ -359,7 +359,6 @@ public class ServiceSpringModuleConfig
         // Configure Main Main Scheduler Properties. The "instance" parameters are needed to manage cluster instances.
         quartzProperties.setProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "herdSystemJobScheduler");
         quartzProperties.setProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_ID, StdSchedulerFactory.AUTO_GENERATE_INSTANCE_ID);
-        quartzProperties.setProperty(StdSchedulerFactory.PROP_SCHED_SKIP_UPDATE_CHECK, "true");
 
         // Configure ThreadPool.
         quartzProperties.setProperty(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");

@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.53.0-SNAPSHOT</version>
+   <version>0.58.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -38,94 +38,89 @@
         are located in the activiti-engine JAR in the org.activiti.db.upgrade package.
        -->
       <activiti.version>5.19.0.1</activiti.version>
-      <aspectj.version>1.8.7</aspectj.version>
-      <aws.sdk.version>1.11.117</aws.sdk.version>
-      <aws.sqs.messaging.version>1.0.1</aws.sqs.messaging.version>
+      <aspectj.version>1.8.11</aspectj.version>
+      <aws.sdk.version>1.11.210</aws.sdk.version>
+      <aws.sqs.messaging.version>1.0.4</aws.sqs.messaging.version>
       <cobertura.version>2.1.1</cobertura.version>
-      <commons.cli.version>1.3.1</commons.cli.version>
+      <commons.cli.version>1.4</commons.cli.version>
       <commons.codec.version>1.10</commons.codec.version>
       <commons.collections4.version>4.1</commons.collections4.version>
-      <commons.compress.version>1.10</commons.compress.version>
+      <commons.compress.version>1.14</commons.compress.version>
       <commons.configuration.version>1.10</commons.configuration.version>
       <commons-dbcp2.version>2.1.1</commons-dbcp2.version>
-      <commons.io.version>2.4</commons.io.version>
-      <commons.lang3.version>3.4</commons.lang3.version>
-      <eclipse.persistence.version>2.6.2</eclipse.persistence.version>
+      <commons.io.version>2.5</commons.io.version>
+      <commons.lang3.version>3.6</commons.lang3.version>
+      <eclipse.persistence.version>2.7.0</eclipse.persistence.version>
       <findbugs.version>3.0.1</findbugs.version>
       <hibernate.jpa.api>1.0.0.Final</hibernate.jpa.api>
-      <hibernate.validator.version>5.2.2.Final</hibernate.validator.version>
-      <hibernate.version>5.0.7.Final</hibernate.version>
-      <h2db.version>1.4.190</h2db.version>
+      <hibernate.validator.version>5.4.2.Final</hibernate.validator.version>
+      <hibernate.version>5.2.12.Final</hibernate.version>
+      <h2db.version>1.4.196</h2db.version>
       <jackson.mapper.version>1.9.13</jackson.mapper.version>
-      <jackson.version>2.6.4</jackson.version>
-      <javax.servlet.version>3.0.1</javax.servlet.version>
-      <jodatime.version>2.9.4</jodatime.version>
-      <jstl-impl.version>1.2.2</jstl-impl.version>
-      <!--
-      TODO: This explicit dependency will be needed when we migrate to Hibernate 5.
-      <jta.version>1.1</jta.version>
-      -->
+      <jackson.version>2.9.1</jackson.version>
+      <javax.servlet.version>4.0.0</javax.servlet.version>
+      <jodatime.version>2.9.9</jodatime.version>
+      <jstl-impl.version>1.2.4</jstl-impl.version>
       <junit.version>4.12</junit.version>
       <log4j.version>2.6.2</log4j.version>
-      <maven.artifact.version>3.3.9</maven.artifact.version>
-      <maven.plugin.api.version>3.3.9</maven.plugin.api.version>
-      <maven.plugin.annotations.version>3.4</maven.plugin.annotations.version>
+      <maven.artifact.version>3.5.0</maven.artifact.version>
+      <maven.plugin.api.version>3.5.0</maven.plugin.api.version>
+      <maven.plugin.annotations.version>3.5</maven.plugin.annotations.version>
       <migbase64.version>2.2</migbase64.version>
-      <oracle.driver.version>11.2.0.2.0</oracle.driver.version>
-      <google.guava.version>21.0</google.guava.version>
-      <googlecode.json-simple.version>1.1</googlecode.json-simple.version>
-      <plexus.utils.version>3.0.22</plexus.utils.version>
-      <postgresql.driver.version>9.4-1206-jdbc42</postgresql.driver.version>
-      <quartz.scheduler.version>2.2.2</quartz.scheduler.version>
-      <roaster.version>2.18.2.Final</roaster.version>
-      <slf4j.version>1.7.21</slf4j.version>
-      <spring.ldap.version>2.2.0.RELEASE</spring.ldap.version>
-      <spring.security.version>4.0.3.RELEASE</spring.security.version>
-      <spring.version>4.2.4.RELEASE</spring.version>
-      <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
-      <sun.jersey.version>1.19.1</sun.jersey.version>
+      <google.guava.version>23.1-jre</google.guava.version>
+      <googlecode.json-simple.version>1.1.1</googlecode.json-simple.version>
+      <plexus.utils.version>3.1.0</plexus.utils.version>
+      <postgresql.driver.version>42.1.4.jre7</postgresql.driver.version>
+      <quartz.scheduler.version>2.3.0</quartz.scheduler.version>
+      <roaster.version>2.20.1.Final</roaster.version>
+      <slf4j.version>1.7.25</slf4j.version>
+      <spring.ldap.version>2.3.2.RELEASE</spring.ldap.version>
+      <spring.security.version>4.2.3.RELEASE</spring.security.version>
+      <spring.version>4.3.12.RELEASE</spring.version>
+      <spring-retry.version>1.2.1.RELEASE</spring-retry.version>
+      <sun.jersey.version>1.19.4</sun.jersey.version>
       <swagger.version>1.5.9</swagger.version>
       <velocity.version>1.7</velocity.version>
       <woodstox.version>4.4.1</woodstox.version>
       <elasticsearch.version>5.1.1</elasticsearch.version>
-      <search-guard-ssl.version>5.1.1-19</search-guard-ssl.version>
-      <jcredstash.version>0.0.3</jcredstash.version>
-      <jest.version>5.3.2</jest.version>
+      <search-guard-ssl.version>5.6.2-23</search-guard-ssl.version>
+      <jcredstash.version>0.0.4</jcredstash.version>
+      <jest.version>5.3.3</jest.version>
 
       <!-- Third Party Plugin Dependencies -->
-      <jaxb.xew.plugin.version>1.6</jaxb.xew.plugin.version>
-      <jaxb2.basics.annotate.version>1.0.2</jaxb2.basics.annotate.version>
-      <jaxb2.basics.runtime.version>0.10.0</jaxb2.basics.runtime.version>
-      <jaxb2.basics.tools.version>0.10.0</jaxb2.basics.tools.version>
-      <jaxb2.basics.version>0.10.0</jaxb2.basics.version>
+      <jaxb.xew.plugin.version>1.9</jaxb.xew.plugin.version>
+      <jaxb2.basics.annotate.version>1.0.3</jaxb2.basics.annotate.version>
+      <jaxb2.basics.runtime.version>0.11.1</jaxb2.basics.runtime.version>
+      <jaxb2.basics.tools.version>0.11.1</jaxb2.basics.tools.version>
+      <jaxb2.basics.version>0.11.1</jaxb2.basics.version>
       <jaxb2.rich.contract.plugin.version>1.18.0</jaxb2.rich.contract.plugin.version>
       <jaxb2.value.constructor.version>3.0</jaxb2.value.constructor.version>
-      <maven.assembly.plugin.version>2.6</maven.assembly.plugin.version>
+      <maven.assembly.plugin.version>3.1.0</maven.assembly.plugin.version>
       <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
-      <maven.build.helper.plugin.version>1.10</maven.build.helper.plugin.version>
+      <maven.build.helper.plugin.version>3.0.0</maven.build.helper.plugin.version>
       <maven.checkstyle.plugin.version>2.17</maven.checkstyle.plugin.version>
       <maven.cobertura.plugin.version>2.7</maven.cobertura.plugin.version>
-      <maven.compiler.plugin.version>3.3</maven.compiler.plugin.version>
-      <maven.dependency.plugin.version>2.10</maven.dependency.plugin.version>
-      <maven.exec.plugin.version>1.4.0</maven.exec.plugin.version>
-      <maven.findbugs.plugin.version>3.0.3</maven.findbugs.plugin.version>
+      <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
+      <maven.dependency.plugin.version>3.0.2</maven.dependency.plugin.version>
+      <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
+      <maven.findbugs.plugin.version>3.0.5</maven.findbugs.plugin.version>
       <maven.velocity.plugin.version>1.1.0</maven.velocity.plugin.version>
       <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
-      <maven.jar.plugin.version>2.6</maven.jar.plugin.version>
-      <maven.jaxb2.plugin.version>0.13.1</maven.jaxb2.plugin.version>
-      <maven.plugin.plugin>3.4</maven.plugin.plugin>
-      <maven.pmd.plugin.version>3.6</maven.pmd.plugin.version>
-      <maven.processor.plugin.version>2.2.4</maven.processor.plugin.version>
-      <maven.resources.plugin.version>2.7</maven.resources.plugin.version>
-      <maven.source.plugin.version>2.4</maven.source.plugin.version>
-      <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
-      <maven.surefire.plugin.version>2.19</maven.surefire.plugin.version>
-      <maven.war.plugin.version>2.6</maven.war.plugin.version>
-      <swagger-codegen-maven-plugin>2.1.5</swagger-codegen-maven-plugin>
-      <versions.maven.plugin.version>2.2</versions.maven.plugin.version>
-      <mockito.version>1.10.19</mockito.version>
-      <nexus.staging.maven.plugin.version>1.6.7</nexus.staging.maven.plugin.version>
-      <jsoup.version>1.10.2</jsoup.version>
+      <maven.jar.plugin.version>3.0.2</maven.jar.plugin.version>
+      <maven.jaxb2.plugin.version>0.13.2</maven.jaxb2.plugin.version>
+      <maven.plugin.plugin>3.5</maven.plugin.plugin>
+      <maven.pmd.plugin.version>3.8</maven.pmd.plugin.version>
+      <maven.processor.plugin.version>3.3.2</maven.processor.plugin.version>
+      <maven.resources.plugin.version>3.0.2</maven.resources.plugin.version>
+      <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
+      <maven.javadoc.plugin.version>2.10.4</maven.javadoc.plugin.version>
+      <maven.surefire.plugin.version>2.20.1</maven.surefire.plugin.version>
+      <maven.war.plugin.version>3.2.0</maven.war.plugin.version>
+      <swagger-codegen-maven-plugin>2.3.0-SNAPSHOT</swagger-codegen-maven-plugin>
+      <versions.maven.plugin.version>2.5</versions.maven.plugin.version>
+      <mockito.version>2.10.0</mockito.version>
+      <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
+      <jsoup.version>1.10.3</jsoup.version>
 
       <!-- Compiler Information -->
       <maven.compiler.source>1.8</maven.compiler.source>
@@ -789,7 +784,7 @@
 
          <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
+            <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
             <scope>test</scope>
          </dependency>

@@ -82,18 +82,68 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         testActivitiServiceTaskSuccess(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
 
-    /**
-     * This unit tests covers scenario when business object data status service fails due to a missing required parameter.
-     */
     @Test
-    public void testUpdateBusinessObjectDataStatusMissingRequiredParameter() throws Exception
+    public void testUpdateBusinessObjectDataStatusInvalidBusinessObjectDataVersion() throws Exception
     {
-        // Validate that activiti task fails when we do not pass a namespace value.
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
         List<Parameter> parameters = new ArrayList<>();
+        parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
+        parameters.add(buildParameter("businessObjectDataVersion", "NOT_AN_INTEGER"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A namespace must be specified.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectDataVersion\" must be a valid integer value.");
+
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataStatusInvalidBusinessObjectFormatVersion() throws Exception
+    {
+        List<FieldExtension> fieldExtensionList = new ArrayList<>();
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
+        List<Parameter> parameters = new ArrayList<>();
+        parameters.add(buildParameter("businessObjectFormatVersion", "NOT_AN_INTEGER"));
+
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
+
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataStatusMissingBusinessObjectDataVersion() throws Exception
+    {
+        List<FieldExtension> fieldExtensionList = new ArrayList<>();
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
+        List<Parameter> parameters = new ArrayList<>();
+        parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
+        parameters.add(buildParameter("businessObjectDataVersion", BLANK_TEXT));
+
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectDataVersion\" must be specified.");
+
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataStatusMissingBusinessObjectFormatVersion() throws Exception
+    {
+        List<FieldExtension> fieldExtensionList = new ArrayList<>();
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
+        List<Parameter> parameters = new ArrayList<>();
+        parameters.add(buildParameter("businessObjectFormatVersion", BLANK_TEXT));
+
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be specified.");
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
@@ -196,42 +246,19 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
         testActivitiServiceTaskSuccess(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
 
-    /**
-     * This unit tests validates that activiti service layer fails when we pass non-integer business object format version value.
-     */
     @Test
-    public void testUpdateBusinessObjectDataStatusInvalidBusinessObjectFormatVersion() throws Exception
+    public void testUpdateBusinessObjectDataStatusMissingRequiredParameter() throws Exception
     {
-        // Validate that activiti task fails when we pass non-integer value for a business object format version.
-        List<FieldExtension> fieldExtensionList = new ArrayList<>();
-        fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
-        List<Parameter> parameters = new ArrayList<>();
-        parameters.add(buildParameter("businessObjectFormatVersion", "NOT_AN_INTEGER"));
-
-        Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
-
-        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
-            testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
-        });
-    }
-
-    /**
-     * This unit tests validates that activiti service layer fails when we pass non-integer business object data version value.
-     */
-    @Test
-    public void testUpdateBusinessObjectDataStatusInvalidBusinessObjectDataVersion() throws Exception
-    {
-        // Validate that activiti task fails when we pass non-integer value for a business object data version.
+        // Validate that business object data status service fails when we do not pass a namespace value.
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
         fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
-        parameters.add(buildParameter("businessObjectDataVersion", "NOT_AN_INTEGER"));
+        parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectDataVersion\" must be a valid integer value.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A namespace must be specified.");
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             testActivitiServiceTaskFailure(UpdateBusinessObjectDataStatus.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);

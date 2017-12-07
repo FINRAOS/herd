@@ -230,7 +230,15 @@ public class BusinessObjectFormatHelper
             businessObjectFormatChild.setBusinessObjectFormatVersion(null);
             businessObjectFormatChildren.add(businessObjectFormatChild);
         }
-        
+
+        //add retention information
+        businessObjectFormat.setRecordFlag(latestVersionBusinessObjectFormatEntity.isRecordFlag());
+        businessObjectFormat.setRetentionPeriodInDays(latestVersionBusinessObjectFormatEntity.getRetentionPeriodInDays());
+        if (latestVersionBusinessObjectFormatEntity.getRetentionType() != null)
+        {
+            businessObjectFormat.setRetentionType(latestVersionBusinessObjectFormatEntity.getRetentionType().getCode());
+        }
+
         return businessObjectFormat;
     }
     

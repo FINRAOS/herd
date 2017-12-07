@@ -302,6 +302,11 @@
                <xs:documentation>The list of security roles</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="securityFunctions" type="securityFunctions">
+            <xs:annotation>
+               <xs:documentation>The list of security functions</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -357,6 +362,17 @@
          <xs:element name="securityRole" type="xs:string" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
                <xs:documentation>The security role</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="securityFunctions" type="securityFunctions"/>
+   <xs:complexType name="securityFunctions">
+      <xs:sequence>
+         <xs:element name="securityFunction" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The security function</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -2031,6 +2047,48 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectFormatAttributeDefinitionsUpdateRequest" type="businessObjectFormatAttributeDefinitionsUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatAttributeDefinitionsUpdateRequest">
+      <xs:all>
+         <xs:element name="attributeDefinitions" type="attributeDefinitions" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of attribute definitions that specify attributes which are required to be specified when registering Business Object
+                  Data against this format. Providing a list with no elements will remove all existing attributes for the business object format
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectFormatRetentionInformationUpdateRequest" type="businessObjectFormatRetentionInformationUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatRetentionInformationUpdateRequest">
+      <xs:all>
+         <xs:element name="recordFlag" type="xs:boolean" minOccurs="0">
+            <!--
+             This is required, but is left as optional here so the auto-generated object becomes "Boolean" and not "boolean".
+             That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "false" and instead will leave
+             the field as null. The validation that this field is required is handled via the service layer validation.
+            -->
+            <xs:annotation>
+               <xs:documentation>Indicates if business object data registered with this format is a record
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionPeriodInDays" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Retention period (in days) for business object data registered with this format
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="businessObjectFormat" type="businessObjectFormat"/>
    <xs:complexType name="businessObjectFormat">
       <xs:all>
@@ -2118,6 +2176,24 @@
             <xs:annotation>
                <xs:documentation>A list of Business Object Data children that were creation from this data. This is used for data lineage. Each child consists
                   of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="recordFlag" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Indicates if business object data registered with this format is a record
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionPeriodInDays" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Retention period (in days) for business object data registered with this format.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -2906,6 +2982,21 @@
                <xs:documentation>The status of this Storage Unit. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="storageUnitStatusHistory" type="storageUnitStatusHistory" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Lists all storage unit status change events for this storage unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storagePolicyTransitionFailedAttempts" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of failed attempts to execute a storage policy transition such as archiving to Glacier</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="restoreExpirationOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The restore expiration time if restored</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -2949,6 +3040,33 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
+   </xs:complexType>
+
+   <xs:element name="storageUnitStatusHistory" type="storageUnitStatusHistory"/>
+   <xs:complexType name="storageUnitStatusHistory">
+      <xs:sequence>
+         <xs:element name="storageUnitStatusChangeEvent" type="storageUnitStatusChangeEvent" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnitStatusChangeEvent">
+      <xs:sequence>
+         <xs:element name="status" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="eventTime" type="xs:dateTime">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the storage unit status change occurred</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who performed status update or registration of the Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <xs:complexType name="attributes">
@@ -3166,6 +3284,14 @@
          <xs:element name="filterOnLatestValidVersion" type="xs:boolean" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The business object is the latest valid version</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="filterOnRetentionExpiration" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The filter for expired business object data with its business object format retention type as PARTITION_VALUE and the business
+                  object data partition value plus the retentionPeriodInDays specified in the business object format expired. Retention information specified
+                  in business object format is version less
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5187,7 +5313,8 @@
                   &lt;li&gt;When multiple subnets are specified, the subnet in the AZ with the best price will be used.&lt;/li&gt;
                   &lt;li&gt;When multiple subnets belong to the same AZ, the subnet with the largest amount of available IP's will be used.&lt;/li&gt;
                   &lt;/ul&gt;
-                  &lt;p&gt;Cross-VPC access in PROD will only accept internal/emr subnets at this time.&lt;/p&gt;</xs:documentation>
+                  &lt;p&gt;Cross-VPC access in PROD will only accept internal/emr subnets at this time.&lt;/p&gt;
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="logBucket" type="xs:string" minOccurs="0">
@@ -5536,7 +5663,8 @@
                <xs:documentation>&lt;p&gt;The amount, in USD, you are willing to pay over the lowest spot price for an on-demand instance. Use this to
                   dynamically balance the cost vs. stability of your instances.&lt;/p&gt;
                   &lt;p&gt;If not specified, the search will not attempt to find an on-demand instance when a spot is found. This is the same behavior as when
-                  this parameter is set to $0.&lt;/p&gt;</xs:documentation>
+                  this parameter is set to $0.&lt;/p&gt;
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5564,7 +5692,8 @@
                <xs:documentation>&lt;p&gt;The amount, in USD, you are willing to pay over the lowest spot price for an on-demand instance. Use this to
                   dynamically balance the cost vs. stability of your instances.&lt;/p&gt;
                   &lt;p&gt;If not specified, the search will not attempt to find an on-demand instance when a spot is found. This is the same behavior as when
-                  this parameter is set to $0.&lt;/p&gt;</xs:documentation>
+                  this parameter is set to $0.&lt;/p&gt;
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -6431,6 +6560,154 @@
       </xs:all>
    </xs:complexType>
 
+   <!-- ***** Business Object Data Storage Unit ***** -->
+
+   <xs:element name="businessObjectDataStorageUnitCreateRequest" type="businessObjectDataStorageUnitCreateRequest"/>
+   <xs:complexType name="businessObjectDataStorageUnitCreateRequest">
+      <xs:all>
+         <xs:element name="businessObjectDataStorageUnitKey" type="businessObjectDataStorageUnitKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageDirectory" type="storageDirectory" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container for a Storage Directory that resides within a specific Storage Unit. Required when one
+                  of the following is true: storageFiles element is not present, discoverStorageFiles is enabled
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageFiles" type="storageFiles" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container of various Storage Files that reside within a specific Storage Unit. Required when
+                  storageDirectory is not present. Note: storageFiles cannot be specified when discoverStorageFiles is enabled
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="discoverStorageFiles" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>If true, enables the auto-discovery of all Storage Files in the specified Storage Directory
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStorageUnitCreateResponse" type="businessObjectDataStorageUnitCreateResponse"/>
+   <xs:complexType name="businessObjectDataStorageUnitCreateResponse">
+      <xs:all>
+         <xs:element name="businessObjectDataStorageUnitKey" type="businessObjectDataStorageUnitKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageDirectory" type="storageDirectory" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container for a Storage Directory that resides within a specific Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageFiles" type="storageFiles" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container of various Storage Files that reside within a specific Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataStorageUnitKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Namespace to which a Business Object Format is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the Business Object Definition to which a Business Object Format is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatUsage" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
+                  Object Format. Does not have to be unique in the system, the Usage string is frequently shared across formats for multiple Business Object
+                  Definitions
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatFileType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>A File Type known to the system that describes the file type of data stored under a Business Object Format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="partitionValue" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Partition Value that this Business Object Data is associated with</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Sub-Partition values this Business Object Data is associated with</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the storage</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Data Storage Unit Status ***** -->
+
+   <xs:element name="businessObjectDataStorageUnitStatusUpdateRequest" type="businessObjectDataStorageUnitStatusUpdateRequest"/>
+   <xs:complexType name="businessObjectDataStorageUnitStatusUpdateRequest">
+      <xs:all>
+         <xs:element name="status" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data Storage Unit. One of the following values: ENABLED, DISABLED, ARCHIVING, ARCHIVED,
+                  RESTORING, RESTORED, EXPIRING
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStorageUnitStatusUpdateResponse" type="businessObjectDataStorageUnitStatusUpdateResponse"/>
+   <xs:complexType name="businessObjectDataStorageUnitStatusUpdateResponse">
+      <xs:all>
+         <xs:element name="businessObjectDataStorageUnitKey" type="businessObjectDataStorageUnitKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="status" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data Storage Unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="previousStatus" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data Storage Unit prior to the update</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** JDBC ***** -->
 
    <xs:element name="jdbcExecutionRequest" type="jdbcExecutionRequest"/>
@@ -7267,7 +7544,7 @@
       <xs:all>
          <xs:element name="indexSearchResultType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The index from which search results are fetched. Currently 'bdef' and 'tag' are supported. Only one is allowed
+               <xs:documentation>The type of the index from which search results are fetched. One of the following values: BUS_OBJCT_DFNTN, TAG
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -7313,7 +7590,13 @@
       <xs:all>
          <xs:element name="indexSearchResultType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of the index search result</xs:documentation>
+               <xs:documentation>The type of the index from which search results are fetched. One of the following values: BUS_OBJCT_DFNTN, TAG
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchIndexKey" type="searchIndexKey" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a search index from which search results are fetched.</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="indexSearchResultKey" type="indexSearchResultKey">

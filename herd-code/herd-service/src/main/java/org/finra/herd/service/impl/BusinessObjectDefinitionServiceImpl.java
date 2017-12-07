@@ -1252,7 +1252,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                     break;
                 case SEARCH_INDEX_UPDATE_TYPE_DELETE:
                     // Delete a search index document
-                    indexFunctionsDao.deleteIndexDocuments(indexName, documentType, ids);
+                    indexFunctionsDao.deleteIndexDocuments(indexName, documentType, ids.subList(fromIndex, toIndex));
                     break;
                 default:
                     LOGGER.warn("Unknown modification type received.");

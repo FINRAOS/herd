@@ -22,6 +22,7 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -38,8 +39,9 @@ import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.IndexSearchService;
 import org.finra.herd.service.SearchableService;
-import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
+import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
@@ -51,40 +53,51 @@ import org.finra.herd.service.helper.TagHelper;
 public class IndexSearchServiceImpl implements IndexSearchService, SearchableService, FacetFieldValidationService
 {
     /**
-     * Constant to hold the display name option for the indexSearch
+     * Constant to hold the display name option for the index search
      */
-    private static final String DISPLAY_NAME_FIELD = "displayname";
+    public static final String DISPLAY_NAME_FIELD = "displayname";
 
     /**
-     * The minimum allowable length of a search term
+     * Constant to hold the column match field option for the index search.
      */
-    private static final int SEARCH_TERM_MINIMUM_ALLOWABLE_LENGTH = 3;
+    public static final String MATCH_COLUMN_FIELD = "column";
 
     /**
-     * Constant to hold the short description option for the indexSearch
+     * The minimum allowable length of a search term.
      */
-    private static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
+    public static final int SEARCH_TERM_MINIMUM_ALLOWABLE_LENGTH = 3;
+
+    /**
+     * Constant to hold the short description option for the index search.
+     */
+    public static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
+
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
 
     @Autowired
     private IndexSearchDao indexSearchDao;
 
     @Autowired
-    private TagHelper tagHelper;
+    private SearchIndexDaoHelper searchIndexDaoHelper;
+
+    @Autowired
+    private SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
 
     @Autowired
     private TagDaoHelper tagDaoHelper;
 
     @Autowired
-    private IndexSearchResultTypeHelper resultTypeHelper;
-
-    @Autowired
-    private SearchIndexDaoHelper searchIndexDaoHelper;
+    private TagHelper tagHelper;
 
     @Override
-    public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
+    public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields, final Set<String> match)
     {
         // Validate the search response fields
         validateSearchResponseFields(fields);
+
+        // Validate the search response match
+        validateSearchMatchFields(match);
 
         // Validate the search term
         validateIndexSearchRequestSearchTerm(request.getSearchTerm());
@@ -108,7 +121,7 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         String bdefActiveIndex = searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
         String tagActiveIndex = searchIndexDaoHelper.getActiveSearchIndex(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
 
-        return indexSearchDao.indexSearch(request, fields, bdefActiveIndex, tagActiveIndex);
+        return indexSearchDao.indexSearch(request, fields, match, bdefActiveIndex, tagActiveIndex);
     }
 
     /**
@@ -140,20 +153,19 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         for (IndexSearchFilter searchFilter : indexSearchFilters)
         {
             // Silently skip a search filter which is null
-            if (null != searchFilter)
+            if (searchFilter != null)
             {
                 // Validate that each search filter has at least one index search key
                 Assert.notEmpty(searchFilter.getIndexSearchKeys(), "At least one index search key must be specified.");
 
                 // Guard against a single null element in the index search keys list
-                if (null != searchFilter.getIndexSearchKeys().get(0))
+                if (searchFilter.getIndexSearchKeys().get(0) != null)
                 {
                     // Get the instance type of the key in the search filter, match all other keys with this
                     Class<?> expectedInstanceType =
                         searchFilter.getIndexSearchKeys().get(0).getIndexSearchResultTypeKey() != null ? IndexSearchResultTypeKey.class : TagKey.class;
 
-                    searchFilter.getIndexSearchKeys().forEach(indexSearchKey ->
-                    {
+                    searchFilter.getIndexSearchKeys().forEach(indexSearchKey -> {
                         // Validate that each search key has either an index search result type key or a tag key
                         Assert.isTrue((indexSearchKey.getIndexSearchResultTypeKey() != null) ^ (indexSearchKey.getTagKey() != null),
                             "Exactly one instance of index search result type key or tag key must be specified.");
@@ -181,7 +193,10 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
                         // Validate search result type key if present
                         if (indexSearchKey.getIndexSearchResultTypeKey() != null)
                         {
-                            resultTypeHelper.validateIndexSearchResultTypeKey(indexSearchKey.getIndexSearchResultTypeKey());
+                            validateIndexSearchResultTypeKey(indexSearchKey.getIndexSearchResultTypeKey());
+
+                            // Ensure that specified search index type exists.
+                            searchIndexTypeDaoHelper.getSearchIndexTypeEntity(indexSearchKey.getIndexSearchResultTypeKey().getIndexSearchResultType());
                         }
                     });
                 }
@@ -195,9 +210,46 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         return ImmutableSet.of(SHORT_DESCRIPTION_FIELD, DISPLAY_NAME_FIELD);
     }
 
+    private Set<String> getValidSearchMatchFields()
+    {
+        return ImmutableSet.of(MATCH_COLUMN_FIELD);
+    }
+
     @Override
     public Set<String> getValidFacetFields()
     {
         return ImmutableSet.of(ElasticsearchHelper.TAG_FACET, ElasticsearchHelper.RESULT_TYPE_FACET);
+    }
+
+    /**
+     * Validates an index search result type key. This method also trims the key parameters.
+     *
+     * @param indexSearchResultTypeKey the specified index search result type key
+     */
+    private void validateIndexSearchResultTypeKey(IndexSearchResultTypeKey indexSearchResultTypeKey)
+    {
+        indexSearchResultTypeKey.setIndexSearchResultType(
+            alternateKeyHelper.validateStringParameter("An", "index search result type", indexSearchResultTypeKey.getIndexSearchResultType()));
+    }
+
+    /**
+     * Validates a set of search match fields. This method also trims and lowers the match fields.
+     *
+     * @param match the search match fields to be validated
+     */
+    private void validateSearchMatchFields(Set<String> match)
+    {
+        // Create a local copy of the match fields set so that we can stream it to modify the match fields set
+        Set<String> localCopy = new HashSet<>(match);
+
+        // Clear the match set
+        match.clear();
+
+        // Add to the match set field the strings both trimmed and lower cased and filter out empty and null strings
+        localCopy.stream().filter(StringUtils::isNotBlank).map(String::trim).map(String::toLowerCase).forEachOrdered(match::add);
+
+        // Validate the field names
+        match.forEach(
+            field -> Assert.isTrue(getValidSearchMatchFields().contains(field), String.format("Search match field \"%s\" is not supported.", field)));
     }
 }

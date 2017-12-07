@@ -210,6 +210,12 @@ public enum ConfigurationValue
     STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES("storage.policy.selector.job.max.business.object.data.instances", "1000"),
 
     /**
+     * The maximum number of failed storage policy transition attempts before the relative storage unit gets excluded from being selected per storage policies
+     * by the storage policy selector system job. 0 means the maximum is not set. The default is 3.
+     */
+    STORAGE_POLICY_TRANSITION_MAX_ALLOWED_ATTEMPTS("storage.policy.transition.max.allowed.attempts", 3),
+
+    /**
      * The threshold in days since business object data registration update for business object data to be selectable by a storage policy of the
      * DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE storage policy rule type. The default is 90 days.
      */
@@ -242,6 +248,11 @@ public enum ConfigurationValue
      * The default value for the expiration time for the business object data restore. The default is 30 days
      */
     BDATA_RESTORE_EXPIRATION_IN_DAYS_DEFAULT("business.object.data.restore.expiration.in.days.default", 30),
+
+    /**
+     * The delay time in days to complete the business object data destroy operation. The default is 15 days
+     */
+    BDATA_FINAL_DESTROY_DELAY_IN_DAYS("business.object.data.final.destroy.delay.in.days", 15),
 
     /**
      * The tokenized template of the Activiti Id. The default is computed dynamically so it is not listed here.
@@ -851,7 +862,27 @@ public enum ConfigurationValue
     /**
      * The session identifier for the assumed role to be used when tagging S3 objects to trigger archiving to Glacier.
      */
-    S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME("s3.archive.to.glacier.role.session.name", null);
+    S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME("s3.archive.to.glacier.role.session.name", null),
+
+    /**
+     * The S3 object tag key to be used to trigger S3 object deletion.
+     */
+    S3_OBJECT_DELETE_TAG_KEY("s3.object.delete.tag.key", "HerdDelete"),
+
+    /**
+     * The S3 object tag value to be used to trigger S3 object deletion.
+     */
+    S3_OBJECT_DELETE_TAG_VALUE("s3.object.delete.tag.value", "true"),
+
+    /**
+     * The Amazon Resource Name (ARN) of the role to assume when tagging S3 objects to trigger S3 object deletion.
+     */
+    S3_OBJECT_DELETE_ROLE_ARN("s3.object.delete.role.arn", null),
+
+    /**
+     * The session identifier for the assumed role to be used when tagging S3 objects to trigger S3 object deletion.
+     */
+    S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null);
 
     private Object defaultValue;
 

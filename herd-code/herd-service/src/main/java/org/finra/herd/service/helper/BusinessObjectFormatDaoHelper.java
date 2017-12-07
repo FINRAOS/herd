@@ -19,9 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.BusinessObjectFormatDao;
+import org.finra.herd.dao.RetentionTypeDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.RetentionTypeEntity;
 
 /**
  * Helper for business object format related operations which require DAO.
@@ -31,6 +33,9 @@ public class BusinessObjectFormatDaoHelper
 {
     @Autowired
     private BusinessObjectFormatDao businessObjectFormatDao;
+
+    @Autowired
+    private RetentionTypeDao retentionTypeDao;
 
     /**
      * Gets a business object format entity based on the alternate key and makes sure that it exists. If a format version isn't specified in the business object
@@ -54,5 +59,22 @@ public class BusinessObjectFormatDaoHelper
         }
 
         return businessObjectFormatEntity;
+    }
+
+    /**
+     * Gets record retention type entity form retention type code
+     * @param retentionTypeCode retention type code
+     * @return the retention type entity
+     */
+    public RetentionTypeEntity getRecordRetentionTypeEntity(String retentionTypeCode)
+    {
+        RetentionTypeEntity recordRetentionTypeEntity = retentionTypeDao.getRetentionTypeByCode(retentionTypeCode);
+
+        if (recordRetentionTypeEntity == null)
+        {
+            throw new ObjectNotFoundException(String.format("Record retention type with code \"%s\" doesn't exist.", retentionTypeCode));
+        }
+
+        return recordRetentionTypeEntity;
     }
 }
