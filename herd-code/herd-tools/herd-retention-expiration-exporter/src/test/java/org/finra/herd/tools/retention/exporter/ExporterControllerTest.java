@@ -38,9 +38,6 @@ import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
-/**
- * Unit tests for UploaderController class.
- */
 public class ExporterControllerTest extends AbstractExporterTest
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExporterControllerTest.class);
@@ -92,13 +89,13 @@ public class ExporterControllerTest extends AbstractExporterTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format(
-                "Unable to register business object data because the latest business object data version is detected in UPLOADING state. " +
+            assertEquals(
+                String.format("Unable to register business object data because the latest business object data version is detected in UPLOADING state. " +
                     "Please use -force option to invalidate the latest business object version and allow upload to proceed. Business object data {" +
                     "namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
                     "businessObjectFormatVersion: 0, businessObjectDataPartitionValue: \"2014-01-31\", businessObjectDataSubPartitionValues: \"\", " +
                     "businessObjectDataVersion: 0}", TEST_NAMESPACE, TEST_BUSINESS_OBJECT_DEFINITION, TEST_BUSINESS_OBJECT_FORMAT_USAGE,
-                TEST_BUSINESS_OBJECT_FORMAT_FILE_TYPE), e.getMessage());
+                    TEST_BUSINESS_OBJECT_FORMAT_FILE_TYPE), e.getMessage());
         }
     }
 

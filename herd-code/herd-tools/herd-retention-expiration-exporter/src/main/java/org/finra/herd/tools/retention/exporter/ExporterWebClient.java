@@ -22,15 +22,14 @@ import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.dto.RetentionExpirationExporterInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
@@ -42,9 +41,6 @@ import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 public class ExporterWebClient extends DataBridgeWebClient
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExporterWebClient.class);
-
-    @Autowired
-    private JsonHelper jsonHelper;
 
     /**
      * Retrieves business object data from the herd registration server.
@@ -96,4 +92,16 @@ public class ExporterWebClient extends DataBridgeWebClient
         return businessObjectDataKeys;
     }
 
+    /**
+     * Extracts BusinessObjectDataKeys object from the registration server HTTP response.
+     *
+     * @param httpResponse the response received from the supported options.
+     * @param actionDescription the description of the action being performed with the registration server (to be used in an error message).
+     *
+     * @return the BusinessObjectDataKeys object extracted from the registration server response.
+     */
+    private BusinessObjectDataKeys getBusinessObjectDataKeys(CloseableHttpResponse httpResponse, String actionDescription)
+    {
+        return (BusinessObjectDataKeys) processXmlHttpResponse(httpResponse, actionDescription, BusinessObjectDataKeys.class);
+    }
 }

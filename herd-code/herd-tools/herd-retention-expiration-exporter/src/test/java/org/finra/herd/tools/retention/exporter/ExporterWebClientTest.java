@@ -15,9 +15,6 @@
  */
 package org.finra.herd.tools.retention.exporter;
 
-/**
- * Unit tests for DestructorWebClient class.
- */
 public class ExporterWebClientTest extends AbstractExporterTest
 {
 

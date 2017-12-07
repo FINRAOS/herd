@@ -58,7 +58,6 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
@@ -446,19 +445,6 @@ public abstract class DataBridgeWebClient
     protected BusinessObjectData getBusinessObjectData(CloseableHttpResponse httpResponse, String actionDescription)
     {
         return (BusinessObjectData) processXmlHttpResponse(httpResponse, actionDescription, BusinessObjectData.class);
-    }
-
-    /**
-     * Extracts BusinessObjectDataKeys object from the registration server HTTP response.
-     *
-     * @param httpResponse the response received from the supported options.
-     * @param actionDescription the description of the action being performed with the registration server (to be used in an error message).
-     *
-     * @return the BusinessObjectDataKeys object extracted from the registration server response.
-     */
-    protected BusinessObjectDataKeys getBusinessObjectDataKeys(CloseableHttpResponse httpResponse, String actionDescription)
-    {
-        return (BusinessObjectDataKeys) processXmlHttpResponse(httpResponse, actionDescription, BusinessObjectDataKeys.class);
     }
 
     /**

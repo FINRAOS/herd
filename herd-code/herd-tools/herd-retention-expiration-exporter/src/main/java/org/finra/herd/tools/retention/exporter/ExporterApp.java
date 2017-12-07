@@ -1,75 +1,82 @@
 /*
- * Copyright 2015 herd contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package org.finra.herd.tools.retention.exporter;
 
 import java.io.FileNotFoundException;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.ArgumentParser;
+import org.finra.herd.core.config.CoreSpringModuleConfig;
+import org.finra.herd.model.api.xml.BuildInformation;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.tools.common.ToolsCommonConstants;
-import org.finra.herd.tools.common.databridge.DataBridgeApp;
+import org.finra.herd.tools.common.config.DataBridgeAopSpringModuleConfig;
+import org.finra.herd.tools.common.config.DataBridgeEnvSpringModuleConfig;
+import org.finra.herd.tools.common.config.DataBridgeSpringModuleConfig;
 
 /**
- * The "main" uploader data bridge application command line tool.
+ * A main class for the herd retention expiration exporter application.
  */
-public class ExporterApp extends DataBridgeApp
+public class ExporterApp
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExporterApp.class);
-    private static final Integer MAX_RETRY_ATTEMPTS_DEFAULT = 5;    // Default number of business object data registration retry attempts.
-    private static final Integer MAX_RETRY_ATTEMPTS_MIN = 0;        // Minimum number of business object data registration retry attempts.
-    private static final Integer MAX_RETRY_ATTEMPTS_MAX = 10;       // Maximum number of business object data registration retry attempts.
-    private static final Integer RETRY_DELAY_SECS_DEFAULT = 120;    // Default delay in seconds between the business object data registration retry attempts.
-    private static final Integer RETRY_DELAY_SECS_MIN = 0;          // Minimum delay in seconds between the business object data registration retry attempts.
-    private static final Integer RETRY_DELAY_SECS_MAX = 900;        // Maximum delay in seconds between the business object data registration retry attempts.
-    // The retention expiration exporter specific command line options.
-    private Option maxRetryAttemptsOpt;
-    private Option retryDelaySecsOpt;
-    private Option createNewVersionOpt;
-    private Option rrsOpt;
-    private Option forceOpt;
-    // Integer values for command line options that are of type "Integer".
-    private Integer maxRetryAttempts;
-    private Integer retryDelaySecs;
-    // An argument parser for the application.
+
+    protected Option businessObjectDefinitionNameOpt;
+
+    protected Option helpOpt;
+
+    protected Option localOutputFileOpt;
+
+    protected Option namespaceOpt;
+
+    protected Option passwordOpt;
+
+    protected Option regServerHostOpt;
+
+    protected Integer regServerPort;
+
+    protected Option regServerPortOpt;
+
+    protected Option sslOpt;
+
+    protected Boolean useSsl;
+
+    protected Option usernameOpt;
+
+    protected Option versionOpt;
+
     private ArgumentParser argParser;
 
     /**
-     * Constructs a new ExporterApp instance.
+     * Constructs a new application instance.
      */
     public ExporterApp()
     {
-        argParser = new ArgumentParser("herd-record-destruction-reporter-app");
-
-        // Create command line options specific to the uploader. Other common options will be handled by the base class.
-        createNewVersionOpt = argParser
-            .addArgument("V", "createNewVersion", false, "If not set, only initial version of the business object data is allowed to be created.", false);
-        rrsOpt = argParser.addArgument("r", "rrs", false, "If set, the data will be saved in Reduced Redundancy Storage.", false);
-        maxRetryAttemptsOpt = argParser.addArgument("R", "maxRetryAttempts", true,
-            "The maximum number of the business object data registration retry attempts that uploader would perform before rolling back the upload.", false);
-        retryDelaySecsOpt =
-            argParser.addArgument("D", "retryDelaySecs", true, "The delay in seconds between the business object data registration retry attempts.", false);
-        forceOpt = argParser.addArgument("f", "force", false,
-            "If set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version.", false);
+        argParser = new ArgumentParser("herd-retention-expiration-exporter-app");
     }
 
     /**
@@ -77,12 +84,12 @@ public class ExporterApp extends DataBridgeApp
      *
      * @param args the command line arguments passed to the program.
      *
-     * @throws FileNotFoundException if the logging file couldn't be found.
+     * @throws java.io.FileNotFoundException if the logging file couldn't be found.
      */
     @SuppressWarnings("PMD.DoNotCallSystemExit") // Using System.exit is allowed for an actual application to exit.
     public static void main(String[] args) throws FileNotFoundException
     {
-        ReturnValue returnValue;
+        ToolsCommonConstants.ReturnValue returnValue;
         try
         {
             // Initialize Log4J with the resource. The configuration itself can use "monitorInterval" to have it refresh if it came from a file.
@@ -101,7 +108,7 @@ public class ExporterApp extends DataBridgeApp
         catch (Exception e)
         {
             LOGGER.error("Error running herd uploader. {}", e.toString(), e);
-            returnValue = ReturnValue.FAILURE;
+            returnValue = ToolsCommonConstants.ReturnValue.FAILURE;
         }
 
         // Exit with the return code.
@@ -109,35 +116,107 @@ public class ExporterApp extends DataBridgeApp
     }
 
     /**
-     * Parses the command line arguments using the specified argument parser.
+     * Runs the application by parsing the command line arguments and calling the controller to export business object data that passed its relative retention
+     * expiration. This is the main entry into the application class itself and is typically called from a main method.
      *
-     * @param args the command line arguments.
-     * @param applicationContext the Spring application context.
+     * @param args the command line arguments passed to the program
      *
-     * @return the return value if the application should exit or null if the application can continue.
+     * @return the return value of the application
+     * @throws Exception if any problems were encountered
      */
-    @Override
-    protected ReturnValue parseCommandLineArguments(String[] args, ApplicationContext applicationContext)
+    protected ToolsCommonConstants.ReturnValue go(String[] args) throws Exception
     {
-        ReturnValue returnValue = super.parseCommandLineArguments(args, applicationContext);
+        // Create the Spring application context.
+        ApplicationContext applicationContext = createApplicationContext();
 
-        // Stop the processing if return value is not null.
+        // Parse the command line arguments and return a return value if we shouldn't continue processing (e.g. we displayed usage information, etc.).
+        ToolsCommonConstants.ReturnValue returnValue = parseCommandLineArguments(args, applicationContext);
         if (returnValue != null)
         {
             return returnValue;
         }
 
+        // Create a DTO to communi
+        RegServerAccessParamsDto regServerAccessParamsDto =
+            RegServerAccessParamsDto.builder().withRegServerHost(argParser.getStringValue(regServerHostOpt)).withRegServerPort(regServerPort).withUseSsl(useSsl)
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt)).build();
+
+        // Call the controller with the user specified parameters to perform the upload.
+        ExporterController controller = applicationContext.getBean(ExporterController.class);
+        controller.performRetentionExpirationExport(argParser.getStringValue(namespaceOpt), argParser.getStringValue(businessObjectDefinitionNameOpt),
+            argParser.getFileValue(localOutputFileOpt), regServerAccessParamsDto);
+
+        // No exceptions were returned so return success.
+        return ToolsCommonConstants.ReturnValue.SUCCESS;
+    }
+
+    /**
+     * Parses the command line arguments using the argument parser. The command line options will be initialized and added to the argument parser in this
+     * method. Ensure the argParser was set in this class prior to calling this method.
+     *
+     * @param args the command line arguments
+     * @param applicationContext the Spring application context
+     *
+     * @return the return value if the application should exit or null if the application can continue.
+     */
+    // Using System.out to inform user of usage or version information is okay.
+    @SuppressWarnings("PMD.SystemPrintln")
+    @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
+    protected ToolsCommonConstants.ReturnValue parseCommandLineArguments(String[] args, ApplicationContext applicationContext)
+    {
         try
         {
-            // Extract uploader specific Integer option values here to catch any NumberFormatException exceptions.
-            maxRetryAttempts = argParser.getIntegerValue(maxRetryAttemptsOpt, MAX_RETRY_ATTEMPTS_DEFAULT, MAX_RETRY_ATTEMPTS_MIN, MAX_RETRY_ATTEMPTS_MAX);
-            retryDelaySecs = argParser.getIntegerValue(retryDelaySecsOpt, RETRY_DELAY_SECS_DEFAULT, RETRY_DELAY_SECS_MIN, RETRY_DELAY_SECS_MAX);
+            namespaceOpt = argParser.addArgument("n", "namespace", true, "Namespace.", true);
+            businessObjectDefinitionNameOpt = argParser.addArgument("b", "businessObjectDefinitionName", true, "Business object definition.", true);
+            localOutputFileOpt = argParser.addArgument("o", "localOutputFile", true, "The path to files on your local file system.", true);
+            regServerHostOpt = argParser.addArgument("H", "regServerHost", true, "Registration Service hostname.", true);
+            regServerPortOpt = argParser.addArgument("P", "regServerPort", true, "Registration Service port.", true);
+            sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
+            usernameOpt = argParser.addArgument("u", "username", true, "The username for HTTPS client authentication.", false);
+            passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
+            helpOpt = argParser.addArgument("h", "help", false, "Display usage information and exit.", false);
+            versionOpt = argParser.addArgument("v", "version", false, "Display version information and exit.", false);
+
+            // Parse command line arguments without failing on any missing required arguments by passing "false" as the second argument.
+            argParser.parseArguments(args, false);
+
+            // If help option was specified, then display usage information and return success.
+            if (argParser.getBooleanValue(helpOpt))
+            {
+                System.out.println(argParser.getUsageInformation());
+                return ToolsCommonConstants.ReturnValue.SUCCESS;
+            }
+
+            // If version option was specified, then display version information and return success.
+            if (argParser.getBooleanValue(versionOpt))
+            {
+                BuildInformation buildInformation = applicationContext.getBean(BuildInformation.class);
+                System.out.println(String
+                    .format(ToolsCommonConstants.BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(),
+                        buildInformation.getBuildOs(), buildInformation.getBuildUser()));
+                return ToolsCommonConstants.ReturnValue.SUCCESS;
+            }
+
+            // Parse command line arguments for the second time, enforcing the required arguments by passing "true" as the second argument.
+            argParser.parseArguments(args, true);
+
+            // Extract a boolean option value passing "false" as a default value.
+            useSsl = argParser.getStringValueAsBoolean(sslOpt, false);
+
+            // Username and password are required when useSsl is enabled.
+            if (useSsl && (StringUtils.isBlank(argParser.getStringValue(usernameOpt)) || StringUtils.isBlank(argParser.getStringValue(passwordOpt))))
+            {
+                throw new ParseException("Username and password are required when SSL is enabled.");
+            }
+
+            // Extract all Integer option values here to catch any NumberFormatException exceptions.
+            regServerPort = argParser.getIntegerValue(regServerPortOpt);
         }
-        catch (Exception ex)
+        catch (ParseException ex)
         {
             // Log a friendly error and return a failure which will cause the application to exit.
             LOGGER.error("Error parsing command line arguments: " + ex.getMessage() + "\n" + argParser.getUsageInformation());
-            return ReturnValue.FAILURE;
+            return ToolsCommonConstants.ReturnValue.FAILURE;
         }
 
         // The command line arguments were all parsed successfully so return null to continue processing.
@@ -145,41 +224,21 @@ public class ExporterApp extends DataBridgeApp
     }
 
     /**
-     * Parses the command line arguments and calls the controller to process the retention expiration exporter.
+     * Creates and returns the Spring application context.
      *
-     * @param args the command line arguments passed to the program.
-     *
-     * @return the return value of the application.
-     * @throws Exception if there are problems performing the retention expiration exporter.
+     * @return the application context
      */
-    @Override
-    public ReturnValue go(String[] args) throws Exception
+    private ApplicationContext createApplicationContext()
     {
-        // Create the Spring application context.
-        ApplicationContext applicationContext = createApplicationContext();
-
-        // Parse the command line arguments and return a return value if we shouldn't continue processing (e.g. we displayed usage information, etc.).
-        ReturnValue returnValue = parseCommandLineArguments(args, applicationContext);
-        if (returnValue != null)
-        {
-            return returnValue;
-        }
-
-        // Call the controller with the user specified parameters to perform the retention expiration exporter.
-        ExporterController controller = applicationContext.getBean(ExporterController.class);
-        RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().withRegServerHost(regServerHost).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt)).build();
-        controller.performRetentionExpirationExport(regServerAccessParamsDto, argParser.getFileValue(manifestPathOpt), argParser.getStringValue(namespace),
-            argParser.getStringValue(businessObjectDefinitionName), argParser.getBooleanValue(forceOpt), maxRetryAttempts, retryDelaySecs);
-
-        // No exceptions were returned so return success.
-        return ReturnValue.SUCCESS;
-    }
-
-    @Override
-    public ArgumentParser getArgumentParser()
-    {
-        return argParser;
+        // Create the Spring application context and register the JavaConfig classes we need.
+        // We will use core (in case it's needed), the service aspect that times the duration of the service method calls, and our specific beans defined in
+        // the data bridge configuration. We're not including full service and DAO configurations because they come with database/data source dependencies
+        // that we don't need and don't want (i.e. we don't want the database to be running as a pre-requisite for running the uploader).
+        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+        ApplicationContextHolder.setApplicationContext(applicationContext);
+        applicationContext.register(CoreSpringModuleConfig.class, DataBridgeSpringModuleConfig.class, DataBridgeAopSpringModuleConfig.class,
+            DataBridgeEnvSpringModuleConfig.class);
+        applicationContext.refresh();
+        return applicationContext;
     }
 }

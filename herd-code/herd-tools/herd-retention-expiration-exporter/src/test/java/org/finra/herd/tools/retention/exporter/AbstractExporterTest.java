@@ -24,20 +24,10 @@ import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.tools.common.databridge.AbstractDataBridgeTest;
 
 /**
- * This is an abstract base class that provides useful methods for uploader test drivers.
+ * This is an abstract base class that provides useful methods for herd retention expiration tool test drivers.
  */
 public abstract class AbstractExporterTest extends AbstractDataBridgeTest
 {
-    protected static final Integer TEST_RETRY_ATTEMPTS = 2;
-
-    protected static final Integer TEST_RETRY_DELAY_SECS = 5;
-
-    /**
-     * Provide easy access to the UploaderManifestReader instance for all test methods.
-     */
-    @Autowired
-    protected ExporterManifestReader exporterManifestReader;
-
     /**
      * Provide easy access to the UploaderController for all test methods.
      */

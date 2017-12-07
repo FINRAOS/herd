@@ -30,43 +30,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.core.helper.HerdThreadHelper;
-import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.RetentionExpirationExporterInputManifestDto;
-import org.finra.herd.service.helper.BusinessObjectDataHelper;
-import org.finra.herd.service.helper.StorageHelper;
-import org.finra.herd.tools.common.databridge.CSVUtils;
-import org.finra.herd.tools.common.databridge.DataBridgeController;
 
 /**
  * Executes the ExporterApp workflow.
  */
 @Component
-public class ExporterController extends DataBridgeController
+public class ExporterController
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExporterController.class);
-
-    @Autowired
-    private BusinessObjectDataHelper businessObjectDataHelper;
-
-    @Autowired
-    private ConfigurationHelper configurationHelper;
-
-    @Autowired
-    private HerdThreadHelper herdThreadHelper;
-
-    @Autowired
-    private JsonHelper jsonHelper;
-
-    @Autowired
-    private ExporterManifestReader manifestReader;
-
-    @Autowired
-    private StorageHelper storageHelper;
 
     @Autowired
     private ExporterWebClient exporterWebClient;
@@ -74,25 +49,19 @@ public class ExporterController extends DataBridgeController
     /**
      * Executes the retention expiration exporter workflow.
      *
-     * @param regServerAccessParamsDto the DTO for the parameters required to communicate with the registration server
-     * @param manifestPath the local path to the manifest file
      * @param namespace the namespace of business object data
      * @param businessObjectDefinitionName the business object definition name of business object data
-     * @param force if set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version
-     * @param maxRetryAttempts the maximum number of the business object data registration retry attempts
-     * @param retryDelaySecs the delay in seconds between the business object data registration retry attempts
+     * @param localOutputFile the local output file
+     * @param regServerAccessParamsDto the DTO for the parameters required to communicate with the registration server
      *
-     * @throws InterruptedException if the upload thread was interrupted.
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws IOException if an I/O error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
+     * @throws Exception if any problems were encountered
      */
-    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", justification = "manifestReader.readJsonManifest will always return an RetentionExpirationExporterInputManifestDto object.")
-    public void performRetentionExpirationExport(RegServerAccessParamsDto regServerAccessParamsDto, File manifestPath, String namespace,
-        String businessObjectDefinitionName, Boolean force, Integer maxRetryAttempts, Integer retryDelaySecs)
-        throws InterruptedException, JAXBException, IOException, URISyntaxException
+    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE",
+        justification = "manifestReader.readJsonManifest will always return an RetentionExpirationExporterInputManifestDto object.")
+    public void performRetentionExpirationExport(String namespace, String businessObjectDefinitionName, File localOutputFile,
+        RegServerAccessParamsDto regServerAccessParamsDto) throws Exception
     {
-        BusinessObjectDataKeys businessObjectDataKeys = null;
+        BusinessObjectDataKeys businessObjectDataKeys;
 
         try
         {
@@ -107,31 +76,27 @@ public class ExporterController extends DataBridgeController
             // Get business object data keys.
             businessObjectDataKeys = exporterWebClient.getBusinessObjectDataKeys(manifest);
 
-
             // Writing business object data to the CSV file
-            String csvFile = "/Users/mkyong/csv/abc.csv";
-            FileWriter writer = new FileWriter(csvFile);
+            FileWriter writer = new FileWriter(localOutputFile);
 
             for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys.getBusinessObjectDataKeys())
             {
-
-                List<String> bDataArray = Arrays.asList(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectFormatUsage(),
-                    businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion().toString(),
-                    businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues().get(0),
-                    businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2),
-                    businessObjectDataKey.getSubPartitionValues().get(3), businessObjectDataKey.getBusinessObjectDataVersion().toString());
-                CSVUtils.writeLine(writer, bDataArray, ',', '"');
-                LOGGER.info("BusinessObjectDataKey|" + bDataArray.toString());
+                List<String> businessObjectDataRecords = Arrays
+                    .asList(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectFormatUsage(),
+                        businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion().toString(),
+                        businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues().get(0),
+                        businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2),
+                        businessObjectDataKey.getSubPartitionValues().get(3), businessObjectDataKey.getBusinessObjectDataVersion().toString());
+                //CSVUtils.writeLine(writer, bDataArray, ',', '"');
+                LOGGER.info("BusinessObjectDataKey|" + businessObjectDataRecords.toString());
             }
 
             writer.flush();
             writer.close();
-
         }
         catch (JAXBException | IOException | URISyntaxException e)
         {
             throw e;
         }
     }
-
 }

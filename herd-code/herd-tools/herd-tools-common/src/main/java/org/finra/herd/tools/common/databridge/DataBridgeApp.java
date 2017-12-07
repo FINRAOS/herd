@@ -45,24 +45,39 @@ public abstract class DataBridgeApp
 
     // The common command line options.
     protected Option s3AccessKeyOpt;
-    protected Option namespace;
-    protected Option businessObjectDefinitionName;
+
     protected Option s3SecretKeyOpt;
+
     protected Option s3EndpointOpt;
+
     protected Option localPathOpt;
+
     protected Option manifestPathOpt;
+
     protected Option regServerHostOpt;
+
     protected Option regServerPortOpt;
+
     protected Option dmRegServerHostOpt;
+
     protected Option dmRegServerPortOpt;
+
     protected Option sslOpt;
+
     protected Option usernameOpt;
+
     protected Option passwordOpt;
+
     protected Option helpOpt;
+
     protected Option versionOpt;
+
     protected Option httpProxyHostOpt;
+
     protected Option httpProxyPortOpt;
+
     protected Option maxThreadsOpt;
+
     protected Option socketTimeoutOpt;
 
     // Boolean values for command line options that are of type "Boolean".
@@ -70,7 +85,9 @@ public abstract class DataBridgeApp
 
     // Integer values for command line options that are of type "Integer".
     protected Integer regServerPort;
+
     protected Integer httpProxyPort;
+
     protected Integer maxThreads;
 
     // The registration server hostname.
@@ -135,8 +152,6 @@ public abstract class DataBridgeApp
         try
         {
             s3AccessKeyOpt = argParser.addArgument("a", "s3AccessKey", true, "S3 access key.", false);
-            namespace = argParser.addArgument("N", "namespace", true, "Namespace.", false);
-            businessObjectDefinitionName = argParser.addArgument("b", "businessObjectDefinitionName", true, "Business object definition.", false);
             s3SecretKeyOpt = argParser.addArgument("p", "s3SecretKey", true, "S3 secret key.", false);
             s3EndpointOpt = argParser.addArgument("e", "s3Endpoint", true, "S3 endpoint.", false);
             localPathOpt = argParser.addArgument("l", "localPath", true, "The path to files on your local file system.", true);
