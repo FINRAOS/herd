@@ -17,12 +17,15 @@ package org.finra.herd.tools.retention.exporter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import java.io.File;
+import java.net.UnknownHostException;
 
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 
+import org.finra.herd.model.api.xml.BuildInformation;
+import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.databridge.DataBridgeApp;
 
 /**
@@ -39,57 +42,107 @@ public class ExporterAppTest extends AbstractExporterTest
     };
 
     @Test
-    public void testParseShortCommandLineArgumentsSuccess() throws Exception
-    {
-        //-N OATS -b NYX_BADGE -l /Users/k26686/aniruddh/develop/July/herd-record-destruction-report-files/oats-nyx-badge-record-destruction-report-as-of-2018-01-01.csv
-        // -H datamgt.aws.finra.org -P 8443 -s true -u tst_dm_adm -w DsRuTfVzMedZ9bgAIC5Mkqp -m /Users/k26686/aniruddh/develop/July/manifest.json
-        String[] arguments = {"-N", TEST_NAMESPACE, "-b", TEST_BUSINESS_OBJECT_DEFINITION, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", STRING_VALUE, "-H",
-            WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
-        assertNull(exporterApp.parseCommandLineArguments(arguments, applicationContext));
-    }
-
-    @Test
-    public void testParseCommandLineArgumentsNone() throws Exception
-    {
-        // assertEquals(DataBridgeApp.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(new String[] {}, applicationContext));
-    }
-
-    @Test
-    public void testParseCommandLineArgumentsInvalidMaxRetryAttempts() throws Exception
+    public void testGoInvalidSslValue() throws Exception
     {
         String[] arguments =
-            {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", STRING_VALUE, "-H",
-                WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString(), "-R",
-                "INVALID_INTEGER"};
-        assertEquals(DataBridgeApp.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(arguments, applicationContext));
+            {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl", "INVALID_BOOLEAN_VALUE", "--username",
+                WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
+
+        runApplicationAndCheckReturnValue(exporterApp, arguments, null, ToolsCommonConstants.ReturnValue.FAILURE);
     }
 
     @Test
     public void testGoSuccess() throws Exception
     {
-        // Create local test data files.
-        createTestDataFiles(LOCAL_TEMP_PATH_INPUT, testManifestFiles);
-
-        // Create the uploader manifest file.
-        File manifestFile = createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), getTestUploaderInputManifestDto());
-
         String[] arguments =
-            {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", manifestFile.getPath(),
-                "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
+            {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--username", WEB_SERVICE_HTTPS_USERNAME,
+                "--password", WEB_SERVICE_HTTPS_PASSWORD};
 
-        // We are expecting this to fail with a NullPointerException when AwsHostNameUtils is trying to parse a region name.
-        //runDataBridgeAndCheckReturnValue(exporterApp, arguments, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.SUCCESS);
+        // We are expecting this to fail with an UnknownHostException.
+        runApplicationAndCheckReturnValue(exporterApp, arguments, null, new UnknownHostException());
     }
 
     @Test
-    public void testGoInvalidSslValue() throws Exception
+    public void testParseCommandLineArgumentsHelpOpt() throws Exception
     {
-        String[] arguments = {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
-            LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath", STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
-            WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString(), "-s", "INVALID_BOOLEAN_VALUE",
-            "-u", WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD};
+        String output = runTestGetSystemOut(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                String[] arguments = {"--help"};
+                assertEquals(ToolsCommonConstants.ReturnValue.SUCCESS, exporterApp.parseCommandLineArguments(arguments, applicationContext));
+            }
+        });
 
-        // We are expecting this to fail with a NullPointerException when AwsHostNameUtils is trying to parse a region name.
-        //runDataBridgeAndCheckReturnValue(exporterApp, arguments, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.FAILURE);
+        assertTrue("Incorrect usage information returned.", output.startsWith("usage: " + ExporterApp.APPLICATION_NAME));
+    }
+
+    @Test
+    public void testParseCommandLineArgumentsInvalidRegServerPort() throws Exception
+    {
+        String[] arguments =
+            {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", "INVALID_INTEGER", "--ssl", "true", "--username", WEB_SERVICE_HTTPS_USERNAME,
+                "--password", WEB_SERVICE_HTTPS_PASSWORD};
+
+        // We are expecting this to fail with a NumberFormatException.
+        runApplicationAndCheckReturnValue(exporterApp, arguments, null, new NumberFormatException());
+    }
+
+    @Test
+    public void testParseCommandLineArgumentsNone() throws Exception
+    {
+        assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(new String[] {}, applicationContext));
+    }
+
+    @Test
+    public void testParseCommandLineArgumentsSslTrueAndNoPassword() throws Exception
+    {
+        String[] arguments =
+            {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl", "true", "--username",
+                WEB_SERVICE_HTTPS_USERNAME};
+        assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(arguments, applicationContext));
+    }
+
+    @Test
+    public void testParseCommandLineArgumentsSslTrueAndNoUsername() throws Exception
+    {
+        String[] arguments =
+            {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl", "true", "--password",
+                WEB_SERVICE_HTTPS_PASSWORD};
+        assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(arguments, applicationContext));
+    }
+
+    @Test
+    public void testParseCommandLineArgumentsVersionOpt()
+    {
+        String output = runTestGetSystemOut(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                String[] arguments = {"--version"};
+                assertEquals(ToolsCommonConstants.ReturnValue.SUCCESS, exporterApp.parseCommandLineArguments(arguments, applicationContext));
+            }
+        });
+
+        BuildInformation buildInformation = applicationContext.getBean(BuildInformation.class);
+
+        assertEquals("output", String
+            .format(DataBridgeApp.BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(), buildInformation.getBuildOs(),
+                buildInformation.getBuildUser()), output);
+    }
+
+    @Test
+    public void testParseShortCommandLineArgumentsSuccess() throws Exception
+    {
+        String[] arguments = {"-n", NAMESPACE, "-b", BUSINESS_OBJECT_DEFINITION_NAME, "-o", LOCAL_OUTPUT_FILE, "-H", WEB_SERVICE_HOSTNAME, "-P",
+            WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD};
+        assertNull(exporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 }

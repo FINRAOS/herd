@@ -43,6 +43,8 @@ import org.finra.herd.tools.common.config.DataBridgeSpringModuleConfig;
  */
 public class ExporterApp
 {
+    public static final String APPLICATION_NAME = "herd-retention-expiration-exporter-app";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ExporterApp.class);
 
     protected Option businessObjectDefinitionNameOpt;
@@ -76,11 +78,11 @@ public class ExporterApp
      */
     public ExporterApp()
     {
-        argParser = new ArgumentParser("herd-retention-expiration-exporter-app");
+        argParser = new ArgumentParser(APPLICATION_NAME);
     }
 
     /**
-     * The main method of the Uploader Application.
+     * The main method of the application.
      *
      * @param args the command line arguments passed to the program.
      *
@@ -107,7 +109,7 @@ public class ExporterApp
         }
         catch (Exception e)
         {
-            LOGGER.error("Error running herd uploader. {}", e.toString(), e);
+            LOGGER.error("Error running herd retention expiration exporter application. {}", e.toString(), e);
             returnValue = ToolsCommonConstants.ReturnValue.FAILURE;
         }
 
@@ -136,7 +138,7 @@ public class ExporterApp
             return returnValue;
         }
 
-        // Create a DTO to communi
+        // Create a DTO to communicate with herd registration server.
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(argParser.getStringValue(regServerHostOpt)).withRegServerPort(regServerPort).withUseSsl(useSsl)
                 .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt)).build();
@@ -233,7 +235,7 @@ public class ExporterApp
         // Create the Spring application context and register the JavaConfig classes we need.
         // We will use core (in case it's needed), the service aspect that times the duration of the service method calls, and our specific beans defined in
         // the data bridge configuration. We're not including full service and DAO configurations because they come with database/data source dependencies
-        // that we don't need and don't want (i.e. we don't want the database to be running as a pre-requisite for running the uploader).
+        // that we don't need and don't want (i.e. we don't want the database to be running as a pre-requisite for running the application).
         AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
         ApplicationContextHolder.setApplicationContext(applicationContext);
         applicationContext.register(CoreSpringModuleConfig.class, DataBridgeSpringModuleConfig.class, DataBridgeAopSpringModuleConfig.class,
