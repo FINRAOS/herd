@@ -772,6 +772,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_HIGHLIGHT_FIELDS("elasticsearch.highlight.fields", "{\"fields\": [\"*\"]}"),
 
     /**
+     * Fields on which highlighting should be done when the column match is used
+     */
+    ELASTICSEARCH_COLUMN_MATCH_HIGHLIGHT_FIELDS("elasticsearch.column.match.highlight.fields", "{\"fields\": [\"*\"]}"),
+
+    /**
      * The elasticsearch default port
      */
     ELASTICSEARCH_DEFAULT_PORT("elasticsearch.default.port", 9300),
