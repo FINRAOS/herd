@@ -16,9 +16,13 @@
 package org.finra.herd.tools.retention.exporter;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,8 +34,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
+import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.RetentionExpirationExporterInputManifestDto;
 
@@ -45,6 +49,18 @@ public class ExporterController
 
     @Autowired
     private ExporterWebClient exporterWebClient;
+
+    private static String followCVSformat(String value)
+    {
+
+        String result = value;
+        if (result.contains("\""))
+        {
+            result = result.replace("\"", "\"\"");
+        }
+        return result;
+
+    }
 
     /**
      * Executes the retention expiration exporter workflow.
@@ -61,7 +77,7 @@ public class ExporterController
     public void performRetentionExpirationExport(String namespace, String businessObjectDefinitionName, File localOutputFile,
         RegServerAccessParamsDto regServerAccessParamsDto) throws Exception
     {
-        BusinessObjectDataKeys businessObjectDataKeys;
+        BusinessObjectDataSearchResult businessObjectDataSearchResult;
 
         try
         {
@@ -73,22 +89,33 @@ public class ExporterController
             // Initialize retention expiration exporter web client.
             exporterWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
 
-            // Get business object data keys.
-            businessObjectDataKeys = exporterWebClient.getBusinessObjectDataKeys(manifest);
+            // Validate that business object definition exists with provided data.
+            exporterWebClient.getBusinessObjectDefinition(manifest);
+
+            // Get business object data search result and add them to the CSV file.
+            businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(manifest);
+            // businessObjectDataSearchResult = this.dummyBusinessObjectDataSearchResult();
 
             // Writing business object data to the CSV file
-            FileWriter writer = new FileWriter(localOutputFile);
-
-            for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys.getBusinessObjectDataKeys())
+            Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8);
+            for (BusinessObjectData businessObjectData : businessObjectDataSearchResult.getBusinessObjectDataElements())
             {
-                List<String> businessObjectDataRecords = Arrays
-                    .asList(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectFormatUsage(),
-                        businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion().toString(),
-                        businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues().get(0),
-                        businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2),
-                        businessObjectDataKey.getSubPartitionValues().get(3), businessObjectDataKey.getBusinessObjectDataVersion().toString());
-                //CSVUtils.writeLine(writer, bDataArray, ',', '"');
-                LOGGER.info("BusinessObjectDataKey|" + businessObjectDataRecords.toString());
+                // Creating the url the UDC
+                final String url =
+                    "https://udc.finra.org/data-objects/" + businessObjectData.getNamespace() + "/" + businessObjectData.getBusinessObjectDefinitionName() +
+                        "/" + businessObjectData.getBusinessObjectFormatUsage() + "/" + businessObjectData.getBusinessObjectFormatFileType() + "/" +
+                        businessObjectData.getBusinessObjectFormatVersion() + "/" + businessObjectData.getPartitionValue() + "/" +
+                        businessObjectData.getVersion() + ";subPartitionValues=" + businessObjectData.getSubPartitionValues().get(0) + "," +
+                        businessObjectData.getSubPartitionValues().get(1) + "," + businessObjectData.getSubPartitionValues().get(2) + "," +
+                        businessObjectData.getSubPartitionValues().get(3);
+                List<String> businessObjectDataRecords = Arrays.asList(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
+                    businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
+                    "" + businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(),
+                    businessObjectData.getSubPartitionValues().get(0), businessObjectData.getSubPartitionValues().get(1),
+                    businessObjectData.getSubPartitionValues().get(2), businessObjectData.getSubPartitionValues().get(3), "" + businessObjectData.getVersion(),
+                    url);
+                this.writeLine(writer, businessObjectDataRecords, '"');
+                LOGGER.info("BusinessObjectData=" + businessObjectDataRecords.toString());
             }
 
             writer.flush();
@@ -98,5 +125,72 @@ public class ExporterController
         {
             throw e;
         }
+    }
+
+    /**
+     * @param writer
+     * @param values
+     * @param customQuote
+     *
+     * @throws IOException
+     */
+    private void writeLine(Writer writer, List<String> values, char customQuote) throws IOException
+    {
+
+        boolean first = true;
+
+        StringBuilder sb = new StringBuilder();
+        for (String value : values)
+        {
+            if (!first)
+            {
+                sb.append(',');
+            }
+            if (customQuote == ' ')
+            {
+                sb.append(followCVSformat(value));
+            }
+            else
+            {
+                sb.append(customQuote).append(followCVSformat(value)).append(customQuote);
+            }
+
+            first = false;
+        }
+        sb.append("\n");
+        writer.append(sb.toString());
+
+
+    }
+
+    /**
+     * @return
+     * @throws JAXBException
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    private BusinessObjectDataSearchResult dummyBusinessObjectDataSearchResult() throws JAXBException, IOException, URISyntaxException
+    {
+        List<BusinessObjectData> businessObjectDataList = new ArrayList();
+        BusinessObjectDataSearchResult businessObjectDataSearchResult = new BusinessObjectDataSearchResult();
+
+        for (int i = 0; i < 1199; i++)
+        {
+            BusinessObjectData businessObjectDataKey = new BusinessObjectData();
+
+            businessObjectDataKey.setNamespace("aniruddha");
+            businessObjectDataKey.setBusinessObjectDefinitionName("ani-bdef-name");
+            businessObjectDataKey.setBusinessObjectFormatUsage("ANI-TEST");
+            businessObjectDataKey.setBusinessObjectFormatFileType("TXT");
+            businessObjectDataKey.setBusinessObjectFormatVersion(0);
+            businessObjectDataKey.setPartitionValue("ani");
+            businessObjectDataKey.setSubPartitionValues(Arrays.asList("ani0" + i, "ani1" + i, "ani2" + i, "ani3" + i));
+            businessObjectDataKey.setVersion(0);
+
+            businessObjectDataList.add(businessObjectDataKey);
+        }
+        businessObjectDataSearchResult.setBusinessObjectDataElements(businessObjectDataList);
+
+        return businessObjectDataSearchResult;
     }
 }
