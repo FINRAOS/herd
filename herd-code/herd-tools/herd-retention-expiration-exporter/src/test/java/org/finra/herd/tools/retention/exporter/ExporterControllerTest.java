@@ -15,7 +15,12 @@
  */
 package org.finra.herd.tools.retention.exporter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ExporterControllerTest extends AbstractExporterTest
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExporterControllerTest.class);
+
 
 }
