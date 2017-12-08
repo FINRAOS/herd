@@ -346,7 +346,7 @@ public class ElasticsearchHelper
             List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
 
             TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
-                new TagTypeIndexSearchResponseDto(tagTypeCodeEntry.getKeyAsString(), tagTypeCodeEntry.getDocCount(), tagIndexSearchResponseDtos, null);
+                new TagTypeIndexSearchResponseDto(tagTypeCodeEntry.getKeyAsString(), tagIndexSearchResponseDtos, null);
             tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
             Terms tagTypeDisplayNameAggs = tagTypeCodeEntry.getAggregations().get(TAGTYPE_NAME_AGGREGATION);
@@ -399,7 +399,7 @@ public class ElasticsearchHelper
     {
         MetricAggregation metricAggregation = searchResult.getAggregations();
         TermsAggregation tagTypeFacetAggregation = metricAggregation.getTermsAggregation(TAG_TYPE_FACET_AGGS);
-        return getTagTypeIndexSearchResponseDtosFromTermsAggregation(tagTypeFacetAggregation, null);
+        return getTagTypeIndexSearchResponseDtosFromTermsAggregation(tagTypeFacetAggregation);
     }
 
     /**
@@ -428,8 +428,7 @@ public class ElasticsearchHelper
         MetricAggregation metricAggregation = searchResult.getAggregations();
         MetricAggregation tagFacetAggregation = metricAggregation.getSumAggregation(TAG_FACET_AGGS);
         TermsAggregation tagTypeCodesAggregation = tagFacetAggregation.getTermsAggregation(TAGTYPE_CODE_AGGREGATION);
-        TermsAggregation tagTypeFacetAggregation = metricAggregation.getTermsAggregation(TAG_TYPE_FACET_AGGS);
-        return getTagTypeIndexSearchResponseDtosFromTermsAggregation(tagTypeCodesAggregation, tagTypeFacetAggregation);
+        return getTagTypeIndexSearchResponseDtosFromTermsAggregation(tagTypeCodesAggregation);
     }
 
     /**
@@ -439,8 +438,7 @@ public class ElasticsearchHelper
      *
      * @return list of tag type index search dto
      */
-    private List<TagTypeIndexSearchResponseDto> getTagTypeIndexSearchResponseDtosFromTermsAggregation(TermsAggregation termsAggregation,
-        TermsAggregation tagTypeFacetAggregation)
+    private List<TagTypeIndexSearchResponseDto> getTagTypeIndexSearchResponseDtosFromTermsAggregation(TermsAggregation termsAggregation)
     {
         List<TermsAggregation.Entry> bucketsL0 = termsAggregation.getBuckets();
 
@@ -453,18 +451,8 @@ public class ElasticsearchHelper
             TermsAggregation termsAggregationL1 = entryL1.getTermsAggregation(TAGTYPE_NAME_AGGREGATION);
             List<TermsAggregation.Entry> bucketsL1 = termsAggregationL1.getBuckets();
 
-            long count;
-            if (tagTypeFacetAggregation != null)
-            {
-                count = getCountByBucketKey(tagTypeFacetAggregation, entryL1.getKeyAsString());
-            }
-            else
-            {
-                count = entryL1.getCount();
-            }
-
             TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
-                new TagTypeIndexSearchResponseDto(entryL1.getKeyAsString(), count, tagIndexSearchResponseDtos, null);
+                new TagTypeIndexSearchResponseDto(entryL1.getKeyAsString(), tagIndexSearchResponseDtos, null);
 
             tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
@@ -494,27 +482,6 @@ public class ElasticsearchHelper
     }
 
     /**
-     * get the count by bucket key
-     *
-     * @param termsAggregation terms aggregation
-     * @param keyName key name
-     *
-     * @return count
-     */
-    private long getCountByBucketKey(TermsAggregation termsAggregation, String keyName)
-    {
-        long count = 0;
-        for (TermsAggregation.Entry entry : termsAggregation.getBuckets())
-        {
-            if (entry.getKeyAsString().equalsIgnoreCase(keyName))
-            {
-                count = entry.getCount();
-            }
-        }
-        return count;
-    }
-
-    /**
      * create tag index search response facet
      *
      * @param tagTypeIndexSearchResponseDto response dto
@@ -529,16 +496,13 @@ public class ElasticsearchHelper
         {
             for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos())
             {
-                long facetCount = tagIndexSearchResponseDto.getCount();
                 Facet tagFacet =
-                    new Facet(tagIndexSearchResponseDto.getTagDisplayName(), facetCount, FacetTypeEnum.TAG.value(), tagIndexSearchResponseDto.getTagCode(),
-                        null);
+                    new Facet(tagIndexSearchResponseDto.getTagDisplayName(), null, FacetTypeEnum.TAG.value(), tagIndexSearchResponseDto.getTagCode(), null);
                 tagFacets.add(tagFacet);
             }
         }
 
-        long facetCount = tagTypeIndexSearchResponseDto.getCount();
-        return new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), facetCount, FacetTypeEnum.TAG_TYPE.value(), tagTypeIndexSearchResponseDto.getCode(),
+        return new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), null, FacetTypeEnum.TAG_TYPE.value(), tagTypeIndexSearchResponseDto.getCode(),
             tagFacets);
     }
 
@@ -586,15 +550,12 @@ public class ElasticsearchHelper
                                 if (tagIndexDto.getTagCode().equals(nestedTagIndexDto.getFacetId()))
                                 {
                                     foundMatchingTagCode = true;
-                                    //add one to the facet count because the tag itself is in the result
-                                    nestedTagIndexDto.setFacetCount(nestedTagIndexDto.getFacetCount() + 1);
                                 }
                             }
                             if (!foundMatchingTagCode)
                             {
-                                tagFacet.getFacets().add(
-                                    new Facet(tagIndexDto.getTagDisplayName(), tagIndexDto.getCount(), FacetTypeEnum.TAG.value(), tagIndexDto.getTagCode(),
-                                        null));
+                                tagFacet.getFacets()
+                                    .add(new Facet(tagIndexDto.getTagDisplayName(), null, FacetTypeEnum.TAG.value(), tagIndexDto.getTagCode(), null));
                             }
                         }
                     }
