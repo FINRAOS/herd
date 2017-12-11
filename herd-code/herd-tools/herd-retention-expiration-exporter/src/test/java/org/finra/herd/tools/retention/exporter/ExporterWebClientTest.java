@@ -15,7 +15,74 @@
  */
 package org.finra.herd.tools.retention.exporter;
 
+import static org.junit.Assert.assertNotNull;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+
+import javax.xml.bind.JAXBException;
+
+import org.junit.Test;
+
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
+import org.finra.herd.model.api.xml.BusinessObjectDefinition;
+
 public class ExporterWebClientTest extends AbstractExporterTest
 {
+    @Test
+    public void testGetBusinessObjectDefinition() throws Exception
+    {
+        runGetBusinessObjectDefinitionTest(false);
+    }
 
+    @Test
+    public void testGetBusinessObjectDefinitionUseSsl() throws Exception
+    {
+        runGetBusinessObjectDefinitionTest(true);
+    }
+
+    @Test
+    public void testSearchBusinessObjectData() throws Exception
+    {
+        runSearchBusinessObjectDataTest(false);
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataUseSsl() throws Exception
+    {
+        runSearchBusinessObjectDataTest(true);
+    }
+
+    /**
+     * Calls getBusinessObjectDefinition() method and makes assertions.
+     *
+     * @param useSsl specifies whether to use SSL or not
+     *
+     * @throws java.io.IOException
+     * @throws javax.xml.bind.JAXBException
+     * @throws java.net.URISyntaxException
+     */
+    private void runGetBusinessObjectDefinitionTest(boolean useSsl) throws IOException, JAXBException, URISyntaxException
+    {
+        exporterWebClient.getRegServerAccessParamsDto().setUseSsl(useSsl);
+        BusinessObjectDefinition result = exporterWebClient.getBusinessObjectDefinition(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
+        assertNotNull(result);
+    }
+
+    /**
+     * Calls getBusinessObjectDefinition() method and makes assertions.
+     *
+     * @param useSsl specifies whether to use SSL or not
+     *
+     * @throws java.io.IOException
+     * @throws javax.xml.bind.JAXBException
+     * @throws java.net.URISyntaxException
+     */
+    private void runSearchBusinessObjectDataTest(boolean useSsl) throws IOException, JAXBException, URISyntaxException
+    {
+        exporterWebClient.getRegServerAccessParamsDto().setUseSsl(useSsl);
+        BusinessObjectDataSearchResult result = exporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1);
+        assertNotNull(result);
+    }
 }

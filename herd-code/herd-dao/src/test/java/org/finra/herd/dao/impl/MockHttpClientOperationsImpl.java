@@ -52,11 +52,13 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersion;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
+import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageDirectory;
@@ -134,6 +136,10 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
                     buildGetBusinessObjectDataResponse(response, uri);
                 }
             }
+            else if (uri.getPath().startsWith("/herd-app/rest/businessObjectDefinitions/"))
+            {
+                buildGetBusinessObjectDefinitionResponse(response, uri);
+            }
             else if (uri.getPath().startsWith("/herd-app/rest/storages/"))
             {
                 checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE);
@@ -155,6 +161,10 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
             {
                 checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION_DURING_REGISTER_BDATA);
                 buildPostBusinessObjectDataResponse(response, uri);
+            }
+            else if (uri.getPath().equals("/herd-app/rest/businessObjectData/search"))
+            {
+                buildSearchBusinessObjectDataResponse(response, uri);
             }
         }
         else if (request instanceof HttpPut)
@@ -226,8 +236,7 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
                     businessObjectData.getBusinessObjectFormatFileType().toLowerCase().replace('_', '-') + "/" +
                     businessObjectData.getBusinessObjectDefinitionName().toLowerCase().replace('_', '-') + "/frmt-v" +
                     businessObjectData.getBusinessObjectFormatVersion() + "/data-v" + businessObjectData.getVersion() + "/" +
-                    businessObjectData.getPartitionKey().toLowerCase().replace('_', '-') +
-                    "=" + businessObjectData.getPartitionValue() + "/" + filename);
+                    businessObjectData.getPartitionKey().toLowerCase().replace('_', '-') + "=" + businessObjectData.getPartitionValue() + "/" + filename);
                 storageFile.setFileSizeBytes(1024L);
                 storageFile.setRowCount(10L);
             }
@@ -238,6 +247,41 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
 
             response.setEntity(getHttpEntity(businessObjectData));
         }
+    }
+
+    /**
+     * Builds a business object definition response.
+     *
+     * @param response the response
+     * @param uri the URI of the incoming request
+     *
+     * @throws JAXBException if a JAXB error occurred
+     */
+    private void buildGetBusinessObjectDefinitionResponse(MockCloseableHttpResponse response, URI uri) throws JAXBException
+    {
+        Pattern pattern = Pattern.compile("/herd-app/rest/businessObjectDefinitions/namespaces/(.*)/businessObjectDefinitionNames/(.*)");
+        Matcher matcher = pattern.matcher(uri.getPath());
+        if (matcher.find())
+        {
+            BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
+            businessObjectDefinition.setNamespace(matcher.group(1));
+            businessObjectDefinition.setBusinessObjectDefinitionName(matcher.group(2));
+            response.setEntity(getHttpEntity(businessObjectDefinition));
+        }
+    }
+
+    /**
+     * Builds a business object definition response.
+     *
+     * @param response the response
+     * @param uri the URI of the incoming request
+     *
+     * @throws JAXBException if a JAXB error occurred
+     */
+    private void buildSearchBusinessObjectDataResponse(MockCloseableHttpResponse response, URI uri) throws JAXBException
+    {
+        BusinessObjectDataSearchResult businessObjectDataSearchResult = new BusinessObjectDataSearchResult();
+        response.setEntity(getHttpEntity(businessObjectDataSearchResult));
     }
 
     /**
@@ -252,8 +296,7 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
     {
         Pattern pattern = Pattern.compile("/herd-app/rest/businessObjectData(/namespaces/(?<namespace>.*?))?" +
             "/businessObjectDefinitionNames/(?<businessObjectDefinitionName>.*?)/businessObjectFormatUsages/(?<businessObjectFormatUsage>.*?)" +
-            "/businessObjectFormatFileTypes/(?<businessObjectFormatFileType>.*?)" +
-            "/versions");
+            "/businessObjectFormatFileTypes/(?<businessObjectFormatFileType>.*?)" + "/versions");
 
         Matcher matcher = pattern.matcher(uri.getPath());
 

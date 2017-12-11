@@ -36,13 +36,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
-import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
-import org.finra.herd.model.dto.RetentionExpirationExporterInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 /**
@@ -54,97 +50,25 @@ public class ExporterWebClient extends DataBridgeWebClient
     private static final Logger LOGGER = LoggerFactory.getLogger(ExporterWebClient.class);
 
     /**
-     * Retrieves business object data from the herd registration server.
-     *
-     * @param manifest the retention expiration exporter input manifest dto input manifest file information
-     *
-     * @return the business object data information
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws IOException if an I/O error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
-     */
-    public BusinessObjectDataSearchResult searchBusinessObjectData(RetentionExpirationExporterInputManifestDto manifest)
-        throws IOException, JAXBException, URISyntaxException
-    {
-        LOGGER.info("Retrieving business object data information from the registration server...");
-
-        StringBuilder uriPathBuilder = new StringBuilder(HERD_APP_REST_URI_PREFIX);
-
-        // Creating request for business object data search
-        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
-        businessObjectDataSearchKey.setNamespace(manifest.getNamespace());
-        businessObjectDataSearchKey.setBusinessObjectDefinitionName(manifest.getBusinessObjectDefinitionName());
-
-        BusinessObjectDataSearchFilter businessObjectDataSearchFilter =
-            new BusinessObjectDataSearchFilter(Arrays.asList((BusinessObjectDataSearchKey) Arrays.asList(businessObjectDataSearchKey)));
-        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest(Arrays.asList(businessObjectDataSearchFilter));
-
-        // Create a JAXB context and marshaller
-        JAXBContext requestContext = JAXBContext.newInstance(BusinessObjectDataStorageFilesCreateRequest.class);
-        Marshaller requestMarshaller = requestContext.createMarshaller();
-        requestMarshaller.setProperty(Marshaller.JAXB_ENCODING, StandardCharsets.UTF_8.name());
-        requestMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-
-        StringWriter sw = new StringWriter();
-        requestMarshaller.marshal(request, sw);
-
-        // Getting the result
-        BusinessObjectDataSearchResult businessObjectDataSearchResult;
-        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
-        {
-            URI uri = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
-                .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(HERD_APP_REST_URI_PREFIX + "/businessObjectData/search").build();
-            HttpPost post = new HttpPost(uri);
-
-            post.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);
-            post.addHeader("Accepts", DEFAULT_ACCEPT);
-
-            // If SSL is enabled, set the client authentication header.
-            if (regServerAccessParamsDto.isUseSsl())
-            {
-                post.addHeader(getAuthorizationHeader());
-            }
-
-            post.setEntity(new StringEntity(sw.toString()));
-
-            LOGGER.info(String.format("    HTTP POST URI: %s", post.getURI().toString()));
-            LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(post.getAllHeaders())));
-            LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", sw.toString()));
-
-            // searchBusinessObjectData() might return a null. That happens when the web client gets status code 200 back from
-            // the service, but it fails to retrieve or deserialize the actual HTTP response.
-            // Please note that processXmlHttpResponse() is responsible for logging the exception info as a warning.
-            businessObjectDataSearchResult = searchBusinessObjectData(httpClientOperations.execute(client, post),
-                "retrieve business object data search results from the registration server");
-        }
-
-        LOGGER.info("Successfully retrieved business object data search results from the registration server.");
-
-        return businessObjectDataSearchResult;
-    }
-
-    /**
      * Retrieves business object definition from the herd registration server.
      *
-     * @param manifest the retention expiration exporter input manifest dto input manifest file information
+     * @param namespace the namespace of the business object definition
+     * @param businessObjectDefinitionName the name of the business object definition
      *
-     * @return the business object data information
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws IOException if an I/O error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
+     * @return the business object definition
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
      */
-    public BusinessObjectDefinition getBusinessObjectDefinition(RetentionExpirationExporterInputManifestDto manifest)
+    public BusinessObjectDefinition getBusinessObjectDefinition(String namespace, String businessObjectDefinitionName)
         throws IOException, JAXBException, URISyntaxException
     {
-        LOGGER.info("Retrieving business object de information from the registration server...");
+        LOGGER.info("Retrieving business object definition information from the registration server...");
 
         StringBuilder uriPathBuilder = new StringBuilder(HERD_APP_REST_URI_PREFIX);
         uriPathBuilder.append("/businessObjectDefinitions");
-        if (manifest.getNamespace() != null)
-        {
-            uriPathBuilder.append("/namespaces/").append(manifest.getNamespace());
-        }
-        uriPathBuilder.append("/businessObjectDefinitionNames/").append(manifest.getBusinessObjectDefinitionName());
+        uriPathBuilder.append("/namespaces/").append(namespace);
+        uriPathBuilder.append("/businessObjectDefinitionNames/").append(businessObjectDefinitionName);
 
         URIBuilder uriBuilder =
             new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
@@ -154,7 +78,7 @@ public class ExporterWebClient extends DataBridgeWebClient
 
         CloseableHttpClient client = httpClientOperations.createHttpClient();
         HttpGet request = new HttpGet(uri);
-        request.addHeader("Accepts", "application/xml");
+        request.addHeader("Accepts", DEFAULT_ACCEPT);
 
         // If SSL is enabled, set the client authentication header.
         if (regServerAccessParamsDto.isUseSsl())
@@ -165,54 +89,93 @@ public class ExporterWebClient extends DataBridgeWebClient
         LOGGER.info(String.format("    HTTP GET URI: %s", request.getURI().toString()));
         LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(request.getAllHeaders())));
 
-        BusinessObjectDefinition businessObjectDefinition =
-            this.getBusinessObjectDefinition(httpClientOperations.execute(client, request), "retrieve business object data keys from the registration server");
+        BusinessObjectDefinition businessObjectDefinition = getBusinessObjectDefinition(httpClientOperations.execute(client, request));
 
-        LOGGER.info("Successfully retrieved business object data keys from the registration server.");
+        LOGGER.info("Successfully retrieved business object definition from the registration server.");
 
         return businessObjectDefinition;
     }
 
-
     /**
-     * Extracts BusinessObjectDataSearchResult object from the registration server HTTP response.
+     * Retrieves business object definition from the herd registration server.
      *
-     * @param httpResponse the response received from the supported options.
-     * @param actionDescription the description of the action being performed with the registration server (to be used in an error message).
+     * @param businessObjectDataSearchRequest the business object definition search request
+     * @param pageNum the page number for the result to contain
      *
-     * @return the BusinessObjectDataSearchResult object extracted from the registration server response.
+     * @return the business object definition
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
      */
-    protected BusinessObjectDataSearchResult searchBusinessObjectData(CloseableHttpResponse httpResponse, String actionDescription)
+    public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest businessObjectDataSearchRequest, Integer pageNum)
+        throws IOException, JAXBException, URISyntaxException
     {
-        try
+        LOGGER.info("Sending business object data search request to the registration server...");
+
+        StringBuilder uriPathBuilder = new StringBuilder(HERD_APP_REST_URI_PREFIX);
+        uriPathBuilder.append("/businessObjectData/search");
+
+        URIBuilder uriBuilder =
+            new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
+                .setPath(uriPathBuilder.toString()).setParameter("pageNum", pageNum.toString());
+
+        URI uri = uriBuilder.build();
+
+        // Create a JAXB context and marshaller
+        JAXBContext requestContext = JAXBContext.newInstance(BusinessObjectDataSearchRequest.class);
+        Marshaller requestMarshaller = requestContext.createMarshaller();
+        requestMarshaller.setProperty(Marshaller.JAXB_ENCODING, StandardCharsets.UTF_8.name());
+        requestMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+        StringWriter stringWriter = new StringWriter();
+        requestMarshaller.marshal(businessObjectDataSearchRequest, stringWriter);
+
+        CloseableHttpClient client = httpClientOperations.createHttpClient();
+        HttpPost request = new HttpPost(uri);
+        request.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);
+        request.addHeader("Accepts", DEFAULT_ACCEPT);
+
+        // If SSL is enabled, set the client authentication header.
+        if (regServerAccessParamsDto.isUseSsl())
         {
-            return (BusinessObjectDataSearchResult) processXmlHttpResponse(httpResponse, actionDescription, BusinessObjectDataSearchResult.class);
+            request.addHeader(getAuthorizationHeader());
         }
-        catch (Exception e)
-        {
-            if (httpResponse.getStatusLine().getStatusCode() == 200)
-            {
-                // We assume add files is a success when we get status code 200 back from the service.
-                // Just return a null back, since processXmlHttpResponse() is responsible for logging the exception info.
-                return null;
-            }
-            else
-            {
-                throw e;
-            }
-        }
+
+        request.setEntity(new StringEntity(stringWriter.toString()));
+
+        LOGGER.info(String.format("    HTTP POST URI: %s", request.getURI().toString()));
+        LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(request.getAllHeaders())));
+        LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", stringWriter.toString()));
+
+        BusinessObjectDataSearchResult businessObjectDataSearchResult = getBusinessObjectDataSearchResult(httpClientOperations.execute(client, request));
+
+        LOGGER.info("Successfully received search business object data response from the registration server.");
+
+        return businessObjectDataSearchResult;
     }
 
     /**
-     * Extracts BusinessObjectDataKeys object from the registration server HTTP response.
+     * Extracts BusinessObjectDataSearchResult from the registration server HTTP response.
      *
-     * @param httpResponse the response received from the supported options.
-     * @param actionDescription the description of the action being performed with the registration server (to be used in an error message).
+     * @param httpResponse the response received from the supported options
      *
-     * @return the BusinessObjectDataKeys object extracted from the registration server response.
+     * @return the BusinessObjectDataSearchResult object extracted from the registration server response
      */
-    private BusinessObjectDefinition getBusinessObjectDefinition(CloseableHttpResponse httpResponse, String actionDescription)
+    private BusinessObjectDataSearchResult getBusinessObjectDataSearchResult(CloseableHttpResponse httpResponse)
     {
-        return (BusinessObjectDefinition) processXmlHttpResponse(httpResponse, actionDescription, BusinessObjectDefinition.class);
+        return (BusinessObjectDataSearchResult) processXmlHttpResponse(httpResponse, "search business object data", BusinessObjectDataSearchResult.class);
+    }
+
+    /**
+     * Extracts BusinessObjectDefinition object from the registration server HTTP response.
+     *
+     * @param httpResponse the response received from the supported options
+     *
+     * @return the BusinessObjectDefinition object extracted from the registration server response
+     */
+    private BusinessObjectDefinition getBusinessObjectDefinition(CloseableHttpResponse httpResponse)
+    {
+        return (BusinessObjectDefinition) processXmlHttpResponse(httpResponse, "retrieve business object definition from the registration server",
+            BusinessObjectDefinition.class);
     }
 }
