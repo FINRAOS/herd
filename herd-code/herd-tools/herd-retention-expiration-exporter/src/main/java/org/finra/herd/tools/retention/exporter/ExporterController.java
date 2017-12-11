@@ -28,12 +28,16 @@ import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 
@@ -48,16 +52,6 @@ public class ExporterController
     @Autowired
     private ExporterWebClient exporterWebClient;
 
-    private static String followCVSformat(String value)
-    {
-        String result = value;
-        if (result.contains("\""))
-        {
-            result = result.replace("\"", "\"\"");
-        }
-        return result;
-    }
-
     /**
      * Executes the retention expiration exporter workflow.
      *
@@ -71,8 +65,6 @@ public class ExporterController
     public void performRetentionExpirationExport(String namespace, String businessObjectDefinitionName, File localOutputFile,
         RegServerAccessParamsDto regServerAccessParamsDto) throws Exception
     {
-        BusinessObjectDataSearchResult businessObjectDataSearchResult;
-
         try
         {
             // Initialize the web client.
@@ -81,22 +73,52 @@ public class ExporterController
             // Validate that specified business object definition exists.
             exporterWebClient.getBusinessObjectDefinition(namespace, businessObjectDefinitionName);
 
-            // Get business object data search result and add them to the CSV file.
-            //businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(...);
-            // TODO: 1) Create search request: businessObjectDataSearchRequest
-            // Start a list of businessObjectDataElements resultList - List<BusinessObjectData> results
-            // pageNum = 1
-            // call searchBdata with pageNum=1
-            // UNTIL businessObjectDataElements.size() == 0 in response:
-            //     add all businessObjectDataElements to resultList
-            //     pageNUm++
-            //     call searchBdata with pageNum
+            // Creating request for business object data search
+            BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+            businessObjectDataSearchKey.setNamespace(namespace);
+            businessObjectDataSearchKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
+            List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+            businessObjectDataSearchKeys.add(businessObjectDataSearchKey);
+            BusinessObjectDataSearchFilter businessObjectDataSearchFilter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+            BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest(Arrays.asList(businessObjectDataSearchFilter));
 
-            businessObjectDataSearchResult = this.dummyBusinessObjectDataSearchResult();
+            // Result list for business object data
+            List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
-            // Writing business object data to the CSV file
-            Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8);
-            for (BusinessObjectData businessObjectData : businessObjectDataSearchResult.getBusinessObjectDataElements())
+            // Fetch business object data from server until no records found
+            int pageNumber = 1;
+            BusinessObjectDataSearchResult businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(request, pageNumber);
+            while (CollectionUtils.isNotEmpty(businessObjectDataSearchResult.getBusinessObjectDataElements()))
+            {
+                businessObjectDataList.addAll(businessObjectDataSearchResult.getBusinessObjectDataElements());
+                pageNumber++;
+                businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(request, pageNumber);
+            }
+
+            // Write business object data to the csv file
+            this.writeToCsvFile(localOutputFile, businessObjectDataList);
+        }
+        catch (JAXBException | IOException | URISyntaxException e)
+        {
+            throw e;
+        }
+    }
+
+    /**
+     * Write business object data to the csv file
+     *
+     * @param localOutputFile the file to write
+     * @param businessObjectDataList business object data list
+     *
+     * @throws IOException if any problems were encountered
+     */
+    private void writeToCsvFile(File localOutputFile, List<BusinessObjectData> businessObjectDataList) throws IOException
+    {
+        // File writer object to write data in to the CSV file
+        Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8);
+        try
+        {
+            for (BusinessObjectData businessObjectData : businessObjectDataList)
             {
                 // Creating the url the UDC
                 final String url =
@@ -115,22 +137,23 @@ public class ExporterController
                 this.writeLine(writer, businessObjectDataRecords, '"');
                 LOGGER.info("BusinessObjectData=" + businessObjectDataRecords.toString());
             }
-
-            writer.flush();
-            writer.close();
         }
-        catch (JAXBException | IOException | URISyntaxException e)
+        catch (IOException e)
         {
             throw e;
         }
+        writer.flush();
+        writer.close();
     }
 
     /**
-     * @param writer
-     * @param values
-     * @param customQuote
+     * Write one line in the csv file
      *
-     * @throws IOException
+     * @param writer file write object
+     * @param values value to write
+     * @param customQuote quote option if any
+     *
+     * @throws IOException if any problems were encountered
      */
     private void writeLine(Writer writer, List<String> values, char customQuote) throws IOException
     {
@@ -159,33 +182,19 @@ public class ExporterController
     }
 
     /**
+     *
+     *
+     * @param value to format
      * @return
-     * @throws JAXBException
-     * @throws IOException
-     * @throws URISyntaxException
      */
-    private BusinessObjectDataSearchResult dummyBusinessObjectDataSearchResult() throws JAXBException, IOException, URISyntaxException
+    private String followCVSformat(String value)
     {
-        List<BusinessObjectData> businessObjectDataList = new ArrayList();
-        BusinessObjectDataSearchResult businessObjectDataSearchResult = new BusinessObjectDataSearchResult();
-
-        for (int i = 0; i < 1199; i++)
+        String result = value;
+        if (result.contains("\""))
         {
-            BusinessObjectData businessObjectDataKey = new BusinessObjectData();
-
-            businessObjectDataKey.setNamespace("aniruddha");
-            businessObjectDataKey.setBusinessObjectDefinitionName("ani-bdef-name");
-            businessObjectDataKey.setBusinessObjectFormatUsage("ANI-TEST");
-            businessObjectDataKey.setBusinessObjectFormatFileType("TXT");
-            businessObjectDataKey.setBusinessObjectFormatVersion(0);
-            businessObjectDataKey.setPartitionValue("ani");
-            businessObjectDataKey.setSubPartitionValues(Arrays.asList("ani0" + i, "ani1" + i, "ani2" + i, "ani3" + i));
-            businessObjectDataKey.setVersion(0);
-
-            businessObjectDataList.add(businessObjectDataKey);
+            result = result.replace("\"", "\"\"");
         }
-        businessObjectDataSearchResult.setBusinessObjectDataElements(businessObjectDataList);
-
-        return businessObjectDataSearchResult;
+        return result;
     }
+
 }
