@@ -485,7 +485,6 @@
    <xs:complexType name="tagTypeIndexSearchResponseDto">
       <xs:sequence>
          <xs:element name="code" type="xs:string" minOccurs="0"/>
-         <xs:element name="count" type="xs:long"/>
          <xs:element name="tagIndexSearchResponseDtos" type="tagIndexSearchResponseDto" minOccurs="0" maxOccurs="unbounded"/>
          <xs:element name="displayName" type="xs:string" minOccurs="0"/>
       </xs:sequence>

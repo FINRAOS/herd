@@ -129,7 +129,7 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
         tagIndexSearchResponseDtos.add(new TagIndexSearchResponseDto(TAG_CODE, TAG_COUNT, TAG_DISPLAY_NAME));
         tagIndexSearchResponseDtos.add(new TagIndexSearchResponseDto(TAG_CODE_2, TAG_COUNT, TAG_DISPLAY_NAME_2));
         TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
-            new TagTypeIndexSearchResponseDto(TAG_TYPE, TAG_TYPE_COUNT, tagIndexSearchResponseDtos, TAG_TYPE_DISPLAY_NAME);
+            new TagTypeIndexSearchResponseDto(TAG_TYPE, tagIndexSearchResponseDtos, TAG_TYPE_DISPLAY_NAME);
         tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
         List<Facet> tagTypeFacets = new ArrayList<>();
@@ -145,7 +145,7 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
                 tagFacets.add(tagFacet);
             }
 
-            tagTypeFacets.add(new Facet(tagTypeIndexSearchResponse.getDisplayName(), tagTypeIndexSearchResponse.getCount(), FacetTypeEnum.TAG_TYPE.value(),
+            tagTypeFacets.add(new Facet(tagTypeIndexSearchResponse.getDisplayName(), null, FacetTypeEnum.TAG_TYPE.value(),
                 tagTypeIndexSearchResponse.getCode(), tagFacets));
         }
 
