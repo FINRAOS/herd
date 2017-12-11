@@ -28,7 +28,6 @@ import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +36,6 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
-import org.finra.herd.model.dto.RetentionExpirationExporterInputManifestDto;
 
 /**
  * Executes the ExporterApp workflow.
@@ -52,14 +50,12 @@ public class ExporterController
 
     private static String followCVSformat(String value)
     {
-
         String result = value;
         if (result.contains("\""))
         {
             result = result.replace("\"", "\"\"");
         }
         return result;
-
     }
 
     /**
@@ -72,8 +68,6 @@ public class ExporterController
      *
      * @throws Exception if any problems were encountered
      */
-    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE",
-        justification = "manifestReader.readJsonManifest will always return an RetentionExpirationExporterInputManifestDto object.")
     public void performRetentionExpirationExport(String namespace, String businessObjectDefinitionName, File localOutputFile,
         RegServerAccessParamsDto regServerAccessParamsDto) throws Exception
     {
@@ -81,20 +75,24 @@ public class ExporterController
 
         try
         {
-            // Process manifest file
-            RetentionExpirationExporterInputManifestDto manifest = new RetentionExpirationExporterInputManifestDto();
-            manifest.setNamespace(namespace);
-            manifest.setBusinessObjectDefinitionName(businessObjectDefinitionName);
-
-            // Initialize retention expiration exporter web client.
+            // Initialize the web client.
             exporterWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
 
-            // Validate that business object definition exists with provided data.
-            exporterWebClient.getBusinessObjectDefinition(manifest);
+            // Validate that specified business object definition exists.
+            exporterWebClient.getBusinessObjectDefinition(namespace, businessObjectDefinitionName);
 
             // Get business object data search result and add them to the CSV file.
-            businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(manifest);
-            // businessObjectDataSearchResult = this.dummyBusinessObjectDataSearchResult();
+            //businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(...);
+            // TODO: 1) Create search request: businessObjectDataSearchRequest
+            // Start a list of businessObjectDataElements resultList - List<BusinessObjectData> results
+            // pageNum = 1
+            // call searchBdata with pageNum=1
+            // UNTIL businessObjectDataElements.size() == 0 in response:
+            //     add all businessObjectDataElements to resultList
+            //     pageNUm++
+            //     call searchBdata with pageNum
+
+            businessObjectDataSearchResult = this.dummyBusinessObjectDataSearchResult();
 
             // Writing business object data to the CSV file
             Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8);
@@ -136,7 +134,6 @@ public class ExporterController
      */
     private void writeLine(Writer writer, List<String> values, char customQuote) throws IOException
     {
-
         boolean first = true;
 
         StringBuilder sb = new StringBuilder();
@@ -159,8 +156,6 @@ public class ExporterController
         }
         sb.append("\n");
         writer.append(sb.toString());
-
-
     }
 
     /**
