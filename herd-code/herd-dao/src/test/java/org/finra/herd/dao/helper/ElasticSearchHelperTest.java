@@ -77,8 +77,6 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
     public static final String TAG_CODE_2 = "Tag Code 2";
 
-    public static final int TAG_CODE_COUNT_2 = 1;
-
     public static final int TAG_CODE_COUNT = 1;
 
     public static final String TAG_CODE_DISPLAY_NAME = "Tag Code DisplayName";
@@ -98,7 +96,28 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetNestedTagTagIndexSearchResponseDto()
+    public void testGetNestedTagTagIndexSearchResponseDtoSearchResponseParameter()
+    {
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        Aggregations aggregations = mock(Aggregations.class);
+
+        when(searchResponse.getAggregations()).thenReturn(aggregations);
+
+        Nested nestedAggregation = mock(Nested.class);
+        when(aggregations.get(TAG_FACET_AGGS)).thenReturn(nestedAggregation);
+
+        Aggregations aggregationAggregations = mock(Aggregations.class);
+        when(nestedAggregation.getAggregations()).thenReturn(aggregationAggregations);
+
+        Terms subAggregation = mock(Terms.class);
+        when(aggregationAggregations.get(TAGTYPE_CODE_AGGREGATION)).thenReturn(subAggregation);
+
+        List<TagTypeIndexSearchResponseDto> result = elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse);
+        assertThat("Result is null.", result, is(notNullValue()));
+    }
+
+    @Test
+    public void testGetNestedTagTagIndexSearchResponseDtoSearchResultParameter()
     {
         SearchResult searchResult = mock(SearchResult.class);
         MetricAggregation metricAggregation = mock(MetricAggregation.class);
@@ -122,6 +141,35 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         when(searchResult.getAggregations()).thenReturn(metricAggregation);
         when(metricAggregation.getTermsAggregation(TAG_TYPE_FACET_AGGS)).thenReturn(termsAggregation);
+
+        List<TermsAggregation.Entry> buckets = new ArrayList<>();
+        TermsAggregation.Entry entryL1 = mock(TermsAggregation.Entry.class);
+        buckets.add(entryL1);
+        when(termsAggregation.getBuckets()).thenReturn(buckets);
+
+        TermsAggregation termsAggregationL1 = mock(TermsAggregation.class);
+        when(entryL1.getTermsAggregation(TAGTYPE_NAME_AGGREGATION)).thenReturn(termsAggregationL1);
+
+        List<TermsAggregation.Entry> bucketsL1 = new ArrayList<>();
+        TermsAggregation.Entry entryL2 = mock(TermsAggregation.Entry.class);
+        bucketsL1.add(entryL2);
+        when(termsAggregationL1.getBuckets()).thenReturn(bucketsL1);
+
+        TermsAggregation entryTermsAggregation = mock(TermsAggregation.class);
+        when(entryL2.getTermsAggregation(TAG_CODE_AGGREGATION)).thenReturn(entryTermsAggregation);
+
+        List<TermsAggregation.Entry> bucketsL2 = new ArrayList<>();
+        TermsAggregation.Entry entryL3 = mock(TermsAggregation.Entry.class);
+        bucketsL2.add(entryL3);
+        when(entryTermsAggregation.getBuckets()).thenReturn(bucketsL2);
+
+        TermsAggregation entryEntryTermsAggregation = mock(TermsAggregation.class);
+        when(entryL3.getTermsAggregation(TAG_NAME_AGGREGATION)).thenReturn(entryEntryTermsAggregation);
+
+        List<TermsAggregation.Entry> bucketsL3 = new ArrayList<>();
+        TermsAggregation.Entry entryL4 = mock(TermsAggregation.Entry.class);
+        bucketsL3.add(entryL4);
+        when(entryEntryTermsAggregation.getBuckets()).thenReturn(bucketsL3);
 
         List<TagTypeIndexSearchResponseDto> result = elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResult);
         assertThat("Result is null.", result, is(notNullValue()));
@@ -211,6 +259,10 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         elasticsearchResponseDto.setNestTagTypeIndexSearchResponseDtos(nestTagTypeIndexSearchResponseDtos);
 
+        List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDtos = new ArrayList<>();
+        resultTypeIndexSearchResponseDtos.add(new ResultTypeIndexSearchResponseDto(TAG_CODE, TAG_COUNT, TAG_SEARCH_INDEX_NAME));
+        elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(resultTypeIndexSearchResponseDtos);
+
         List<Facet> facets =
             elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME);
         List<Facet> expectedFacets = new ArrayList<>();
@@ -220,6 +272,8 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME, null, FacetTypeEnum.TAG.value(), TAG_CODE, null));
 
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME_2, null, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE_2, tagFacet));
+        expectedFacets.add(new Facet(SearchIndexTypeEntity.SearchIndexTypes.TAG.name(), 120L, FacetTypeEnum.RESULT_TYPE.value(),
+            SearchIndexTypeEntity.SearchIndexTypes.TAG.name(), null));
         assertEquals(expectedFacets, facets);
     }
 
