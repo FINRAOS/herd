@@ -46,8 +46,8 @@ public class ExporterAppTest extends AbstractExporterTest
     {
         String[] arguments =
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
-                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl", "INVALID_BOOLEAN_VALUE", "--username",
-                WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
+                "INVALID_BOOLEAN_VALUE", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
 
         runApplicationAndCheckReturnValue(exporterApp, arguments, null, ToolsCommonConstants.ReturnValue.FAILURE);
     }
@@ -57,8 +57,8 @@ public class ExporterAppTest extends AbstractExporterTest
     {
         String[] arguments =
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
-                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--username", WEB_SERVICE_HTTPS_USERNAME,
-                "--password", WEB_SERVICE_HTTPS_PASSWORD};
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME,
+                "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
 
         // We are expecting this to fail with an UnknownHostException.
         runApplicationAndCheckReturnValue(exporterApp, arguments, null, new UnknownHostException());
@@ -85,8 +85,8 @@ public class ExporterAppTest extends AbstractExporterTest
     {
         String[] arguments =
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
-                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", "INVALID_INTEGER", "--ssl", "true", "--username", WEB_SERVICE_HTTPS_USERNAME,
-                "--password", WEB_SERVICE_HTTPS_PASSWORD};
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", "INVALID_INTEGER", "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl", "true",
+                "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
 
         // We are expecting this to fail with a NumberFormatException.
         runApplicationAndCheckReturnValue(exporterApp, arguments, null, new NumberFormatException());
@@ -103,8 +103,8 @@ public class ExporterAppTest extends AbstractExporterTest
     {
         String[] arguments =
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
-                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl", "true", "--username",
-                WEB_SERVICE_HTTPS_USERNAME};
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME};
         assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 
@@ -113,8 +113,8 @@ public class ExporterAppTest extends AbstractExporterTest
     {
         String[] arguments =
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
-                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl", "true", "--password",
-                WEB_SERVICE_HTTPS_PASSWORD};
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
+                "true", "--password", WEB_SERVICE_HTTPS_PASSWORD};
         assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 
@@ -142,7 +142,7 @@ public class ExporterAppTest extends AbstractExporterTest
     public void testParseShortCommandLineArgumentsSuccess() throws Exception
     {
         String[] arguments = {"-n", NAMESPACE, "-b", BUSINESS_OBJECT_DEFINITION_NAME, "-o", LOCAL_OUTPUT_FILE, "-H", WEB_SERVICE_HOSTNAME, "-P",
-            WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD};
+            WEB_SERVICE_HTTPS_PORT.toString(), "-c", UDC_SERVICE_HOSTNAME, "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD};
         assertNull(exporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 }

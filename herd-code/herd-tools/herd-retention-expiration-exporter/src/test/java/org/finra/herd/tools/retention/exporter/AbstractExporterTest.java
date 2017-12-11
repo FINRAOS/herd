@@ -52,6 +52,8 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
 
     protected static final String NAMESPACE = "testNamespace";
 
+    protected static final String UDC_SERVICE_HOSTNAME = "testUdcHostname";
+
     private static Logger logger = LoggerFactory.getLogger(AbstractExporterTest.class);
 
     /**

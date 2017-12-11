@@ -57,11 +57,12 @@ public class ExporterController
      * @param businessObjectDefinitionName the business object definition name of business object data
      * @param localOutputFile the local output file
      * @param regServerAccessParamsDto the DTO for the parameters required to communicate with the registration server
+     * @param udcServerHost the hostname of the UDC application server
      *
      * @throws Exception if any problems were encountered
      */
     public void performRetentionExpirationExport(String namespace, String businessObjectDefinitionName, File localOutputFile,
-        RegServerAccessParamsDto regServerAccessParamsDto) throws Exception
+        RegServerAccessParamsDto regServerAccessParamsDto, String udcServerHost) throws Exception
     {
         // Initialize the web client.
         exporterWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
@@ -94,7 +95,7 @@ public class ExporterController
         }
 
         // Write business object data to the csv file
-        writeToCsvFile(localOutputFile, namespace, businessObjectDefinitionName, businessObjectDataList);
+        writeToCsvFile(localOutputFile, namespace, businessObjectDefinitionName, udcServerHost, businessObjectDataList);
     }
 
     /**
@@ -103,15 +104,16 @@ public class ExporterController
      * @param localOutputFile the file to write
      * @param namespace the namespace of business object definition
      * @param businessObjectDefinitionName the name of the business object definition
+     * @param udcServerHost the hostname of the UDC application server
      * @param businessObjectDataList the list of business object data
      *
      * @throws IOException if any problems were encountered
      */
-    private void writeToCsvFile(File localOutputFile, String namespace, String businessObjectDefinitionName, List<BusinessObjectData> businessObjectDataList)
-        throws IOException
+    private void writeToCsvFile(File localOutputFile, String namespace, String businessObjectDefinitionName, String udcServerHost,
+        List<BusinessObjectData> businessObjectDataList) throws IOException
     {
         // Creating the url the UDC
-        String businessObjectDefinitionUdcUri = String.format("https://udc.finra.org/data-entities/%s/%s", namespace, businessObjectDefinitionName);
+        String businessObjectDefinitionUdcUri = String.format("https://%s/data-entities/%s/%s", udcServerHost, namespace, businessObjectDefinitionName);
 
         // Create the local output file.
         try (Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8))

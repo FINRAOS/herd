@@ -53,10 +53,11 @@ public class ExporterControllerTest extends AbstractExporterTest
                 .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
 
         // Perform the retention expiration export.
-        exporterController.performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, outputFile, regServerAccessParamsDto);
+        exporterController
+            .performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, outputFile, regServerAccessParamsDto, UDC_SERVICE_HOSTNAME);
 
         // Create the expected URI.
-        String expectedUri = String.format("https://udc.finra.org/data-entities/%s/%s", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
+        String expectedUri = String.format("https://%s/data-entities/%s/%s", UDC_SERVICE_HOSTNAME, NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
 
         // Expected output file content.
         StringBuilder stringBuilder = new StringBuilder();

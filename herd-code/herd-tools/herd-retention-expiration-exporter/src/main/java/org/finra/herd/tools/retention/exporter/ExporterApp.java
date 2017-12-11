@@ -63,6 +63,8 @@ public class ExporterApp
 
     protected Option regServerPortOpt;
 
+    protected Option udcServerHostOpt;
+
     protected Option sslOpt;
 
     protected Boolean useSsl;
@@ -146,7 +148,7 @@ public class ExporterApp
         // Call the controller with the user specified parameters to perform the upload.
         ExporterController controller = applicationContext.getBean(ExporterController.class);
         controller.performRetentionExpirationExport(argParser.getStringValue(namespaceOpt), argParser.getStringValue(businessObjectDefinitionNameOpt),
-            argParser.getFileValue(localOutputFileOpt), regServerAccessParamsDto);
+            argParser.getFileValue(localOutputFileOpt), regServerAccessParamsDto, argParser.getStringValue(udcServerHostOpt));
 
         // No exceptions were returned so return success.
         return ToolsCommonConstants.ReturnValue.SUCCESS;
@@ -173,6 +175,7 @@ public class ExporterApp
             localOutputFileOpt = argParser.addArgument("o", "localOutputFile", true, "The path to files on your local file system.", true);
             regServerHostOpt = argParser.addArgument("H", "regServerHost", true, "Registration Service hostname.", true);
             regServerPortOpt = argParser.addArgument("P", "regServerPort", true, "Registration Service port.", true);
+            udcServerHostOpt = argParser.addArgument("c", "udcServerHost", true, "UDC application server hostname.", true);
             sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
             usernameOpt = argParser.addArgument("u", "username", true, "The username for HTTPS client authentication.", false);
             passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
