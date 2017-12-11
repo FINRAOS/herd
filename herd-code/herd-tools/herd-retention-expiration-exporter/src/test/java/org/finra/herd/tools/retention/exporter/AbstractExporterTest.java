@@ -38,7 +38,15 @@ import org.finra.herd.tools.common.databridge.HttpErrorResponseException;
  */
 public abstract class AbstractExporterTest extends AbstractDataBridgeTest
 {
+    protected static final Integer BUSINESS_OBJECT_DATA_VERSION = 5;
+
     protected static final String BUSINESS_OBJECT_DEFINITION_NAME = "testBusinessObjectDefinitionName";
+
+    protected static final String BUSINESS_OBJECT_FORMAT_USAGE = "testBusinessObjectFormatUsage";
+
+    protected static final String BUSINESS_OBJECT_FORMAT_FILE_TYPE = "testBusinessObjectFormatFileType";
+
+    protected static final Integer BUSINESS_OBJECT_FORMAT_VERSION = 9;
 
     protected static final String LOCAL_OUTPUT_FILE = Paths.get(LOCAL_TEMP_PATH_OUTPUT.toString(), LOCAL_FILE).toString();
 

@@ -281,6 +281,32 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
     private void buildSearchBusinessObjectDataResponse(MockCloseableHttpResponse response, URI uri) throws JAXBException
     {
         BusinessObjectDataSearchResult businessObjectDataSearchResult = new BusinessObjectDataSearchResult();
+
+        // Build the response based on the pageNum.
+        if (uri.getRawQuery().equals("pageNum=1"))
+        {
+            List<BusinessObjectData> businessObjectDataElements = new ArrayList<>();
+
+            for (int i = 0; i < 3; i++)
+            {
+                BusinessObjectData businessObjectData = new BusinessObjectData();
+
+                businessObjectData.setNamespace("testNamespace");
+                businessObjectData.setBusinessObjectDefinitionName("testBusinessObjectDefinitionName");
+                businessObjectData.setBusinessObjectFormatUsage("testBusinessObjectFormatUsage");
+                businessObjectData.setBusinessObjectFormatFileType("testBusinessObjectFormatFileType");
+                businessObjectData.setBusinessObjectFormatVersion(9);
+                businessObjectData.setPartitionValue("primaryPartitionValue-" + i);
+                businessObjectData.setSubPartitionValues(
+                    Arrays.asList("subPartitionValue1-" + i, "subPartitionValue2-" + i, "subPartitionValue3-" + i, "subPartitionValue4-" + i));
+                businessObjectData.setVersion(5);
+
+                businessObjectDataElements.add(businessObjectData);
+            }
+
+            businessObjectDataSearchResult.setBusinessObjectDataElements(businessObjectDataElements);
+        }
+
         response.setEntity(getHttpEntity(businessObjectDataSearchResult));
     }
 
