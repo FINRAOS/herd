@@ -20,13 +20,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-
-import javax.xml.bind.JAXBException;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -65,136 +63,108 @@ public class ExporterController
     public void performRetentionExpirationExport(String namespace, String businessObjectDefinitionName, File localOutputFile,
         RegServerAccessParamsDto regServerAccessParamsDto) throws Exception
     {
-        try
+        // Initialize the web client.
+        exporterWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
+
+        // Validate that specified business object definition exists.
+        exporterWebClient.getBusinessObjectDefinition(namespace, businessObjectDefinitionName);
+
+        // Creating request for business object data search
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        businessObjectDataSearchKeys.add(businessObjectDataSearchKey);
+        BusinessObjectDataSearchFilter businessObjectDataSearchFilter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest(Collections.singletonList(businessObjectDataSearchFilter));
+
+        // Result list for business object data
+        List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
+
+        // Fetch business object data from server until no records found
+        int pageNumber = 1;
+        BusinessObjectDataSearchResult businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(request, pageNumber);
+        while (CollectionUtils.isNotEmpty(businessObjectDataSearchResult.getBusinessObjectDataElements()))
         {
-            // Initialize the web client.
-            exporterWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
-
-            // Validate that specified business object definition exists.
-            exporterWebClient.getBusinessObjectDefinition(namespace, businessObjectDefinitionName);
-
-            // Creating request for business object data search
-            BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
-            businessObjectDataSearchKey.setNamespace(namespace);
-            businessObjectDataSearchKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
-            List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-            businessObjectDataSearchKeys.add(businessObjectDataSearchKey);
-            BusinessObjectDataSearchFilter businessObjectDataSearchFilter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-            BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest(Arrays.asList(businessObjectDataSearchFilter));
-
-            // Result list for business object data
-            List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
-
-            // Fetch business object data from server until no records found
-            int pageNumber = 1;
-            BusinessObjectDataSearchResult businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(request, pageNumber);
-            while (CollectionUtils.isNotEmpty(businessObjectDataSearchResult.getBusinessObjectDataElements()))
-            {
-                businessObjectDataList.addAll(businessObjectDataSearchResult.getBusinessObjectDataElements());
-                pageNumber++;
-                businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(request, pageNumber);
-            }
-
-            // Write business object data to the csv file
-            this.writeToCsvFile(localOutputFile, businessObjectDataList);
+            LOGGER.info("Fetched {} business object data records from the registration server.",
+                CollectionUtils.size(businessObjectDataSearchResult.getBusinessObjectDataElements()));
+            businessObjectDataList.addAll(businessObjectDataSearchResult.getBusinessObjectDataElements());
+            pageNumber++;
+            businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(request, pageNumber);
         }
-        catch (JAXBException | IOException | URISyntaxException e)
-        {
-            throw e;
-        }
+
+        // Write business object data to the csv file
+        writeToCsvFile(localOutputFile, namespace, businessObjectDefinitionName, businessObjectDataList);
     }
 
     /**
-     * Write business object data to the csv file
+     * Writes business object data to the csv file.
      *
      * @param localOutputFile the file to write
-     * @param businessObjectDataList business object data list
+     * @param namespace the namespace of business object definition
+     * @param businessObjectDefinitionName the name of the business object definition
+     * @param businessObjectDataList the list of business object data
      *
      * @throws IOException if any problems were encountered
      */
-    private void writeToCsvFile(File localOutputFile, List<BusinessObjectData> businessObjectDataList) throws IOException
+    private void writeToCsvFile(File localOutputFile, String namespace, String businessObjectDefinitionName, List<BusinessObjectData> businessObjectDataList)
+        throws IOException
     {
-        // File writer object to write data in to the CSV file
-        Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8);
-        try
+        // Creating the url the UDC
+        String businessObjectDefinitionUdcUri = String.format("https://udc.finra.org/data-entities/%s/%s", namespace, businessObjectDefinitionName);
+
+        // Create the local output file.
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8))
         {
             for (BusinessObjectData businessObjectData : businessObjectDataList)
             {
-                // Creating the url the UDC
-                final String url =
-                    "https://udc.finra.org/data-objects/" + businessObjectData.getNamespace() + "/" + businessObjectData.getBusinessObjectDefinitionName() +
-                        "/" + businessObjectData.getBusinessObjectFormatUsage() + "/" + businessObjectData.getBusinessObjectFormatFileType() + "/" +
-                        businessObjectData.getBusinessObjectFormatVersion() + "/" + businessObjectData.getPartitionValue() + "/" +
-                        businessObjectData.getVersion() + ";subPartitionValues=" + businessObjectData.getSubPartitionValues().get(0) + "," +
-                        businessObjectData.getSubPartitionValues().get(1) + "," + businessObjectData.getSubPartitionValues().get(2) + "," +
-                        businessObjectData.getSubPartitionValues().get(3);
                 List<String> businessObjectDataRecords = Arrays.asList(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
                     businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
-                    "" + businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(),
+                    Integer.toString(businessObjectData.getBusinessObjectFormatVersion()), businessObjectData.getPartitionValue(),
                     businessObjectData.getSubPartitionValues().get(0), businessObjectData.getSubPartitionValues().get(1),
-                    businessObjectData.getSubPartitionValues().get(2), businessObjectData.getSubPartitionValues().get(3), "" + businessObjectData.getVersion(),
-                    url);
-                this.writeLine(writer, businessObjectDataRecords, '"');
-                LOGGER.info("BusinessObjectData=" + businessObjectDataRecords.toString());
+                    businessObjectData.getSubPartitionValues().get(2), businessObjectData.getSubPartitionValues().get(3),
+                    Integer.toString(businessObjectData.getVersion()), businessObjectDefinitionUdcUri);
+                writeLine(writer, businessObjectDataRecords);
             }
         }
-        catch (IOException e)
-        {
-            throw e;
-        }
-        writer.flush();
-        writer.close();
     }
 
     /**
-     * Write one line in the csv file
+     * Write one line in the csv file.
      *
      * @param writer file write object
      * @param values value to write
-     * @param customQuote quote option if any
      *
      * @throws IOException if any problems were encountered
      */
-    private void writeLine(Writer writer, List<String> values, char customQuote) throws IOException
+    private void writeLine(Writer writer, List<String> values) throws IOException
     {
-        boolean first = true;
+        final char customQuote = '"';
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
+        boolean first = true;
         for (String value : values)
         {
             if (!first)
             {
-                sb.append(',');
+                stringBuilder.append(',');
             }
-            if (customQuote == ' ')
-            {
-                sb.append(followCVSformat(value));
-            }
-            else
-            {
-                sb.append(customQuote).append(followCVSformat(value)).append(customQuote);
-            }
-
+            stringBuilder.append(customQuote).append(applyCsvFormatting(value)).append(customQuote);
             first = false;
         }
-        sb.append("\n");
-        writer.append(sb.toString());
+        stringBuilder.append(System.lineSeparator());
+        writer.append(stringBuilder.toString());
     }
 
     /**
+     * Applies CSV formatting to a string value.
      *
+     * @param value the string value to format
      *
-     * @param value to format
-     * @return
+     * @return the CSV formatted string value
      */
-    private String followCVSformat(String value)
+    private String applyCsvFormatting(String value)
     {
-        String result = value;
-        if (result.contains("\""))
-        {
-            result = result.replace("\"", "\"\"");
-        }
-        return result;
+        return value.replace("\"", "\"\"");
     }
-
 }

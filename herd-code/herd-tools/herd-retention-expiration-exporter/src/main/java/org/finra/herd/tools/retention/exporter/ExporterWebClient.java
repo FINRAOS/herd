@@ -76,24 +76,26 @@ public class ExporterWebClient extends DataBridgeWebClient
 
         URI uri = uriBuilder.build();
 
-        CloseableHttpClient client = httpClientOperations.createHttpClient();
-        HttpGet request = new HttpGet(uri);
-        request.addHeader("Accepts", DEFAULT_ACCEPT);
-
-        // If SSL is enabled, set the client authentication header.
-        if (regServerAccessParamsDto.isUseSsl())
+        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
         {
-            request.addHeader(getAuthorizationHeader());
+            HttpGet request = new HttpGet(uri);
+            request.addHeader("Accepts", DEFAULT_ACCEPT);
+
+            // If SSL is enabled, set the client authentication header.
+            if (regServerAccessParamsDto.isUseSsl())
+            {
+                request.addHeader(getAuthorizationHeader());
+            }
+
+            LOGGER.info(String.format("    HTTP GET URI: %s", request.getURI().toString()));
+            LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(request.getAllHeaders())));
+
+            BusinessObjectDefinition businessObjectDefinition = getBusinessObjectDefinition(httpClientOperations.execute(client, request));
+
+            LOGGER.info("Successfully retrieved business object definition from the registration server.");
+
+            return businessObjectDefinition;
         }
-
-        LOGGER.info(String.format("    HTTP GET URI: %s", request.getURI().toString()));
-        LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(request.getAllHeaders())));
-
-        BusinessObjectDefinition businessObjectDefinition = getBusinessObjectDefinition(httpClientOperations.execute(client, request));
-
-        LOGGER.info("Successfully retrieved business object definition from the registration server.");
-
-        return businessObjectDefinition;
     }
 
     /**
@@ -130,28 +132,30 @@ public class ExporterWebClient extends DataBridgeWebClient
         StringWriter stringWriter = new StringWriter();
         requestMarshaller.marshal(businessObjectDataSearchRequest, stringWriter);
 
-        CloseableHttpClient client = httpClientOperations.createHttpClient();
-        HttpPost request = new HttpPost(uri);
-        request.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);
-        request.addHeader("Accepts", DEFAULT_ACCEPT);
-
-        // If SSL is enabled, set the client authentication header.
-        if (regServerAccessParamsDto.isUseSsl())
+        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
         {
-            request.addHeader(getAuthorizationHeader());
+            HttpPost request = new HttpPost(uri);
+            request.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);
+            request.addHeader("Accepts", DEFAULT_ACCEPT);
+
+            // If SSL is enabled, set the client authentication header.
+            if (regServerAccessParamsDto.isUseSsl())
+            {
+                request.addHeader(getAuthorizationHeader());
+            }
+
+            request.setEntity(new StringEntity(stringWriter.toString()));
+
+            LOGGER.info(String.format("    HTTP POST URI: %s", request.getURI().toString()));
+            LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(request.getAllHeaders())));
+            LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", stringWriter.toString()));
+
+            BusinessObjectDataSearchResult businessObjectDataSearchResult = getBusinessObjectDataSearchResult(httpClientOperations.execute(client, request));
+
+            LOGGER.info("Successfully received search business object data response from the registration server.");
+
+            return businessObjectDataSearchResult;
         }
-
-        request.setEntity(new StringEntity(stringWriter.toString()));
-
-        LOGGER.info(String.format("    HTTP POST URI: %s", request.getURI().toString()));
-        LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(request.getAllHeaders())));
-        LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", stringWriter.toString()));
-
-        BusinessObjectDataSearchResult businessObjectDataSearchResult = getBusinessObjectDataSearchResult(httpClientOperations.execute(client, request));
-
-        LOGGER.info("Successfully received search business object data response from the registration server.");
-
-        return businessObjectDataSearchResult;
     }
 
     /**
