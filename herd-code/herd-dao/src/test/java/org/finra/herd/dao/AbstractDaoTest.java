@@ -43,6 +43,7 @@ import org.finra.herd.core.AbstractCoreTest;
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.config.DaoTestSpringModuleConfig;
+import org.finra.herd.dao.helper.EmrVpcPricingStateFormatter;
 import org.finra.herd.dao.helper.HerdCollectionHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.api.xml.Attribute;
@@ -536,8 +537,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<Attribute> NO_ATTRIBUTES = new ArrayList<>();
 
-    public static final XMLGregorianCalendar NO_RESTORE_EXPIRATION_ON = null;
-
     public static final List<AttributeDefinition> NO_ATTRIBUTE_DEFINITIONS = new ArrayList<>();
 
     public static final String NO_AWS_ACCESS_KEY = null;
@@ -641,6 +640,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_PARTITION_KEY_GROUP = null;
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
+
+    public static final XMLGregorianCalendar NO_RESTORE_EXPIRATION_ON = null;
 
     public static final String NO_S3_BUCKET_NAME = null;
 
@@ -914,10 +915,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET = true;
 
-    public static final String STRING_VALUE = "UT_SomeText" + RANDOM_SUFFIX;
-
-    public static final String STRING_VALUE_2 = "UT_SomeText_2_" + RANDOM_SUFFIX;
-
     public static final List<String> SUBPARTITION_VALUES =
         Arrays.asList("Aa" + RANDOM_SUFFIX, "Bb" + RANDOM_SUFFIX, "Cc" + RANDOM_SUFFIX, "Dd" + RANDOM_SUFFIX);
 
@@ -1164,6 +1161,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected EmrDao emrDao;
+
+    @Autowired
+    protected EmrVpcPricingStateFormatter emrVpcPricingStateFormatter;
 
     @PersistenceContext
     protected EntityManager entityManager;

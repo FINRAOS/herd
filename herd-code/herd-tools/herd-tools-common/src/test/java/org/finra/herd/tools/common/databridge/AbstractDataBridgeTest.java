@@ -20,8 +20,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -63,6 +65,8 @@ import org.finra.herd.tools.common.config.DataBridgeTestSpringModuleConfig;
 public abstract class AbstractDataBridgeTest extends AbstractCoreTest
 {
     private static Logger logger = LoggerFactory.getLogger(AbstractDataBridgeTest.class);
+
+    private PrintStream originalStream = System.out;
 
     protected static final String WEB_SERVICE_HOSTNAME = "testWebServiceHostname";
 
@@ -662,5 +666,22 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
         dataBridgeWebClient.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID);
         // Clean up the local input directory used for the test data files upload.
         FileUtils.cleanDirectory(LOCAL_TEMP_PATH_INPUT.toFile());
+    }
+
+    protected String runTestGetSystemOut(Runnable runnable)
+    {
+        try
+        {
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            PrintStream printStream = new PrintStream(output);
+            System.setOut(printStream);
+            runnable.run();
+
+            return output.toString().trim();
+        }
+        finally
+        {
+            System.setOut(originalStream);
+        }
     }
 }

@@ -17,14 +17,29 @@ package org.finra.herd.core;
 
 import static org.junit.Assert.assertEquals;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 /**
  * Test driver for the {@link HerdStringUtils} class
  */
-public class HerdStringUtilsTest
+public class HerdStringUtilsTest extends AbstractCoreTest
 {
+    @Test
+    public void testDecodeBase64()
+    {
+        // Test decode using hard coded values.
+        assertEquals("UT_SomeText", HerdStringUtils.decodeBase64("VVRfU29tZVRleHQ="));
+
+        // Test decode using random string and encoder.
+        String encodedText = StringUtils.toEncodedString(Base64.getEncoder().encode(STRING_VALUE.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+        assertEquals(STRING_VALUE, HerdStringUtils.decodeBase64(encodedText));
+    }
+
     @Test
     public void testGetShortDescription()
     {

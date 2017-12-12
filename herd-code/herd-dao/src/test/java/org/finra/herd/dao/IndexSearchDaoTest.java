@@ -389,6 +389,18 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         testIndexSearch(fields, null, null, ENABLE_HIT_HIGHLIGHTING);
     }
 
+    @Test
+    public void indexSearchWithColumnMatchAndHighlightingEnabled() throws IOException
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        // Create a set of match fields.
+        final Set<String> match = Sets.newHashSet(MATCH_COLUMN);
+
+        testIndexSearch(fields, match, null, null, ENABLE_HIT_HIGHLIGHTING, false, false, DISABLE_COLUMN_FIELDS);
+    }
+
     private void testIndexSearch(Set<String> fields, List<IndexSearchFilter> searchFilters, List<String> facetList, boolean isHitHighlightingEnabled)
         throws IOException
     {
@@ -427,6 +439,9 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         final String highlightFieldsConfigValue =
             "{\"highlightFields\":[{\"fieldName\":\"displayName\",\"fragmentSize\":100,\"matchedFields\":[\"displayName\",\"displayName.stemmed\",\"displayName.ngrams\"],\"numOfFragments\":5}]}";
 
+        final String highlightFieldsColumnMatchConfigValue =
+            "{\"highlightFields\":[{\"fieldName\":\"columnName\",\"fragmentSize\":100,\"matchedFields\":[\"columnName\",\"columnName.stemmed\",\"columnName.ngrams\"],\"numOfFragments\":5}]}";
+
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class)).thenReturn(300);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class)).thenReturn(300);
@@ -435,7 +450,15 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_SHINGLES)).thenReturn("{\"displayName\":\"1.0\"}");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS)).thenReturn("<hlt class=\"highlight\">");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS)).thenReturn("</hlt>");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS)).thenReturn(highlightFieldsConfigValue);
+        if (match != null && match.contains(MATCH_COLUMN))
+        {
+            when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_COLUMN_MATCH_HIGHLIGHT_FIELDS))
+                .thenReturn(highlightFieldsColumnMatchConfigValue);
+        }
+        else
+        {
+            when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS)).thenReturn(highlightFieldsConfigValue);
+        }
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class)).thenReturn(1f);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class)).thenReturn(1f);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class)).thenReturn(1f);
@@ -463,13 +486,26 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
         IndexSearchHighlightFields highlightFields = new IndexSearchHighlightFields(Collections.singletonList(indexSearchHighlightField));
 
+        IndexSearchHighlightField indexSearchHighlightFieldColumnOnly =
+            new IndexSearchHighlightField("columnName", 100, Arrays.asList("columnName", "columnName.stemmed", "columnName.ngrams"), 5);
+
+        IndexSearchHighlightFields highlightFieldsColumnOnly = new IndexSearchHighlightFields(Collections.singletonList(indexSearchHighlightFieldColumnOnly));
+
         if (testExceptions)
         {
             when(jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsConfigValue)).thenThrow(new IOException());
         }
         else
         {
-            when(jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsConfigValue)).thenReturn(highlightFields);
+            if (match != null && match.contains(MATCH_COLUMN))
+            {
+                when(jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsColumnMatchConfigValue))
+                    .thenReturn(highlightFieldsColumnOnly);
+            }
+            else
+            {
+                when(jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsConfigValue)).thenReturn(highlightFields);
+            }
         }
 
         when(searchRequestBuilder.setSource(any(SearchSourceBuilder.class))).thenReturn(searchRequestBuilderWithSource);
@@ -507,7 +543,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, searchFilters, facetList, isHitHighlightingEnabled);
 
         List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = Collections
-            .singletonList(new TagTypeIndexSearchResponseDto("code", 1, Collections.singletonList(new TagIndexSearchResponseDto("tag1", 1, null)), null));
+            .singletonList(new TagTypeIndexSearchResponseDto("code", Collections.singletonList(new TagIndexSearchResponseDto("tag1", 1, null)), null));
         List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDto =
             Collections.singletonList(new ResultTypeIndexSearchResponseDto("type", 1, null));
 
@@ -593,7 +629,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
         if (indexSearchRequest.isEnableHitHighlighting() != null)
         {
-            verifyHitHighlightingInteractions(searchRequestBuilder, indexSearchRequest.isEnableHitHighlighting());
+            verifyHitHighlightingInteractions(searchRequestBuilder, indexSearchRequest.isEnableHitHighlighting(), match);
         }
 
         if (CollectionUtils.isNotEmpty(indexSearchRequest.getFacetFields()))
@@ -624,7 +660,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         verifyNoMoreInteractionsHelper();
     }
 
-    private void verifyHitHighlightingInteractions(SearchRequestBuilder searchRequestBuilder, boolean isHitHighlightingEnabled) throws IOException
+    private void verifyHitHighlightingInteractions(SearchRequestBuilder searchRequestBuilder, boolean isHitHighlightingEnabled, Set<String> match)
+        throws IOException
     {
         if (isHitHighlightingEnabled)
         {
@@ -633,7 +670,14 @@ public class IndexSearchDaoTest extends AbstractDaoTest
             verify(jsonHelper).unmarshallJsonToObject(eq(IndexSearchHighlightFields.class), any(String.class));
             verify(configurationHelper, times(3)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
             verify(configurationHelper, times(3)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
-            verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS);
+            if (match != null && match.contains(MATCH_COLUMN))
+            {
+                verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_COLUMN_MATCH_HIGHLIGHT_FIELDS);
+            }
+            else
+            {
+                verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS);
+            }
         }
         else
         {
