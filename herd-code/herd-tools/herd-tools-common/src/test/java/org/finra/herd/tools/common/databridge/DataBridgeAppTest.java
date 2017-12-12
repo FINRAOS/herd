@@ -20,9 +20,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 
@@ -36,8 +33,6 @@ import org.finra.herd.tools.common.databridge.DataBridgeApp.ReturnValue;
  */
 public class DataBridgeAppTest extends AbstractDataBridgeTest
 {
-    private PrintStream originalStream = System.out;
-
     private MockDataBridgeApp dataBridgeApp = new MockDataBridgeApp();
 
     @Test
@@ -80,15 +75,15 @@ public class DataBridgeAppTest extends AbstractDataBridgeTest
         // Access key is present, but secret key is not which is invalid.
         String[] argumentsMissingSecretKey =
             {"--s3AccessKey", S3_ACCESS_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath", LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath",
-                STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost",
-                HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString()};
+                STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST,
+                "--httpProxyPort", HTTP_PROXY_PORT.toString()};
         assertEquals(ReturnValue.FAILURE, dataBridgeApp.parseCommandLineArguments(argumentsMissingSecretKey, applicationContext));
 
         // Secret key is present, but access key is not which is invalid.
         String[] argumentsMissingAccessKeyKey =
             {"--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath", LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath",
-                STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost",
-                HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString()};
+                STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST,
+                "--httpProxyPort", HTTP_PROXY_PORT.toString()};
         assertEquals(ReturnValue.FAILURE, dataBridgeApp.parseCommandLineArguments(argumentsMissingAccessKeyKey, applicationContext));
     }
 
@@ -189,38 +184,12 @@ public class DataBridgeAppTest extends AbstractDataBridgeTest
         assertNotNull(applicationContext.getBean(S3Operations.class));
     }
 
-    private String runTestGetSystemOut(Runnable runnable)
-    {
-        try
-        {
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            PrintStream printStream = new PrintStream(output);
-            System.setOut(printStream);
-            runnable.run();
-
-            return output.toString().trim();
-        }
-        finally
-        {
-            System.setOut(originalStream);
-        }
-    }
-
     @Test
     public void testParseCommandLineArgumentsAssertNoErrorWhenSslTrueAndUserPwdProvided() throws Exception
     {
-        String[] arguments = {
-                "-s", Boolean.TRUE.toString(),
-                "-u", "username",
-                "-w", "password",
-                "-e", S3_ENDPOINT_US_STANDARD, 
-                "-l", LOCAL_TEMP_PATH_INPUT.toString(), 
-                "-m", STRING_VALUE, 
-                "-H", WEB_SERVICE_HOSTNAME, 
-                "-P", WEB_SERVICE_HTTPS_PORT.toString(), 
-                "-n", HTTP_PROXY_HOST, 
-                "-o", HTTP_PROXY_PORT.toString()
-                };
+        String[] arguments =
+            {"-s", Boolean.TRUE.toString(), "-u", "username", "-w", "password", "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m",
+                STRING_VALUE, "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
 
         assertNull(dataBridgeApp.parseCommandLineArguments(arguments, applicationContext));
     }
@@ -229,17 +198,9 @@ public class DataBridgeAppTest extends AbstractDataBridgeTest
     public void testParseCommandLineArgumentsAssertRegServerHostFallbackToLegacyWhenNotProvided() throws Exception
     {
         String expectedRegServerHost = WEB_SERVICE_HOSTNAME;
-        String[] arguments = {
-                "-a", S3_ACCESS_KEY,
-                "-p", S3_SECRET_KEY,
-                "-e", S3_ENDPOINT_US_STANDARD, 
-                "-l", LOCAL_TEMP_PATH_INPUT.toString(), 
-                "-m", STRING_VALUE, 
-                "-Y", expectedRegServerHost, 
-                "-P", WEB_SERVICE_HTTPS_PORT.toString(), 
-                "-n", HTTP_PROXY_HOST, 
-                "-o", HTTP_PROXY_PORT.toString()
-                };
+        String[] arguments =
+            {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", STRING_VALUE, "-Y",
+                expectedRegServerHost, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
 
         assertNull(dataBridgeApp.parseCommandLineArguments(arguments, applicationContext));
         assertEquals(expectedRegServerHost, dataBridgeApp.regServerHost);
@@ -248,16 +209,9 @@ public class DataBridgeAppTest extends AbstractDataBridgeTest
     @Test
     public void testParseCommandLineArgumentsAssertErrorWhenBothRegServerHostNotProvided() throws Exception
     {
-        String[] arguments = {
-                "-a", S3_ACCESS_KEY,
-                "-p", S3_SECRET_KEY,
-                "-e", S3_ENDPOINT_US_STANDARD, 
-                "-l", LOCAL_TEMP_PATH_INPUT.toString(), 
-                "-m", STRING_VALUE, 
-                "-P", WEB_SERVICE_HTTPS_PORT.toString(), 
-                "-n", HTTP_PROXY_HOST, 
-                "-o", HTTP_PROXY_PORT.toString()
-                };
+        String[] arguments =
+            {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", STRING_VALUE, "-P",
+                WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
 
         assertEquals(ReturnValue.FAILURE, dataBridgeApp.parseCommandLineArguments(arguments, applicationContext));
     }
@@ -265,18 +219,10 @@ public class DataBridgeAppTest extends AbstractDataBridgeTest
     @Test
     public void testParseCommandLineArgumentsAssertErrorWhenBothRegServerHostAreProvided() throws Exception
     {
-        String[] arguments = {
-                "-Y", WEB_SERVICE_HOSTNAME, 
-                "-H", WEB_SERVICE_HOSTNAME, 
-                "-a", S3_ACCESS_KEY,
-                "-p", S3_SECRET_KEY,
-                "-e", S3_ENDPOINT_US_STANDARD, 
-                "-l", LOCAL_TEMP_PATH_INPUT.toString(), 
-                "-m", STRING_VALUE, 
-                "-P", WEB_SERVICE_HTTPS_PORT.toString(), 
-                "-n", HTTP_PROXY_HOST, 
-                "-o", HTTP_PROXY_PORT.toString()
-                };
+        String[] arguments =
+            {"-Y", WEB_SERVICE_HOSTNAME, "-H", WEB_SERVICE_HOSTNAME, "-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l",
+                LOCAL_TEMP_PATH_INPUT.toString(), "-m", STRING_VALUE, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o",
+                HTTP_PROXY_PORT.toString()};
 
         assertEquals(ReturnValue.FAILURE, dataBridgeApp.parseCommandLineArguments(arguments, applicationContext));
     }
@@ -284,17 +230,9 @@ public class DataBridgeAppTest extends AbstractDataBridgeTest
     @Test
     public void testParseCommandLineArgumentsAssertRegServerPortFallbackToLegacyWhenNotProvided() throws Exception
     {
-        String[] arguments = {
-            "-a", S3_ACCESS_KEY, 
-            "-p", S3_SECRET_KEY, 
-            "-e", S3_ENDPOINT_US_STANDARD, 
-            "-l", LOCAL_TEMP_PATH_INPUT.toString(), 
-            "-m", STRING_VALUE, 
-            "-H", WEB_SERVICE_HOSTNAME, 
-            "-Z", WEB_SERVICE_HTTPS_PORT.toString(), 
-            "-n", HTTP_PROXY_HOST, 
-            "-o", HTTP_PROXY_PORT.toString()
-            };
+        String[] arguments =
+            {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", STRING_VALUE, "-H",
+                WEB_SERVICE_HOSTNAME, "-Z", WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
         assertNull(dataBridgeApp.parseCommandLineArguments(arguments, applicationContext));
         assertEquals(WEB_SERVICE_HTTPS_PORT, dataBridgeApp.regServerPort);
     }
@@ -302,34 +240,19 @@ public class DataBridgeAppTest extends AbstractDataBridgeTest
     @Test
     public void testParseCommandLineArgumentsAssertErrorWhenBothRegServerPortAreNotProvided() throws Exception
     {
-        String[] arguments = {
-            "-a", S3_ACCESS_KEY, 
-            "-p", S3_SECRET_KEY, 
-            "-e", S3_ENDPOINT_US_STANDARD, 
-            "-l", LOCAL_TEMP_PATH_INPUT.toString(), 
-            "-m", STRING_VALUE, 
-            "-H", WEB_SERVICE_HOSTNAME, 
-            "-n", HTTP_PROXY_HOST, 
-            "-o", HTTP_PROXY_PORT.toString()
-            };
+        String[] arguments =
+            {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", STRING_VALUE, "-H",
+                WEB_SERVICE_HOSTNAME, "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
         assertEquals(ReturnValue.FAILURE, dataBridgeApp.parseCommandLineArguments(arguments, applicationContext));
     }
 
     @Test
     public void testParseCommandLineArgumentsAssertErrorWhenBothRegServerPortAreProvided() throws Exception
     {
-        String[] arguments = {
-            "-a", S3_ACCESS_KEY, 
-            "-p", S3_SECRET_KEY, 
-            "-e", S3_ENDPOINT_US_STANDARD, 
-            "-l", LOCAL_TEMP_PATH_INPUT.toString(), 
-            "-m", STRING_VALUE, 
-            "-H", WEB_SERVICE_HOSTNAME, 
-            "-P", WEB_SERVICE_HTTPS_PORT.toString(), 
-            "-Z", WEB_SERVICE_HTTPS_PORT.toString(), 
-            "-n", HTTP_PROXY_HOST, 
-            "-o", HTTP_PROXY_PORT.toString()
-            };
+        String[] arguments =
+            {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", STRING_VALUE, "-H",
+                WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-Z", WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o",
+                HTTP_PROXY_PORT.toString()};
         assertEquals(ReturnValue.FAILURE, dataBridgeApp.parseCommandLineArguments(arguments, applicationContext));
     }
 
