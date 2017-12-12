@@ -90,6 +90,8 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
 
     public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_UPDATE_BDATA_STATUS = "testThrowIoExceptionDuringUpdateBdataStatus";
 
+    public static final String HOSTNAME_THROW_IO_EXCEPTION = "testThrowIoException";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MockHttpClientOperationsImpl.class);
 
     @Autowired
@@ -138,6 +140,7 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
             }
             else if (uri.getPath().startsWith("/herd-app/rest/businessObjectDefinitions/"))
             {
+                checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION);
                 buildGetBusinessObjectDefinitionResponse(response, uri);
             }
             else if (uri.getPath().startsWith("/herd-app/rest/storages/"))
@@ -164,6 +167,7 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
             }
             else if (uri.getPath().equals("/herd-app/rest/businessObjectData/search"))
             {
+                checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION);
                 buildSearchBusinessObjectDataResponse(response, uri);
             }
         }
