@@ -200,22 +200,22 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             EmrVpcPricingState expectedEmrVpcPricingState = new EmrVpcPricingState();
             expectedEmrVpcPricingState.setSubnetAvailableIpAddressCounts(new HashMap<String, Integer>()
             {{
-                    put(MockEc2OperationsImpl.SUBNET_1, 10);
-                }});
+                put(MockEc2OperationsImpl.SUBNET_1, 10);
+            }});
             expectedEmrVpcPricingState.setSpotPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                    put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<>());
-                }});
+                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<>());
+            }});
             expectedEmrVpcPricingState.setOnDemandPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                    put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
-                    {{
-                            put(MockEc2OperationsImpl.INSTANCE_TYPE_4, ON_DEMAND);
-                        }});
+                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
+                {{
+                    put(MockEc2OperationsImpl.INSTANCE_TYPE_4, ON_DEMAND);
                 }});
+            }});
 
             assertEquals(String.format(
-                "There were no subnets which satisfied your best price search criteria. If you explicitly opted to use spot EC2 instances, please confirm" +
+                "There were no subnets which satisfied your best price search criteria. If you explicitly opted to use spot EC2 instances, please confirm " +
                     "that your instance types support spot pricing. Otherwise, try setting the max price or the on-demand threshold to a higher value.%n%s",
                 emrVpcPricingStateFormatter.format(expectedEmrVpcPricingState)), e.getMessage());
         }
@@ -413,22 +413,22 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             EmrVpcPricingState expectedEmrVpcPricingState = new EmrVpcPricingState();
             expectedEmrVpcPricingState.setSubnetAvailableIpAddressCounts(new HashMap<String, Integer>()
             {{
-                    put(MockEc2OperationsImpl.SUBNET_1, 10);
-                }});
+                put(MockEc2OperationsImpl.SUBNET_1, 10);
+            }});
             expectedEmrVpcPricingState.setSpotPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                    put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<>());
-                }});
+                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<>());
+            }});
             expectedEmrVpcPricingState.setOnDemandPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                    put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
-                    {{
-                            put(MockEc2OperationsImpl.INSTANCE_TYPE_4, ON_DEMAND);
-                        }});
+                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
+                {{
+                    put(MockEc2OperationsImpl.INSTANCE_TYPE_4, ON_DEMAND);
                 }});
+            }});
 
             assertEquals(String.format(
-                "There were no subnets which satisfied your best price search criteria. If you explicitly opted to use spot EC2 instances, please confirm" +
+                "There were no subnets which satisfied your best price search criteria. If you explicitly opted to use spot EC2 instances, please confirm " +
                     "that your instance types support spot pricing. Otherwise, try setting the max price or the on-demand threshold to a higher value.%n%s",
                 emrVpcPricingStateFormatter.format(expectedEmrVpcPricingState)), e.getMessage());
         }

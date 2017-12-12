@@ -109,7 +109,7 @@ public class EmrPricingHelper extends AwsHelper
         if (subnets.isEmpty())
         {
             LOGGER.info(String.format("Insufficient IP availability. namespace=\"%s\" emrClusterDefinitionName=\"%s\" emrClusterName=\"%s\" " +
-                "totalRequestedInstanceCount=%s emrVpcPricingState=%s", emrClusterAlternateKeyDto.getNamespace(),
+                    "totalRequestedInstanceCount=%s emrVpcPricingState=%s", emrClusterAlternateKeyDto.getNamespace(),
                 emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(), totalInstanceCount,
                 jsonHelper.objectToJson(emrVpcPricingState)));
             throw new ObjectNotFoundException(String.format(
@@ -195,11 +195,11 @@ public class EmrPricingHelper extends AwsHelper
         if (emrClusterPrices.isEmpty())
         {
             LOGGER.info(String.format("No subnets which satisfied the best price search criteria. namespace=\"%s\" emrClusterDefinitionName=\"%s\" " +
-                "emrClusterName=\"%s\" emrVpcPricingState=%s", emrClusterAlternateKeyDto.getNamespace(),
+                    "emrClusterName=\"%s\" emrVpcPricingState=%s", emrClusterAlternateKeyDto.getNamespace(),
                 emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(),
                 jsonHelper.objectToJson(emrVpcPricingState)));
             throw new ObjectNotFoundException(String.format(
-                "There were no subnets which satisfied your best price search criteria. If you explicitly opted to use spot EC2 instances, please confirm" +
+                "There were no subnets which satisfied your best price search criteria. If you explicitly opted to use spot EC2 instances, please confirm " +
                     "that your instance types support spot pricing. Otherwise, try setting the max price or the on-demand threshold to a higher value.%n%s",
                 emrVpcPricingStateFormatter.format(emrVpcPricingState)));
         }
