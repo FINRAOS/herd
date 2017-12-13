@@ -64,6 +64,12 @@ public class ExporterController
     public void performRetentionExpirationExport(String namespace, String businessObjectDefinitionName, File localOutputFile,
         RegServerAccessParamsDto regServerAccessParamsDto, String udcServerHost) throws Exception
     {
+        // Fail if local output file already exists.
+        if (localOutputFile.exists())
+        {
+            throw new IllegalArgumentException(String.format("The specified local output file \"%s\" already exists.", localOutputFile.toString()));
+        }
+
         // Initialize the web client.
         exporterWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
 
@@ -112,12 +118,17 @@ public class ExporterController
     private void writeToCsvFile(File localOutputFile, String namespace, String businessObjectDefinitionName, String udcServerHost,
         List<BusinessObjectData> businessObjectDataList) throws IOException
     {
-        // Creating the url the UDC
+        // Create business object definition URI.
         String businessObjectDefinitionUdcUri = String.format("https://%s/data-entities/%s/%s", udcServerHost, namespace, businessObjectDefinitionName);
 
         // Create the local output file.
         try (Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8))
         {
+            // Write csv file header.
+            writeLine(writer, Arrays.asList("Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type",
+                "Business Object Format Version", "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3",
+                "Sub-Partition Value 4", "Business Object Data Version", "Business Object Definition URI"));
+
             for (BusinessObjectData businessObjectData : businessObjectDataList)
             {
                 List<String> businessObjectDataRecords = Arrays.asList(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
