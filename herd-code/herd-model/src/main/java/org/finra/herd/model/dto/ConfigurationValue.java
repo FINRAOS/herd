@@ -608,7 +608,7 @@ public enum ConfigurationValue
     /**
      * The maximum number of records returned in business object data search result count
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 100_000),
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 10_000),
 
     /**
      * The maximum number of records returned in business object data search page
