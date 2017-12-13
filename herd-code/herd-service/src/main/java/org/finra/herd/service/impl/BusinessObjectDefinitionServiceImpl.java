@@ -338,7 +338,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
-        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity -> {
+        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity ->
+        {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -480,6 +481,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @param businessObjectDefinitionKey the business object definition key
      * @param includeBusinessObjectDefinitionUpdateHistory a flag to include change event information or not
+     *
      * @return the business object definition.
      */
     protected BusinessObjectDefinition getBusinessObjectDefinitionImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey,
@@ -669,8 +671,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 }
 
                 tagTypeFacets.add(
-                    new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), tagTypeIndexSearchResponseDto.getCount(), FacetTypeEnum.TAG_TYPE.value(),
-                        tagTypeIndexSearchResponseDto.getCode(), tagFacets));
+                    new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), null, FacetTypeEnum.TAG_TYPE.value(), tagTypeIndexSearchResponseDto.getCode(),
+                        tagFacets));
             }
         }
 
@@ -1040,7 +1042,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final List<BusinessObjectDefinitionChangeEvent> businessObjectDefinitionChangeEvents = new ArrayList<>();
         if (BooleanUtils.isTrue(includeBusinessObjectDefinitionUpdateHistory))
         {
-            businessObjectDefinitionEntity.getChangeEvents().forEach(businessObjectDefinitionChangeEventEntity -> {
+            businessObjectDefinitionEntity.getChangeEvents().forEach(businessObjectDefinitionChangeEventEntity ->
+            {
                 DescriptiveBusinessObjectFormatUpdateRequest descriptiveBusinessObjectFormatUpdateRequest = null;
                 if (businessObjectDefinitionChangeEventEntity.getFileType() != null)
                 {
@@ -1279,7 +1282,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         Map<String, String> businessObjectDefinitionJSONMap = new HashMap<>();
 
-        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
+        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity ->
+        {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();

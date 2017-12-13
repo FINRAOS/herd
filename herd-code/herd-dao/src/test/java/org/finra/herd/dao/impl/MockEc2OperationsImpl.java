@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.finra.herd.dao.Ec2Operations;
-
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.AvailabilityZone;
@@ -41,39 +39,58 @@ import com.amazonaws.services.ec2.model.ModifyInstanceAttributeRequest;
 import com.amazonaws.services.ec2.model.SpotPrice;
 import com.amazonaws.services.ec2.model.Subnet;
 
+import org.finra.herd.dao.Ec2Operations;
+
 /**
  * Mock implementation of AWS EC2 operations.
- * 
+ * <p/>
  * The mock contains several pre-configured subnets, availability zones, regions, and instance types.
  */
 public class MockEc2OperationsImpl implements Ec2Operations
 {
     public static final int AVAILABLE_IP_HIGH = 20;
+
     public static final int AVAILABLE_IP_LOW = 10;
 
     public static final String SPOT_PRICE_VERY_HIGH = "2";
+
     public static final String SPOT_PRICE_HIGH = "1.5";
+
     public static final String SPOT_PRICE_EQUAL = "1";
+
     public static final String SPOT_PRICE_LOW = ".5";
+
     public static final String SPOT_PRICE_VERY_LOW = ".25";
 
     public static String SUBNET_1 = "SUBNET_1";
+
     public static String SUBNET_2 = "SUBNET_2";
+
     public static String SUBNET_3 = "SUBNET_3";
+
     public static String SUBNET_4 = "SUBNET_4";
+
     public static String SUBNET_5 = "SUBNET_5";
 
     public static String AVAILABILITY_ZONE_1 = "AVAILABILITY_ZONE_1";
+
     public static String AVAILABILITY_ZONE_2 = "AVAILABILITY_ZONE_2";
+
     public static String AVAILABILITY_ZONE_3 = "AVAILABILITY_ZONE_3";
+
     public static String AVAILABILITY_ZONE_4 = "AVAILABILITY_ZONE_4";
 
     public static String REGION_1 = "REGION_1";
+
     public static String REGION_2 = "REGION_2";
 
     public static String INSTANCE_TYPE_1 = "INSTANCE_TYPE_1";
+
     public static String INSTANCE_TYPE_2 = "INSTANCE_TYPE_2";
+
     public static String INSTANCE_TYPE_3 = "INSTANCE_TYPE_3";
+
+    public static String INSTANCE_TYPE_4 = "INSTANCE_TYPE_4";
 
     /*
      * Pre-configured in-memory EC2 instance information.
@@ -81,7 +98,9 @@ public class MockEc2OperationsImpl implements Ec2Operations
      * Note that on-demand prices are database configurations, therefore are stored in the mock reference data DB script.
      */
     private Map<String, MockSubnet> mockSubnets = new HashMap<>();
+
     private Map<String, MockAvailabilityZone> mockAvailabilityZones = new HashMap<>();
+
     private Set<String> mockInstanceTypes = new HashSet<>();
 
     public MockEc2OperationsImpl()
@@ -275,14 +294,14 @@ public class MockEc2OperationsImpl implements Ec2Operations
     @Override
     public void modifyInstanceAttribute(AmazonEC2Client ec2Client, ModifyInstanceAttributeRequest modifyInstanceAttributeRequest)
     {
-        if (modifyInstanceAttributeRequest.getGroups() != null
-            && modifyInstanceAttributeRequest.getGroups().get(0).equals(MockAwsOperationsHelper.AMAZON_SERVICE_EXCEPTION))
+        if (modifyInstanceAttributeRequest.getGroups() != null &&
+            modifyInstanceAttributeRequest.getGroups().get(0).equals(MockAwsOperationsHelper.AMAZON_SERVICE_EXCEPTION))
         {
             throw new AmazonServiceException(MockAwsOperationsHelper.AMAZON_SERVICE_EXCEPTION);
         }
 
-        if (modifyInstanceAttributeRequest.getGroups() != null
-            && modifyInstanceAttributeRequest.getGroups().get(0).equals(MockAwsOperationsHelper.AMAZON_THROTTLING_EXCEPTION))
+        if (modifyInstanceAttributeRequest.getGroups() != null &&
+            modifyInstanceAttributeRequest.getGroups().get(0).equals(MockAwsOperationsHelper.AMAZON_THROTTLING_EXCEPTION))
         {
             AmazonServiceException throttlingException = new AmazonServiceException("test throttling exception");
             throttlingException.setErrorCode("ThrottlingException");
@@ -293,9 +312,9 @@ public class MockEc2OperationsImpl implements Ec2Operations
     }
 
     /**
-     * In-memory implementation of describeSubnets. Returns the subnets from the pre-configured subnets.
-     * The method can be ordered to throw an AmazonServiceException with a specified error code by specifying a subnet ID with prefix "throw." followed by a
-     * string indicating the error code to throw. The exception thrown in this manner will always set the status code to 500.
+     * In-memory implementation of describeSubnets. Returns the subnets from the pre-configured subnets. The method can be ordered to throw an
+     * AmazonServiceException with a specified error code by specifying a subnet ID with prefix "throw." followed by a string indicating the error code to
+     * throw. The exception thrown in this manner will always set the status code to 500.
      */
     @Override
     public DescribeSubnetsResult describeSubnets(AmazonEC2Client ec2Client, DescribeSubnetsRequest describeSubnetsRequest)

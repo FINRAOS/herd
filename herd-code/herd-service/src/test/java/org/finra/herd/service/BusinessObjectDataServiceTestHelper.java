@@ -66,6 +66,9 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlOutputFormatEnum;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusInformation;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
@@ -813,6 +816,29 @@ public class BusinessObjectDataServiceTestHelper
         String s3ObjectKey = s3KeyPrefix + "/test";
         PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, s3ObjectKey, new ByteArrayInputStream(new byte[1]), new ObjectMetadata());
         s3Operations.putObject(putObjectRequest, null);
+    }
+
+    /**
+     * Creates a simple business object data search request.
+     *
+     * @param namespace the namespace to search for
+     * @param bdefName the bdef name to search for
+     *
+     * @return the newly created business object data search request
+     */
+    public BusinessObjectDataSearchRequest createSimpleBusinessObjectDataSearchRequest(final String namespace, final String bdefName)
+    {
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(namespace);
+        key.setBusinessObjectDefinitionName(bdefName);
+        businessObjectDataSearchKeys.add(key);
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+        request.setBusinessObjectDataSearchFilters(filters);
+        return request;
     }
 
     /**

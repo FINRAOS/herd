@@ -744,15 +744,20 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * Searches business object data based on namespace, definition name, format usage, file type, and format version. <p> Namespace and definition name are
      * required. </p> <p> Requires READ permission on namespace </p>
      *
+     * @param pageNum if pageNum parameter is specified, results contain the appropriate page specified. Page numbers are one-based - that is the first page
+     * number is one. Default value is 1
+     * @param pageSize if pageSize parameter is specified, results contain that number of business object data (unless it is the end of the result set). Default
+     * value is 1000
      * @param businessObjectDataSearchRequest search request
      *
      * @return search result
      */
     @RequestMapping(value = "/businessObjectData/search", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_SEARCH_POST)
-    public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
+    public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestParam(value = "pageNum", required = false) Integer pageNum,
+        @RequestParam(value = "pageSize", required = false) Integer pageSize, @RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
     {
-        return businessObjectDataService.searchBusinessObjectData(businessObjectDataSearchRequest);
+        return businessObjectDataService.searchBusinessObjectData(pageNum, pageSize, businessObjectDataSearchRequest);
     }
 
     /**

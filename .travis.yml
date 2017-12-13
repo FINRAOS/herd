@@ -12,4 +12,4 @@ before_script:
   - export MAVEN_OPTS='-Xmx4096m -XX:MaxPermSize=2048m'
   - echo $MAVEN_OPTS
 script:
-  - mvn clean install -q 2> /dev/null
+  - mvn clean install
