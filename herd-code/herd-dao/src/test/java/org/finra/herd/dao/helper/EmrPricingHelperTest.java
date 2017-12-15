@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.amazonaws.AmazonServiceException;
 import org.apache.commons.lang3.StringUtils;
@@ -37,6 +39,7 @@ import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.MasterInstanceDefinition;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
+import org.finra.herd.model.dto.EmrVpcPricingState;
 
 /**
  * Test cases for EMR pricing algorithm.
@@ -45,7 +48,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 {
     private static final BigDecimal ONE_UNIT = new BigDecimal("0.00001");
 
-    private static final BigDecimal ON_DEMAND = BigDecimal.ONE;
+    private static final BigDecimal ON_DEMAND = new BigDecimal("1.00");
 
     private static final BigDecimal ON_DEMAND_LESS_ONE = ON_DEMAND.subtract(ONE_UNIT);
 
@@ -167,6 +170,58 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     /**
+     * Tests algorithmic case when the max search price is lower than on-demand price and spot price is not available. The update method should throw an error
+     * indicating that no subnets satisfied the given criteria.
+     */
+    @Test
+    public void testBestPriceAlgorithmicMaxSearchPriceTooLowAndSpotPriceNotAvailable()
+    {
+        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+
+        // For master instance definition, use instance type that does not have spot price available.
+        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
+        masterInstanceDefinition.setInstanceCount(1);
+        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_4);
+        masterInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND_LESS_ONE);
+
+        InstanceDefinition coreInstanceDefinition = null;
+
+        InstanceDefinition taskInstanceDefinition = null;
+
+        // Try with master failing criteria
+        try
+        {
+            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            // Set expected EMR VPC price state.
+            EmrVpcPricingState expectedEmrVpcPricingState = new EmrVpcPricingState();
+            expectedEmrVpcPricingState.setSubnetAvailableIpAddressCounts(new HashMap<String, Integer>()
+            {{
+                put(MockEc2OperationsImpl.SUBNET_1, 10);
+            }});
+            expectedEmrVpcPricingState.setSpotPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
+            {{
+                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<>());
+            }});
+            expectedEmrVpcPricingState.setOnDemandPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
+            {{
+                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
+                {{
+                    put(MockEc2OperationsImpl.INSTANCE_TYPE_4, ON_DEMAND);
+                }});
+            }});
+
+            assertEquals(String.format(
+                "There were no subnets which satisfied your best price search criteria. If you explicitly opted to use spot EC2 instances, please confirm " +
+                    "that your instance types support spot pricing. Otherwise, try setting the max price or the on-demand threshold to a higher value.%n%s",
+                emrVpcPricingStateFormatter.format(expectedEmrVpcPricingState)), e.getMessage());
+        }
+    }
+
+    /**
      * Tests 2 cases: Master spot is less than on-demand, max search price is less than on-demand, threshold is greater than on-demand. - Master should pick
      * spot because even though on-demand is within the threshold, it is above the max Core spot > on-demand, max search price = spot - Core should pick
      * on-demand since on-demand is cheaper
@@ -197,6 +252,36 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
         assertEquals("master instance bid price", ON_DEMAND_LESS_ONE,
             emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
+        assertNull("core instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
+    }
+
+    /**
+     * Tests algorithmic case when the max search price equals to on-demand price and spot price is not available. Master should pick on-demand because spot is
+     * not available and max >= on-demand. Core spot > on-demand, max search price = spot - Core should pick on-demand since on-demand is cheaper.
+     */
+    @Test
+    public void testBestPriceAlgorithmicMaxSearchPriceEqualsToOnDemandAndSpotPriceNotAvailable()
+    {
+        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+
+        // For master instance definition, use instance type that does not have spot price available.
+        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
+        masterInstanceDefinition.setInstanceCount(1);
+        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_4);
+        masterInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND);
+
+        InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
+        coreInstanceDefinition.setInstanceCount(1);
+        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_3);
+        coreInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND);
+
+        InstanceDefinition taskInstanceDefinition = null;
+
+        EmrClusterDefinition emrClusterDefinition =
+            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
+
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
+        assertNull("master instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
         assertNull("core instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
     }
 
@@ -295,6 +380,58 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
         assertEquals("master instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
         assertNull("core instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
+    }
+
+    /**
+     * Tests algorithmic case when spot is explicitly requested and spot price is not available. The update method should throw an error indicating that no
+     * subnets satisfied the given criteria.
+     */
+    @Test
+    public void testBestPriceExplicitSpotAndSpotPriceNotAvailable()
+    {
+        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+
+        // For master instance definition, use instance type that does not have spot price available.
+        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
+        masterInstanceDefinition.setInstanceCount(1);
+        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_4);
+        masterInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
+
+        InstanceDefinition coreInstanceDefinition = null;
+
+        InstanceDefinition taskInstanceDefinition = null;
+
+        // Try with master failing criteria
+        try
+        {
+            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            // Set expected EMR VPC price state.
+            EmrVpcPricingState expectedEmrVpcPricingState = new EmrVpcPricingState();
+            expectedEmrVpcPricingState.setSubnetAvailableIpAddressCounts(new HashMap<String, Integer>()
+            {{
+                put(MockEc2OperationsImpl.SUBNET_1, 10);
+            }});
+            expectedEmrVpcPricingState.setSpotPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
+            {{
+                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<>());
+            }});
+            expectedEmrVpcPricingState.setOnDemandPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
+            {{
+                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
+                {{
+                    put(MockEc2OperationsImpl.INSTANCE_TYPE_4, ON_DEMAND);
+                }});
+            }});
+
+            assertEquals(String.format(
+                "There were no subnets which satisfied your best price search criteria. If you explicitly opted to use spot EC2 instances, please confirm " +
+                    "that your instance types support spot pricing. Otherwise, try setting the max price or the on-demand threshold to a higher value.%n%s",
+                emrVpcPricingStateFormatter.format(expectedEmrVpcPricingState)), e.getMessage());
+        }
     }
 
     /**
@@ -548,36 +685,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     /**
-     * Tests case where instance type was not found in the spot list. This is a user error because we are using AWS API to look up the values, therefore, we can
-     * trust that if AWS does not return the instance type, it does not exist.
-     */
-    @Test
-    public void testBestPriceSpotInstanceNotFound()
-    {
-        String subnetId = MockEc2OperationsImpl.SUBNET_5;
-
-        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
-        masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_3);
-
-        InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
-        coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_3);
-
-        InstanceDefinition taskInstanceDefinition = null;
-
-        try
-        {
-            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
-            fail("expected ObjectNotFoundException, but no exception was thrown");
-        }
-        catch (Exception e)
-        {
-            assertEquals("thrown exception", ObjectNotFoundException.class, e.getClass());
-        }
-    }
-
-    /**
      * Tests case where instance type was not found in the spot list because AWS does not have a spot price for the given instance type in the given AZ. But
      * there is another AZ available for that does have a all spot prices available.
      */
@@ -599,7 +706,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
     }
 
@@ -614,7 +720,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_2);
+        masterInstanceDefinition.setInstanceType(INVALID_VALUE);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);

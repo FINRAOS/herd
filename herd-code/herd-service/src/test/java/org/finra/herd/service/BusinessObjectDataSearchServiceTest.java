@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
-import org.springframework.util.Assert;
 
 import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -25,7 +24,16 @@ import org.finra.herd.model.api.xml.PartitionValueFilter;
  */
 public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
 {
+    /**
+     * The default page number for the business object data search
+     */
+    private static final Integer DEFAULT_PAGE_NUMBER = 1;
 
+    /**
+     * The default page size for the business object data search
+     */
+    private static final Integer DEFAULT_PAGE_SIZE = 1_000;
+    
     @Test
     public void testSearchBusinessObjectData()
     {
@@ -43,14 +51,14 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         filters.add(filter);
         request.setBusinessObjectDataSearchFilters(filters);
 
-        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);
+        BusinessObjectDataSearchResult result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);
 
-        Assert.isTrue(result.getBusinessObjectDataElements().size() == 2);
+        assertTrue(result.getBusinessObjectDataElements().size() == 2);
 
         for (BusinessObjectData data : result.getBusinessObjectDataElements())
         {
-            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
-            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            assertEquals(NAMESPACE, data.getNamespace());
+            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
         }
 
     }
@@ -67,11 +75,11 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         key.setNamespace(NAMESPACE);
         key.setBusinessObjectDefinitionName(BDEF_NAME);
 
-        List<PartitionValueFilter> partitionValueFilters = new ArrayList<PartitionValueFilter>();
+        List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
         partitionValueFilters.add(partitionValueFilter);
         partitionValueFilter.setPartitionKey(PARTITION_KEY);
-        List<String> values = new ArrayList<String>();
+        List<String> values = new ArrayList<>();
         values.add(PARTITION_VALUE);
         partitionValueFilter.setPartitionValues(values);
         key.setPartitionValueFilters(partitionValueFilters);
@@ -82,12 +90,12 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         filters.add(filter);
         request.setBusinessObjectDataSearchFilters(filters);
 
-        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);
+        BusinessObjectDataSearchResult result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);
         //this should be zero, as no schema column is registered
-        Assert.isTrue(result.getBusinessObjectDataElements().size() == 0);
+        assertTrue(result.getBusinessObjectDataElements().size() == 0);
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testSearchBusinessObjectDataWithPartitionFilterBadRequest()
     {
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
@@ -99,7 +107,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         key.setNamespace(NAMESPACE);
         key.setBusinessObjectDefinitionName(BDEF_NAME);
 
-        List<PartitionValueFilter> partitionValueFilters = new ArrayList<PartitionValueFilter>();
+        List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
         partitionValueFilters.add(partitionValueFilter);
         partitionValueFilter.setLatestAfterPartitionValue(new LatestAfterPartitionValue("A"));
@@ -112,15 +120,8 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         filters.add(filter);
         request.setBusinessObjectDataSearchFilters(filters);
 
-        try
-        {
-            businessObjectDataService.searchBusinessObjectData(request);
-            fail("Should not get here, as IllegalArgumentException should be thrown");
-        }
-        catch (IllegalArgumentException ex)
-        {
-        }
-
+        businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);
+        fail("Should not get here, as IllegalArgumentException should be thrown");
     }
     
     @Test
@@ -147,7 +148,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectDataService.searchBusinessObjectData(request);
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);
             fail("Should not get here, as IllegalArgumentException should be thrown");
         }
         catch (IllegalArgumentException ex)
@@ -161,7 +162,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         key.setAttributeValueFilters(attributeValueFilters);
         try
         {
-            businessObjectDataService.searchBusinessObjectData(request);
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);
             fail("Should not get here, as IllegalArgumentException should be thrown");
         }
         catch (IllegalArgumentException ex)
@@ -175,7 +176,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         key.setAttributeValueFilters(attributeValueFilters);
         try
         {
-            businessObjectDataService.searchBusinessObjectData(request);
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);
             fail("Should not get here, as IllegalArgumentException should be thrown");
         }
         catch (IllegalArgumentException ex)
@@ -210,16 +211,16 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         filters.add(filter);
         request.setBusinessObjectDataSearchFilters(filters);
 
-        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);      
+        BusinessObjectDataSearchResult result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);      
         List<BusinessObjectData> resultList = result.getBusinessObjectDataElements();
         assertEquals(1, resultList.size());
 
         for (BusinessObjectData data : resultList)
         {
-            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
-            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
-            Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
-            Assert.isTrue(ATTRIBUTE_VALUE_1.equals(data.getAttributes().get(0).getValue()));
+            assertEquals(NAMESPACE, data.getNamespace());
+            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
+            assertEquals(ATTRIBUTE_NAME_1_MIXED_CASE, data.getAttributes().get(0).getName());
+            assertEquals(ATTRIBUTE_VALUE_1, data.getAttributes().get(0).getValue());
         }
     }
     
@@ -249,16 +250,16 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         filters.add(filter);
         request.setBusinessObjectDataSearchFilters(filters);
 
-        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);      
+        BusinessObjectDataSearchResult result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);      
         List<BusinessObjectData> resultList = result.getBusinessObjectDataElements();
         assertEquals(1, resultList.size());
 
         for (BusinessObjectData data : resultList)
         {
-            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
-            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
-            Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
-            Assert.isTrue(ATTRIBUTE_VALUE_1.equals(data.getAttributes().get(0).getValue()));
+            assertEquals(NAMESPACE, data.getNamespace());
+            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
+            assertEquals(ATTRIBUTE_NAME_1_MIXED_CASE, data.getAttributes().get(0).getName());
+            assertEquals(ATTRIBUTE_VALUE_1, data.getAttributes().get(0).getValue());
         }
     }
     
@@ -301,15 +302,15 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         filters.add(filter);
         request.setBusinessObjectDataSearchFilters(filters);
 
-        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);      
+        BusinessObjectDataSearchResult result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, request);      
         List<BusinessObjectData> resultList = result.getBusinessObjectDataElements();
         assertEquals(1, resultList.size());
 
         for (BusinessObjectData data : resultList)
         {
-            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
-            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
-            
+            assertEquals(NAMESPACE, data.getNamespace());
+            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
+
             assertEquals(2, data.getAttributes().size());
             boolean foundCase1 = false, foundCase2 = false;
             for (int i = 0; i < data.getAttributes().size(); i++)
@@ -327,5 +328,49 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
             }
             assertTrue(foundCase1 && foundCase2);
           }
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataWithPageNumPageSize()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        BusinessObjectDataSearchRequest request = businessObjectDataServiceTestHelper.createSimpleBusinessObjectDataSearchRequest(NAMESPACE, BDEF_NAME);
+
+        // Test getting the first page
+        BusinessObjectDataSearchResult result = businessObjectDataService.searchBusinessObjectData(1, 1, request);
+
+        assertTrue(result.getBusinessObjectDataElements().size() == 1);
+
+        for (BusinessObjectData data : result.getBusinessObjectDataElements())
+        {
+            assertEquals(NAMESPACE, data.getNamespace());
+            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
+            assertEquals(FORMAT_FILE_TYPE_CODE, data.getBusinessObjectFormatFileType());
+            assertEquals(FORMAT_USAGE_CODE, data.getBusinessObjectFormatUsage());
+        }
+
+        // Test getting the second page
+        result = businessObjectDataService.searchBusinessObjectData(2, 1, request);
+
+        assertTrue(result.getBusinessObjectDataElements().size() == 1);
+
+        for (BusinessObjectData data : result.getBusinessObjectDataElements())
+        {
+            assertEquals(NAMESPACE, data.getNamespace());
+            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
+            assertEquals(FORMAT_FILE_TYPE_CODE, data.getBusinessObjectFormatFileType());
+            assertEquals(FORMAT_USAGE_CODE_2, data.getBusinessObjectFormatUsage());
+        }
+
+        // Test getting a larger page than there are results remaining
+        result = businessObjectDataService.searchBusinessObjectData(1, 3, request);
+
+        assertTrue(result.getBusinessObjectDataElements().size() == 2);
+
+        // Test getting a page that does not exist
+        result = businessObjectDataService.searchBusinessObjectData(3, 1, request);
+
+        assertTrue(result.getBusinessObjectDataElements().size() == 0);
     }
 }

@@ -175,11 +175,11 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         // Create multiple states of business object data destroy parameters DTO.
         List<BusinessObjectDataDestroyDto> businessObjectDataDestroyDtoStates = Arrays.asList(
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_FILES,
-                S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
+                StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
+                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.DISABLED, StorageUnitStatusEntity.DISABLING, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_FILES,
-                S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS));
+                StorageUnitStatusEntity.DISABLED, StorageUnitStatusEntity.DISABLING, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
+                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS));
 
         // Create a business object data.
         BusinessObjectData businessObjectData = new BusinessObjectData();

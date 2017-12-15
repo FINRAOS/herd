@@ -99,7 +99,7 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements BusinessObjectDataDao
 {
     @Autowired
-    BusinessObjectFormatDao businessObjectFormatDao;
+    private BusinessObjectFormatDao businessObjectFormatDao;
 
     @Override
     public BusinessObjectDataEntity getBusinessObjectDataByAltKey(BusinessObjectDataKey businessObjectDataKey)
@@ -885,9 +885,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     @Override
-    public List<BusinessObjectData> searchBusinessObjectData(List<BusinessObjectDataSearchFilter> filters)
+    public List<BusinessObjectData> searchBusinessObjectData(Integer pageNum, Integer pageSize, List<BusinessObjectDataSearchFilter> filters)
     {
-        Integer businessObjectDataSearchMaxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+        Integer businessObjectDataSearchMaxResultCount =
+            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT, Integer.class);
 
         // assume only one filter and only on search key, the validation should be passed by now
         BusinessObjectDataSearchKey businessDataSearchKey = filters.get(0).getBusinessObjectDataSearchKeys().get(0);
@@ -900,7 +901,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         Root<BusinessObjectDataEntity> countBusinessObjectDataEntity = countCriteria.from(BusinessObjectDataEntity.class);
 
-        Predicate countPredicate = null;
+        Predicate countPredicate;
         try
         {
             countPredicate = getPredict(countBuilder, criteria, countBusinessObjectDataEntity, businessDataSearchKey, true);
@@ -908,15 +909,15 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         catch (IllegalArgumentException ex)
         {
             // this exception means that there is no record found for the query, no need to run the actual query, return empty list
-            return new ArrayList<BusinessObjectData>();
+            return new ArrayList<>();
         }
 
         countCriteria.select(countBuilder.count(countBusinessObjectDataEntity)).where(countPredicate).distinct(true);
         Long count = entityManager.createQuery(countCriteria).getSingleResult();
-        if (count > businessObjectDataSearchMaxResults)
+        if (count > businessObjectDataSearchMaxResultCount)
         {
             throw new IllegalArgumentException(String
-                .format("Result limit of %d exceeded. Total result size %d. Modify filters to further limit results.", businessObjectDataSearchMaxResults,
+                .format("Result limit of %d exceeded. Total result size %d. Modify filters to further limit results.", businessObjectDataSearchMaxResultCount,
                     count));
         }
 
@@ -926,7 +927,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         criteria.select(businessObjectDataEntity).where(predicate);
 
-        List<BusinessObjectDataEntity> entityArray = entityManager.createQuery(criteria).getResultList();
+        List<BusinessObjectDataEntity> entityArray =
+            entityManager.createQuery(criteria).setFirstResult(pageSize * (pageNum - 1)).setMaxResults(pageSize).getResultList();
         return getQueryResultListFromEntityList(entityArray, businessDataSearchKey.getAttributeValueFilters());
     }
 

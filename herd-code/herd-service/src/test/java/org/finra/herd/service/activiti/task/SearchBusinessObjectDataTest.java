@@ -50,15 +50,17 @@ public class SearchBusinessObjectDataTest extends HerdActivitiServiceTaskTest
 
         parameters.add(buildParameter("contentType", "xml"));
         parameters.add(buildParameter("businessObjectDataSearchRequest", xmlHelper.objectToXml(searchRequest)));
+        parameters.add(buildParameter("pageNum", BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE.toString()));
+        parameters.add(buildParameter("pageSize", BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND.toString()));
 
         //the actual result from calling the service directly
-        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(searchRequest);
+        BusinessObjectDataSearchResult result = this.businessObjectDataService
+            .searchBusinessObjectData(BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE, BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND, searchRequest);
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(result));
 
-        testActivitiServiceTaskSuccess(SearchBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        testActivitiServiceTaskSuccess(SearchBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
 
     }
 
@@ -79,15 +81,17 @@ public class SearchBusinessObjectDataTest extends HerdActivitiServiceTaskTest
 
         parameters.add(buildParameter("contentType", "json"));
         parameters.add(buildParameter("businessObjectDataSearchRequest", jsonHelper.objectToJson(searchRequest)));
+        parameters.add(buildParameter("pageNum", BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE.toString()));
+        parameters.add(buildParameter("pageSize", BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND.toString()));
 
         //the actual result from calling the service directly
-        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(searchRequest);
+        BusinessObjectDataSearchResult result = this.businessObjectDataService
+            .searchBusinessObjectData(BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE, BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND, searchRequest);
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(result));
 
-        testActivitiServiceTaskSuccess(SearchBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        testActivitiServiceTaskSuccess(SearchBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
 
 
@@ -95,7 +99,7 @@ public class SearchBusinessObjectDataTest extends HerdActivitiServiceTaskTest
     public void testSearchBusinessObjectDataWithBadParameter() throws Exception
     {
         this.businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
-        BusinessObjectDataSearchRequest searchRequest = getBusinessObjectDataSearchRequest() ;
+        BusinessObjectDataSearchRequest searchRequest = getBusinessObjectDataSearchRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("contentType", "${contentType}"));
@@ -111,11 +115,10 @@ public class SearchBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, expectedBadFormatMessage);
 
-        testActivitiServiceTaskFailure(SearchBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        testActivitiServiceTaskFailure(SearchBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
 
-    private  BusinessObjectDataSearchRequest getBusinessObjectDataSearchRequest()
+    private BusinessObjectDataSearchRequest getBusinessObjectDataSearchRequest()
     {
         BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
         List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
