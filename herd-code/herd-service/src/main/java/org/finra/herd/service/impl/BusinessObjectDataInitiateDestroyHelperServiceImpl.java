@@ -223,14 +223,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         s3ObjectTaggerParamsDto.setS3Endpoint(businessObjectDataDestroyDto.getS3Endpoint());
 
         // Get actual S3 files by selecting all S3 keys matching the S3 key prefix form the S3 bucket.
-        // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
-        List<S3ObjectSummary> actualS3FilesWithoutZeroByteDirectoryMarkers = s3Service.listDirectory(s3FileTransferRequestParamsDto, true);
-
-        // Validate existence of the S3 files.
-        storageFileHelper.validateRegisteredS3Files(businessObjectDataDestroyDto.getStorageFiles(), actualS3FilesWithoutZeroByteDirectoryMarkers,
-            businessObjectDataDestroyDto.getStorageName(), businessObjectDataDestroyDto.getBusinessObjectDataKey());
-
-        // Get actual S3 files by selecting all S3 keys matching the S3 key prefix form the S3 bucket.
         // This time, we do not ignore 0 byte objects that represent S3 directories.
         List<S3ObjectSummary> actualS3Files = s3Service.listDirectory(s3FileTransferRequestParamsDto, false);
 
@@ -375,8 +367,9 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         // Get the storage name.
         String storageName = storageEntity.getName();
 
-        // Retrieve and validate storage files registered with the storage unit.
-        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
+        // Retrieve and validate storage files registered with the storage unit, if they exist.
+        List<StorageFile> storageFiles =
+            storageFileHelper.getAndValidateStorageFilesIfPresent(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.
@@ -399,7 +392,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         businessObjectDataDestroyDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
         businessObjectDataDestroyDto.setS3BucketName(s3BucketName);
         businessObjectDataDestroyDto.setS3KeyPrefix(s3KeyPrefix);
-        businessObjectDataDestroyDto.setStorageFiles(storageFiles);
         businessObjectDataDestroyDto.setS3ObjectTagKey(s3ObjectTagKey);
         businessObjectDataDestroyDto.setS3ObjectTagValue(s3ObjectTagValue);
         businessObjectDataDestroyDto.setS3ObjectTaggerRoleArn(s3ObjectTaggerRoleArn);
@@ -486,14 +478,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
                 false, true))
         {
             throw new IllegalStateException(String.format("Path prefix validation must be enabled on \"%s\" storage.", storageEntity.getName()));
-        }
-
-        // Validate that storage policy filter storage has the S3 file existence validation enabled.
-        if (!storageHelper
-            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), storageEntity,
-                false, true))
-        {
-            throw new IllegalStateException(String.format("File existence validation must be enabled on \"%s\" storage.", storageEntity.getName()));
         }
     }
 }

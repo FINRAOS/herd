@@ -5679,7 +5679,11 @@
                <xs:documentation>The EBS configurations that will be attached to each EC2 instance in the instance group</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="instanceSpotPrice" type="xs:decimal" minOccurs="0"/>
+         <xs:element name="instanceSpotPrice" type="xs:decimal" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The instance bid price, in USD. If not specified, uses on-demand</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="instanceMaxSearchPrice" type="xs:decimal" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The maximum amount, in USD, to search for the best price. The best price search will only search for prices lower than this

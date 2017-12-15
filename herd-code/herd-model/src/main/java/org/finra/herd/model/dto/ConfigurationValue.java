@@ -606,6 +606,16 @@ public enum ConfigurationValue
     BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS("business.object.data.search.max.results", 1000),
 
     /**
+     * The maximum number of records returned in business object data search result count
+     */
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 10_000),
+
+    /**
+     * The maximum number of records returned in business object data search page
+     */
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE("business.object.data.search.max.page.size", 1_000),
+
+    /**
      * The maximum number of nested tags allowed
      */
     MAX_ALLOWED_TAG_NESTING("tag.max.nesting", 10),
@@ -632,7 +642,14 @@ public enum ConfigurationValue
     LDAP_USER_DN("ldap.user.dn", ""),
 
     /**
-     * The LDAP password (credentials) to use for getting authenticated contexts.
+     * The LDAP password (credentials) in base64 encoded format to use for getting authenticated contexts. If this value is not configured, the application
+     * falls back to "ldap.password" configuration option.
+     */
+    LDAP_PASSWORD_BASE64("ldap.password.base64", ""),
+
+    /**
+     * The LDAP password (credentials) to use for getting authenticated contexts. This configuration option is ignored when "ldap.password.base64" is
+     * configured.
      */
     LDAP_PASSWORD("ldap.password", ""),
 
@@ -753,6 +770,11 @@ public enum ConfigurationValue
      * Fields on which highlighting should be done, defaults to all fields
      */
     ELASTICSEARCH_HIGHLIGHT_FIELDS("elasticsearch.highlight.fields", "{\"fields\": [\"*\"]}"),
+
+    /**
+     * Fields on which highlighting should be done when the column match is used
+     */
+    ELASTICSEARCH_COLUMN_MATCH_HIGHLIGHT_FIELDS("elasticsearch.column.match.highlight.fields", "{\"fields\": [\"*\"]}"),
 
     /**
      * The elasticsearch default port

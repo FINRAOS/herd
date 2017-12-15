@@ -280,7 +280,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             String preTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
             String postTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
 
-            searchRequestBuilder.highlighter(buildHighlightQuery(preTag, postTag));
+            searchRequestBuilder.highlighter(buildHighlightQuery(preTag, postTag, match));
         }
 
         // Add facet aggregations if specified in the request
@@ -595,10 +595,11 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      *
      * @param preTag The specified pre-tag to be used for highlighting
      * @param postTag The specified post-tag to be used for highlighting
+     * @param match the set of match fields that are to be searched upon in the index search
      *
      * @return A configured {@link HighlightBuilder} object
      */
-    private HighlightBuilder buildHighlightQuery(String preTag, String postTag)
+    private HighlightBuilder buildHighlightQuery(String preTag, String postTag, Set<String> match)
     {
         HighlightBuilder highlightBuilder = new HighlightBuilder();
 
@@ -613,7 +614,17 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         highlightBuilder.postTags(postTag);
 
         // Get highlight fields value from configuration
-        String highlightFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS);
+        String highlightFieldsValue;
+
+        // If the match column is included
+        if (match != null && match.contains(MATCH_COLUMN))
+        {
+            highlightFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_COLUMN_MATCH_HIGHLIGHT_FIELDS);
+        }
+        else
+        {
+            highlightFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS);
+        }
 
         try
         {
@@ -650,7 +661,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         }
         catch (IOException e)
         {
-            LOGGER.warn("Could not parse the configured value for highlight fields: {}", ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS, e);
+            LOGGER.warn("Could not parse the configured value for highlight fields: {}", highlightFieldsValue, e);
         }
 
         return highlightBuilder;

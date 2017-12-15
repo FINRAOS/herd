@@ -21,17 +21,43 @@ package org.finra.herd.tools.common;
 public final class ToolsCommonConstants
 {
     /**
-     * The location of Log4J configuration.
+     * The format for the build information string for the herd tool applications.
      */
-    public static final String LOG4J_CONFIG_LOCATION = "classpath:herd-console-info-log4j2.xml";
+    public static final String BUILD_INFO_STRING_FORMAT = "buildDate: %s\nbuildNumber: %s\nbuildOS: %s\nbuildUser: %s";
 
     /**
      * Default number of threads to be used by the Amazon S3 TransferManager.
      */
     public static final Integer DEFAULT_THREADS = 10;
 
+    /**
+     * The location of Log4J configuration.
+     */
+    public static final String LOG4J_CONFIG_LOCATION = "classpath:herd-console-info-log4j2.xml";
+
     private ToolsCommonConstants()
     {
         // Prevent classes from instantiating.
+    }
+
+    /**
+     * The list of possible return values for the herd tool applications.
+     */
+    public enum ReturnValue
+    {
+        SUCCESS(0),
+        FAILURE(1);
+
+        private int returnCode;
+
+        private ReturnValue(int returnCode)
+        {
+            this.returnCode = returnCode;
+        }
+
+        public int getReturnCode()
+        {
+            return returnCode;
+        }
     }
 }

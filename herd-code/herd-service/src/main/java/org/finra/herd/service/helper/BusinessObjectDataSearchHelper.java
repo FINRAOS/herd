@@ -22,12 +22,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
+import org.finra.herd.model.dto.ConfigurationValue;
 
 
 /*
@@ -38,20 +40,25 @@ public class BusinessObjectDataSearchHelper
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
-    
+
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
 
+    @Autowired
+    protected ConfigurationHelper configurationHelper;
+
     /**
      * validate business object search request
+     *
      * @param request business object DATA search request
+     *
      * @throws IllegalArgumentException when business object data search request is not valid
      */
     public void validateBusinesObjectDataSearchRequest(BusinessObjectDataSearchRequest request) throws IllegalArgumentException
     {
         Assert.notNull(request, "A Business Object Data SearchRequest must be specified");
         List<BusinessObjectDataSearchFilter> businessObjectDataSearchFilters = request.getBusinessObjectDataSearchFilters();
-        Assert.isTrue(businessObjectDataSearchFilters!= null, "Business Object Data Search Filters must be specified");
+        Assert.isTrue(businessObjectDataSearchFilters != null, "Business Object Data Search Filters must be specified");
         Assert.isTrue(businessObjectDataSearchFilters.size() == 1, "Business Object Data Search Filters can only have one filter");
         List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = request.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys();
 
@@ -63,6 +70,61 @@ public class BusinessObjectDataSearchHelper
         {
             validateBusinessObjectDataKey(key);
         }
+    }
+
+    /**
+     * Validate the business object search request pageNum parameter.
+     *
+     * @param pageNum the page number parameter. Page numbers are one-based - that is the first page number is one.
+     *
+     * @return the validated page number
+     */
+    public Integer validateBusinessObjectDataSearchRequestPageNumParameter(Integer pageNum)
+    {
+        int firstPage = 1;
+
+        // If the pageNum is null set the pageNum parameter to the default first page
+        if (pageNum == null)
+        {
+            pageNum = firstPage;
+        }
+        // Check if pageNum is less than one
+        else if (pageNum < 1)
+        {
+            throw new IllegalArgumentException("A pageNum greater than 0 must be specified.");
+        }
+
+        return pageNum;
+    }
+
+    /**
+     * Validate the business object search request pageSize parameter.
+     *
+     * @param pageSize the page size parameter. From one to maximum page size.
+     *
+     * @return the validated pageSize
+     */
+    public Integer validateBusinessObjectDataSearchRequestPageSizeParameter(Integer pageSize)
+    {
+        int maxPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
+
+        // If the pageSize is null set the pageSize to the maxPageSize default
+        if (pageSize == null)
+        {
+            pageSize = maxPageSize;
+        }
+        // Check for pageSize less than one
+        else if (pageSize < 1)
+        {
+            throw new IllegalArgumentException("A pageSize greater than 0 must be specified.");
+        }
+        // Check the pageSize larger than max page size
+        else if (pageSize > maxPageSize)
+        {
+            throw new IllegalArgumentException("A pageSize less than " + maxPageSize + " must be specified.");
+        }
+
+        return pageSize;
     }
 
     /**
@@ -116,12 +178,12 @@ public class BusinessObjectDataSearchHelper
             {
                 String attributeName = attributeValueFilter.getAttributeName();
                 String attributeValue = attributeValueFilter.getAttributeValue();
-                if (attributeName!= null)
-                { 
+                if (attributeName != null)
+                {
                     attributeName = attributeName.trim();
                     attributeValueFilter.setAttributeName(attributeName);
                 }
-                if (StringUtils.isEmpty(attributeName)  && StringUtils.isEmpty(attributeValue))
+                if (StringUtils.isEmpty(attributeName) && StringUtils.isEmpty(attributeValue))
                 {
                     throw new IllegalArgumentException("Either attribute name or value filter must exist.");
                 }

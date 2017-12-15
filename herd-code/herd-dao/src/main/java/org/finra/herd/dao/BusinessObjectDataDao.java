@@ -187,11 +187,14 @@ public interface BusinessObjectDataDao extends BaseJpaDao
     /**
      * Retrieves a list of business object data by list of filters
      *
+     * @param pageNum if pageNum parameter is specified, results contain the appropriate page specified. Page numbers are one-based - that is the first page
+     * number is one.
+     * @param pageSize if pageSize parameter is specified, results contain that number of business object data (unless it is the end of the result set).
      * @param filters search filters
      *
      * @return A list of business object data
      */
-    public List<BusinessObjectData> searchBusinessObjectData(List<BusinessObjectDataSearchFilter> filters);
+    public List<BusinessObjectData> searchBusinessObjectData(Integer pageNum, Integer pageSize, List<BusinessObjectDataSearchFilter> filters);
 
     /**
      * Gets a list of keys for business object data registered under specified business object definition entity.

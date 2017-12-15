@@ -185,11 +185,14 @@ public interface BusinessObjectDataService
     /**
      * Search business object data based on the request
      *
+     * @param pageNum if pageNum parameter is specified, results contain the appropriate page specified. Page numbers are one-based - that is the first page
+     * number is one.
+     * @param pageSize if pageSize parameter is specified, results contain that number of business object data (unless it is the end of the result set).
      * @param request search request
      *
      * @return business data search result
      */
-    public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request);
+    public BusinessObjectDataSearchResult searchBusinessObjectData(Integer pageNum, Integer pageSize, BusinessObjectDataSearchRequest request);
 
     /**
      * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object definition.
