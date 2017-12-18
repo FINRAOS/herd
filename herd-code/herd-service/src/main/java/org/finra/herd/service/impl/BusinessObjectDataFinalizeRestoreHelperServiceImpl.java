@@ -32,7 +32,7 @@ import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -114,7 +114,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImpl implements Busin
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectDataRestoreDto prepareToFinalizeRestore(StorageUnitAlternateKeyDto storageUnitKey)
+    public BusinessObjectDataRestoreDto prepareToFinalizeRestore(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         return prepareToFinalizeRestoreImpl(storageUnitKey);
     }
@@ -234,7 +234,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImpl implements Busin
      *
      * @return the DTO that holds various parameters needed to perform a business object data restore
      */
-    protected BusinessObjectDataRestoreDto prepareToFinalizeRestoreImpl(StorageUnitAlternateKeyDto storageUnitKey)
+    protected BusinessObjectDataRestoreDto prepareToFinalizeRestoreImpl(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         // Get the storage name.
         String storageName = storageUnitKey.getStorageName();

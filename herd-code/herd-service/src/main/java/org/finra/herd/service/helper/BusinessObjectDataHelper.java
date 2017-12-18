@@ -46,7 +46,7 @@ import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity;
@@ -337,7 +337,7 @@ public class BusinessObjectDataHelper
      *
      * @return the business object data key.
      */
-    public BusinessObjectDataKey createBusinessObjectDataKeyFromStorageUnitKey(StorageUnitAlternateKeyDto storageUnitKey)
+    public BusinessObjectDataKey createBusinessObjectDataKeyFromStorageUnitKey(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         return new BusinessObjectDataKey(storageUnitKey.getNamespace(), storageUnitKey.getBusinessObjectDefinitionName(),
             storageUnitKey.getBusinessObjectFormatUsage(), storageUnitKey.getBusinessObjectFormatFileType(), storageUnitKey.getBusinessObjectFormatVersion(),

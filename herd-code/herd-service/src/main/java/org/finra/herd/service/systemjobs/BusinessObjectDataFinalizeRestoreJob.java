@@ -31,7 +31,7 @@ import org.springframework.util.CollectionUtils;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.service.BusinessObjectDataFinalizeRestoreService;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.ParameterHelper;
@@ -79,14 +79,14 @@ public class BusinessObjectDataFinalizeRestoreJob extends AbstractSystemJob
         if (maxBusinessObjectDataInstancesToFinalize > 0)
         {
             // Get business object data that is currently being restored.
-            List<StorageUnitAlternateKeyDto> storageUnitKeys =
+            List<BusinessObjectDataStorageUnitKey> storageUnitKeys =
                 businessObjectDataFinalizeRestoreService.getS3StorageUnitsToRestore(maxBusinessObjectDataInstancesToFinalize);
 
             // Log the number of storage units selected for processing.
             LOGGER.info("Selected for processing S3 storage units. systemJobName=\"{}\" storageUnitCount={}", JOB_NAME, storageUnitKeys.size());
 
             // Try to finalize restore for each of the selected storage units.
-            for (StorageUnitAlternateKeyDto storageUnitKey : storageUnitKeys)
+            for (BusinessObjectDataStorageUnitKey storageUnitKey : storageUnitKeys)
             {
                 try
                 {

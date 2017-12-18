@@ -20,7 +20,7 @@ import java.util.List;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 
 /**
  * An implementation of the business object data finalize restore service for testing.
@@ -35,7 +35,7 @@ public class TestBusinessObjectDataFinalizeRestoreServiceImpl extends BusinessOb
      * This implementation keeps the current transaction context.
      */
     @Override
-    public void finalizeRestore(StorageUnitAlternateKeyDto storageUnitKey)
+    public void finalizeRestore(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         finalizeRestoreImpl(storageUnitKey);
     }
@@ -46,7 +46,7 @@ public class TestBusinessObjectDataFinalizeRestoreServiceImpl extends BusinessOb
      * This implementation keeps the current transaction context.
      */
     @Override
-    public List<StorageUnitAlternateKeyDto> getS3StorageUnitsToRestore(int maxResult)
+    public List<BusinessObjectDataStorageUnitKey> getS3StorageUnitsToRestore(int maxResult)
     {
         return getS3StorageUnitsToRestoreImpl(maxResult);
     }

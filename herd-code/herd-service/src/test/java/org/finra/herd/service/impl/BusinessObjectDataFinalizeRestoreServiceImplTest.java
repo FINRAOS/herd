@@ -36,7 +36,7 @@ import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -80,8 +80,8 @@ public class BusinessObjectDataFinalizeRestoreServiceImplTest extends AbstractSe
                 DATA_VERSION);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey =
-            new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataStorageUnitKey storageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
         // Create a DTO for business object data restore parameters.
@@ -129,8 +129,8 @@ public class BusinessObjectDataFinalizeRestoreServiceImplTest extends AbstractSe
         List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitEntity);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey =
-            new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataStorageUnitKey storageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
         // Mock the external calls.
@@ -138,7 +138,7 @@ public class BusinessObjectDataFinalizeRestoreServiceImplTest extends AbstractSe
         when(storageUnitHelper.createStorageUnitKeyFromEntity(storageUnitEntity)).thenReturn(storageUnitKey);
 
         // Call the method under test.
-        List<StorageUnitAlternateKeyDto> result = businessObjectDataFinalizeRestoreServiceImpl.getS3StorageUnitsToRestore(MAX_RESULT);
+        List<BusinessObjectDataStorageUnitKey> result = businessObjectDataFinalizeRestoreServiceImpl.getS3StorageUnitsToRestore(MAX_RESULT);
 
         // Verify the external calls.
         verify(storageUnitDao).getS3StorageUnitsToRestore(MAX_RESULT);

@@ -16,7 +16,7 @@
 package org.finra.herd.service;
 
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 
 /**
  * The helper service class for the business object data finalize restore functionality.
@@ -45,5 +45,5 @@ public interface ExpireRestoredBusinessObjectDataHelperService
      *
      * @return the DTO that holds various parameters needed to perform a business object data restore
      */
-    public BusinessObjectDataRestoreDto prepareToExpireStorageUnit(StorageUnitAlternateKeyDto storageUnitKey);
+    public BusinessObjectDataRestoreDto prepareToExpireStorageUnit(BusinessObjectDataStorageUnitKey storageUnitKey);
 }

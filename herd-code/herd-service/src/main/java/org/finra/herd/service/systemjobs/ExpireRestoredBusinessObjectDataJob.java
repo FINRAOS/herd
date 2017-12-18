@@ -31,7 +31,7 @@ import org.springframework.util.CollectionUtils;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.service.ExpireRestoredBusinessObjectDataService;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.ParameterHelper;
@@ -79,14 +79,14 @@ public class ExpireRestoredBusinessObjectDataJob extends AbstractSystemJob
         if (maxBusinessObjectDataInstancesToProcess > 0)
         {
             // Select restored business object data that is already expired.
-            List<StorageUnitAlternateKeyDto> storageUnitKeys =
+            List<BusinessObjectDataStorageUnitKey> storageUnitKeys =
                 expireRestoredBusinessObjectDataService.getS3StorageUnitsToExpire(maxBusinessObjectDataInstancesToProcess);
 
             // Log the number of storage units selected for processing.
             LOGGER.info("Selected for processing S3 storage units. systemJobName=\"{}\" storageUnitCount={}", JOB_NAME, storageUnitKeys.size());
 
             // Try to expire each of the selected storage units.
-            for (StorageUnitAlternateKeyDto storageUnitKey : storageUnitKeys)
+            for (BusinessObjectDataStorageUnitKey storageUnitKey : storageUnitKeys)
             {
                 try
                 {

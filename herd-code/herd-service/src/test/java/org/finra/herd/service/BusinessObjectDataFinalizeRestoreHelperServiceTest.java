@@ -38,7 +38,7 @@ import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
@@ -67,7 +67,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         try
         {
@@ -259,7 +259,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         // Create database entities required for testing.
         BusinessObjectDataEntity businessObjectDataEntity =
@@ -284,7 +284,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         try
         {
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
             fail();
         }
@@ -314,7 +314,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         try
         {
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                new StorageUnitAlternateKeyDto(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataStorageUnitKey(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
             fail();
         }
@@ -329,7 +329,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         try
         {
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
             fail();
         }
@@ -344,7 +344,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         try
         {
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
             fail();
         }
@@ -359,7 +359,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         try
         {
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
             fail();
         }
@@ -374,7 +374,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         try
         {
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
             fail();
         }
@@ -389,7 +389,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         try
         {
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, I_DO_NOT_EXIST,
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, I_DO_NOT_EXIST,
                     SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
             fail();
         }
@@ -408,7 +408,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             try
             {
                 businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                    new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                         testSubPartitionValues, DATA_VERSION, STORAGE_NAME));
                 fail();
             }
@@ -424,7 +424,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         try
         {
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, INVALID_DATA_VERSION, STORAGE_NAME));
             fail();
         }
@@ -439,7 +439,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         try
         {
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, I_DO_NOT_EXIST));
             fail();
         }
@@ -468,7 +468,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         // Prepare to finalize a restore for business object data without sub-partition values.
         BusinessObjectDataRestoreDto result = businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(storageUnitKey);
@@ -492,7 +492,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME, NO_S3_BUCKET_NAME, StorageUnitStatusEntity.RESTORING);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         // Try to prepare to finalize a restore when S3 storage does not have an S3 bucket name configured.
         try
@@ -520,7 +520,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, StorageUnitStatusEntity.RESTORED);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         // Try to prepare to finalize a restore when storage unit is already restored.
         try
@@ -554,7 +554,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         storageUnitEntity.getStorageFiles().clear();
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         // Try to prepare to finalize a restore when storage unit has no storage files.
         try
@@ -581,7 +581,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         // Try to prepare to finalize a restore when a storage unit does not exist.
         try
@@ -610,7 +610,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 NO_STORAGE_DIRECTORY_PATH);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         // Try to prepare to finalize a restore when storage unit is not in RESTORING state.
         try

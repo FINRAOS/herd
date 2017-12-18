@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 
 /**
  * An implementation of the helper service class for the business object data finalize restore functionality for testing.
@@ -56,7 +56,7 @@ public class TestBusinessObjectDataFinalizeRestoreHelperServiceImpl extends Busi
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectDataRestoreDto prepareToFinalizeRestore(StorageUnitAlternateKeyDto storageUnitKey)
+    public BusinessObjectDataRestoreDto prepareToFinalizeRestore(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         return prepareToFinalizeRestoreImpl(storageUnitKey);
     }

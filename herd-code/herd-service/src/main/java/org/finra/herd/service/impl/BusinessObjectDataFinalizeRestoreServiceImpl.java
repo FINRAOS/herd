@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.BusinessObjectDataFinalizeRestoreHelperService;
@@ -68,7 +68,7 @@ public class BusinessObjectDataFinalizeRestoreServiceImpl implements BusinessObj
      */
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void finalizeRestore(StorageUnitAlternateKeyDto storageUnitKey)
+    public void finalizeRestore(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         finalizeRestoreImpl(storageUnitKey);
     }
@@ -80,7 +80,7 @@ public class BusinessObjectDataFinalizeRestoreServiceImpl implements BusinessObj
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public List<StorageUnitAlternateKeyDto> getS3StorageUnitsToRestore(int maxResult)
+    public List<BusinessObjectDataStorageUnitKey> getS3StorageUnitsToRestore(int maxResult)
     {
         return getS3StorageUnitsToRestoreImpl(maxResult);
     }
@@ -90,7 +90,7 @@ public class BusinessObjectDataFinalizeRestoreServiceImpl implements BusinessObj
      *
      * @param storageUnitKey the storage unit key
      */
-    protected void finalizeRestoreImpl(StorageUnitAlternateKeyDto storageUnitKey)
+    protected void finalizeRestoreImpl(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         // Build the business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto = businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(storageUnitKey);
@@ -114,13 +114,13 @@ public class BusinessObjectDataFinalizeRestoreServiceImpl implements BusinessObj
      *
      * @return the list of storage unit keys
      */
-    protected List<StorageUnitAlternateKeyDto> getS3StorageUnitsToRestoreImpl(int maxResult)
+    protected List<BusinessObjectDataStorageUnitKey> getS3StorageUnitsToRestoreImpl(int maxResult)
     {
         // Retrieves a list of storage units that belong to S3 storage and have the relative S3 storage unit in RESTORING state.
         List<StorageUnitEntity> storageUnitEntities = storageUnitDao.getS3StorageUnitsToRestore(maxResult);
 
         // Build a list of storage unit keys.
-        List<StorageUnitAlternateKeyDto> storageUnitKeys = new ArrayList<>();
+        List<BusinessObjectDataStorageUnitKey> storageUnitKeys = new ArrayList<>();
         for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
         {
             storageUnitKeys.add(storageUnitHelper.createStorageUnitKeyFromEntity(storageUnitEntity));

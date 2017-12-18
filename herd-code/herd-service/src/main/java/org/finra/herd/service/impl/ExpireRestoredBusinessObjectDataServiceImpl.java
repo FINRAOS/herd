@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.ExpireRestoredBusinessObjectDataHelperService;
@@ -68,7 +68,7 @@ public class ExpireRestoredBusinessObjectDataServiceImpl implements ExpireRestor
      */
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void expireS3StorageUnit(StorageUnitAlternateKeyDto storageUnitKey)
+    public void expireS3StorageUnit(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         expireS3StorageUnitImpl(storageUnitKey);
     }
@@ -80,7 +80,7 @@ public class ExpireRestoredBusinessObjectDataServiceImpl implements ExpireRestor
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public List<StorageUnitAlternateKeyDto> getS3StorageUnitsToExpire(int maxResult)
+    public List<BusinessObjectDataStorageUnitKey> getS3StorageUnitsToExpire(int maxResult)
     {
         return getS3StorageUnitsToExpireImpl(maxResult);
     }
@@ -90,7 +90,7 @@ public class ExpireRestoredBusinessObjectDataServiceImpl implements ExpireRestor
      *
      * @param storageUnitKey the storage unit key
      */
-    protected void expireS3StorageUnitImpl(StorageUnitAlternateKeyDto storageUnitKey)
+    protected void expireS3StorageUnitImpl(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         // Build the business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto = expireRestoredBusinessObjectDataHelperService.prepareToExpireStorageUnit(storageUnitKey);
@@ -119,13 +119,13 @@ public class ExpireRestoredBusinessObjectDataServiceImpl implements ExpireRestor
      *
      * @return the list of storage unit keys
      */
-    protected List<StorageUnitAlternateKeyDto> getS3StorageUnitsToExpireImpl(int maxResult)
+    protected List<BusinessObjectDataStorageUnitKey> getS3StorageUnitsToExpireImpl(int maxResult)
     {
         // Retrieves a list of storage units that belong to S3 storage, have RESTORED status, and ready to be expired.
         List<StorageUnitEntity> storageUnitEntities = storageUnitDao.getS3StorageUnitsToExpire(maxResult);
 
         // Build a list of storage unit keys.
-        List<StorageUnitAlternateKeyDto> storageUnitKeys = new ArrayList<>();
+        List<BusinessObjectDataStorageUnitKey> storageUnitKeys = new ArrayList<>();
         for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
         {
             storageUnitKeys.add(storageUnitHelper.createStorageUnitKeyFromEntity(storageUnitEntity));
