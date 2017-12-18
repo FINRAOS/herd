@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd</artifactId>
-      <version>0.59.0-SNAPSHOT</version>
+      <version>0.60.0-SNAPSHOT</version>
    </parent>
 
    <name>herd code</name>
@@ -321,8 +321,7 @@
       <module>herd-app</module>
       <module>herd-war</module>
       <module>herd-tools</module>
-      <!--Uncomment after branch. This is commented out due to issues with travis and Sonatype-->
-      <!--<module>herd-sdk</module>-->
+      <module>herd-sdk</module>
    </modules>
 
 </project>
