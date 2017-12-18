@@ -52,7 +52,7 @@ public class ExporterWebClientTest extends AbstractExporterTest
         exporterWebClient.getRegServerAccessParamsDto().setUseSsl(false);
         BusinessObjectDataSearchResult result = exporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1);
         assertNotNull(result);
-        assertEquals(3, CollectionUtils.size(result.getBusinessObjectDataElements()));
+        assertEquals(2, CollectionUtils.size(result.getBusinessObjectDataElements()));
     }
 
     @Test
