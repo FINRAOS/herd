@@ -18,8 +18,8 @@ package org.finra.herd.service.impl;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
+import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 
 /**
  * An implementation of the helper service class for the business object data finalize restore functionality for testing.
