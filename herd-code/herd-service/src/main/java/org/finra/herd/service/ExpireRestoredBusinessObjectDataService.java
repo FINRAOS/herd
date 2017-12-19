@@ -17,7 +17,7 @@ package org.finra.herd.service;
 
 import java.util.List;
 
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 
 /**
  * The service that expires restored business object data.
@@ -29,7 +29,7 @@ public interface ExpireRestoredBusinessObjectDataService
      *
      * @param storageUnitKey the storage unit key
      */
-    public void expireS3StorageUnit(StorageUnitAlternateKeyDto storageUnitKey);
+    public void expireS3StorageUnit(BusinessObjectDataStorageUnitKey storageUnitKey);
 
     /**
      * Retrieves a list of keys for S3 storage units that are ready to be expired.
@@ -38,5 +38,5 @@ public interface ExpireRestoredBusinessObjectDataService
      *
      * @return the list of storage unit keys
      */
-    public List<StorageUnitAlternateKeyDto> getS3StorageUnitsToExpire(int maxResult);
+    public List<BusinessObjectDataStorageUnitKey> getS3StorageUnitsToExpire(int maxResult);
 }

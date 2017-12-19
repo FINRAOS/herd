@@ -434,20 +434,6 @@
       </xs:sequence>
    </xs:complexType>
 
-   <xs:complexType name="storageUnitAlternateKeyDto">
-      <xs:sequence>
-         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
-         <xs:element name="businessObjectDefinitionName" type="xs:string" minOccurs="0"/>
-         <xs:element name="businessObjectFormatUsage" type="xs:string" minOccurs="0"/>
-         <xs:element name="businessObjectFormatFileType" type="xs:string" minOccurs="0"/>
-         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
-         <xs:element name="partitionValue" type="xs:string" minOccurs="0"/>
-         <xs:element name="subPartitionValues" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
-         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
-         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
-      </xs:sequence>
-   </xs:complexType>
-
    <xs:complexType name="storageUnitNotificationEventParamsDto">
       <xs:complexContent>
          <xs:extension base="notificationEventParamsDto">
