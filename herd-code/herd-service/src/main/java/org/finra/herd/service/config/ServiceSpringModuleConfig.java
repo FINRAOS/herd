@@ -390,7 +390,8 @@ public class ServiceSpringModuleConfig
             triggers.add(trigger);
         }
 
-        // Schedule the system jobs.
+        // Schedule the system jobs and set a flag to overwrite already registered jobs that would be read in from the database (persistent job store).
+        quartzScheduler.setOverwriteExistingJobs(true);
         quartzScheduler.setJobDetails(jobDetails.toArray(new JobDetail[jobDetails.size()]));
         quartzScheduler.setTriggers(triggers.toArray(new CronTrigger[triggers.size()]));
 
