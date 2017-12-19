@@ -38,6 +38,7 @@
       <module>herd-uploader</module>
       <module>herd-downloader</module>
       <module>herd-retention-expiration-exporter</module>
+      <module>herd-retention-expiration-destroyer</module>
    </modules>
 
 </project>

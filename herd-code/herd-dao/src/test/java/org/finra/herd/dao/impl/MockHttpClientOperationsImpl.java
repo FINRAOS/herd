@@ -170,6 +170,11 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
                 checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION);
                 buildSearchBusinessObjectDataResponse(response, uri);
             }
+            else if (uri.getPath().startsWith("/herd-app/rest/businessObjectData/destroy"))
+            {
+                checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION);
+                buildPostBusinessObjectDataResponse(response, uri);
+            }
         }
         else if (request instanceof HttpPut)
         {
