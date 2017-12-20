@@ -47,7 +47,7 @@ public class RetentionExpirationDestroyerController
     private static final String CSV_FILE_HEADER =
         "\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
             "\"Business Object Format Version\",\"Primary Partition Value\",\"Sub-Partition Value 1\",\"Sub-Partition Value 2\",\"Sub-Partition Value 3\"," +
-            "\"Sub-Partition Value 4\",\"Business Object Data Version\",\"Business Object Definition URI\"";
+            "\"Sub-Partition Value 4\",\"Business Object Data Version\",\"Business Object Definition Display Name\",\"Business Object Definition URI\"";
 
     @Autowired
     private RetentionExpirationDestroyerWebClient destructorWebClient;
