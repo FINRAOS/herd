@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
+import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 
 /**
@@ -74,7 +76,10 @@ public class ExporterController
         exporterWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
 
         // Validate that specified business object definition exists.
-        exporterWebClient.getBusinessObjectDefinition(namespace, businessObjectDefinitionName);
+        BusinessObjectDefinition businessObjectDefinition = exporterWebClient.getBusinessObjectDefinition(namespace, businessObjectDefinitionName);
+
+        // Get business object display name.
+        String businessObjectDefinitionDisplayName = getBusinessObjectDefinitionDisplayName(businessObjectDefinition);
 
         // Creating request for business object data search
         BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
@@ -101,7 +106,8 @@ public class ExporterController
         }
 
         // Write business object data to the csv file
-        writeToCsvFile(localOutputFile, namespace, businessObjectDefinitionName, udcServerHost, businessObjectDataList);
+        writeToCsvFile(localOutputFile, businessObjectDefinition.getNamespace(), businessObjectDefinition.getBusinessObjectDefinitionName(),
+            businessObjectDefinitionDisplayName, udcServerHost, businessObjectDataList);
     }
 
     /**
@@ -110,13 +116,14 @@ public class ExporterController
      * @param localOutputFile the file to write
      * @param namespace the namespace of business object definition
      * @param businessObjectDefinitionName the name of the business object definition
+     * @param businessObjectDefinitionDisplayName the display name of the business object definition
      * @param udcServerHost the hostname of the UDC application server
      * @param businessObjectDataList the list of business object data
      *
      * @throws IOException if any problems were encountered
      */
-    private void writeToCsvFile(File localOutputFile, String namespace, String businessObjectDefinitionName, String udcServerHost,
-        List<BusinessObjectData> businessObjectDataList) throws IOException
+    private void writeToCsvFile(File localOutputFile, String namespace, String businessObjectDefinitionName, String businessObjectDefinitionDisplayName,
+        String udcServerHost, List<BusinessObjectData> businessObjectDataList) throws IOException
     {
         // Create business object definition URI.
         String businessObjectDefinitionUdcUri = String.format("https://%s/data-entities/%s/%s", udcServerHost, namespace, businessObjectDefinitionName);
@@ -127,7 +134,7 @@ public class ExporterController
             // Write csv file header.
             writeLine(writer, Arrays.asList("Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type",
                 "Business Object Format Version", "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3",
-                "Sub-Partition Value 4", "Business Object Data Version", "Business Object Definition URI"));
+                "Sub-Partition Value 4", "Business Object Data Version", "Business Object Definition Display Name", "Business Object Definition URI"));
 
             for (BusinessObjectData businessObjectData : businessObjectDataList)
             {
@@ -139,7 +146,7 @@ public class ExporterController
                     subPartitionsCount > 1 ? businessObjectData.getSubPartitionValues().get(1) : "",
                     subPartitionsCount > 2 ? businessObjectData.getSubPartitionValues().get(2) : "",
                     subPartitionsCount > 3 ? businessObjectData.getSubPartitionValues().get(3) : "", Integer.toString(businessObjectData.getVersion()),
-                    businessObjectDefinitionUdcUri);
+                    businessObjectDefinitionDisplayName, businessObjectDefinitionUdcUri);
                 writeLine(writer, businessObjectDataRecords);
             }
         }
@@ -182,5 +189,18 @@ public class ExporterController
     private String applyCsvFormatting(String value)
     {
         return value.replace("\"", "\"\"");
+    }
+
+    /**
+     * Get business object definition display name from business object definition.
+     *
+     * @param businessObjectDefinition the business object definition
+     *
+     * @return the business object definition display name
+     */
+    protected String getBusinessObjectDefinitionDisplayName(BusinessObjectDefinition businessObjectDefinition)
+    {
+        return StringUtils.isNotEmpty(businessObjectDefinition.getDisplayName()) ? businessObjectDefinition.getDisplayName() :
+            businessObjectDefinition.getBusinessObjectDefinitionName();
     }
 }

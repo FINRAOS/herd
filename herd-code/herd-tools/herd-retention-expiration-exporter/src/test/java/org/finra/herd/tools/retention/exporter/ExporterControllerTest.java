@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.core.helper.LogLevel;
+import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
@@ -66,20 +67,21 @@ public class ExporterControllerTest extends AbstractExporterTest
         // Add a CSV header.
         stringBuilder.append("\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
             "\"Business Object Format Version\",\"Primary Partition Value\",\"Sub-Partition Value 1\",\"Sub-Partition Value 2\"," +
-            "\"Sub-Partition Value 3\",\"Sub-Partition Value 4\",\"Business Object Data Version\",\"Business Object Definition URI\"")
-            .append(System.lineSeparator());
+            "\"Sub-Partition Value 3\",\"Sub-Partition Value 4\",\"Business Object Data Version\",\"Business Object Definition Display Name\"," +
+            "\"Business Object Definition URI\"").append(System.lineSeparator());
 
         // Add business object data With sub-partition.
         stringBuilder.append(String
-            .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
+            .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
                 BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, "primaryPartitionValue", "subPartitionValue1",
-                "subPartitionValue2", "subPartitionValue3", "subPartitionValue4", BUSINESS_OBJECT_DATA_VERSION, expectedUri));
+                "subPartitionValue2", "subPartitionValue3", "subPartitionValue4", BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME,
+                expectedUri));
 
         // Add a business object data without sub-partitions.
         stringBuilder.append(String
-            .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
+            .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
                 BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, "primaryPartitionValue", "", "", "", "",
-                BUSINESS_OBJECT_DATA_VERSION, expectedUri));
+                BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri));
 
         // Get the expected output file content from the string builder.
         String expectedOutputFileContent = stringBuilder.toString();
@@ -112,5 +114,22 @@ public class ExporterControllerTest extends AbstractExporterTest
         {
             assertEquals(String.format("The specified local output file \"%s\" already exists.", outputFile.toString()), e.getMessage());
         }
+    }
+
+    @Test
+    public void testGetBusinessObjectDefinitionDisplayName()
+    {
+        // Create a business object definition name without a display name.
+        BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
+        businessObjectDefinition.setBusinessObjectDefinitionName(BUSINESS_OBJECT_DEFINITION_NAME);
+
+        // Get a business object defintion display name and validate that it defaults to the business objetct definition name.
+        assertEquals(BUSINESS_OBJECT_DEFINITION_NAME, exporterController.getBusinessObjectDefinitionDisplayName(businessObjectDefinition));
+
+        // Set business object definition display name for the test business object definition.
+        businessObjectDefinition.setDisplayName(BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME);
+
+        // Get and validate business object definition display name.
+        assertEquals(BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, exporterController.getBusinessObjectDefinitionDisplayName(businessObjectDefinition));
     }
 }

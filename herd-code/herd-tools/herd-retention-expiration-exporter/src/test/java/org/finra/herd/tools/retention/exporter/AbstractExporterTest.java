@@ -42,6 +42,8 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
 
     protected static final String BUSINESS_OBJECT_DEFINITION_NAME = "testBusinessObjectDefinitionName";
 
+    protected static final String BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME = "testBusinessObjectDefinitionDisplayName";
+
     protected static final String BUSINESS_OBJECT_FORMAT_USAGE = "testBusinessObjectFormatUsage";
 
     protected static final String BUSINESS_OBJECT_FORMAT_FILE_TYPE = "testBusinessObjectFormatFileType";
