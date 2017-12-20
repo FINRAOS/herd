@@ -275,6 +275,7 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
             BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
             businessObjectDefinition.setNamespace(matcher.group(1));
             businessObjectDefinition.setBusinessObjectDefinitionName(matcher.group(2));
+            businessObjectDefinition.setDisplayName("testBusinessObjectDefinitionDisplayName");
             response.setEntity(getHttpEntity(businessObjectDefinition));
         }
     }
