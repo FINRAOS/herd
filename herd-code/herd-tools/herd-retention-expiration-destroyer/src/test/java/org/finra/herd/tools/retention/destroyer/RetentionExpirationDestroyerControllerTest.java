@@ -52,8 +52,9 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
         StringBuilder stringBuilder = new StringBuilder();
 
         // Add a CSV header.
-        stringBuilder.append(
-            "\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\",\"Business Object Format Version\",\"Primary Partition Value\",\"Sub-Partition Value 1\",\"Sub-Partition Value 2\",\"Sub-Partition Value 3\",\"Sub-Partition Value 4\",\"Business Object Data Version\",\"Business Object Definition URI\"")
+        stringBuilder.append("\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
+            "\"Business Object Format Version\",\"Primary Partition Value\",\"Sub-Partition Value 1\",\"Sub-Partition Value 2\",\"Sub-Partition Value 3\"," +
+            "\"Sub-Partition Value 4\",\"Business Object Data Version\",\"Business Object Definition Display Name\",\"Business Object Definition URI\"")
             .append(System.lineSeparator());
 
         // Add business object data with sub-partitions.
