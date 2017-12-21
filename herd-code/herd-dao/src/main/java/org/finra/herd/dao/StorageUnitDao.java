@@ -26,7 +26,7 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 public interface StorageUnitDao extends BaseJpaDao
 {
     /**
-     * Retrieves a list of storage units that belong to S3 storage, and has a final destroy on timestamp < current time, has a DELETED status, and associated
+     * Retrieves a list of storage units that belong to S3 storage, and has a final destroy on timestamp < current time, has a DISABLED status, and associated
      * BData has a DELETED status. The returned list is ordered by the "finalDestroyOn" timestamp of the S3 storage units, starting with an S3 storage unit that
      * is final destroy on the longest.
      *
