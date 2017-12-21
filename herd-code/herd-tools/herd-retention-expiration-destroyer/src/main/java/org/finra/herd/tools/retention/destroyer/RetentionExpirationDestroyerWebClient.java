@@ -22,6 +22,7 @@ import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -68,7 +69,7 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
             new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
                 .setPath(uriPathBuilder.toString());
 
-        if (businessObjectDataKey.getSubPartitionValues() != null)
+        if (CollectionUtils.isNotEmpty(businessObjectDataKey.getSubPartitionValues()))
         {
             uriBuilder.setParameter("subPartitionValues", herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\"));
         }
