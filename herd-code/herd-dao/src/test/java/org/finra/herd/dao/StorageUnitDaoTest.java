@@ -23,8 +23,10 @@ import static org.junit.Assert.assertTrue;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import org.finra.herd.core.HerdDateUtils;
@@ -41,6 +43,80 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 
 public class StorageUnitDaoTest extends AbstractDaoTest
 {
+    @Test
+    public void testGetS3StorageUnitsToCleanup()
+    {
+        // Create a list of business object data keys.
+        List<BusinessObjectDataKey> businessObjectDataKeys = new ArrayList<>();
+        for (int i = 0; i < 7; i++)
+        {
+            businessObjectDataKeys.add(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Integer.toString(i),
+                    SUBPARTITION_VALUES, DATA_VERSION));
+        }
+
+        // Create database entities required for testing.
+        List<StorageUnitEntity> storageUnitEntities = Lists.newArrayList();
+
+        // Add 4 valid storage unit entries
+        storageUnitEntities.add(storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataKeys.get(0), LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.DELETED, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH));
+
+        storageUnitEntities.add(storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataKeys.get(1), LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.DELETED, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH));
+
+        storageUnitEntities.add(storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataKeys.get(2), LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.DELETED, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH));
+
+        storageUnitEntities.add(storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME_2, StoragePlatformEntity.S3, businessObjectDataKeys.get(3), LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.DELETED, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH));
+
+
+        // Not a valid business object data status
+        storageUnitEntities.add(storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataKeys.get(4), LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.ARCHIVED, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH));
+
+        // Not a valid storage unit status
+        storageUnitEntities.add(storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataKeys.get(5), LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.DELETED, StorageUnitStatusEntity.ARCHIVED, NO_STORAGE_DIRECTORY_PATH));
+
+        // Not a valid storage platform
+        storageUnitEntities.add(storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME_3, StoragePlatformEntity.TABLE_NAME, businessObjectDataKeys.get(6), LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.DELETED, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH));
+
+
+        // Set restore expiration time values.
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+
+        // Not a valid final destroy on date
+        storageUnitEntities.get(0).setFinalDestroyOn(null);
+
+        // Final destroy on date is not less than current timestamp
+        storageUnitEntities.get(1).setFinalDestroyOn(HerdDateUtils.addDays(currentTime, 1));
+
+        // Valid final destroy on dates
+        storageUnitEntities.get(2).setFinalDestroyOn(HerdDateUtils.addDays(currentTime, -1));
+        storageUnitEntities.get(3).setFinalDestroyOn(HerdDateUtils.addDays(currentTime, -2));
+        storageUnitEntities.get(4).setFinalDestroyOn(HerdDateUtils.addDays(currentTime, -2));
+        storageUnitEntities.get(5).setFinalDestroyOn(HerdDateUtils.addDays(currentTime, -2));
+        storageUnitEntities.get(6).setFinalDestroyOn(HerdDateUtils.addDays(currentTime, -2));
+
+        // Retrieve the storage units and validate the results. Only two entities are expected to match all select criteria.
+        List<StorageUnitEntity> result = storageUnitDao.getS3StorageUnitsToCleanup(MAX_RESULT);
+        assertEquals(Arrays.asList(storageUnitEntities.get(3), storageUnitEntities.get(2)), result);
+
+        // Try to retrieve the storage units with max result limit set to 1. Only a single storage unit entity should get selected.
+        result = storageUnitDao.getS3StorageUnitsToCleanup(1);
+        assertEquals(Collections.singletonList(storageUnitEntities.get(3)), result);
+    }
+
     @Test
     public void testGetS3StorageUnitsToExpire()
     {
@@ -60,8 +136,8 @@ public class StorageUnitDaoTest extends AbstractDaoTest
                 storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(2), StorageUnitStatusEntity.RESTORED),
                 storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(3), StorageUnitStatusEntity.RESTORED),
                 storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(4), STORAGE_UNIT_STATUS), storageUnitDaoTestHelper
-                .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataKeys.get(5), LATEST_VERSION_FLAG_SET, BDATA_STATUS,
-                    StorageUnitStatusEntity.RESTORED, NO_STORAGE_DIRECTORY_PATH));
+                    .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataKeys.get(5), LATEST_VERSION_FLAG_SET, BDATA_STATUS,
+                        StorageUnitStatusEntity.RESTORED, NO_STORAGE_DIRECTORY_PATH));
 
         // Set restore expiration time values.
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -77,7 +153,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         assertEquals(Arrays.asList(storageUnitEntities.get(3), storageUnitEntities.get(2)), result);
 
         // Try to retrieve the storage units with max result limit set to 1. Only a single storage unit entity should get selected.
-        assertEquals(Arrays.asList(storageUnitEntities.get(3)), storageUnitDao.getS3StorageUnitsToExpire(1));
+        assertEquals(Collections.singletonList(storageUnitEntities.get(3)), storageUnitDao.getS3StorageUnitsToExpire(1));
     }
 
     @Test
@@ -97,8 +173,8 @@ public class StorageUnitDaoTest extends AbstractDaoTest
             .asList(storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(0), StorageUnitStatusEntity.RESTORING),
                 storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(1), StorageUnitStatusEntity.RESTORING),
                 storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(2), STORAGE_UNIT_STATUS), storageUnitDaoTestHelper
-                .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataKeys.get(3), LATEST_VERSION_FLAG_SET, BDATA_STATUS,
-                    StorageUnitStatusEntity.RESTORING, NO_STORAGE_DIRECTORY_PATH));
+                    .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataKeys.get(3), LATEST_VERSION_FLAG_SET, BDATA_STATUS,
+                        StorageUnitStatusEntity.RESTORING, NO_STORAGE_DIRECTORY_PATH));
 
         // Retrieve the storage units and validate the results. Only the first two storage unit entities are expected to be selected.
         List<StorageUnitEntity> result = storageUnitDao.getS3StorageUnitsToRestore(MAX_RESULT);
@@ -354,24 +430,24 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // Retrieve "available" storage units per specified parameters.
         List<StorageUnitEntity> resultStorageUnitEntities = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
             new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), partitionFilters, DATA_VERSION,
-            null, Arrays.asList(STORAGE_NAME), null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+            null, Collections.singletonList(STORAGE_NAME), null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertEquals(Arrays.asList(enabledStorageUnitEntity), resultStorageUnitEntities);
+        assertEquals(Collections.singletonList(enabledStorageUnitEntity), resultStorageUnitEntities);
 
         // Retrieve "available" storage units without specifying
         // a business object format version, which is an optional parameter.
         resultStorageUnitEntities = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
             new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), partitionFilters, DATA_VERSION, null,
-            Arrays.asList(STORAGE_NAME), null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+            Collections.singletonList(STORAGE_NAME), null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertEquals(Arrays.asList(enabledStorageUnitEntity), resultStorageUnitEntities);
+        assertEquals(Collections.singletonList(enabledStorageUnitEntity), resultStorageUnitEntities);
 
         // Retrieve storage units regardless of storage unit status per specified parameters.
         resultStorageUnitEntities = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
             new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), partitionFilters, DATA_VERSION,
-            null, Arrays.asList(STORAGE_NAME), null, null, NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+            null, Collections.singletonList(STORAGE_NAME), null, null, NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
         assertEquals(Arrays.asList(enabledStorageUnitEntity, disabledStorageUnitEntity), resultStorageUnitEntities);
@@ -380,7 +456,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // a business object format version, which is an optional parameter.
         resultStorageUnitEntities = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
             new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), partitionFilters, DATA_VERSION, null,
-            Arrays.asList(STORAGE_NAME), null, null, NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+            Collections.singletonList(STORAGE_NAME), null, null, NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
         assertEquals(Arrays.asList(enabledStorageUnitEntity, disabledStorageUnitEntity), resultStorageUnitEntities);
@@ -395,8 +471,8 @@ public class StorageUnitDaoTest extends AbstractDaoTest
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, TEST_S3_KEY_PREFIX);
 
         // Retrieve storage unit entities by storage and business object data.
-        List<StorageUnitEntity> resultStorageUnitEntities = storageUnitDao
-            .getStorageUnitsByStorageAndBusinessObjectData(storageUnitEntity.getStorage(), Arrays.asList(storageUnitEntity.getBusinessObjectData()));
+        List<StorageUnitEntity> resultStorageUnitEntities = storageUnitDao.getStorageUnitsByStorageAndBusinessObjectData(storageUnitEntity.getStorage(),
+            Collections.singletonList(storageUnitEntity.getBusinessObjectData()));
 
         // Validate the results.
         assertNotNull(resultStorageUnitEntities);
@@ -418,7 +494,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
 
         // Create database entities required for testing.
         List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
+                .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
             storageUnitDaoTestHelper
                 .createStorageUnitEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
             storageUnitDaoTestHelper
