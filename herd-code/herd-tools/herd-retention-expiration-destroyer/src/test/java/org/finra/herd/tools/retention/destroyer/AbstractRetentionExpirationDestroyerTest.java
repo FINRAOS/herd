@@ -21,6 +21,9 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -42,6 +45,10 @@ public abstract class AbstractRetentionExpirationDestroyerTest extends AbstractD
 
     protected static final String BUSINESS_OBJECT_DEFINITION_NAME = "testBusinessObjectDefinitionName";
 
+    protected static final String BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME = "testBusinessObjectDefinitionDisplayName";
+
+    protected static final String BUSINESS_OBJECT_DEFINITION_URI = "testBusinessObjectDefinitionUri";
+
     protected static final String BUSINESS_OBJECT_FORMAT_USAGE = "testBusinessObjectFormatUsage";
 
     protected static final String BUSINESS_OBJECT_FORMAT_FILE_TYPE = "testBusinessObjectFormatFileType";
@@ -53,6 +60,15 @@ public abstract class AbstractRetentionExpirationDestroyerTest extends AbstractD
     protected static final String NAMESPACE = "testNamespace";
 
     protected static final String UDC_SERVICE_HOSTNAME = "testUdcHostname";
+
+    protected static final String PRIMARY_PARTITION_VALUE = "primaryPartitionValue";
+
+    protected static final List<String> SUB_PARTITION_VALUES =
+        Arrays.asList("subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4");
+
+    protected static final List<String> NO_SUB_PARTITION_VALUES = new ArrayList<>();
+
+    protected static final Integer LINE_NUMBER = 99;
 
     private static Logger logger = LoggerFactory.getLogger(AbstractRetentionExpirationDestroyerTest.class);
 
