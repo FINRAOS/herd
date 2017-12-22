@@ -75,7 +75,11 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
             new BusinessObjectDataKey(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
                 BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES, BUSINESS_OBJECT_DATA_VERSION),
             new BusinessObjectDataKey(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
-                BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, NO_SUB_PARTITION_VALUES, BUSINESS_OBJECT_DATA_VERSION)), result);
+                BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, NO_SUB_PARTITION_VALUES, BUSINESS_OBJECT_DATA_VERSION),
+            new BusinessObjectDataKey(NAMESPACE + ",\"", BUSINESS_OBJECT_DEFINITION_NAME + ",\"", BUSINESS_OBJECT_FORMAT_USAGE + ",\"",
+                BUSINESS_OBJECT_FORMAT_FILE_TYPE + ",\"", BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE + ",\"", Arrays
+                .asList(SUB_PARTITION_VALUES.get(0) + ",\"", SUB_PARTITION_VALUES.get(1) + ",\"", SUB_PARTITION_VALUES.get(2) + ",\"",
+                    SUB_PARTITION_VALUES.get(3) + ",\""), BUSINESS_OBJECT_DATA_VERSION)), result);
     }
 
     @Test
@@ -189,6 +193,13 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
             .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
                 BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, "", "", "", "",
                 BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri));
+
+        // Add a business object data that uses CSV file separator and quote characters in its alternate key values.
+        stringBuilder.append(String.format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE + ",\"\"",
+            BUSINESS_OBJECT_DEFINITION_NAME + ",\"\"", BUSINESS_OBJECT_FORMAT_USAGE + ",\"\"", BUSINESS_OBJECT_FORMAT_FILE_TYPE + ",\"\"",
+            BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE + ",\"\"", SUB_PARTITION_VALUES.get(0) + ",\"\"", SUB_PARTITION_VALUES.get(1) + ",\"\"",
+            SUB_PARTITION_VALUES.get(2) + ",\"\"", SUB_PARTITION_VALUES.get(3) + ",\"\"", BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME,
+            expectedUri));
 
         // Write to the input CSV file.
         FileUtils.writeStringToFile(inputCsvFile, stringBuilder.toString(), StandardCharsets.UTF_8);

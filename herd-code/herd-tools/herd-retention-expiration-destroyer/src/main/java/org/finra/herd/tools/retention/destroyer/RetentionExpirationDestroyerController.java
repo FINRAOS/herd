@@ -16,8 +16,10 @@
 package org.finra.herd.tools.retention.destroyer;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -93,7 +95,7 @@ public class RetentionExpirationDestroyerController
         List<BusinessObjectDataKey> businessObjectDataKeyList = new ArrayList<>();
 
         // Read the input CSV file and populate business object data key list.
-        try (CSVReader csvReader = new CSVReader(new FileReader(inputCsvFile)))
+        try (CSVReader csvReader = new CSVReader(new InputStreamReader(new FileInputStream(inputCsvFile), StandardCharsets.UTF_8)))
         {
             String[] line;
 
