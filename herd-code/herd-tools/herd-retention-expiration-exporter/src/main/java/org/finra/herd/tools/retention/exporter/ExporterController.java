@@ -81,19 +81,20 @@ public class ExporterController
         // Get business object display name.
         String businessObjectDefinitionDisplayName = getBusinessObjectDefinitionDisplayName(businessObjectDefinition);
 
-        // Creating request for business object data search
+        // Create a search request for business object data with the filter on retention expiration option.
         BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
         businessObjectDataSearchKey.setNamespace(namespace);
         businessObjectDataSearchKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
+        businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
         List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
         businessObjectDataSearchKeys.add(businessObjectDataSearchKey);
         BusinessObjectDataSearchFilter businessObjectDataSearchFilter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
         BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest(Collections.singletonList(businessObjectDataSearchFilter));
 
-        // Result list for business object data
+        // Create a result list for business object data.
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
-        // Fetch business object data from server until no records found
+        // Fetch business object data from server until no records found.
         int pageNumber = 1;
         BusinessObjectDataSearchResult businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(request, pageNumber);
         while (CollectionUtils.isNotEmpty(businessObjectDataSearchResult.getBusinessObjectDataElements()))
@@ -105,13 +106,13 @@ public class ExporterController
             businessObjectDataSearchResult = exporterWebClient.searchBusinessObjectData(request, pageNumber);
         }
 
-        // Write business object data to the csv file
+        // Write business object data to the output CSV file.
         writeToCsvFile(localOutputFile, businessObjectDefinition.getNamespace(), businessObjectDefinition.getBusinessObjectDefinitionName(),
             businessObjectDefinitionDisplayName, udcServerHost, businessObjectDataList);
     }
 
     /**
-     * Writes business object data to the csv file.
+     * Writes business object data to the CSV file.
      *
      * @param localOutputFile the file to write
      * @param namespace the namespace of business object definition
