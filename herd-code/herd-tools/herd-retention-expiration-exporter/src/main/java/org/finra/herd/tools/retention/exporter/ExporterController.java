@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -165,9 +164,11 @@ public class ExporterController
      * @param businessObjectDefinitionName the name of the business object definition
      *
      * @return the business object definition URI
+     * @throws URISyntaxException if an URI syntax error was encountered
+     * @throws MalformedURLException if an URL syntax error was encountered
      */
     protected String getBusinessObjectDefinitionUdcUri(String udcServerHost, String namespace, String businessObjectDefinitionName)
-        throws URISyntaxException, MalformedURLException, UnsupportedEncodingException
+        throws URISyntaxException, MalformedURLException
     {
         URIBuilder uriBuilder =
             new URIBuilder().setScheme("https").setHost(udcServerHost).setPath(String.format("/data-entities/%s/%s", namespace, businessObjectDefinitionName));
