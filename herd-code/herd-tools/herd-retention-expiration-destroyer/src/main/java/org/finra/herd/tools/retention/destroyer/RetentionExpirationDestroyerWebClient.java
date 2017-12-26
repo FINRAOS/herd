@@ -60,10 +60,10 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
         uriPathBuilder.append("/namespaces/").append(businessObjectDataKey.getNamespace());
         uriPathBuilder.append("/businessObjectDefinitionNames/").append(businessObjectDataKey.getBusinessObjectDefinitionName());
         uriPathBuilder.append("/businessObjectFormatUsages/").append(businessObjectDataKey.getBusinessObjectFormatUsage());
-        uriPathBuilder.append("/businessObjectFormatFileType/").append(businessObjectDataKey.getBusinessObjectFormatFileType());
-        uriPathBuilder.append("/businessObjectFormatVersion/").append(businessObjectDataKey.getBusinessObjectFormatVersion());
-        uriPathBuilder.append("/partitionValue/").append(businessObjectDataKey.getPartitionValue());
-        uriPathBuilder.append("/businessObjectDataVersion/").append(businessObjectDataKey.getBusinessObjectDataVersion());
+        uriPathBuilder.append("/businessObjectFormatFileTypes/").append(businessObjectDataKey.getBusinessObjectFormatFileType());
+        uriPathBuilder.append("/businessObjectFormatVersions/").append(businessObjectDataKey.getBusinessObjectFormatVersion());
+        uriPathBuilder.append("/partitionValues/").append(businessObjectDataKey.getPartitionValue());
+        uriPathBuilder.append("/businessObjectDataVersions/").append(businessObjectDataKey.getBusinessObjectDataVersion());
 
         URIBuilder uriBuilder =
             new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
