@@ -49,9 +49,9 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
      * @param businessObjectDataKey the name of the business object data key
      *
      * @return the business object definition
-     * @throws JAXBException if a JAXB error was encountered
      * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws URISyntaxException if an URI syntax error was encountered
      */
     public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey) throws IOException, JAXBException, URISyntaxException
     {
