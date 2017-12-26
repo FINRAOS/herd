@@ -19,7 +19,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +31,7 @@ import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,10 +128,10 @@ public class ExporterController
      * @throws IOException if any problems were encountered
      */
     private void writeToCsvFile(File localOutputFile, String namespace, String businessObjectDefinitionName, String businessObjectDefinitionDisplayName,
-        String udcServerHost, List<BusinessObjectData> businessObjectDataList) throws IOException
+        String udcServerHost, List<BusinessObjectData> businessObjectDataList) throws IOException, URISyntaxException
     {
         // Create business object definition URI.
-        String businessObjectDefinitionUdcUri = String.format("https://%s/data-entities/%s/%s", udcServerHost, namespace, businessObjectDefinitionName);
+        String businessObjectDefinitionUdcUri = getBusinessObjectDefinitionUdcUri(udcServerHost, namespace, businessObjectDefinitionName);
 
         // Create the local output file.
         try (Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8))
@@ -151,6 +155,23 @@ public class ExporterController
                 writeLine(writer, businessObjectDataRecords);
             }
         }
+    }
+
+    /**
+     * Builds and returns business object definition UDC URI.
+     *
+     * @param udcServerHost the hostname of the UDC application server
+     * @param namespace the namespace of business object definition
+     * @param businessObjectDefinitionName the name of the business object definition
+     *
+     * @return the business object definition URI
+     */
+    protected String getBusinessObjectDefinitionUdcUri(String udcServerHost, String namespace, String businessObjectDefinitionName)
+        throws URISyntaxException, MalformedURLException, UnsupportedEncodingException
+    {
+        URIBuilder uriBuilder =
+            new URIBuilder().setScheme("https").setHost(udcServerHost).setPath(String.format("/data-entities/%s/%s", namespace, businessObjectDefinitionName));
+        return String.valueOf(uriBuilder.build().toURL());
     }
 
     /**

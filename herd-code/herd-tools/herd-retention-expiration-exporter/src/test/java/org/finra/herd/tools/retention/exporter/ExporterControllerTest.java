@@ -132,4 +132,14 @@ public class ExporterControllerTest extends AbstractExporterTest
         // Get and validate business object definition display name.
         assertEquals(BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, exporterController.getBusinessObjectDefinitionDisplayName(businessObjectDefinition));
     }
+
+    @Test
+    public void testGetBusinessObjectDefinitionUdcUri() throws Exception
+    {
+        assertEquals(String.format("https://%s/data-entities/%s/%s", UDC_SERVICE_HOSTNAME, NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME),
+            exporterController.getBusinessObjectDefinitionUdcUri(UDC_SERVICE_HOSTNAME, NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME));
+
+        assertEquals("https://testUdcHostname/data-entities/testNamespace,%22/testBusinessObjectDefinitionName,%22",
+            exporterController.getBusinessObjectDefinitionUdcUri(UDC_SERVICE_HOSTNAME, NAMESPACE + ",\"", BUSINESS_OBJECT_DEFINITION_NAME + ",\""));
+    }
 }
