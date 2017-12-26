@@ -82,11 +82,11 @@ public class CleanupDestroyedBusinessObjectDataServiceImpl implements CleanupDes
     /**
      * {@inheritDoc}
      * <p/>
-     * This implementation executes non-transactionally, suspends the current transaction if one exists.
+     * This implementation starts a new transaction.
      */
     @PublishNotificationMessages
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void cleanupS3StorageUnit(BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey)
     {
         cleanupS3StorageUnitImpl(businessObjectDataStorageUnitKey);
@@ -95,10 +95,10 @@ public class CleanupDestroyedBusinessObjectDataServiceImpl implements CleanupDes
     /**
      * {@inheritDoc}
      * <p/>
-     * This implementation starts a new transaction.
+     * This implementation executes non-transactionally, suspends the current transaction if one exists.
      */
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public List<BusinessObjectDataStorageUnitKey> getS3StorageUnitsToCleanup(int maxResult)
     {
         return getS3StorageUnitsToCleanupImpl(maxResult);
