@@ -80,7 +80,7 @@
                </descriptorRefs>
                <archive>
                   <manifest>
-                     <mainClass>org.finra.herd.tools.retention.exporter.ExporterApp</mainClass>
+                     <mainClass>org.finra.herd.tools.retention.exporter.RetentionExpirationExporterApp</mainClass>
                   </manifest>
                </archive>
                <finalName>${project.artifactId}-app</finalName>
