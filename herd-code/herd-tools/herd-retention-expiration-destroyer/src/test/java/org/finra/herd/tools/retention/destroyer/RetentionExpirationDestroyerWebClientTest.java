@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Test;
 
@@ -34,16 +34,8 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
     public void testDestroyBusinessObjectData() throws Exception
     {
         retentionExpirationDestroyerWebClient.getRegServerAccessParamsDto().setUseSsl(false);
-        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Arrays.asList("test"), 0);
-        BusinessObjectData result = retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
-        assertNotNull(result);
-    }
-
-    @Test
-    public void testDestroyBusinessObjectDataUseSsl() throws Exception
-    {
-        retentionExpirationDestroyerWebClient.getRegServerAccessParamsDto().setUseSsl(true);
-        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Arrays.asList("test"), 0);
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
         BusinessObjectData result = retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
         assertNotNull(result);
     }
@@ -55,7 +47,8 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
 
         try
         {
-            BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Arrays.asList("test"), 0);
+            BusinessObjectDataKey businessObjectDataKey =
+                new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
             retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
             fail();
         }
@@ -63,5 +56,15 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
         {
             assertEquals("testThrowIoException", e.getMessage());
         }
+    }
+
+    @Test
+    public void testDestroyBusinessObjectDataUseSsl() throws Exception
+    {
+        retentionExpirationDestroyerWebClient.getRegServerAccessParamsDto().setUseSsl(true);
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
+        BusinessObjectData result = retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
+        assertNotNull(result);
     }
 }
