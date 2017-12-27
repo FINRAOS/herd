@@ -28,9 +28,6 @@ import org.finra.herd.model.api.xml.BuildInformation;
 import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.databridge.DataBridgeApp;
 
-/**
- * Unit tests for RetentionExpirationDestroyerApp class.
- */
 public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpirationDestroyerTest
 {
     private RetentionExpirationDestroyerApp exporterApp = new RetentionExpirationDestroyerApp()
@@ -48,7 +45,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
                 "INVALID_BOOLEAN_VALUE", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
 
-        runApplicationAndCheckReturnValue(exporterApp, arguments, null, ToolsCommonConstants.ReturnValue.FAILURE);
+        runApplicationAndCheckReturnValue(exporterApp, arguments, ToolsCommonConstants.ReturnValue.FAILURE);
     }
 
     @Test
@@ -58,7 +55,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString()};
 
         // We are expecting this to fail with an FileNotFoundException.
-        runApplicationAndCheckReturnValue(exporterApp, arguments, null, new FileNotFoundException());
+        runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
     }
 
     @Test
@@ -69,20 +66,15 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
                 "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
 
         // We are expecting this to fail with an FileNotFoundException.
-        runApplicationAndCheckReturnValue(exporterApp, arguments, null, new FileNotFoundException());
+        runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
     }
 
     @Test
-    public void testParseCommandLineArgumentsHelpOpt() throws Exception
+    public void testParseCommandLineArgumentsHelpOpt()
     {
-        String output = runTestGetSystemOut(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                String[] arguments = {"--help"};
-                assertEquals(ToolsCommonConstants.ReturnValue.SUCCESS, exporterApp.parseCommandLineArguments(arguments, applicationContext));
-            }
+        String output = runTestGetSystemOut(() -> {
+            String[] arguments = {"--help"};
+            assertEquals(ToolsCommonConstants.ReturnValue.SUCCESS, exporterApp.parseCommandLineArguments(arguments, applicationContext));
         });
 
         assertTrue("Incorrect usage information returned.", output.startsWith("usage: " + RetentionExpirationDestroyerApp.APPLICATION_NAME));
@@ -96,17 +88,17 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
                 WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
 
         // We are expecting this to fail with a NumberFormatException.
-        runApplicationAndCheckReturnValue(exporterApp, arguments, null, new NumberFormatException());
+        runApplicationAndCheckReturnValue(exporterApp, arguments, new NumberFormatException());
     }
 
     @Test
-    public void testParseCommandLineArgumentsNone() throws Exception
+    public void testParseCommandLineArgumentsNone()
     {
         assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(new String[] {}, applicationContext));
     }
 
     @Test
-    public void testParseCommandLineArgumentsSslTrueAndNoPassword() throws Exception
+    public void testParseCommandLineArgumentsSslTrueAndNoPassword()
     {
         String[] arguments =
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
@@ -115,7 +107,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
     }
 
     @Test
-    public void testParseCommandLineArgumentsSslTrueAndNoUsername() throws Exception
+    public void testParseCommandLineArgumentsSslTrueAndNoUsername()
     {
         String[] arguments =
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
@@ -126,14 +118,9 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
     @Test
     public void testParseCommandLineArgumentsVersionOpt()
     {
-        String output = runTestGetSystemOut(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                String[] arguments = {"--version"};
-                assertEquals(ToolsCommonConstants.ReturnValue.SUCCESS, exporterApp.parseCommandLineArguments(arguments, applicationContext));
-            }
+        String output = runTestGetSystemOut(() -> {
+            String[] arguments = {"--version"};
+            assertEquals(ToolsCommonConstants.ReturnValue.SUCCESS, exporterApp.parseCommandLineArguments(arguments, applicationContext));
         });
 
         BuildInformation buildInformation = applicationContext.getBean(BuildInformation.class);
@@ -144,7 +131,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
     }
 
     @Test
-    public void testParseShortCommandLineArgumentsSuccess() throws Exception
+    public void testParseShortCommandLineArgumentsSuccess()
     {
         String[] arguments =
             {"-i", LOCAL_INPUT_FILE, "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME, "-w",

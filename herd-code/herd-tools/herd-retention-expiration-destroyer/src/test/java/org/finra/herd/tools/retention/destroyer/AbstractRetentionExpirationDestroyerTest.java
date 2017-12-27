@@ -30,45 +30,40 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.finra.herd.core.Command;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.databridge.AbstractDataBridgeTest;
 import org.finra.herd.tools.common.databridge.HttpErrorResponseException;
 
-/**
- * This is an abstract base class that provides useful methods for herd retention expiration destroyer tool test drivers.
- */
 public abstract class AbstractRetentionExpirationDestroyerTest extends AbstractDataBridgeTest
 {
-    protected static final Integer BUSINESS_OBJECT_DATA_VERSION = 5;
+    static final Integer BUSINESS_OBJECT_DATA_VERSION = 5;
 
-    protected static final String BUSINESS_OBJECT_DEFINITION_NAME = "testBusinessObjectDefinitionName";
+    static final String BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME = "testBusinessObjectDefinitionDisplayName";
 
-    protected static final String BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME = "testBusinessObjectDefinitionDisplayName";
+    static final String BUSINESS_OBJECT_DEFINITION_NAME = "testBusinessObjectDefinitionName";
 
-    protected static final String BUSINESS_OBJECT_DEFINITION_URI = "testBusinessObjectDefinitionUri";
+    static final String BUSINESS_OBJECT_DEFINITION_URI = "testBusinessObjectDefinitionUri";
 
-    protected static final String BUSINESS_OBJECT_FORMAT_USAGE = "testBusinessObjectFormatUsage";
+    static final String BUSINESS_OBJECT_FORMAT_FILE_TYPE = "testBusinessObjectFormatFileType";
 
-    protected static final String BUSINESS_OBJECT_FORMAT_FILE_TYPE = "testBusinessObjectFormatFileType";
+    static final String BUSINESS_OBJECT_FORMAT_USAGE = "testBusinessObjectFormatUsage";
 
-    protected static final Integer BUSINESS_OBJECT_FORMAT_VERSION = 9;
+    static final Integer BUSINESS_OBJECT_FORMAT_VERSION = 9;
 
-    protected static final String LOCAL_INPUT_FILE = Paths.get(LOCAL_TEMP_PATH_INPUT.toString(), LOCAL_FILE).toString();
+    static final Integer LINE_NUMBER = 99;
 
-    protected static final String NAMESPACE = "testNamespace";
+    static final String LOCAL_INPUT_FILE = Paths.get(LOCAL_TEMP_PATH_INPUT.toString(), LOCAL_FILE).toString();
 
-    protected static final String UDC_SERVICE_HOSTNAME = "testUdcHostname";
+    static final String NAMESPACE = "testNamespace";
 
-    protected static final String PRIMARY_PARTITION_VALUE = "primaryPartitionValue";
+    static final List<String> NO_SUB_PARTITION_VALUES = new ArrayList<>();
 
-    protected static final List<String> SUB_PARTITION_VALUES =
-        Arrays.asList("subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4");
+    static final String PRIMARY_PARTITION_VALUE = "primaryPartitionValue";
 
-    protected static final List<String> NO_SUB_PARTITION_VALUES = new ArrayList<>();
+    static final List<String> SUB_PARTITION_VALUES = Arrays.asList("subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4");
 
-    protected static final Integer LINE_NUMBER = 99;
+    static final String UDC_SERVICE_HOSTNAME = "testUdcHostname";
 
     private static Logger logger = LoggerFactory.getLogger(AbstractRetentionExpirationDestroyerTest.class);
 
@@ -105,15 +100,14 @@ public abstract class AbstractRetentionExpirationDestroyerTest extends AbstractD
      *
      * @param retentionExpirationDestroyerApp the application
      * @param args the application arguments
-     * @param noLoggingClass an optional class that will have logging turned off
      * @param expectedReturnValue the expected application return value
      *
      * @throws Exception if any errors were found during the execution of the application
      */
-    protected void runApplicationAndCheckReturnValue(RetentionExpirationDestroyerApp retentionExpirationDestroyerApp, String[] args, Class<?> noLoggingClass,
+    void runApplicationAndCheckReturnValue(RetentionExpirationDestroyerApp retentionExpirationDestroyerApp, String[] args,
         ToolsCommonConstants.ReturnValue expectedReturnValue) throws Exception
     {
-        runApplicationAndCheckReturnValue(retentionExpirationDestroyerApp, args, noLoggingClass, expectedReturnValue, null);
+        runApplicationAndCheckReturnValue(retentionExpirationDestroyerApp, args, expectedReturnValue, null);
     }
 
     /**
@@ -122,16 +116,15 @@ public abstract class AbstractRetentionExpirationDestroyerTest extends AbstractD
      *
      * @param retentionExpirationDestroyerApp the application
      * @param args the application arguments
-     * @param noLoggingClass an optional class that will have logging turned off
      * @param expectedException an instance of an expected exception that should be thrown. If this is an instance of HttpErrorResponseException, then the
      * response status will also be compared
      *
      * @throws Exception if any errors were found during the execution of the application
      */
-    protected void runApplicationAndCheckReturnValue(RetentionExpirationDestroyerApp retentionExpirationDestroyerApp, String[] args, Class<?> noLoggingClass,
-        Object expectedException) throws Exception
+    void runApplicationAndCheckReturnValue(RetentionExpirationDestroyerApp retentionExpirationDestroyerApp, String[] args, Object expectedException)
+        throws Exception
     {
-        runApplicationAndCheckReturnValue(retentionExpirationDestroyerApp, args, noLoggingClass, null, expectedException);
+        runApplicationAndCheckReturnValue(retentionExpirationDestroyerApp, args, null, expectedException);
     }
 
     /**
@@ -140,7 +133,6 @@ public abstract class AbstractRetentionExpirationDestroyerTest extends AbstractD
      *
      * @param retentionExpirationDestroyerApp the application
      * @param args the application arguments
-     * @param noLoggingClass an optional class that will have logging turned off
      * @param expectedReturnValue the expected application return value or null if an exception is expected
      * @param expectedException an instance of an expected exception that should be thrown or null if no exception is expected. If this is null, then an
      * expected return value should be populated. If this is an instance of HttpErrorResponseException, then the response status will also be compared
@@ -148,25 +140,20 @@ public abstract class AbstractRetentionExpirationDestroyerTest extends AbstractD
      * @throws Exception if any errors were found during the execution of the application
      */
     private void runApplicationAndCheckReturnValue(final RetentionExpirationDestroyerApp retentionExpirationDestroyerApp, final String[] args,
-        Class<?> noLoggingClass, final ToolsCommonConstants.ReturnValue expectedReturnValue, final Object expectedException) throws Exception
+        final ToolsCommonConstants.ReturnValue expectedReturnValue, final Object expectedException) throws Exception
     {
         try
         {
-            executeWithoutLogging(noLoggingClass, new Command()
-            {
-                @Override
-                public void execute() throws Exception
+            executeWithoutLogging((Class<?>) null, () -> {
+                ToolsCommonConstants.ReturnValue returnValue = retentionExpirationDestroyerApp.go(args);
+                if (expectedException != null)
                 {
-                    ToolsCommonConstants.ReturnValue returnValue = retentionExpirationDestroyerApp.go(args);
-                    if (expectedException != null)
-                    {
-                        fail("Expected exception of class " + expectedException.getClass().getName() + " that was not thrown.");
-                    }
-                    else
-                    {
-                        assertEquals(expectedReturnValue, returnValue);
-                        assertEquals(expectedReturnValue.getReturnCode(), returnValue.getReturnCode());
-                    }
+                    fail("Expected exception of class " + expectedException.getClass().getName() + " that was not thrown.");
+                }
+                else
+                {
+                    assertEquals(expectedReturnValue, returnValue);
+                    assertEquals(expectedReturnValue.getReturnCode(), returnValue.getReturnCode());
                 }
             });
         }

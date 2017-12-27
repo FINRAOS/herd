@@ -36,41 +36,27 @@ import org.finra.herd.tools.common.config.DataBridgeAopSpringModuleConfig;
 import org.finra.herd.tools.common.config.DataBridgeEnvSpringModuleConfig;
 import org.finra.herd.tools.common.config.DataBridgeSpringModuleConfig;
 
-/**
- * A main class for the herd retention expiration destroyer application.
- */
 public class RetentionExpirationDestroyerApp
 {
     public static final String APPLICATION_NAME = "herd-retention-expiration-destroyer-app";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RetentionExpirationDestroyerApp.class);
 
-    protected Option helpOpt;
-
-    protected Option localInputFileOpt;
-
-    protected Option passwordOpt;
-
-    protected Option regServerHostOpt;
-
-    protected Integer regServerPort;
-
-    protected Option regServerPortOpt;
-
-    protected Option sslOpt;
-
-    protected Boolean useSsl;
-
-    protected Option usernameOpt;
-
-    protected Option versionOpt;
-
     private ArgumentParser argParser;
 
-    /**
-     * Constructs a new application instance.
-     */
-    public RetentionExpirationDestroyerApp()
+    private Option localInputFileOpt;
+
+    private Option passwordOpt;
+
+    private Option regServerHostOpt;
+
+    private Integer regServerPort;
+
+    private Boolean useSsl;
+
+    private Option usernameOpt;
+
+    RetentionExpirationDestroyerApp()
     {
         argParser = new ArgumentParser(APPLICATION_NAME);
     }
@@ -161,12 +147,12 @@ public class RetentionExpirationDestroyerApp
         {
             localInputFileOpt = argParser.addArgument("i", "localInputFile", true, "The path to files on your local file system as input.", true);
             regServerHostOpt = argParser.addArgument("H", "regServerHost", true, "Registration Service hostname.", true);
-            regServerPortOpt = argParser.addArgument("P", "regServerPort", true, "Registration Service port.", true);
-            sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
+            Option regServerPortOpt = argParser.addArgument("P", "regServerPort", true, "Registration Service port.", true);
+            Option sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
             usernameOpt = argParser.addArgument("u", "username", true, "The username for HTTPS client authentication.", false);
             passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
-            helpOpt = argParser.addArgument("h", "help", false, "Display usage information and exit.", false);
-            versionOpt = argParser.addArgument("v", "version", false, "Display version information and exit.", false);
+            Option helpOpt = argParser.addArgument("h", "help", false, "Display usage information and exit.", false);
+            Option versionOpt = argParser.addArgument("v", "version", false, "Display version information and exit.", false);
 
             // Parse command line arguments without failing on any missing required arguments by passing "false" as the second argument.
             argParser.parseArguments(args, false);

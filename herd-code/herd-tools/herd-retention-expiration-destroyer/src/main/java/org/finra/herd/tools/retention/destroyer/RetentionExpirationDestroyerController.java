@@ -36,24 +36,21 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 
-/**
- * Executes the retention expiration destroyer workflow.
- */
 @Component
 public class RetentionExpirationDestroyerController
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RetentionExpirationDestroyerController.class);
-
     private static final String[] CSV_FILE_HEADER_COLUMNS =
         {"Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type", "Business Object Format Version",
             "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3", "Sub-Partition Value 4",
             "Business Object Data Version", "Business Object Definition Display Name", "Business Object Definition URI"};
 
-    @Autowired
-    private RetentionExpirationDestroyerWebClient retentionExpirationDestroyerWebClient;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RetentionExpirationDestroyerController.class);
 
     @Autowired
     private JsonHelper jsonHelper;
+
+    @Autowired
+    private RetentionExpirationDestroyerWebClient retentionExpirationDestroyerWebClient;
 
     /**
      * Executes the retention expiration destroyer workflow.
@@ -80,40 +77,6 @@ public class RetentionExpirationDestroyerController
         }
 
         LOGGER.info("Successfully processed {} business object data instances for destruction.", CollectionUtils.size(businessObjectDataKeys));
-    }
-
-    /**
-     * Get business object data keys from the input CSV tile. This method also validates the input file format.
-     *
-     * @param inputCsvFile the input CSV file
-     *
-     * @return the list of business object data keys
-     * @throws IOException if any problems were encountered
-     */
-    protected List<BusinessObjectDataKey> getBusinessObjectDataKeys(File inputCsvFile) throws IOException
-    {
-        List<BusinessObjectDataKey> businessObjectDataKeyList = new ArrayList<>();
-
-        // Read the input CSV file and populate business object data key list.
-        try (CSVReader csvReader = new CSVReader(new InputStreamReader(new FileInputStream(inputCsvFile), StandardCharsets.UTF_8)))
-        {
-            String[] line;
-
-            // Validate required header of the CSV input file.
-            if ((line = csvReader.readNext()) == null || !Arrays.equals(line, CSV_FILE_HEADER_COLUMNS))
-            {
-                throw new IllegalArgumentException(String.format("Input file \"%s\" does not contain the expected CSV file header.", inputCsvFile.toString()));
-            }
-
-            // Process the input CSV file line by line.
-            int lineCount = 2;
-            while ((line = csvReader.readNext()) != null)
-            {
-                businessObjectDataKeyList.add(getBusinessObjectDataKey(line, lineCount++, inputCsvFile));
-            }
-        }
-
-        return businessObjectDataKeyList;
     }
 
     /**
@@ -174,5 +137,39 @@ public class RetentionExpirationDestroyerController
 
         return new BusinessObjectDataKey(line[0], line[1], line[2], line[3], businessObjectFormatVersion, line[5], subPartitionValues,
             businessObjectDataVersion);
+    }
+
+    /**
+     * Get business object data keys from the input CSV tile. This method also validates the input file format.
+     *
+     * @param inputCsvFile the input CSV file
+     *
+     * @return the list of business object data keys
+     * @throws IOException if any problems were encountered
+     */
+    protected List<BusinessObjectDataKey> getBusinessObjectDataKeys(File inputCsvFile) throws IOException
+    {
+        List<BusinessObjectDataKey> businessObjectDataKeyList = new ArrayList<>();
+
+        // Read the input CSV file and populate business object data key list.
+        try (CSVReader csvReader = new CSVReader(new InputStreamReader(new FileInputStream(inputCsvFile), StandardCharsets.UTF_8)))
+        {
+            String[] line;
+
+            // Validate required header of the CSV input file.
+            if ((line = csvReader.readNext()) == null || !Arrays.equals(line, CSV_FILE_HEADER_COLUMNS))
+            {
+                throw new IllegalArgumentException(String.format("Input file \"%s\" does not contain the expected CSV file header.", inputCsvFile.toString()));
+            }
+
+            // Process the input CSV file line by line.
+            int lineCount = 2;
+            while ((line = csvReader.readNext()) != null)
+            {
+                businessObjectDataKeyList.add(getBusinessObjectDataKey(line, lineCount++, inputCsvFile));
+            }
+        }
+
+        return businessObjectDataKeyList;
     }
 }

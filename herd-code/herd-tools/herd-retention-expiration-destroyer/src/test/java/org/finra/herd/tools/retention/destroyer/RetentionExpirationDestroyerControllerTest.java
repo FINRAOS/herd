@@ -47,18 +47,60 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
     }
 
     @Test
-    public void testPerformRetentionExpirationDestruction() throws Exception
+    public void testGetBusinessObjectDataKeyInvalidBusinessObjectDataVersion()
     {
-        // Create a local input CSV file.
-        File inputCsvFile = createLocalInputCsvFile();
+        // Try to get business object data key when business object data version is not a valid integer.
+        try
+        {
+            String[] line = {NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
+                BUSINESS_OBJECT_FORMAT_VERSION.toString(), PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES.get(0), SUB_PARTITION_VALUES.get(1),
+                SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3), INVALID_INTEGER_VALUE, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME,
+                BUSINESS_OBJECT_DEFINITION_URI};
+            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_FILE));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Line number %d of input file \"%s\" does not match the expected format. Business object data version must be an integer.", LINE_NUMBER,
+                    LOCAL_FILE), e.getMessage());
+        }
+    }
 
-        // Create and initialize the registration server DTO.
-        RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().withRegServerHost(WEB_SERVICE_HOSTNAME).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
-                .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
+    @Test
+    public void testGetBusinessObjectDataKeyInvalidBusinessObjectFormatVersion()
+    {
+        // Try to get business object data key when business object format version is not a valid integer.
+        try
+        {
+            String[] line = {NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, INVALID_INTEGER_VALUE,
+                PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES.get(0), SUB_PARTITION_VALUES.get(1), SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3),
+                BUSINESS_OBJECT_DATA_VERSION.toString(), BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, BUSINESS_OBJECT_DEFINITION_URI};
+            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_FILE));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Line number %d of input file \"%s\" does not match the expected format. Business object format version must be an integer.",
+                    LINE_NUMBER, LOCAL_FILE), e.getMessage());
+        }
+    }
 
-        // Perform the retention expiration destruction.
-        retentionExpirationDestroyerController.performRetentionExpirationDestruction(inputCsvFile, regServerAccessParamsDto);
+    @Test
+    public void testGetBusinessObjectDataKeyInvalidCsvLineFormat()
+    {
+        // Try to get business object data key when line does not have the expected number of columns.
+        try
+        {
+            String[] line = {};
+            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_FILE));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Line number %d of input file \"%s\" does not match the expected format.", LINE_NUMBER, LOCAL_FILE), e.getMessage());
+        }
     }
 
     @Test
@@ -102,60 +144,18 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
     }
 
     @Test
-    public void testGetBusinessObjectDataKeyInvalidCsvLineFormat()
+    public void testPerformRetentionExpirationDestruction() throws Exception
     {
-        // Try to get business object data key when line does not have the expected number of columns.
-        try
-        {
-            String[] line = {};
-            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_FILE));
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(String.format("Line number %d of input file \"%s\" does not match the expected format.", LINE_NUMBER, LOCAL_FILE), e.getMessage());
-        }
-    }
+        // Create a local input CSV file.
+        File inputCsvFile = createLocalInputCsvFile();
 
-    @Test
-    public void testGetBusinessObjectDataKeyInvalidBusinessObjectFormatVersion()
-    {
-        // Try to get business object data key when business object format version is not a valid integer.
-        try
-        {
-            String[] line = {NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, INVALID_INTEGER_VALUE,
-                PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES.get(0), SUB_PARTITION_VALUES.get(1), SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3),
-                BUSINESS_OBJECT_DATA_VERSION.toString(), BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, BUSINESS_OBJECT_DEFINITION_URI};
-            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_FILE));
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(String
-                .format("Line number %d of input file \"%s\" does not match the expected format. Business object format version must be an integer.",
-                    LINE_NUMBER, LOCAL_FILE), e.getMessage());
-        }
-    }
+        // Create and initialize the registration server DTO.
+        RegServerAccessParamsDto regServerAccessParamsDto =
+            RegServerAccessParamsDto.builder().withRegServerHost(WEB_SERVICE_HOSTNAME).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
+                .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
 
-    @Test
-    public void testGetBusinessObjectDataKeyInvalidBusinessObjectDataVersion()
-    {
-        // Try to get business object data key when business object data version is not a valid integer.
-        try
-        {
-            String[] line = {NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
-                BUSINESS_OBJECT_FORMAT_VERSION.toString(), PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES.get(0), SUB_PARTITION_VALUES.get(1),
-                SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3), INVALID_INTEGER_VALUE, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME,
-                BUSINESS_OBJECT_DEFINITION_URI};
-            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_FILE));
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(String
-                .format("Line number %d of input file \"%s\" does not match the expected format. Business object data version must be an integer.", LINE_NUMBER,
-                    LOCAL_FILE), e.getMessage());
-        }
+        // Perform the retention expiration destruction.
+        retentionExpirationDestroyerController.performRetentionExpirationDestruction(inputCsvFile, regServerAccessParamsDto);
     }
 
     /**
@@ -173,36 +173,33 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
         String expectedUri = String.format("https://%s/data-entities/%s/%s", UDC_SERVICE_HOSTNAME, NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
 
         // Build the input file content.
-        StringBuilder stringBuilder = new StringBuilder();
-
-        // Add a CSV header.
-        stringBuilder.append("\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
+        String stringBuilder = ("\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
             "\"Business Object Format Version\",\"Primary Partition Value\",\"Sub-Partition Value 1\",\"Sub-Partition Value 2\",\"Sub-Partition Value 3\"," +
-            "\"Sub-Partition Value 4\",\"Business Object Data Version\",\"Business Object Definition Display Name\",\"Business Object Definition URI\"")
-            .append(System.lineSeparator());
-
-        // Add business object data with sub-partitions.
-        stringBuilder.append(String
+            "\"Sub-Partition Value 4\",\"Business Object Data Version\",\"Business Object Definition Display Name\",\"Business Object Definition URI\"") +
+            System.lineSeparator() + String
             .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
                 BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE,
                 SUB_PARTITION_VALUES.get(0), SUB_PARTITION_VALUES.get(1), SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3),
-                BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri));
-
-        // Add a business object data without sub-partitions.
-        stringBuilder.append(String
+                BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri) + String
             .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
                 BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, "", "", "", "",
-                BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri));
+                BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri) + String
+            .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE + ",\"\"",
+                BUSINESS_OBJECT_DEFINITION_NAME + ",\"\"", BUSINESS_OBJECT_FORMAT_USAGE + ",\"\"", BUSINESS_OBJECT_FORMAT_FILE_TYPE + ",\"\"",
+                BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE + ",\"\"", SUB_PARTITION_VALUES.get(0) + ",\"\"", SUB_PARTITION_VALUES.get(1) + ",\"\"",
+                SUB_PARTITION_VALUES.get(2) + ",\"\"", SUB_PARTITION_VALUES.get(3) + ",\"\"", BUSINESS_OBJECT_DATA_VERSION,
+                BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri);
+
+        // Add a CSV header.
+
+        // Add business object data with sub-partitions.
+
+        // Add a business object data without sub-partitions.
 
         // Add a business object data that uses CSV file separator and quote characters in its alternate key values.
-        stringBuilder.append(String.format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE + ",\"\"",
-            BUSINESS_OBJECT_DEFINITION_NAME + ",\"\"", BUSINESS_OBJECT_FORMAT_USAGE + ",\"\"", BUSINESS_OBJECT_FORMAT_FILE_TYPE + ",\"\"",
-            BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE + ",\"\"", SUB_PARTITION_VALUES.get(0) + ",\"\"", SUB_PARTITION_VALUES.get(1) + ",\"\"",
-            SUB_PARTITION_VALUES.get(2) + ",\"\"", SUB_PARTITION_VALUES.get(3) + ",\"\"", BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME,
-            expectedUri));
 
         // Write to the input CSV file.
-        FileUtils.writeStringToFile(inputCsvFile, stringBuilder.toString(), StandardCharsets.UTF_8);
+        FileUtils.writeStringToFile(inputCsvFile, stringBuilder, StandardCharsets.UTF_8);
 
         return inputCsvFile;
     }

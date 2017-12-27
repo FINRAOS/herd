@@ -35,9 +35,6 @@ import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
-/**
- * This class encapsulates web client functionality required to communicate with the registration server.
- */
 @Component
 public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
 {
@@ -55,19 +52,15 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
      */
     public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey) throws IOException, JAXBException, URISyntaxException
     {
-        StringBuilder uriPathBuilder = new StringBuilder(HERD_APP_REST_URI_PREFIX);
-        uriPathBuilder.append("/businessObjectData/destroy");
-        uriPathBuilder.append("/namespaces/").append(businessObjectDataKey.getNamespace());
-        uriPathBuilder.append("/businessObjectDefinitionNames/").append(businessObjectDataKey.getBusinessObjectDefinitionName());
-        uriPathBuilder.append("/businessObjectFormatUsages/").append(businessObjectDataKey.getBusinessObjectFormatUsage());
-        uriPathBuilder.append("/businessObjectFormatFileTypes/").append(businessObjectDataKey.getBusinessObjectFormatFileType());
-        uriPathBuilder.append("/businessObjectFormatVersions/").append(businessObjectDataKey.getBusinessObjectFormatVersion());
-        uriPathBuilder.append("/partitionValues/").append(businessObjectDataKey.getPartitionValue());
-        uriPathBuilder.append("/businessObjectDataVersions/").append(businessObjectDataKey.getBusinessObjectDataVersion());
+        String uriPath = HERD_APP_REST_URI_PREFIX + "/businessObjectData/destroy" + "/namespaces/" + businessObjectDataKey.getNamespace() +
+            "/businessObjectDefinitionNames/" + businessObjectDataKey.getBusinessObjectDefinitionName() + "/businessObjectFormatUsages/" +
+            businessObjectDataKey.getBusinessObjectFormatUsage() + "/businessObjectFormatFileTypes/" + businessObjectDataKey.getBusinessObjectFormatFileType() +
+            "/businessObjectFormatVersions/" + businessObjectDataKey.getBusinessObjectFormatVersion() + "/partitionValues/" +
+            businessObjectDataKey.getPartitionValue() + "/businessObjectDataVersions/" + businessObjectDataKey.getBusinessObjectDataVersion();
 
         URIBuilder uriBuilder =
             new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
-                .setPath(uriPathBuilder.toString());
+                .setPath(uriPath);
 
         if (CollectionUtils.isNotEmpty(businessObjectDataKey.getSubPartitionValues()))
         {
