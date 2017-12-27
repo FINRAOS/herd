@@ -41,44 +41,36 @@ import org.finra.herd.tools.common.config.DataBridgeSpringModuleConfig;
 /**
  * A main class for the herd retention expiration exporter application.
  */
-public class ExporterApp
+public class RetentionExpirationExporterApp
 {
-    public static final String APPLICATION_NAME = "herd-retention-expiration-exporter-app";
+    static final String APPLICATION_NAME = "herd-retention-expiration-exporter-app";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExporterApp.class);
-
-    protected Option businessObjectDefinitionNameOpt;
-
-    protected Option helpOpt;
-
-    protected Option localOutputFileOpt;
-
-    protected Option namespaceOpt;
-
-    protected Option passwordOpt;
-
-    protected Option regServerHostOpt;
-
-    protected Integer regServerPort;
-
-    protected Option regServerPortOpt;
-
-    protected Option udcServerHostOpt;
-
-    protected Option sslOpt;
-
-    protected Boolean useSsl;
-
-    protected Option usernameOpt;
-
-    protected Option versionOpt;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RetentionExpirationExporterApp.class);
 
     private ArgumentParser argParser;
+
+    private Option businessObjectDefinitionNameOpt;
+
+    private Option localOutputFileOpt;
+
+    private Option namespaceOpt;
+
+    private Option passwordOpt;
+
+    private Option regServerHostOpt;
+
+    private Integer regServerPort;
+
+    private Option udcServerHostOpt;
+
+    private Boolean useSsl;
+
+    private Option usernameOpt;
 
     /**
      * Constructs a new application instance.
      */
-    public ExporterApp()
+    RetentionExpirationExporterApp()
     {
         argParser = new ArgumentParser(APPLICATION_NAME);
     }
@@ -106,8 +98,8 @@ public class ExporterApp
                 throw new IllegalArgumentException("Invalid configuration found at resource location: \"" + ToolsCommonConstants.LOG4J_CONFIG_LOCATION + "\".");
             }
 
-            ExporterApp exporterApp = new ExporterApp();
-            returnValue = exporterApp.go(args);
+            RetentionExpirationExporterApp retentionExpirationExporterApp = new RetentionExpirationExporterApp();
+            returnValue = retentionExpirationExporterApp.go(args);
         }
         catch (Exception e)
         {
@@ -128,7 +120,7 @@ public class ExporterApp
      * @return the return value of the application
      * @throws Exception if any problems were encountered
      */
-    protected ToolsCommonConstants.ReturnValue go(String[] args) throws Exception
+    ToolsCommonConstants.ReturnValue go(String[] args) throws Exception
     {
         // Create the Spring application context.
         ApplicationContext applicationContext = createApplicationContext();
@@ -146,7 +138,7 @@ public class ExporterApp
                 .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt)).build();
 
         // Call the controller with the user specified parameters to perform the upload.
-        ExporterController controller = applicationContext.getBean(ExporterController.class);
+        RetentionExpirationExporterController controller = applicationContext.getBean(RetentionExpirationExporterController.class);
         controller.performRetentionExpirationExport(argParser.getStringValue(namespaceOpt), argParser.getStringValue(businessObjectDefinitionNameOpt),
             argParser.getFileValue(localOutputFileOpt), regServerAccessParamsDto, argParser.getStringValue(udcServerHostOpt));
 
@@ -166,7 +158,7 @@ public class ExporterApp
     // Using System.out to inform user of usage or version information is okay.
     @SuppressWarnings("PMD.SystemPrintln")
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
-    protected ToolsCommonConstants.ReturnValue parseCommandLineArguments(String[] args, ApplicationContext applicationContext)
+    ToolsCommonConstants.ReturnValue parseCommandLineArguments(String[] args, ApplicationContext applicationContext)
     {
         try
         {
@@ -174,13 +166,13 @@ public class ExporterApp
             businessObjectDefinitionNameOpt = argParser.addArgument("b", "businessObjectDefinitionName", true, "Business object definition.", true);
             localOutputFileOpt = argParser.addArgument("o", "localOutputFile", true, "The path to files on your local file system.", true);
             regServerHostOpt = argParser.addArgument("H", "regServerHost", true, "Registration Service hostname.", true);
-            regServerPortOpt = argParser.addArgument("P", "regServerPort", true, "Registration Service port.", true);
+            Option regServerPortOpt = argParser.addArgument("P", "regServerPort", true, "Registration Service port.", true);
             udcServerHostOpt = argParser.addArgument("c", "udcServerHost", true, "UDC application server hostname.", true);
-            sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
+            Option sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
             usernameOpt = argParser.addArgument("u", "username", true, "The username for HTTPS client authentication.", false);
             passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
-            helpOpt = argParser.addArgument("h", "help", false, "Display usage information and exit.", false);
-            versionOpt = argParser.addArgument("v", "version", false, "Display version information and exit.", false);
+            Option helpOpt = argParser.addArgument("h", "help", false, "Display usage information and exit.", false);
+            Option versionOpt = argParser.addArgument("v", "version", false, "Display version information and exit.", false);
 
             // Parse command line arguments without failing on any missing required arguments by passing "false" as the second argument.
             argParser.parseArguments(args, false);

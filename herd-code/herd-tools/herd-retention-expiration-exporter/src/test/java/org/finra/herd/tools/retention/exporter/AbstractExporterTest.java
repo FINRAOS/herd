@@ -38,23 +38,23 @@ import org.finra.herd.tools.common.databridge.HttpErrorResponseException;
  */
 public abstract class AbstractExporterTest extends AbstractDataBridgeTest
 {
-    protected static final Integer BUSINESS_OBJECT_DATA_VERSION = 5;
+    static final Integer BUSINESS_OBJECT_DATA_VERSION = 5;
 
-    protected static final String BUSINESS_OBJECT_DEFINITION_NAME = "testBusinessObjectDefinitionName";
+    static final String BUSINESS_OBJECT_DEFINITION_NAME = "testBusinessObjectDefinitionName";
 
-    protected static final String BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME = "testBusinessObjectDefinitionDisplayName";
+    static final String BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME = "testBusinessObjectDefinitionDisplayName";
 
-    protected static final String BUSINESS_OBJECT_FORMAT_USAGE = "testBusinessObjectFormatUsage";
+    static final String BUSINESS_OBJECT_FORMAT_USAGE = "testBusinessObjectFormatUsage";
 
-    protected static final String BUSINESS_OBJECT_FORMAT_FILE_TYPE = "testBusinessObjectFormatFileType";
+    static final String BUSINESS_OBJECT_FORMAT_FILE_TYPE = "testBusinessObjectFormatFileType";
 
-    protected static final Integer BUSINESS_OBJECT_FORMAT_VERSION = 9;
+    static final Integer BUSINESS_OBJECT_FORMAT_VERSION = 9;
 
-    protected static final String LOCAL_OUTPUT_FILE = Paths.get(LOCAL_TEMP_PATH_OUTPUT.toString(), LOCAL_FILE).toString();
+    static final String LOCAL_OUTPUT_FILE = Paths.get(LOCAL_TEMP_PATH_OUTPUT.toString(), LOCAL_FILE).toString();
 
-    protected static final String NAMESPACE = "testNamespace";
+    static final String NAMESPACE = "testNamespace";
 
-    protected static final String UDC_SERVICE_HOSTNAME = "testUdcHostname";
+    static final String UDC_SERVICE_HOSTNAME = "testUdcHostname";
 
     private static Logger logger = LoggerFactory.getLogger(AbstractExporterTest.class);
 
@@ -62,13 +62,13 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
      * Provide easy access to the controller for all test methods.
      */
     @Autowired
-    protected ExporterController exporterController;
+    RetentionExpirationExporterController retentionExpirationExporterController;
 
     /**
      * Provide easy access to the web client for all test methods.
      */
     @Autowired
-    protected ExporterWebClient exporterWebClient;
+    RetentionExpirationExporterWebClient retentionExpirationExporterWebClient;
 
     /**
      * Sets up the test environment.
@@ -82,31 +82,31 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(WEB_SERVICE_HOSTNAME).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
                 .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).build();
-        exporterWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
+        retentionExpirationExporterWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
     }
 
     /**
      * Runs a application application with the specified arguments and validates the response against an expected return value. An optional "no logging class"
      * can also be specified.
      *
-     * @param exporterApp the application
+     * @param retentionExpirationExporterApp the application
      * @param args the application arguments
      * @param noLoggingClass an optional class that will have logging turned off
      * @param expectedReturnValue the expected application return value
      *
      * @throws Exception if any errors were found during the execution of the application
      */
-    protected void runApplicationAndCheckReturnValue(ExporterApp exporterApp, String[] args, Class<?> noLoggingClass,
+    void runApplicationAndCheckReturnValue(RetentionExpirationExporterApp retentionExpirationExporterApp, String[] args, Class<?> noLoggingClass,
         ToolsCommonConstants.ReturnValue expectedReturnValue) throws Exception
     {
-        runApplicationAndCheckReturnValue(exporterApp, args, noLoggingClass, expectedReturnValue, null);
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, args, noLoggingClass, expectedReturnValue, null);
     }
 
     /**
      * Runs a application application  with the specified arguments and verifies that an expected exception will be thrown. An optional "no logging class" can
      * also be specified.
      *
-     * @param exporterApp the application
+     * @param retentionExpirationExporterApp the application
      * @param args the application arguments
      * @param noLoggingClass an optional class that will have logging turned off
      * @param expectedException an instance of an expected exception that should be thrown. If this is an instance of HttpErrorResponseException, then the
@@ -114,9 +114,10 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
      *
      * @throws Exception if any errors were found during the execution of the application
      */
-    protected void runApplicationAndCheckReturnValue(ExporterApp exporterApp, String[] args, Class<?> noLoggingClass, Object expectedException) throws Exception
+    void runApplicationAndCheckReturnValue(RetentionExpirationExporterApp retentionExpirationExporterApp, String[] args, Class<?> noLoggingClass,
+        Object expectedException) throws Exception
     {
-        runApplicationAndCheckReturnValue(exporterApp, args, noLoggingClass, null, expectedException);
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, args, noLoggingClass, null, expectedException);
     }
 
     /**
@@ -132,7 +133,7 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
      *
      * @throws Exception if any errors were found during the execution of the application
      */
-    private void runApplicationAndCheckReturnValue(final ExporterApp dataBridgeApp, final String[] args, Class<?> noLoggingClass,
+    private void runApplicationAndCheckReturnValue(final RetentionExpirationExporterApp dataBridgeApp, final String[] args, Class<?> noLoggingClass,
         final ToolsCommonConstants.ReturnValue expectedReturnValue, final Object expectedException) throws Exception
     {
         try
