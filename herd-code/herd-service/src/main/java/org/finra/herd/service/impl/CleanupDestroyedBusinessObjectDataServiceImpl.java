@@ -37,7 +37,6 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.CleanupDestroyedBusinessObjectDataService;
-import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
@@ -58,9 +57,6 @@ public class CleanupDestroyedBusinessObjectDataServiceImpl implements CleanupDes
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
-
-    @Autowired
-    private MessageNotificationEventService messageNotificationEventService;
 
     /**
      * The @Lazy annotation below is added to address the following BeanCreationException: - Error creating bean with name 'notificationEventServiceImpl': Bean
