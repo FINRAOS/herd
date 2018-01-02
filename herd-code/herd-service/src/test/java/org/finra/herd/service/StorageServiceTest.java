@@ -139,7 +139,7 @@ public class StorageServiceTest extends AbstractServiceTest
         Storage result = storageService.deleteStorage(new StorageKey(storage.getName()));
         assertEquals(storage, result);
 
-        // Retrieve the storage by it's name and verify that it doesn't exist.
+        // Retrieve the storage by its name and verify that it doesn't exist.
         assertNull(storageDao.getStorageByName(storage.getName()));
     }
 
@@ -211,7 +211,7 @@ public class StorageServiceTest extends AbstractServiceTest
         // Create and persist a valid storage.
         Storage storage = storageService.createStorage(getNewStorageCreateRequest());
 
-        // Retrieve the storage by it's name.
+        // Retrieve the storage by its name.
         Storage result = storageService.getStorage(new StorageKey(storage.getName()));
 
         // Validate the results.

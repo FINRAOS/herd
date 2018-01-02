@@ -30,7 +30,7 @@ public interface StorageDao extends BaseJpaDao
     List<StorageKey> getAllStorage();
 
     /**
-     * Gets a storage by it's name.
+     * Gets a storage by its name.
      *
      * @param storageName the storage name (case-insensitive)
      *
