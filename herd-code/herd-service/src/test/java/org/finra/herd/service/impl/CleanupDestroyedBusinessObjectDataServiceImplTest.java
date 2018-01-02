@@ -47,7 +47,6 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
-import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
@@ -69,9 +68,6 @@ public class CleanupDestroyedBusinessObjectDataServiceImplTest extends AbstractS
 
     @InjectMocks
     private CleanupDestroyedBusinessObjectDataServiceImpl cleanupDestroyedBusinessObjectDataService;
-
-    @Mock
-    private MessageNotificationEventService mockMessageNotificationEventService;
 
     @Mock
     private NotificationEventService mockNotificationEventService;
@@ -134,13 +130,8 @@ public class CleanupDestroyedBusinessObjectDataServiceImplTest extends AbstractS
             .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG, businessObjectDataKey, null,
                 BusinessObjectDataStatusEntity.DELETED);
 
-        verify(mockBusinessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
-
         verify(businessObjectDataEntity).getBusinessObjectDataChildren();
         verify(businessObjectDataEntity).getBusinessObjectDataParents();
-
-        verify(mockMessageNotificationEventService)
-            .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, null, BusinessObjectDataStatusEntity.DELETED);
 
         verify(businessObjectDataEntity).getLatestVersion();
         verify(mockBusinessObjectDataDao).getBusinessObjectDataMaxVersion(businessObjectDataKey);
@@ -250,7 +241,7 @@ public class CleanupDestroyedBusinessObjectDataServiceImplTest extends AbstractS
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(mockBusinessObjectDataHelper, mockBusinessObjectDataDaoHelper, mockBusinessObjectDataDao, mockMessageNotificationEventService,
-            mockNotificationEventService, mockStorageUnitDao, mockStorageUnitHelper);
+        verifyNoMoreInteractions(mockBusinessObjectDataHelper, mockBusinessObjectDataDaoHelper, mockBusinessObjectDataDao, mockNotificationEventService,
+            mockStorageUnitDao, mockStorageUnitHelper);
     }
 }
