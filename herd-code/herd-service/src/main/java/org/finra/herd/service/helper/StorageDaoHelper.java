@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.StorageDao;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.dto.StorageAlternateKeyDto;
+import org.finra.herd.model.api.xml.StorageKey;
 import org.finra.herd.model.jpa.StorageEntity;
 
 /**
@@ -35,16 +35,16 @@ public class StorageDaoHelper
     private StorageDao storageDao;
 
     /**
-     * Gets a storage entity based on the alternate key and makes sure that it exists.
+     * Gets a storage entity by storage key and makes sure that it exists.
      *
-     * @param storageAlternateKey the storage entity alternate key
+     * @param storageKey the storage key
      *
      * @return the storage entity
      * @throws ObjectNotFoundException if the storage entity doesn't exist
      */
-    public StorageEntity getStorageEntity(StorageAlternateKeyDto storageAlternateKey) throws ObjectNotFoundException
+    public StorageEntity getStorageEntity(StorageKey storageKey) throws ObjectNotFoundException
     {
-        return getStorageEntity(storageAlternateKey.getStorageName());
+        return getStorageEntity(storageKey.getStorageName());
     }
 
     /**

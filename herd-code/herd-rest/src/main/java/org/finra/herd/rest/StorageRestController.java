@@ -25,11 +25,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.StorageCreateRequest;
+import org.finra.herd.model.api.xml.StorageKey;
 import org.finra.herd.model.api.xml.StorageKeys;
 import org.finra.herd.model.api.xml.StorageUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
-import org.finra.herd.model.dto.StorageAlternateKeyDto;
 import org.finra.herd.service.StorageService;
 import org.finra.herd.ui.constants.UiConstants;
 
@@ -39,9 +40,9 @@ import org.finra.herd.ui.constants.UiConstants;
 @RestController
 @RequestMapping(value = UiConstants.REST_URL_BASE, produces = {"application/xml", "application/json"})
 @Api(tags = "Storage")
-public class StorageRestController extends HerdBaseController
+class StorageRestController extends HerdBaseController
 {
-    public static final String STORAGES_URI_PREFIX = "/storages";
+    private static final String STORAGE_URI_PREFIX = "/storages";
 
     @Autowired
     private StorageService storageService;
@@ -49,46 +50,15 @@ public class StorageRestController extends HerdBaseController
     /**
      * Creates a new storage.
      *
-     * @param request the information needed to create the storage
+     * @param storageCreateRequest the information needed to create the storage
      *
      * @return the created storage information
      */
-    @RequestMapping(value = STORAGES_URI_PREFIX, method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = STORAGE_URI_PREFIX, method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_STORAGES_POST)
-    public Storage createStorage(@RequestBody StorageCreateRequest request)
+    Storage createStorage(@RequestBody StorageCreateRequest storageCreateRequest)
     {
-        return storageService.createStorage(request);
-    }
-
-    /**
-     * Updates an existing storage.
-     *
-     * @param storageName the name of the storage to update
-     * @param request the information needed to update the storage
-     *
-     * @return the updated storage information
-     */
-    @RequestMapping(value = STORAGES_URI_PREFIX + "/{storageName}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_STORAGES_PUT)
-    public Storage updateStorage(@PathVariable("storageName") String storageName, @RequestBody StorageUpdateRequest request)
-    {
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
-        return storageService.updateStorage(alternateKey, request);
-    }
-
-    /**
-     * Gets an existing storage by name.
-     *
-     * @param storageName the storage name
-     *
-     * @return the storage information
-     */
-    @RequestMapping(value = STORAGES_URI_PREFIX + "/{storageName}", method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_STORAGES_GET)
-    public Storage getStorage(@PathVariable("storageName") String storageName)
-    {
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
-        return storageService.getStorage(alternateKey);
+        return storageService.createStorage(storageCreateRequest);
     }
 
     /**
@@ -98,23 +68,66 @@ public class StorageRestController extends HerdBaseController
      *
      * @return the storage information of the storage that got deleted
      */
-    @RequestMapping(value = STORAGES_URI_PREFIX + "/{storageName}", method = RequestMethod.DELETE)
+    @RequestMapping(value = STORAGE_URI_PREFIX + "/{storageName}", method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_STORAGES_DELETE)
-    public Storage deleteStorage(@PathVariable("storageName") String storageName)
+    Storage deleteStorage(@PathVariable("storageName") String storageName)
     {
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
-        return storageService.deleteStorage(alternateKey);
+        return storageService.deleteStorage(new StorageKey(storageName));
     }
 
     /**
-     * Gets a list of namespace keys for all namespaces defined in the system.
+     * Gets a list of storage keys for all storage defined in the system.
      *
-     * @return the list of namespace keys
+     * @return the list of storage keys
      */
-    @RequestMapping(value = STORAGES_URI_PREFIX, method = RequestMethod.GET)
+    @RequestMapping(value = STORAGE_URI_PREFIX, method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_STORAGES_ALL_GET)
-    public StorageKeys getStorages()
+    StorageKeys getAllStorage()
     {
-        return storageService.getStorages();
+        return storageService.getAllStorage();
+    }
+
+    /**
+     * Gets an existing storage by name.
+     *
+     * @param storageName the storage name
+     *
+     * @return the storage information
+     */
+    @RequestMapping(value = STORAGE_URI_PREFIX + "/{storageName}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_STORAGES_GET)
+    Storage getStorage(@PathVariable("storageName") String storageName)
+    {
+        return storageService.getStorage(new StorageKey(storageName));
+    }
+
+    /**
+     * Updates an existing storage.
+     *
+     * @param storageName the name of the storage to update
+     * @param storageUpdateRequest the information needed to update the storage
+     *
+     * @return the updated storage information
+     */
+    @RequestMapping(value = STORAGE_URI_PREFIX + "/{storageName}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_STORAGES_PUT)
+    Storage updateStorage(@PathVariable("storageName") String storageName, @RequestBody StorageUpdateRequest storageUpdateRequest)
+    {
+        return storageService.updateStorage(new StorageKey(storageName), storageUpdateRequest);
+    }
+
+    /**
+     * Updates an existing storage attributes by storage name.
+     *
+     * @param storageName the name of the storage
+     * @param storageAttributesUpdateRequest the information needed to update storage attributes
+     *
+     * @return the updated storage information
+     */
+    @RequestMapping(value = "/storageAttributes/storages/{storageName}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_STORAGE_ATTRIBUTES_PUT)
+    Storage updateStorageAttributes(@PathVariable("storageName") String storageName, @RequestBody StorageAttributesUpdateRequest storageAttributesUpdateRequest)
+    {
+        return storageService.updateStorageAttributes(new StorageKey(storageName), storageAttributesUpdateRequest);
     }
 }

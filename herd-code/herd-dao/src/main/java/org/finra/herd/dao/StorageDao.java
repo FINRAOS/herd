@@ -23,18 +23,18 @@ import org.finra.herd.model.jpa.StorageEntity;
 public interface StorageDao extends BaseJpaDao
 {
     /**
+     * Gets a list of storage keys for all storage defined in the system.
+     *
+     * @return the list of storage keys
+     */
+    List<StorageKey> getAllStorage();
+
+    /**
      * Gets a storage by it's name.
      *
      * @param storageName the storage name (case-insensitive)
      *
      * @return the storage for the specified name
      */
-    public StorageEntity getStorageByName(String storageName);
-
-    /**
-     * Gets a list of storage keys for all storages defined in the system.
-     *
-     * @return the list of storage keys
-     */
-    public List<StorageKey> getStorages();
+    StorageEntity getStorageByName(String storageName);
 }
