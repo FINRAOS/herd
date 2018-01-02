@@ -187,11 +187,6 @@ public class CleanupDestroyedBusinessObjectDataServiceImpl implements CleanupDes
         notificationEventService
             .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG, businessObjectDataKey, null,
                 BusinessObjectDataStatusEntity.DELETED);
-
-        // Sent a business object data status change notification.
-        messageNotificationEventService
-            .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), null,
-                BusinessObjectDataStatusEntity.DELETED);
     }
 
     /**
