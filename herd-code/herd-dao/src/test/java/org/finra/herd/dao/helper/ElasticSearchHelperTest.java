@@ -269,7 +269,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, null, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
         List<Facet> tagFacet = new ArrayList<>();
-        tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME, null, FacetTypeEnum.TAG.value(), TAG_CODE, null));
+        tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME, 1L, FacetTypeEnum.TAG.value(), TAG_CODE, null));
 
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME_2, null, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE_2, tagFacet));
         expectedFacets.add(new Facet(SearchIndexTypeEntity.SearchIndexTypes.TAG.name(), 120L, FacetTypeEnum.RESULT_TYPE.value(),
@@ -304,7 +304,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, null, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
         List<Facet> tagFacet = new ArrayList<>();
-        tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME, null, FacetTypeEnum.TAG.value(), TAG_CODE, null));
+        tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME, 1L, FacetTypeEnum.TAG.value(), TAG_CODE, null));
 
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME_2, null, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE_2, tagFacet));
         assertEquals(expectedFacets, facets);
@@ -337,8 +337,8 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, null, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
         List<Facet> tagFacet = new ArrayList<>();
-        tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME, null, FacetTypeEnum.TAG.value(), TAG_CODE, null));
-        tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME_2, null, FacetTypeEnum.TAG.value(), TAG_CODE_2, null));
+        tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME, 1L, FacetTypeEnum.TAG.value(), TAG_CODE, null));
+        tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME_2, 1L, FacetTypeEnum.TAG.value(), TAG_CODE_2, null));
 
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME_2, null, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE_2, tagFacet));
         assertEquals(expectedFacets, facets);
@@ -371,10 +371,10 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME, null, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE, new ArrayList<>()));
 
         List<Facet> tagFacet = new ArrayList<>();
-        tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME, null, FacetTypeEnum.TAG.value(), TAG_CODE, null));
+        tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME, 1L, FacetTypeEnum.TAG.value(), TAG_CODE, null));
 
         List<Facet> newTagFacet = new ArrayList<>();
-        newTagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME_2, null, FacetTypeEnum.TAG.value(), TAG_CODE_2, null));
+        newTagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME_2, 1L, FacetTypeEnum.TAG.value(), TAG_CODE_2, null));
 
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME_2, null, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE_2, tagFacet));
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME_3, null, FacetTypeEnum.TAG_TYPE.value(), TAG_TYPE_CODE_3, newTagFacet));
