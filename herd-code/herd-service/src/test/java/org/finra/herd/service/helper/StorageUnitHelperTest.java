@@ -23,9 +23,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Before;
@@ -40,7 +40,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageUnit;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -82,12 +81,12 @@ public class StorageUnitHelperTest extends AbstractServiceTest
     public void testCreateStorageUnitKey()
     {
         // Get a storage unit key.
-        StorageUnitAlternateKeyDto result = storageUnitHelper.createStorageUnitKey(
+        BusinessObjectDataStorageUnitKey result = storageUnitHelper.createStorageUnitKey(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION), STORAGE_NAME);
 
         // Validate the result object.
-        assertEquals(new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        assertEquals(new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
             SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME), result);
     }
 
@@ -106,14 +105,14 @@ public class StorageUnitHelperTest extends AbstractServiceTest
         when(businessObjectDataHelper.getSubPartitionValues(storageUnitEntity.getBusinessObjectData())).thenReturn(SUBPARTITION_VALUES);
 
         // Call the method under test.
-        StorageUnitAlternateKeyDto result = storageUnitHelper.createStorageUnitKeyFromEntity(storageUnitEntity);
+        BusinessObjectDataStorageUnitKey result = storageUnitHelper.createStorageUnitKeyFromEntity(storageUnitEntity);
 
         // Verify the external calls.
         verify(businessObjectDataHelper).getSubPartitionValues(storageUnitEntity.getBusinessObjectData());
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        assertEquals(new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
             SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME), result);
     }
 

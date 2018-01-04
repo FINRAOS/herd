@@ -180,6 +180,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING_2 = "UT_BusinessObjectDataKeyAsString_2_" + RANDOM_SUFFIX;
 
+    public static final Integer BUSINESS_OBJECT_DATA_MAX_VERSION = 1;
+
     public static final Integer BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_NUMBER = 0;
 
     public static final Integer BUSINESS_OBJECT_DATA_SEARCH_NO_PAGE_NUMBER = null;
@@ -743,6 +745,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected BusinessObjectFormatServiceTestHelper businessObjectFormatServiceTestHelper;
+
+    @Autowired
+    protected CleanupDestroyedBusinessObjectDataService cleanupDestroyedBusinessObjectDataService;
 
     @Autowired
     protected CurrentUserService currentUserService;

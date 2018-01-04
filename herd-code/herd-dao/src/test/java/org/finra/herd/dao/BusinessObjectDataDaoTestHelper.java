@@ -99,6 +99,39 @@ public class BusinessObjectDataDaoTestHelper
     public BusinessObjectDataEntity createBusinessObjectDataEntity(String namespaceCode, String businessObjectDefinitionName, String businessObjectFormatUsage,
         String businessObjectFormatFileType, Integer businessObjectFormatVersion, String businessObjectDataPartitionValue,
         List<String> businessObjectDataSubPartitionValues, Integer businessObjectDataVersion, Boolean businessObjectDataLatestVersion,
+        String businessObjectDataStatusCode, List<BusinessObjectDataEntity> businessObjectDataParents)
+    {
+        // Create a business object format entity if it does not exist.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
+            new BusinessObjectFormatKey(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion));
+        if (businessObjectFormatEntity == null)
+        {
+            businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                    businessObjectFormatVersion, AbstractDaoTest.FORMAT_DESCRIPTION, true, AbstractDaoTest.PARTITION_KEY);
+        }
+
+        // Create a business object data status entity if it does not exist.
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
+            businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(businessObjectDataStatusCode);
+        if (businessObjectDataStatusEntity == null)
+        {
+            businessObjectDataStatusEntity = businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(businessObjectDataStatusCode);
+        }
+
+        return createBusinessObjectDataEntity(businessObjectFormatEntity, businessObjectDataPartitionValue, businessObjectDataSubPartitionValues,
+            businessObjectDataVersion, businessObjectDataLatestVersion, businessObjectDataStatusEntity, businessObjectDataParents);
+    }
+
+    /**
+     * Creates and persists a new business object data entity.
+     *
+     * @return the newly created business object data entity.
+     */
+    public BusinessObjectDataEntity createBusinessObjectDataEntity(String namespaceCode, String businessObjectDefinitionName, String businessObjectFormatUsage,
+        String businessObjectFormatFileType, Integer businessObjectFormatVersion, String businessObjectDataPartitionValue,
+        List<String> businessObjectDataSubPartitionValues, Integer businessObjectDataVersion, Boolean businessObjectDataLatestVersion,
         String businessObjectDataStatusCode)
     {
         // Create a business object format entity if it does not exist.
@@ -201,6 +234,42 @@ public class BusinessObjectDataDaoTestHelper
         businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataEntity.setLatestVersion(businessObjectDataLatestVersion);
         businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
+
+        // Add an entry to the business object data status history table.
+        BusinessObjectDataStatusHistoryEntity businessObjectDataStatusHistoryEntity = new BusinessObjectDataStatusHistoryEntity();
+        businessObjectDataStatusHistoryEntity.setBusinessObjectData(businessObjectDataEntity);
+        businessObjectDataStatusHistoryEntity.setStatus(businessObjectDataStatusEntity);
+        List<BusinessObjectDataStatusHistoryEntity> businessObjectDataStatusHistoryEntities = new ArrayList<>();
+        businessObjectDataStatusHistoryEntities.add(businessObjectDataStatusHistoryEntity);
+        businessObjectDataEntity.setHistoricalStatuses(businessObjectDataStatusHistoryEntities);
+
+        return businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+    }
+
+    /**
+     * Creates and persists a new business object data entity.
+     *
+     * @return the newly created business object data entity.
+     */
+    public BusinessObjectDataEntity createBusinessObjectDataEntity(BusinessObjectFormatEntity businessObjectFormatEntity,
+        String businessObjectDataPartitionValue, List<String> businessObjectDataSubPartitionValues, Integer businessObjectDataVersion,
+        Boolean businessObjectDataLatestVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity,
+        List<BusinessObjectDataEntity> businessObjectDataParents)
+    {
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+        businessObjectDataEntity.setVersion(businessObjectDataVersion);
+        businessObjectDataEntity.setPartitionValue(businessObjectDataPartitionValue);
+        if (businessObjectDataSubPartitionValues != null)
+        {
+            businessObjectDataEntity.setPartitionValue2(businessObjectDataSubPartitionValues.size() > 0 ? businessObjectDataSubPartitionValues.get(0) : null);
+            businessObjectDataEntity.setPartitionValue3(businessObjectDataSubPartitionValues.size() > 1 ? businessObjectDataSubPartitionValues.get(1) : null);
+            businessObjectDataEntity.setPartitionValue4(businessObjectDataSubPartitionValues.size() > 2 ? businessObjectDataSubPartitionValues.get(2) : null);
+            businessObjectDataEntity.setPartitionValue5(businessObjectDataSubPartitionValues.size() > 3 ? businessObjectDataSubPartitionValues.get(3) : null);
+        }
+        businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+        businessObjectDataEntity.setLatestVersion(businessObjectDataLatestVersion);
+        businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
+        businessObjectDataEntity.setBusinessObjectDataParents(businessObjectDataParents);
 
         // Add an entry to the business object data status history table.
         BusinessObjectDataStatusHistoryEntity businessObjectDataStatusHistoryEntity = new BusinessObjectDataStatusHistoryEntity();

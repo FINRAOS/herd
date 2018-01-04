@@ -28,12 +28,9 @@ import org.finra.herd.model.api.xml.BuildInformation;
 import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.databridge.DataBridgeApp;
 
-/**
- * Unit tests for ExporterApp class.
- */
-public class ExporterAppTest extends AbstractExporterTest
+public class RetentionExpirationExporterAppTest extends AbstractExporterTest
 {
-    private ExporterApp exporterApp = new ExporterApp()
+    private RetentionExpirationExporterApp retentionExpirationExporterApp = new RetentionExpirationExporterApp()
     {
         protected ApplicationContext createApplicationContext()
         {
@@ -49,7 +46,7 @@ public class ExporterAppTest extends AbstractExporterTest
                 "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
                 "INVALID_BOOLEAN_VALUE", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
 
-        runApplicationAndCheckReturnValue(exporterApp, arguments, null, ToolsCommonConstants.ReturnValue.FAILURE);
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, ToolsCommonConstants.ReturnValue.FAILURE);
     }
 
     @Test
@@ -61,23 +58,18 @@ public class ExporterAppTest extends AbstractExporterTest
                 "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
 
         // We are expecting this to fail with an UnknownHostException.
-        runApplicationAndCheckReturnValue(exporterApp, arguments, null, new UnknownHostException());
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new UnknownHostException());
     }
 
     @Test
     public void testParseCommandLineArgumentsHelpOpt() throws Exception
     {
-        String output = runTestGetSystemOut(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                String[] arguments = {"--help"};
-                assertEquals(ToolsCommonConstants.ReturnValue.SUCCESS, exporterApp.parseCommandLineArguments(arguments, applicationContext));
-            }
+        String output = runTestGetSystemOut(() -> {
+            String[] arguments = {"--help"};
+            assertEquals(ToolsCommonConstants.ReturnValue.SUCCESS, retentionExpirationExporterApp.parseCommandLineArguments(arguments, applicationContext));
         });
 
-        assertTrue("Incorrect usage information returned.", output.startsWith("usage: " + ExporterApp.APPLICATION_NAME));
+        assertTrue("Incorrect usage information returned.", output.startsWith("usage: " + RetentionExpirationExporterApp.APPLICATION_NAME));
     }
 
     @Test
@@ -89,13 +81,13 @@ public class ExporterAppTest extends AbstractExporterTest
                 "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
 
         // We are expecting this to fail with a NumberFormatException.
-        runApplicationAndCheckReturnValue(exporterApp, arguments, null, new NumberFormatException());
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new NumberFormatException());
     }
 
     @Test
     public void testParseCommandLineArgumentsNone() throws Exception
     {
-        assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(new String[] {}, applicationContext));
+        assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, retentionExpirationExporterApp.parseCommandLineArguments(new String[] {}, applicationContext));
     }
 
     @Test
@@ -105,7 +97,7 @@ public class ExporterAppTest extends AbstractExporterTest
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
                 "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
                 "true", "--username", WEB_SERVICE_HTTPS_USERNAME};
-        assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(arguments, applicationContext));
+        assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, retentionExpirationExporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 
     @Test
@@ -115,20 +107,15 @@ public class ExporterAppTest extends AbstractExporterTest
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
                 "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
                 "true", "--password", WEB_SERVICE_HTTPS_PASSWORD};
-        assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(arguments, applicationContext));
+        assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, retentionExpirationExporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 
     @Test
     public void testParseCommandLineArgumentsVersionOpt()
     {
-        String output = runTestGetSystemOut(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                String[] arguments = {"--version"};
-                assertEquals(ToolsCommonConstants.ReturnValue.SUCCESS, exporterApp.parseCommandLineArguments(arguments, applicationContext));
-            }
+        String output = runTestGetSystemOut(() -> {
+            String[] arguments = {"--version"};
+            assertEquals(ToolsCommonConstants.ReturnValue.SUCCESS, retentionExpirationExporterApp.parseCommandLineArguments(arguments, applicationContext));
         });
 
         BuildInformation buildInformation = applicationContext.getBean(BuildInformation.class);
@@ -143,6 +130,6 @@ public class ExporterAppTest extends AbstractExporterTest
     {
         String[] arguments = {"-n", NAMESPACE, "-b", BUSINESS_OBJECT_DEFINITION_NAME, "-o", LOCAL_OUTPUT_FILE, "-H", WEB_SERVICE_HOSTNAME, "-P",
             WEB_SERVICE_HTTPS_PORT.toString(), "-c", UDC_SERVICE_HOSTNAME, "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD};
-        assertNull(exporterApp.parseCommandLineArguments(arguments, applicationContext));
+        assertNull(retentionExpirationExporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 }

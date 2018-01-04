@@ -34,7 +34,6 @@ import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitStatusChangeEvent;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageAttributeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -81,9 +80,9 @@ public class StorageUnitHelper
      *
      * @return the storage unit key
      */
-    public StorageUnitAlternateKeyDto createStorageUnitKey(BusinessObjectDataKey businessObjectDataKey, String storageName)
+    public BusinessObjectDataStorageUnitKey createStorageUnitKey(BusinessObjectDataKey businessObjectDataKey, String storageName)
     {
-        return new StorageUnitAlternateKeyDto(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+        return new BusinessObjectDataStorageUnitKey(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
             businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
             businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues(),
             businessObjectDataKey.getBusinessObjectDataVersion(), storageName);
@@ -96,13 +95,13 @@ public class StorageUnitHelper
      *
      * @return the storage unit key
      */
-    public StorageUnitAlternateKeyDto createStorageUnitKeyFromEntity(StorageUnitEntity storageUnitEntity)
+    public BusinessObjectDataStorageUnitKey createStorageUnitKeyFromEntity(StorageUnitEntity storageUnitEntity)
     {
         // Get the business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = storageUnitEntity.getBusinessObjectData();
 
         // Create and initialize the storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = new StorageUnitAlternateKeyDto();
+        BusinessObjectDataStorageUnitKey storageUnitKey = new BusinessObjectDataStorageUnitKey();
         storageUnitKey.setNamespace(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode());
         storageUnitKey.setBusinessObjectDefinitionName(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName());
         storageUnitKey.setBusinessObjectFormatUsage(businessObjectDataEntity.getBusinessObjectFormat().getUsage());

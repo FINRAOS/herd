@@ -496,8 +496,10 @@ public class ElasticsearchHelper
         {
             for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos())
             {
+                long facetCount = tagIndexSearchResponseDto.getCount();
                 Facet tagFacet =
-                    new Facet(tagIndexSearchResponseDto.getTagDisplayName(), null, FacetTypeEnum.TAG.value(), tagIndexSearchResponseDto.getTagCode(), null);
+                    new Facet(tagIndexSearchResponseDto.getTagDisplayName(), facetCount, FacetTypeEnum.TAG.value(), tagIndexSearchResponseDto.getTagCode(),
+                        null);
                 tagFacets.add(tagFacet);
             }
         }
@@ -554,8 +556,9 @@ public class ElasticsearchHelper
                             }
                             if (!foundMatchingTagCode)
                             {
-                                tagFacet.getFacets()
-                                    .add(new Facet(tagIndexDto.getTagDisplayName(), null, FacetTypeEnum.TAG.value(), tagIndexDto.getTagCode(), null));
+                                tagFacet.getFacets().add(
+                                    new Facet(tagIndexDto.getTagDisplayName(), tagIndexDto.getCount(), FacetTypeEnum.TAG.value(), tagIndexDto.getTagCode(),
+                                        null));
                             }
                         }
                     }
