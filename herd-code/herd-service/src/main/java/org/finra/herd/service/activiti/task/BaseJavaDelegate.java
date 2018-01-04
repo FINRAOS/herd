@@ -16,6 +16,7 @@
 package org.finra.herd.service.activiti.task;
 
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import org.activiti.engine.delegate.BpmnError;
 import org.activiti.engine.delegate.DelegateExecution;
@@ -150,6 +151,9 @@ public abstract class BaseJavaDelegate implements JavaDelegate
 
             // Set the MDC property for the Activiti process instance ID.
             MDC.put(ACTIVITI_PROCESS_INSTANCE_ID_KEY, "activitiProcessInstanceId=" + execution.getProcessInstanceId());
+
+            // Log all input variables from the execution (before the execution starts).
+            logInputParameters(execution);
 
             // Perform the execution implementation handled in the sub-class.
             executeImpl(execution);
@@ -323,5 +327,17 @@ public abstract class BaseJavaDelegate implements JavaDelegate
         }
 
         return request;
+    }
+
+    /**
+     * Loops through all process variables and logs them.
+     *
+     * @param execution the execution information
+     */
+    protected void logInputParameters(DelegateExecution execution)
+    {
+        LOGGER.info("{} Input parameters for {}: {}", activitiHelper.getProcessIdentifyingInformation(execution), this.getClass().getName(),
+            execution.getVariables().entrySet().stream().map(entry -> entry.getKey() + "=" + jsonHelper.objectToJson(entry.getValue()))
+                .collect(Collectors.joining(" ")));
     }
 }

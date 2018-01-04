@@ -38,6 +38,7 @@ import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
 import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
@@ -46,7 +47,6 @@ import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity;
@@ -138,13 +138,13 @@ public class BusinessObjectDataHelper
         String businessObjectFormatFileType, int businessObjectFormatVersion, String businessObjectDataPartitionValue,
         List<String> businessObjectDataSubPartitionValues, int businessObjectDataVersion)
     {
-        return String
-            .format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+        return String.format(
+            "namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
                 "businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", businessObjectDataSubPartitionValues: \"%s\", " +
                 "businessObjectDataVersion: %d", namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, businessObjectDataPartitionValue,
-                org.springframework.util.CollectionUtils.isEmpty(businessObjectDataSubPartitionValues) ? "" :
-                    StringUtils.join(businessObjectDataSubPartitionValues, ","), businessObjectDataVersion);
+            businessObjectFormatVersion, businessObjectDataPartitionValue,
+            org.springframework.util.CollectionUtils.isEmpty(businessObjectDataSubPartitionValues) ? "" :
+                StringUtils.join(businessObjectDataSubPartitionValues, ","), businessObjectDataVersion);
     }
 
     /**
@@ -337,7 +337,7 @@ public class BusinessObjectDataHelper
      *
      * @return the business object data key.
      */
-    public BusinessObjectDataKey createBusinessObjectDataKeyFromStorageUnitKey(StorageUnitAlternateKeyDto storageUnitKey)
+    public BusinessObjectDataKey createBusinessObjectDataKeyFromStorageUnitKey(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         return new BusinessObjectDataKey(storageUnitKey.getNamespace(), storageUnitKey.getBusinessObjectDefinitionName(),
             storageUnitKey.getBusinessObjectFormatUsage(), storageUnitKey.getBusinessObjectFormatFileType(), storageUnitKey.getBusinessObjectFormatVersion(),
@@ -588,8 +588,8 @@ public class BusinessObjectDataHelper
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateBusinessObjectDataKey(BusinessObjectDataKey key, boolean businessObjectFormatVersionRequired, boolean businessObjectDataVersionRequired)
-        throws IllegalArgumentException
+    public void validateBusinessObjectDataKey(BusinessObjectDataKey key, boolean businessObjectFormatVersionRequired,
+        boolean businessObjectDataVersionRequired) throws IllegalArgumentException
     {
         // Validate and remove leading and trailing spaces.
         Assert.notNull(key, "A business object data key must be specified.");
@@ -687,9 +687,9 @@ public class BusinessObjectDataHelper
                 // Validate that partition value tokens are not specified as start and end partition values.
                 // This check is required, regardless if partition value tokens are allowed or not.
                 Assert.isTrue(!partitionValueRange.getStartPartitionValue().equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
-                    !partitionValueRange.getStartPartitionValue().equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN) &&
-                    !partitionValueRange.getEndPartitionValue().equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
-                    !partitionValueRange.getEndPartitionValue().equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
+                        !partitionValueRange.getStartPartitionValue().equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN) &&
+                        !partitionValueRange.getEndPartitionValue().equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
+                        !partitionValueRange.getEndPartitionValue().equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
                     "A partition value token cannot be specified with a partition value range.");
 
                 // Using string compare, validate that start partition value is less than or equal to end partition value.
@@ -714,7 +714,7 @@ public class BusinessObjectDataHelper
                     if (!allowPartitionValueTokens)
                     {
                         Assert.isTrue(!partitionValue.equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
-                            !partitionValue.equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
+                                !partitionValue.equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
                             "A partition value token cannot be specified as one of partition values.");
                     }
 

@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.impl;
 
 import java.io.IOException;
@@ -170,6 +170,11 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
                 checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION);
                 buildSearchBusinessObjectDataResponse(response, uri);
             }
+            else if (uri.getPath().startsWith("/herd-app/rest/businessObjectData/destroy"))
+            {
+                checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION);
+                buildPostBusinessObjectDataResponse(response, uri);
+            }
         }
         else if (request instanceof HttpPut)
         {
@@ -270,6 +275,7 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
             BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
             businessObjectDefinition.setNamespace(matcher.group(1));
             businessObjectDefinition.setBusinessObjectDefinitionName(matcher.group(2));
+            businessObjectDefinition.setDisplayName("testBusinessObjectDefinitionDisplayName");
             response.setEntity(getHttpEntity(businessObjectDefinition));
         }
     }
@@ -291,22 +297,30 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
         {
             List<BusinessObjectData> businessObjectDataElements = new ArrayList<>();
 
-            for (int i = 0; i < 3; i++)
-            {
-                BusinessObjectData businessObjectData = new BusinessObjectData();
+            // Add business object data with sub-partitions.
+            BusinessObjectData businessObjectDataWithSubPartitions = new BusinessObjectData();
+            businessObjectDataWithSubPartitions.setNamespace("testNamespace");
+            businessObjectDataWithSubPartitions.setBusinessObjectDefinitionName("testBusinessObjectDefinitionName");
+            businessObjectDataWithSubPartitions.setBusinessObjectFormatUsage("testBusinessObjectFormatUsage");
+            businessObjectDataWithSubPartitions.setBusinessObjectFormatFileType("testBusinessObjectFormatFileType");
+            businessObjectDataWithSubPartitions.setBusinessObjectFormatVersion(9);
+            businessObjectDataWithSubPartitions.setPartitionValue("primaryPartitionValue");
+            businessObjectDataWithSubPartitions
+                .setSubPartitionValues(Arrays.asList("subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4"));
+            businessObjectDataWithSubPartitions.setVersion(5);
+            businessObjectDataElements.add(businessObjectDataWithSubPartitions);
 
-                businessObjectData.setNamespace("testNamespace");
-                businessObjectData.setBusinessObjectDefinitionName("testBusinessObjectDefinitionName");
-                businessObjectData.setBusinessObjectFormatUsage("testBusinessObjectFormatUsage");
-                businessObjectData.setBusinessObjectFormatFileType("testBusinessObjectFormatFileType");
-                businessObjectData.setBusinessObjectFormatVersion(9);
-                businessObjectData.setPartitionValue("primaryPartitionValue-" + i);
-                businessObjectData.setSubPartitionValues(
-                    Arrays.asList("subPartitionValue1-" + i, "subPartitionValue2-" + i, "subPartitionValue3-" + i, "subPartitionValue4-" + i));
-                businessObjectData.setVersion(5);
-
-                businessObjectDataElements.add(businessObjectData);
-            }
+            // Add business object data without sub-partitions.
+            BusinessObjectData businessObjectDataWithoutSubPartitions = new BusinessObjectData();
+            businessObjectDataWithoutSubPartitions.setNamespace("testNamespace");
+            businessObjectDataWithoutSubPartitions.setBusinessObjectDefinitionName("testBusinessObjectDefinitionName");
+            businessObjectDataWithoutSubPartitions.setBusinessObjectFormatUsage("testBusinessObjectFormatUsage");
+            businessObjectDataWithoutSubPartitions.setBusinessObjectFormatFileType("testBusinessObjectFormatFileType");
+            businessObjectDataWithoutSubPartitions.setBusinessObjectFormatVersion(9);
+            businessObjectDataWithoutSubPartitions.setPartitionValue("primaryPartitionValue");
+            businessObjectDataWithoutSubPartitions.setSubPartitionValues(null);
+            businessObjectDataWithoutSubPartitions.setVersion(5);
+            businessObjectDataElements.add(businessObjectDataWithoutSubPartitions);
 
             businessObjectDataSearchResult.setBusinessObjectDataElements(businessObjectDataElements);
         }

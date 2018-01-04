@@ -62,4 +62,14 @@ public class LogVariables extends BaseJavaDelegate
             }
         }
     }
+
+    /**
+     * Overrite this method to prevent all process variables from being logged before the execution of this Activiti task.
+     *
+     * @param execution the execution information
+     */
+    @Override
+    protected void logInputParameters(DelegateExecution execution)
+    {
+    }
 }

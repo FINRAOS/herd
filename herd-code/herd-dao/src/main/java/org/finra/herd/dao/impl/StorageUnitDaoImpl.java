@@ -40,6 +40,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity_;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -60,6 +61,50 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 @Repository
 public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDao
 {
+    @Override
+    public List<StorageUnitEntity> getS3StorageUnitsToCleanup(int maxResult)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<StorageUnitEntity> criteria = builder.createQuery(StorageUnitEntity.class);
+
+        // The criteria root is the storage unit.
+        Root<StorageUnitEntity> storageUnitEntityRoot = criteria.from(StorageUnitEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.storage);
+        Join<StorageEntity, StoragePlatformEntity> storagePlatformEntityJoin = storageEntityJoin.join(StorageEntity_.storagePlatform);
+        Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.status);
+        Join<StorageUnitEntity, BusinessObjectDataEntity> businessObjectDataEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.businessObjectData);
+        Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> businessObjectDataStatusEntity =
+            businessObjectDataEntityJoin.join(BusinessObjectDataEntity_.status);
+
+
+        // Get the current time.
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        // Restrictions include:
+        //      - Storage platform is set to S3 storage
+        //      - Storage unit status is DISABLED
+        //      - Associated BData has a DELETED status
+        //      - Final destroy on timestamp < current time
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(storagePlatformEntityJoin.get(StoragePlatformEntity_.name), StoragePlatformEntity.S3));
+        predicates.add(builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.DISABLED));
+        predicates.add(builder.equal(businessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code), BusinessObjectDataStatusEntity.DELETED));
+        predicates.add(builder.lessThan(storageUnitEntityRoot.get(StorageUnitEntity_.finalDestroyOn), currentTime));
+
+        // Order the results.
+        Order orderBy = builder.asc(storageUnitEntityRoot.get(StorageUnitEntity_.finalDestroyOn));
+
+        // Add the clauses for the query.
+        criteria.select(storageUnitEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderBy);
+
+        // Execute the query and return the results.
+        return entityManager.createQuery(criteria).setMaxResults(maxResult).getResultList();
+    }
+
     @Override
     public List<StorageUnitEntity> getS3StorageUnitsToExpire(int maxResult)
     {
@@ -218,16 +263,16 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         criteria.select(storageUnitEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
 
         // Execute the query and return the result.
-        return executeSingleResultQuery(criteria, String
-            .format("Found more than one business object data storage unit instance with parameters {namespace=\"%s\", businessObjectDefinitionName=\"%s\"," +
+        return executeSingleResultQuery(criteria, String.format(
+            "Found more than one business object data storage unit instance with parameters {namespace=\"%s\", businessObjectDefinitionName=\"%s\"," +
                 " businessObjectFormatUsage=\"%s\", businessObjectFormatFileType=\"%s\", businessObjectFormatVersion=\"%d\"," +
                 " businessObjectDataPartitionValue=\"%s\", businessObjectDataSubPartitionValues=\"%s\", businessObjectDataVersion=\"%d\"," +
                 " storageName=\"%s\"}.", businessObjectDataStorageUnitKey.getNamespace(), businessObjectDataStorageUnitKey.getBusinessObjectDefinitionName(),
-                businessObjectDataStorageUnitKey.getBusinessObjectFormatUsage(), businessObjectDataStorageUnitKey.getBusinessObjectFormatFileType(),
-                businessObjectDataStorageUnitKey.getBusinessObjectFormatVersion(), businessObjectDataStorageUnitKey.getPartitionValue(),
-                CollectionUtils.isEmpty(businessObjectDataStorageUnitKey.getSubPartitionValues()) ? "" :
-                    StringUtils.join(businessObjectDataStorageUnitKey.getSubPartitionValues(), ","),
-                businessObjectDataStorageUnitKey.getBusinessObjectDataVersion(), businessObjectDataStorageUnitKey.getStorageName()));
+            businessObjectDataStorageUnitKey.getBusinessObjectFormatUsage(), businessObjectDataStorageUnitKey.getBusinessObjectFormatFileType(),
+            businessObjectDataStorageUnitKey.getBusinessObjectFormatVersion(), businessObjectDataStorageUnitKey.getPartitionValue(),
+            CollectionUtils.isEmpty(businessObjectDataStorageUnitKey.getSubPartitionValues()) ? "" :
+                StringUtils.join(businessObjectDataStorageUnitKey.getSubPartitionValues(), ","),
+            businessObjectDataStorageUnitKey.getBusinessObjectDataVersion(), businessObjectDataStorageUnitKey.getStorageName()));
     }
 
     @Override
