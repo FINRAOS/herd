@@ -17,8 +17,11 @@ package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.List;
 
 import javax.persistence.PersistenceException;
 
@@ -30,55 +33,27 @@ import org.finra.herd.core.Command;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.StorageCreateRequest;
 import org.finra.herd.model.api.xml.StorageKey;
 import org.finra.herd.model.api.xml.StorageKeys;
 import org.finra.herd.model.api.xml.StorageUpdateRequest;
-import org.finra.herd.model.dto.StorageAlternateKeyDto;
+import org.finra.herd.model.jpa.StorageAttributeEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 
-/**
- * This class tests various functionality within the storage REST controller.
- */
 public class StorageServiceTest extends AbstractServiceTest
 {
     @Test
-    public void testCreateStorage() throws Exception
+    public void testCreateStorage()
     {
         // Create and persist a valid storage.
-        StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-
-        Storage storage = storageService.createStorage(storageCreateRequest);
-
-        assertNotNull(storage);
-        assertTrue(storage.getName().equals(storageCreateRequest.getName()));
-
-        // Check if result list of attributes matches to the list from the create request.
-        businessObjectDefinitionServiceTestHelper.validateAttributes(storageCreateRequest.getAttributes(), storage.getAttributes());
-    }
-
-    @Test
-    public void testCreateStorageMissingOptionalParameters() throws Exception
-    {
-        // Create and persist a valid storage without specifying optional parameters.
         StorageCreateRequest request = getNewStorageCreateRequest();
-        request.setAttributes(null);
-        Storage storage = storageService.createStorage(request);
+        Storage result = storageService.createStorage(request);
 
-        // Validate the returned object.
-        assertNotNull(storage);
-        assertTrue(storage.getName().equals(request.getName()));
-        assertTrue(storage.getAttributes().isEmpty());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testCreateStorageNoName() throws Exception
-    {
-        // Leave the storage name blank which is invalid.
-        StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        storageCreateRequest.setName(null);
-        storageService.createStorage(storageCreateRequest);
+        // Validate the results.
+        assertEquals(new Storage(request.getName(), request.getStoragePlatformName(), request.getAttributes()), result);
     }
 
     @Test
@@ -107,99 +82,71 @@ public class StorageServiceTest extends AbstractServiceTest
         }
     }
 
-    @Test(expected = AlreadyExistsException.class)
-    public void testCreateStorageAlreadyExists() throws Exception
+    @Test
+    public void testCreateStorageMissingOptionalParameters()
     {
-        // Create and persist a valid storage.
-        StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        storageService.createStorage(storageCreateRequest);
+        // Create and persist a valid storage without specifying optional parameters.
+        StorageCreateRequest request = getNewStorageCreateRequest();
+        request.setAttributes(null);
+        Storage result = storageService.createStorage(request);
 
-        // Try creating it again which is invalid since it already exists.
-        storageService.createStorage(storageCreateRequest);
+        // Validate the results.
+        assertEquals(new Storage(request.getName(), request.getStoragePlatformName(), NO_ATTRIBUTES), result);
     }
 
     @Test
-    public void testUpdateStorage() throws Exception
+    public void testCreateStorageMissingRequiredParameters()
     {
-        // Create a valid storage.
-        StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        storageService.createStorage(storageCreateRequest);
-
-        // Update the storage platform which is valid.
-        StorageUpdateRequest storageUpdateRequest = new StorageUpdateRequest();
-
-        // TODO: Update various attributes of the storage update request in the future when there is something to update.
-
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageCreateRequest.getName()).build();
-        storageService.updateStorage(alternateKey, storageUpdateRequest);
-
-        // TODO: Add asserts to ensure fields that were update indeed got updated.
-    }
-
-    @Test(expected = ObjectNotFoundException.class)
-    public void testUpdateStorageNoExists() throws Exception
-    {
-        // Create and persist a valid storage.
-        StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-
-        // Try updating a storage that doesn't yet exist which is invalid.
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageCreateRequest.getName()).build();
-        storageService.updateStorage(alternateKey, new StorageUpdateRequest());
+        // Try to create a storage without specifying a storage name.
+        try
+        {
+            storageService.createStorage(new StorageCreateRequest(BLANK_TEXT, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A storage name must be specified.", e.getMessage());
+        }
     }
 
     @Test
-    public void testGetStorage() throws Exception
+    public void testCreateStorageStorageAlreadyExists()
     {
         // Create and persist a valid storage.
         StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        String name = storageCreateRequest.getName();
-        Storage storage = storageService.createStorage(storageCreateRequest);
+        storageService.createStorage(storageCreateRequest);
 
-        // Retrieve the storage by it's name which is valid.
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storage.getName()).build();
-        storage = storageService.getStorage(alternateKey);
-        assertNotNull(storage);
-        assertTrue(storage.getName().equals(name));
+        // Try creating that storage again which is invalid since it already exists.
+        try
+        {
+            storageService.createStorage(storageCreateRequest);
+            fail();
+        }
+        catch (AlreadyExistsException e)
+        {
+            assertEquals(String.format("Storage with name \"%s\" already exists.", storageCreateRequest.getName()), e.getMessage());
+        }
+
     }
 
-    @Test(expected = ObjectNotFoundException.class)
-    public void testGetStorageInvalidName() throws Exception
-    {
-        // Try getting a storage that doesn't exist which is invalid.
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName("invalid" + getRandomSuffix()).build();
-        storageService.getStorage(alternateKey);
-    }
-
-    @Test(expected = ObjectNotFoundException.class)
-    public void testDeleteStorage() throws Exception
+    @Test
+    public void testDeleteStorage()
     {
         // Create and persist a valid storage.
-        StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        String name = storageCreateRequest.getName();
-        Storage storage = storageService.createStorage(storageCreateRequest);
+        Storage storage = storageService.createStorage(getNewStorageCreateRequest());
 
-        // Delete the storage by it's name which is valid.
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storage.getName()).build();
-        storage = storageService.deleteStorage(alternateKey);
-        assertNotNull(storage);
-        assertTrue(storage.getName().equals(name));
+        // Delete the storage.
+        Storage result = storageService.deleteStorage(new StorageKey(storage.getName()));
+        assertEquals(storage, result);
 
-        // Retrieve the storage by it's name and verify that it doesn't exist.
-        storageService.getStorage(alternateKey);
-    }
-
-    @Test(expected = ObjectNotFoundException.class)
-    public void testDeleteStorageInvalidName() throws Exception
-    {
-        // Delete a storage which doesn't exist.
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(getNewStorageCreateRequest().getName()).build();
-        storageService.deleteStorage(alternateKey);
+        // Retrieve the storage by its name and verify that it doesn't exist.
+        assertNull(storageDao.getStorageByName(storage.getName()));
     }
 
     /*
      * This test is ignored because the constraint validation is a DB dependent feature. This method had inconsistent behavior between Oracle and PostgreSQL.
      * Oracle was throwing the error after each statement, whereas PostgreSQL would not because it by default raises error only when transaction is committed.
-     * 
+     *
      * Besides, this test case is not valid as a use case as normal transactions wouldn't delete after insert within same transaction.
      */
     @Ignore
@@ -217,41 +164,186 @@ public class StorageServiceTest extends AbstractServiceTest
             public void execute()
             {
                 // Delete the storage which is invalid because there still exists a storage unit entity that references it.
-                StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageUnitEntity.getStorage().getName()).build();
+                StorageKey alternateKey = new StorageKey(storageUnitEntity.getStorage().getName());
                 storageService.deleteStorage(alternateKey);
             }
         });
     }
 
     @Test
-    public void testGetStorages() throws Exception
+    public void testDeleteStorageInvalidName()
     {
-        // Create and persist test storage entities.
-        for (StorageKey key : storageDaoTestHelper.getTestStorageKeys())
+        // Try to delete a storage which doesn't exist.
+        try
         {
-            storageDaoTestHelper.createStorageEntity(key.getStorageName());
+            storageService.deleteStorage(new StorageKey(INVALID_VALUE));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Storage with name \"%s\" doesn't exist.", INVALID_VALUE), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetAllStorage()
+    {
+        // Get a list of test storage keys.
+        List<StorageKey> storageKeys = storageDaoTestHelper.getTestStorageKeys();
+
+        // Create and persist test storage entities.
+        for (StorageKey storageKey : storageKeys)
+        {
+            storageDaoTestHelper.createStorageEntity(storageKey.getStorageName());
         }
 
         // Retrieve a list of storage keys.
-        StorageKeys resultStorageKeys = storageService.getStorages();
+        StorageKeys result = storageService.getAllStorage();
 
-        // Validate the returned object.
-        assertNotNull(resultStorageKeys);
-        assertTrue(resultStorageKeys.getStorageKeys().containsAll(storageDaoTestHelper.getTestStorageKeys()));
+        // Validate the results.
+        assertNotNull(result);
+        assertTrue(result.getStorageKeys().containsAll(storageKeys));
+    }
+
+    @Test
+    public void testGetStorage()
+    {
+        // Create and persist a valid storage.
+        Storage storage = storageService.createStorage(getNewStorageCreateRequest());
+
+        // Retrieve the storage by its name.
+        Storage result = storageService.getStorage(new StorageKey(storage.getName()));
+
+        // Validate the results.
+        assertEquals(storage, result);
+    }
+
+    @Test
+    public void testGetStorageInvalidStorageName()
+    {
+        // Try getting a storage that doesn't exist.
+        try
+        {
+            storageService.getStorage(new StorageKey(INVALID_VALUE));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Storage with name \"%s\" doesn't exist.", INVALID_VALUE), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateStorage()
+    {
+        // Create a storage.
+        Storage storage = storageService.createStorage(getNewStorageCreateRequest());
+
+        // Update the storage.
+        // TODO: Update various attributes of the storage update request in the future when there is something to update.
+        Storage result = storageService.updateStorage(new StorageKey(storage.getName()), new StorageUpdateRequest());
+
+        // Validate the results.
+        // TODO: Add asserts to ensure fields that were update indeed got updated.
+        assertEquals(new Storage(storage.getName(), storage.getStoragePlatformName(), storage.getAttributes()), result);
+    }
+
+    @Test
+    public void testUpdateStorageAttributes()
+    {
+
+        // Create and persist a valid storage.
+        StorageCreateRequest request = getNewStorageCreateRequest();
+        Storage storage = storageService.createStorage(request);
+
+        // Update attributes for the storage.
+        Storage result = storageService.updateStorageAttributes(new StorageKey(storage.getName()),
+            new StorageAttributesUpdateRequest(businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
+
+        // Validate the results.
+        assertEquals(new Storage(storage.getName(), storage.getStoragePlatformName(), businessObjectDefinitionServiceTestHelper.getNewAttributes2()), result);
+    }
+
+    @Test
+    public void testUpdateStorageAttributesRemoveAllAttributes()
+    {
+        // Create and persist a valid storage.
+        StorageCreateRequest request = getNewStorageCreateRequest();
+        Storage storage = storageService.createStorage(request);
+
+        // Update attributes for the storage.
+        Storage result = storageService.updateStorageAttributes(new StorageKey(storage.getName()), new StorageAttributesUpdateRequest(NO_ATTRIBUTES));
+
+        // Validate the results.
+        assertEquals(new Storage(storage.getName(), storage.getStoragePlatformName(), NO_ATTRIBUTES), result);
+    }
+
+    @Test
+    public void testUpdateStorageAttributesStorageHasDuplicateAttributes()
+    {
+        // Create and persist a valid storage.
+        StorageCreateRequest request = getNewStorageCreateRequest();
+        Storage storage = storageService.createStorage(request);
+
+        // Add a duplicate attribute to the storage.
+        StorageEntity storageEntity = storageDao.getStorageByName(storage.getName());
+        StorageAttributeEntity storageAttributeEntity = new StorageAttributeEntity();
+        storageAttributeEntity.setStorage(storageEntity);
+        storageAttributeEntity.setName(request.getAttributes().get(0).getName().toUpperCase());
+        storageEntity.getAttributes().add(storageAttributeEntity);
+        storageDao.saveAndRefresh(storageEntity);
+
+        // Try to update attributes for the storage.
+        try
+        {
+            storageService.updateStorageAttributes(new StorageKey(storage.getName()),
+                new StorageAttributesUpdateRequest(businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Found duplicate attribute with name \"%s\" for \"%s\" storage.", request.getAttributes().get(0).getName().toLowerCase(),
+                storage.getName()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateStorageAttributesStorageNoExists()
+    {
+        // Try to update attributes for a storage that doesn't yet exist.
+        try
+        {
+            storageService.updateStorageAttributes(new StorageKey(INVALID_VALUE),
+                new StorageAttributesUpdateRequest(businessObjectDefinitionServiceTestHelper.getNewAttributes()));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Storage with name \"%s\" doesn't exist.", INVALID_VALUE), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateStorageStorageNoExists()
+    {
+        // Try to update a storage that doesn't yet exist.
+        try
+        {
+            storageService.updateStorage(new StorageKey(INVALID_VALUE), new StorageUpdateRequest());
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Storage with name \"%s\" doesn't exist.", INVALID_VALUE), e.getMessage());
+        }
     }
 
     /**
      * Creates (but does not persist) a new valid storage create request.
      *
-     * @return a new storage.
+     * @return a new storage create request
      */
     private StorageCreateRequest getNewStorageCreateRequest()
     {
-        String name = "StorageTest" + getRandomSuffix();
-        StorageCreateRequest storageRequest = new StorageCreateRequest();
-        storageRequest.setStoragePlatformName(StoragePlatformEntity.S3);
-        storageRequest.setName(name);
-        storageRequest.setAttributes(businessObjectDefinitionServiceTestHelper.getNewAttributes());
-        return storageRequest;
+        return new StorageCreateRequest(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDefinitionServiceTestHelper.getNewAttributes());
     }
 }
