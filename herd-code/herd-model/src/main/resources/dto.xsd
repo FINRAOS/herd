@@ -104,6 +104,24 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="businessObjectDataSearchResult">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.api.xml.BusinessObjectDataSearchResult"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataSearchResultPagingInfoDto">
+      <xs:complexContent>
+         <xs:extension base="pagingInfoDto">
+            <xs:sequence>
+               <xs:element name="businessObjectDataSearchResult" type="businessObjectDataSearchResult" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
    <!-- This object is used to parse Elasticsearch responses. Do not modify this DTO unless there are changes done to the relative Elasticsearch index. -->
    <xs:complexType name="businessObjectDefinitionIndexSearchResponseDto">
       <xs:sequence>
@@ -310,6 +328,17 @@
          <xs:element name="messageDestination" type="xs:string" minOccurs="0"/>
          <xs:element name="messageText" type="xs:string" minOccurs="0"/>
          <xs:element name="messageHeaders" type="messageHeader" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="pagingInfoDto">
+      <xs:sequence>
+         <xs:element name="pageNum" type="xs:long" minOccurs="0"/>
+         <xs:element name="pageSize" type="xs:long" minOccurs="0"/>
+         <xs:element name="pageCount" type="xs:long" minOccurs="0"/>
+         <xs:element name="totalRecordsOnPage" type="xs:long" minOccurs="0"/>
+         <xs:element name="totalRecordCount" type="xs:long" minOccurs="0"/>
+         <xs:element name="maxResultsPerPage" type="xs:long" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 
