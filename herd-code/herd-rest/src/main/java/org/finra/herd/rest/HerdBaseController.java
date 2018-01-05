@@ -35,8 +35,7 @@ import org.finra.herd.model.dto.PagingInfoDto;
 public abstract class HerdBaseController
 {
     /**
-     * The HTTP header for the maximum number of results that will be returned on any page of data. The "pageSize" query parameter should not be greater than
-     * this value or an HTTP status of 400 (Bad Request) error would be returned.
+     * The HTTP header for the maximum number of results that will be returned on any page of data.
      */
     static final String HTTP_HEADER_PAGING_MAX_RESULTS_PER_PAGE = "Paging-MaxResultsPerPage";
 

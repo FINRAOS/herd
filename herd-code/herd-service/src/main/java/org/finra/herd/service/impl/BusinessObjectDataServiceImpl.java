@@ -551,7 +551,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         Long pageCount = totalRecordCount / pageSize + (totalRecordCount % pageSize > 0 ? 1 : 0);
 
         // Build and return the business object data search result with the paging information.
-        return new BusinessObjectDataSearchResultPagingInfoDto(Long.valueOf(pageNum), Long.valueOf(pageSize), pageCount, (long) businessObjectDataList.size(),
+        return new BusinessObjectDataSearchResultPagingInfoDto(pageNum.longValue(), pageSize.longValue(), pageCount, (long) businessObjectDataList.size(),
             totalRecordCount, (long) maxResultsPerPage, new BusinessObjectDataSearchResult(businessObjectDataList));
     }
 
