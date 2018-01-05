@@ -17,6 +17,7 @@ package org.finra.herd.service.helper;
 
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,12 +30,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
-import org.finra.herd.model.dto.ConfigurationValue;
 
-
-/*
- * a helper class Business Object Data Search 
- */
 @Component
 public class BusinessObjectDataSearchHelper
 {
@@ -48,144 +44,115 @@ public class BusinessObjectDataSearchHelper
     protected ConfigurationHelper configurationHelper;
 
     /**
-     * validate business object search request
+     * Validates a business object data search request.
      *
-     * @param request business object DATA search request
-     *
-     * @throws IllegalArgumentException when business object data search request is not valid
+     * @param businessObjectDataSearchRequest the business object data search request
      */
-    public void validateBusinesObjectDataSearchRequest(BusinessObjectDataSearchRequest request) throws IllegalArgumentException
+    public void validateBusinessObjectDataSearchRequest(BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
     {
-        Assert.notNull(request, "A Business Object Data SearchRequest must be specified");
-        List<BusinessObjectDataSearchFilter> businessObjectDataSearchFilters = request.getBusinessObjectDataSearchFilters();
-        Assert.isTrue(businessObjectDataSearchFilters != null, "Business Object Data Search Filters must be specified");
-        Assert.isTrue(businessObjectDataSearchFilters.size() == 1, "Business Object Data Search Filters can only have one filter");
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = request.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys();
+        Assert.notNull(businessObjectDataSearchRequest, "A business object data search request must be specified.");
 
-        Assert.isTrue(businessObjectDataSearchKeys != null, "A BusinessObject Search Key must be specified");
+        List<BusinessObjectDataSearchFilter> businessObjectDataSearchFilters = businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters();
 
-        Assert.isTrue(businessObjectDataSearchKeys.size() == 1, "A BusinessObject Search Key can only have one");
+        Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectDataSearchFilters), "A business object data search filter must be specified.");
 
-        for (BusinessObjectDataSearchKey key : businessObjectDataSearchKeys)
-        {
-            validateBusinessObjectDataKey(key);
-        }
+        Assert.isTrue(businessObjectDataSearchFilters.size() == 1, "A list of business object data search filters can only have one element.");
+
+        BusinessObjectDataSearchFilter businessObjectDataSearchFilter = businessObjectDataSearchFilters.get(0);
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = businessObjectDataSearchFilter.getBusinessObjectDataSearchKeys();
+
+        Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectDataSearchKeys), "A business object data search key must be specified.");
+
+        Assert.isTrue(businessObjectDataSearchKeys.size() == 1, "A list of business object data search keys can only have one element.");
+
+        validateBusinessObjectDataSearchKey(businessObjectDataSearchKeys.get(0));
     }
 
     /**
-     * Validate the business object search request pageNum parameter.
+     * Validates paging parameter value per specified criteria.
      *
-     * @param pageNum the page number parameter. Page numbers are one-based - that is the first page number is one.
+     * @param parameterName the name of the parameter
+     * @param parameterValue the parameter value, may be null
+     * @param defaultParameterValue the default parameter value
+     * @param maxParameterValue the maximum allowed parameter value
      *
-     * @return the validated page number
+     * @return the validated parameter value
      */
-    public Integer validateBusinessObjectDataSearchRequestPageNumParameter(Integer pageNum)
+    public Integer validatePagingParameter(String parameterName, Integer parameterValue, Integer defaultParameterValue, Integer maxParameterValue)
     {
-        int firstPage = 1;
-
-        // If the pageNum is null set the pageNum parameter to the default first page
-        if (pageNum == null)
+        if (parameterValue == null)
         {
-            pageNum = firstPage;
+            parameterValue = defaultParameterValue;
         }
-        // Check if pageNum is less than one
-        else if (pageNum < 1)
+        else if (parameterValue < 1)
         {
-            throw new IllegalArgumentException("A pageNum greater than 0 must be specified.");
+            throw new IllegalArgumentException(String.format("A %s greater than 0 must be specified.", parameterName));
+        }
+        else if (parameterValue > maxParameterValue)
+        {
+            throw new IllegalArgumentException(String.format("A %s less than %d must be specified.", parameterName, maxParameterValue));
         }
 
-        return pageNum;
+        return parameterValue;
     }
 
     /**
-     * Validate the business object search request pageSize parameter.
+     * Validates a business object data search key.
      *
-     * @param pageSize the page size parameter. From one to maximum page size.
-     *
-     * @return the validated pageSize
+     * @param businessObjectDataSearchKey the business object data search key
      */
-    public Integer validateBusinessObjectDataSearchRequestPageSizeParameter(Integer pageSize)
+    void validateBusinessObjectDataSearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey)
     {
-        int maxPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
+        Assert.notNull(businessObjectDataSearchKey, "A business object data search key must be specified.");
 
-        // If the pageSize is null set the pageSize to the maxPageSize default
-        if (pageSize == null)
+        businessObjectDataSearchKey.setNamespace(alternateKeyHelper.validateStringParameter("namespace", businessObjectDataSearchKey.getNamespace()));
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", businessObjectDataSearchKey.getBusinessObjectDefinitionName()));
+
+        if (businessObjectDataSearchKey.getBusinessObjectFormatUsage() != null)
         {
-            pageSize = maxPageSize;
-        }
-        // Check for pageSize less than one
-        else if (pageSize < 1)
-        {
-            throw new IllegalArgumentException("A pageSize greater than 0 must be specified.");
-        }
-        // Check the pageSize larger than max page size
-        else if (pageSize > maxPageSize)
-        {
-            throw new IllegalArgumentException("A pageSize less than " + maxPageSize + " must be specified.");
+            businessObjectDataSearchKey.setBusinessObjectFormatUsage(
+                alternateKeyHelper.validateStringParameter("business object format usage", businessObjectDataSearchKey.getBusinessObjectFormatUsage()));
         }
 
-        return pageSize;
-    }
-
-    /**
-     * validate business search key
-     *
-     * @param key business object data search key
-     *
-     * @throws IllegalArgumentException when business object data search key is not valid
-     */
-    public void validateBusinessObjectDataKey(BusinessObjectDataSearchKey key) throws IllegalArgumentException
-    {
-        Assert.notNull(key, "A business object data key must be specified.");
-        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
-        key.setBusinessObjectDefinitionName(
-            alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
-
-        if (key.getBusinessObjectFormatUsage() != null)
+        if (businessObjectDataSearchKey.getBusinessObjectFormatFileType() != null)
         {
-            key.setBusinessObjectFormatUsage(alternateKeyHelper.validateStringParameter("business object format usage", key.getBusinessObjectFormatUsage()));
+            businessObjectDataSearchKey.setBusinessObjectFormatFileType(
+                alternateKeyHelper.validateStringParameter("business object format file type", businessObjectDataSearchKey.getBusinessObjectFormatFileType()));
         }
 
-        if (key.getBusinessObjectFormatFileType() != null)
+        // Validate partition value filters, if specified.
+        if (CollectionUtils.isNotEmpty(businessObjectDataSearchKey.getPartitionValueFilters()))
         {
-            key.setBusinessObjectFormatFileType(
-                alternateKeyHelper.validateStringParameter("business object format file type", key.getBusinessObjectFormatFileType()));
-        }
+            businessObjectDataHelper.validatePartitionValueFilters(businessObjectDataSearchKey.getPartitionValueFilters(), null, false);
 
-        List<PartitionValueFilter> partitionValueFilters = key.getPartitionValueFilters();
-        if (partitionValueFilters != null && !partitionValueFilters.isEmpty())
-        {
-            businessObjectDataHelper.validatePartitionValueFilters(partitionValueFilters, null, false);
-
-            //TODO For now, only support partition values or ranges filter
-            for (PartitionValueFilter partitionValueFilter : partitionValueFilters)
+            // TODO: For now, we only support partition values or partition range in the filter.
+            for (PartitionValueFilter partitionValueFilter : businessObjectDataSearchKey.getPartitionValueFilters())
             {
                 List<String> partitionValues = partitionValueFilter.getPartitionValues();
                 PartitionValueRange partitionValueRange = partitionValueFilter.getPartitionValueRange();
-                //The partition values array should not be empty and partition vale range start and end value should not be empty
-                //as it is done above at businessObjectDataHelper.validatePartitionValueFilters
-                if ((partitionValues == null) && (partitionValueRange == null))
+
+                // The partition values array should not be empty and partition vale range start and end value should not be empty
+                // as it is done above at businessObjectDataHelper.validatePartitionValueFilters().
+                if (CollectionUtils.isEmpty(partitionValues) && partitionValueRange == null)
                 {
-                    throw new IllegalArgumentException("Only partition values or partition range are supported in partition value filters.");
+                    throw new IllegalArgumentException("Only partition values or partition range are supported in partition value filter.");
                 }
             }
         }
 
-        List<AttributeValueFilter> attributeValueFilters = key.getAttributeValueFilters();
-        if (attributeValueFilters != null && !attributeValueFilters.isEmpty())
+        // Validate attribute value filters, if specified.
+        if (CollectionUtils.isNotEmpty(businessObjectDataSearchKey.getAttributeValueFilters()))
         {
-            for (AttributeValueFilter attributeValueFilter : attributeValueFilters)
+            for (AttributeValueFilter attributeValueFilter : businessObjectDataSearchKey.getAttributeValueFilters())
             {
-                String attributeName = attributeValueFilter.getAttributeName();
-                String attributeValue = attributeValueFilter.getAttributeValue();
-                if (attributeName != null)
+                if (attributeValueFilter.getAttributeName() != null)
                 {
-                    attributeName = attributeName.trim();
-                    attributeValueFilter.setAttributeName(attributeName);
+                    attributeValueFilter.setAttributeName(attributeValueFilter.getAttributeName().trim());
                 }
-                if (StringUtils.isEmpty(attributeName) && StringUtils.isEmpty(attributeValue))
+                if (StringUtils.isBlank(attributeValueFilter.getAttributeName()) && StringUtils.isEmpty(attributeValueFilter.getAttributeValue()))
                 {
-                    throw new IllegalArgumentException("Either attribute name or value filter must exist.");
+                    throw new IllegalArgumentException("Either attribute name or attribute value filter must be specified.");
                 }
             }
         }

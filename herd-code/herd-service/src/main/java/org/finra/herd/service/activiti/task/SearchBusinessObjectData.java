@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
+import org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto;
 import org.finra.herd.service.BusinessObjectDataService;
 
 
@@ -62,10 +62,11 @@ public class SearchBusinessObjectData extends BaseJavaDelegate
 
         BusinessObjectDataSearchRequest request = getRequestObject(contentTypeString, requestString, BusinessObjectDataSearchRequest.class);
 
-        // Call the business object data search service
-        BusinessObjectDataSearchResult businessObjectDataSearchResult = businessObjectDataService.searchBusinessObjectData(pageNum, pageSize, request);
+        // Call the business object data search service.
+        BusinessObjectDataSearchResultPagingInfoDto businessObjectDataSearchResultPagingInfoDto =
+            businessObjectDataService.searchBusinessObjectData(pageNum, pageSize, request);
 
         // Set the JSON response as a workflow variable.
-        setJsonResponseAsWorkflowVariable(businessObjectDataSearchResult, execution);
+        setJsonResponseAsWorkflowVariable(businessObjectDataSearchResultPagingInfoDto.getBusinessObjectDataSearchResult(), execution);
     }
 }
