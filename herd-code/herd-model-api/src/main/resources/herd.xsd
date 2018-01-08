@@ -366,6 +366,7 @@
          <xs:enumeration value="WRITE"/>
          <xs:enumeration value="EXECUTE"/>
          <xs:enumeration value="GRANT"/>
+         <xs:enumeration value="WRITE_DESCRIPTIVE_CONTENT"/>
       </xs:restriction>
    </xs:simpleType>
 

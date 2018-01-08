@@ -26,11 +26,13 @@ import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectDefinitionSubjectMatterExpertDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpert;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpertCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpertKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpertKeys;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionSubjectMatterExpertEntity;
 import org.finra.herd.service.BusinessObjectDefinitionSubjectMatterExpertService;
@@ -68,6 +70,8 @@ public class BusinessObjectDefinitionSubjectMatterExpertServiceImpl implements B
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
+    @NamespacePermission(fields = "#request.businessObjectDefinitionSubjectMatterExpertKey.namespace",
+        permissions = NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)
     @Override
     public BusinessObjectDefinitionSubjectMatterExpert createBusinessObjectDefinitionSubjectMatterExpert(
         BusinessObjectDefinitionSubjectMatterExpertCreateRequest request)
@@ -108,6 +112,7 @@ public class BusinessObjectDefinitionSubjectMatterExpertServiceImpl implements B
         return createBusinessObjectDefinitionSubjectMatterExpertFromEntity(businessObjectDefinitionSubjectMatterExpertEntity);
     }
 
+    @NamespacePermission(fields = "#key.namespace", permissions = NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)
     @Override
     public BusinessObjectDefinitionSubjectMatterExpert deleteBusinessObjectDefinitionSubjectMatterExpert(BusinessObjectDefinitionSubjectMatterExpertKey key)
     {
