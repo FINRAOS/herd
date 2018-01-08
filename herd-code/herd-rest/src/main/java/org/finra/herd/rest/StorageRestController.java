@@ -76,18 +76,6 @@ class StorageRestController extends HerdBaseController
     }
 
     /**
-     * Gets a list of storage keys for all storage defined in the system.
-     *
-     * @return the list of storage keys
-     */
-    @RequestMapping(value = STORAGE_URI_PREFIX, method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_STORAGES_ALL_GET)
-    StorageKeys getAllStorage()
-    {
-        return storageService.getAllStorage();
-    }
-
-    /**
      * Gets an existing storage by name.
      *
      * @param storageName the storage name
@@ -99,6 +87,18 @@ class StorageRestController extends HerdBaseController
     Storage getStorage(@PathVariable("storageName") String storageName)
     {
         return storageService.getStorage(new StorageKey(storageName));
+    }
+
+    /**
+     * Gets a list of storage keys for all storage defined in the system.
+     *
+     * @return the list of storage keys
+     */
+    @RequestMapping(value = STORAGE_URI_PREFIX, method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_STORAGES_ALL_GET)
+    StorageKeys getStorages()
+    {
+        return storageService.getAllStorage();
     }
 
     /**

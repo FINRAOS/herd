@@ -100,26 +100,6 @@ public class StorageRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testGetAllStorage()
-    {
-        // Get a list of storage keys.
-        StorageKeys storageKeys = new StorageKeys(Arrays.asList(new StorageKey(STORAGE_NAME), new StorageKey(STORAGE_NAME_2)));
-
-        // Mock the external calls.
-        when(storageService.getAllStorage()).thenReturn(storageKeys);
-
-        // Call the method under test.
-        StorageKeys result = storageRestController.getAllStorage();
-
-        // Verify the external calls.
-        verify(storageService).getAllStorage();
-        verifyNoMoreInteractions(storageService);
-
-        // Validate the returned object.
-        assertEquals(storageKeys, result);
-    }
-
-    @Test
     public void testGetStorage()
     {
         // Create a storage key.
@@ -140,6 +120,26 @@ public class StorageRestControllerTest extends AbstractRestTest
 
         // Validate the returned object.
         assertEquals(storage, result);
+    }
+
+    @Test
+    public void testGetStorages()
+    {
+        // Get a list of storage keys.
+        StorageKeys storageKeys = new StorageKeys(Arrays.asList(new StorageKey(STORAGE_NAME), new StorageKey(STORAGE_NAME_2)));
+
+        // Mock the external calls.
+        when(storageService.getAllStorage()).thenReturn(storageKeys);
+
+        // Call the method under test.
+        StorageKeys result = storageRestController.getStorages();
+
+        // Verify the external calls.
+        verify(storageService).getAllStorage();
+        verifyNoMoreInteractions(storageService);
+
+        // Validate the returned object.
+        assertEquals(storageKeys, result);
     }
 
     @Test
