@@ -117,6 +117,8 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
 
     private Log4jDbWatchdog watchdog;
 
+    private LoggerContext loggerContext;
+
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException
     {
@@ -202,7 +204,7 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
                 System.out.println("Using Log4J configuration location \"" + resourceLocationTrimmed + "\".");
 
                 // Initialize Log4J with the resource. The configuration itself can use "monitorInterval" to have it refresh if it came from a file.
-                LoggerContext loggerContext = Configurator.initialize(null, resourceLocationTrimmed);
+                loggerContext = Configurator.initialize(null, resourceLocationTrimmed);
 
                 // For some initialization errors, a null context will be returned.
                 if (loggerContext == null)
@@ -514,7 +516,7 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
                 // This is the initial configuration so tell Log4J to do the initialization based on the temporary file we just created.
                 // The configuration file itself can use "monitorInterval" to have it refresh if it came from a file. We will let
                 // Log4J do it's auto-refresh from the temporary file, but we will update that file ourselves using our watchdog.
-                Configurator.initialize(tempFile.toString(), null, tempFile.toUri());
+                loggerContext = Configurator.initialize(tempFile.toString(), null, tempFile.toUri());
 
                 // Create and start a watchdog thread to monitor the DB configuration and when a change is found, it will call this method again
                 // to overwrite the temporary file with the new configuration.
@@ -546,7 +548,7 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
     {
         // Create the Log4J configuration object from the configuration string and get the refresh interval in seconds from the configuration.
         XmlConfiguration xmlConfiguration =
-            new XmlConfiguration(new ConfigurationSource(new ByteArrayInputStream(xmlConfigurationString.getBytes(StandardCharsets.UTF_8))));
+            new XmlConfiguration(loggerContext, new ConfigurationSource(new ByteArrayInputStream(xmlConfigurationString.getBytes(StandardCharsets.UTF_8))));
         return xmlConfiguration.getWatchManager().getIntervalSeconds();
     }
 
