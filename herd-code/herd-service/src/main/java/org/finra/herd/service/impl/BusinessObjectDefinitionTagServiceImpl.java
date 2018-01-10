@@ -72,8 +72,8 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
     @Autowired
     private TagHelper tagHelper;
 
-    @NamespacePermission(fields = "#request.businessObjectDefinitionTagKey.businessObjectDefinitionKey.namespace",
-        permissions = NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)
+    @NamespacePermission(fields = "#request.businessObjectDefinitionTagKey.businessObjectDefinitionKey.namespace", permissions = {
+        NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionTag createBusinessObjectDefinitionTag(BusinessObjectDefinitionTagCreateRequest request)
     {
@@ -108,7 +108,7 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
     }
 
     @NamespacePermission(fields = "#businessObjectDefinitionTagKey.businessObjectDefinitionKey.namespace",
-        permissions = NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)
+        permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionTag deleteBusinessObjectDefinitionTag(BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey)
     {

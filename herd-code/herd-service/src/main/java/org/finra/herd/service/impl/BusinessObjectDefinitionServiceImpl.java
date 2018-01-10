@@ -413,7 +413,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * <p>
      * This implementation starts a new transaction.
      */
-    @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)
+    @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
+        NamespacePermissionEnum.WRITE})
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,

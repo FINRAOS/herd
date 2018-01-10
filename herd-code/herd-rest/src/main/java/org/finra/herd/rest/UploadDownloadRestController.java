@@ -175,7 +175,7 @@ public class UploadDownloadRestController extends HerdBaseController
     }
     
     /**
-     * Provide the location and credentials prior to upload a Sample Data file
+     * Provide the location and credentials prior to upload a Sample Data file <p>Requires WRITE or WRITE_DESCRIPTIVE_CONTENT permission on namespace</p>
      * @param uploadBusinessObjectDefinitionSampleDataFileInitiationRequest request to upload
      * @return information necessary to upload sample data file
      */

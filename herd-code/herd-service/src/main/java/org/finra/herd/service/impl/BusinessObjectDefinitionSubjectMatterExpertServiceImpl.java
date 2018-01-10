@@ -71,7 +71,7 @@ public class BusinessObjectDefinitionSubjectMatterExpertServiceImpl implements B
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
     @NamespacePermission(fields = "#request.businessObjectDefinitionSubjectMatterExpertKey.namespace",
-        permissions = NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)
+        permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionSubjectMatterExpert createBusinessObjectDefinitionSubjectMatterExpert(
         BusinessObjectDefinitionSubjectMatterExpertCreateRequest request)
@@ -112,7 +112,7 @@ public class BusinessObjectDefinitionSubjectMatterExpertServiceImpl implements B
         return createBusinessObjectDefinitionSubjectMatterExpertFromEntity(businessObjectDefinitionSubjectMatterExpertEntity);
     }
 
-    @NamespacePermission(fields = "#key.namespace", permissions = NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)
+    @NamespacePermission(fields = "#key.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionSubjectMatterExpert deleteBusinessObjectDefinitionSubjectMatterExpert(BusinessObjectDefinitionSubjectMatterExpertKey key)
     {

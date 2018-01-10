@@ -96,7 +96,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
-    @NamespacePermission(fields = "#request.businessObjectDefinitionColumnKey.namespace", permissions = NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)
+    @NamespacePermission(fields = "#request.businessObjectDefinitionColumnKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
+        NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionColumn createBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnCreateRequest request)
     {
@@ -173,7 +174,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
     }
 
-    @NamespacePermission(fields = "#businessObjectDefinitionColumnKey.namespace", permissions = NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)
+    @NamespacePermission(fields = "#businessObjectDefinitionColumnKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
+        NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionColumn deleteBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey)
     {
@@ -274,7 +276,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             .collect(Collectors.toList()));
     }
 
-    @NamespacePermission(fields = "#businessObjectDefinitionColumnKey.namespace", permissions = NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)
+    @NamespacePermission(fields = "#businessObjectDefinitionColumnKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
+        NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionColumn updateBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey,
         BusinessObjectDefinitionColumnUpdateRequest request)

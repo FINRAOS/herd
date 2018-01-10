@@ -87,7 +87,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
     }
 
     /**
-     * Updates an existing business object definition descriptive information by key. <p>Requires no Namespace level security</p>
+     * Updates an existing business object definition descriptive information by key. <p>Requires WRITE or WRITE_DESCRIPTIVE_CONTENT permission on namespace</p>
      *
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the name of the business object definition to update

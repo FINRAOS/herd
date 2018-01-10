@@ -43,6 +43,11 @@ public class TestUploadDownloadServiceImpl extends UploadDownloadServiceImpl
     }
 
 
+    /**
+     * overwrite the base lass method to by pass the namespace level permission check
+     * @param request the request
+     * @return the response
+     */
     @Override
     public UploadBusinessObjectDefinitionSampleDataFileInitiationResponse initiateUploadSampleFile(
         UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request)
