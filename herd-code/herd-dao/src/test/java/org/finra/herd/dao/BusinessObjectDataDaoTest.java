@@ -25,7 +25,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,14 +40,12 @@ import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -540,6 +537,57 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         // Validate the results.
         assertEquals(Long.valueOf(1L), result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataCountBySearchKeyWithAllSearchKeyFields()
+    {
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
+
+        Long result = businessObjectDataDao.getBusinessObjectDataCountBySearchKey(businessObjectDataSearchKey);
+        assertEquals(Long.valueOf(2), result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataCountBySearchKeyWithRetentionExpirationFilterEmptyResult()
+    {
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
+        businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
+
+        Long result = businessObjectDataDao.getBusinessObjectDataCountBySearchKey(businessObjectDataSearchKey);
+        assertEquals(Long.valueOf(0), result);
     }
 
     @Test
@@ -1092,20 +1140,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
                 DATA_VERSION, true, "INVALID");
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
-        key.setBusinessObjectFormatVersion(FORMAT_VERSION);
-        businessObjectDataSearchKeys.add(key);
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
 
         for (BusinessObjectData data : result)
@@ -1129,18 +1171,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
                 DATA_VERSION, true, "VALID");
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
 
         // Test getting the first page
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(1, 1, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, 1, 1);
 
         assertTrue(result.size() == 1);
 
@@ -1153,7 +1189,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         }
 
         // Test getting the second page
-        result = businessObjectDataDao.searchBusinessObjectData(2, 1, filters);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, 2, 1);
 
         assertTrue(result.size() == 1);
 
@@ -1166,12 +1202,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         }
 
         // Test getting a larger page than there are results remaining
-        result = businessObjectDataDao.searchBusinessObjectData(1, 3, filters);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, 1, 3);
 
         assertTrue(result.size() == 2);
 
         // Test getting a page that does not exist
-        result = businessObjectDataDao.searchBusinessObjectData(3, 1, filters);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, 3, 1);
 
         assertTrue(result.size() == 0);
     }
@@ -1190,17 +1226,11 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
                 DATA_VERSION, true, "INVALID");
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        businessObjectDataSearchKeys.add(key);
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1228,50 +1258,28 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE, null,
                 DATA_VERSION, true, "VALID");
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE_2);
-        key.setBusinessObjectDefinitionName(BDEF_NAME_2);
-        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE_2);
-        businessObjectDataSearchKeys.add(key);
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE_2);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME_2);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE_2);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
 
-        businessObjectDataSearchKeys.clear();
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE_2);
 
-        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE_2);
-        businessObjectDataSearchKeys.add(key);
-        filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
-        businessObjectDataSearchKeys.clear();
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION_2);
 
-        key.setBusinessObjectFormatVersion(FORMAT_VERSION_2);
-        businessObjectDataSearchKeys.add(key);
-        filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
-        businessObjectDataSearchKeys.clear();
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(null);
 
-        key.setBusinessObjectFormatFileType(null);
-        businessObjectDataSearchKeys.add(key);
-        filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
-
     }
 
     @Test
@@ -1291,17 +1299,11 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subpartitionList,
                 DATA_VERSION, true, "INVALID");
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        businessObjectDataSearchKeys.add(key);
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
 
         result.get(0).getSubPartitionValues().containsAll(subpartitionList);
@@ -1317,9 +1319,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
 
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
@@ -1342,19 +1342,15 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             partitionValueFilter2.setPartitionValues(values2);
         }
 
-        key.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
 
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVersion);
-        businessObjectDataSearchKeys.add(key);
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1377,9 +1373,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
 
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
@@ -1391,18 +1385,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         partitionValueRange.setEndPartitionValue(PARTITION_VALUE + "1");
         partitionValueFilter.setPartitionValueRange(partitionValueRange);
 
-        key.setPartitionValueFilters(partitionValueFilters);
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVersion);
-        businessObjectDataSearchKeys.add(key);
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1413,9 +1403,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             assertEquals(fileTypeCode, data.getBusinessObjectFormatFileType());
             assertTrue(formatVersion == data.getBusinessObjectFormatVersion());
         }
-
     }
-
 
     @Test
     public void testBusinessObjectDataSearchWithPartitionValueRangeFiltersSubPartition()
@@ -1427,9 +1415,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
 
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
@@ -1441,18 +1427,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         partitionValueRange.setEndPartitionValue(businessObjectDataEntity.getPartitionValue2() + "1");
         partitionValueFilter.setPartitionValueRange(partitionValueRange);
 
-        key.setPartitionValueFilters(partitionValueFilters);
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVersion);
-        businessObjectDataSearchKeys.add(key);
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1463,7 +1445,6 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             assertEquals(fileTypeCode, data.getBusinessObjectFormatFileType());
             assertTrue(formatVersion == data.getBusinessObjectFormatVersion());
         }
-
     }
 
     @Test
@@ -1476,9 +1457,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVerion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
 
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
@@ -1490,18 +1469,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         partitionValueRange.setEndPartitionValue(PARTITION_VALUE + "1");
         partitionValueFilter.setPartitionValueRange(partitionValueRange);
 
-        key.setPartitionValueFilters(partitionValueFilters);
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVerion);
-        businessObjectDataSearchKeys.add(key);
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVerion);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(0, result.size());
     }
 
@@ -1567,9 +1542,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
 
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
@@ -1588,19 +1561,15 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         partitionValueRange.setEndPartitionValue(businessObjectDataEntity.getPartitionValue2() + "1");
         partitionValueFilter2.setPartitionValueRange(partitionValueRange);
 
-        key.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
 
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVersion);
-        businessObjectDataSearchKeys.add(key);
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1612,7 +1581,6 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             assertTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
         }
     }
-
 
     @Test
     public void testBusinessObjectDataSearchWithAttributeValueFilters()
@@ -1638,26 +1606,17 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
         List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
         attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
+        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        key.setAttributeValueFilters(attributeValueFilters);
-
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVersion);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1696,26 +1655,17 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
         List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
         attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, null));
+        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        key.setAttributeValueFilters(attributeValueFilters);
-
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVersion);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1750,26 +1700,17 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
         List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
         attributeValueFilters.add(new AttributeValueFilter(null, ATTRIBUTE_VALUE_1));
+        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        key.setAttributeValueFilters(attributeValueFilters);
-
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVersion);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
         Set<String> expectedAttributeNames = new HashSet<>(Arrays.asList(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_NAME_2_MIXED_CASE));
         for (BusinessObjectData data : result)
@@ -1801,21 +1742,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVersion);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1853,26 +1787,17 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
         List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
         attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1.substring(2, 5)));
+        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        key.setAttributeValueFilters(attributeValueFilters);
-
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVersion);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1907,26 +1832,18 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
         int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
         List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
         attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
         attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_1));
-        key.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        key.setNamespace(namespace);
-        key.setBusinessObjectDefinitionName(bDefName);
-        key.setBusinessObjectFormatUsage(usage);
-        key.setBusinessObjectFormatFileType(fileTypeCode);
-        key.setBusinessObjectFormatVersion(formatVersion);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1982,21 +1899,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             }
         }
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        businessObjectDataSearchKey.setFilterOnLatestValidVersion(true);
 
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
-        key.setFilterOnLatestValidVersion(true);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
         assertTrue(result.contains(expectedBData1));
         assertTrue(result.contains(expectedBData2));
@@ -2015,22 +1925,15 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
                     SUBPARTITION_VALUES, version, version.equals(SECOND_DATA_VERSION), BDATA_STATUS);
         }
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
+        businessObjectDataSearchKey.setFilterOnLatestValidVersion(true);
 
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
-        key.setBusinessObjectFormatVersion(FORMAT_VERSION);
-        key.setFilterOnLatestValidVersion(true);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(0, result.size());
     }
 
@@ -2061,22 +1964,15 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         }
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
+        businessObjectDataSearchKey.setFilterOnLatestValidVersion(true);
 
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
-        key.setBusinessObjectFormatVersion(FORMAT_VERSION);
-        key.setFilterOnLatestValidVersion(true);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         List<BusinessObjectData> expectedResult = new ArrayList<>(Collections.singletonList(expectedBData));
         assertEquals(1, result.size());
         assertEquals(result, expectedResult);
@@ -2147,56 +2043,6 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testBusinessObjectDataSearchWithMaxRecordsExceeded() throws Exception
-    {
-        // Override configuration.
-        int maxRecordSizeOverride = 2;
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT.getKey(), maxRecordSizeOverride);
-        modifyPropertySourceInEnvironment(overrideMap);
-
-
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-                true, "VALID");
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-                true, "INVALID");
-
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE, null,
-                DATA_VERSION, true, "INVALID");
-
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE, null,
-                DATA_VERSION, true, "VALID");
-
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        int recordCountExpected = 3;
-
-        String expectedErrorMessage = String
-            .format("Result limit of %d exceeded. Total result size %d. Modify filters to further limit results.", maxRecordSizeOverride, recordCountExpected);
-
-        try
-        {
-            businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(e.getMessage(), expectedErrorMessage);
-        }
-    }
-
-    @Test
     public void testBusinessObjectDataSearchWithRetentionExpirationFilterEmptyResult()
     {
         businessObjectDataDaoTestHelper
@@ -2210,21 +2056,15 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
                 DATA_VERSION, true, "INVALID");
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
-        key.setBusinessObjectFormatVersion(FORMAT_VERSION);
-        key.setFilterOnRetentionExpiration(true);
-        businessObjectDataSearchKeys.add(key);
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
+        businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(0, result.size());
     }
 
@@ -2255,20 +2095,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataEntity2.getBusinessObjectFormat().setRetentionType(existingRetentionType);
         businessObjectDataEntity2.getBusinessObjectFormat().setRetentionPeriodInDays(retentionPeriod - 1);
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
-        key.setFilterOnRetentionExpiration(true);
-        businessObjectDataSearchKeys.add(key);
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
     }
 
@@ -2318,18 +2152,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataEntity4.getBusinessObjectFormat().setRetentionType(notFoundRetentionTypeEntity);
         businessObjectDataEntity4.getBusinessObjectFormat().setRetentionPeriodInDays(retentionPeriod);
 
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        key.setFilterOnRetentionExpiration(true);
-        businessObjectDataSearchKeys.add(key);
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
 
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, filters);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
     }
 }

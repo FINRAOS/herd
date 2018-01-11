@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -64,6 +65,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.api.xml.StorageUnitUploadCredential;
+import org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.StorageUnitService;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
@@ -590,26 +592,37 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
         // Create a business object data search request.
         BusinessObjectDataSearchRequest businessObjectDataSearchRequest = new BusinessObjectDataSearchRequest();
 
-        // Create a business object data search response.
-        BusinessObjectDataSearchResult businessObjectDataSearchResult = new BusinessObjectDataSearchResult();
+        // Create a business object data search response with paging information.
+        BusinessObjectDataSearchResultPagingInfoDto businessObjectDataSearchResultPagingInfoDto =
+            new BusinessObjectDataSearchResultPagingInfoDto(Long.valueOf(PAGE_NUMBER_ONE), Long.valueOf(PAGE_SIZE_ONE_THOUSAND), PAGE_COUNT,
+                TOTAL_RECORDS_ON_PAGE, TOTAL_RECORD_COUNT, MAX_RESULTS_PER_PAGE, new BusinessObjectDataSearchResult());
+
+        // Create a mocked HTTP servlet response.
+        HttpServletResponse httpServletResponse = mock(HttpServletResponse.class);
 
         // Mock the external calls.
-        when(businessObjectDataService.searchBusinessObjectData(BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE, BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND,
-            businessObjectDataSearchRequest)).thenReturn(businessObjectDataSearchResult);
+        when(businessObjectDataService.searchBusinessObjectData(PAGE_NUMBER_ONE, PAGE_SIZE_ONE_THOUSAND, businessObjectDataSearchRequest))
+            .thenReturn(businessObjectDataSearchResultPagingInfoDto);
 
         // Call the method under test.
         BusinessObjectDataSearchResult result = businessObjectDataRestController
-            .searchBusinessObjectData(BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE, BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND,
-                businessObjectDataSearchRequest);
+            .searchBusinessObjectData(PAGE_NUMBER_ONE, PAGE_SIZE_ONE_THOUSAND, businessObjectDataSearchRequest, httpServletResponse);
 
         // Verify the external calls.
-        verify(businessObjectDataService)
-            .searchBusinessObjectData(BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE, BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND,
-                businessObjectDataSearchRequest);
+        verify(businessObjectDataService).searchBusinessObjectData(PAGE_NUMBER_ONE, PAGE_SIZE_ONE_THOUSAND, businessObjectDataSearchRequest);
         verifyNoMoreInteractionsHelper();
 
+        // Verify interactions with the mocked objects.
+        verify(httpServletResponse).setHeader(HerdBaseController.HTTP_HEADER_PAGING_PAGE_NUM, String.valueOf(PAGE_NUMBER_ONE));
+        verify(httpServletResponse).setHeader(HerdBaseController.HTTP_HEADER_PAGING_PAGE_SIZE, String.valueOf(PAGE_SIZE_ONE_THOUSAND));
+        verify(httpServletResponse).setHeader(HerdBaseController.HTTP_HEADER_PAGING_PAGE_COUNT, String.valueOf(PAGE_COUNT));
+        verify(httpServletResponse).setHeader(HerdBaseController.HTTP_HEADER_PAGING_TOTAL_RECORDS_ON_PAGE, String.valueOf(TOTAL_RECORDS_ON_PAGE));
+        verify(httpServletResponse).setHeader(HerdBaseController.HTTP_HEADER_PAGING_TOTAL_RECORD_COUNT, String.valueOf(TOTAL_RECORD_COUNT));
+        verify(httpServletResponse).setHeader(HerdBaseController.HTTP_HEADER_PAGING_MAX_RESULTS_PER_PAGE, String.valueOf(MAX_RESULTS_PER_PAGE));
+        verifyNoMoreInteractions(httpServletResponse);
+
         // Validate the results.
-        assertEquals(businessObjectDataSearchResult, result);
+        assertEquals(businessObjectDataSearchResultPagingInfoDto.getBusinessObjectDataSearchResult(), result);
     }
 
     @Test

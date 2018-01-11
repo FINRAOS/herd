@@ -21,7 +21,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,14 +28,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.StorageCreateRequest;
 import org.finra.herd.model.api.xml.StorageKey;
 import org.finra.herd.model.api.xml.StorageKeys;
 import org.finra.herd.model.api.xml.StorageUpdateRequest;
-import org.finra.herd.model.dto.StorageAlternateKeyDto;
-import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.service.StorageService;
 
 /**
@@ -57,124 +54,144 @@ public class StorageRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testCreateStorage() throws Exception
+    public void testCreateStorage()
     {
-        // Create and persist a valid storage.
-        StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        Storage storage = new Storage();
-        storage.setName(storageCreateRequest.getName());
-        storage.setAttributes(storageCreateRequest.getAttributes());
+        // Create a storage create request.
+        StorageCreateRequest storageCreateRequest = new StorageCreateRequest(STORAGE_NAME, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES);
 
+        // Create a storage.
+        Storage storage = new Storage(STORAGE_NAME, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES);
+
+        // Mock the external calls.
         when(storageService.createStorage(storageCreateRequest)).thenReturn(storage);
 
-        Storage resultStorage = storageRestController.createStorage(storageCreateRequest);
+        // Call the method under test.
+        Storage result = storageRestController.createStorage(storageCreateRequest);
 
         // Verify the external calls.
         verify(storageService).createStorage(storageCreateRequest);
         verifyNoMoreInteractions(storageService);
 
         // Validate the returned object.
-        assertEquals(storage, resultStorage);
-    }
-
-    @Test(expected = ObjectNotFoundException.class)
-    public void testDeleteStorage() throws Exception
-    {
-        // Create and persist a valid storage.
-        StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        Storage storage = new Storage();
-        String storageName = storageCreateRequest.getName();
-        storage.setName(storageName);
-        storage.setAttributes(storageCreateRequest.getAttributes());
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
-        ObjectNotFoundException exception = new ObjectNotFoundException("object not found");
-
-        when(storageService.deleteStorage(alternateKey)).thenThrow(exception);
-
-        storageRestController.deleteStorage(storageName);
-        // Verify the external calls.
-        verify(storageService).deleteStorage(alternateKey);
-        verifyNoMoreInteractions(storageService);
+        assertEquals(storage, result);
     }
 
     @Test
-    public void testGetStorage() throws Exception
+    public void testDeleteStorage()
     {
-        // Create and persist a valid storage.
-        StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        Storage storage = new Storage();
-        String storageName = storageCreateRequest.getName();
-        storage.setName(storageName);
-        storage.setAttributes(storageCreateRequest.getAttributes());
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
+        // Create a storage key.
+        StorageKey storageKey = new StorageKey(STORAGE_NAME);
 
-        when(storageService.getStorage(alternateKey)).thenReturn(storage);
+        // Create a storage.
+        Storage storage = new Storage(STORAGE_NAME, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES);
 
-        // Retrieve the storage by it's name which is valid.
-        Storage resultStorage = storageRestController.getStorage(storageName);
+        // Mock the external calls.
+        when(storageService.deleteStorage(storageKey)).thenReturn(storage);
+
+        // Call the method under test.
+        Storage result = storageRestController.deleteStorage(STORAGE_NAME);
+
         // Verify the external calls.
-        verify(storageService).getStorage(alternateKey);
+        verify(storageService).deleteStorage(storageKey);
         verifyNoMoreInteractions(storageService);
 
         // Validate the returned object.
-        assertEquals(storage, resultStorage);
+        assertEquals(storage, result);
     }
 
     @Test
-    public void testGetStorages() throws Exception
+    public void testGetStorage()
     {
-        // Get a list of test storage keys.
-        List<StorageKey> testStorageKeys = Arrays.asList(new StorageKey(STORAGE_NAME), new StorageKey(STORAGE_NAME_2));
-        StorageKeys storageKeys = new StorageKeys(testStorageKeys);
+        // Create a storage key.
+        StorageKey storageKey = new StorageKey(STORAGE_NAME);
 
-        when(storageService.getStorages()).thenReturn(storageKeys);
-        // Retrieve a list of storage keys.
-        StorageKeys resultStorageKeys = storageRestController.getStorages();
+        // Create a storage.
+        Storage storage = new Storage(STORAGE_NAME, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES);
+
+        // Mock the external calls.
+        when(storageService.getStorage(storageKey)).thenReturn(storage);
+
+        // Call the method under test.
+        Storage result = storageRestController.getStorage(STORAGE_NAME);
 
         // Verify the external calls.
-        verify(storageService).getStorages();
+        verify(storageService).getStorage(storageKey);
         verifyNoMoreInteractions(storageService);
+
         // Validate the returned object.
-        assertEquals(storageKeys, resultStorageKeys);
+        assertEquals(storage, result);
     }
 
     @Test
-    public void testUpdateStorage() throws Exception
+    public void testGetStorages()
     {
-        // Create a valid storage.
-        StorageCreateRequest storageCreateRequest = getNewStorageCreateRequest();
-        Storage storage = new Storage();
-        String storageName = storageCreateRequest.getName();
-        storage.setName(storageName);
-        storage.setAttributes(storageCreateRequest.getAttributes());
+        // Get a list of storage keys.
+        StorageKeys storageKeys = new StorageKeys(Arrays.asList(new StorageKey(STORAGE_NAME), new StorageKey(STORAGE_NAME_2)));
 
-        // Update the storage platform which is valid.
+        // Mock the external calls.
+        when(storageService.getAllStorage()).thenReturn(storageKeys);
+
+        // Call the method under test.
+        StorageKeys result = storageRestController.getStorages();
+
+        // Verify the external calls.
+        verify(storageService).getAllStorage();
+        verifyNoMoreInteractions(storageService);
+
+        // Validate the returned object.
+        assertEquals(storageKeys, result);
+    }
+
+    @Test
+    public void testUpdateStorage()
+    {
+        // Create a storage key.
+        StorageKey storageKey = new StorageKey(STORAGE_NAME);
+
+        // Create a storage update request.
         StorageUpdateRequest storageUpdateRequest = new StorageUpdateRequest();
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().withStorageName(storageName).build();
-        when(storageService.updateStorage(alternateKey, storageUpdateRequest)).thenReturn(storage);
 
-        Storage resultStorage = storageRestController.updateStorage(storageCreateRequest.getName(), storageUpdateRequest);
+        // Create a storage.
+        Storage storage = new Storage(STORAGE_NAME, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES);
+
+        // Mock the external calls.
+        when(storageService.updateStorage(storageKey, storageUpdateRequest)).thenReturn(storage);
+
+        // Call the method under test.
+        Storage result = storageRestController.updateStorage(STORAGE_NAME, storageUpdateRequest);
 
         // Verify the external calls.
-        verify(storageService).updateStorage(alternateKey, storageUpdateRequest);
+        verify(storageService).updateStorage(storageKey, storageUpdateRequest);
         verifyNoMoreInteractions(storageService);
 
         // Validate the returned object.
-        assertEquals(storage, resultStorage);
+        assertEquals(storage, result);
     }
 
-    /**
-     * Creates (but does not persist) a new valid storage create request.
-     *
-     * @return a new storage.
-     */
-    private StorageCreateRequest getNewStorageCreateRequest()
+    @Test
+    public void testUpdateStorageAttributes()
     {
-        String name = "StorageTest" + getRandomSuffix();
-        StorageCreateRequest storageRequest = new StorageCreateRequest();
-        storageRequest.setStoragePlatformName(StoragePlatformEntity.S3);
-        storageRequest.setName(name);
-        storageRequest.setAttributes(businessObjectDefinitionServiceTestHelper.getNewAttributes());
-        return storageRequest;
+        // Create a storage key.
+        StorageKey storageKey = new StorageKey(STORAGE_NAME);
+
+        // Create a storage update request.
+        StorageAttributesUpdateRequest storageAttributesUpdateRequest =
+            new StorageAttributesUpdateRequest(businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        // Create a storage.
+        Storage storage = new Storage(STORAGE_NAME, STORAGE_PLATFORM_CODE, businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        // Mock the external calls.
+        when(storageService.updateStorageAttributes(storageKey, storageAttributesUpdateRequest)).thenReturn(storage);
+
+        // Call the method under test.
+        Storage result = storageRestController.updateStorageAttributes(STORAGE_NAME, storageAttributesUpdateRequest);
+
+        // Verify the external calls.
+        verify(storageService).updateStorageAttributes(storageKey, storageAttributesUpdateRequest);
+        verifyNoMoreInteractions(storageService);
+
+        // Validate the returned object.
+        assertEquals(storage, result);
     }
 }

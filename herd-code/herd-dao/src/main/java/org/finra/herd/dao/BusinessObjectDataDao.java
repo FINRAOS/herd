@@ -20,7 +20,7 @@ import java.util.Map;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -185,16 +185,25 @@ public interface BusinessObjectDataDao extends BaseJpaDao
     public List<BusinessObjectDataEntity> getBusinessObjectDataEntitiesByPartitionValue(String partitionValue);
 
     /**
-     * Retrieves a list of business object data by list of filters
+     * Retrieves business object data record count per specified business object data search key.
      *
-     * @param pageNum if pageNum parameter is specified, results contain the appropriate page specified. Page numbers are one-based - that is the first page
-     * number is one.
-     * @param pageSize if pageSize parameter is specified, results contain that number of business object data (unless it is the end of the result set).
-     * @param filters search filters
+     * @param businessObjectDataSearchKey the business object data search key
      *
-     * @return A list of business object data
+     * @return the record count of business object data
      */
-    public List<BusinessObjectData> searchBusinessObjectData(Integer pageNum, Integer pageSize, List<BusinessObjectDataSearchFilter> filters);
+    public Long getBusinessObjectDataCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey);
+
+    /**
+     * Retrieves a list of business object data per specified business object data search key.
+     *
+     * @param businessObjectDataSearchKey the business object data search key
+     * @param pageNum if pageNum parameter is specified, results contain the appropriate page specified. Page numbers are one-based - that is the first page
+     * number is one
+     * @param pageSize if pageSize parameter is specified, results contain that number of business object data (unless it is the end of the result set)
+     *
+     * @return the list of business object data
+     */
+    public List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer pageNum, Integer pageSize);
 
     /**
      * Gets a list of keys for business object data registered under specified business object definition entity.

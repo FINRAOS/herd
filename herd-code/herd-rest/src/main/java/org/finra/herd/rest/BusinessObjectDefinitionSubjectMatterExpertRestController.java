@@ -47,7 +47,7 @@ public class BusinessObjectDefinitionSubjectMatterExpertRestController extends H
     private BusinessObjectDefinitionSubjectMatterExpertService businessObjectDefinitionSubjectMatterExpertService;
 
     /**
-     * Creates a new business object definition subject matter expert.
+     * Creates a new business object definition subject matter expert. <p>Requires WRITE or WRITE_DESCRIPTIVE_CONTENT permission on namespace</p>
      *
      * @param request the information needed to create a business object definition subject matter expert
      *
@@ -63,7 +63,7 @@ public class BusinessObjectDefinitionSubjectMatterExpertRestController extends H
     }
 
     /**
-     * Deletes an existing business object definition subject matter expert.
+     * Deletes an existing business object definition subject matter expert. <p>Requires WRITE or WRITE_DESCRIPTIVE_CONTENT permission on namespace</p>
      *
      * @param namespace the namespace of the business object definition
      * @param businessObjectDefinitionName the name of the business object definition

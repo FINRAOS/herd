@@ -54,6 +54,7 @@ import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
@@ -181,18 +182,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING_2 = "UT_BusinessObjectDataKeyAsString_2_" + RANDOM_SUFFIX;
 
     public static final Integer BUSINESS_OBJECT_DATA_MAX_VERSION = 1;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_NUMBER = 0;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_NO_PAGE_NUMBER = null;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE = 1;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_SIZE = 0;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_NO_PAGE_SIZE = null;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND = 1_000;
 
     public static final String BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
         "  \"eventDate\" : \"$current_time\",\n" +
@@ -382,6 +371,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     public static final String MATCH_COLUMN = "column";
 
+    public static final Long MAX_RESULTS_PER_PAGE = getRandomLong();
+
     public static final String MESSAGE_VERSION = "UT_MessageVersion" + RANDOM_SUFFIX;
 
     public static final String METHOD_NAME = "UT_MethodName_1_" + RANDOM_SUFFIX;
@@ -395,6 +386,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final JobStatusEnum NO_ACTIVITI_JOB_STATUS = null;
 
     public static final Boolean NO_ALLOW_MISSING_DATA = false;
+
+    public static final List<AttributeValueFilter> NO_ATTRIBUTE_VALUE_FILTERS = new ArrayList<>();
 
     public static final List<BusinessObjectDataStatus> NO_AVAILABLE_STATUSES = new ArrayList<>();
 
@@ -439,6 +432,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = false;
 
     public static final Long NO_FILE_SIZE = null;
+
+    public static final Boolean NO_FILTER_ON_LATEST_VALID_VERSION = false;
+
+    public static final Boolean NO_FILTER_ON_RETENTION_EXPIRATION = false;
 
     public static final Integer NO_ID = null;
 
@@ -513,6 +510,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_VARIABLE_REQUIRED = false;
 
     public static final Boolean OVERRIDE_TERMINATION_PROTECTION = true;
+
+    public static final Long PAGE_COUNT = getRandomLong();
+
+    public static final Integer PAGE_NUMBER_ONE = 1;
+
+    public static final Integer PAGE_SIZE_ONE_THOUSAND = 1_000;
 
     public static final String PARAMETER_NAME = "UT_ParameterName_" + RANDOM_SUFFIX;
 
@@ -618,6 +621,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String TEST_SQS_ENVIRONMENT = "testEnvironment";
 
     public static final String TEST_SQS_MESSAGE_CORRELATION_ID = "testCorrelationId";
+
+    public static final Long TOTAL_RECORDS_ON_PAGE = getRandomLong();
+
+    public static final Long TOTAL_RECORD_COUNT = getRandomLong();
 
     public static final String UUID_VALUE = "UT_UUID_Value_" + RANDOM_SUFFIX;
 

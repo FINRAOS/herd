@@ -36,6 +36,7 @@ import org.finra.herd.dao.SchemaColumnDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumn;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
@@ -46,6 +47,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionColumnEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
@@ -94,6 +96,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
+    @NamespacePermission(fields = "#request.businessObjectDefinitionColumnKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
+        NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionColumn createBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnCreateRequest request)
     {
@@ -170,6 +174,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
     }
 
+    @NamespacePermission(fields = "#businessObjectDefinitionColumnKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
+        NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionColumn deleteBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey)
     {
@@ -270,6 +276,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             .collect(Collectors.toList()));
     }
 
+    @NamespacePermission(fields = "#businessObjectDefinitionColumnKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
+        NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionColumn updateBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey,
         BusinessObjectDefinitionColumnUpdateRequest request)
