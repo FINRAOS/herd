@@ -472,7 +472,40 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
     }
 
     @Test
-    public void checkPermissionAssertAccessDeniedWhenUserRequiresMultiplePermissionsButIsMissingOne() throws Exception
+    public void checkPermissionAssertAccessDeniedWhenCurrentUserHasNoAnyRequiredPermissions() throws Exception
+    {
+        // Mock a join point of the method call
+        // mockMethod("foo");
+        JoinPoint joinPoint = mock(JoinPoint.class);
+        MethodSignature methodSignature = mock(MethodSignature.class);
+        Method method = NamespaceSecurityAdviceTest.class.getDeclaredMethod("mockMethodMultiplePermissions", String.class);
+        when(methodSignature.getParameterNames()).thenReturn(new String[] {"namespace"});
+        when(methodSignature.getMethod()).thenReturn(method);
+        when(joinPoint.getSignature()).thenReturn(methodSignature);
+        when(joinPoint.getArgs()).thenReturn(new Object[] {"foo"});
+
+        String userId = "userId";
+        ApplicationUser applicationUser = new ApplicationUser(getClass());
+        applicationUser.setUserId(userId);
+        applicationUser.setNamespaceAuthorizations(new HashSet<>());
+        applicationUser.getNamespaceAuthorizations().add(new NamespaceAuthorization("foo", Arrays.asList(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT)));
+        SecurityContextHolder.getContext().setAuthentication(
+            new TestingAuthenticationToken(new SecurityUserWrapper(userId, "", false, false, false, false, Arrays.asList(), applicationUser), null));
+
+        try
+        {
+            namespaceSecurityAdvice.checkPermission(joinPoint);
+            fail();
+        }
+        catch (Exception e)
+        {
+            assertEquals(AccessDeniedException.class, e.getClass());
+            assertEquals(String.format("User \"%s\" does not have \"[READ OR WRITE]\" permission(s) to the namespace \"foo\"", userId), e.getMessage());
+        }
+    }
+
+    @Test
+    public void checkPermissionAssertAccessApprovedWhenUserRequiresMultiplePermissionsButIsMissingOne() throws Exception
     {
         // Mock a join point of the method call
         // mockMethodMultiplePermissions("foo");
@@ -489,6 +522,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         applicationUser.setUserId(userId);
         applicationUser.setNamespaceAuthorizations(new HashSet<>());
         // User requires both READ and WRITE, but only has READ
+        // It works now as the permissions in the same space are treated using OR logic now
         applicationUser.getNamespaceAuthorizations().add(new NamespaceAuthorization("foo", Arrays.asList(NamespacePermissionEnum.READ)));
         SecurityContextHolder.getContext().setAuthentication(
             new TestingAuthenticationToken(new SecurityUserWrapper(userId, "", false, false, false, false, Arrays.asList(), applicationUser), null));
@@ -496,14 +530,14 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         try
         {
             namespaceSecurityAdvice.checkPermission(joinPoint);
-            fail();
         }
         catch (Exception e)
         {
-            assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals(String.format("User \"%s\" does not have \"[READ, WRITE]\" permission(s) to the namespace \"foo\"", userId), e.getMessage());
+            fail();
         }
     }
+
+
 
     @Test
     public void checkPermissionAssertAccessDeniedWhenCurrentUserHasNullAuthorizations() throws Exception

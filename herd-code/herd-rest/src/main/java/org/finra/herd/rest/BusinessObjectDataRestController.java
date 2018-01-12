@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -57,6 +58,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.api.xml.StorageUnitUploadCredential;
+import org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.StorageUnitService;
@@ -742,22 +744,39 @@ public class BusinessObjectDataRestController extends HerdBaseController
 
     /**
      * Searches business object data based on namespace, definition name, format usage, file type, and format version. <p> Namespace and definition name are
-     * required. </p> <p> Requires READ permission on namespace </p>
+     * required. </p> <p> Requires READ permission on namespace </p> <p> The response contains the following HTTP headers: <ul> <li>Paging-MaxResultsPerPage -
+     * the HTTP header for the maximum number of results that will be returned on any page of data. The "pageSize" query parameter should not be greater than
+     * this value or an HTTP status of 400 (Bad Request) error would be returned</li> <li>Paging-PageCount - the HTTP header for the total number of pages that
+     * exist assuming a page size limit and the total records returned in the query</li> <li>Paging-PageNum - the HTTP header for the current page number being
+     * returned. For the first page, this value would be "1"</li> <li>Paging-PageSize - the HTTP header for the current page size limit. This is based on what
+     * is specified in the request "pageSize" query parameter</li> <li>Paging-TotalRecordsOnPage - the HTTP header for the total number of records returned on
+     * the current page. This could be less than the "pageSize" query parameter on the last page of data</li> <li>Paging-TotalRecordCount - the HTTP header for
+     * the total number of records that would be returned across all pages. This is basically a "select count" query</li> </ul> </p>
      *
-     * @param pageNum if pageNum parameter is specified, results contain the appropriate page specified. Page numbers are one-based - that is the first page
-     * number is one. Default value is 1
-     * @param pageSize if pageSize parameter is specified, results contain that number of business object data (unless it is the end of the result set). Default
-     * value is 1000
-     * @param businessObjectDataSearchRequest search request
+     * @param pageNum the page number. If this parameter is specified, results contain the appropriate page that is specified. Page numbers are one-based - that
+     * is the first page number is one. Default value is 1
+     * @param pageSize the page size. If pageSize parameter is specified, results contain that number of business object data (unless it is the end of the
+     * result set). Default value is 1000
+     * @param businessObjectDataSearchRequest the business object data search request
+     * @param httpServletResponse the HTTP servlet response
      *
-     * @return search result
+     * @return the business object data search result with HTTP headers that contain the pagination information
      */
     @RequestMapping(value = "/businessObjectData/search", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_SEARCH_POST)
     public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestParam(value = "pageNum", required = false) Integer pageNum,
-        @RequestParam(value = "pageSize", required = false) Integer pageSize, @RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
+        @RequestParam(value = "pageSize", required = false) Integer pageSize, @RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest,
+        HttpServletResponse httpServletResponse)
     {
-        return businessObjectDataService.searchBusinessObjectData(pageNum, pageSize, businessObjectDataSearchRequest);
+        // Search business object data.
+        BusinessObjectDataSearchResultPagingInfoDto businessObjectDataSearchResultPagingInfoDto =
+            businessObjectDataService.searchBusinessObjectData(pageNum, pageSize, businessObjectDataSearchRequest);
+
+        // Add HTTP headers to HTTP servlet response per paging information.
+        addPagingHttpHeaders(httpServletResponse, businessObjectDataSearchResultPagingInfoDto);
+
+        // Create and return the HTTP response.
+        return businessObjectDataSearchResultPagingInfoDto.getBusinessObjectDataSearchResult();
     }
 
     /**

@@ -27,19 +27,22 @@ import org.finra.herd.model.api.xml.StorageKey;
 public class StorageDaoTest extends AbstractDaoTest
 {
     @Test
-    public void testGetStorages()
+    public void testGetAllStorage()
     {
+        // Get a list of test storage keys.
+        List<StorageKey> storageKeys = storageDaoTestHelper.getTestStorageKeys();
+
         // Create and persist storage entities.
-        for (StorageKey key : storageDaoTestHelper.getTestStorageKeys())
+        for (StorageKey storageKey : storageKeys)
         {
-            storageDaoTestHelper.createStorageEntity(key.getStorageName());
+            storageDaoTestHelper.createStorageEntity(storageKey.getStorageName());
         }
 
-        // Retrieve a list of storage keys.
-        List<StorageKey> resultStorageKeys = storageDao.getStorages();
+        // Retrieve a list of storage keys for all storage registered in the system.
+        List<StorageKey> result = storageDao.getAllStorage();
 
-        // Validate the returned object.
-        assertNotNull(resultStorageKeys);
-        assertTrue(resultStorageKeys.containsAll(storageDaoTestHelper.getTestStorageKeys()));
+        // Validate the results.
+        assertNotNull(result);
+        assertTrue(result.containsAll(storageDaoTestHelper.getTestStorageKeys()));
     }
 }

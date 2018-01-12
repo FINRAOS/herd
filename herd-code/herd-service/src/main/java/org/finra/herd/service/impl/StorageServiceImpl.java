@@ -16,11 +16,15 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.dao.StorageDao;
@@ -28,10 +32,11 @@ import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.StorageCreateRequest;
+import org.finra.herd.model.api.xml.StorageKey;
 import org.finra.herd.model.api.xml.StorageKeys;
 import org.finra.herd.model.api.xml.StorageUpdateRequest;
-import org.finra.herd.model.dto.StorageAlternateKeyDto;
 import org.finra.herd.model.jpa.StorageAttributeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
@@ -63,18 +68,11 @@ public class StorageServiceImpl implements StorageService
     @Autowired
     private StoragePlatformHelper storagePlatformHelper;
 
-    /**
-     * Creates a new storage.
-     *
-     * @param storageCreateRequest the storage request
-     *
-     * @return the created storage information
-     */
     @Override
     public Storage createStorage(StorageCreateRequest storageCreateRequest)
     {
         // Perform validation and trim.
-        validateStorageCreateRequest(storageCreateRequest);
+        validateAndTrimStorageCreateRequest(storageCreateRequest);
 
         // Retrieve storage platform.
         StoragePlatformEntity storagePlatformEntity = storagePlatformHelper.getStoragePlatformEntity(storageCreateRequest.getStoragePlatformName());
@@ -86,12 +84,12 @@ public class StorageServiceImpl implements StorageService
             throw new AlreadyExistsException(String.format("Storage with name \"%s\" already exists.", storageCreateRequest.getName()));
         }
 
-        // Create and persist the storage entity.
+        // Create a storage entity.
         storageEntity = new StorageEntity();
         storageEntity.setName(storageCreateRequest.getName());
         storageEntity.setStoragePlatform(storagePlatformEntity);
 
-        // Create the attributes if they are specified.
+        // Create attributes if they are specified.
         if (!CollectionUtils.isEmpty(storageCreateRequest.getAttributes()))
         {
             List<StorageAttributeEntity> attributeEntities = new ArrayList<>();
@@ -106,28 +104,58 @@ public class StorageServiceImpl implements StorageService
             }
         }
 
+        // Persist the storage entity.
         storageEntity = storageDao.saveAndRefresh(storageEntity);
 
         // Return the storage information.
         return createStorageFromEntity(storageEntity);
     }
 
-    /**
-     * Updates an existing storage.
-     *
-     * @param storageAlternateKey the storage alternate key (case-insensitive)
-     * @param storageUpdateRequest the storage update request
-     *
-     * @return the updated storage information
-     */
     @Override
-    public Storage updateStorage(StorageAlternateKeyDto storageAlternateKey, StorageUpdateRequest storageUpdateRequest)
+    public Storage deleteStorage(StorageKey storageKey)
     {
         // Perform validation and trim.
-        validateStorageAlternateKey(storageAlternateKey);
+        validateAndTrimStorageKey(storageKey);
 
-        // Retrieve and ensure that a storage with the specified alternate key exists.
-        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageAlternateKey);
+        // Retrieve and ensure that a storage exists.
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageKey);
+
+        // Delete the storage.
+        storageDao.delete(storageEntity);
+
+        // Return the storage information.
+        return createStorageFromEntity(storageEntity);
+    }
+
+    @Override
+    public StorageKeys getAllStorage()
+    {
+        StorageKeys storageKeys = new StorageKeys();
+        storageKeys.getStorageKeys().addAll(storageDao.getAllStorage());
+        return storageKeys;
+    }
+
+    @Override
+    public Storage getStorage(StorageKey storageKey)
+    {
+        // Perform validation and trim.
+        validateAndTrimStorageKey(storageKey);
+
+        // Retrieve and ensure that a storage exists.
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageKey);
+
+        // Return the storage information.
+        return createStorageFromEntity(storageEntity);
+    }
+
+    @Override
+    public Storage updateStorage(StorageKey storageKey, StorageUpdateRequest storageUpdateRequest)
+    {
+        // Perform validation and trim.
+        validateAndTrimStorageKey(storageKey);
+
+        // Retrieve and ensure that a storage exists.
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageKey);
 
         // TODO: Add in code to update storageEntity as needed from storageUpdateRequest attributes.
 
@@ -138,103 +166,152 @@ public class StorageServiceImpl implements StorageService
         return createStorageFromEntity(storageEntity);
     }
 
-    /**
-     * Gets a storage for the specified storage name.
-     *
-     * @param storageAlternateKey the storage alternate key (case-insensitive)
-     *
-     * @return the storage
-     */
     @Override
-    public Storage getStorage(StorageAlternateKeyDto storageAlternateKey)
+    public Storage updateStorageAttributes(StorageKey storageKey, StorageAttributesUpdateRequest storageAttributesUpdateRequest)
     {
-        // Perform validation and trim.
-        validateStorageAlternateKey(storageAlternateKey);
+        // Perform validation and trim the storage key parameters.
+        validateAndTrimStorageKey(storageKey);
 
-        // Retrieve the storage with the specified alternate key.
-        return createStorageFromEntity(storageDaoHelper.getStorageEntity(storageAlternateKey));
-    }
+        // Validate storage attributes update request.
+        validateAndTrimStorageAttributesUpdateRequest(storageAttributesUpdateRequest);
 
-    /**
-     * Deletes a storage for the specified storage alternate key.
-     *
-     * @param storageAlternateKey the storage alternate key (case-insensitive)
-     *
-     * @return the storage that was deleted
-     */
-    @Override
-    public Storage deleteStorage(StorageAlternateKeyDto storageAlternateKey)
-    {
-        // Perform validation and trim.
-        validateStorageAlternateKey(storageAlternateKey);
+        // Retrieve and ensure that a storage exists.
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageKey);
 
-        // Retrieve and ensure that a storage with the specified alternate key exists.
-        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageAlternateKey);
+        // Update storage attributes.
+        updateStorageAttributesHelper(storageEntity, storageAttributesUpdateRequest.getAttributes(), storageKey);
 
-        // Delete the storage.
-        storageDao.delete(storageEntity);
+        // Persist and refresh the entity.
+        storageEntity = storageDao.saveAndRefresh(storageEntity);
 
-        // Return the storage that got deleted.
+        // Return the storage information.
         return createStorageFromEntity(storageEntity);
-    }
-
-    @Override
-    public StorageKeys getStorages()
-    {
-        StorageKeys storageKeys = new StorageKeys();
-        storageKeys.getStorageKeys().addAll(storageDao.getStorages());
-        return storageKeys;
-    }
-
-    /**
-     * Validates the storage create request. This method also trims request parameters.
-     *
-     * @param request the request.
-     *
-     * @throws IllegalArgumentException if any validation errors were found.
-     */
-    private void validateStorageCreateRequest(StorageCreateRequest request)
-    {
-        request.setStoragePlatformName(alternateKeyHelper.validateStringParameter("storage platform name", request.getStoragePlatformName()));
-        request.setName(alternateKeyHelper.validateStringParameter("storage name", request.getName()));
-        attributeHelper.validateAttributes(request.getAttributes());
-    }
-
-    /**
-     * Validates the storage alternate key. This method also trims the alternate key parameters.
-     *
-     * @param key the storage alternate key
-     */
-    private void validateStorageAlternateKey(StorageAlternateKeyDto key)
-    {
-        key.setStorageName(alternateKeyHelper.validateStringParameter("storage name", key.getStorageName()));
     }
 
     /**
      * Creates a storage from it's entity object.
      *
-     * @param storageEntity the storage entity.
+     * @param storageEntity the storage entity
      *
-     * @return the storage.
+     * @return the storage
      */
     private Storage createStorageFromEntity(StorageEntity storageEntity)
     {
-        // Create the base storage.
-        Storage storage = new Storage();
-        storage.setName(storageEntity.getName());
-        storage.setStoragePlatformName(storageEntity.getStoragePlatform().getName());
-
-        // Add in the attributes.
+        // Create a list of attributes.
         List<Attribute> attributes = new ArrayList<>();
-        storage.setAttributes(attributes);
         for (StorageAttributeEntity attributeEntity : storageEntity.getAttributes())
         {
-            Attribute attribute = new Attribute();
-            attributes.add(attribute);
-            attribute.setName(attributeEntity.getName());
-            attribute.setValue(attributeEntity.getValue());
+            attributes.add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));
         }
 
-        return storage;
+        return new Storage(storageEntity.getName(), storageEntity.getStoragePlatform().getName(), attributes);
+    }
+
+    /**
+     * Updates storage attributes.
+     *
+     * @param storageEntity the storage entity
+     * @param attributes the list of attributes
+     * @param storageKey the storage key
+     */
+    private void updateStorageAttributesHelper(StorageEntity storageEntity, List<Attribute> attributes, StorageKey storageKey)
+    {
+        // Load all existing attribute entities in a map with a "lowercase" attribute name as the key for case insensitivity.
+        Map<String, StorageAttributeEntity> existingAttributeEntities = new HashMap<>();
+        for (StorageAttributeEntity attributeEntity : storageEntity.getAttributes())
+        {
+            String mapKey = attributeEntity.getName().toLowerCase();
+            if (existingAttributeEntities.containsKey(mapKey))
+            {
+                throw new IllegalStateException(
+                    String.format("Found duplicate attribute with name \"%s\" for \"%s\" storage.", mapKey, storageKey.getStorageName()));
+            }
+            existingAttributeEntities.put(mapKey, attributeEntity);
+        }
+
+        // Process the list of attributes to determine that storage attribute entities should be created, updated, or deleted.
+        List<StorageAttributeEntity> createdAttributeEntities = new ArrayList<>();
+        List<StorageAttributeEntity> retainedAttributeEntities = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(attributes))
+        {
+            for (Attribute attribute : attributes)
+            {
+                // Use a "lowercase" attribute name for case insensitivity.
+                String lowercaseAttributeName = attribute.getName().toLowerCase();
+                if (existingAttributeEntities.containsKey(lowercaseAttributeName))
+                {
+                    // Check if the attribute value needs to be updated.
+                    StorageAttributeEntity attributeEntity = existingAttributeEntities.get(lowercaseAttributeName);
+                    if (!StringUtils.equals(attribute.getValue(), attributeEntity.getValue()))
+                    {
+                        // Update the attribute entity.
+                        attributeEntity.setValue(attribute.getValue());
+                    }
+
+                    // Add this entity to the list of attribute entities to be retained.
+                    retainedAttributeEntities.add(attributeEntity);
+                }
+                else
+                {
+                    // Create a new attribute entity.
+                    StorageAttributeEntity attributeEntity = new StorageAttributeEntity();
+                    storageEntity.getAttributes().add(attributeEntity);
+                    attributeEntity.setStorage(storageEntity);
+                    attributeEntity.setName(attribute.getName());
+                    attributeEntity.setValue(attribute.getValue());
+
+                    // Add this entity to the list of the newly created attribute entities.
+                    createdAttributeEntities.add(attributeEntity);
+                }
+            }
+        }
+
+        // Remove any of the currently existing attribute entities that did not get onto the retained entities list.
+        storageEntity.getAttributes().retainAll(retainedAttributeEntities);
+
+        // Add all of the newly created attribute entities.
+        storageEntity.getAttributes().addAll(createdAttributeEntities);
+    }
+
+    /**
+     * Validates storage update request. This method also trims request parameters.
+     *
+     * @param storageAttributesUpdateRequest the storage attributes update request
+     */
+    private void validateAndTrimStorageAttributesUpdateRequest(StorageAttributesUpdateRequest storageAttributesUpdateRequest)
+    {
+        // Validate storage attributes update request.
+        Assert.notNull(storageAttributesUpdateRequest, "A storage attributes update request is required.");
+        Assert.notNull(storageAttributesUpdateRequest.getAttributes(), "A storage attributes list is required.");
+
+        // Validate optional attributes. This is also going to trim the attribute names.
+        attributeHelper.validateAttributes(storageAttributesUpdateRequest.getAttributes());
+    }
+
+    /**
+     * Validates storage create request. This method also trims request parameters.
+     *
+     * @param storageCreateRequest the storage create request
+     */
+    private void validateAndTrimStorageCreateRequest(StorageCreateRequest storageCreateRequest)
+    {
+        // Validate storage attributes update request.
+        Assert.notNull(storageCreateRequest, "A storage create request is required.");
+        storageCreateRequest
+            .setStoragePlatformName(alternateKeyHelper.validateStringParameter("storage platform name", storageCreateRequest.getStoragePlatformName()));
+        storageCreateRequest.setName(alternateKeyHelper.validateStringParameter("storage name", storageCreateRequest.getName()));
+
+        // Validate optional attributes. This is also going to trim the attribute names.
+        attributeHelper.validateAttributes(storageCreateRequest.getAttributes());
+    }
+
+    /**
+     * Validates storage key. This method also trims storage key parameters.
+     *
+     * @param storageKey the storage key
+     */
+    private void validateAndTrimStorageKey(StorageKey storageKey)
+    {
+        storageKey.setStorageName(alternateKeyHelper.validateStringParameter("storage name", storageKey.getStorageName()));
     }
 }

@@ -56,13 +56,11 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity_;
@@ -885,51 +883,68 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     @Override
-    public List<BusinessObjectData> searchBusinessObjectData(Integer pageNum, Integer pageSize, List<BusinessObjectDataSearchFilter> filters)
+    public Long getBusinessObjectDataCountBySearchKey(BusinessObjectDataSearchKey businessDataSearchKey)
     {
-        Integer businessObjectDataSearchMaxResultCount =
-            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT, Integer.class);
-
-        // assume only one filter and only on search key, the validation should be passed by now
-        BusinessObjectDataSearchKey businessDataSearchKey = filters.get(0).getBusinessObjectDataSearchKeys().get(0);
-
         // Create the criteria builder and the criteria.
-        CriteriaBuilder countBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Long> countCriteria = countBuilder.createQuery(Long.class);
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
+        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
 
-        Root<BusinessObjectDataEntity> countBusinessObjectDataEntity = countCriteria.from(BusinessObjectDataEntity.class);
+        // The criteria root is the business object data.
+        Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
 
-        Predicate countPredicate;
+        // Create path.
+        Expression<Long> businessObjectDataCount = builder.count(businessObjectDataEntityRoot);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate predicate;
         try
         {
-            countPredicate = getPredict(countBuilder, criteria, countBusinessObjectDataEntity, businessDataSearchKey, true);
+            predicate = getPredict(builder, criteria, businessObjectDataEntityRoot, businessDataSearchKey, true);
         }
         catch (IllegalArgumentException ex)
         {
-            // this exception means that there is no record found for the query, no need to run the actual query, return empty list
+            // This exception means that there are no records found for the query, thus return 0 record count.
+            return 0L;
+        }
+
+        // Add all clauses for the query.
+        criteria.select(businessObjectDataCount).where(predicate).distinct(true);
+
+        // Execute the query and return the result.
+        return entityManager.createQuery(criteria).getSingleResult();
+    }
+
+    @Override
+    public List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer pageNum, Integer pageSize)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
+
+        // The criteria root is the business object data.
+        Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate predicate;
+        try
+        {
+            predicate = getPredict(builder, criteria, businessObjectDataEntityRoot, businessObjectDataSearchKey, false);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            // This exception means that there are no records found for the query, thus return an empty result list.
             return new ArrayList<>();
         }
 
-        countCriteria.select(countBuilder.count(countBusinessObjectDataEntity)).where(countPredicate).distinct(true);
-        Long count = entityManager.createQuery(countCriteria).getSingleResult();
-        if (count > businessObjectDataSearchMaxResultCount)
-        {
-            throw new IllegalArgumentException(String
-                .format("Result limit of %d exceeded. Total result size %d. Modify filters to further limit results.", businessObjectDataSearchMaxResultCount,
-                    count));
-        }
+        // Add all clauses for the query.
+        criteria.select(businessObjectDataEntityRoot).where(predicate);
 
-        // The criteria root is the business object data.
-        Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
-        Predicate predicate = getPredict(builder, criteria, businessObjectDataEntity, businessDataSearchKey, false);
-
-        criteria.select(businessObjectDataEntity).where(predicate);
-
+        // Execute the query.
         List<BusinessObjectDataEntity> entityArray =
             entityManager.createQuery(criteria).setFirstResult(pageSize * (pageNum - 1)).setMaxResults(pageSize).getResultList();
-        return getQueryResultListFromEntityList(entityArray, businessDataSearchKey.getAttributeValueFilters());
+
+        // Crete the result list of business object data.
+        return getQueryResultListFromEntityList(entityArray, businessObjectDataSearchKey.getAttributeValueFilters());
     }
 
     /**
