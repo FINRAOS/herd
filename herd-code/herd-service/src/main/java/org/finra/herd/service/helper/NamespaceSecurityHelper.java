@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -82,21 +83,24 @@ public class NamespaceSecurityHelper
         ApplicationUser applicationUser = getApplicationUser();
         if (!isAuthorized(applicationUser, namespaceTrimmed, permissions))
         {
+            String permissionsString = Arrays.asList(permissions).stream().map(n -> n.toString()).collect(Collectors.joining(" OR "));
+            permissionsString = "[" + permissionsString + "]";
+
             // The current user is not authorized to access the given namespace, so log a warning and throw an exception.
             LOGGER.warn(String
                 .format("User does not have permission(s) to the namespace. %s namespace=\"%s\" permissions=\"%s\"", applicationUser, namespaceTrimmed,
-                    Arrays.asList(permissions)));
+                    permissionsString));
 
             if (applicationUser != null)
             {
                 throw new AccessDeniedException(String
-                    .format("User \"%s\" does not have \"%s\" permission(s) to the namespace \"%s\"", applicationUser.getUserId(), Arrays.asList(permissions),
+                    .format("User \"%s\" does not have \"%s\" permission(s) to the namespace \"%s\"", applicationUser.getUserId(), permissionsString,
                         namespaceTrimmed));
             }
             else
             {
                 throw new AccessDeniedException(
-                    String.format("Current user does not have \"%s\" permission(s) to the namespace \"%s\"", Arrays.asList(permissions), namespaceTrimmed));
+                    String.format("Current user does not have \"%s\" permission(s) to the namespace \"%s\"", permissionsString, namespaceTrimmed));
             }
         }
     }
@@ -167,7 +171,7 @@ public class NamespaceSecurityHelper
                 }
 
                 if (StringUtils.equalsIgnoreCase(currentUserAuthorization.getNamespace(), namespace) &&
-                    currentUserNamespacePermissions.containsAll(Arrays.asList(permissions)))
+                    currentUserNamespacePermissions.stream().anyMatch(Arrays.asList(permissions)::contains))
                 {
                     return true;
                 }

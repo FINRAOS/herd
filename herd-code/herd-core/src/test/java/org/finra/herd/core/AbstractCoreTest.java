@@ -124,6 +124,14 @@ public abstract class AbstractCoreTest
     }
 
     /**
+     * Returns a random long.
+     */
+    public static Long getRandomLong()
+    {
+        return (long) (Math.random() * Long.MAX_VALUE);
+    }
+
+    /**
      * Returns a random suffix.
      */
     public static String getRandomSuffix()

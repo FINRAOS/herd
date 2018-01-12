@@ -33,6 +33,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.StoragePolicySelection;
+import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.StoragePolicyProcessorService;
 
 /*
@@ -125,8 +126,19 @@ public class StoragePolicyProcessorJmsMessageListener
         }
         catch (RuntimeException | IOException e)
         {
-            LOGGER.error("Failed to process message from the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}",
-                HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE, payload, e);
+            // Log a warning message if storage unit status is already ARCHIVED. Such error case is typically caused by a duplicate SQS message.
+            if (e instanceof IllegalArgumentException &&
+                e.getMessage().startsWith(String.format("Storage unit status is \"%s\"", StorageUnitStatusEntity.ARCHIVED)))
+            {
+                LOGGER.warn("Failed to process message from the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}",
+                    HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE, payload, e);
+            }
+            // Otherwise, log an error.
+            else
+            {
+                LOGGER.error("Failed to process message from the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}",
+                    HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE, payload, e);
+            }
         }
     }
 }

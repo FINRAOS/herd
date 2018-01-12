@@ -16,28 +16,68 @@
 package org.finra.herd.service;
 
 import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.StorageCreateRequest;
+import org.finra.herd.model.api.xml.StorageKey;
 import org.finra.herd.model.api.xml.StorageKeys;
 import org.finra.herd.model.api.xml.StorageUpdateRequest;
-import org.finra.herd.model.dto.StorageAlternateKeyDto;
 
 /**
  * The storage service.
  */
 public interface StorageService
 {
-    public Storage createStorage(StorageCreateRequest storageRequest);
-
-    public Storage updateStorage(StorageAlternateKeyDto storageAlternateKey, StorageUpdateRequest storageRequest);
-
-    public Storage getStorage(StorageAlternateKeyDto storageAlternateKey);
-
-    public Storage deleteStorage(StorageAlternateKeyDto storageAlternateKey);
+    /**
+     * Creates a new storage.
+     *
+     * @param storageCreateRequest the information needed to create storage
+     *
+     * @return the created storage information
+     */
+    Storage createStorage(StorageCreateRequest storageCreateRequest);
 
     /**
-     * Gets a list of storage keys for all storages defined in the system.
+     * Deletes an existing storage by storage key.
      *
-     * @return the storage keys
+     * @param storageKey the storage key (case-insensitive)
+     *
+     * @return the storage information of the storage that got deleted
      */
-    public StorageKeys getStorages();
+    Storage deleteStorage(StorageKey storageKey);
+
+    /**
+     * Gets a list of storage keys for all storage defined in the system.
+     *
+     * @return the list of storage keys
+     */
+    StorageKeys getAllStorage();
+
+    /**
+     * Gets an existing storage by storage key.
+     *
+     * @param storageKey the storage key (case-insensitive)
+     *
+     * @return the storage information
+     */
+    Storage getStorage(StorageKey storageKey);
+
+    /**
+     * Updates an existing storage by storage key.
+     *
+     * @param storageKey the storage key (case-insensitive)
+     * @param storageUpdateRequest the information needed to update the storage
+     *
+     * @return the updated storage information
+     */
+    Storage updateStorage(StorageKey storageKey, StorageUpdateRequest storageUpdateRequest);
+
+    /**
+     * Updates an existing storage attributes by storage key.
+     *
+     * @param storageKey the storage key (case-insensitive)
+     * @param storageAttributesUpdateRequest the information needed to update storage attributes
+     *
+     * @return the updated storage information
+     */
+    Storage updateStorageAttributes(StorageKey storageKey, StorageAttributesUpdateRequest storageAttributesUpdateRequest);
 }

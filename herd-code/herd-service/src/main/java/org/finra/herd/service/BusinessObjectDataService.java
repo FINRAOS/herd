@@ -32,10 +32,10 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto;
 
 /**
  * The business object data service.
@@ -190,9 +190,9 @@ public interface BusinessObjectDataService
      * @param pageSize if pageSize parameter is specified, results contain that number of business object data (unless it is the end of the result set).
      * @param request search request
      *
-     * @return business data search result
+     * @return business data search result with the paging information
      */
-    public BusinessObjectDataSearchResult searchBusinessObjectData(Integer pageNum, Integer pageSize, BusinessObjectDataSearchRequest request);
+    public BusinessObjectDataSearchResultPagingInfoDto searchBusinessObjectData(Integer pageNum, Integer pageSize, BusinessObjectDataSearchRequest request);
 
     /**
      * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object definition.
