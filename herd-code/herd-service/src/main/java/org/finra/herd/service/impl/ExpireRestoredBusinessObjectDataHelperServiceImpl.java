@@ -28,11 +28,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -110,7 +110,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectDataRestoreDto prepareToExpireStorageUnit(StorageUnitAlternateKeyDto storageUnitKey)
+    public BusinessObjectDataRestoreDto prepareToExpireStorageUnit(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         return prepareToExpireStorageUnitImpl(storageUnitKey);
     }
@@ -215,7 +215,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
      *
      * @return the DTO that holds various parameters required to expire business object data
      */
-    protected BusinessObjectDataRestoreDto prepareToExpireStorageUnitImpl(StorageUnitAlternateKeyDto storageUnitKey)
+    protected BusinessObjectDataRestoreDto prepareToExpireStorageUnitImpl(BusinessObjectDataStorageUnitKey storageUnitKey)
     {
         // Get the storage unit name.
         String storageName = storageUnitKey.getStorageName();

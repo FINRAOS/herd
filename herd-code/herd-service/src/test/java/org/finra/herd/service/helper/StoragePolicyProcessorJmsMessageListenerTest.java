@@ -165,6 +165,68 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
     }
 
     @Test
+    public void testProcessMessageStorageUnitAlreadyArchived() throws Exception
+    {
+        // Build the expected S3 key prefix for test business object data.
+        String s3KeyPrefix =
+            getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, null, null, DATA_VERSION);
+
+        // Create and persist the relative database entities.
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(StoragePolicyTransitionTypeEntity.GLACIER));
+
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create and persist an already ARCHIVED storage unit in the source storage.
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
+                StorageUnitStatusEntity.ARCHIVED, NO_STORAGE_DIRECTORY_PATH);
+
+        // Add storage files to the source storage unit.
+        for (String filePath : LOCAL_FILES)
+        {
+            storageFileDaoTestHelper.createStorageFileEntity(sourceStorageUnitEntity, s3KeyPrefix + "/" + filePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
+        }
+
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
+
+        // Override configuration to specify some settings required for testing.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN.getKey(), S3_OBJECT_TAGGER_ROLE_ARN);
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            // Try to perform a storage policy transition.
+            executeWithoutLogging(StoragePolicyProcessorJmsMessageListener.class, () -> {
+                storagePolicyProcessorJmsMessageListener
+                    .processMessage(jsonHelper.objectToJson(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION)), null);
+            });
+
+            // Validate the status of the source storage unit.
+            assertEquals(StorageUnitStatusEntity.ARCHIVED, sourceStorageUnitEntity.getStatus().getCode());
+        }
+        finally
+        {
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
     public void testProcessMessageBusinessObjectDataNoExists() throws Exception
     {
         // Create a business object data key.
@@ -212,7 +274,7 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
         when(mockMessageListenerContainer.isRunning()).thenReturn(true);
         storagePolicyProcessorJmsMessageListener.controlStoragePolicyProcessorJmsMessageListener();
         verify(mockMessageListenerContainer, Mockito.times(0)).start();
-        // the listener is not running, but it is enabled, should start        
+        // the listener is not running, but it is enabled, should start
         when(mockMessageListenerContainer.isRunning()).thenReturn(false);
         storagePolicyProcessorJmsMessageListener.controlStoragePolicyProcessorJmsMessageListener();
         verify(mockMessageListenerContainer).start();

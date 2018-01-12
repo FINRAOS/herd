@@ -245,6 +245,19 @@ public enum ConfigurationValue
     EXPIRE_RESTORED_BDATA_JOB_MAX_BDATA_INSTANCES("expire.restored.business.object.data.job.max.business.object.data.instances", "1000"),
 
     /**
+     * The cron expression to schedule "cleanupDestroyedBusinessObjectData" system job. The default is to run this system job every 6 hours every day, starting
+     * at 3 AM.
+     */
+    CLEANUP_DESTROYED_BDATA_JOB_CRON_EXPRESSION("cleanup.destroyed.business.object.data.job.cron.expression", "0 0 3/6 * * ?"),
+
+    /**
+     * The maximum number of business object data instances with expired restoration interval that can get processed in a single run of this system job. The
+     * default is 1000 business object data instances.
+     */
+    CLEANUP_DESTROYED_BDATA_JOB_MAX_BDATA_INSTANCES("cleanup.destroyed.business.object.data.job.max.business.object.data.instances", "1000"),
+
+
+    /**
      * The default value for the expiration time for the business object data restore. The default is 30 days
      */
     BDATA_RESTORE_EXPIRATION_IN_DAYS_DEFAULT("business.object.data.restore.expiration.in.days.default", 30),
@@ -608,7 +621,7 @@ public enum ConfigurationValue
     /**
      * The maximum number of records returned in business object data search result count
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 100_000),
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 10_000),
 
     /**
      * The maximum number of records returned in business object data search page

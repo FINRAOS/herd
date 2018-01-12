@@ -34,8 +34,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
@@ -66,7 +66,7 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
                 DATA_VERSION);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         try
         {
@@ -106,7 +106,7 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
         StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         try
         {
@@ -171,7 +171,7 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
                 FILE_SIZE_1_KB, ROW_COUNT);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
+        BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
         try
         {
@@ -231,7 +231,7 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
         }
 
         // Select the RESTORING storage units.
-        List<StorageUnitAlternateKeyDto> resultStorageUnitKeys = businessObjectDataFinalizeRestoreService.getS3StorageUnitsToRestore(MAX_RESULT);
+        List<BusinessObjectDataStorageUnitKey> resultStorageUnitKeys = businessObjectDataFinalizeRestoreService.getS3StorageUnitsToRestore(MAX_RESULT);
 
         // Validate the results.
         assertEquals(businessObjectDataKeys.size(), resultStorageUnitKeys.size());

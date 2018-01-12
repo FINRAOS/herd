@@ -35,25 +35,7 @@ import org.finra.herd.model.jpa.StorageEntity_;
 public class StorageDaoImpl extends AbstractHerdDao implements StorageDao
 {
     @Override
-    public StorageEntity getStorageByName(String storageName)
-    {
-        // Create the criteria builder and the criteria.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<StorageEntity> criteria = builder.createQuery(StorageEntity.class);
-
-        // The criteria root is the namespace.
-        Root<StorageEntity> storageEntity = criteria.from(StorageEntity.class);
-
-        // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate queryRestriction = builder.equal(builder.upper(storageEntity.get(StorageEntity_.name)), storageName.toUpperCase());
-
-        criteria.select(storageEntity).where(queryRestriction);
-
-        return executeSingleResultQuery(criteria, String.format("Found more than one storage with \"%s\" name.", storageName));
-    }
-
-    @Override
-    public List<StorageKey> getStorages()
+    public List<StorageKey> getAllStorage()
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -82,5 +64,23 @@ public class StorageDaoImpl extends AbstractHerdDao implements StorageDao
         }
 
         return storageKeys;
+    }
+
+    @Override
+    public StorageEntity getStorageByName(String storageName)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<StorageEntity> criteria = builder.createQuery(StorageEntity.class);
+
+        // The criteria root is the namespace.
+        Root<StorageEntity> storageEntity = criteria.from(StorageEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate queryRestriction = builder.equal(builder.upper(storageEntity.get(StorageEntity_.name)), storageName.toUpperCase());
+
+        criteria.select(storageEntity).where(queryRestriction);
+
+        return executeSingleResultQuery(criteria, String.format("Found more than one storage with \"%s\" name.", storageName));
     }
 }

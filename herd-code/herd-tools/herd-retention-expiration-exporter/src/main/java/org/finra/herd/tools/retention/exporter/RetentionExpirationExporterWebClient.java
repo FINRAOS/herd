@@ -45,9 +45,9 @@ import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
  * This class encapsulates web client functionality required to communicate with the registration server.
  */
 @Component
-public class ExporterWebClient extends DataBridgeWebClient
+class RetentionExpirationExporterWebClient extends DataBridgeWebClient
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExporterWebClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RetentionExpirationExporterWebClient.class);
 
     /**
      * Retrieves business object definition from the herd registration server.
@@ -60,19 +60,17 @@ public class ExporterWebClient extends DataBridgeWebClient
      * @throws IOException if an I/O error was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
      */
-    public BusinessObjectDefinition getBusinessObjectDefinition(String namespace, String businessObjectDefinitionName)
+    BusinessObjectDefinition getBusinessObjectDefinition(String namespace, String businessObjectDefinitionName)
         throws IOException, JAXBException, URISyntaxException
     {
         LOGGER.info("Retrieving business object definition information from the registration server...");
 
-        StringBuilder uriPathBuilder = new StringBuilder(HERD_APP_REST_URI_PREFIX);
-        uriPathBuilder.append("/businessObjectDefinitions");
-        uriPathBuilder.append("/namespaces/").append(namespace);
-        uriPathBuilder.append("/businessObjectDefinitionNames/").append(businessObjectDefinitionName);
+        String uriPathBuilder = HERD_APP_REST_URI_PREFIX + "/businessObjectDefinitions" + "/namespaces/" + namespace + "/businessObjectDefinitionNames/" +
+            businessObjectDefinitionName;
 
         URIBuilder uriBuilder =
             new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
-                .setPath(uriPathBuilder.toString());
+                .setPath(uriPathBuilder);
 
         URI uri = uriBuilder.build();
 
@@ -109,17 +107,14 @@ public class ExporterWebClient extends DataBridgeWebClient
      * @throws IOException if an I/O error was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
      */
-    public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest businessObjectDataSearchRequest, Integer pageNum)
+    BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest businessObjectDataSearchRequest, Integer pageNum)
         throws IOException, JAXBException, URISyntaxException
     {
         LOGGER.info("Sending business object data search request to the registration server...");
 
-        StringBuilder uriPathBuilder = new StringBuilder(HERD_APP_REST_URI_PREFIX);
-        uriPathBuilder.append("/businessObjectData/search");
-
         URIBuilder uriBuilder =
             new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
-                .setPath(uriPathBuilder.toString()).setParameter("pageNum", pageNum.toString());
+                .setPath(HERD_APP_REST_URI_PREFIX + "/businessObjectData/search").setParameter("pageNum", pageNum.toString());
 
         URI uri = uriBuilder.build();
 

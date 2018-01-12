@@ -40,11 +40,11 @@ import org.mockito.stubbing.Answer;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -279,8 +279,8 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImplTest extends Abstr
                 DATA_VERSION);
 
         // Create a storage unit key.
-        StorageUnitAlternateKeyDto storageUnitKey =
-            new StorageUnitAlternateKeyDto(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataStorageUnitKey storageUnitKey =
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
         // Create a storage entity.
