@@ -98,24 +98,126 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
     public List<NotificationMessage> buildBusinessObjectDataStatusChangeMessages(BusinessObjectDataKey businessObjectDataKey,
         String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus)
     {
-        String configurationKey = ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey();
+        // Create a result list.
+        List<NotificationMessage> notificationMessages = new ArrayList<>();
 
-        Map<String, Object> velocityContextMap = getVelocityContextMap(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus);
+        // Get notification message definitions.
+        NotificationMessageDefinitions notificationMessageDefinitions = configurationDaoHelper
+            .getXmlClobPropertyAndUnmarshallToObject(NotificationMessageDefinitions.class,
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+
+        // Continue processing if notification message definitions are configured.
+        if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
+        {
+            // Create a context map of values that can be used when building the message.
+            Map<String, Object> velocityContextMap = getVelocityContextMap(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus);
+
+            // Generate notification message for each notification message definition.
+            for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
+            {
+                // Validate the notification message type.
+                if (StringUtils.isBlank(notificationMessageDefinition.getMessageType()))
+                {
+                    throw new IllegalStateException(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                        ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()));
+                }
+
+                // Validate the notification message destination.
+                if (StringUtils.isBlank(notificationMessageDefinition.getMessageDestination()))
+                {
+                    throw new IllegalStateException(String
+                        .format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                            ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()));
+                }
+
+                // Evaluate the template to generate the message text.
+                String messageText = evaluateVelocityTemplate(notificationMessageDefinition.getMessageVelocityTemplate(), velocityContextMap,
+                    "businessObjectDataStatusChangeEvent");
+
+                // Build a list of optional message headers.
+                List<MessageHeader> messageHeaders = new ArrayList<>();
+                if (CollectionUtils.isNotEmpty(notificationMessageDefinition.getMessageHeaderDefinitions()))
+                {
+                    for (MessageHeaderDefinition messageHeaderDefinition : notificationMessageDefinition.getMessageHeaderDefinitions())
+                    {
+                        messageHeaders.add(new MessageHeader(messageHeaderDefinition.getKey(),
+                            evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
+                                String.format("businessObjectDataStatusChangeEvent_messageHeader_%s", messageHeaderDefinition.getKey()))));
+                    }
+                }
+
+                // Create a notification message and add it to the result list.
+                notificationMessages.add(
+                    new NotificationMessage(notificationMessageDefinition.getMessageType(), notificationMessageDefinition.getMessageDestination(), messageText,
+                        messageHeaders));
+            }
+        }
 
         // Return the results.
-        return buildNotificationMessageList(configurationKey, "businessObjectDataStatusChangeEvent", velocityContextMap);
+        return notificationMessages;
     }
 
     @Override
     public List<NotificationMessage> buildBusinessObjectFormatVersionChangeMessages(BusinessObjectFormatKey businessObjectFormatKey,
         String oldBusinessObjectFormatVersion)
     {
-        String configurationKey = ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey();
+        // Create a result list.
+        List<NotificationMessage> notificationMessages = new ArrayList<>();
 
-        Map<String, Object> velocityContextMap = getVelocityContextMap(businessObjectFormatKey, oldBusinessObjectFormatVersion);
+        // Get notification message definitions.
+        NotificationMessageDefinitions notificationMessageDefinitions = configurationDaoHelper
+            .getXmlClobPropertyAndUnmarshallToObject(NotificationMessageDefinitions.class,
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+
+        // Continue processing if notification message definitions are configured.
+        if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
+        {
+            // Create a context map of values that can be used when building the message.
+            Map<String, Object> velocityContextMap = getVelocityContextMap(businessObjectFormatKey, oldBusinessObjectFormatVersion);
+
+            // Generate notification message for each notification message definition.
+            for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
+            {
+                // Validate the notification message type.
+                if (StringUtils.isBlank(notificationMessageDefinition.getMessageType()))
+                {
+                    throw new IllegalStateException(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                        ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()));
+                }
+
+                // Validate the notification message destination.
+                if (StringUtils.isBlank(notificationMessageDefinition.getMessageDestination()))
+                {
+                    throw new IllegalStateException(String
+                        .format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                            ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()));
+                }
+
+                // Evaluate the template to generate the message text.
+                String messageText = evaluateVelocityTemplate(notificationMessageDefinition.getMessageVelocityTemplate(), velocityContextMap,
+                    "businessObjectFormatVersionChangeEvent");
+
+                // Build a list of optional message headers.
+                List<MessageHeader> messageHeaders = new ArrayList<>();
+                if (CollectionUtils.isNotEmpty(notificationMessageDefinition.getMessageHeaderDefinitions()))
+                {
+                    for (MessageHeaderDefinition messageHeaderDefinition : notificationMessageDefinition.getMessageHeaderDefinitions())
+                    {
+                        messageHeaders.add(new MessageHeader(messageHeaderDefinition.getKey(),
+                            evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
+                                String.format("businessObjectFormatVersionChangeEvent_messageHeader_%s", messageHeaderDefinition.getKey()))));
+                    }
+                }
+
+                // Create a notification message and add it to the result list.
+                notificationMessages.add(
+                    new NotificationMessage(notificationMessageDefinition.getMessageType(), notificationMessageDefinition.getMessageDestination(), messageText,
+                        messageHeaders));
+            }
+        }
 
         // Return the results.
-        return buildNotificationMessageList(configurationKey, "businessObjectFormatVersionChangeEvent", velocityContextMap);
+        return notificationMessages;
     }
 
     @Override
@@ -139,56 +241,6 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         {
             return null;
         }
-    }
-
-    private List<NotificationMessage> buildNotificationMessageList(String configurationKey, String velocityTemplateName, Map<String, Object> velocityContextMap)
-    {
-        // Create a result list.
-        List<NotificationMessage> notificationMessages = new ArrayList<>();
-
-        // Get notification message definitions.
-        NotificationMessageDefinitions notificationMessageDefinitions =
-            configurationDaoHelper.getXmlClobPropertyAndUnmarshallToObject(NotificationMessageDefinitions.class, configurationKey);
-
-        // Generate notification message for each notification message definition.
-        for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
-        {
-            // Validate the notification message type.
-            if (StringUtils.isBlank(notificationMessageDefinition.getMessageType()))
-            {
-                throw new IllegalStateException(
-                    String.format("Notification message type must be specified. Please update \"%s\" configuration entry.", configurationKey));
-            }
-
-            // Validate the notification message destination.
-            if (StringUtils.isBlank(notificationMessageDefinition.getMessageDestination()))
-            {
-                throw new IllegalStateException(
-                    String.format("Notification message destination must be specified. Please update \"%s\" configuration entry.", configurationKey));
-            }
-
-            // Evaluate the template to generate the message text.
-            String messageText = evaluateVelocityTemplate(notificationMessageDefinition.getMessageVelocityTemplate(), velocityContextMap, velocityTemplateName);
-
-            // Build a list of optional message headers.
-            List<MessageHeader> messageHeaders = new ArrayList<>();
-            if (CollectionUtils.isNotEmpty(notificationMessageDefinition.getMessageHeaderDefinitions()))
-            {
-                for (MessageHeaderDefinition messageHeaderDefinition : notificationMessageDefinition.getMessageHeaderDefinitions())
-                {
-                    messageHeaders.add(new MessageHeader(messageHeaderDefinition.getKey(),
-                        evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
-                            String.format(velocityTemplateName + "_messageHeader_%s", messageHeaderDefinition.getKey()))));
-                }
-            }
-
-            // Create a notification message and add it to the result list.
-            notificationMessages.add(
-                new NotificationMessage(notificationMessageDefinition.getMessageType(), notificationMessageDefinition.getMessageDestination(), messageText,
-                    messageHeaders));
-        }
-
-        return notificationMessages;
     }
 
     /**
@@ -369,7 +421,6 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
 
         return velocityContextMap;
     }
-
 
     /**
      * Returns Velocity context map of additional keys and values to place in the velocity context

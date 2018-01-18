@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -54,6 +55,8 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.dto.MessageHeader;
+import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
@@ -516,7 +519,7 @@ public class BusinessObjectFormatServiceTestHelper
         String businessObjectFormatFileType, Integer businessObjectFormatVersion)
     {
         return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d", namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage,
+                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d", namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage,
             businessObjectFormatFileType, businessObjectFormatVersion);
     }
 
@@ -535,7 +538,7 @@ public class BusinessObjectFormatServiceTestHelper
         String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion)
     {
         return String.format("Business object format with namespace \"%s\", business object definition name \"%s\"," +
-            " format usage \"%s\", format file type \"%s\", and format version \"%d\" doesn't exist.", namespaceCode, businessObjectDefinitionName,
+                " format usage \"%s\", format file type \"%s\", and format version \"%d\" doesn't exist.", namespaceCode, businessObjectDefinitionName,
             businessObjectFormatUsage, businessObjectFormatFileType, businessObjectFormatVersion);
     }
 
@@ -772,6 +775,7 @@ public class BusinessObjectFormatServiceTestHelper
 
     /**
      * Validate retention information
+     *
      * @param expectedRecordFlag the expected record flag
      * @param expectedRetentionDays the expected retention in days
      * @param expectedRetentionType the expected retention type
@@ -828,5 +832,77 @@ public class BusinessObjectFormatServiceTestHelper
         validateBusinessObjectFormatDdl(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
             FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME,
             expectedCustomDdlName, expectedDdl, actualBusinessObjectFormatDdl);
+    }
+
+    /**
+     * Validates a business object data status change notification message.
+     *
+     * @param expectedMessageType the expected message type
+     * @param expectedMessageDestination the expected message destination
+     * @param expectedBusinessObjectFormatKey the expected business object data key
+     * @param expectedUsername the expected username
+     * @param expectedNewBusinessObjectFormatVersion the expected new business object data status
+     * @param expectedOldBusinessObjectFormatVersion the expected old business object data status
+     * @param expectedMessageHeaders the list of expected message headers
+     * @param notificationMessage the notification message to be validated
+     */
+    public void validateBusinessObjectFormatVersionChangeMessageWithXmlPayload(String expectedMessageType, String expectedMessageDestination,
+        BusinessObjectFormatKey expectedBusinessObjectFormatKey, String expectedUsername, String expectedNewBusinessObjectFormatVersion,
+        String expectedOldBusinessObjectFormatVersion, List<MessageHeader> expectedMessageHeaders, NotificationMessage notificationMessage)
+    {
+        assertNotNull(notificationMessage);
+
+        assertEquals(expectedMessageType, notificationMessage.getMessageType());
+        assertEquals(expectedMessageDestination, notificationMessage.getMessageDestination());
+
+        String messageText = notificationMessage.getMessageText();
+
+        validateXmlFieldPresent(messageText, "triggered-by-username", expectedUsername);
+        validateXmlFieldPresent(messageText, "context-message-type", "testDomain/testApplication/BusinessObjectFormatVersionChanged");
+        validateXmlFieldPresent(messageText, "newBusinessObjectFormatVersion", expectedNewBusinessObjectFormatVersion);
+
+        if (expectedOldBusinessObjectFormatVersion == null)
+        {
+            validateXmlFieldNotPresent(messageText, "oldBusinessObjectFormatVersion");
+        }
+        else
+        {
+            validateXmlFieldPresent(messageText, "oldBusinessObjectFormatVersion", expectedOldBusinessObjectFormatVersion);
+        }
+
+        validateXmlFieldPresent(messageText, "namespace", expectedBusinessObjectFormatKey.getNamespace());
+        validateXmlFieldPresent(messageText, "businessObjectDefinitionName", expectedBusinessObjectFormatKey.getBusinessObjectDefinitionName());
+        validateXmlFieldPresent(messageText, "businessObjectFormatUsage", expectedBusinessObjectFormatKey.getBusinessObjectFormatUsage());
+        validateXmlFieldPresent(messageText, "businessObjectFormatFileType", expectedBusinessObjectFormatKey.getBusinessObjectFormatFileType());
+        validateXmlFieldPresent(messageText, "businessObjectFormatVersion", expectedBusinessObjectFormatKey.getBusinessObjectFormatVersion());
+
+        assertEquals(expectedMessageHeaders, notificationMessage.getMessageHeaders());
+    }
+
+    /**
+     * Validates that a specified XML opening and closing set of tags are not present in the message.
+     *
+     * @param message the XML message.
+     * @param xmlTagName the XML tag name (without the '<', '/', and '>' characters).
+     */
+    private void validateXmlFieldNotPresent(String message, String xmlTagName)
+    {
+        for (String xmlTag : Arrays.asList(String.format("<%s>", xmlTagName), String.format("</%s>", xmlTagName)))
+        {
+            assertTrue(String.format("%s tag not expected, but found.", xmlTag), !message.contains(xmlTag));
+        }
+    }
+
+    /**
+     * Validates that a specified XML tag and value are present in the message.
+     *
+     * @param message the XML message.
+     * @param xmlTagName the XML tag name (without the '<', '/', and '>' characters).
+     * @param value the value of the data for the tag.
+     */
+    private void validateXmlFieldPresent(String message, String xmlTagName, Object value)
+    {
+        assertTrue(xmlTagName + " \"" + value + "\" expected, but not found.",
+            message.contains("<" + xmlTagName + ">" + (value == null ? null : value.toString()) + "</" + xmlTagName + ">"));
     }
 }
