@@ -230,8 +230,8 @@ public class RestControllerProcessor
                     rm.value().length > 0 && // has at least 1 URI
                     rm.method().length > 0 && // has at least 1 HttpMethod
                     (apiOp == null || !apiOp.hidden()); // marked as a hidden ApiOperation
-            }).sorted(Comparator.comparing(a -> a.getAnnotation(RequestMapping.class).value()[0])
-                .thenComparing(a -> a.getAnnotation(RequestMapping.class).method()[0]))
+            }).sorted(Comparator.comparing(a -> ((Method)a).getAnnotation(RequestMapping.class).value()[0])
+                .thenComparing(a -> ((Method)a).getAnnotation(RequestMapping.class).method()[0]))
                 .collect(Collectors.toList());
 
             for (Method method : outMethods)

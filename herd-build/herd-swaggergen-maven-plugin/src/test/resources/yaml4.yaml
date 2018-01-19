@@ -16,7 +16,7 @@ paths:
       - "Person"
       summary: "create"
       description: ""
-      operationId: "Person.create1"
+      operationId: "Person.create"
       parameters:
       - in: "body"
         name: "person"
@@ -58,7 +58,7 @@ paths:
       - "Person"
       summary: "create"
       description: ""
-      operationId: "Person.create"
+      operationId: "Person.create1"
       parameters:
       - name: "id"
         in: "path"
