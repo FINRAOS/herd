@@ -16,7 +16,7 @@
 
 -- user_name_space_athrn table
 
-alter table dmrowner.user_name_space_athrn add column write_desc_content_prmsn_fl char(1) NOT NULL default 'N';
+alter table user_name_space_athrn add column write_desc_content_prmsn_fl char(1) NOT NULL default 'N';
 
 --scrty_fn_lk
 
