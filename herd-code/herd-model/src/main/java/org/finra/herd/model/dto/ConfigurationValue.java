@@ -578,7 +578,8 @@ public enum ConfigurationValue
      * NotificationMessageDefinitions} to use when generating notification messages for a business object format version change event. There is no default value
      * which will cause no messages to be sent.
      */
-    HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS("herd.notification.business.object.format.version.change.message.definitions", null),
+    HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS("herd.notification.business.object.format.version.change.message.definitions",
+        null),
 
     /**
      * The cache time to live in seconds defined in net.sf.ehcache.config.CacheConfiguration.
