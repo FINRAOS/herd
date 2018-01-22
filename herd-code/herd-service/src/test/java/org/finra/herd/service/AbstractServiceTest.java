@@ -271,6 +271,48 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final String BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML = "<?xml version=\"1.1\" encoding=\"UTF-8\"?>\n" +
+        "<datamgt:TestApplicationEvent xmlns:datamgt=\"http://testDomain/testApplication/testApplication-event\">\n" +
+        "   <header>\n" +
+        "      <producer>\n" +
+        "         <name>testDomain/testApplication</name>\n" +
+        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "      </producer>\n" +
+        "      <creation>\n" +
+        "         <datetime>$current_time</datetime>\n" +
+        "      </creation>\n" +
+        "      <context-message-type>testDomain/testApplication/BusinessObjectFormatVersionChanged</context-message-type>\n" +
+        "      <system-message-type>NoError</system-message-type>\n" +
+        "      <xsd>http://testDomain/testApplication/testApplication-event.xsd</xsd>\n" +
+        "      <event-id>\n" +
+        "         <system-name>testDomain/testApplication</system-name>\n" +
+        "         <system-unique-id>$uuid</system-unique-id>\n" +
+        "      </event-id>\n" +
+        "   </header>\n" +
+        "   <payload>\n" +
+        "      <eventDate>$current_time</eventDate>\n" +
+        "      <datamgtEvent>\n" +
+        "         <businessObjectFormatVersionChanged>\n" +
+        "            <businessObjectFormatKey>\n" +
+        "               <namespace>$businessObjectFormatKey.namespace</namespace>\n" +
+        "               <businessObjectDefinitionName>$businessObjectFormatKey.businessObjectDefinitionName</businessObjectDefinitionName>\n" +
+        "               <businessObjectFormatUsage>$businessObjectFormatKey.businessObjectFormatUsage</businessObjectFormatUsage>\n" +
+        "               <businessObjectFormatFileType>$businessObjectFormatKey.businessObjectFormatFileType</businessObjectFormatFileType>\n" +
+        "               <businessObjectFormatVersion>$businessObjectFormatKey.businessObjectFormatVersion</businessObjectFormatVersion>\n" +
+        "            </businessObjectFormatKey>\n" +
+        "            <newBusinessObjectFormatVersion>$newBusinessObjectFormatVersion</newBusinessObjectFormatVersion>\n" +
+        "#if($StringUtils.isNotEmpty($oldBusinessObjectFormatVersion))            <oldBusinessObjectFormatVersion>$oldBusinessObjectFormatVersion</oldBusinessObjectFormatVersion>\n" +
+        "#end" +
+        "         </businessObjectFormatVersionChanged>\n" +
+        "      </datamgtEvent>\n" +
+        "   </payload>\n" +
+        "   <soa-audit>\n" +
+        "      <triggered-date-time>$current_time</triggered-date-time>\n" +
+        "      <triggered-by-username>$username</triggered-by-username>\n" +
+        "      <transmission-id>$uuid</transmission-id>\n" +
+        "   </soa-audit>\n" +
+        "</datamgt:TestApplicationEvent>";
+
     public static final String BUSINESS_OBJECT_FORMAT_KEY_AS_STRING = "UT_BusinessObjectFormatKeyAsString_" + RANDOM_SUFFIX;
 
     public static final Boolean CONTINUE_ON_ERROR = true;
@@ -456,6 +498,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;
 
     public static final List<BusinessObjectDataStatus> NO_NOT_AVAILABLE_STATUSES = new ArrayList<>();
+
+    public static final String NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION = null;
 
     public static final TagKey NO_PARENT_TAG_KEY = null;
 

@@ -18,6 +18,7 @@ package org.finra.herd.service.helper;
 import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.NotificationMessage;
 
 /**
@@ -37,6 +38,18 @@ public interface NotificationMessageBuilder
      */
     public List<NotificationMessage> buildBusinessObjectDataStatusChangeMessages(BusinessObjectDataKey businessObjectDataKey,
         String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
+
+    /**
+     * Builds a list of notification messages for the business object format version change event. The result list might be empty if if no messages should be
+     * sent.
+     *
+     * @param businessObjectFormatKey the business object format key for the object whose version changed
+     * @param oldBusinessObjectFormatVersion the old business object format version
+     *
+     * @return the list of business object data status change notification messages
+     */
+    public List<NotificationMessage> buildBusinessObjectFormatVersionChangeMessages(BusinessObjectFormatKey businessObjectFormatKey,
+        String oldBusinessObjectFormatVersion);
 
     /**
      * Builds the message for the ESB system monitor response.
