@@ -237,11 +237,17 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Retrieve the business object data and ensure it exists.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
 
-        // Check if we are allowed to delete this business object data.
+        // If the business object data has children, remove the parent children relationship.
         if (!businessObjectDataEntity.getBusinessObjectDataChildren().isEmpty())
         {
-            throw new IllegalArgumentException(String
-                .format("Can not delete a business object data that has children associated with it. Business object data: {%s}",
+            for (BusinessObjectDataEntity childBusinessObjectEntity : businessObjectDataEntity.getBusinessObjectDataChildren())
+            {
+                childBusinessObjectEntity.getBusinessObjectDataParents().remove(businessObjectDataEntity);
+            }
+            businessObjectDataEntity.setBusinessObjectDataChildren(new ArrayList<BusinessObjectDataEntity>());
+            businessObjectDataDao.save(businessObjectDataEntity);
+            LOGGER.warn(String
+                .format("Delete a business object data that has children associated with it. Business object data: {%s} children has been removed.",
                     businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
         }
 

@@ -588,19 +588,16 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         // Try to delete the parent business object data.
         try
         {
-            businessObjectDataService.deleteBusinessObjectData(
+            BusinessObjectDataKey businessObjectDataKey =
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), false);
-            fail("Should throw an IllegalArgumentException when trying to delete a business object data that has children associated with it.");
+                    DATA_VERSION);
+            businessObjectDataService.deleteBusinessObjectData(businessObjectDataKey, false);
+            // Confirm business object data is deleted;
+            assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Can not delete a business object data that has children associated with it. " +
-                "Business object data: {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", " +
-                "businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", businessObjectDataSubPartitionValues: \"%s,%s,%s,%s\", " +
-                "businessObjectDataVersion: %d}", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION), e.getMessage());
+            fail("Should not throw an IllegalArgumentException when trying to delete a business object data that has children associated with it.");
         }
     }
 
