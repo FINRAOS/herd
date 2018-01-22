@@ -14,9 +14,6 @@
 * limitations under the License.
 */
 
-insert into scrty_fn_lk (scrty_fn_cd, scrty_fn_dsply_nm, scrty_fn_ds, creat_ts, creat_user_id, updt_ts, updt_user_id) 
-values ('FN_JOBS_GET_BY_ID','FN_JOBS_GET_BY_ID','FN_JOBS_GET_BY_ID', current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
-
 alter table ntfcn_rgstn add column old_bus_objct_data_stts_cd varchar(50);
 alter table ntfcn_rgstn add column new_bus_objct_data_stts_cd varchar(50);
 
