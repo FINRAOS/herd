@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -244,11 +245,14 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             {
                 childBusinessObjectEntity.getBusinessObjectDataParents().remove(businessObjectDataEntity);
             }
+
+            String businessObjectDataChildren = businessObjectDataEntity.getBusinessObjectDataChildren().stream()
+                .map(bData -> String.format("{%s}", businessObjectDataHelper.businessObjectDataEntityAltKeyToString(bData))).collect(Collectors.joining(", "));
             businessObjectDataEntity.setBusinessObjectDataChildren(new ArrayList<BusinessObjectDataEntity>());
             businessObjectDataDao.save(businessObjectDataEntity);
             LOGGER.warn(String
-                .format("Delete a business object data that has children associated with it. Business object data: {%s} children has been removed.",
-                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+                .format("Deleting business object data {%s} that has children associated with it. The parent relationship has been removed from: %s.",
+                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), businessObjectDataChildren));
         }
 
         // If the flag is set, clean up the data files from all storages of S3 storage platform type.
