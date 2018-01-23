@@ -580,7 +580,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         BusinessObjectDataEntity businessObjectDataChildEntity = businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
                 SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
-        
+
         // Associate with each other child and parent business object data entities.
         businessObjectDataParentEntity.getBusinessObjectDataChildren().add(businessObjectDataChildEntity);
         businessObjectDataChildEntity.getBusinessObjectDataParents().add(businessObjectDataParentEntity);
@@ -589,7 +589,6 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         BusinessObjectDataEntity businessObjectDataChildEntity2 = businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3,
                 SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
-
 
         // Associate with each other child and parent business object data entities.
         businessObjectDataParentEntity.getBusinessObjectDataChildren().add(businessObjectDataChildEntity2);
