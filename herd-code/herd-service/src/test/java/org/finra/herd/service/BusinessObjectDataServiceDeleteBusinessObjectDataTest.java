@@ -585,6 +585,15 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         businessObjectDataParentEntity.getBusinessObjectDataChildren().add(businessObjectDataChildEntity);
         businessObjectDataChildEntity.getBusinessObjectDataParents().add(businessObjectDataParentEntity);
 
+        // Create a child business object data entity.
+        BusinessObjectDataEntity businessObjectDataChildEntity2 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+
+        // Associate with each other child and parent business object data entities.
+        businessObjectDataParentEntity.getBusinessObjectDataChildren().add(businessObjectDataChildEntity2);
+        businessObjectDataChildEntity2.getBusinessObjectDataParents().add(businessObjectDataParentEntity);
+
         // Try to delete the parent business object data.
         try
         {
@@ -594,6 +603,16 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
             businessObjectDataService.deleteBusinessObjectData(businessObjectDataKey, false);
             // Confirm business object data is deleted;
             assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
+
+            businessObjectDataChildEntity = businessObjectDataDao
+                .getBusinessObjectDataByAltKey(new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES,
+                    DATA_VERSION));
+            assertEquals(businessObjectDataChildEntity.getBusinessObjectDataParents().size(), 0);
+
+            businessObjectDataChildEntity2 = businessObjectDataDao
+                .getBusinessObjectDataByAltKey(new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3, SUBPARTITION_VALUES,
+                    DATA_VERSION));
+            assertEquals(businessObjectDataChildEntity2.getBusinessObjectDataParents().size(), 0);
         }
         catch (IllegalArgumentException e)
         {
