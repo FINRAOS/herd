@@ -271,6 +271,20 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final String BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
+        "  \"eventDate\" : \"$current_time\",\n" +
+        "  \"businessObjectFormatKey\" : {\n" +
+        "    \"namespace\" : \"$businessObjectFormatKey.namespace\",\n" +
+        "    \"businessObjectDefinitionName\" : \"$businessObjectFormatKey.businessObjectDefinitionName\",\n" +
+        "    \"businessObjectFormatUsage\" : \"$businessObjectFormatKey.businessObjectFormatUsage\",\n" +
+        "    \"businessObjectFormatFileType\" : \"$businessObjectFormatKey.businessObjectFormatFileType\",\n" +
+        "    \"businessObjectFormatVersion\" : $businessObjectFormatKey.businessObjectFormatVersion\n" +
+        "  },\n" +
+        "  \"newBusinessObjectFormatVersion\" : \"$newBusinessObjectFormatVersion\"" +
+        "#if($StringUtils.isNotEmpty($oldBusinessObjectFormatVersion)),\n  \"oldBusinessObjectFormatVersion\" : \"$oldBusinessObjectFormatVersion\"" +
+        "#end\n" +
+        "}\n";
+
     public static final String BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML = "<?xml version=\"1.1\" encoding=\"UTF-8\"?>\n" +
         "<datamgt:TestApplicationEvent xmlns:datamgt=\"http://testDomain/testApplication/testApplication-event\">\n" +
         "   <header>\n" +
