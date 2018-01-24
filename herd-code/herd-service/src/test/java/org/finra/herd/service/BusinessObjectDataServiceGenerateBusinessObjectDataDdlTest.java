@@ -771,9 +771,13 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Partition value range [\"%s\", \"%s\"] contains no valid partition values.",
+            assertEquals(String.format(
+                "Partition value range [\"%s\", \"%s\"] contains no valid partition values in partition key group \"%s\". " + "Business object format: {%s}",
                 request.getPartitionValueFilters().get(0).getPartitionValueRange().getStartPartitionValue(),
-                request.getPartitionValueFilters().get(0).getPartitionValueRange().getEndPartitionValue()), e.getMessage());
+                request.getPartitionValueFilters().get(0).getPartitionValueRange().getEndPartitionValue(), PARTITION_KEY_GROUP,
+                businessObjectFormatServiceTestHelper
+                    .getExpectedBusinessObjectFormatKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION)),
+                e.getMessage());
         }
 
         // Try to retrieve business object data ddl when partition value filter has specifies a range that results in no valid partition values.

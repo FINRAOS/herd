@@ -1158,8 +1158,10 @@ public class BusinessObjectDataDaoHelper
 
         // Validate that our partition value range results in a non-empty partition value list.
         Assert.notEmpty(resultPartitionValues, String
-            .format("Partition value range [\"%s\", \"%s\"] contains no valid partition values.", partitionValueRange.getStartPartitionValue(),
-                partitionValueRange.getEndPartitionValue()));
+            .format("Partition value range [\"%s\", \"%s\"] contains no valid partition values in partition key group \"%s\". Business object format: {%s}",
+                partitionValueRange.getStartPartitionValue(), partitionValueRange.getEndPartitionValue(),
+                businessObjectFormatEntity.getPartitionKeyGroup().getPartitionKeyGroupName(),
+                businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
 
         return resultPartitionValues;
     }
