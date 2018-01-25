@@ -14,11 +14,3 @@
 * limitations under the License.
 */
 
--- user_name_space_athrn table
-
-alter table user_name_space_athrn add column write_desc_content_prmsn_fl char(1) NOT NULL default 'N';
-
---scrty_fn_lk
-
-insert into scrty_fn_lk (scrty_fn_cd, creat_ts, creat_user_id, updt_ts, updt_user_id)
-values ('FN_STORAGE_ATTRIBUTES_PUT', current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');

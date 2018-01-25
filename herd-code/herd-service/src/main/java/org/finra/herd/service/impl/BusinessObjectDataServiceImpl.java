@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -237,12 +238,21 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Retrieve the business object data and ensure it exists.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
 
-        // Check if we are allowed to delete this business object data.
+        // If the business object data has children, remove the parent children relationship.
         if (!businessObjectDataEntity.getBusinessObjectDataChildren().isEmpty())
         {
-            throw new IllegalArgumentException(String
-                .format("Can not delete a business object data that has children associated with it. Business object data: {%s}",
-                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+            for (BusinessObjectDataEntity childBusinessObjectEntity : businessObjectDataEntity.getBusinessObjectDataChildren())
+            {
+                childBusinessObjectEntity.getBusinessObjectDataParents().remove(businessObjectDataEntity);
+            }
+
+            String businessObjectDataChildren = businessObjectDataEntity.getBusinessObjectDataChildren().stream()
+                .map(bData -> String.format("{%s}", businessObjectDataHelper.businessObjectDataEntityAltKeyToString(bData))).collect(Collectors.joining(", "));
+            businessObjectDataEntity.setBusinessObjectDataChildren(new ArrayList<BusinessObjectDataEntity>());
+            businessObjectDataDao.save(businessObjectDataEntity);
+            LOGGER.warn(String
+                .format("Deleting business object data {%s} that has children associated with it. The parent relationship has been removed from: %s.",
+                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), businessObjectDataChildren));
         }
 
         // If the flag is set, clean up the data files from all storages of S3 storage platform type.

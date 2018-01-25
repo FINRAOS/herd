@@ -3,6 +3,19 @@ swagger: "2.0"
 tags:
 - name: "Test2"
 paths:
+  /a/test/shouldSort:
+    get:
+      tags:
+      - "Test2"
+      summary: "shouldSort"
+      description: ""
+      operationId: "Test2.shouldSort"
+      parameters: []
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/basicCase"
   /test/multipleMethods:
     get:
       tags:

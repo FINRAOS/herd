@@ -18,6 +18,7 @@ package org.finra.herd.service;
 import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.NotificationMessage;
 
 public interface MessageNotificationEventService
@@ -33,6 +34,17 @@ public interface MessageNotificationEventService
      */
     public List<NotificationMessage> processBusinessObjectDataStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey,
         String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
+
+    /**
+     * Handles notifications for the business object format version changes.
+     *
+     * @param businessObjectFormatKey the business object format key
+     * @param oldBusinessObjectFormatVersion the old business object format version
+     *
+     * @return the list of notification messages that got queued for publishing
+     */
+    public List<NotificationMessage> processBusinessObjectFormatVersionChangeNotificationEvent(BusinessObjectFormatKey businessObjectFormatKey,
+        String oldBusinessObjectFormatVersion);
 
     /**
      * Handles the system monitor event notification.

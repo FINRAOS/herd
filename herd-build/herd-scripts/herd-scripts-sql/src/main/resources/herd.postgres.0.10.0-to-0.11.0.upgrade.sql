@@ -16,8 +16,6 @@
 
 create sequence user_name_space_athrn_seq;
 
-grant select, update on user_name_space_athrn_seq to dmr_rw_role;
-
 create table user_name_space_athrn
 (
  user_name_space_athrn_id   bigint       not null,
