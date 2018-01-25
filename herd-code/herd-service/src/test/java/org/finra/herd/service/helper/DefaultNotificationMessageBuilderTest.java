@@ -46,7 +46,9 @@ import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinitions;
@@ -54,8 +56,10 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.ConfigurationEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
@@ -337,10 +341,11 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BDATA_STATUS, BDATA_STATUS_2, NO_ATTRIBUTES, Arrays
-                .asList(new MessageHeader(MESSAGE_HEADER_KEY_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)),
-                    new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_TYPE, MESSAGE_TYPE), new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_VERSION, MESSAGE_VERSION),
-                    new MessageHeader(MESSAGE_HEADER_KEY_SOURCE_SYSTEM, SOURCE_SYSTEM), new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_ID, uuid),
-                    new MessageHeader(MESSAGE_HEADER_KEY_USER_ID, HerdDaoSecurityHelper.SYSTEM_USER)), result.get(0));
+                    .asList(new MessageHeader(MESSAGE_HEADER_KEY_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)),
+                        new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_TYPE, MESSAGE_TYPE),
+                        new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_VERSION, MESSAGE_VERSION),
+                        new MessageHeader(MESSAGE_HEADER_KEY_SOURCE_SYSTEM, SOURCE_SYSTEM), new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_ID, uuid),
+                        new MessageHeader(MESSAGE_HEADER_KEY_USER_ID, HerdDaoSecurityHelper.SYSTEM_USER)), result.get(0));
     }
 
     @SuppressWarnings("serial")
@@ -402,6 +407,145 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         {
             // Restore the original authentication.
             SecurityContextHolder.getContext().setAuthentication(originalAuthentication);
+        }
+    }
+
+    @Test
+    public void testBuildBusinessObjectFormatVersionChangeMessagesNoMessageDefinitions() throws Exception
+    {
+        // Create a business object format entity.
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
+
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
+
+        // Get a business object data key.
+        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(null);
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Trigger the notification and validate the results.
+        assertEquals(0, messageNotificationEventService
+            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION).size());
+
+        // Override configuration, so there will be an empty list of notification message definitions configured in the system.
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions()));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        assertEquals(0, messageNotificationEventService
+            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION).size());
+    }
+
+    @Test
+    public void testBuildBusinessObjectFormatValueChangeMessagesWithJsonPayload() throws Exception
+    {
+        // Create a business object format entity.
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
+
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
+
+        // Get a business object data key.
+        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Trigger the notification.
+        List<NotificationMessage> result = messageNotificationEventService
+            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
+
+        // Validate the notification message.
+        assertEquals(1, CollectionUtils.size(result));
+        validateBusinessObjectFormatVersionChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
+            businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION, result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectFormatValueChangeMessagesWithJsonPayloadWithNoMessageType() throws Exception
+    {
+        // Create a business object format entity.
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
+
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
+
+        // Get a business object data key.
+        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(NO_MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        try
+        {
+            // Trigger the notification.
+            messageNotificationEventService
+                .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
+
+            // Should not get here
+            fail();
+        }
+        catch (IllegalStateException illegalStateException)
+        {
+            assertEquals(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()), illegalStateException.getMessage());
+        }
+    }
+
+    @Test
+    public void testBuildBusinessObjectFormatValueChangeMessagesWithJsonPayloadWithNoMessageDestination() throws Exception
+    {
+        // Create a business object format entity.
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
+
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
+
+        // Get a business object data key.
+        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        try
+        {
+            // Trigger the notification.
+            messageNotificationEventService
+                .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
+
+            // Should not get here
+            fail();
+        }
+        catch (IllegalStateException illegalStateException)
+        {
+            assertEquals(String.format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()), illegalStateException.getMessage());
         }
     }
 
@@ -663,6 +807,34 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         assertEquals(expectedMessageHeaders, notificationMessage.getMessageHeaders());
     }
 
+    /**
+     * Validates a business object data status change notification message with JSON payload.
+     *
+     * @param expectedMessageType the expected message type
+     * @param expectedMessageDestination the expected message destination
+     * @param expectedBusinessObjectFormatKey the expected business object format key
+     * @param expectedNewBusinessObjectFormatVersion the expected new business object format version
+     * @param expectedOldBusinessObjectFormatVersion the expected old business object format version
+     * @param notificationMessage the notification message to be validated
+     */
+    private void validateBusinessObjectFormatVersionChangeMessageWithJsonPayload(String expectedMessageType, String expectedMessageDestination,
+        BusinessObjectFormatKey expectedBusinessObjectFormatKey, String expectedNewBusinessObjectFormatVersion, String expectedOldBusinessObjectFormatVersion,
+        NotificationMessage notificationMessage) throws IOException
+    {
+        assertNotNull(notificationMessage);
+
+        assertEquals(expectedMessageType, notificationMessage.getMessageType());
+        assertEquals(expectedMessageDestination, notificationMessage.getMessageDestination());
+
+        BusinessObjectFormatVersionChangeJsonMessagePayload businessObjectFormatVersionChangeJsonMessagePayload =
+            jsonHelper.unmarshallJsonToObject(BusinessObjectFormatVersionChangeJsonMessagePayload.class, notificationMessage.getMessageText());
+
+        assertEquals(StringUtils.length(businessObjectFormatVersionChangeJsonMessagePayload.eventDate), StringUtils.length(HerdDateUtils.now().toString()));
+        assertEquals(expectedBusinessObjectFormatKey, businessObjectFormatVersionChangeJsonMessagePayload.businessObjectFormatKey);
+        assertEquals(expectedNewBusinessObjectFormatVersion, businessObjectFormatVersionChangeJsonMessagePayload.newBusinessObjectFormatVersion);
+        assertEquals(expectedOldBusinessObjectFormatVersion, businessObjectFormatVersionChangeJsonMessagePayload.oldBusinessObjectFormatVersion);
+    }
+
     private static class BusinessObjectDataStatusChangeJsonMessagePayload
     {
         public Map<String, String> attributes;
@@ -674,5 +846,16 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         public String newBusinessObjectDataStatus;
 
         public String oldBusinessObjectDataStatus;
+    }
+
+    private static class BusinessObjectFormatVersionChangeJsonMessagePayload
+    {
+        public BusinessObjectFormatKey businessObjectFormatKey;
+
+        public String eventDate;
+
+        public String newBusinessObjectFormatVersion;
+
+        public String oldBusinessObjectFormatVersion;
     }
 }
