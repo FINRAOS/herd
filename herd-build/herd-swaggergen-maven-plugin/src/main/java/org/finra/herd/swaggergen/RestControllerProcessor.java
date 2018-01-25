@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,9 +28,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.collect.Lists;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.models.Operation;
@@ -215,7 +218,23 @@ public class RestControllerProcessor
 
             // Add the tag and process each method.
             swagger.addTag(new Tag().name(tagName));
-            for (Method method : clazz.getDeclaredMethods())
+
+            List<Method> methods = Lists.newArrayList(clazz.getDeclaredMethods());
+            // Based on the Java 8 doc, getDeclaredMethods() is not guaranteed sorted
+            // In order to be sure we generate stable API when the URL's don't change
+            // we can give it a sort order based on the first URI hit in the request mapping
+            List<Method> outMethods = methods.stream().filter((method) -> {
+                RequestMapping rm = method.getAnnotation(RequestMapping.class);
+                ApiOperation apiOp = method.getAnnotation(ApiOperation.class);
+                return  rm != null && // Has RequestMapping
+                    rm.value().length > 0 && // has at least 1 URI
+                    rm.method().length > 0 && // has at least 1 HttpMethod
+                    (apiOp == null || !apiOp.hidden()); // marked as a hidden ApiOperation
+            }).sorted(Comparator.comparing(a -> ((Method)a).getAnnotation(RequestMapping.class).value()[0])
+                .thenComparing(a -> ((Method)a).getAnnotation(RequestMapping.class).method()[0]))
+                .collect(Collectors.toList());
+
+            for (Method method : outMethods)
             {
                 // Get the method source information.
                 List<Class<?>> methodParamClasses = new ArrayList<>();

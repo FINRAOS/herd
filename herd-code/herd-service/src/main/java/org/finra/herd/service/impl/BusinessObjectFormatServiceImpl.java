@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.validation.constraints.AssertTrue;
-
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -47,6 +45,7 @@ import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.NamespacePermissions;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -77,6 +76,7 @@ import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 import org.finra.herd.service.BusinessObjectFormatService;
+import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
@@ -140,11 +140,15 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     private FileTypeDaoHelper fileTypeDaoHelper;
 
     @Autowired
+    private MessageNotificationEventService messageNotificationEventService;
+
+    @Autowired
     private PartitionKeyGroupDaoHelper partitionKeyGroupDaoHelper;
 
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat createBusinessObjectFormat(BusinessObjectFormatCreateRequest request)
@@ -236,10 +240,16 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Notify the search index that a business object definition must be updated.
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
+        // Create a version change notification to be sent on create business object format event.
+        messageNotificationEventService
+            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatHelper.getBusinessObjectFormatKey(newBusinessObjectFormatEntity),
+                latestVersionBusinessObjectFormatEntity != null ? latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatVersion().toString() : "");
+
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(newBusinessObjectFormatEntity);
     }
 
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey, BusinessObjectFormatUpdateRequest request)
@@ -301,6 +311,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Notify the search index that a business object definition must be updated.
         searchIndexUpdateHelper
             .modifyBusinessObjectDefinitionInSearchIndex(businessObjectFormatEntity.getBusinessObjectDefinition(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Create a version change notification to be sent on create business object format event.
+        messageNotificationEventService
+            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity),
+                businessObjectFormatEntity.getBusinessObjectFormatVersion().toString());
 
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);

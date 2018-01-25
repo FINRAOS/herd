@@ -30,6 +30,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.service.MessageNotificationEventService;
@@ -60,6 +61,14 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
     {
         return processNotificationMessages(notificationMessageBuilder
             .buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus));
+    }
+
+    @Override
+    public List<NotificationMessage> processBusinessObjectFormatVersionChangeNotificationEvent(BusinessObjectFormatKey businessObjectFormatKey,
+        String oldBusinessObjectFormatVersion)
+    {
+        return processNotificationMessages(
+            notificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, oldBusinessObjectFormatVersion));
     }
 
     @PublishNotificationMessages
