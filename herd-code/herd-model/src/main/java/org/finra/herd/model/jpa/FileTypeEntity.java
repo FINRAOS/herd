@@ -53,6 +53,11 @@ public class FileTypeEntity extends AuditableEntity
     public static final String TXT_FILE_TYPE = "TXT";
 
     /**
+     * File type for database tables
+     */
+    public static final String DB_TABLE_FILE_TYPE = "DB_TABLE";
+
+    /**
      * The code column.
      */
     @Id
