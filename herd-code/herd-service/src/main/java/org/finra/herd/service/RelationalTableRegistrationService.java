@@ -18,7 +18,18 @@ package org.finra.herd.service;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 
+/**
+ * relational table registration service
+ */
 public interface RelationalTableRegistrationService
 {
+    /**
+     * Create relational table registration in Herd
+     * Includes create business object definition, business object format and business object data
+     *
+     * @param relationalTableRegistrationCreateRequest relational table registration create request
+     *
+     * @return business object data
+     */
     public BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest);
 }

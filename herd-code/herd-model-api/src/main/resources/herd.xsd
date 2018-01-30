@@ -7944,6 +7944,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectFormatUsage" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
+                  Object Format
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="dataProviderName" type="xs:string">
             <xs:annotation>
                <xs:documentation>The name of the data provider</xs:documentation>
