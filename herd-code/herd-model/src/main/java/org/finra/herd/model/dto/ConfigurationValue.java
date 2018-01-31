@@ -930,7 +930,7 @@ public enum ConfigurationValue
     /**
      * The attribute name which the relational table registration put the table name in
      */
-    RELATIONAL_TABLE_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME("relationalTable.businessObjectFormat.attribute.name", "dbTableName");
+    RELATIONAL_TABLE_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME("relationalTable.businessObjectFormat.attribute.name", "relational.table.name");
 
     private Object defaultValue;
 

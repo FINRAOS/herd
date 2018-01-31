@@ -33,7 +33,6 @@ import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
-import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -121,11 +120,11 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
      *
      * @return business object data
      */
-    protected BusinessObjectData createRelationalTableRegistrationImpl(RelationalTableRegistrationCreateRequest createRequest)
+    private BusinessObjectData createRelationalTableRegistrationImpl(RelationalTableRegistrationCreateRequest createRequest)
     {
         String relationalTableBusinessObjectFormatAttributeName =
             configurationHelper.getProperty(ConfigurationValue.RELATIONAL_TABLE_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME, String.class);
-        validateRelationalTableRegistrationCreateRequest(createRequest);
+        validateAndTrimRelationalTableRegistrationCreateRequest(createRequest);
 
         DataProviderEntity dataProviderEntity = dataProviderDaoHelper.getDataProviderEntity(createRequest.getDataProviderName());
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(createRequest.getNamespace());
@@ -181,11 +180,11 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
     }
 
     /**
-     * Validate relational table registration create request
+     * Validate and trim relational table registration create request
      *
      * @param createRequest relational table registration create request
      */
-    public void validateRelationalTableRegistrationCreateRequest(RelationalTableRegistrationCreateRequest createRequest)
+    private void validateAndTrimRelationalTableRegistrationCreateRequest(RelationalTableRegistrationCreateRequest createRequest)
     {
         Assert.notNull(createRequest, "A relational table registration create request must be specified.");
         createRequest.setNamespace(alternateKeyHelper.validateStringParameter("namespace", createRequest.getNamespace()));
