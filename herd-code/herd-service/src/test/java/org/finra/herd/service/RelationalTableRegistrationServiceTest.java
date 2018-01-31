@@ -157,6 +157,86 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testCreateRelationalTableRegistrationWithNullOptionalFields()
+    {
+        String businessObjectFormatAttributeName =
+            configurationHelper.getProperty(ConfigurationValue.RELATIONAL_TABLE_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME, String.class);
+
+        RelationalTableRegistrationCreateRequest createRequest = new RelationalTableRegistrationCreateRequest();
+        createRequest.setNamespace(BDEF_NAMESPACE);
+        createRequest.setDataProviderName(DATA_PROVIDER_NAME);
+        createRequest.setBusinessObjectDefinitionName(BDEF_NAME);
+        createRequest.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        createRequest.setRelationalTableName(RELATIONAL_TABLE_NAME);
+        createRequest.setStorageName(STORAGE_NAME);
+        createRequest.setBusinessObjectDefinitionDisplayName(null);
+
+        BusinessObjectData businessObjectData = relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
+        BusinessObjectData expectedBusinessObjectData = new BusinessObjectData();
+        expectedBusinessObjectData.setId(businessObjectData.getId());
+        expectedBusinessObjectData.setNamespace(BDEF_NAMESPACE);
+        expectedBusinessObjectData.setBusinessObjectDefinitionName(BDEF_NAME);
+        expectedBusinessObjectData.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        expectedBusinessObjectData.setVersion(0);
+        expectedBusinessObjectData.setStatus("VALID");
+        expectedBusinessObjectData.setLatestVersion(true);
+        expectedBusinessObjectData.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
+        expectedBusinessObjectData.setPartitionValue(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_VALUE);
+        expectedBusinessObjectData.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
+
+        StorageUnit expectedStorageUnit = new StorageUnit();
+        Storage expectedStorage = new Storage();
+        expectedStorage.setName(STORAGE_NAME);
+        expectedStorage.setStoragePlatformName(StoragePlatformEntity.RELATIONAL);
+        expectedStorageUnit.setStorage(expectedStorage);
+        expectedStorageUnit.setStorageUnitStatus(StorageUnitStatusEntity.ENABLED);
+
+        expectedBusinessObjectData.setStorageUnits(Arrays.asList(expectedStorageUnit));
+        expectedBusinessObjectData.setSubPartitionValues(new ArrayList<>());
+        expectedBusinessObjectData.setAttributes(new ArrayList<>());
+        expectedBusinessObjectData.setBusinessObjectDataParents(new ArrayList<>());
+        expectedBusinessObjectData.setBusinessObjectDataChildren(new ArrayList<>());
+
+        assertEquals(businessObjectData, expectedBusinessObjectData);
+
+        BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
+        businessObjectFormatKey.setNamespace(BDEF_NAMESPACE);
+        businessObjectFormatKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectFormatKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectFormatKey.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
+        businessObjectFormatKey.setBusinessObjectFormatVersion(0);
+
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKey);
+        BusinessObjectFormat expectedBusinessObjectFormat = new BusinessObjectFormat();
+        expectedBusinessObjectFormat.setId(businessObjectFormat.getId());
+        expectedBusinessObjectFormat.setNamespace(BDEF_NAMESPACE);
+        expectedBusinessObjectFormat.setBusinessObjectDefinitionName(BDEF_NAME);
+        expectedBusinessObjectFormat.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
+        expectedBusinessObjectFormat.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        expectedBusinessObjectFormat.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
+        expectedBusinessObjectFormat.setBusinessObjectFormatVersion(0);
+        expectedBusinessObjectFormat.setLatestVersion(true);
+        expectedBusinessObjectFormat.setBusinessObjectFormatParents(new ArrayList<>());
+        expectedBusinessObjectFormat.setBusinessObjectFormatChildren(new ArrayList<>());
+        expectedBusinessObjectFormat.setAttributeDefinitions(new ArrayList<>());
+        expectedBusinessObjectFormat.setAttributes(Arrays.asList(new Attribute(businessObjectFormatAttributeName, RELATIONAL_TABLE_NAME)));
+
+        assertEquals(businessObjectFormat, expectedBusinessObjectFormat);
+
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
+        businessObjectDefinitionKey.setNamespace(BDEF_NAMESPACE);
+        businessObjectDefinitionKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, false);
+        BusinessObjectDefinition expectedBusinessObjectDefinition = (BusinessObjectDefinition) businessObjectDefinition.clone();
+        expectedBusinessObjectDefinition.setNamespace(BDEF_NAMESPACE);
+        expectedBusinessObjectDefinition.setBusinessObjectDefinitionName(BDEF_NAME);
+        expectedBusinessObjectDefinition.setDataProviderName(DATA_PROVIDER_NAME);
+        expectedBusinessObjectDefinition.setDisplayName(null);
+
+        assertEquals(businessObjectDefinition, expectedBusinessObjectDefinition);
+    }
+
+    @Test
     public void testCreateRelationalTableRegistrationMissingRequiredParameters()
     {
         RelationalTableRegistrationCreateRequest createRequest = new RelationalTableRegistrationCreateRequest();

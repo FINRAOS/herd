@@ -198,5 +198,10 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
         createRequest.setStorageName(alternateKeyHelper.validateStringParameter("storage name", createRequest.getStorageName()));
         createRequest.setBusinessObjectFormatUsage(
             alternateKeyHelper.validateStringParameter("business object format usage", createRequest.getBusinessObjectFormatUsage()));
+
+        if (createRequest.getBusinessObjectDefinitionDisplayName() != null)
+        {
+            createRequest.setBusinessObjectDefinitionDisplayName(createRequest.getBusinessObjectDefinitionDisplayName().trim());
+        }
     }
 }
