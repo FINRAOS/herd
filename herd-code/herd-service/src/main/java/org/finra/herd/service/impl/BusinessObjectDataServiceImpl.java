@@ -118,6 +118,16 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      */
     public static final String REASON_NOT_REGISTERED = "NOT_REGISTERED";
 
+    /**
+     * The partition key value for business object data without partitioning.
+     */
+    public static final String NO_PARTITIONING_PARTITION_KEY = "partition";
+
+    /**
+     * The partition value for business object data without partitioning.
+     */
+    public static final String NO_PARTITIONING_PARTITION_VALUE = "none";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataServiceImpl.class);
 
     @Autowired

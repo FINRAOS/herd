@@ -694,6 +694,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ZERO_COLUMN_SIZE = "0";
 
+    public static final String RELATIONAL_TABLE_NAME = "UT_RELATIONAL_TABLE_" + RANDOM_SUFFIX;
+
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
 
