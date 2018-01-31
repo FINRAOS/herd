@@ -38,6 +38,13 @@ public class RelationalTableRegistrationRestController extends HerdBaseControlle
     @Autowired
     private RelationalTableRegistrationService relationalTableRegistrationService;
 
+    /**
+     * Creates relational table registration
+     *
+     * @param relationalTableRegistrationCreateRequest relational table registration create request
+     *
+     * @return business object data
+     */
     @RequestMapping(value = "/relationalTableRegistrations", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_RELATIONAL_TABLE_REGISTRATIONS_POST)
     public BusinessObjectData createRelationalTableRegistration(@RequestBody RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
