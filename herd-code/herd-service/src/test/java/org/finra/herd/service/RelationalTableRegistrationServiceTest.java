@@ -34,6 +34,8 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
@@ -62,6 +64,9 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
     @Autowired
     private BusinessObjectFormatService businessObjectFormatService;
 
+    @Autowired
+    private BusinessObjectDefinitionService businessObjectDefinitionService;
+
     @Before
     public void setupData()
     {
@@ -84,6 +89,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         createRequest.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
         createRequest.setRelationalTableName(RELATIONAL_TABLE_NAME);
         createRequest.setStorageName(STORAGE_NAME);
+        createRequest.setBusinessObjectDefinitionDisplayName(BDEF_DISPLAY_NAME);
 
         BusinessObjectData businessObjectData = relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
         BusinessObjectData expectedBusinessObjectData = new BusinessObjectData();
@@ -136,6 +142,18 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectFormat.setAttributes(Arrays.asList(new Attribute(businessObjectFormatAttributeName, RELATIONAL_TABLE_NAME)));
 
         assertEquals(businessObjectFormat, expectedBusinessObjectFormat);
+
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
+        businessObjectDefinitionKey.setNamespace(BDEF_NAMESPACE);
+        businessObjectDefinitionKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, false);
+        BusinessObjectDefinition expectedBusinessObjectDefinition = (BusinessObjectDefinition) businessObjectDefinition.clone();
+        expectedBusinessObjectDefinition.setNamespace(BDEF_NAMESPACE);
+        expectedBusinessObjectDefinition.setBusinessObjectDefinitionName(BDEF_NAME);
+        expectedBusinessObjectDefinition.setDataProviderName(DATA_PROVIDER_NAME);
+        expectedBusinessObjectDefinition.setDisplayName(BDEF_DISPLAY_NAME);
+
+        assertEquals(businessObjectDefinition, expectedBusinessObjectDefinition);
     }
 
     @Test
