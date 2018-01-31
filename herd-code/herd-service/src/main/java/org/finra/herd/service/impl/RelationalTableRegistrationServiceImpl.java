@@ -145,7 +145,7 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
         // Create Business Object Format
         BusinessObjectFormatCreateRequest businessObjectFormatCreateRequest = new BusinessObjectFormatCreateRequest();
         businessObjectFormatCreateRequest.setNamespace(namespaceEntity.getCode());
-        businessObjectFormatCreateRequest.setBusinessObjectDefinitionName(createRequest.getBusinessObjectDefinitionName());
+        businessObjectFormatCreateRequest.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
         businessObjectFormatCreateRequest.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
         businessObjectFormatCreateRequest.setBusinessObjectFormatUsage(createRequest.getBusinessObjectFormatUsage());
         businessObjectFormatCreateRequest.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
@@ -161,14 +161,10 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
 
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
         businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
-        businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
         businessObjectDataEntity.setVersion(0);
         businessObjectDataEntity.setLatestVersion(true);
         businessObjectDataEntity.setPartitionValue(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_VALUE);
-
-        StorageUnitCreateRequest storageUnitCreateRequest = new StorageUnitCreateRequest();
-        storageUnitCreateRequest.setStorageName(storageEntity.getName());
 
         // Get the storage unit status entity for the ENABLED status.
         StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ENABLED);
