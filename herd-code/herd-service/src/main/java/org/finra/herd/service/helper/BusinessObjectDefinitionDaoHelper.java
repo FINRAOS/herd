@@ -56,9 +56,6 @@ public class BusinessObjectDefinitionDaoHelper
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
-    @Autowired
-    private SearchIndexUpdateHelper searchIndexUpdateHelper;
-    
     /**
      * Retrieves a business object definition entity by it's key and ensure it exists.
      *
