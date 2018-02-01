@@ -140,13 +140,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
     @Autowired
-    private DataProviderDaoHelper dataProviderDaoHelper;
-
-    @Autowired
     private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
-
-    @Autowired
-    private NamespaceDaoHelper namespaceDaoHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -206,6 +200,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     protected BusinessObjectDefinition createBusinessObjectDefinitionImpl(BusinessObjectDefinitionCreateRequest request)
     {
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.createBusinessObjectDefinitionEntity(request);
+
+        // Notify the search index that a business object definition must be created.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Create and return the business object definition object from the persisted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, false);

@@ -16,6 +16,8 @@
 package org.finra.herd.service.impl;
 
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_CREATE;
+
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
@@ -55,9 +58,9 @@ import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageUnitStatusDaoHelper;
-import org.finra.herd.core.helper.ConfigurationHelper;
 
 /**
  * The relational table registration service implementation
@@ -103,6 +106,9 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
     private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
 
     @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
+
+    @Autowired
     private ConfigurationHelper configurationHelper;
 
     @NamespacePermission(fields = "#relationalTableRegistrationCreateRequest.namespace", permissions = NamespacePermissionEnum.WRITE)
@@ -140,6 +146,9 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
         businessObjectDefinitionCreateRequest.setDisplayName(createRequest.getBusinessObjectDefinitionDisplayName());
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
             businessObjectDefinitionDaoHelper.createBusinessObjectDefinitionEntity(businessObjectDefinitionCreateRequest);
+
+        // Notify the search index that a business object definition must be created.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Create Business Object Format
         BusinessObjectFormatCreateRequest businessObjectFormatCreateRequest = new BusinessObjectFormatCreateRequest();
