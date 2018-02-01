@@ -15,8 +15,6 @@
 */
 package org.finra.herd.service.helper;
 
-import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_CREATE;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,9 +56,6 @@ public class BusinessObjectDefinitionDaoHelper
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
-    @Autowired
-    private SearchIndexUpdateHelper searchIndexUpdateHelper;
-    
     /**
      * Retrieves a business object definition entity by it's key and ensure it exists.
      *
@@ -139,9 +134,6 @@ public class BusinessObjectDefinitionDaoHelper
 
         // Persist the change event entity
         saveBusinessObjectDefinitionChangeEvents(businessObjectDefinitionEntity);
-
-        // Notify the search index that a business object definition must be created.
-        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Persist and return the new entity.
         return businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
