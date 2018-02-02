@@ -28,6 +28,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.BusinessObjectFormatDao;
@@ -136,6 +137,13 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
     public List<BusinessObjectFormatKey> getBusinessObjectFormats(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         boolean latestBusinessObjectFormatVersion)
     {
+        return getBusinessObjectFormatsWithFilters(businessObjectDefinitionKey, null, latestBusinessObjectFormatVersion);
+    }
+
+    @Override
+    public List<BusinessObjectFormatKey> getBusinessObjectFormatsWithFilters(
+        BusinessObjectDefinitionKey businessObjectDefinitionKey, String businessObjectFormatUsage, boolean latestBusinessObjectFormatVersion)
+    {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
@@ -163,6 +171,13 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
             builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessObjectDefinitionKey.getNamespace().toUpperCase());
         queryRestriction = builder.and(queryRestriction, builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
             businessObjectDefinitionKey.getBusinessObjectDefinitionName().toUpperCase()));
+
+        // Add the business object format usage where parameter is not empty
+        if (StringUtils.isNotEmpty(businessObjectFormatUsage))
+        {
+            queryRestriction = builder.and(queryRestriction,
+                builder.equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)), businessObjectFormatUsage.toUpperCase()));
+        }
 
         // Add the select clause.
         criteria.multiselect(namespaceCodeColumn, businessObjectDefinitionNameColumn, businessObjectFormatUsageColumn, fileTypeCodeColumn,

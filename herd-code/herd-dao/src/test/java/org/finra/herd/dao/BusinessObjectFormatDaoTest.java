@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -242,6 +243,48 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
 
         // Validate the returned object.
         assertEquals(businessObjectFormatDaoTestHelper.getExpectedBusinessObjectFormatLatestVersionKeys(), resultKeys);
+    }
+
+    @Test
+    public void testGetBusinessObjectFormatsWithFilters()
+    {
+        // Create and persist the relative business object definitions.
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+
+        // Create and persist business object format entities.
+        for (BusinessObjectFormatKey key : businessObjectFormatDaoTestHelper.getTestBusinessObjectFormatKeys())
+        {
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
+                    key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
+        }
+
+        // Retrieve a list of business object format keys for the specified business object definition.
+        List<BusinessObjectFormatKey> resultKeys =
+            businessObjectFormatDao.getBusinessObjectFormatsWithFilters(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),  FORMAT_USAGE_CODE, false);
+
+        // Need to filter format usage
+        List<BusinessObjectFormatKey> expectedKeyList = businessObjectFormatDaoTestHelper.getExpectedBusinessObjectFormatKeys();
+        expectedKeyList = expectedKeyList.stream().filter(formatKey -> (formatKey.getBusinessObjectFormatUsage().equalsIgnoreCase(FORMAT_USAGE_CODE)))
+            .collect(Collectors.toList());
+
+        // Validate the returned object.
+        assertEquals(expectedKeyList, resultKeys);
+
+        // Retrieve a list of the latest version business object format keys for the specified business object definition.
+        resultKeys =
+            businessObjectFormatDao.getBusinessObjectFormatsWithFilters(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), FORMAT_USAGE_CODE, true);
+
+        // Need to filter format usage
+        expectedKeyList = businessObjectFormatDaoTestHelper.getExpectedBusinessObjectFormatLatestVersionKeys();
+        expectedKeyList = expectedKeyList.stream().filter(formatKey -> (formatKey.getBusinessObjectFormatUsage().equalsIgnoreCase(FORMAT_USAGE_CODE)))
+            .collect(Collectors.toList());
+
+        // Validate the returned object.
+        assertEquals(expectedKeyList, resultKeys);
     }
 
     @Test
