@@ -429,6 +429,23 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long MAX_RESULTS_PER_PAGE = getRandomLong();
 
+    /**
+     * Message header keys notification message builder testing
+     */
+    public static final String MESSAGE_HEADER_KEY_ENVIRONMENT = "environment";
+
+    public static final String MESSAGE_HEADER_KEY_MESSAGE_ID = "messageId";
+
+    public static final String MESSAGE_HEADER_KEY_MESSAGE_TYPE = "messageType";
+
+    public static final String MESSAGE_HEADER_KEY_MESSAGE_VERSION = "messageVersion";
+
+    public static final String MESSAGE_HEADER_KEY_NAMESPACE = "namespace";
+
+    public static final String MESSAGE_HEADER_KEY_SOURCE_SYSTEM = "sourceSystem";
+
+    public static final String MESSAGE_HEADER_KEY_USER_ID = "userId";
+
     public static final String MESSAGE_VERSION = "UT_MessageVersion" + RANDOM_SUFFIX;
 
     public static final String METHOD_NAME = "UT_MethodName_1_" + RANDOM_SUFFIX;
