@@ -443,6 +443,26 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     }
 
     @Override
+    public BusinessObjectFormatKeys getBusinessObjectFormatsWithFilters(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        String businessObjectFormatUsage, boolean latestBusinessObjectFormatVersion)
+    {
+        // Perform validation and trim.
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+
+        // Perform Validation and trim of businessObjectFormatUsage
+        businessObjectFormatUsage = alternateKeyHelper.validateStringParameter("business object format usage", businessObjectFormatUsage);
+
+        // Ensure that a business object definition already exists with the specified name.
+        businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+
+        // Gets the list of keys and return them.
+        BusinessObjectFormatKeys businessObjectFormatKeys = new BusinessObjectFormatKeys();
+        businessObjectFormatKeys.getBusinessObjectFormatKeys().addAll(businessObjectFormatDao
+            .getBusinessObjectFormatsWithFilters(businessObjectDefinitionKey, businessObjectFormatUsage, latestBusinessObjectFormatVersion));
+        return businessObjectFormatKeys;
+    }
+
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectFormatDdl generateBusinessObjectFormatDdl(BusinessObjectFormatDdlRequest request)
     {
