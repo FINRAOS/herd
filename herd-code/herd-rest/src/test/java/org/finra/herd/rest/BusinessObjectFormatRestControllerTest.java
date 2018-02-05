@@ -226,8 +226,7 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         // Validate the returned object.
         assertEquals(businessObjectFormatKeys, resultKeys);
     }
-
-
+    
     @Test
     public void testUpdateBusinessObjectFormat()
     {
