@@ -49,6 +49,7 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.BusinessObjectFormatService;
+import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.RelationalTableRegistrationService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
@@ -110,6 +111,9 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
 
     @Autowired
     private ConfigurationHelper configurationHelper;
+
+    @Autowired
+    private MessageNotificationEventService sqsNotificationEventService;
 
     @NamespacePermission(fields = "#relationalTableRegistrationCreateRequest.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
@@ -184,6 +188,11 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
 
         // Persist the new entity.
         businessObjectDataEntity = businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+
+        // Create a status change notification to be sent on create business object data event.
+        sqsNotificationEventService
+            .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity),
+                businessObjectDataStatusEntity.getCode(), null);
 
         return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);
     }
