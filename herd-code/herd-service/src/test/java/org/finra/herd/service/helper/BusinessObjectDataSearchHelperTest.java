@@ -204,4 +204,37 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
             assertEquals(String.format("A %s less than %d must be specified.", PARAMETER_NAME, Integer.MAX_VALUE - 1), e.getMessage());
         }
     }
+
+    @Test
+    public void testValidateBusinessObjectDataSearchKey()
+    {
+        try
+        {
+            AttributeValueFilter attributeValueFilter = new AttributeValueFilter();
+            attributeValueFilter.setAttributeName(null);
+            attributeValueFilter.setAttributeValue(ATTRIBUTE_VALUE);
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
+                new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
+
+            attributeValueFilter = new AttributeValueFilter();
+            attributeValueFilter.setAttributeName(ATTRIBUTE_NAME);
+            attributeValueFilter.setAttributeValue(null);
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
+                new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
+
+            attributeValueFilter = new AttributeValueFilter();
+            attributeValueFilter.setAttributeName(ATTRIBUTE_NAME);
+            attributeValueFilter.setAttributeValue(ATTRIBUTE_VALUE);
+            businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
+                new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
+
+        }
+        catch (IllegalArgumentException e)
+        {
+            fail();
+        }
+    }
 }
