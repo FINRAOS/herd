@@ -208,7 +208,6 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
     public void testBusinessObjectDataKeyToStringWithNull()
     {
         BusinessObjectDataKey testBusinessObjectDataKey = null;
-        String resultString = businessObjectDataHelper.businessObjectDataKeyToString(testBusinessObjectDataKey);
-        assertNull(resultString);
+        assertNull(businessObjectDataHelper.businessObjectDataKeyToString(testBusinessObjectDataKey));
     }
 }
