@@ -391,6 +391,8 @@ public class SecurityFunctions
 
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_PUT = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
 
+    public static final String FN_RELATIONAL_TABLE_REGISTRATIONS_POST = "FN_RELATIONAL_TABLE_REGISTRATIONS_POST";
+
     /**
      * Returns all the functions sorted by function name.
      *
