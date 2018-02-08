@@ -925,7 +925,12 @@ public enum ConfigurationValue
     /**
      * The session identifier for the assumed role to be used when tagging S3 objects to trigger S3 object deletion.
      */
-    S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null);
+    S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null),
+
+    /**
+     * The attribute name which the relational table registration put the table name in
+     */
+    RELATIONAL_TABLE_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME("relationalTable.businessObjectFormat.attribute.name", "relational.table.name");
 
     private Object defaultValue;
 

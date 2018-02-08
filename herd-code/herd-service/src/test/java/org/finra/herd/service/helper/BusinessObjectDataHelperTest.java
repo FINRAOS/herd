@@ -16,6 +16,7 @@
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -201,5 +202,12 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
         assertEquals(expectedOutput, businessObjectDataHelper
             .businessObjectDataKeyToString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION));
+    }
+
+    @Test
+    public void testBusinessObjectDataKeyToStringWithNull()
+    {
+        BusinessObjectDataKey testBusinessObjectDataKey = null;
+        assertNull(businessObjectDataHelper.businessObjectDataKeyToString(testBusinessObjectDataKey));
     }
 }

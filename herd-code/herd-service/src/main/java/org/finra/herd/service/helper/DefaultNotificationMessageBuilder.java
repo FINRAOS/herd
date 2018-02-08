@@ -419,6 +419,9 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         // Add the map of business object data attributes to the context.
         velocityContextMap.put("businessObjectDataAttributes", businessObjectDataAttributes);
 
+        // Add the namespace to the header.
+        velocityContextMap.put("namespace", businessObjectDataKey.getNamespace());
+
         return velocityContextMap;
     }
 
