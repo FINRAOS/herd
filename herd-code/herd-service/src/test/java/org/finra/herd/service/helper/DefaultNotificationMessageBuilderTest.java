@@ -109,7 +109,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Arrays.asList(
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
@@ -125,6 +125,52 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
     }
 
     @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesWithJsonPayloadAndWithMessageHeaders() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Create message header definitions.
+        List<MessageHeaderDefinition> messageHeaderDefinitions = new ArrayList<>();
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_ENVIRONMENT, "$herd_environment"));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_TYPE, MESSAGE_TYPE));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_VERSION, MESSAGE_VERSION));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_SOURCE_SYSTEM, SOURCE_SYSTEM));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_ID, "$uuid"));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_USER_ID, "$username"));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_NAMESPACE, "$namespace"));
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                messageHeaderDefinitions)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build the notification message
+        List<NotificationMessage> result =
+            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
+
+        // Validate the notification message.
+        assertEquals(1, CollectionUtils.size(result));
+        assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
+        String uuid = result.get(0).getMessageHeaders().get(4).getValue();
+        assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
+            NO_ATTRIBUTES, Arrays
+                .asList(new MessageHeader(MESSAGE_HEADER_KEY_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)),
+                    new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_TYPE, MESSAGE_TYPE), new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_VERSION, MESSAGE_VERSION),
+                    new MessageHeader(MESSAGE_HEADER_KEY_SOURCE_SYSTEM, SOURCE_SYSTEM), new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_ID, uuid),
+                    new MessageHeader(MESSAGE_HEADER_KEY_USER_ID, HerdDaoSecurityHelper.SYSTEM_USER),
+                    new MessageHeader(MESSAGE_HEADER_KEY_NAMESPACE, NAMESPACE)), result.get(0));
+    }
+
+    @Test
     public void testBuildBusinessObjectDataStatusChangeMessagesWithJsonPayloadNoOldBusinessObjectDataStatus() throws Exception
     {
         // Create a business object data entity.
@@ -137,7 +183,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Arrays.asList(
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
@@ -169,7 +215,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Arrays.asList(
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
@@ -208,7 +254,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Arrays.asList(
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
@@ -237,7 +283,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Arrays.asList(
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
@@ -265,7 +311,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Arrays.asList(
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
@@ -304,14 +350,6 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Get a business object data key.
         BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
 
-        // Create message header keys.
-        final String MESSAGE_HEADER_KEY_ENVIRONMENT = "environment";
-        final String MESSAGE_HEADER_KEY_MESSAGE_TYPE = "messageType";
-        final String MESSAGE_HEADER_KEY_MESSAGE_VERSION = "messageVersion";
-        final String MESSAGE_HEADER_KEY_SOURCE_SYSTEM = "sourceSystem";
-        final String MESSAGE_HEADER_KEY_MESSAGE_ID = "messageId";
-        final String MESSAGE_HEADER_KEY_USER_ID = "userId";
-
         // Create message header definitions.
         List<MessageHeaderDefinition> messageHeaderDefinitions = new ArrayList<>();
         messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_ENVIRONMENT, "$herd_environment"));
@@ -324,7 +362,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Arrays.asList(
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
                 messageHeaderDefinitions)))));
         configurationDao.saveAndRefresh(configurationEntity);
@@ -718,7 +756,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         }
         catch (MethodInvocationException e)
         {
-            assertEquals(String.format("Variable $incoming_message_correlation_id has not been set at systemMonitorResponse[line 11, column 29]"),
+            assertEquals("Variable $incoming_message_correlation_id has not been set at systemMonitorResponse[line 11, column 29]",
                 e.getMessage());
         }
         finally
@@ -747,7 +785,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Arrays.asList(
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
