@@ -336,7 +336,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         assertNotNull(storageUnitEntity.getRestoreExpirationOn());
         Long differenceInDays =
             TimeUnit.DAYS.convert(storageUnitEntity.getRestoreExpirationOn().getTime() - storageUnitEntity.getCreatedOn().getTime(), TimeUnit.MILLISECONDS);
-        assertEquals(Long.valueOf((Integer) ConfigurationValue.BDATA_RESTORE_EXPIRATION_IN_DAYS_DEFAULT.getDefaultValue()), differenceInDays);
+        assertTrue((Integer) ConfigurationValue.BDATA_RESTORE_EXPIRATION_IN_DAYS_DEFAULT.getDefaultValue() - differenceInDays <= 1);
     }
 
     @Test
