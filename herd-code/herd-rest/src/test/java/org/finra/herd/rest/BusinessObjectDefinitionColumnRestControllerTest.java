@@ -23,8 +23,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumn;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKeys;
@@ -64,10 +67,15 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
     @Test
     public void testCreateBusinessObjectDefinitionColumn()
     {
+        // Create business object definition change event
+        List<BusinessObjectDefinitionColumnChangeEvent> businessObjectDefinitionColumnChangeEvents =
+            Lists.newArrayList(new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION, CREATED_ON, CREATED_BY));
+
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
             new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
         BusinessObjectDefinitionColumn businessObjectDefinitionColumn =
-            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
+            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION,
+                businessObjectDefinitionColumnChangeEvents);
         BusinessObjectDefinitionColumnCreateRequest businessObjectDefinitionColumnCreateRequest =
             new BusinessObjectDefinitionColumnCreateRequest(businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
 
@@ -87,10 +95,15 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
     @Test
     public void testDeleteBusinessObjectDefinitionColumn()
     {
+        // Create business object definition change event
+        List<BusinessObjectDefinitionColumnChangeEvent> businessObjectDefinitionColumnChangeEvents =
+            Lists.newArrayList(new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION, CREATED_ON, CREATED_BY));
+
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
             new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
         BusinessObjectDefinitionColumn businessObjectDefinitionColumn =
-            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
+            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION,
+                businessObjectDefinitionColumnChangeEvents);
 
         when(businessObjectDefinitionColumnService.deleteBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey))
             .thenReturn(businessObjectDefinitionColumn);
@@ -107,21 +120,55 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
     @Test
     public void testGetBusinessObjectDefinitionColumn()
     {
+        // Create business object definition change event
+        List<BusinessObjectDefinitionColumnChangeEvent> businessObjectDefinitionColumnChangeEvents =
+            Lists.newArrayList(new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION, CREATED_ON, CREATED_BY));
+
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
             new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
         BusinessObjectDefinitionColumn businessObjectDefinitionColumn =
-            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
+            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION,
+                businessObjectDefinitionColumnChangeEvents);
 
-        when(businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey))
+        when(businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey, false))
             .thenReturn(businessObjectDefinitionColumn);
 
         // Get the business object definition column.
         BusinessObjectDefinitionColumn resultBusinessObjectDefinitionColumn =
-            businessObjectDefinitionColumnRestController.getBusinessObjectDefinitionColumn(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
+            businessObjectDefinitionColumnRestController.getBusinessObjectDefinitionColumn(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME, false);
 
         // Verify the external calls.
-        verify(businessObjectDefinitionColumnService).getBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey);
+        verify(businessObjectDefinitionColumnService).getBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey, false);
         verifyNoMoreInteractions(businessObjectDefinitionColumnService);
+
+        // Validate the returned object.
+        assertEquals(businessObjectDefinitionColumn, resultBusinessObjectDefinitionColumn);
+    }
+
+    @Test
+    public void testGetBusinessObjectDefinitionColumnWithUpdateHistory()
+    {
+        // Create business object definition change event
+        List<BusinessObjectDefinitionColumnChangeEvent> businessObjectDefinitionColumnChangeEvents =
+            Lists.newArrayList(new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION, CREATED_ON, CREATED_BY));
+
+        BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
+            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
+        BusinessObjectDefinitionColumn businessObjectDefinitionColumn =
+            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION,
+                businessObjectDefinitionColumnChangeEvents);
+
+        when(businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey, true))
+            .thenReturn(businessObjectDefinitionColumn);
+
+        // Get the business object definition column.
+        BusinessObjectDefinitionColumn resultBusinessObjectDefinitionColumn =
+            businessObjectDefinitionColumnRestController.getBusinessObjectDefinitionColumn(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME, true);
+
+        // Verify the external calls.
+        verify(businessObjectDefinitionColumnService).getBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey, true);
+        verifyNoMoreInteractions(businessObjectDefinitionColumnService);
+
         // Validate the returned object.
         assertEquals(businessObjectDefinitionColumn, resultBusinessObjectDefinitionColumn);
     }
@@ -136,7 +183,7 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
             .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
 
         BusinessObjectDefinitionColumnKeys businessObjectDefinitionColumnKeys =
-            new BusinessObjectDefinitionColumnKeys(Arrays.asList(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2)));
+            new BusinessObjectDefinitionColumnKeys(Lists.newArrayList(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2)));
 
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
         when(businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumns(businessObjectDefinitionKey))
@@ -155,14 +202,18 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
     @Test
     public void testSearchBusinessObjectDefinitionColumns()
     {
-        BusinessObjectDefinitionColumnSearchRequest request = new BusinessObjectDefinitionColumnSearchRequest(Arrays
-            .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME)))));
+        // Create business object definition change event
+        List<BusinessObjectDefinitionColumnChangeEvent> businessObjectDefinitionColumnChangeEvents =
+            Lists.newArrayList(new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION, CREATED_ON, CREATED_BY));
+
+        BusinessObjectDefinitionColumnSearchRequest request = new BusinessObjectDefinitionColumnSearchRequest(Lists.newArrayList(
+            new BusinessObjectDefinitionColumnSearchFilter(Lists.newArrayList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME)))));
 
         BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = new BusinessObjectDefinitionColumnSearchResponse(Arrays
             .asList(new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), COLUMN_NAME,
-                BDEF_COLUMN_DESCRIPTION),
+                    BDEF_COLUMN_DESCRIPTION, businessObjectDefinitionColumnChangeEvents),
                 new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), COLUMN_NAME_2,
-                    BDEF_COLUMN_DESCRIPTION_2)));
+                    BDEF_COLUMN_DESCRIPTION_2, businessObjectDefinitionColumnChangeEvents)));
 
         Set<String> set = Sets.newHashSet(SCHEMA_COLUMN_NAME_FIELD, DESCRIPTION_FIELD);
 
@@ -181,13 +232,18 @@ public class BusinessObjectDefinitionColumnRestControllerTest extends AbstractRe
     @Test
     public void testUpdateBusinessObjectDefinitionColumn()
     {
+        // Create business object definition change event
+        List<BusinessObjectDefinitionColumnChangeEvent> businessObjectDefinitionColumnChangeEvents =
+            Lists.newArrayList(new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION, CREATED_ON, CREATED_BY));
+
         // Create a business object definition column key.
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
             new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
         BusinessObjectDefinitionColumnUpdateRequest request = new BusinessObjectDefinitionColumnUpdateRequest(BDEF_COLUMN_DESCRIPTION_2);
 
         BusinessObjectDefinitionColumn businessObjectDefinitionColumn =
-            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION);
+            new BusinessObjectDefinitionColumn(ID, businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION,
+                businessObjectDefinitionColumnChangeEvents);
 
         when(businessObjectDefinitionColumnService.updateBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey, request))
             .thenReturn(businessObjectDefinitionColumn);

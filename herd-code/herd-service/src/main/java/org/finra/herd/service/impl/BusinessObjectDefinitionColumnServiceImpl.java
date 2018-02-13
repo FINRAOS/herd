@@ -23,13 +23,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.BusinessObjectDefinitionColumnDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.SchemaColumnDao;
@@ -38,6 +41,7 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumn;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKeys;
@@ -131,13 +135,13 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             if (businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat() == null)
             {
                 throw new ObjectNotFoundException(String.format("Unable to create business object definition column because there are no format schema " +
-                    "columns with name \"%s\" for the business object definition {%s}.", request.getSchemaColumnName(),
+                        "columns with name \"%s\" for the business object definition {%s}.", request.getSchemaColumnName(),
                     businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
             }
             else
             {
                 throw new ObjectNotFoundException(String.format("Unable to create business object definition column because there are no format schema " +
-                    "columns with name \"%s\" in the descriptive business object format for the business object definition {%s}.",
+                        "columns with name \"%s\" in the descriptive business object format for the business object definition {%s}.",
                     request.getSchemaColumnName(), businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
             }
         }
@@ -164,6 +168,9 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             schemaColumnEntity.setBusinessObjectDefinitionColumn(businessObjectDefinitionColumnEntity);
         }
 
+        // Persist the change event entity
+        businessObjectDefinitionColumnDaoHelper.saveBusinessObjectDefinitionColumnChangeEvents(businessObjectDefinitionColumnEntity);
+
         // Persist the new entity.
         businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDao.saveAndRefresh(businessObjectDefinitionColumnEntity);
 
@@ -171,7 +178,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition column object from the persisted entity.
-        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
+        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields(), false);
     }
 
     @NamespacePermission(fields = "#businessObjectDefinitionColumnKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
@@ -201,11 +208,12 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition column object from the deleted entity.
-        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
+        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields(), false);
     }
 
     @Override
-    public BusinessObjectDefinitionColumn getBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey)
+    public BusinessObjectDefinitionColumn getBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey,
+        Boolean includeBusinessObjectDefinitionColumnUpdateHistory)
     {
         // Validate and trim the business object definition column key.
         validateBusinessObjectDefinitionColumnKey(businessObjectDefinitionColumnKey);
@@ -215,7 +223,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             businessObjectDefinitionColumnDaoHelper.getBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey);
 
         // Create and return the business object definition column object from the persisted entity.
-        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
+        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields(),
+            includeBusinessObjectDefinitionColumnUpdateHistory);
     }
 
     @Override
@@ -271,8 +280,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
-        return new BusinessObjectDefinitionColumnSearchResponse(businessObjectDefinitionEntity.getColumns().stream()
-            .map(businessObjectDefinitionColumnEntity -> createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, false, fields))
+        return new BusinessObjectDefinitionColumnSearchResponse(businessObjectDefinitionEntity.getColumns().stream().map(
+            businessObjectDefinitionColumnEntity -> createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, false, fields, false))
             .collect(Collectors.toList()));
     }
 
@@ -295,6 +304,9 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         // Update the entity with the new values.
         businessObjectDefinitionColumnEntity.setDescription(request.getDescription());
 
+        // Persist the change event entity
+        businessObjectDefinitionColumnDaoHelper.saveBusinessObjectDefinitionColumnChangeEvents(businessObjectDefinitionColumnEntity);
+
         // Persist the entity.
         businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDao.saveAndRefresh(businessObjectDefinitionColumnEntity);
 
@@ -303,7 +315,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             .modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionColumnEntity.getBusinessObjectDefinition(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition column object from the persisted entity.
-        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
+        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields(), false);
     }
 
     /**
@@ -336,7 +348,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
      * @return the business object definition column
      */
     private BusinessObjectDefinitionColumn createBusinessObjectDefinitionColumnFromEntity(
-        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity, boolean includeId, Set<String> fields)
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity, boolean includeId, Set<String> fields,
+        Boolean includeBusinessObjectDefinitionColumnUpdateHistory)
     {
         BusinessObjectDefinitionColumn businessObjectDefinitionColumn = new BusinessObjectDefinitionColumn();
 
@@ -356,6 +369,20 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         {
             businessObjectDefinitionColumn.setSchemaColumnName(IterableUtils.get(businessObjectDefinitionColumnEntity.getSchemaColumns(), 0).getName());
         }
+
+        // Add change events.
+        final List<BusinessObjectDefinitionColumnChangeEvent> businessObjectDefinitionColumnChangeEvents = Lists.newArrayList();
+
+        if (BooleanUtils.isTrue(includeBusinessObjectDefinitionColumnUpdateHistory))
+        {
+            businessObjectDefinitionColumnEntity.getChangeEvents().forEach(
+                businessObjectDefinitionColumnChangeEventEntity -> businessObjectDefinitionColumnChangeEvents.add(
+                    new BusinessObjectDefinitionColumnChangeEvent(businessObjectDefinitionColumnEntity.getDescription(),
+                        HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionColumnEntity.getCreatedOn()),
+                        businessObjectDefinitionColumnEntity.getCreatedBy())));
+        }
+
+        businessObjectDefinitionColumn.setBusinessObjectDefinitionColumnChangeEvents(businessObjectDefinitionColumnChangeEvents);
 
         return businessObjectDefinitionColumn;
     }
