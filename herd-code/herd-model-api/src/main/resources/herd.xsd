@@ -1615,7 +1615,7 @@
       <xs:sequence>
          <xs:element name="businessObjectDefinitionColumnChangeEvent" type="businessObjectDefinitionColumnChangeEvent" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>A list of business object definition column change events</xs:documentation>
+               <xs:documentation>A business object definition column change event</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
