@@ -15,12 +15,16 @@
 */
 package org.finra.herd.service.helper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.BusinessObjectDefinitionColumnDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionColumnChangeEventEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionColumnEntity;
 
 /**
@@ -53,9 +57,34 @@ public class BusinessObjectDefinitionColumnDaoHelper
         {
             throw new ObjectNotFoundException(String.format("Column with name \"%s\" does not exist for business object definition {%s}.",
                 businessObjectDefinitionColumnKey.getBusinessObjectDefinitionColumnName(), businessObjectDefinitionHelper
-                .businessObjectDefinitionKeyToString(businessObjectDefinitionHelper.getBusinessObjectDefinitionKey(businessObjectDefinitionColumnKey))));
+                    .businessObjectDefinitionKeyToString(businessObjectDefinitionHelper.getBusinessObjectDefinitionKey(businessObjectDefinitionColumnKey))));
         }
 
         return businessObjectDefinitionColumnEntity;
+    }
+
+    /**
+     * Update and persist the business object definition column change events
+     *
+     * @param businessObjectDefinitionColumnEntity the business object definition entity
+     */
+    public void saveBusinessObjectDefinitionColumnChangeEvents(BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity)
+    {
+        // Set the change events and add an entry to the change event table
+        List<BusinessObjectDefinitionColumnChangeEventEntity> businessObjectDefinitionColumnChangeEventEntities = new ArrayList<>();
+        BusinessObjectDefinitionColumnChangeEventEntity businessObjectDefinitionColumnChangeEventEntity = new BusinessObjectDefinitionColumnChangeEventEntity();
+        businessObjectDefinitionColumnChangeEventEntities.add(businessObjectDefinitionColumnChangeEventEntity);
+
+        businessObjectDefinitionColumnChangeEventEntity.setBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnEntity);
+        businessObjectDefinitionColumnChangeEventEntity.setDescription(businessObjectDefinitionColumnEntity.getDescription());
+
+        if (businessObjectDefinitionColumnEntity.getChangeEvents() != null)
+        {
+            businessObjectDefinitionColumnEntity.getChangeEvents().add(businessObjectDefinitionColumnChangeEventEntity);
+        }
+        else
+        {
+            businessObjectDefinitionColumnEntity.setChangeEvents(businessObjectDefinitionColumnChangeEventEntities);
+        }
     }
 }

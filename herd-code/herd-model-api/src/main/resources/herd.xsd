@@ -1485,6 +1485,11 @@
                <xs:documentation>Description of the Business Object Definition Column</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectDefinitionColumnChangeEvents" type="businessObjectDefinitionColumnChangeEvents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of business object definition column change events</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -1604,6 +1609,36 @@
             </xs:annotation>
          </xs:element>
       </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionColumnChangeEvents">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionColumnChangeEvent" type="businessObjectDefinitionColumnChangeEvent" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A list of business object definition column change events</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionColumnChangeEvent">
+      <xs:all>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Description of the Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="eventTime" type="xs:dateTime">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the business object definition column update occured</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who performed business object definition column update</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
    </xs:complexType>
 
    <!-- ***** Business Object Definition Tag ***** -->
