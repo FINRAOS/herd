@@ -29,7 +29,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.Test;
 
-import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumn;
@@ -83,7 +82,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinitionColumn(resultBusinessObjectDefinitionColumn.getId(), businessObjectDefinitionColumnKey, COLUMN_NAME,
             BDEF_COLUMN_DESCRIPTION, Lists.newArrayList(new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION,
-            HerdDateUtils.getXMLGregorianCalendarValue(resultBusinessObjectDefinitionColumnEntity.getCreatedOn()),
+            resultBusinessObjectDefinitionColumn.getBusinessObjectDefinitionColumnChangeEvents().get(0).getEventTime(),
             resultBusinessObjectDefinitionColumnEntity.getCreatedBy()))), resultBusinessObjectDefinitionColumn);
 
         // Validate that the schema column is now linked with the business object definition column.
@@ -696,7 +695,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinitionColumn(resultBusinessObjectDefinitionColumn.getId(), businessObjectDefinitionColumnKey, COLUMN_NAME,
             BDEF_COLUMN_DESCRIPTION, Lists.newArrayList(new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION,
-            HerdDateUtils.getXMLGregorianCalendarValue(resultBusinessObjectDefinitionColumnEntity.getCreatedOn()),
+            resultBusinessObjectDefinitionColumn.getBusinessObjectDefinitionColumnChangeEvents().get(0).getEventTime(),
             resultBusinessObjectDefinitionColumnEntity.getCreatedBy()))), resultBusinessObjectDefinitionColumn);
     }
 
@@ -740,7 +739,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
             new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION_2,
                 resultBusinessObjectDefinitionColumn.getBusinessObjectDefinitionColumnChangeEvents().get(0).getEventTime(),
                 resultBusinessObjectDefinitionColumnEntityUpdated.getCreatedBy()), new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION,
-                HerdDateUtils.getXMLGregorianCalendarValue(resultBusinessObjectDefinitionColumnEntityCreated.getCreatedOn()),
+                resultBusinessObjectDefinitionColumn.getBusinessObjectDefinitionColumnChangeEvents().get(1).getEventTime(),
                 resultBusinessObjectDefinitionColumnEntityCreated.getCreatedBy()));
 
         // Validate the returned object.
