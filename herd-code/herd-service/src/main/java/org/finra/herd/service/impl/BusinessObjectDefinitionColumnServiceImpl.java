@@ -377,9 +377,9 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         {
             businessObjectDefinitionColumnEntity.getChangeEvents().forEach(
                 businessObjectDefinitionColumnChangeEventEntity -> businessObjectDefinitionColumnChangeEvents.add(
-                    new BusinessObjectDefinitionColumnChangeEvent(businessObjectDefinitionColumnEntity.getDescription(),
-                        HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionColumnEntity.getCreatedOn()),
-                        businessObjectDefinitionColumnEntity.getCreatedBy())));
+                    new BusinessObjectDefinitionColumnChangeEvent(businessObjectDefinitionColumnChangeEventEntity.getDescription(),
+                        HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionColumnChangeEventEntity.getCreatedOn()),
+                        businessObjectDefinitionColumnChangeEventEntity.getCreatedBy())));
         }
 
         businessObjectDefinitionColumn.setBusinessObjectDefinitionColumnChangeEvents(businessObjectDefinitionColumnChangeEvents);

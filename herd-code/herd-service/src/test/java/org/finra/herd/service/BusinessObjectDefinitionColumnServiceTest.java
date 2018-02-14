@@ -701,6 +701,54 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     }
 
     @Test
+    public void testGetBusinessObjectDefinitionColumnWithChangeEventsWithUpdate()
+    {
+        // Create and persist a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Create and persist a schema column for this business object format.
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
+
+        // Create a business object definition column key.
+        BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
+            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
+
+        // Create a business object definition column.
+        businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+            new BusinessObjectDefinitionColumnCreateRequest(businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION));
+
+        // Get the created business object definition column entity.
+        BusinessObjectDefinitionColumnEntity resultBusinessObjectDefinitionColumnEntityCreated =
+            businessObjectDefinitionColumnDaoHelper.getBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey);
+
+        // Update a business object definition column.
+        businessObjectDefinitionColumnService.updateBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey,
+            new BusinessObjectDefinitionColumnUpdateRequest(BDEF_COLUMN_DESCRIPTION_2));
+
+        // Get the updated business object definition column entity.
+        BusinessObjectDefinitionColumnEntity resultBusinessObjectDefinitionColumnEntityUpdated =
+            businessObjectDefinitionColumnDaoHelper.getBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey);
+
+        // Get the business object definition column.
+        BusinessObjectDefinitionColumn resultBusinessObjectDefinitionColumn =
+            businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey, true);
+
+        // Build the expected business object definition column change events list.
+        List<BusinessObjectDefinitionColumnChangeEvent> expectedBusinessObjectDefinitionColumnChangeEvents = Lists.newArrayList(
+            new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION_2,
+                resultBusinessObjectDefinitionColumn.getBusinessObjectDefinitionColumnChangeEvents().get(0).getEventTime(),
+                resultBusinessObjectDefinitionColumnEntityUpdated.getCreatedBy()), new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION,
+                HerdDateUtils.getXMLGregorianCalendarValue(resultBusinessObjectDefinitionColumnEntityCreated.getCreatedOn()),
+                resultBusinessObjectDefinitionColumnEntityCreated.getCreatedBy()));
+
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinitionColumn(resultBusinessObjectDefinitionColumn.getId(), businessObjectDefinitionColumnKey, COLUMN_NAME,
+            BDEF_COLUMN_DESCRIPTION_2, expectedBusinessObjectDefinitionColumnChangeEvents), resultBusinessObjectDefinitionColumn);
+    }
+
+    @Test
     public void testGetBusinessObjectDefinitionColumnBusinessObjectDefinitionColumnNoExists()
     {
         // Try to get a non-existing business object definition column.
@@ -1273,15 +1321,13 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         businessObjectDefinitionColumnService.updateBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey,
             new BusinessObjectDefinitionColumnUpdateRequest(BDEF_COLUMN_DESCRIPTION_2));
 
-        // get the business object definition column.
+        // Get the business object definition column.
         BusinessObjectDefinitionColumn resultBusinessObjectDefinitionColumn =
-            businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey, true);
+            businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey, false);
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinitionColumn(businessObjectDefinitionColumnEntity.getId(), businessObjectDefinitionColumnKey, COLUMN_NAME,
-            BDEF_COLUMN_DESCRIPTION_2, Lists.newArrayList(new BusinessObjectDefinitionColumnChangeEvent(BDEF_COLUMN_DESCRIPTION_2,
-            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionColumnEntity.getCreatedOn()),
-            businessObjectDefinitionColumnEntity.getCreatedBy()))), resultBusinessObjectDefinitionColumn);
+            BDEF_COLUMN_DESCRIPTION_2, NO_BUSINESS_OBJECT_DEFINITION_COLUMN_CHANGE_EVENTS), resultBusinessObjectDefinitionColumn);
     }
 
     @Test
