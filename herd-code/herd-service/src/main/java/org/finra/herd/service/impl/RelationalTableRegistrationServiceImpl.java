@@ -29,6 +29,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
@@ -115,6 +116,7 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
     @Autowired
     private MessageNotificationEventService sqsNotificationEventService;
 
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#relationalTableRegistrationCreateRequest.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
