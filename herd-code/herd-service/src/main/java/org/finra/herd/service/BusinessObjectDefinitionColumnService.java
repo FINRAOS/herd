@@ -45,10 +45,13 @@ public interface BusinessObjectDefinitionColumnService
      * Gets an existing business object definition column by key.
      *
      * @param businessObjectDefinitionColumnKey the business object definition column key
+     * @param includeBusinessObjectDefinitionColumnUpdateHistory the boolean flag to determine whether or not to include business object definition column
+     * update history in the get results
      *
      * @return the business object definition column information
      */
-    public BusinessObjectDefinitionColumn getBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey);
+    public BusinessObjectDefinitionColumn getBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey,
+        Boolean includeBusinessObjectDefinitionColumnUpdateHistory);
 
     /**
      * Updates an existing business object definition column by key.
