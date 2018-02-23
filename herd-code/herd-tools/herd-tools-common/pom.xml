@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-tools</artifactId>
-      <version>0.63.0-SNAPSHOT</version>
+      <version>0.64.0-SNAPSHOT</version>
    </parent>
 
    <name>herd tools common</name>
