@@ -329,9 +329,9 @@ public enum ConfigurationValue
 
     /**
      * The threshold value in dollar amount when choosing an EMR cluster pricing based on the lowest total cost.
-     * It should be of string type so the precision will be kept. The default value is 5 cents(0.05 dollar).
+     * It should be of string type so the precision can be kept. The default value is 5 cents(0.05 dollar).
      */
-    EMR_CLUSTER_LOW_TOTAL_COST_THRESHOLD_DOLLARS("emr.cluster.low.total.cost.threshold.dollar", "0.05"),
+    EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS("emr.cluster.lowest.total.cost.threshold.dollar", "0.05"),
 
     /**
      * S3 protocol for constructing an S3 URL. The default is the standard "s3" prefix.
