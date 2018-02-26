@@ -402,7 +402,7 @@ public class EmrPricingHelper extends AwsHelper
         }
 
         // Finds the list of pricings in the range of the lowest total cost
-        List<EmrClusterPriceDto> emrClusterPricesWithLowestTotalCost = new ArrayList<>();
+        List<EmrClusterPriceDto> emrClusterPricesWithinLowestTotalCostThreshold = new ArrayList<>();
         if (!emrClusterPriceMapKeyedByTotalCost.isEmpty())
         {
             // calculate the low total cost range
@@ -415,7 +415,7 @@ public class EmrPricingHelper extends AwsHelper
                 // Fall into the low cost range? add it to the list
                 if (totalCost.compareTo(lowestTotalCostLowerBound) >= 0 && totalCost.compareTo(lowestTotalCostUpperBound) <= 0)
                 {
-                    emrClusterPricesWithLowestTotalCost.addAll(entry.getValue());
+                    emrClusterPricesWithinLowestTotalCostThreshold.addAll(entry.getValue());
                 }
                 else
                 {
@@ -424,7 +424,7 @@ public class EmrPricingHelper extends AwsHelper
                 }
             }
         }
-        return emrClusterPricesWithLowestTotalCost;
+        return emrClusterPricesWithinLowestTotalCostThreshold;
     }
 
     /**
