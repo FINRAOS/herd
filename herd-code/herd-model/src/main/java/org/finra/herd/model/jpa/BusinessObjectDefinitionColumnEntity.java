@@ -17,6 +17,7 @@ package org.finra.herd.model.jpa;
 
 import java.util.Collection;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -24,10 +25,12 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 /**
@@ -68,6 +71,11 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
     @JsonManagedReference
     @OneToMany(mappedBy = "businessObjectDefinitionColumn")
     private Collection<SchemaColumnEntity> schemaColumns;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "businessObjectDefinitionColumn", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("createdOn DESC")
+    private Collection<BusinessObjectDefinitionColumnChangeEventEntity> changeEvents;
 
     public Integer getId()
     {
@@ -117,5 +125,15 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
     public void setSchemaColumns(Collection<SchemaColumnEntity> schemaColumns)
     {
         this.schemaColumns = schemaColumns;
+    }
+
+    public Collection<BusinessObjectDefinitionColumnChangeEventEntity> getChangeEvents()
+    {
+        return changeEvents;
+    }
+
+    public void setChangeEvents(Collection<BusinessObjectDefinitionColumnChangeEventEntity> changeEvents)
+    {
+        this.changeEvents = changeEvents;
     }
 }

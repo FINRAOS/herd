@@ -54,10 +54,12 @@ import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionChangeEvent;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
@@ -180,17 +182,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING_2 = "UT_BusinessObjectDataKeyAsString_2_" + RANDOM_SUFFIX;
 
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_NUMBER = 0;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_NO_PAGE_NUMBER = null;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_PAGE_NUMBER_ONE = 1;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_INVALID_PAGE_SIZE = 0;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_NO_PAGE_SIZE = null;
-
-    public static final Integer BUSINESS_OBJECT_DATA_SEARCH_PAGE_SIZE_ONE_THOUSAND = 1_000;
+    public static final Integer BUSINESS_OBJECT_DATA_MAX_VERSION = 1;
 
     public static final String BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
         "  \"eventDate\" : \"$current_time\",\n" +
@@ -271,6 +263,62 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "            </attributes>\n" +
         "#end" +
         "         </businessObjectDataStatusChanged>\n" +
+        "      </datamgtEvent>\n" +
+        "   </payload>\n" +
+        "   <soa-audit>\n" +
+        "      <triggered-date-time>$current_time</triggered-date-time>\n" +
+        "      <triggered-by-username>$username</triggered-by-username>\n" +
+        "      <transmission-id>$uuid</transmission-id>\n" +
+        "   </soa-audit>\n" +
+        "</datamgt:TestApplicationEvent>";
+
+    public static final String BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
+        "  \"eventDate\" : \"$current_time\",\n" +
+        "  \"businessObjectFormatKey\" : {\n" +
+        "    \"namespace\" : \"$businessObjectFormatKey.namespace\",\n" +
+        "    \"businessObjectDefinitionName\" : \"$businessObjectFormatKey.businessObjectDefinitionName\",\n" +
+        "    \"businessObjectFormatUsage\" : \"$businessObjectFormatKey.businessObjectFormatUsage\",\n" +
+        "    \"businessObjectFormatFileType\" : \"$businessObjectFormatKey.businessObjectFormatFileType\",\n" +
+        "    \"businessObjectFormatVersion\" : $businessObjectFormatKey.businessObjectFormatVersion\n" +
+        "  },\n" +
+        "  \"newBusinessObjectFormatVersion\" : \"$newBusinessObjectFormatVersion\"" +
+        "#if($StringUtils.isNotEmpty($oldBusinessObjectFormatVersion)),\n  \"oldBusinessObjectFormatVersion\" : \"$oldBusinessObjectFormatVersion\"" +
+        "#end\n" +
+        "}\n";
+
+    public static final String BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML = "<?xml version=\"1.1\" encoding=\"UTF-8\"?>\n" +
+        "<datamgt:TestApplicationEvent xmlns:datamgt=\"http://testDomain/testApplication/testApplication-event\">\n" +
+        "   <header>\n" +
+        "      <producer>\n" +
+        "         <name>testDomain/testApplication</name>\n" +
+        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "      </producer>\n" +
+        "      <creation>\n" +
+        "         <datetime>$current_time</datetime>\n" +
+        "      </creation>\n" +
+        "      <context-message-type>testDomain/testApplication/BusinessObjectFormatVersionChanged</context-message-type>\n" +
+        "      <system-message-type>NoError</system-message-type>\n" +
+        "      <xsd>http://testDomain/testApplication/testApplication-event.xsd</xsd>\n" +
+        "      <event-id>\n" +
+        "         <system-name>testDomain/testApplication</system-name>\n" +
+        "         <system-unique-id>$uuid</system-unique-id>\n" +
+        "      </event-id>\n" +
+        "   </header>\n" +
+        "   <payload>\n" +
+        "      <eventDate>$current_time</eventDate>\n" +
+        "      <datamgtEvent>\n" +
+        "         <businessObjectFormatVersionChanged>\n" +
+        "            <businessObjectFormatKey>\n" +
+        "               <namespace>$businessObjectFormatKey.namespace</namespace>\n" +
+        "               <businessObjectDefinitionName>$businessObjectFormatKey.businessObjectDefinitionName</businessObjectDefinitionName>\n" +
+        "               <businessObjectFormatUsage>$businessObjectFormatKey.businessObjectFormatUsage</businessObjectFormatUsage>\n" +
+        "               <businessObjectFormatFileType>$businessObjectFormatKey.businessObjectFormatFileType</businessObjectFormatFileType>\n" +
+        "               <businessObjectFormatVersion>$businessObjectFormatKey.businessObjectFormatVersion</businessObjectFormatVersion>\n" +
+        "            </businessObjectFormatKey>\n" +
+        "            <newBusinessObjectFormatVersion>$newBusinessObjectFormatVersion</newBusinessObjectFormatVersion>\n" +
+        "#if($StringUtils.isNotEmpty($oldBusinessObjectFormatVersion))            <oldBusinessObjectFormatVersion>$oldBusinessObjectFormatVersion</oldBusinessObjectFormatVersion>\n" +
+        "#end" +
+        "         </businessObjectFormatVersionChanged>\n" +
         "      </datamgtEvent>\n" +
         "   </payload>\n" +
         "   <soa-audit>\n" +
@@ -380,6 +428,25 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     public static final String MATCH_COLUMN = "column";
 
+    public static final Long MAX_RESULTS_PER_PAGE = getRandomLong();
+
+    /**
+     * Message header keys notification message builder testing
+     */
+    public static final String MESSAGE_HEADER_KEY_ENVIRONMENT = "environment";
+
+    public static final String MESSAGE_HEADER_KEY_MESSAGE_ID = "messageId";
+
+    public static final String MESSAGE_HEADER_KEY_MESSAGE_TYPE = "messageType";
+
+    public static final String MESSAGE_HEADER_KEY_MESSAGE_VERSION = "messageVersion";
+
+    public static final String MESSAGE_HEADER_KEY_NAMESPACE = "namespace";
+
+    public static final String MESSAGE_HEADER_KEY_SOURCE_SYSTEM = "sourceSystem";
+
+    public static final String MESSAGE_HEADER_KEY_USER_ID = "userId";
+
     public static final String MESSAGE_VERSION = "UT_MessageVersion" + RANDOM_SUFFIX;
 
     public static final String METHOD_NAME = "UT_MethodName_1_" + RANDOM_SUFFIX;
@@ -394,6 +461,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_ALLOW_MISSING_DATA = false;
 
+    public static final List<AttributeValueFilter> NO_ATTRIBUTE_VALUE_FILTERS = new ArrayList<>();
+
     public static final List<BusinessObjectDataStatus> NO_AVAILABLE_STATUSES = new ArrayList<>();
 
     public static final Boolean NO_BOOLEAN_DEFAULT_VALUE = null;
@@ -407,6 +476,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<BusinessObjectDataStatusChangeEvent> NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY = null;
 
     public static final List<BusinessObjectDefinitionChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS = new ArrayList<>();
+
+    public static final List<BusinessObjectDefinitionColumnChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_COLUMN_CHANGE_EVENTS = new ArrayList<>();
 
     public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
 
@@ -438,6 +509,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long NO_FILE_SIZE = null;
 
+    public static final Boolean NO_FILTER_ON_LATEST_VALID_VERSION = false;
+
+    public static final Boolean NO_FILTER_ON_RETENTION_EXPIRATION = false;
+
     public static final Integer NO_ID = null;
 
     public static final Boolean NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS = false;
@@ -457,6 +532,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;
 
     public static final List<BusinessObjectDataStatus> NO_NOT_AVAILABLE_STATUSES = new ArrayList<>();
+
+    public static final String NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION = null;
 
     public static final TagKey NO_PARENT_TAG_KEY = null;
 
@@ -511,6 +588,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_VARIABLE_REQUIRED = false;
 
     public static final Boolean OVERRIDE_TERMINATION_PROTECTION = true;
+
+    public static final Long PAGE_COUNT = getRandomLong();
+
+    public static final Integer PAGE_NUMBER_ONE = 1;
+
+    public static final Integer PAGE_SIZE_ONE_THOUSAND = 1_000;
 
     public static final String PARAMETER_NAME = "UT_ParameterName_" + RANDOM_SUFFIX;
 
@@ -617,6 +700,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String TEST_SQS_MESSAGE_CORRELATION_ID = "testCorrelationId";
 
+    public static final Long TOTAL_RECORDS_ON_PAGE = getRandomLong();
+
+    public static final Long TOTAL_RECORD_COUNT = getRandomLong();
+
     public static final String UUID_VALUE = "UT_UUID_Value_" + RANDOM_SUFFIX;
 
     public static final String VARIABLE_NAME = "UT_Variable_Name_" + RANDOM_SUFFIX;
@@ -626,6 +713,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean VERBOSE = true;
 
     public static final String ZERO_COLUMN_SIZE = "0";
+
+    public static final String RELATIONAL_TABLE_NAME = "UT_RELATIONAL_TABLE_" + RANDOM_SUFFIX;
 
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
@@ -743,6 +832,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected BusinessObjectFormatServiceTestHelper businessObjectFormatServiceTestHelper;
+
+    @Autowired
+    protected CleanupDestroyedBusinessObjectDataService cleanupDestroyedBusinessObjectDataService;
 
     @Autowired
     protected CurrentUserService currentUserService;

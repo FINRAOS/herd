@@ -17,7 +17,7 @@ package org.finra.herd.service;
 
 import java.util.List;
 
-import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 
 /**
  * The business object data finalize restore service.
@@ -29,7 +29,7 @@ public interface BusinessObjectDataFinalizeRestoreService
      *
      * @param storageUnitKey the storage unit key
      */
-    public void finalizeRestore(StorageUnitAlternateKeyDto storageUnitKey);
+    public void finalizeRestore(BusinessObjectDataStorageUnitKey storageUnitKey);
 
     /**
      * Retrieves the keys for S3 storage units that are currently being restored.
@@ -38,5 +38,5 @@ public interface BusinessObjectDataFinalizeRestoreService
      *
      * @return the list of storage unit keys
      */
-    public List<StorageUnitAlternateKeyDto> getS3StorageUnitsToRestore(int maxResult);
+    public List<BusinessObjectDataStorageUnitKey> getS3StorageUnitsToRestore(int maxResult);
 }

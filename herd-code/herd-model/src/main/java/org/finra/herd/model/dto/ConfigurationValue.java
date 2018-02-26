@@ -245,6 +245,19 @@ public enum ConfigurationValue
     EXPIRE_RESTORED_BDATA_JOB_MAX_BDATA_INSTANCES("expire.restored.business.object.data.job.max.business.object.data.instances", "1000"),
 
     /**
+     * The cron expression to schedule "cleanupDestroyedBusinessObjectData" system job. The default is to run this system job every 6 hours every day, starting
+     * at 3 AM.
+     */
+    CLEANUP_DESTROYED_BDATA_JOB_CRON_EXPRESSION("cleanup.destroyed.business.object.data.job.cron.expression", "0 0 3/6 * * ?"),
+
+    /**
+     * The maximum number of business object data instances with expired restoration interval that can get processed in a single run of this system job. The
+     * default is 1000 business object data instances.
+     */
+    CLEANUP_DESTROYED_BDATA_JOB_MAX_BDATA_INSTANCES("cleanup.destroyed.business.object.data.job.max.business.object.data.instances", "1000"),
+
+
+    /**
      * The default value for the expiration time for the business object data restore. The default is 30 days
      */
     BDATA_RESTORE_EXPIRATION_IN_DAYS_DEFAULT("business.object.data.restore.expiration.in.days.default", 30),
@@ -561,6 +574,14 @@ public enum ConfigurationValue
     HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS("herd.notification.business.object.data.status.change.message.definitions", null),
 
     /**
+     * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
+     * NotificationMessageDefinitions} to use when generating notification messages for a business object format version change event. There is no default value
+     * which will cause no messages to be sent.
+     */
+    HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS("herd.notification.business.object.format.version.change.message.definitions",
+        null),
+
+    /**
      * The cache time to live in seconds defined in net.sf.ehcache.config.CacheConfiguration.
      */
     HERD_CACHE_TIME_TO_LIVE_SECONDS("herd.cache.time.to.live.seconds", 300L),
@@ -608,7 +629,7 @@ public enum ConfigurationValue
     /**
      * The maximum number of records returned in business object data search result count
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 100_000),
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 10_000),
 
     /**
      * The maximum number of records returned in business object data search page
@@ -904,7 +925,12 @@ public enum ConfigurationValue
     /**
      * The session identifier for the assumed role to be used when tagging S3 objects to trigger S3 object deletion.
      */
-    S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null);
+    S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null),
+
+    /**
+     * The attribute name which the relational table registration put the table name in
+     */
+    RELATIONAL_TABLE_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME("relationalTable.businessObjectFormat.attribute.name", "relational.table.name");
 
     private Object defaultValue;
 

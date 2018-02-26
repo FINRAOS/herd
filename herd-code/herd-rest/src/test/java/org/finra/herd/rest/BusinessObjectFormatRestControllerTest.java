@@ -209,6 +209,25 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
     }
 
     @Test
+    public void testGetBusinessObjectFormatsWithFilters()
+    {
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+        BusinessObjectFormatKeys businessObjectFormatKeys = new BusinessObjectFormatKeys(Arrays
+            .asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, INITIAL_FORMAT_VERSION),
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION, INITIAL_FORMAT_VERSION)));
+
+        when(businessObjectFormatService.getBusinessObjectFormatsWithFilters(businessObjectDefinitionKey, FORMAT_USAGE_CODE, false)).thenReturn(businessObjectFormatKeys);
+        // Retrieve a list of business object format keys for the specified business object definition.
+        BusinessObjectFormatKeys resultKeys = businessObjectFormatRestController.getBusinessObjectFormatsWithFilters(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,false);
+
+        // Verify the external calls.
+        verify(businessObjectFormatService).getBusinessObjectFormatsWithFilters(businessObjectDefinitionKey, FORMAT_USAGE_CODE, false);
+        verifyNoMoreInteractions(businessObjectFormatService);
+        // Validate the returned object.
+        assertEquals(businessObjectFormatKeys, resultKeys);
+    }
+    
+    @Test
     public void testUpdateBusinessObjectFormat()
     {
         BusinessObjectFormat businessObjectFormat =

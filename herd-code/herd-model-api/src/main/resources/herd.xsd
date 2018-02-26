@@ -142,6 +142,19 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="storageAttributesUpdateRequest" type="storageAttributesUpdateRequest"/>
+   <xs:complexType name="storageAttributesUpdateRequest">
+      <xs:all>
+         <xs:element name="attributes" type="attributes" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Custom user-defined metadata associated with this storage. "name" is the attribute name (i.e. the key) and "value" is the
+                  attribute value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="storage" type="storage"/>
    <xs:complexType name="storage">
       <xs:all>
@@ -353,6 +366,7 @@
          <xs:enumeration value="WRITE"/>
          <xs:enumeration value="EXECUTE"/>
          <xs:enumeration value="GRANT"/>
+         <xs:enumeration value="WRITE_DESCRIPTIVE_CONTENT"/>
       </xs:restriction>
    </xs:simpleType>
 
@@ -1471,6 +1485,11 @@
                <xs:documentation>Description of the Business Object Definition Column</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectDefinitionColumnChangeEvents" type="businessObjectDefinitionColumnChangeEvents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of business object definition column change events</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -1590,6 +1609,36 @@
             </xs:annotation>
          </xs:element>
       </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionColumnChangeEvents">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionColumnChangeEvent" type="businessObjectDefinitionColumnChangeEvent" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A business object definition column change event</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionColumnChangeEvent">
+      <xs:all>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Description of the Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="eventTime" type="xs:dateTime">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the business object definition column update occured</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who performed business object definition column update</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
    </xs:complexType>
 
    <!-- ***** Business Object Definition Tag ***** -->
@@ -7908,6 +7957,50 @@
       <xs:all>
          <xs:element name="key" type="xs:string" minOccurs="0"/>
          <xs:element name="valueVelocityTemplate" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="relationalTableRegistrationCreateRequest" type="relationalTableRegistrationCreateRequest"/>
+   <xs:complexType name="relationalTableRegistrationCreateRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Namespace to which a Business Object Format is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the Business Object Definition to which a Business Object Format is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionDisplayName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The display name of the business object definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatUsage" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
+                  Object Format
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="dataProviderName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the data provider</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="relationalTableName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The relational table name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the storage</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 

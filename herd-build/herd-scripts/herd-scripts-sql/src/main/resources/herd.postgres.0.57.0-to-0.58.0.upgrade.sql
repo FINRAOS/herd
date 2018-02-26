@@ -16,7 +16,7 @@
 
 -- strge_unit table
 
-alter table dmrowner.strge_unit add column final_destroy_ts timestamp without time zone;
+alter table strge_unit add column final_destroy_ts timestamp without time zone;
 
 -- populate new value in strge_unit_stts_cd_lk table
 

@@ -48,7 +48,7 @@ public class BusinessObjectDefinitionTagRestController extends HerdBaseControlle
     private BusinessObjectDefinitionTagService businessObjectDefinitionTagService;
 
     /**
-     * Creates a new business object definition tag.
+     * Creates a new business object definition tag. <p>Requires WRITE or WRITE_DESCRIPTIVE_CONTENT permission on namespace</p>
      *
      * @param request the information needed to create a business object definition tag
      *
@@ -62,7 +62,7 @@ public class BusinessObjectDefinitionTagRestController extends HerdBaseControlle
     }
 
     /**
-     * Deletes an existing business object definition tag.
+     * Deletes an existing business object definition tag. <p>Requires WRITE or WRITE_DESCRIPTIVE_CONTENT permission on namespace</p>
      *
      * @param namespace the namespace of the business object definition
      * @param businessObjectDefinitionName the name of the business object definition

@@ -170,6 +170,29 @@ public class BusinessObjectFormatRestController extends HerdBaseController
     }
 
     /**
+     * Gets a list of business object formats for the specified business object definition name and business object format usage.
+     *
+     * @param namespace the namespace code
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param latestBusinessObjectFormatVersion latest business object format version
+     *
+     * @return the list of business object formats.
+     */
+    @RequestMapping(value = "/businessObjectFormats/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}/" +
+        "businessObjectFormatUsages/{businessObjectFormatUsage}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMATS_ALL_GET)
+    public BusinessObjectFormatKeys getBusinessObjectFormatsWithFilters(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @RequestParam(value = "latestBusinessObjectFormatVersion", required = false, defaultValue = "false") Boolean latestBusinessObjectFormatVersion)
+    {
+        return businessObjectFormatService
+            .getBusinessObjectFormatsWithFilters(new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName), businessObjectFormatUsage,
+                BooleanUtils.isTrue(latestBusinessObjectFormatVersion));
+    }
+
+    /**
      * Retrieves the DDL to initialize the specified type of the database system (e.g. Hive) by creating a table for the requested business object format.
      *
      * @param businessObjectFormatDdlRequest the business object data DDL request

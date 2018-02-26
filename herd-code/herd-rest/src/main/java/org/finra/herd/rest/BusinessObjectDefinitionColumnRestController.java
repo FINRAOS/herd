@@ -53,7 +53,7 @@ public class BusinessObjectDefinitionColumnRestController extends HerdBaseContro
     private BusinessObjectDefinitionColumnService businessObjectDefinitionColumnService;
 
     /**
-     * Creates a new business object definition column.
+     * Creates a new business object definition column. <p>Requires WRITE or WRITE_DESCRIPTIVE_CONTENT permission on namespace</p>
      *
      * @param request the information needed to create a business object definition column
      *
@@ -72,6 +72,8 @@ public class BusinessObjectDefinitionColumnRestController extends HerdBaseContro
      * @param namespace the namespace of the business object definition
      * @param businessObjectDefinitionName the name of the business object definition
      * @param businessObjectDefinitionColumnName the name of the business object definition column
+     * @param includeBusinessObjectDefinitionColumnUpdateHistory the boolean flag to determine whether or not to include business object definition column
+     * update history in the get results
      *
      * @return the business object definition column that got updated
      */
@@ -81,14 +83,17 @@ public class BusinessObjectDefinitionColumnRestController extends HerdBaseContro
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_GET)
     public BusinessObjectDefinitionColumn getBusinessObjectDefinitionColumn(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
-        @PathVariable("businessObjectDefinitionColumnName") String businessObjectDefinitionColumnName)
+        @PathVariable("businessObjectDefinitionColumnName") String businessObjectDefinitionColumnName,
+        @RequestParam(value = "includeBusinessObjectDefinitionColumnUpdateHistory", required = false)
+            Boolean includeBusinessObjectDefinitionColumnUpdateHistory)
     {
         return businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(
-            new BusinessObjectDefinitionColumnKey(namespace, businessObjectDefinitionName, businessObjectDefinitionColumnName));
+            new BusinessObjectDefinitionColumnKey(namespace, businessObjectDefinitionName, businessObjectDefinitionColumnName),
+            includeBusinessObjectDefinitionColumnUpdateHistory);
     }
 
     /**
-     * Updates an existing column for the business object definition.
+     * Updates an existing column for the business object definition. <p>Requires WRITE or WRITE_DESCRIPTIVE_CONTENT permission on namespace</p>
      *
      * @param namespace the namespace of the business object definition
      * @param businessObjectDefinitionName the name of the business object definition
@@ -112,7 +117,7 @@ public class BusinessObjectDefinitionColumnRestController extends HerdBaseContro
     }
 
     /**
-     * Deletes an existing column for the business object definition.
+     * Deletes an existing column for the business object definition. <p>Requires WRITE or WRITE_DESCRIPTIVE_CONTENT permission on namespace</p>
      *
      * @param namespace the namespace of the business object definition
      * @param businessObjectDefinitionName the name of the business object definition

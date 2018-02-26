@@ -63,6 +63,18 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
         boolean latestBusinessObjectFormatVersion);
 
     /**
+     * Gets a list of business object format keys for the specified business object definition key and business object format usage.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     * @param businessObjectFormatUsage the business object format usage
+     * @param latestBusinessObjectFormatVersion specifies if only the latest (maximum) versions of the relative business object formats are returned
+     *
+     * @return the list of business object format keys
+     */
+    public List<BusinessObjectFormatKey> getBusinessObjectFormatsWithFilters(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        String businessObjectFormatUsage, boolean latestBusinessObjectFormatVersion);
+
+    /**
      * Gets a list of latest version business object format entities for the specified business object definition key.
      *
      * @param businessObjectDefinitionKey the business object definition key

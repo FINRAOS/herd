@@ -316,6 +316,8 @@ public class SecurityFunctions
 
     public static final String FN_STORAGES_PUT = "FN_STORAGES_PUT";
 
+    public static final String FN_STORAGE_ATTRIBUTES_PUT = "FN_STORAGE_ATTRIBUTES_PUT";
+
     public static final String FN_STORAGE_PLATFORMS_ALL_GET = "FN_STORAGE_PLATFORMS_ALL_GET";
 
     public static final String FN_STORAGE_PLATFORMS_GET = "FN_STORAGE_PLATFORMS_GET";
@@ -388,6 +390,8 @@ public class SecurityFunctions
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_POST = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
 
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_PUT = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
+
+    public static final String FN_RELATIONAL_TABLE_REGISTRATIONS_POST = "FN_RELATIONAL_TABLE_REGISTRATIONS_POST";
 
     /**
      * Returns all the functions sorted by function name.

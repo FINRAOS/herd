@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -56,6 +57,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResp
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
@@ -67,6 +69,7 @@ import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
+import org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -114,6 +117,16 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * A status reason of "not registered".
      */
     public static final String REASON_NOT_REGISTERED = "NOT_REGISTERED";
+
+    /**
+     * The partition key value for business object data without partitioning.
+     */
+    public static final String NO_PARTITIONING_PARTITION_KEY = "partition";
+
+    /**
+     * The partition value for business object data without partitioning.
+     */
+    public static final String NO_PARTITIONING_PARTITION_VALUE = "none";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataServiceImpl.class);
 
@@ -235,12 +248,21 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Retrieve the business object data and ensure it exists.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
 
-        // Check if we are allowed to delete this business object data.
+        // If the business object data has children, remove the parent children relationship.
         if (!businessObjectDataEntity.getBusinessObjectDataChildren().isEmpty())
         {
-            throw new IllegalArgumentException(String
-                .format("Can not delete a business object data that has children associated with it. Business object data: {%s}",
-                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+            for (BusinessObjectDataEntity childBusinessObjectEntity : businessObjectDataEntity.getBusinessObjectDataChildren())
+            {
+                childBusinessObjectEntity.getBusinessObjectDataParents().remove(businessObjectDataEntity);
+            }
+
+            String businessObjectDataChildren = businessObjectDataEntity.getBusinessObjectDataChildren().stream()
+                .map(bData -> String.format("{%s}", businessObjectDataHelper.businessObjectDataEntityAltKeyToString(bData))).collect(Collectors.joining(", "));
+            businessObjectDataEntity.setBusinessObjectDataChildren(new ArrayList<BusinessObjectDataEntity>());
+            businessObjectDataDao.save(businessObjectDataEntity);
+            LOGGER.warn(String
+                .format("Deleting business object data {%s} that has children associated with it. The parent relationship has been removed from: %s.",
+                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), businessObjectDataChildren));
         }
 
         // If the flag is set, clean up the data files from all storages of S3 storage platform type.
@@ -500,29 +522,57 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         return businessObjectDataRetryStoragePolicyTransitionHelper.retryStoragePolicyTransition(businessObjectDataKey, request);
     }
 
-    @NamespacePermission(fields = "#request.businessObjectDataSearchFilters[0].BusinessObjectDataSearchKeys[0].namespace",
+    @NamespacePermission(fields = "#businessObjectDataSearchRequest.businessObjectDataSearchFilters[0].BusinessObjectDataSearchKeys[0].namespace",
         permissions = NamespacePermissionEnum.READ)
     @Override
-    public BusinessObjectDataSearchResult searchBusinessObjectData(Integer pageNum, Integer pageSize, BusinessObjectDataSearchRequest request)
+    public BusinessObjectDataSearchResultPagingInfoDto searchBusinessObjectData(Integer pageNum, Integer pageSize,
+        BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
     {
-        //TO DO check name space permission for all entries in the request.
-        // validate search request
-        businessObjectDataSearchHelper.validateBusinesObjectDataSearchRequest(request);
+        // TODO: Check name space permission for all entries in the request.
+        // Validate the business object data search request.
+        businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequest(businessObjectDataSearchRequest);
+
+        // Get the maximum number of results that can be returned on any page of data. The "pageSize" query parameter should not be greater than
+        // this value or an HTTP status of 400 (Bad Request) error would be returned.
+        int maxResultsPerPage = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
 
         // Validate the page number and page size
         // Set the defaults if pageNum and pageSize are null
         // Page number must be greater than 0
         // Page size must be greater than 0 and less than maximum page size
-        pageNum = businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageNumParameter(pageNum);
-        pageSize = businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequestPageSizeParameter(pageSize);
+        pageNum = businessObjectDataSearchHelper.validatePagingParameter("pageNum", pageNum, 1, Integer.MAX_VALUE);
+        pageSize = businessObjectDataSearchHelper.validatePagingParameter("pageSize", pageSize, maxResultsPerPage, maxResultsPerPage);
 
-        // search business object data
+        // Get the maximum record count that is configured in the system.
+        Integer businessObjectDataSearchMaxResultCount =
+            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT, Integer.class);
+
+        // Get the business object data search key.
+        // We assume that the input list contains only one filter with a single search key, since validation should be passed by now.
+        BusinessObjectDataSearchKey businessObjectDataSearchKey =
+            businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0);
+
+        // Get the total record count.
+        Long totalRecordCount = businessObjectDataDao.getBusinessObjectDataCountBySearchKey(businessObjectDataSearchKey);
+
+        // Validate the total record count.
+        if (totalRecordCount > businessObjectDataSearchMaxResultCount)
+        {
+            throw new IllegalArgumentException(String
+                .format("Result limit of %d exceeded. Total result size %d. Modify filters to further limit results.", businessObjectDataSearchMaxResultCount,
+                    totalRecordCount));
+        }
+
+        // If total record count is zero, we return an empty result list. Otherwise, execute the search.
         List<BusinessObjectData> businessObjectDataList =
-            businessObjectDataDao.searchBusinessObjectData(pageNum, pageSize, request.getBusinessObjectDataSearchFilters());
-        BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();
-        result.setBusinessObjectDataElements(businessObjectDataList);
+            totalRecordCount == 0 ? new ArrayList<>() : businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, pageNum, pageSize);
 
-        return result;
+        // Get the page count.
+        Long pageCount = totalRecordCount / pageSize + (totalRecordCount % pageSize > 0 ? 1 : 0);
+
+        // Build and return the business object data search result with the paging information.
+        return new BusinessObjectDataSearchResultPagingInfoDto(pageNum.longValue(), pageSize.longValue(), pageCount, (long) businessObjectDataList.size(),
+            totalRecordCount, (long) maxResultsPerPage, new BusinessObjectDataSearchResult(businessObjectDataList));
     }
 
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)

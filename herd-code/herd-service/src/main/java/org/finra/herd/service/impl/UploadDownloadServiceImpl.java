@@ -832,7 +832,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Perform validation and trim.
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
     }
-
+    
+    @NamespacePermission(fields = "#request.businessObjectDefinitionKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
+        NamespacePermissionEnum.WRITE})
     @Override
     public UploadBusinessObjectDefinitionSampleDataFileInitiationResponse initiateUploadSampleFile(
         UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request)

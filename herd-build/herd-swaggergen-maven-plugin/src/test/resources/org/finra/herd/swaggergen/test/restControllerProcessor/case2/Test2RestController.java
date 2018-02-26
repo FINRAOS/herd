@@ -28,7 +28,7 @@ public class Test2RestController
 {
     /**
      * Get basic case
-     * 
+     *
      * @param id Basic case ID
      * @return Basic case
      * @see A reference
@@ -48,6 +48,12 @@ public class Test2RestController
 
     public void notAnEndpoint()
     {
+    }
+
+    @RequestMapping(value = "/a/test/shouldSort", method = RequestMethod.GET)
+    public BasicCase shouldSort()
+    {
+        return null;
     }
 
     @RequestMapping(value = "/test/missingMethods")

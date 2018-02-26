@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-tools</artifactId>
-      <version>0.59.0-SNAPSHOT</version>
+      <version>0.65.0-SNAPSHOT</version>
    </parent>
 
    <name>herd retention expiration exporter</name>
@@ -80,7 +80,7 @@
                </descriptorRefs>
                <archive>
                   <manifest>
-                     <mainClass>org.finra.herd.tools.retention.exporter.ExporterApp</mainClass>
+                     <mainClass>org.finra.herd.tools.retention.exporter.RetentionExpirationExporterApp</mainClass>
                   </manifest>
                </archive>
                <finalName>${project.artifactId}-app</finalName>

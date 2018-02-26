@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFileInitiationRequest;
+import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFileInitiationResponse;
 
 /**
  * This is an upload download service implementation for testing.
@@ -39,4 +41,18 @@ public class TestUploadDownloadServiceImpl extends UploadDownloadServiceImpl
     {
         return performCompleteUploadSingleMessageImpl(objectKey);
     }
+
+
+    /**
+     * overwrite the base lass method to by pass the namespace level permission check
+     * @param request the request
+     * @return the response
+     */
+    @Override
+    public UploadBusinessObjectDefinitionSampleDataFileInitiationResponse initiateUploadSampleFile(
+        UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request)
+    {
+        return super.initiateUploadSampleFile(request);
+    }
+
 }

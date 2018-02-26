@@ -85,6 +85,18 @@ public interface BusinessObjectFormatService
         boolean latestBusinessObjectFormatVersion);
 
     /**
+     * Gets a list of business object formats for the specified business object definition name and business object format usage.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     * @param businessObjectFormatUsage the business object format usage
+     * @param latestBusinessObjectFormatVersion specifies is only the latest (maximum) versions of the business object formats are returned
+     *
+     * @return the list of business object formats.
+     */
+    public BusinessObjectFormatKeys getBusinessObjectFormatsWithFilters(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        String businessObjectFormatUsage, boolean latestBusinessObjectFormatVersion);
+
+    /**
      * Retrieves the DDL to initialize the specified type of the database system (e.g. Hive) by creating a table for the requested business object format. This
      * method starts a new transaction.
      *

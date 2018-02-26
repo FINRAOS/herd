@@ -27,9 +27,6 @@ create table rtntn_type_cd_lk
 
 alter table rtntn_type_cd_lk add constraint rtntn_type_cd_lk_pk primary key (rtntn_type_cd); 
 
-grant select, insert, update, delete on rtntn_type_cd_lk to dmr_rw_role;
-grant select on rtntn_type_cd_lk to dmr_ro_role;
-
 -- alter bus_objct_frmt table
 
 alter table bus_objct_frmt add column rec_fl char(1);
