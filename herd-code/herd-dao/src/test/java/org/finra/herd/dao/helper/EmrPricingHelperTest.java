@@ -15,13 +15,20 @@
 */
 package org.finra.herd.dao.helper;
 
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.AVAILABILITY_ZONE_1;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.AVAILABILITY_ZONE_2;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.AVAILABILITY_ZONE_3;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.AVAILABILITY_ZONE_4;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.amazonaws.AmazonServiceException;
@@ -38,7 +45,9 @@ import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.MasterInstanceDefinition;
 import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.Ec2PriceDto;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
+import org.finra.herd.model.dto.EmrClusterPriceDto;
 import org.finra.herd.model.dto.EmrVpcPricingState;
 
 /**
@@ -47,6 +56,8 @@ import org.finra.herd.model.dto.EmrVpcPricingState;
 public class EmrPricingHelperTest extends AbstractDaoTest
 {
     private static final BigDecimal ONE_UNIT = new BigDecimal("0.00001");
+
+    private static final BigDecimal FIVE_UNIT = new BigDecimal("0.00005");
 
     private static final BigDecimal ON_DEMAND = new BigDecimal("1.00");
 
@@ -204,11 +215,11 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             }});
             expectedEmrVpcPricingState.setSpotPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<>());
+                put(AVAILABILITY_ZONE_1, new HashMap<>());
             }});
             expectedEmrVpcPricingState.setOnDemandPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
+                put(AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
                 {{
                     put(MockEc2OperationsImpl.INSTANCE_TYPE_4, ON_DEMAND);
                 }});
@@ -417,11 +428,11 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             }});
             expectedEmrVpcPricingState.setSpotPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<>());
+                put(AVAILABILITY_ZONE_1, new HashMap<>());
             }});
             expectedEmrVpcPricingState.setOnDemandPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
+                put(AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
                 {{
                     put(MockEc2OperationsImpl.INSTANCE_TYPE_4, ON_DEMAND);
                 }});
@@ -896,7 +907,8 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        assertEquals(MockEc2OperationsImpl.SUBNET_3, emrClusterDefinition.getSubnetId());
+        // we select the pricing randomly so either one can be chosen
+        assertTrue(Arrays.asList(MockEc2OperationsImpl.SUBNET_1, MockEc2OperationsImpl.SUBNET_3).contains(emrClusterDefinition.getSubnetId()));
     }
 
     @Test
@@ -917,7 +929,95 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        assertEquals(MockEc2OperationsImpl.SUBNET_3, emrClusterDefinition.getSubnetId());
+        // we select the pricing randomly so either one can be chosen
+        assertTrue(Arrays.asList(MockEc2OperationsImpl.SUBNET_1, MockEc2OperationsImpl.SUBNET_3).contains(emrClusterDefinition.getSubnetId()));
+    }
+
+    @Test
+    public void testGetEmrClusterPricesWithinLowestTotalCostThresholdSinglePricing() throws Exception
+    {
+        List<EmrClusterPriceDto> pricingList = Arrays.asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE));
+        List<EmrClusterPriceDto> lowTotalCostPricings = invokeGetEmrClusterPricesWithLowestTotalCost(pricingList, FIVE_UNIT);
+
+        assertEquals(1, lowTotalCostPricings.size());
+        assertEquals(AVAILABILITY_ZONE_1, lowTotalCostPricings.get(0).getAvailabilityZone());
+    }
+
+    /**
+     *  Needs to test the private method since it has complex logic to retrieve pricings based on the lowest total cost and the threshold
+     * @throws Exception
+     */
+    @Test
+    public void testGetEmrClusterPricesWithinLowestTotalCostThresholdMultiplePricing() throws Exception
+    {
+        List<EmrClusterPriceDto> pricingList = Arrays.asList(
+            createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE),
+            createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
+            createSimpleEmrClusterPrice(AVAILABILITY_ZONE_3, BigDecimal.ONE.add(FIVE_UNIT)),
+            createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, BigDecimal.ONE.add(ONE_UNIT)));
+
+        List<EmrClusterPriceDto> lowTotalCostPricings = invokeGetEmrClusterPricesWithLowestTotalCost(pricingList, FIVE_UNIT);
+        assertEquals(3, lowTotalCostPricings.size());
+        for (EmrClusterPriceDto emrClusterPriceDto : lowTotalCostPricings)
+        {
+            assertTrue(Arrays.asList(AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_3, AVAILABILITY_ZONE_4).contains(emrClusterPriceDto.getAvailabilityZone()));
+        }
+    }
+
+    /**
+     *  Tests when the threshold is zero.
+     * @throws Exception
+     */
+    @Test
+    public void testGetEmrClusterPricesWithinLowestTotalCostZeroThresholdMultiplePricing() throws Exception
+    {
+        List<EmrClusterPriceDto> pricingList = Arrays.asList(
+            createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE),
+            createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
+            createSimpleEmrClusterPrice(AVAILABILITY_ZONE_3, BigDecimal.ONE.add(FIVE_UNIT)),
+            createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, BigDecimal.ONE));
+
+        List<EmrClusterPriceDto> lowTotalCostPricings = invokeGetEmrClusterPricesWithLowestTotalCost(pricingList, BigDecimal.ZERO);
+        assertEquals(2, lowTotalCostPricings.size());
+        for (EmrClusterPriceDto emrClusterPriceDto : lowTotalCostPricings)
+        {
+            assertTrue(Arrays.asList(AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_4).contains(emrClusterPriceDto.getAvailabilityZone()));
+        }
+    }
+
+    private EmrClusterPriceDto createSimpleEmrClusterPrice(final String availabilityZone, final BigDecimal instancePrice)
+    {
+        EmrClusterPriceDto emrClusterPriceDto = new EmrClusterPriceDto();
+
+        emrClusterPriceDto.setAvailabilityZone(availabilityZone);
+        Ec2PriceDto masterPrice = new Ec2PriceDto();
+        masterPrice.setInstanceCount(1);
+        masterPrice.setInstancePrice(instancePrice);
+        emrClusterPriceDto.setMasterPrice(masterPrice);
+
+        return emrClusterPriceDto;
+    }
+
+    /**
+     * Invokes private method {@link EmrPricingHelper#getEmrClusterPricesWithinLowestTotalCostThreshold(List, BigDecimal)}.
+     * Needs to use reflection here since the method is private.
+     *
+     * @param emrClusterPrices - list of pricing used by the private method
+     * @param thresholdValue - threshold value used by the private method
+     *
+     * @return list of pricing that meets the lowest total cost criteria
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    private List<EmrClusterPriceDto> invokeGetEmrClusterPricesWithLowestTotalCost(final List<EmrClusterPriceDto> emrClusterPrices, final BigDecimal thresholdValue)
+        throws Exception
+    {
+        Method method = emrPricingHelper.getClass().getDeclaredMethod(
+            "getEmrClusterPricesWithinLowestTotalCostThreshold", List.class, BigDecimal.class);
+        // Making private method accessible
+        method.setAccessible(true);
+
+        return (List<EmrClusterPriceDto>) method.invoke(emrPricingHelper, emrClusterPrices, thresholdValue);
     }
 
     /**

@@ -25,7 +25,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 
 import com.amazonaws.services.ec2.model.AvailabilityZone;
 import com.amazonaws.services.ec2.model.SpotPrice;
@@ -36,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.Ec2Dao;
 import org.finra.herd.dao.Ec2OnDemandPricingDao;
 import org.finra.herd.model.ObjectNotFoundException;
@@ -72,6 +75,9 @@ public class EmrPricingHelper extends AwsHelper
 
     @Autowired
     private Ec2OnDemandPricingDao ec2OnDemandPricingDao;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     /**
      * Finds the best price for each master and core instances based on the subnets and master and core instance search parameters given in the definition.
@@ -338,26 +344,87 @@ public class EmrPricingHelper extends AwsHelper
     }
 
     /**
-     * Selects the EMR cluster pricing with the lowest total cost. Returns null if the given list is empty
+     * Selects the EMR cluster pricing with the lowest total cost. We will select one pricing randomly if there are multiple pricings that meet the
+     * lowest total cost criteria.
+     * <p>
+     * Returns null if the given list is empty
      *
      * @param emrClusterPrices the list of pricing to select from
      *
      * @return the pricing with the lowest total cost
      */
-    private EmrClusterPriceDto getEmrClusterPriceWithLowestTotalCost(List<EmrClusterPriceDto> emrClusterPrices)
+    private EmrClusterPriceDto getEmrClusterPriceWithLowestTotalCost(final List<EmrClusterPriceDto> emrClusterPrices)
     {
-        EmrClusterPriceDto top = getTop(emrClusterPrices, new Comparator<EmrClusterPriceDto>()
+        List<EmrClusterPriceDto> emrClusterPricesWithLowestTotalCost = getEmrClusterPricesWithinLowestTotalCostThreshold(emrClusterPrices,
+            new BigDecimal(configurationHelper.getProperty(ConfigurationValue.EMR_CLUSTER_LOW_TOTAL_COST_THRESHOLD_DOLLARS)));
+        if (!emrClusterPricesWithLowestTotalCost.isEmpty())
         {
-            @Override
-            public int compare(EmrClusterPriceDto o1, EmrClusterPriceDto o2)
-            {
-                BigDecimal totalCost1 = getEmrClusterTotalCost(o1);
-                BigDecimal totalCost2 = getEmrClusterTotalCost(o2);
-                return totalCost1.compareTo(totalCost2);
-            }
-        });
+            LOGGER.debug(String.format("List of pricing with low total cost: %s", emrClusterPricesWithLowestTotalCost));
 
-        return top;
+            // Pick one randomly from the low total cost pricing list
+            return emrClusterPricesWithLowestTotalCost.get(new Random().nextInt(emrClusterPricesWithLowestTotalCost.size()));
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    /**
+     * Finds all the pricings that meet the lowest total cost criteria. The lowest total cost is defined as a range from the lowest total cost of all the
+     * pricings, to the lowest total cost plus the threshold value.
+     * For example, if the total costs are 0.30, 0.32, 0.34, 0.36, and the threshold value is 0.05, then the low total cost range should be [0.30, 0.35].
+     *
+     * @param emrClusterPrices the list of pricings to select from
+     * @param lowestTotalCostThresholdValue the threshold value that defines the range of low total cost
+     *
+     * @return the list of pricing that fall in low total cost range
+     */
+    private List<EmrClusterPriceDto> getEmrClusterPricesWithinLowestTotalCostThreshold(final List<EmrClusterPriceDto> emrClusterPrices,
+        final BigDecimal lowestTotalCostThresholdValue)
+    {
+        // Builds a tree map that has the total cost as the key, and the list of pricing with the same total cost as the value. The tree map is
+        // automatically sorted, so it is easy to find the lowest total cost, and total costs within the threshold of lowest total cost.
+        TreeMap<BigDecimal, List<EmrClusterPriceDto>> emrClusterPriceMapKeyedByTotalCost = new TreeMap<>();
+        for (final EmrClusterPriceDto emrClusterPriceDto : emrClusterPrices)
+        {
+            final BigDecimal totalCost = getEmrClusterTotalCost(emrClusterPriceDto);
+            if (emrClusterPriceMapKeyedByTotalCost.containsKey(totalCost))
+            {
+                emrClusterPriceMapKeyedByTotalCost.get(totalCost).add(emrClusterPriceDto);
+            }
+            else
+            {
+                List<EmrClusterPriceDto> emrClusterPriceList = new ArrayList<>();
+                emrClusterPriceList.add(emrClusterPriceDto);
+                emrClusterPriceMapKeyedByTotalCost.put(totalCost, emrClusterPriceList);
+            }
+        }
+
+        // Finds the list of pricings in the range of the lowest total cost
+        List<EmrClusterPriceDto> emrClusterPricesWithLowestTotalCost = new ArrayList<>();
+        if (!emrClusterPriceMapKeyedByTotalCost.isEmpty())
+        {
+            // calculate the low total cost range
+            final BigDecimal lowestTotalCostLowerBound = emrClusterPriceMapKeyedByTotalCost.firstEntry().getKey();
+            final BigDecimal lowestTotalCostUpperBound = lowestTotalCostLowerBound.add(lowestTotalCostThresholdValue);
+
+            for (final Map.Entry<BigDecimal, List<EmrClusterPriceDto>> entry : emrClusterPriceMapKeyedByTotalCost.entrySet())
+            {
+                final BigDecimal totalCost = entry.getKey();
+                // Fall into the low cost range? add it to the list
+                if (totalCost.compareTo(lowestTotalCostLowerBound) >= 0 && totalCost.compareTo(lowestTotalCostUpperBound) <= 0)
+                {
+                    emrClusterPricesWithLowestTotalCost.addAll(entry.getValue());
+                }
+                else
+                {
+                    // since the tree map is sorted in ascending order, we do not need to check the rest of entries in the map
+                    break;
+                }
+            }
+        }
+        return emrClusterPricesWithLowestTotalCost;
     }
 
     /**
@@ -368,6 +435,7 @@ public class EmrPricingHelper extends AwsHelper
      *
      * @return the total cost
      */
+
     private BigDecimal getEmrClusterTotalCost(EmrClusterPriceDto emrClusterPrice)
     {
         BigDecimal totalPrice = BigDecimal.ZERO;
