@@ -1017,7 +1017,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
      * @return list of pricing that meets the lowest total cost criteria
      * @throws Exception
      */
-    @SuppressWarnings("unchecked") // Need to cast Object to List<EmrClusterPriceDto> when retrieving the return value of method call via reflection.
+    @SuppressWarnings("unchecked") // Needs to cast Object to List<EmrClusterPriceDto> when retrieving the return value of method call via reflection.
     private List<EmrClusterPriceDto> invokeGetEmrClusterPricesWithLowestTotalCost(final List<EmrClusterPriceDto> emrClusterPrices,
         final BigDecimal thresholdValue) throws Exception
     {
