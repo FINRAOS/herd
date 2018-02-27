@@ -249,12 +249,13 @@ public class ConfigurationHelper
     }
 
     /**
+     * Logs the error message, and then throws {@link IllegalStateException}
+     *
      * @param configurationValue - {@link ConfigurationValue}
      * @param targetTypeName - the name of the data type we want to convert the configuration value to(boolean, BigDecimal...etc)
      * @param stringValue - the configuration value in string type
      * @param exception - the exception thrown when converting the configuration value from string type to the target data type
      *
-     * @return
      */
     private void logErrorAndThrowIllegalStateException(ConfigurationValue configurationValue, String targetTypeName, String stringValue, Exception exception)
     {
