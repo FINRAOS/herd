@@ -20,12 +20,17 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.math.BigDecimal;
+
 import org.junit.Test;
 import org.springframework.mock.env.MockEnvironment;
 
 import org.finra.herd.core.AbstractCoreTest;
 import org.finra.herd.model.dto.ConfigurationValue;
 
+/**
+ * unit tests for {@link ConfigurationHelper}
+ */
 public class ConfigurationHelperTest extends AbstractCoreTest
 {
     @Test
@@ -67,7 +72,8 @@ public class ConfigurationHelperTest extends AbstractCoreTest
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
 
-        executeWithoutLogging(ConfigurationHelper.class, () -> {
+        executeWithoutLogging(ConfigurationHelper.class, () ->
+        {
             Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
             assertNotNull("value", value);
             assertEquals("value", expectedValue, value);
@@ -173,6 +179,51 @@ public class ConfigurationHelperTest extends AbstractCoreTest
         String value = configurationHelper.getProperty(configurationValue);
 
         assertEquals("value", configurationValue.getDefaultValue(), value);
+    }
+
+    @Test
+    public void testGetBigDecimalPropertyValue()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "0.05");
+
+        assertEquals(new BigDecimal("0.05"), configurationHelper.getBigDecimalProperty(configurationValue, environment));
+    }
+
+    @Test
+    public void testGetBigDecimalPropertyValueConversionFail()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "INVALID_BigDecimal_VALUE");
+
+        try
+        {
+            configurationHelper.getBigDecimalProperty(configurationValue, environment);
+            fail("Should throw an IllegalStatueException when property value is not BigDecimal.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Configuration \"%s\" has an invalid BigDecimal value: \"INVALID_BigDecimal_VALUE\".", configurationValue.getKey()),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetBigDecimalPropertyValidationThrowsWhenConfigurationValueIsNull()
+    {
+        try
+        {
+            configurationHelper.getBigDecimalProperty(null);
+            fail("Should throw an IllegalStateException when configuration value is null.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals("configurationValue is required", e.getMessage());
+        }
     }
 
     @Test

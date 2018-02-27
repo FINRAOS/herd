@@ -15,6 +15,8 @@
 */
 package org.finra.herd.core.helper;
 
+import java.math.BigDecimal;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,6 +139,45 @@ public class ConfigurationHelper
     }
 
     /**
+     * Gets a property value as a {@link BigDecimal}.
+     *
+     * @param configurationValue the {@link BigDecimal} configuration value
+     *
+     * @return the {@link BigDecimal} property value
+     */
+    public BigDecimal getBigDecimalProperty(ConfigurationValue configurationValue)
+    {
+        return getBigDecimalProperty(configurationValue, environment);
+    }
+
+    /**
+     * Gets a property value as a {@link BigDecimal}.
+     *
+     * @param configurationValue the {@link BigDecimal} configuration value
+     * @param environment the environment containing the property
+     *
+     * @return the {@link BigDecimal} property value
+     */
+    public BigDecimal getBigDecimalProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        String bigDecimalStringValue = getProperty(configurationValue, environment);
+
+        BigDecimal bigDecimalValue = null;
+        try
+        {
+            // Converts the string value to BigDecimal
+            bigDecimalValue = new BigDecimal(bigDecimalStringValue);
+        }
+        catch (NumberFormatException numberFormatException)
+        {
+            logErrorAndThrowIllegalStateException(configurationValue, "BigDecimal", bigDecimalStringValue, numberFormatException);
+        }
+
+        return bigDecimalValue;
+    }
+
+
+    /**
      * Gets a property value as a boolean.
      *
      * @param configurationValue the boolean configuration value
@@ -168,15 +209,7 @@ public class ConfigurationHelper
         }
         catch (IllegalArgumentException e)
         {
-            // Create an invalid state exception.
-            IllegalStateException illegalStateException = new IllegalStateException(
-                String.format("Configuration \"%s\" has an invalid boolean value: \"%s\".", configurationValue.getKey(), booleanStringValue), e);
-
-            // Log the exception.
-            LOGGER.error(illegalStateException.getMessage(), illegalStateException);
-
-            // This will produce a 500 HTTP status code error.
-            throw illegalStateException;
+            logErrorAndThrowIllegalStateException(configurationValue, "boolean", booleanStringValue, e);
         }
 
         // Return the boolean value.
@@ -213,5 +246,25 @@ public class ConfigurationHelper
         }
 
         return property;
+    }
+
+    /**
+     * @param configurationValue - {@link ConfigurationValue}
+     * @param targetTypeName - the name of the data type we want to convert the configuration value to(boolean, BigDecimal...etc)
+     * @param stringValue - the configuration value in string type
+     * @param exception - the exception thrown when converting the configuration value from string type to the target data type
+     *
+     * @return
+     */
+    private void logErrorAndThrowIllegalStateException(ConfigurationValue configurationValue, String targetTypeName, String stringValue, Exception exception)
+    {
+        // Create an invalid state exception.
+        IllegalStateException illegalStateException = new IllegalStateException(
+            String.format("Configuration \"%s\" has an invalid %s value: \"%s\".", configurationValue.getKey(), targetTypeName, stringValue), exception);
+
+        // Log the exception.
+        LOGGER.error(illegalStateException.getMessage(), illegalStateException);
+        // This will produce a 500 HTTP status code error.
+        throw illegalStateException;
     }
 }

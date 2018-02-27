@@ -33,9 +33,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -943,29 +943,30 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     @Test
+    public void testGetEmrClusterLowestTotalCostEmptyPricingList() {
+        assertNull(emrPricingHelper.getEmrClusterPriceWithLowestTotalCost(Collections.emptyList()));
+    }
+
+    @Test
     public void testGetEmrClusterPricesWithinLowestTotalCostThresholdSinglePricing() throws Exception
     {
         List<EmrClusterPriceDto> pricingList = Arrays.asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE));
-        List<EmrClusterPriceDto> lowTotalCostPricings = invokeGetEmrClusterPricesWithLowestTotalCost(pricingList, FIVE_UNIT);
+        List<EmrClusterPriceDto> lowTotalCostPricings = emrPricingHelper.getEmrClusterPricesWithinLowestTotalCostThreshold(pricingList, FIVE_UNIT);
 
         assertEquals(1, lowTotalCostPricings.size());
         assertEquals(AVAILABILITY_ZONE_1, lowTotalCostPricings.get(0).getAvailabilityZone());
     }
 
-    /**
-     * Needs to test the private method since it has complex logic to retrieve pricings based on the lowest total cost and the threshold
-     *
-     * @throws Exception
-     */
     @Test
     public void testGetEmrClusterPricesWithinLowestTotalCostThresholdMultiplePricing() throws Exception
     {
         List<EmrClusterPriceDto> pricingList = Arrays
-            .asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE), createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
+            .asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE),
+                createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
                 createSimpleEmrClusterPrice(AVAILABILITY_ZONE_3, BigDecimal.ONE.add(FIVE_UNIT)),
                 createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, BigDecimal.ONE.add(ONE_UNIT)));
 
-        List<EmrClusterPriceDto> lowTotalCostPricings = invokeGetEmrClusterPricesWithLowestTotalCost(pricingList, FIVE_UNIT);
+        List<EmrClusterPriceDto> lowTotalCostPricings = emrPricingHelper.getEmrClusterPricesWithinLowestTotalCostThreshold(pricingList, FIVE_UNIT);
         assertEquals(3, lowTotalCostPricings.size());
         for (EmrClusterPriceDto emrClusterPriceDto : lowTotalCostPricings)
         {
@@ -982,11 +983,12 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     public void testGetEmrClusterPricesWithinLowestTotalCostZeroThresholdMultiplePricing() throws Exception
     {
         List<EmrClusterPriceDto> pricingList = Arrays
-            .asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE), createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
+            .asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE),
+                createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
                 createSimpleEmrClusterPrice(AVAILABILITY_ZONE_3, BigDecimal.ONE.add(FIVE_UNIT)),
                 createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, BigDecimal.ONE));
 
-        List<EmrClusterPriceDto> lowTotalCostPricings = invokeGetEmrClusterPricesWithLowestTotalCost(pricingList, BigDecimal.ZERO);
+        List<EmrClusterPriceDto> lowTotalCostPricings = emrPricingHelper.getEmrClusterPricesWithinLowestTotalCostThreshold(pricingList, BigDecimal.ZERO);
         assertEquals(2, lowTotalCostPricings.size());
         for (EmrClusterPriceDto emrClusterPriceDto : lowTotalCostPricings)
         {
@@ -1005,26 +1007,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         emrClusterPriceDto.setMasterPrice(masterPrice);
 
         return emrClusterPriceDto;
-    }
-
-    /**
-     * Invokes private method {@link EmrPricingHelper#getEmrClusterPricesWithinLowestTotalCostThreshold(List, BigDecimal)}.
-     * Needs to use reflection here since the method is private.
-     *
-     * @param emrClusterPrices - list of pricing used by the private method
-     * @param thresholdValue - threshold value used by the private method
-     *
-     * @return list of pricing that meets the lowest total cost criteria
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked") // Needs to cast Object to List<EmrClusterPriceDto> when retrieving the return value of method call via reflection.
-    private List<EmrClusterPriceDto> invokeGetEmrClusterPricesWithLowestTotalCost(final List<EmrClusterPriceDto> emrClusterPrices,
-        final BigDecimal thresholdValue) throws Exception
-    {
-        Method method = emrPricingHelper.getClass().getDeclaredMethod("getEmrClusterPricesWithinLowestTotalCostThreshold", List.class, BigDecimal.class);
-        // Making private method accessible
-        method.setAccessible(true);
-        return (List<EmrClusterPriceDto>) method.invoke(emrPricingHelper, emrClusterPrices, thresholdValue);
     }
 
     /**
