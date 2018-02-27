@@ -975,7 +975,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     /**
-     * Tests when the threshold is zero.
+     * Tests when the threshold is set to zero.
      *
      * @throws Exception
      */
