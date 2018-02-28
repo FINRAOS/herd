@@ -328,6 +328,12 @@ public enum ConfigurationValue
     EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS("emr.spot.price.history.product.descriptions", null),
 
     /**
+     * The threshold value in dollar amount when choosing an EMR cluster based on the lowest total cost.
+     * It should be of string type so the precision can be kept. The default value is 5 cents(0.05 dollar).
+     */
+    EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS("emr.cluster.lowest.total.cost.threshold.dollars", "0.05"),
+
+    /**
      * S3 protocol for constructing an S3 URL. The default is the standard "s3" prefix.
      */
     S3_URL_PROTOCOL("s3.url.protocol", "s3://"),
