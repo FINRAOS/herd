@@ -182,18 +182,18 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     }
 
     @Test
-    public void testGetBigDecimalPropertyValue()
+    public void testGetBigDecimalRequiredPropertyValue()
     {
         ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
 
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), "0.05");
 
-        assertEquals(new BigDecimal("0.05"), configurationHelper.getBigDecimalProperty(configurationValue, environment));
+        assertEquals(new BigDecimal("0.05"), configurationHelper.getBigDecimalRequiredProperty(configurationValue, environment));
     }
 
     @Test
-    public void testGetBigDecimalPropertyValueConversionFail()
+    public void testGetBigDecimalRequiredPropertyValueConversionFail()
     {
         ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
 
@@ -202,7 +202,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
 
         try
         {
-            configurationHelper.getBigDecimalProperty(configurationValue, environment);
+            configurationHelper.getBigDecimalRequiredProperty(configurationValue, environment);
             fail("Should throw an IllegalStatueException when property value is not BigDecimal.");
         }
         catch (IllegalStateException e)
@@ -213,11 +213,30 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     }
 
     @Test
-    public void testGetBigDecimalPropertyValidationThrowsWhenConfigurationValueIsNull()
+    public void testGetBigDecimalRequiredPropertyValueBlankStringValue()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), " ");
+
+        try
+        {
+            configurationHelper.getBigDecimalRequiredProperty(configurationValue, environment);
+            fail("Should throw an IllegalStatueException when property value is not BigDecimal.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Configuration \"%s\" must have a value.", configurationValue.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetBigDecimalRequiredPropertyValidationThrowsWhenConfigurationValueIsNull()
     {
         try
         {
-            configurationHelper.getBigDecimalProperty(null);
+            configurationHelper.getBigDecimalRequiredProperty(null);
             fail("Should throw an IllegalStateException when configuration value is null.");
         }
         catch (IllegalStateException e)
@@ -227,29 +246,29 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     }
 
     @Test
-    public void testGetNonNegativeBigDecimalPropertyValuePositiveValue()
+    public void testGetNonNegativeBigDecimalRequiredPropertyValuePositiveValue()
     {
         ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
 
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), "1.00");
 
-        assertEquals(new BigDecimal("1.00"), configurationHelper.getNonNegativeBigDecimalProperty(configurationValue, environment));
+        assertEquals(new BigDecimal("1.00"), configurationHelper.getNonNegativeBigDecimalRequiredProperty(configurationValue, environment));
     }
 
     @Test
-    public void testGetNonNegativeBigDecimalPropertyValueZeroValue()
+    public void testGetNonNegativeBigDecimalRequiredPropertyValueZeroValue()
     {
         ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
 
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), "0");
 
-        assertEquals(new BigDecimal("0"), configurationHelper.getNonNegativeBigDecimalProperty(configurationValue, environment));
+        assertEquals(new BigDecimal("0"), configurationHelper.getNonNegativeBigDecimalRequiredProperty(configurationValue, environment));
     }
 
     @Test
-    public void testGetNonNegativeBigDecimalPropertyValueNegativeValueFail()
+    public void testGetNonNegativeBigDecimalRequiredPropertyValueNegativeValueFail()
     {
         ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
 
@@ -258,7 +277,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
 
         try
         {
-            configurationHelper.getNonNegativeBigDecimalProperty(configurationValue, environment);
+            configurationHelper.getNonNegativeBigDecimalRequiredProperty(configurationValue, environment);
             fail("Should throw an IllegalStatueException when property value is not BigDecimal.");
         }
         catch (IllegalStateException e)
@@ -269,16 +288,35 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     }
 
     @Test
-    public void testGetNonNegativeBigDecimalPropertyValidationThrowsWhenConfigurationValueIsNull()
+    public void testGetNonNegativeBigDecimalRequiredPropertyValidationThrowsWhenConfigurationValueIsNull()
     {
         try
         {
-            configurationHelper.getNonNegativeBigDecimalProperty(null);
+            configurationHelper.getNonNegativeBigDecimalRequiredProperty(null);
             fail("Should throw an IllegalStateException when configuration value is null.");
         }
         catch (IllegalStateException e)
         {
             assertEquals("configurationValue is required", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetNonNegativeBigDecimalRequiredPropertyValueBlankStringValue()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), " ");
+
+        try
+        {
+            configurationHelper.getNonNegativeBigDecimalRequiredProperty(configurationValue, environment);
+            fail("Should throw an IllegalStatueException when property value is not BigDecimal.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Configuration \"%s\" must have a value.", configurationValue.getKey()), e.getMessage());
         }
     }
 

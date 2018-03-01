@@ -357,7 +357,7 @@ public class EmrPricingHelper extends AwsHelper
     EmrClusterPriceDto getEmrClusterPriceWithLowestTotalCost(final List<EmrClusterPriceDto> emrClusterPrices)
     {
         final List<EmrClusterPriceDto> emrClusterPricesWithLowestTotalCost = getEmrClusterPricesWithinLowestTotalCostThreshold(emrClusterPrices,
-            configurationHelper.getNonNegativeBigDecimalProperty(ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS));
+            configurationHelper.getNonNegativeBigDecimalRequiredProperty(ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS));
         if (!emrClusterPricesWithLowestTotalCost.isEmpty())
         {
             // Pick one randomly from the lowest total cost pricing list

@@ -114,40 +114,15 @@ public class ConfigurationHelper
     }
 
     /**
-     * Calls {@link #getProperty(ConfigurationValue, Class)} where the target type is {@link String}.
-     *
-     * @param configurationValue {@link ConfigurationValue}
-     *
-     * @return The string value
-     */
-    public String getProperty(ConfigurationValue configurationValue)
-    {
-        return getProperty(configurationValue, String.class);
-    }
-
-    /**
-     * Calls {@link #getProperty(ConfigurationValue, Class, Environment)}
-     *
-     * @param configurationValue The {@link ConfigurationValue}
-     * @param targetType The return type
-     *
-     * @return The property value
-     */
-    public <T> T getProperty(ConfigurationValue configurationValue, Class<T> targetType)
-    {
-        return getProperty(configurationValue, targetType, environment);
-    }
-
-    /**
      * Gets a property value as a {@link BigDecimal}.
      *
      * @param configurationValue the {@link BigDecimal} configuration value
      *
      * @return the {@link BigDecimal} property value
      */
-    public BigDecimal getBigDecimalProperty(ConfigurationValue configurationValue)
+    public BigDecimal getBigDecimalRequiredProperty(ConfigurationValue configurationValue)
     {
-        return getBigDecimalProperty(configurationValue, environment);
+        return getBigDecimalRequiredProperty(configurationValue, environment);
     }
 
     /**
@@ -158,9 +133,9 @@ public class ConfigurationHelper
      *
      * @return the {@link BigDecimal} property value
      */
-    public BigDecimal getBigDecimalProperty(ConfigurationValue configurationValue, Environment environment)
+    public BigDecimal getBigDecimalRequiredProperty(ConfigurationValue configurationValue, Environment environment)
     {
-        String bigDecimalStringValue = getProperty(configurationValue, environment);
+        String bigDecimalStringValue = getRequiredProperty(configurationValue, environment);
 
         BigDecimal bigDecimalValue = null;
         try
@@ -174,40 +149,6 @@ public class ConfigurationHelper
         }
 
         return bigDecimalValue;
-    }
-
-    /**
-     * Gets a property value as {@link BigDecimal}. Additionally it ensures that the property value is not negative.
-     *
-     * @param configurationValue the {@link BigDecimal} configuration value
-     *
-     * @return the non-negative {@link BigDecimal} property value
-     */
-    public BigDecimal getNonNegativeBigDecimalProperty(ConfigurationValue configurationValue)
-    {
-        return getBigDecimalProperty(configurationValue, environment);
-    }
-
-
-    /**
-     * Gets a property value as {@link BigDecimal}. Additionally it ensures that the property value is not negative.
-     *
-     * @param configurationValue the {@link BigDecimal} configuration value
-     * @param environment the environment containing the property
-     *
-     * @return the non-negative {@link BigDecimal} property value
-     */
-    public BigDecimal getNonNegativeBigDecimalProperty(ConfigurationValue configurationValue, Environment environment)
-    {
-        final BigDecimal nonNegativeBigDecimalPropertyValue = getBigDecimalProperty(configurationValue, environment);
-        if (nonNegativeBigDecimalPropertyValue.signum() == -1)
-        {
-            throw new IllegalStateException(String
-                .format("Configuration \"%s\" has an invalid non-negative BigDecimal value: \"%s\".", configurationValue.getKey(),
-                    nonNegativeBigDecimalPropertyValue));
-        }
-
-        return nonNegativeBigDecimalPropertyValue;
     }
 
     /**
@@ -247,6 +188,65 @@ public class ConfigurationHelper
 
         // Return the boolean value.
         return (Boolean) customBooleanEditor.getValue();
+    }
+
+    /**
+     * Gets a property value as {@link BigDecimal}. Additionally it ensures that the property value is not negative.
+     *
+     * @param configurationValue the {@link BigDecimal} configuration value
+     *
+     * @return the non-negative {@link BigDecimal} property value
+     */
+    public BigDecimal getNonNegativeBigDecimalRequiredProperty(ConfigurationValue configurationValue)
+    {
+        return getBigDecimalRequiredProperty(configurationValue, environment);
+    }
+
+
+    /**
+     * Gets a property value as {@link BigDecimal}. Additionally it ensures that the property value is not negative.
+     *
+     * @param configurationValue the {@link BigDecimal} configuration value
+     * @param environment the environment containing the property
+     *
+     * @return the non-negative {@link BigDecimal} property value
+     */
+    public BigDecimal getNonNegativeBigDecimalRequiredProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        final BigDecimal nonNegativeBigDecimalPropertyValue = getBigDecimalRequiredProperty(configurationValue, environment);
+        if (nonNegativeBigDecimalPropertyValue.signum() == -1)
+        {
+            throw new IllegalStateException(String
+                .format("Configuration \"%s\" has an invalid non-negative BigDecimal value: \"%s\".", configurationValue.getKey(),
+                    nonNegativeBigDecimalPropertyValue));
+        }
+
+        return nonNegativeBigDecimalPropertyValue;
+    }
+
+    /**
+     * Calls {@link #getProperty(ConfigurationValue, Class)} where the target type is {@link String}.
+     *
+     * @param configurationValue {@link ConfigurationValue}
+     *
+     * @return The string value
+     */
+    public String getProperty(ConfigurationValue configurationValue)
+    {
+        return getProperty(configurationValue, String.class);
+    }
+
+    /**
+     * Calls {@link #getProperty(ConfigurationValue, Class, Environment)}
+     *
+     * @param configurationValue The {@link ConfigurationValue}
+     * @param targetType The return type
+     *
+     * @return The property value
+     */
+    public <T> T getProperty(ConfigurationValue configurationValue, Class<T> targetType)
+    {
+        return getProperty(configurationValue, targetType, environment);
     }
 
     /**
