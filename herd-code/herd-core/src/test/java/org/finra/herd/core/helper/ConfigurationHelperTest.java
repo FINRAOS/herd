@@ -227,6 +227,62 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     }
 
     @Test
+    public void testGetNonNegativeBigDecimalPropertyValuePositiveValue()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "1.00");
+
+        assertEquals(new BigDecimal("1.00"), configurationHelper.getNonNegativeBigDecimalProperty(configurationValue, environment));
+    }
+
+    @Test
+    public void testGetNonNegativeBigDecimalPropertyValueZeroValue()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "0");
+
+        assertEquals(new BigDecimal("0"), configurationHelper.getNonNegativeBigDecimalProperty(configurationValue, environment));
+    }
+
+    @Test
+    public void testGetNonNegativeBigDecimalPropertyValueNegativeValueFail()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "-1.00");
+
+        try
+        {
+            configurationHelper.getNonNegativeBigDecimalProperty(configurationValue, environment);
+            fail("Should throw an IllegalStatueException when property value is not BigDecimal.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Configuration \"%s\" has an invalid non-negative BigDecimal value: \"-1.00\".", configurationValue.getKey()),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetNonNegativeBigDecimalPropertyValidationThrowsWhenConfigurationValueIsNull()
+    {
+        try
+        {
+            configurationHelper.getNonNegativeBigDecimalProperty(null);
+            fail("Should throw an IllegalStateException when configuration value is null.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals("configurationValue is required", e.getMessage());
+        }
+    }
+
+    @Test
     public void testGetBooleanPropertyValue()
     {
         ConfigurationValue configurationValue = ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED;

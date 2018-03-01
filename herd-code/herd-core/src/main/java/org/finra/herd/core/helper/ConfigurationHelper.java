@@ -176,6 +176,39 @@ public class ConfigurationHelper
         return bigDecimalValue;
     }
 
+    /**
+     * Gets a property value as {@link BigDecimal}. Additionally it ensures that the property value is not negative.
+     *
+     * @param configurationValue the {@link BigDecimal} configuration value
+     *
+     * @return the non-negative {@link BigDecimal} property value
+     */
+    public BigDecimal getNonNegativeBigDecimalProperty(ConfigurationValue configurationValue)
+    {
+        return getBigDecimalProperty(configurationValue, environment);
+    }
+
+
+    /**
+     * Gets a property value as {@link BigDecimal}. Additionally it ensures that the property value is not negative.
+     *
+     * @param configurationValue the {@link BigDecimal} configuration value
+     * @param environment the environment containing the property
+     *
+     * @return the non-negative {@link BigDecimal} property value
+     */
+    public BigDecimal getNonNegativeBigDecimalProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        final BigDecimal nonNegativeBigDecimalPropertyValue = getBigDecimalProperty(configurationValue, environment);
+        if (nonNegativeBigDecimalPropertyValue.signum() == -1)
+        {
+            throw new IllegalStateException(String
+                .format("Configuration \"%s\" has an invalid non-negative BigDecimal value: \"%s\".", configurationValue.getKey(),
+                    nonNegativeBigDecimalPropertyValue));
+        }
+
+        return nonNegativeBigDecimalPropertyValue;
+    }
 
     /**
      * Gets a property value as a boolean.
@@ -255,7 +288,6 @@ public class ConfigurationHelper
      * @param targetTypeName - the name of the data type we want to convert the configuration value to(boolean, BigDecimal...etc)
      * @param stringValue - the configuration value in string type
      * @param exception - the exception thrown when converting the configuration value from string type to the target data type
-     *
      */
     private void logErrorAndThrowIllegalStateException(ConfigurationValue configurationValue, String targetTypeName, String stringValue, Exception exception)
     {

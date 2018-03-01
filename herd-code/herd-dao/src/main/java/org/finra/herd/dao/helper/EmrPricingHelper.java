@@ -357,7 +357,7 @@ public class EmrPricingHelper extends AwsHelper
     EmrClusterPriceDto getEmrClusterPriceWithLowestTotalCost(final List<EmrClusterPriceDto> emrClusterPrices)
     {
         final List<EmrClusterPriceDto> emrClusterPricesWithLowestTotalCost = getEmrClusterPricesWithinLowestTotalCostThreshold(emrClusterPrices,
-            configurationHelper.getBigDecimalProperty(ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS));
+            configurationHelper.getNonNegativeBigDecimalProperty(ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS));
         if (!emrClusterPricesWithLowestTotalCost.isEmpty())
         {
             // Pick one randomly from the lowest total cost pricing list
@@ -424,8 +424,9 @@ public class EmrPricingHelper extends AwsHelper
             for (final Map.Entry<BigDecimal, List<EmrClusterPriceDto>> entry : emrClusterPriceMapKeyedByTotalCost.entrySet())
             {
                 final BigDecimal totalCost = entry.getKey();
-                // Fall into the low cost range? add it to the list
-                if (totalCost.compareTo(lowestTotalCostLowerBound) >= 0 && totalCost.compareTo(lowestTotalCostUpperBound) <= 0)
+                // Fall into the low cost range? add it to the list.
+                // There is no need to check the lower bound here, since the tree map is sorted, and lower bound is the lowest total cost in the tree map.
+                if (totalCost.compareTo(lowestTotalCostUpperBound) <= 0)
                 {
                     emrClusterPricesWithinLowestTotalCostThreshold.addAll(entry.getValue());
                 }
