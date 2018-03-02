@@ -199,7 +199,7 @@ public class ConfigurationHelper
      */
     public BigDecimal getNonNegativeBigDecimalRequiredProperty(ConfigurationValue configurationValue)
     {
-        return getBigDecimalRequiredProperty(configurationValue, environment);
+        return getNonNegativeBigDecimalRequiredProperty(configurationValue, environment);
     }
 
 
