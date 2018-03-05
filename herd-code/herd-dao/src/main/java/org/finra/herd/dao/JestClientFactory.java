@@ -16,11 +16,9 @@
 package org.finra.herd.dao;
 
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
-import com.amazonaws.ClientConfiguration;
 import io.searchbox.client.JestClient;
 import io.searchbox.client.config.HttpClientConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -29,15 +27,11 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.credstash.CredStash;
 import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
-import org.finra.herd.dao.helper.AwsHelper;
-import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.dao.helper.CredStashHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
 
 @Component
@@ -46,16 +40,10 @@ public class JestClientFactory
     private static final Logger LOGGER = LoggerFactory.getLogger(JestClientFactory.class);
 
     @Autowired
-    private AwsHelper awsHelper;
-
-    @Autowired
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private CredStashFactory credStashFactory;
-
-    @Autowired
-    private JsonHelper jsonHelper;
+    private CredStashHelper credStashHelper;
 
     /**
      * Builds and returns a JEST client.
@@ -80,11 +68,12 @@ public class JestClientFactory
         {
             final String userName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
             final String credentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
+            final String credstashEncryptionContext = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
 
             String password;
             try
             {
-                password = getCredentialFromCredStash(credentialName);
+                password = credStashHelper.getCredentialFromCredStash(credstashEncryptionContext, credentialName);
             }
             catch (CredStashGetCredentialFailedException e)
             {
@@ -111,57 +100,5 @@ public class JestClientFactory
         }
 
         return jestClientFactory.getObject();
-    }
-
-    /**
-     * Gets a password from the credstash.
-     *
-     * @param credentialName the credential name
-     *
-     * @return the password
-     * @throws CredStashGetCredentialFailedException if CredStash fails to get a credential
-     */
-    @Retryable(maxAttempts = 3, value = CredStashGetCredentialFailedException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
-    private String getCredentialFromCredStash(String credentialName) throws CredStashGetCredentialFailedException
-    {
-        // Get the credstash table name and credential names for the keystore and truststore
-        String credstashEncryptionContext = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
-        String credstashAwsRegion = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
-        String credstashTableName = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
-
-        LOGGER.info("credstashTableName={}", credstashTableName);
-        LOGGER.info("credentialName={}", credentialName);
-
-        // Get the AWS client configuration.
-        ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsHelper.getAwsParamsDto());
-
-        // Get the keystore and truststore passwords from Credstash
-        CredStash credstash = credStashFactory.getCredStash(credstashAwsRegion, credstashTableName, clientConfiguration);
-
-        String password = null;
-
-        // Try to obtain the credentials from cred stash
-        try
-        {
-            // Convert the JSON config file version of the encryption context to a Java Map class
-            @SuppressWarnings("unchecked")
-            Map<String, String> credstashEncryptionContextMap = jsonHelper.unmarshallJsonToObject(Map.class, credstashEncryptionContext);
-            // Get the keystore and truststore passwords from credstash
-            password = credstash.getCredential(credentialName, credstashEncryptionContextMap);
-        }
-        catch (Exception exception)
-        {
-            LOGGER.error("Caught exception when attempting to get a credential value from CredStash", exception);
-        }
-
-        // If either the keystorePassword or truststorePassword values are empty and could not be obtained as credentials from cred stash,
-        // then throw a new CredStashGetCredentialFailedException
-        if (StringUtils.isEmpty(password))
-        {
-            throw new CredStashGetCredentialFailedException("Failed to obtain the keystore or truststore credential from cred stash.");
-        }
-
-        // Return the keystore and truststore passwords in a map
-        return password;
     }
 }
