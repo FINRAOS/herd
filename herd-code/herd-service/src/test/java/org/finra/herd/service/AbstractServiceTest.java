@@ -272,6 +272,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final String BUSINESS_OBJECT_FORMAT_KEY_AS_STRING = "UT_BusinessObjectFormatKeyAsString_" + RANDOM_SUFFIX;
+
     public static final String BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
         "  \"eventDate\" : \"$current_time\",\n" +
         "  \"businessObjectFormatKey\" : {\n" +
@@ -327,8 +329,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "      <transmission-id>$uuid</transmission-id>\n" +
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
-
-    public static final String BUSINESS_OBJECT_FORMAT_KEY_AS_STRING = "UT_BusinessObjectFormatKeyAsString_" + RANDOM_SUFFIX;
 
     public static final Boolean CONTINUE_ON_ERROR = true;
 
@@ -607,6 +607,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
 
+    public static final String RELATIONAL_TABLE_NAME = "UT_RelationalTableName_" + RANDOM_SUFFIX;
+
     public static final Integer RETENTION_PERIOD_DAYS = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean RETRIEVE_INSTANCE_FLEETS = true;
@@ -713,8 +715,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean VERBOSE = true;
 
     public static final String ZERO_COLUMN_SIZE = "0";
-
-    public static final String RELATIONAL_TABLE_NAME = "UT_RELATIONAL_TABLE_" + RANDOM_SUFFIX;
 
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
@@ -946,6 +946,15 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected PartitionKeyGroupServiceTestHelper partitionKeyGroupServiceTestHelper;
+
+    @Autowired
+    protected RelationalTableRegistrationHelperService relationalTableRegistrationHelperService;
+
+    @Autowired
+    protected RelationalTableRegistrationService relationalTableRegistrationService;
+
+    @Autowired
+    protected RelationalTableRegistrationServiceTestHelper relationalTableRegistrationServiceTestHelper;
 
     @Autowired
     protected S3KeyPrefixHelper s3KeyPrefixHelper;

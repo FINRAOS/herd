@@ -884,6 +884,12 @@ public enum ConfigurationValue
     CREDSTASH_ENCRYPTION_CONTEXT("credstash.encryption.context", "{\"AGS\":\"AGS_VALUE\",\"SDLC\":\"SDLC_VALUE\",\"Component\":\"COMPONENT_VALUE\"}"),
 
     /**
+     * The Credstash encryption context key value map for RELATIONAL storage.
+     */
+    CREDSTASH_RELATIONAL_STORAGE_ENCRYPTION_CONTEXT("credstash.relational.storage.encryption.context",
+        "{\"AGS\":\"AGS_VALUE\",\"SDLC\":\"SDLC_VALUE\",\"Component\":\"RELATIONAL_STORAGE_COMPONENT_VALUE\"}"),
+
+    /**
      * The Credstash aws region name.
      */
     CREDSTASH_AWS_REGION_NAME("credstash.aws.region.name", "us-east-1"),
@@ -934,9 +940,29 @@ public enum ConfigurationValue
     S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null),
 
     /**
-     * The attribute name which the relational table registration put the table name in
+     * The business object format attribute name for the relational table name. The default is "relational.table.name".
      */
-    RELATIONAL_TABLE_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME("relationalTable.businessObjectFormat.attribute.name", "relational.table.name");
+    BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME("business.object.format.attribute.name.relational.table.name", "relational.table.name"),
+
+    /**
+     * The storage attribute name for the JDBC URL. The default is "jdbc.url".
+     */
+    STORAGE_ATTRIBUTE_NAME_JDBC_URL("storage.attribute.name.jdbc.url", "jdbc.url"),
+
+    /**
+     * The storage attribute name for the JDBC username. The default is "jdbc.username".
+     */
+    STORAGE_ATTRIBUTE_NAME_JDBC_USERNAME("storage.attribute.name.jdbc.useraname", "jdbc.username"),
+
+    /**
+     * The storage attribute name for the JDBC password. The default is "jdbc.password".
+     */
+    STORAGE_ATTRIBUTE_NAME_JDBC_PASSWORD("storage.attribute.name.jdbc.password", "jdbc.password"),
+
+    /**
+     * The storage attribute name for the JDBC user credential name. The default is "jdbc.user.credential.name".
+     */
+    STORAGE_ATTRIBUTE_NAME_JDBC_USER_CREDENTIAL_NAME("storage.attribute.name.jdbc.user.credential.name", "jdbc.user.credential.name");
 
     private Object defaultValue;
 

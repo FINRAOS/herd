@@ -440,6 +440,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String I_DO_NOT_EXIST = "I_DO_NOT_EXIST";
 
+    public static final String JDBC_URL = "jdbc:h2:mem:herdTestDb";
+
     public static final String JOB_DESCRIPTION = "UT_JobDescription" + RANDOM_SUFFIX;
 
     public static final String JOB_ID = "UT_JobId_" + RANDOM_SUFFIX;
@@ -639,6 +641,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_PARTITION_KEY_GROUP = null;
 
+    public static final String NO_PASSWORD = null;
+
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
 
     public static final XMLGregorianCalendar NO_RESTORE_EXPIRATION_ON = null;
@@ -690,6 +694,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final XMLGregorianCalendar NO_UPDATED_ON = null;
 
     public static final Timestamp NO_UPDATED_ON_TIMESTAMP = null;
+
+    public static final String NO_USER_CREDENTIAL_NAME = null;
 
     public static final String NO_USER_TELEPHONE_NUMBER = null;
 
@@ -1005,12 +1011,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TARGET_S3_KEY = "herd-dao-test-key-prefix" + RANDOM_SUFFIX + "/" + LOCAL_FILE;
 
-    public static final String TEST_DDL = "CREATE EXTERNAL TABLE `ITEMS` (\n" +
-        "    `ORGNL_TRANSFORM` INT,\n" +
-        "    `DATA` DOUBLE)\n" +
-        "PARTITIONED BY (`TRANSFORM` INT)\n" +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '\\\\' NULL DEFINED AS '\\001'\n" +
-        "STORED AS TEXTFILE;";
+    public static final String TEST_DDL =
+        "CREATE EXTERNAL TABLE `ITEMS` (\n" + "    `ORGNL_TRANSFORM` INT,\n" + "    `DATA` DOUBLE)\n" + "PARTITIONED BY (`TRANSFORM` INT)\n" +
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '\\\\' NULL DEFINED AS '\\001'\n" + "STORED AS TEXTFILE;";
 
     public static final String TEST_DDL_2 = "DROP TABLE `Test`;\n" + "CREATE EXTERNAL TABLE `TEST`;";
 
