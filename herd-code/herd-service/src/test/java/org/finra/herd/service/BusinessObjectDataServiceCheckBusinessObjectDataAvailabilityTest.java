@@ -1295,14 +1295,13 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
     @Test
     public void testCheckBusinessObjectDataAvailabilityPartitionValueListMaxPartitionValueTokenUpperCaseParameters()
     {
-        verifyPartitionValueListMaxPartitionValueTokenUpperLowerCaseParameters(true);
+        runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(true, true);
     }
 
     @Test
     public void testCheckBusinessObjectDataAvailabilityPartitionValueListMaxPartitionValueTokenLowerCaseParameters()
     {
-        verifyPartitionValueListMaxPartitionValueTokenUpperLowerCaseParameters(false);
-
+        runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(true, false);
     }
 
     @Test
@@ -1410,15 +1409,13 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
     @Test
     public void testCheckBusinessObjectDataAvailabilityPartitionValueListMinPartitionValueTokenUpperCaseParameters()
     {
-        veirfyPartitionValueListMinPartitionValueTokenUpperLowerCase(true);
-
+        runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(false, true);
     }
 
     @Test
     public void testCheckBusinessObjectDataAvailabilityPartitionValueListMinPartitionValueTokenLowerCaseParameters()
     {
-        veirfyPartitionValueListMinPartitionValueTokenUpperLowerCase(false);
-
+        runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(false, false);
     }
 
     @Test
@@ -2078,74 +2075,32 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
                 BusinessObjectDataStatusEntity.VALID)), NO_NOT_AVAILABLE_STATUSES), result);
     }
 
-    private void verifyPartitionValueListMaxPartitionValueTokenUpperLowerCaseParameters(boolean isUpperCase)
+    private void runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(boolean useMaxPartitionValueToken, boolean isUpperCase)
     {
         // Prepare test data.
         businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
 
-        // Check business object data availability using maximum partition value token.
+        // Check business object data availability using maximum or minimum partition value token with business
+        // object format alternate key parameters in upper or lower case as per specified input parameters.
         BusinessObjectDataAvailabilityRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(null);
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
         request.setPartitionValueFilters(partitionValueFilters);
-        partitionValueFilters.add(
-            new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN), NO_PARTITION_VALUE_RANGE,
-                NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE));
-
-        makeBusinessDataFormatKeyInRequestUpperLowerCase(request, isUpperCase);
-
+        partitionValueFilters.add(new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(
+            useMaxPartitionValueToken ? BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN : BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
+            NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE));
+        request.setNamespace(isUpperCase ? NAMESPACE.toUpperCase() : NAMESPACE.toLowerCase());
+        request.setBusinessObjectDefinitionName(isUpperCase ? BDEF_NAME.toUpperCase() : BDEF_NAME.toLowerCase());
+        request.setBusinessObjectFormatUsage(isUpperCase ? FORMAT_USAGE_CODE.toUpperCase() : FORMAT_USAGE_CODE.toLowerCase());
+        request.setBusinessObjectFormatFileType(isUpperCase ? FORMAT_FILE_TYPE_CODE.toUpperCase() : FORMAT_FILE_TYPE_CODE.toLowerCase());
         BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                Arrays.asList(STORAGE_1_GREATEST_PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+                Arrays.asList(useMaxPartitionValueToken ? STORAGE_1_GREATEST_PARTITION_VALUE : STORAGE_1_LEAST_PARTITION_VALUE),
+                NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
-    }
-
-    private void veirfyPartitionValueListMinPartitionValueTokenUpperLowerCase(boolean isUpperCase)
-    {
-        // Prepare test data.
-        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
-
-        // Check business object data availability using minimum partition value token.
-        BusinessObjectDataAvailabilityRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(null);
-        List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
-        request.setPartitionValueFilters(partitionValueFilters);
-        partitionValueFilters.add(
-            new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN), NO_PARTITION_VALUE_RANGE,
-                NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE));
-
-        makeBusinessDataFormatKeyInRequestUpperLowerCase(request, isUpperCase);
-        BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
-
-        // Validate the results.
-        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                Arrays.asList(STORAGE_1_LEAST_PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
-        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
-    }
-
-    private void makeBusinessDataFormatKeyInRequestUpperLowerCase(BusinessObjectDataAvailabilityRequest request, boolean isUpperCase)
-    {
-        if (isUpperCase)
-        {
-            // Make namespace, business object definition, and file type in the business data format key upper cases
-            request.setNamespace(NAMESPACE.toUpperCase());
-            request.setBusinessObjectDefinitionName(BDEF_NAME.toUpperCase());
-            request.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE.toUpperCase());
-            request.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE.toUpperCase());
-        }
-        else
-        {
-            // Make namespace, business object definition, and file type in the business data format key lower cases
-            request.setNamespace(NAMESPACE.toLowerCase());
-            request.setBusinessObjectDefinitionName(BDEF_NAME.toLowerCase());
-            request.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE.toLowerCase());
-            request.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE.toLowerCase());
-        }
     }
 }
