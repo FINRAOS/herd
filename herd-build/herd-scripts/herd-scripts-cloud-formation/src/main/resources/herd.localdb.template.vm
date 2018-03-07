@@ -137,7 +137,8 @@
         "GroupDescription" : "Enable WEB server access",
         "SecurityGroupIngress" : [
           {"IpProtocol" : "tcp", "FromPort" : "22",   "ToPort" : "22",   "CidrIp" : { "Ref" : "SSHLocation"}},
-          {"IpProtocol" : "tcp", "FromPort" : "8080", "ToPort" : "8080", "CidrIp" : { "Ref" : "SSHLocation"}}
+          {"IpProtocol" : "tcp", "FromPort" : "8080", "ToPort" : "8080", "CidrIp" : { "Ref" : "SSHLocation"}},
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "SSHLocation"}}
          ]
       }
     },
@@ -195,7 +196,8 @@
                 "postgresql9*": [],
                 "tomcat8": [],
                 "elasticsearch": [],
-                "jq": []
+                "jq": [],
+                "httpd24": []
               }
             },
             "commands": {
@@ -239,13 +241,13 @@
                 }
               },
               "/usr/share/tomcat8/webapps/herd-app.war": {
-                "source": "https://oss.sonatype.org/service/local/repositories/releases/content/org/finra/herd/herd-war/${project.version}/herd-war-${project.version}.war",
+                "source": "https://oss.sonatype.org/service/local/repositories/releases/content/org/finra/herd/herd-war/${herdTagVersion}/herd-war-${herdTagVersion}.war",
                 "mode": "000550",
                 "owner": "tomcat",
                 "group": "tomcat"
               },
               "/home/ec2-user/sql/herd-scripts-sql.jar": {
-                "source": "https://oss.sonatype.org/service/local/repositories/releases/content/org/finra/herd/herd-scripts-sql/${project.version}/herd-scripts-sql-${project.version}.jar",
+                "source": "https://oss.sonatype.org/service/local/repositories/releases/content/org/finra/herd/herd-scripts-sql/${herdTagVersion}/herd-scripts-sql-${herdTagVersion}.jar",
                 "mode": "000664",
                 "owner": "ec2-user",
                 "group": "ec2-user"
@@ -540,6 +542,49 @@
           "{\"filePath\":\"demo-app-a\/exchange\/source\/bz\/data-object-a\/frmt-v0\/data-v0\/transaction-date=2015-06-01\/object_a.gz\",\"fileSizeBytes\":\"9511\",\"rowCount\":\"1000\"}","]}","],\"attributes\":[","{\"name\":\"Processor_Id\",\"value\":\"8801\"}","]",
           "}' http://localhost:8080/herd-app/rest/businessObjectData\n",
 
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"tagTypeKey\": {\"tagTypeCode\":\"Category_Type_A\"}, \"displayName\":\"Category Type A\",",
+          "\"tagTypeOrder\": 0, \"description\":\"Tag Type for testing.\"",
+          "}' http://localhost:8080/herd-app/rest/tagTypes\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"tagKey\": {\"tagTypeCode\":\"Category_Type_A\",\"tagCode\":\"Category_A\"},",
+          "\"displayName\":\"Category A\",\"description\":\"Tag for testing.\"",
+          "}' http://localhost:8080/herd-app/rest/tags\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"businessObjectDefinitionTagKey\": {\"businessObjectDefinitionKey\": {\"namespace\":\"Demo_App_A\", \"businessObjectDefinitionName\":\"Data_Object_A\"},",
+          "\"tagKey\": {\"tagTypeCode\": \"Category_Type_A\", \"tagCode\": \"Category_A\"}}",
+          "}' http://localhost:8080/herd-app/rest/businessObjectDefinitionTags\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"namespace\": \"Demo_App_A\", \"businessObjectDefinitionName\": \"Data_Object_A\", \"businessObjectFormatUsage\": \"FOR\",",
+          "\"businessObjectFormatFileType\": \"TXT\", \"partitionKey\": \"PRTNDATE\",",
+          "\"description\": \"Business Object Format Usage A\", \"attributes\": [",
+          "{ \"name\": \"Attribute Name A\", \"value\": \"Attribute Value A\" } ],",
+          "\"attributeDefinitions\": [ { \"name\": \"Attribute Definition Name A\", \"publish\": true } ],",
+          "\"schema\": { \"columns\": [ { \"name\": \"COLUMN1\", \"type\": \"DATE\", \"size\": \"string\", \"required\": true, \"defaultValue\": \"string\",",
+          "\"description\": \"Date column\" }, { \"name\": \"COLUMN2\", \"type\": \"DECIMAL\", \"size\": \"18,8\", \"required\": true, \"defaultValue\": 0,",
+          "\"description\": \"Decimal column\" } ], \"partitions\": [ { \"name\": \"PRTNDATE\", \"type\": \"DATE\", \"required\": true,",
+          "\"description\": \"Partition Date\" } ], \"nullValue\": \"\\N\", \"delimiter\": \"|\", \"escapeCharacter\": \"\\\" }",
+          "}' http://localhost:8080/herd-app/rest/businessObjectFormats\n",
+
+          "/usr/bin/curl -s -X PUT --header 'Content-Type: application/json' -d '{",
+          "\"description\": \"Object_A is transactional data with important information including X, Y, Z\",",
+          "\"displayName\": \"Data_Object_A\", \"descriptiveBusinessObjectFormat\": { \"businessObjectFormatUsage\": \"FOR\",",
+          "\"businessObjectFormatFileType\": \"TXT\", \"businessObjectFormatVersion\":0 }",
+          "}' http://localhost:8080/herd-app/rest/businessObjectDefinitionDescriptiveInformation/namespaces/Demo_App_A/businessObjectDefinitionNames/Data_Object_A\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"businessObjectDefinitionColumnKey\": { \"namespace\": \"Demo_App_A\", \"businessObjectDefinitionName\": \"Data_Object_A\",",
+          "\"businessObjectDefinitionColumnName\": \"Column_1\" }, \"schemaColumnName\": \"COLUMN1\", \"description\": \"Column 1 for Data Object A\"",
+          "}' http://localhost:8080/herd-app/rest/businessObjectDefinitionColumns\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"businessObjectDefinitionColumnKey\": { \"namespace\": \"Demo_App_A\", \"businessObjectDefinitionName\": \"Data_Object_A\",",
+          "\"businessObjectDefinitionColumnName\": \"Column_2\" }, \"schemaColumnName\": \"COLUMN2\", \"description\": \"Column 2 for Data Object A\"",
+          "}' http://localhost:8080/herd-app/rest/businessObjectDefinitionColumns\n",
+
           "bdef_index_name=$(/usr/bin/curl -s -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{",
           "\"searchIndexType\": \"BUS_OBJCT_DFNTN\"",
           "}' http://localhost:8080/herd-app/rest/searchIndexes | jq -r '.searchIndexKey.searchIndexName')\n",
@@ -555,6 +600,72 @@
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{",
           "\"searchIndexKey\": { \"searchIndexName\": \"${tag_index_name}\" }",
           "}' http://localhost:8080/herd-app/rest/searchIndexActivations\n",
+
+          "# Configuring http server\n",
+
+          "/bin/sed -i '/Built In Filter Definitions/a ",
+          "<filter>",
+          "<filter-name>CorsFilter</filter-name>",
+          "<filter-class>org.apache.catalina.filters.CorsFilter</filter-class>",
+          "<init-param>",
+          "<param-name>cors.allowed.origins</param-name>",
+          "<param-value>*</param-value>",
+          "</init-param>",
+          "<init-param>",
+          "<param-name>cors.allowed.headers</param-name>",
+          "<param-value>Content-Type,Authorization,Accept,Origin</param-value>",
+          "</init-param>",
+          "<init-param>",
+          "<param-name>cors.allowed.methods</param-name>",
+          "<param-value>GET,POST,PUT,DELETE,HEAD,OPTIONS</param-value>",
+          "</init-param>",
+          "</filter>",
+          "<filter-mapping>",
+          "<filter-name>CorsFilter</filter-name>",
+          "<url-pattern>/*</url-pattern>",
+          "</filter-mapping>",
+          "' /usr/share/tomcat8/conf/web.xml\n",
+
+          "sudo service httpd start\n",
+
+          "sudo chkconfig httpd on\n",
+
+          "sudo usermod -a -G apache ec2-user\n",
+
+          "# Deployig herd-ui\n",
+
+          "/usr/bin/curl 'https://registry.npmjs.org/@herd/herd-ui-dist/-/herd-ui-dist-${herdUIVersion}.tgz' | /bin/tar xz -C /home/ec2-user\n",
+
+          "mv /home/ec2-user/package/dist/* /var/www/html\n",
+
+          "# Configuring directory and file ownership for the http server\n",
+
+          "sudo chown -R ec2-user:apache /var/www\n",
+
+          "sudo chmod 2775 /var/www\n",
+
+          "find /var/www -type d -exec sudo chmod 2775 {} + \n",
+
+          "find /var/www -type f -exec sudo chmod 0664 {} + \n",
+
+          "# Setup configuration.json herd-ui settings\n",
+
+          "herd_ui_host_ip=$(/usr/bin/curl http://169.254.169.254/latest/meta-data/public-hostname)\n",
+
+          "echo '{\"restBaseUri\": \"http://'$herd_ui_host_ip':8080/herd-app/rest\",",
+          "\"basicAuthRestBaseUri\": \"basicAuthRestBaseUri\",",
+          "\"helpUrl\": \"helpUrl\",",
+          "\"supportEmail\": \"orgSupportEmail\",",
+          "\"brandHeader\": \"Herd-UI\",",
+          "\"brandMotto\": \"Locate and understand data available in HERD\",",
+          "\"docTitlePrefix\": \"Herd-UI\",",
+          "\"useBasicAuth\": false,",
+          "\"alertDelayInSeconds\": 10,",
+          "\"trackAnalytics\": false,",
+          "\"ga\": {",
+          "\"key\": \"key\",",
+          "\"iv\": \"iv\",",
+          "\"trackingId\": \"trackingId\"}}' > /var/www/html/configuration.json\n",
 
           "# If all went well, signal success\n",
           "/opt/aws/bin/cfn-signal -e $? -r 'Herd Server configuration' '", { "Ref" : "herdServerWaitHandle" }, "'\n"
