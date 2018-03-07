@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.Test;
@@ -58,12 +59,13 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
             .createDatabaseEntitiesForRelationalTableRegistrationTesting(BDEF_NAMESPACE, DATA_PROVIDER_NAME, STORAGE_NAME);
 
         // Pick one of the in-memory database tables to be registered as a relational table.
+        String relationalSchemaName = "PUBLIC";
         String relationalTableName = BusinessObjectDefinitionEntity.TABLE_NAME.toUpperCase();
 
         // Create a relational table registration create request for a table that is part of the in-memory database setup as part of DAO mocks.
         RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest =
             new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                relationalTableName, STORAGE_NAME);
+                relationalSchemaName, relationalTableName, STORAGE_NAME);
 
         // Create a relational table registration.
         BusinessObjectData businessObjectData = relationalTableRegistrationService.createRelationalTableRegistration(relationalTableRegistrationCreateRequest);
@@ -121,7 +123,9 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectFormat.setBusinessObjectFormatParents(new ArrayList<>());
         expectedBusinessObjectFormat.setBusinessObjectFormatChildren(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributeDefinitions(new ArrayList<>());
-        expectedBusinessObjectFormat.setAttributes(Collections.singletonList(
+        expectedBusinessObjectFormat.setAttributes(Arrays.asList(
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
+                relationalSchemaName),
             new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
                 relationalTableName)));
         expectedBusinessObjectFormat.setSchema(expectedSchema);

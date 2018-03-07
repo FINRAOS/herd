@@ -61,9 +61,10 @@ public class TestRelationalTableRegistrationHelperServiceImpl extends Relational
      * This implementation keeps the current transaction context.
      */
     @Override
-    public List<SchemaColumn> retrieveRelationalTableColumns(RelationalStorageAttributesDto relationalStorageAttributesDto, String relationalTableName)
+    public List<SchemaColumn> retrieveRelationalTableColumns(RelationalStorageAttributesDto relationalStorageAttributesDto, String relationalSchemaName,
+        String relationalTableName)
     {
-        return retrieveRelationalTableColumnsImpl(relationalStorageAttributesDto, relationalTableName);
+        return retrieveRelationalTableColumnsImpl(relationalStorageAttributesDto, relationalSchemaName, relationalTableName);
     }
 
     /**

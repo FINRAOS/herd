@@ -72,7 +72,8 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
         // Retrieve a list of actual schema columns for the specified relational table.
         // This method uses actual JDBC connection to retrieve a description of table columns.
         List<SchemaColumn> schemaColumns = relationalTableRegistrationHelperService
-            .retrieveRelationalTableColumns(relationalStorageAttributesDto, relationalTableRegistrationCreateRequest.getRelationalTableName());
+            .retrieveRelationalTableColumns(relationalStorageAttributesDto, relationalTableRegistrationCreateRequest.getRelationalSchemaName(),
+                relationalTableRegistrationCreateRequest.getRelationalTableName());
 
         // Create a new relational table registration and return the information for the newly created business object data.
         return relationalTableRegistrationHelperService.registerRelationalTable(relationalTableRegistrationCreateRequest, schemaColumns);

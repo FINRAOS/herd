@@ -22,6 +22,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -154,9 +155,10 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
 
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public List<SchemaColumn> retrieveRelationalTableColumns(RelationalStorageAttributesDto relationalStorageAttributesDto, String relationalTableName)
+    public List<SchemaColumn> retrieveRelationalTableColumns(RelationalStorageAttributesDto relationalStorageAttributesDto, String relationalSchemaName,
+        String relationalTableName)
     {
-        return retrieveRelationalTableColumnsImpl(relationalStorageAttributesDto, relationalTableName);
+        return retrieveRelationalTableColumnsImpl(relationalStorageAttributesDto, relationalSchemaName, relationalTableName);
     }
 
     @Override
@@ -289,7 +291,9 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         businessObjectFormatCreateRequest.setBusinessObjectFormatUsage(relationalTableRegistrationCreateRequest.getBusinessObjectFormatUsage());
         businessObjectFormatCreateRequest.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
         businessObjectFormatCreateRequest.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
-        businessObjectFormatCreateRequest.setAttributes(Collections.singletonList(
+        businessObjectFormatCreateRequest.setAttributes(Arrays.asList(
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
+                relationalTableRegistrationCreateRequest.getRelationalSchemaName()),
             new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
                 relationalTableRegistrationCreateRequest.getRelationalTableName())));
         businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null));
@@ -345,11 +349,13 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
      * columns.
      *
      * @param relationalStorageAttributesDto the relational storage attributes DTO
+     * @param relationalSchemaName the name of the relational database schema
      * @param relationalTableName the name of the relational table
      *
      * @return the list of schema columns for the specified relational table
      */
-    List<SchemaColumn> retrieveRelationalTableColumnsImpl(RelationalStorageAttributesDto relationalStorageAttributesDto, String relationalTableName)
+    List<SchemaColumn> retrieveRelationalTableColumnsImpl(RelationalStorageAttributesDto relationalStorageAttributesDto, String relationalSchemaName,
+        String relationalTableName)
     {
         // Get the JDBC password value.
         String password = getPassword(relationalStorageAttributesDto);
@@ -371,11 +377,11 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             DatabaseMetaData databaseMetaData = connection.getMetaData();
 
             // Check if the specified relational table exists in the database.
-            try (ResultSet tables = databaseMetaData.getTables(null, null, relationalTableName, null))
+            try (ResultSet tables = databaseMetaData.getTables(null, relationalSchemaName, relationalTableName, null))
             {
                 Assert.isTrue(tables.next(), String
-                    .format("Relational table with \"%s\" name not found at jdbc.url=\"%s\" for jdbc.username=\"%s\".", relationalTableName,
-                        driverManagerDataSource.getUrl(), driverManagerDataSource.getUsername()));
+                    .format("Relational table with \"%s\" name not found under \"%s\" schema at jdbc.url=\"%s\" for jdbc.username=\"%s\".", relationalTableName,
+                        relationalSchemaName, driverManagerDataSource.getUrl(), driverManagerDataSource.getUsername()));
             }
 
             // Retrieve the relational table columns.
@@ -395,9 +401,9 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         }
         catch (SQLException e)
         {
-            throw new IllegalArgumentException(String
-                .format("Failed to retrieve description of a relational table with \"%s\" name at jdbc.url=\"%s\" using jdbc.username=\"%s\". Reason: %s",
-                    relationalTableName, driverManagerDataSource.getUrl(), driverManagerDataSource.getUsername(), e.getMessage()), e);
+            throw new IllegalArgumentException(String.format("Failed to retrieve description of a relational table with \"%s\" name under \"%s\" schema " +
+                    "at jdbc.url=\"%s\" using jdbc.username=\"%s\". Reason: %s", relationalTableName, relationalSchemaName, driverManagerDataSource.getUrl(),
+                driverManagerDataSource.getUsername(), e.getMessage()), e);
         }
 
         return schemaColumns;
@@ -417,14 +423,16 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             .setNamespace(alternateKeyHelper.validateStringParameter("namespace", relationalTableRegistrationCreateRequest.getNamespace()));
         relationalTableRegistrationCreateRequest.setBusinessObjectDefinitionName(alternateKeyHelper
             .validateStringParameter("business object definition name", relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName()));
-        relationalTableRegistrationCreateRequest.setRelationalTableName(
-            alternateKeyHelper.validateStringParameter("relational table name", relationalTableRegistrationCreateRequest.getRelationalTableName()));
-        relationalTableRegistrationCreateRequest.setDataProviderName(
-            alternateKeyHelper.validateStringParameter("data provider name", relationalTableRegistrationCreateRequest.getDataProviderName()));
-        relationalTableRegistrationCreateRequest
-            .setStorageName(alternateKeyHelper.validateStringParameter("storage name", relationalTableRegistrationCreateRequest.getStorageName()));
         relationalTableRegistrationCreateRequest.setBusinessObjectFormatUsage(alternateKeyHelper
             .validateStringParameter("business object format usage", relationalTableRegistrationCreateRequest.getBusinessObjectFormatUsage()));
+        relationalTableRegistrationCreateRequest.setDataProviderName(
+            alternateKeyHelper.validateStringParameter("data provider name", relationalTableRegistrationCreateRequest.getDataProviderName()));
+        relationalTableRegistrationCreateRequest.setRelationalSchemaName(
+            alternateKeyHelper.validateStringParameter("relational schema name", relationalTableRegistrationCreateRequest.getRelationalSchemaName()));
+        relationalTableRegistrationCreateRequest.setRelationalTableName(
+            alternateKeyHelper.validateStringParameter("relational table name", relationalTableRegistrationCreateRequest.getRelationalTableName()));
+        relationalTableRegistrationCreateRequest
+            .setStorageName(alternateKeyHelper.validateStringParameter("storage name", relationalTableRegistrationCreateRequest.getStorageName()));
 
         // Trim optional business object definition display name, if specified.
         if (relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionDisplayName() != null)
