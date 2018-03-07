@@ -303,10 +303,6 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         BusinessObjectFormatEntity businessObjectFormatEntity =
             businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormat));
 
-        // Set the newly created business object format as a descriptive format for the business object definition.
-        businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
-        businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
-
         // Get a business object data status entity for the VALID status.
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
             businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);

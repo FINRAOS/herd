@@ -32,7 +32,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
-import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.Storage;
@@ -147,8 +146,6 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectDefinition.setDataProviderName(DATA_PROVIDER_NAME);
         expectedBusinessObjectDefinition.setDisplayName(BDEF_DISPLAY_NAME);
         expectedBusinessObjectDefinition.setAttributes(new ArrayList<>());
-        expectedBusinessObjectDefinition.setDescriptiveBusinessObjectFormat(
-            new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, INITIAL_FORMAT_VERSION));
         expectedBusinessObjectDefinition.setSampleDataFiles(new ArrayList<>());
         expectedBusinessObjectDefinition.setCreatedByUserId(businessObjectDefinition.getCreatedByUserId());
         expectedBusinessObjectDefinition.setLastUpdatedByUserId(businessObjectDefinition.getLastUpdatedByUserId());
