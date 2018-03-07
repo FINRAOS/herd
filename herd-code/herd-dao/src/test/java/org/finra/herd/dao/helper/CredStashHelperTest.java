@@ -107,7 +107,57 @@ public class CredStashHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetCredentialFromCredStashCredStashGetCredentialFailedException() throws Exception
+    public void testGetCredentialFromCredStashEmptyPasswordValue() throws Exception
+    {
+        // Build AWS parameters.
+        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+
+        // Build AWS client configuration.
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+
+        // Create CredStash encryption context map.
+        Map<String, String> credStashEncryptionContextMap = new HashMap<>();
+        credStashEncryptionContextMap.put(KEY, VALUE);
+
+        // Mock the CredStash.
+        CredStash credStash = mock(CredStash.class);
+        when(credStash.getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap)).thenReturn(EMPTY_STRING);
+
+        // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn(TABLE_NAME);
+        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
+        when(awsHelper.getClientConfiguration(awsParamsDto)).thenReturn(clientConfiguration);
+        when(credStashFactory.getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration)).thenReturn(credStash);
+        when(jsonHelper.unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(credStashEncryptionContextMap);
+
+        // Try to call the method under test.
+        try
+        {
+            credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
+            fail();
+        }
+        catch (CredStashGetCredentialFailedException e)
+        {
+            assertEquals(String.format("Failed to obtain the keystore or truststore credential from credstash. " +
+                    "credStashAwsRegion=%s credStashTableName=%s credStashEncryptionContext=%s credentialName=%s", AWS_REGION_NAME, TABLE_NAME,
+                CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME), e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
+        verify(awsHelper).getAwsParamsDto();
+        verify(awsHelper).getClientConfiguration(awsParamsDto);
+        verify(credStashFactory).getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration);
+        verify(jsonHelper).unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT);
+        verify(credStash).getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap);
+        verifyNoMoreInteractions(credStash);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testGetCredentialFromCredStashException() throws Exception
     {
         // Build AWS parameters.
         AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
@@ -139,7 +189,9 @@ public class CredStashHelperTest extends AbstractDaoTest
         }
         catch (CredStashGetCredentialFailedException e)
         {
-            assertEquals("Failed to obtain the keystore or truststore credential from cred stash.", e.getMessage());
+            assertEquals(String.format("Failed to obtain the keystore or truststore credential from credstash. Reason: %s " +
+                    "credStashAwsRegion=%s credStashTableName=%s credStashEncryptionContext=%s credentialName=%s", ERROR_MESSAGE, AWS_REGION_NAME,
+                TABLE_NAME, CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME), e.getMessage());
         }
 
         // Verify the external calls.
