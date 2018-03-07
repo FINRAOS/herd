@@ -53,7 +53,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.getRelationalStorageAttributes(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME));
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME));
             fail();
         }
         catch (AlreadyExistsException ex)
@@ -78,7 +78,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.getRelationalStorageAttributes(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME_2));
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME_2));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -101,7 +101,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.getRelationalStorageAttributes(
                 new RelationalTableRegistrationCreateRequest(I_DO_NOT_EXIST, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME));
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME));
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -114,7 +114,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.getRelationalStorageAttributes(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME));
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME));
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -127,7 +127,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.getRelationalStorageAttributes(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, I_DO_NOT_EXIST));
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, I_DO_NOT_EXIST));
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -151,7 +151,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.registerRelationalTable(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns());
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns());
             fail();
         }
         catch (AlreadyExistsException ex)
@@ -174,7 +174,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.registerRelationalTable(
                 new RelationalTableRegistrationCreateRequest(I_DO_NOT_EXIST, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns());
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns());
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -187,7 +187,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.registerRelationalTable(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns());
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns());
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -200,7 +200,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.registerRelationalTable(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, I_DO_NOT_EXIST), relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns());
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, I_DO_NOT_EXIST), relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns());
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -219,7 +219,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperServiceImpl.getRelationalStorageAttributes(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME));
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME));
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -241,13 +241,14 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperServiceImpl
                 .retrieveRelationalTableColumns(new RelationalStorageAttributesDto(JDBC_URL, USERNAME, PASSWORD, NO_USER_CREDENTIAL_NAME),
-                    RELATIONAL_TABLE_NAME);
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME);
             fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Failed to retrieve description of a relational table with \"%s\" name at jdbc.url=\"%s\" using jdbc.username=\"%s\". " +
-                "Reason: Wrong user name or password [28000-196]", RELATIONAL_TABLE_NAME, JDBC_URL, USERNAME), e.getMessage());
+            assertEquals(String.format(
+                "Failed to retrieve description of a relational table with \"%s\" name under \"%s\" schema at jdbc.url=\"%s\" using jdbc.username=\"%s\". " +
+                    "Reason: Wrong user name or password [28000-196]", RELATIONAL_TABLE_NAME, RELATIONAL_SCHEMA_NAME, JDBC_URL, USERNAME), e.getMessage());
         }
 
         try
@@ -274,14 +275,14 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         // Try to get a list of schema columns for a non-existing relational table.
         try
         {
-            relationalTableRegistrationHelperService.retrieveRelationalTableColumns(relationalStorageAttributesDto, I_DO_NOT_EXIST);
+            relationalTableRegistrationHelperService.retrieveRelationalTableColumns(relationalStorageAttributesDto, RELATIONAL_SCHEMA_NAME, I_DO_NOT_EXIST);
             fail();
         }
         catch (IllegalArgumentException e)
         {
             assertEquals(String
-                    .format("Relational table with \"%s\" name not found at jdbc.url=\"%s\" for jdbc.username=\"%s\".", I_DO_NOT_EXIST, JDBC_URL, EMPTY_STRING),
-                e.getMessage());
+                .format("Relational table with \"%s\" name not found under \"%s\" schema at jdbc.url=\"%s\" for jdbc.username=\"%s\".", I_DO_NOT_EXIST,
+                    RELATIONAL_SCHEMA_NAME, JDBC_URL, EMPTY_STRING), e.getMessage());
         }
     }
 
@@ -297,13 +298,16 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         // Try to get a list of schema columns using an invalid JDBC URL.
         try
         {
-            relationalTableRegistrationHelperService.retrieveRelationalTableColumns(relationalStorageAttributesDto, RELATIONAL_TABLE_NAME);
+            relationalTableRegistrationHelperService
+                .retrieveRelationalTableColumns(relationalStorageAttributesDto, RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME);
             fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Failed to retrieve description of a relational table with \"%s\" name at jdbc.url=\"%s\" using jdbc.username=\"%s\". " +
-                "Reason: No suitable driver found for %s", RELATIONAL_TABLE_NAME, INVALID_VALUE, USERNAME, INVALID_VALUE), e.getMessage());
+            assertEquals(String.format(
+                "Failed to retrieve description of a relational table with \"%s\" name under \"%s\" schema at jdbc.url=\"%s\" using jdbc.username=\"%s\". " +
+                    "Reason: No suitable driver found for %s", RELATIONAL_TABLE_NAME, RELATIONAL_SCHEMA_NAME, INVALID_VALUE, USERNAME, INVALID_VALUE),
+                e.getMessage());
         }
     }
 
@@ -312,16 +316,16 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
     {
         // Create a relational table registration create request with optional parameters passed as blank strings.
         RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest =
-            new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME, RELATIONAL_TABLE_NAME,
-                STORAGE_NAME);
+            new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME, RELATIONAL_SCHEMA_NAME,
+                RELATIONAL_TABLE_NAME, STORAGE_NAME);
 
         // Validate and trim the create request.
         relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(relationalTableRegistrationCreateRequest);
 
         // Validate the results.
         assertEquals(
-            new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, EMPTY_STRING, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME, RELATIONAL_TABLE_NAME,
-                STORAGE_NAME), relationalTableRegistrationCreateRequest);
+            new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, EMPTY_STRING, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME, RELATIONAL_SCHEMA_NAME,
+                RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationCreateRequest);
     }
 
     @Test
@@ -330,14 +334,14 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         // Create a relational table registration create request with optional parameters passed as nulls.
         RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest =
             new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, NO_BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                RELATIONAL_TABLE_NAME, STORAGE_NAME);
+                RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME);
 
         // Validate and trim the create request.
         relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(relationalTableRegistrationCreateRequest);
 
         // Validate the results.
         assertEquals(new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, NO_BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-            RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationCreateRequest);
+            RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationCreateRequest);
     }
 
     @Test
@@ -359,7 +363,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(
                 new RelationalTableRegistrationCreateRequest(BLANK_TEXT, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME));
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -372,7 +376,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BLANK_TEXT, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME));
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -385,7 +389,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, BLANK_TEXT, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, STORAGE_NAME));
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -397,8 +401,8 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         try
         {
             relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(
-                new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, RELATIONAL_TABLE_NAME,
-                    STORAGE_NAME));
+                new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, BLANK_TEXT,
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -406,12 +410,25 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
             assertEquals("A data provider name must be specified.", e.getMessage());
         }
 
-        // Try to validate a create request with a missing relational table name.
+        // Try to validate a create request with a missing relational schema name.
         try
         {
             relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME, BLANK_TEXT,
-                    STORAGE_NAME));
+                    RELATIONAL_TABLE_NAME, STORAGE_NAME));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A relational schema name must be specified.", e.getMessage());
+        }
+
+        // Try to validate a create request with a missing relational table name.
+        try
+        {
+            relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(
+                new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
+                    RELATIONAL_SCHEMA_NAME, BLANK_TEXT, STORAGE_NAME));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -424,7 +441,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-                    RELATIONAL_TABLE_NAME, BLANK_TEXT));
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, BLANK_TEXT));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -439,13 +456,14 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         // Create a relational table registration create request with parameters having leading and trailing empty spaces.
         RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest =
             new RelationalTableRegistrationCreateRequest(addWhitespace(BDEF_NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(BDEF_DISPLAY_NAME),
-                addWhitespace(FORMAT_USAGE_CODE), addWhitespace(DATA_PROVIDER_NAME), addWhitespace(RELATIONAL_TABLE_NAME), addWhitespace(STORAGE_NAME));
+                addWhitespace(FORMAT_USAGE_CODE), addWhitespace(DATA_PROVIDER_NAME), addWhitespace(RELATIONAL_SCHEMA_NAME),
+                addWhitespace(RELATIONAL_TABLE_NAME), addWhitespace(STORAGE_NAME));
 
         // Validate and trim the create request.
         relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(relationalTableRegistrationCreateRequest);
 
         // Validate the results.
         assertEquals(new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
-            RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationCreateRequest);
+            RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), relationalTableRegistrationCreateRequest);
     }
 }

@@ -53,12 +53,14 @@ public interface RelationalTableRegistrationHelperService
      * Retrieves a list of actual schema columns for the specified relational table. This method uses actual JDBC connection to retrieve a description of table
      * columns.
      *
-     * @param relationalStorageAttributesDto the relationals torage attributes DTO
+     * @param relationalStorageAttributesDto the relational storage attributes DTO
+     * @param relationalSchemaName the name of the relational database schema
      * @param relationalTableName the name of the relational table
      *
      * @return the list of schema columns for the specified relational table
      */
-    List<SchemaColumn> retrieveRelationalTableColumns(RelationalStorageAttributesDto relationalStorageAttributesDto, String relationalTableName);
+    List<SchemaColumn> retrieveRelationalTableColumns(RelationalStorageAttributesDto relationalStorageAttributesDto, String relationalSchemaName,
+        String relationalTableName);
 
     /**
      * Validates a relational table registration create request. This method also trims the request parameters.

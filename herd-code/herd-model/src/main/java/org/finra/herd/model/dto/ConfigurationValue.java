@@ -328,8 +328,8 @@ public enum ConfigurationValue
     EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS("emr.spot.price.history.product.descriptions", null),
 
     /**
-     * The threshold value in dollar amount when choosing an EMR cluster based on the lowest total cost.
-     * It should be of string type so the precision can be kept. The default value is 10 cents(0.1 dollar).
+     * The threshold value in dollar amount when choosing an EMR cluster based on the lowest total cost. It should be of string type so the precision can be
+     * kept. The default value is 10 cents(0.1 dollar).
      */
     EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS("emr.cluster.lowest.total.cost.threshold.dollars", "0.1"),
 
@@ -938,6 +938,11 @@ public enum ConfigurationValue
      * The session identifier for the assumed role to be used when tagging S3 objects to trigger S3 object deletion.
      */
     S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null),
+
+    /**
+     * The business object format attribute name for the relational database schema name. The default is "relational.schema.name".
+     */
+    BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME("business.object.format.attribute.name.relational.schema.name", "relational.schema.name"),
 
     /**
      * The business object format attribute name for the relational table name. The default is "relational.table.name".
