@@ -377,7 +377,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             DatabaseMetaData databaseMetaData = connection.getMetaData();
 
             // Check if the specified relational table exists in the database.
-            try (ResultSet tables = databaseMetaData.getTables(null, null, relationalTableName, null))
+            try (ResultSet tables = databaseMetaData.getTables(null, relationalSchemaName, relationalTableName, null))
             {
                 Assert.isTrue(tables.next(), String
                     .format("Relational table with \"%s\" name not found under \"%s\" schema at jdbc.url=\"%s\" for jdbc.username=\"%s\".", relationalTableName,
