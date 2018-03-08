@@ -709,7 +709,7 @@
       "Description" : "Herd REST API documentation"
     },
     "HerdUI" : {
-      "Value" : { "Fn::Join" : [ "", ["http://", { "Fn::GetAtt" : ["herdApplicationServer", "PublicIp"] },":8080/herd-app/herd-ui/"]]},
+      "Value" : { "Fn::Join" : [ "", ["http://", { "Fn::GetAtt" : ["herdApplicationServer", "PublicIp"] },"/"]]},
       "Description" : "Herd UI"
     },
     "S3BucketSecureURL" : {
