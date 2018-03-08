@@ -16,6 +16,7 @@
 package org.finra.herd.service.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -116,13 +117,18 @@ public class RelationalTableRegistrationHelperServiceImplTest extends AbstractSe
     }
 
     @Test
-    public void testGetPassword()
+    public void testGetPassword() throws Exception
     {
+        // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_RELATIONAL_STORAGE_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
+        when(credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME)).thenReturn(PASSWORD);
+
         // Call the method under test.
-        String result =
-            relationalTableRegistrationHelperServiceImpl.getPassword(new RelationalStorageAttributesDto(JDBC_URL, USERNAME, PASSWORD, NO_USER_CREDENTIAL_NAME));
+        String result = relationalTableRegistrationHelperServiceImpl.getPassword(new RelationalStorageAttributesDto(JDBC_URL, USERNAME, USER_CREDENTIAL_NAME));
 
         // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_RELATIONAL_STORAGE_ENCRYPTION_CONTEXT);
+        verify(credStashHelper).getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -130,7 +136,7 @@ public class RelationalTableRegistrationHelperServiceImplTest extends AbstractSe
     }
 
     @Test
-    public void testGetPasswordGetCredentialFromCredStash() throws Exception
+    public void testGetPasswordCredStashException() throws Exception
     {
         // Mock the external calls.
         when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_RELATIONAL_STORAGE_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
@@ -140,7 +146,7 @@ public class RelationalTableRegistrationHelperServiceImplTest extends AbstractSe
         // Try to call the method under test.
         try
         {
-            relationalTableRegistrationHelperServiceImpl.getPassword(new RelationalStorageAttributesDto(JDBC_URL, USERNAME, NO_PASSWORD, USER_CREDENTIAL_NAME));
+            relationalTableRegistrationHelperServiceImpl.getPassword(new RelationalStorageAttributesDto(JDBC_URL, USERNAME, USER_CREDENTIAL_NAME));
             fail();
         }
         catch (IllegalStateException e)
@@ -155,23 +161,17 @@ public class RelationalTableRegistrationHelperServiceImplTest extends AbstractSe
     }
 
     @Test
-    public void testGetPasswordGetCredentialFromCredStashFailed() throws Exception
+    public void testGetPasswordNoUserCredentialName()
     {
-        // Mock the external calls.
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_RELATIONAL_STORAGE_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
-        when(credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME)).thenReturn(PASSWORD);
-
         // Call the method under test.
         String result =
-            relationalTableRegistrationHelperServiceImpl.getPassword(new RelationalStorageAttributesDto(JDBC_URL, USERNAME, NO_PASSWORD, USER_CREDENTIAL_NAME));
+            relationalTableRegistrationHelperServiceImpl.getPassword(new RelationalStorageAttributesDto(JDBC_URL, USERNAME, NO_USER_CREDENTIAL_NAME));
 
         // Verify the external calls.
-        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_RELATIONAL_STORAGE_ENCRYPTION_CONTEXT);
-        verify(credStashHelper).getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(PASSWORD, result);
+        assertNull(result);
     }
 
     /**

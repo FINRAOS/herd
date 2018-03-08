@@ -960,11 +960,6 @@ public enum ConfigurationValue
     STORAGE_ATTRIBUTE_NAME_JDBC_USERNAME("storage.attribute.name.jdbc.useraname", "jdbc.username"),
 
     /**
-     * The storage attribute name for the JDBC password. The default is "jdbc.password".
-     */
-    STORAGE_ATTRIBUTE_NAME_JDBC_PASSWORD("storage.attribute.name.jdbc.password", "jdbc.password"),
-
-    /**
      * The storage attribute name for the JDBC user credential name. The default is "jdbc.user.credential.name".
      */
     STORAGE_ATTRIBUTE_NAME_JDBC_USER_CREDENTIAL_NAME("storage.attribute.name.jdbc.user.credential.name", "jdbc.user.credential.name");

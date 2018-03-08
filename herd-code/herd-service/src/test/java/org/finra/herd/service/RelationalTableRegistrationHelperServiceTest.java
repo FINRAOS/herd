@@ -240,8 +240,8 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         try
         {
             relationalTableRegistrationHelperServiceImpl
-                .retrieveRelationalTableColumns(new RelationalStorageAttributesDto(JDBC_URL, USERNAME, PASSWORD, NO_USER_CREDENTIAL_NAME),
-                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME);
+                .retrieveRelationalTableColumns(new RelationalStorageAttributesDto(JDBC_URL, USERNAME, NO_USER_CREDENTIAL_NAME), RELATIONAL_SCHEMA_NAME,
+                    RELATIONAL_TABLE_NAME);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -270,7 +270,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         RelationalStorageAttributesDto relationalStorageAttributesDto = new RelationalStorageAttributesDto();
         relationalStorageAttributesDto.setJdbcUrl(JDBC_URL);
         relationalStorageAttributesDto.setJdbcUsername(EMPTY_STRING);
-        relationalStorageAttributesDto.setJdbcPassword(EMPTY_STRING);
+        relationalStorageAttributesDto.setJdbcUserCredentialName(NO_USER_CREDENTIAL_NAME);
 
         // Try to get a list of schema columns for a non-existing relational table.
         try
@@ -293,7 +293,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         RelationalStorageAttributesDto relationalStorageAttributesDto = new RelationalStorageAttributesDto();
         relationalStorageAttributesDto.setJdbcUrl(INVALID_VALUE);
         relationalStorageAttributesDto.setJdbcUsername(USERNAME);
-        relationalStorageAttributesDto.setJdbcPassword(PASSWORD);
+        relationalStorageAttributesDto.setJdbcUserCredentialName(NO_USER_CREDENTIAL_NAME);
 
         // Try to get a list of schema columns using an invalid JDBC URL.
         try

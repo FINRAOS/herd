@@ -106,9 +106,9 @@ class RelationalTableRegistrationServiceTestHelper
     {
         // The storage attributes specify JDBC connection to point to the in-memory database setup as part of DAO mocks.
         // For simplify validation, the attributes are listed alphabetically by attribute name ascending.
-        return Arrays
-            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_PASSWORD), AbstractServiceTest.EMPTY_STRING),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_URL), AbstractServiceTest.JDBC_URL),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USERNAME), AbstractServiceTest.EMPTY_STRING));
+        return Arrays.asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_URL), AbstractServiceTest.JDBC_URL),
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USER_CREDENTIAL_NAME),
+                AbstractServiceTest.EMPTY_STRING),
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USERNAME), AbstractServiceTest.EMPTY_STRING));
     }
 }
