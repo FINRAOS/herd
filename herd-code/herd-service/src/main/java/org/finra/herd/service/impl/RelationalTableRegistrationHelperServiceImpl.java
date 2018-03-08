@@ -177,11 +177,11 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
      */
     String getPassword(RelationalStorageAttributesDto relationalStorageAttributesDto)
     {
-        // Get the JDBC password value.
-        String password = relationalStorageAttributesDto.getJdbcPassword();
+        // Default password value to null.
+        String password = null;
 
-        // If password is not specified, check if we need to get a password from the credstash.
-        if (StringUtils.isBlank(password) && StringUtils.isNotBlank(relationalStorageAttributesDto.getJdbcUserCredentialName()))
+        // Check if we need to get a password value from the credstash.
+        if (StringUtils.isNotBlank(relationalStorageAttributesDto.getJdbcUserCredentialName()))
         {
             final String credStashEncryptionContext = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_RELATIONAL_STORAGE_ENCRYPTION_CONTEXT);
 
@@ -242,11 +242,6 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USERNAME), storageEntity, false,
                 false);
 
-        // Get JDBC password for this storage. This storage attribute is not required and it is allowed to have a blank value.
-        String jdbcPassword = storageHelper
-            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_PASSWORD), storageEntity, false,
-                false);
-
         // Get JDBC user credential name for this storage. This storage attribute is not required and it is allowed to have a blank value.
         String jdbcUserCredentialName = storageHelper
             .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USER_CREDENTIAL_NAME), storageEntity,
@@ -256,7 +251,6 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         RelationalStorageAttributesDto relationalStorageAttributesDto = new RelationalStorageAttributesDto();
         relationalStorageAttributesDto.setJdbcUrl(jdbcUrl);
         relationalStorageAttributesDto.setJdbcUsername(jdbcUsername);
-        relationalStorageAttributesDto.setJdbcPassword(jdbcPassword);
         relationalStorageAttributesDto.setJdbcUserCredentialName(jdbcUserCredentialName);
 
         return relationalStorageAttributesDto;
