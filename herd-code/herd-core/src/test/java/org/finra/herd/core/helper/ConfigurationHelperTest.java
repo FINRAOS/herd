@@ -184,7 +184,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     @Test
     public void testGetBigDecimalRequiredPropertyValue()
     {
-        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE;
 
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), "0.05");
@@ -195,7 +195,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     @Test
     public void testGetBigDecimalRequiredPropertyValueConversionFail()
     {
-        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE;
 
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), "INVALID_BigDecimal_VALUE");
@@ -215,7 +215,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     @Test
     public void testGetBigDecimalRequiredPropertyValueBlankStringValue()
     {
-        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE;
 
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), " ");
@@ -248,7 +248,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     @Test
     public void testGetNonNegativeBigDecimalRequiredPropertyValuePositiveValue()
     {
-        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE;
 
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), "1.00");
@@ -259,7 +259,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     @Test
     public void testGetNonNegativeBigDecimalRequiredPropertyValueZeroValue()
     {
-        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE;
 
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), "0");
@@ -270,7 +270,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     @Test
     public void testGetNonNegativeBigDecimalRequiredPropertyValueNegativeValueFail()
     {
-        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE;
 
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), "-1.00");
@@ -304,7 +304,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     @Test
     public void testGetNonNegativeBigDecimalRequiredPropertyValueBlankStringValue()
     {
-        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS;
+        ConfigurationValue configurationValue = ConfigurationValue.EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE;
 
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), " ");
