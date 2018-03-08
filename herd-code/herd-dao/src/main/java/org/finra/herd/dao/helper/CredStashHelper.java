@@ -77,6 +77,7 @@ public class CredStashHelper
 
         // Try to obtain the credentials from cred stash.
         String password = null;
+        String errorMessage = null;
         try
         {
             // Convert the JSON config file version of the encryption context to a Java Map class.
@@ -88,13 +89,17 @@ public class CredStashHelper
         catch (Exception exception)
         {
             LOGGER.error("Caught exception when attempting to get a credential value from CredStash.", exception);
+            errorMessage = exception.getMessage();
         }
 
         // If either the keystorePassword or truststorePassword values are empty and could not be obtained
         // as credentials from cred stash, then throw a CredStashGetCredentialFailedException.
         if (StringUtils.isEmpty(password))
         {
-            throw new CredStashGetCredentialFailedException("Failed to obtain the keystore or truststore credential from cred stash.");
+            throw new CredStashGetCredentialFailedException(String.format("Failed to obtain the keystore or truststore credential from credstash.%s " +
+                    "credStashAwsRegion=%s credStashTableName=%s credStashEncryptionContext=%s credentialName=%s",
+                StringUtils.isNotBlank(errorMessage) ? " Reason: " + errorMessage : "", credStashAwsRegion, credStashTableName,
+                credStashEncryptionContext, credentialName));
         }
 
         // Return the keystore and truststore passwords in a map.
