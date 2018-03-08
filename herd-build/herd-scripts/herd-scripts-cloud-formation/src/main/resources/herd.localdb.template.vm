@@ -566,7 +566,7 @@
           "\"schema\": { \"columns\": [ { \"name\": \"COLUMN1\", \"type\": \"DATE\", \"size\": \"string\", \"required\": true, \"defaultValue\": \"string\",",
           "\"description\": \"Date column\" }, { \"name\": \"COLUMN2\", \"type\": \"DECIMAL\", \"size\": \"18,8\", \"required\": true, \"defaultValue\": 0,",
           "\"description\": \"Decimal column\" } ], \"partitions\": [ { \"name\": \"PRTNDATE\", \"type\": \"DATE\", \"required\": true,",
-          "\"description\": \"Partition Date\" } ], \"nullValue\": \"\\N\", \"delimiter\": \"|\", \"escapeCharacter\": \"\\\" }",
+          "\"description\": \"Partition Date\" } ], \"nullValue\": \"\\\\N\", \"delimiter\": \"|\", \"escapeCharacter\": \"\\\\\" }",
           "}' http://localhost:8080/herd-app/rest/businessObjectFormats\n",
 
           "/usr/bin/curl -s -X PUT --header 'Content-Type: application/json' -d '{",
@@ -601,7 +601,7 @@
           "\"searchIndexKey\": { \"searchIndexName\": \"${tag_index_name}\" }",
           "}' http://localhost:8080/herd-app/rest/searchIndexActivations\n",
 
-          "# Configuring http server\n",
+          "# Configuring tomcat server\n",
 
           "/bin/sed -i '/Built In Filter Definitions/a ",
           "<filter>",
@@ -625,6 +625,12 @@
           "<url-pattern>/*</url-pattern>",
           "</filter-mapping>",
           "' /usr/share/tomcat8/conf/web.xml\n",
+
+          "sudo service tomcat8 stop\n",
+
+          "sudo service tomcat8 start\n",
+
+          "# Configuring http server\n",
 
           "sudo service httpd start\n",
 
