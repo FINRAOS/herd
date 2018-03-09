@@ -15,6 +15,8 @@
 */
 package org.finra.herd.core.helper;
 
+import java.math.BigDecimal;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,28 +114,41 @@ public class ConfigurationHelper
     }
 
     /**
-     * Calls {@link #getProperty(ConfigurationValue, Class)} where the target type is {@link String}.
+     * Gets a property value as a {@link BigDecimal}.
      *
-     * @param configurationValue {@link ConfigurationValue}
+     * @param configurationValue the {@link BigDecimal} configuration value
      *
-     * @return The string value
+     * @return the {@link BigDecimal} property value
      */
-    public String getProperty(ConfigurationValue configurationValue)
+    public BigDecimal getBigDecimalRequiredProperty(ConfigurationValue configurationValue)
     {
-        return getProperty(configurationValue, String.class);
+        return getBigDecimalRequiredProperty(configurationValue, environment);
     }
 
     /**
-     * Calls {@link #getProperty(ConfigurationValue, Class, Environment)}
+     * Gets a property value as a {@link BigDecimal}.
      *
-     * @param configurationValue The {@link ConfigurationValue}
-     * @param targetType The return type
+     * @param configurationValue the {@link BigDecimal} configuration value
+     * @param environment the environment containing the property
      *
-     * @return The property value
+     * @return the {@link BigDecimal} property value
      */
-    public <T> T getProperty(ConfigurationValue configurationValue, Class<T> targetType)
+    public BigDecimal getBigDecimalRequiredProperty(ConfigurationValue configurationValue, Environment environment)
     {
-        return getProperty(configurationValue, targetType, environment);
+        String bigDecimalStringValue = getRequiredProperty(configurationValue, environment);
+
+        BigDecimal bigDecimalValue = null;
+        try
+        {
+            // Converts the string value to BigDecimal
+            bigDecimalValue = new BigDecimal(bigDecimalStringValue);
+        }
+        catch (NumberFormatException numberFormatException)
+        {
+            logErrorAndThrowIllegalStateException(configurationValue, "BigDecimal", bigDecimalStringValue, numberFormatException);
+        }
+
+        return bigDecimalValue;
     }
 
     /**
@@ -168,19 +183,70 @@ public class ConfigurationHelper
         }
         catch (IllegalArgumentException e)
         {
-            // Create an invalid state exception.
-            IllegalStateException illegalStateException = new IllegalStateException(
-                String.format("Configuration \"%s\" has an invalid boolean value: \"%s\".", configurationValue.getKey(), booleanStringValue), e);
-
-            // Log the exception.
-            LOGGER.error(illegalStateException.getMessage(), illegalStateException);
-
-            // This will produce a 500 HTTP status code error.
-            throw illegalStateException;
+            logErrorAndThrowIllegalStateException(configurationValue, "boolean", booleanStringValue, e);
         }
 
         // Return the boolean value.
         return (Boolean) customBooleanEditor.getValue();
+    }
+
+    /**
+     * Gets a property value as {@link BigDecimal}. Additionally it ensures that the property value is not negative.
+     *
+     * @param configurationValue the {@link BigDecimal} configuration value
+     *
+     * @return the non-negative {@link BigDecimal} property value
+     */
+    public BigDecimal getNonNegativeBigDecimalRequiredProperty(ConfigurationValue configurationValue)
+    {
+        return getNonNegativeBigDecimalRequiredProperty(configurationValue, environment);
+    }
+
+
+    /**
+     * Gets a property value as {@link BigDecimal}. Additionally it ensures that the property value is not negative.
+     *
+     * @param configurationValue the {@link BigDecimal} configuration value
+     * @param environment the environment containing the property
+     *
+     * @return the non-negative {@link BigDecimal} property value
+     */
+    public BigDecimal getNonNegativeBigDecimalRequiredProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        final BigDecimal nonNegativeBigDecimalPropertyValue = getBigDecimalRequiredProperty(configurationValue, environment);
+        if (nonNegativeBigDecimalPropertyValue.signum() == -1)
+        {
+            throw new IllegalStateException(String
+                .format("Configuration \"%s\" has an invalid non-negative BigDecimal value: \"%s\".", configurationValue.getKey(),
+                    nonNegativeBigDecimalPropertyValue));
+        }
+
+        return nonNegativeBigDecimalPropertyValue;
+    }
+
+    /**
+     * Calls {@link #getProperty(ConfigurationValue, Class)} where the target type is {@link String}.
+     *
+     * @param configurationValue {@link ConfigurationValue}
+     *
+     * @return The string value
+     */
+    public String getProperty(ConfigurationValue configurationValue)
+    {
+        return getProperty(configurationValue, String.class);
+    }
+
+    /**
+     * Calls {@link #getProperty(ConfigurationValue, Class, Environment)}
+     *
+     * @param configurationValue The {@link ConfigurationValue}
+     * @param targetType The return type
+     *
+     * @return The property value
+     */
+    public <T> T getProperty(ConfigurationValue configurationValue, Class<T> targetType)
+    {
+        return getProperty(configurationValue, targetType, environment);
     }
 
     /**
@@ -213,5 +279,25 @@ public class ConfigurationHelper
         }
 
         return property;
+    }
+
+    /**
+     * Logs the error message, and then throws {@link IllegalStateException}
+     *
+     * @param configurationValue - {@link ConfigurationValue}
+     * @param targetTypeName - the name of the data type we want to convert the configuration value to(boolean, BigDecimal...etc)
+     * @param stringValue - the configuration value in string type
+     * @param exception - the exception thrown when converting the configuration value from string type to the target data type
+     */
+    private void logErrorAndThrowIllegalStateException(ConfigurationValue configurationValue, String targetTypeName, String stringValue, Exception exception)
+    {
+        // Create an invalid state exception.
+        IllegalStateException illegalStateException = new IllegalStateException(
+            String.format("Configuration \"%s\" has an invalid %s value: \"%s\".", configurationValue.getKey(), targetTypeName, stringValue), exception);
+
+        // Log the exception.
+        LOGGER.error(illegalStateException.getMessage(), illegalStateException);
+        // This will produce a 500 HTTP status code error.
+        throw illegalStateException;
     }
 }

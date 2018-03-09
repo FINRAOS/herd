@@ -15,13 +15,29 @@
 */
 package org.finra.herd.dao.helper;
 
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.AVAILABILITY_ZONE_1;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.AVAILABILITY_ZONE_2;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.AVAILABILITY_ZONE_3;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.AVAILABILITY_ZONE_4;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.INSTANCE_TYPE_1;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.INSTANCE_TYPE_2;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.INSTANCE_TYPE_3;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.INSTANCE_TYPE_4;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.SUBNET_1;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.SUBNET_2;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.SUBNET_3;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.SUBNET_4;
+import static org.finra.herd.dao.impl.MockEc2OperationsImpl.SUBNET_5;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.amazonaws.AmazonServiceException;
@@ -38,7 +54,9 @@ import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.MasterInstanceDefinition;
 import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.Ec2PriceDto;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
+import org.finra.herd.model.dto.EmrClusterPriceDto;
 import org.finra.herd.model.dto.EmrVpcPricingState;
 
 /**
@@ -46,7 +64,15 @@ import org.finra.herd.model.dto.EmrVpcPricingState;
  */
 public class EmrPricingHelperTest extends AbstractDaoTest
 {
+    private static final BigDecimal ONE_POINT_ONE = new BigDecimal("1.1");
+
+    private static final BigDecimal ONE_POINT_ONE_ONE = new BigDecimal("1.11");
+
     private static final BigDecimal ONE_UNIT = new BigDecimal("0.00001");
+
+    private static final BigDecimal FIVE_UNIT = new BigDecimal("0.00005");
+
+    private static final BigDecimal TEN_PERCENT = new BigDecimal("0.1");
 
     private static final BigDecimal ON_DEMAND = new BigDecimal("1.00");
 
@@ -81,16 +107,16 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceAlgorithmicPickSpotAndOnDemand()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+        String subnetId = SUBNET_1;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         masterInstanceDefinition.setInstanceCount(1);
         masterInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND);
         masterInstanceDefinition.setInstanceOnDemandThreshold(SPOT_PRICE_LOW_LESS_ONE);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         coreInstanceDefinition.setInstanceCount(1);
         coreInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND);
         coreInstanceDefinition.setInstanceOnDemandThreshold(SPOT_PRICE_LOW);
@@ -114,21 +140,21 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceAlgorithmicMaxSearchPriceTooLow()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+        String subnetId = SUBNET_1;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         masterInstanceDefinition.setInstanceMaxSearchPrice(SPOT_PRICE_LOW_LESS_ONE);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         coreInstanceDefinition.setInstanceMaxSearchPrice(SPOT_PRICE_LOW_LESS_ONE);
 
         InstanceDefinition taskInstanceDefinition = new InstanceDefinition();
         taskInstanceDefinition.setInstanceCount(1);
-        taskInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        taskInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         taskInstanceDefinition.setInstanceMaxSearchPrice(SPOT_PRICE_LOW_LESS_ONE);
 
         // Try with both master, core, and task failing criteria
@@ -176,12 +202,12 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceAlgorithmicMaxSearchPriceTooLowAndSpotPriceNotAvailable()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+        String subnetId = SUBNET_1;
 
         // For master instance definition, use instance type that does not have spot price available.
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_4);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_4);
         masterInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND_LESS_ONE);
 
         InstanceDefinition coreInstanceDefinition = null;
@@ -200,17 +226,17 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             EmrVpcPricingState expectedEmrVpcPricingState = new EmrVpcPricingState();
             expectedEmrVpcPricingState.setSubnetAvailableIpAddressCounts(new HashMap<String, Integer>()
             {{
-                put(MockEc2OperationsImpl.SUBNET_1, 10);
+                put(SUBNET_1, 10);
             }});
             expectedEmrVpcPricingState.setSpotPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<>());
+                put(AVAILABILITY_ZONE_1, new HashMap<>());
             }});
             expectedEmrVpcPricingState.setOnDemandPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
+                put(AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
                 {{
-                    put(MockEc2OperationsImpl.INSTANCE_TYPE_4, ON_DEMAND);
+                    put(INSTANCE_TYPE_4, ON_DEMAND);
                 }});
             }});
 
@@ -231,17 +257,17 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceAlgorithmicOnDemandOverMaxAndSpotGreaterThanOnDemand()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+        String subnetId = SUBNET_1;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         masterInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND_LESS_ONE);
         masterInstanceDefinition.setInstanceOnDemandThreshold(SPOT_PRICE_LOW_PLUS_ONE);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_3);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_3);
         coreInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND);
 
         InstanceDefinition taskInstanceDefinition = null;
@@ -262,17 +288,17 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceAlgorithmicMaxSearchPriceEqualsToOnDemandAndSpotPriceNotAvailable()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+        String subnetId = SUBNET_1;
 
         // For master instance definition, use instance type that does not have spot price available.
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_4);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_4);
         masterInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_3);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_3);
         coreInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND);
 
         InstanceDefinition taskInstanceDefinition = null;
@@ -294,17 +320,17 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceAlgorithmicThresholdAboveOnDemandAndSearchBelowOnDemand()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+        String subnetId = SUBNET_1;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         masterInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND);
         masterInstanceDefinition.setInstanceOnDemandThreshold(ON_DEMAND.subtract(SPOT_PRICE_LOW).add(ONE_UNIT));
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         coreInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND_LESS_ONE);
         coreInstanceDefinition.setInstanceOnDemandThreshold(ON_DEMAND_LESS_ONE.subtract(SPOT_PRICE_LOW));
 
@@ -327,17 +353,17 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceAlgorithmicSearchBelowOnDemandThresholdBelowOnDemand()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+        String subnetId = SUBNET_1;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         masterInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND_LESS_ONE);
         masterInstanceDefinition.setInstanceOnDemandThreshold(ON_DEMAND_LESS_ONE.subtract(SPOT_PRICE_LOW));
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         coreInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND_LESS_ONE);
         coreInstanceDefinition.setInstanceOnDemandThreshold(ON_DEMAND_LESS_ONE.subtract(SPOT_PRICE_LOW));
 
@@ -359,16 +385,16 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceExplicitSpotAndOnDemand()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+        String subnetId = SUBNET_1;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         masterInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition taskInstanceDefinition = null;
 
@@ -389,12 +415,12 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceExplicitSpotAndSpotPriceNotAvailable()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1;
+        String subnetId = SUBNET_1;
 
         // For master instance definition, use instance type that does not have spot price available.
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_4);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_4);
         masterInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         InstanceDefinition coreInstanceDefinition = null;
@@ -413,17 +439,17 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             EmrVpcPricingState expectedEmrVpcPricingState = new EmrVpcPricingState();
             expectedEmrVpcPricingState.setSubnetAvailableIpAddressCounts(new HashMap<String, Integer>()
             {{
-                put(MockEc2OperationsImpl.SUBNET_1, 10);
+                put(SUBNET_1, 10);
             }});
             expectedEmrVpcPricingState.setSpotPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<>());
+                put(AVAILABILITY_ZONE_1, new HashMap<>());
             }});
             expectedEmrVpcPricingState.setOnDemandPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
-                put(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
+                put(AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
                 {{
-                    put(MockEc2OperationsImpl.INSTANCE_TYPE_4, ON_DEMAND);
+                    put(INSTANCE_TYPE_4, ON_DEMAND);
                 }});
             }});
 
@@ -443,16 +469,16 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceCheapestPriceDoenstHaveEnoughIp()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_3;
+        String subnetId = SUBNET_1 + "," + SUBNET_3;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(5);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         masterInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(6);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         coreInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         InstanceDefinition taskInstanceDefinition = null;
@@ -464,7 +490,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         assertEquals("master instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
         assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
 
-        assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_3, emrClusterDefinition.getSubnetId());
+        assertEquals("selected subnet", SUBNET_3, emrClusterDefinition.getSubnetId());
     }
 
     /**
@@ -475,15 +501,15 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceAllSubnetNotEnoughIp()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_2;
+        String subnetId = SUBNET_1 + "," + SUBNET_2;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(10);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(11);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition taskInstanceDefinition = null;
 
@@ -507,16 +533,16 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPricePickBestAz()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_3;
+        String subnetId = SUBNET_1 + "," + SUBNET_3;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(4);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         masterInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(5);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         coreInstanceDefinition.setInstanceMaxSearchPrice(ON_DEMAND);
 
         InstanceDefinition taskInstanceDefinition = null;
@@ -528,12 +554,12 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         assertEquals("master instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
         assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
 
-        assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_1, emrClusterDefinition.getSubnetId());
+        assertEquals("selected subnet", SUBNET_1, emrClusterDefinition.getSubnetId());
     }
 
     /**
-     * Tests case where instance count affect subnet selection. Tests case given - master instance is very expensive in one AZ but cheaper in the other - core
-     * instance is very cheap in one AZ but more expensive in the other When - Enough instances are specified such that the AZ with the expensive master is
+     * Tests case where instance count affect subnet selection. Tests case given - core instance is very expensive in one AZ but cheaper in the other - master
+     * instance is very cheap in one AZ but more expensive in the other When - Enough instances are specified such that the AZ with the expensive core is
      * selected
      * <p/>
      * Even though the core is more expensive, the master is cheap enough to warrant the use of the expensive core AZ.
@@ -541,35 +567,35 @@ public class EmrPricingHelperTest extends AbstractDaoTest
      * Test case reference ClusterSpotPriceAlgorithm 13
      */
     @Test
-    public void testBestPricePickMultipleInstancesSelectCheaperMaster()
+    public void testBestPricePickMultipleInstancesSelectCheaperCore()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_4;
+        String subnetId = SUBNET_1 + "," + SUBNET_4;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_2);
-        masterInstanceDefinition.setInstanceSpotPrice(SPOT_PRICE_VERY_HIGH);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
-        coreInstanceDefinition.setInstanceCount(2);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
-        coreInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
+        coreInstanceDefinition.setInstanceCount(1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_2);
+        coreInstanceDefinition.setInstanceSpotPrice(SPOT_PRICE_VERY_HIGH);
 
         InstanceDefinition taskInstanceDefinition = new InstanceDefinition();
         taskInstanceDefinition.setInstanceCount(1);
-        taskInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        taskInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         taskInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
-        assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
+        assertEquals("master instance bid price", ON_DEMAND,
             emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-        assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
+        assertEquals("core instance bid price", SPOT_PRICE_VERY_HIGH, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
         assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
-        assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_1, emrClusterDefinition.getSubnetId());
+        assertEquals("selected subnet", SUBNET_1, emrClusterDefinition.getSubnetId());
     }
 
     /**
@@ -582,21 +608,21 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPricePickMultipleInstancesAzPricesAreEqual()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_4;
+        String subnetId = SUBNET_1 + "," + SUBNET_4;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_2);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_2);
         masterInstanceDefinition.setInstanceSpotPrice(SPOT_PRICE_VERY_HIGH);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(2);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         coreInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         InstanceDefinition taskInstanceDefinition = new InstanceDefinition();
         taskInstanceDefinition.setInstanceCount(2);
-        taskInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        taskInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         taskInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         EmrClusterDefinition emrClusterDefinition =
@@ -608,8 +634,8 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
         assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
-        assertTrue("selected subnet was neither SUBNET_1 or SUBNET_4", MockEc2OperationsImpl.SUBNET_1.equals(emrClusterDefinition.getSubnetId()) ||
-            MockEc2OperationsImpl.SUBNET_4.equals(emrClusterDefinition.getSubnetId()));
+        assertTrue("selected subnet was neither SUBNET_1 or SUBNET_4",
+            SUBNET_1.equals(emrClusterDefinition.getSubnetId()) || SUBNET_4.equals(emrClusterDefinition.getSubnetId()));
     }
 
     /**
@@ -624,21 +650,21 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPricePickMultipleInstancesSelectCheaperCoreAndTask()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_4;
+        String subnetId = SUBNET_1 + "," + SUBNET_4;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_2);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_2);
         masterInstanceDefinition.setInstanceSpotPrice(SPOT_PRICE_VERY_HIGH);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(2);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         coreInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         InstanceDefinition taskInstanceDefinition = new InstanceDefinition();
         taskInstanceDefinition.setInstanceCount(3);
-        taskInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        taskInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
         taskInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         EmrClusterDefinition emrClusterDefinition =
@@ -650,7 +676,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
         assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
-        assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_4, emrClusterDefinition.getSubnetId());
+        assertEquals("selected subnet", SUBNET_4, emrClusterDefinition.getSubnetId());
     }
 
     /**
@@ -662,15 +688,15 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceMultipleRegions()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_5;
+        String subnetId = SUBNET_1 + "," + SUBNET_5;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition taskInstanceDefinition = null;
 
@@ -681,7 +707,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         assertNull("master instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
         assertNull("core instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
 
-        assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_5, emrClusterDefinition.getSubnetId());
+        assertEquals("selected subnet", SUBNET_5, emrClusterDefinition.getSubnetId());
     }
 
     /**
@@ -691,15 +717,15 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceSpotInstanceNotFoundBecauseSpotPriceIsNotAvailable()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_5;
+        String subnetId = SUBNET_1 + "," + SUBNET_5;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_3);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_3);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition taskInstanceDefinition = null;
 
@@ -716,7 +742,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceOnDemandNotFound()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_5;
+        String subnetId = SUBNET_5;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
@@ -724,7 +750,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_2);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_2);
 
         InstanceDefinition taskInstanceDefinition = null;
 
@@ -749,11 +775,11 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition taskInstanceDefinition = null;
 
@@ -773,15 +799,15 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceSubnetPermutations()
     {
-        String subnetId = ", \n\t\r" + MockEc2OperationsImpl.SUBNET_1 + " \n\t\r,, \n\t\r,";
+        String subnetId = ", \n\t\r" + SUBNET_1 + " \n\t\r,, \n\t\r,";
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition taskInstanceDefinition = null;
 
@@ -790,7 +816,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
 
-        assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_1, emrClusterDefinition.getSubnetId());
+        assertEquals("selected subnet", SUBNET_1, emrClusterDefinition.getSubnetId());
     }
 
     /**
@@ -799,15 +825,15 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceSubnetNotFound()
     {
-        String subnetId = "I_DO_NOT_EXIST," + MockEc2OperationsImpl.SUBNET_1;
+        String subnetId = "I_DO_NOT_EXIST," + SUBNET_1;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition taskInstanceDefinition = null;
 
@@ -832,11 +858,11 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition taskInstanceDefinition = null;
 
@@ -860,15 +886,15 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceSameAzMultipleSubnets()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_2;
+        String subnetId = SUBNET_1 + "," + SUBNET_2;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition taskInstanceDefinition = null;
 
@@ -877,17 +903,17 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
 
-        assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_2, emrClusterDefinition.getSubnetId());
+        assertEquals("selected subnet", SUBNET_2, emrClusterDefinition.getSubnetId());
     }
 
     @Test
     public void testCoreInstanceNullSubnetInMultipleAzAssertSuccess() throws Exception
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_3;
+        String subnetId = SUBNET_1 + "," + SUBNET_3;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition coreInstanceDefinition = null;
 
@@ -896,28 +922,122 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        assertEquals(MockEc2OperationsImpl.SUBNET_3, emrClusterDefinition.getSubnetId());
+        // we select the pricing randomly so either one can be chosen
+        assertTrue(Arrays.asList(SUBNET_1, SUBNET_3).contains(emrClusterDefinition.getSubnetId()));
     }
 
     @Test
     public void testCoreInstanceCount0SubnetInMultipleAzAssertSuccess()
     {
-        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_3;
+        String subnetId = SUBNET_1 + "," + SUBNET_3;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
         coreInstanceDefinition.setInstanceCount(0);
-        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
 
         InstanceDefinition taskInstanceDefinition = null;
 
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        assertEquals(MockEc2OperationsImpl.SUBNET_3, emrClusterDefinition.getSubnetId());
+        // we select the pricing randomly so either one can be chosen
+        assertTrue(Arrays.asList(SUBNET_1, SUBNET_3).contains(emrClusterDefinition.getSubnetId()));
+    }
+
+    @Test
+    public void testGetEmrClusterLowestCoreInstancePriceEmptyPricingList()
+    {
+        assertNull(emrPricingHelper.getEmrClusterPriceWithLowestCoreInstancePrice(Collections.emptyList()));
+    }
+
+    @Test
+    public void testGetEmrClusterPricesWithinLowestCoreInstancePriceThresholdSinglePricing() throws Exception
+    {
+        List<EmrClusterPriceDto> pricingList = Arrays.asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE));
+        List<EmrClusterPriceDto> lowestCoreInstancePriceClusters =
+            emrPricingHelper.getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(pricingList, TEN_PERCENT);
+
+        assertEquals(1, lowestCoreInstancePriceClusters.size());
+        assertEquals(AVAILABILITY_ZONE_1, lowestCoreInstancePriceClusters.get(0).getAvailabilityZone());
+    }
+
+    @Test
+    public void testGetEmrClusterPricesWithinLowestCoreInstancePriceThresholdMultiplePricing() throws Exception
+    {
+        List<EmrClusterPriceDto> pricingList = Arrays
+            .asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE), createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
+                createSimpleEmrClusterPrice(AVAILABILITY_ZONE_3, ONE_POINT_ONE), createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, ONE_POINT_ONE_ONE));
+
+        List<EmrClusterPriceDto> lowestCoreInstancePriceClusters =
+            emrPricingHelper.getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(pricingList, TEN_PERCENT);
+        assertEquals(2, lowestCoreInstancePriceClusters.size());
+        for (EmrClusterPriceDto emrClusterPriceDto : lowestCoreInstancePriceClusters)
+        {
+            assertTrue(Arrays.asList(AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_3).contains(emrClusterPriceDto.getAvailabilityZone()));
+        }
+    }
+
+    /**
+     * Tests when the threshold is set to zero.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testGetEmrClusterPricesWithinLowestCoreInstancePriceZeroThresholdMultiplePricings() throws Exception
+    {
+        List<EmrClusterPriceDto> pricingList = Arrays
+            .asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE), createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
+                createSimpleEmrClusterPrice(AVAILABILITY_ZONE_3, BigDecimal.ONE.add(FIVE_UNIT)),
+                createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, BigDecimal.ONE));
+
+        List<EmrClusterPriceDto> lowestCoreInstancePriceClusters =
+            emrPricingHelper.getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(pricingList, BigDecimal.ZERO);
+        assertEquals(2, lowestCoreInstancePriceClusters.size());
+        for (EmrClusterPriceDto emrClusterPriceDto : lowestCoreInstancePriceClusters)
+        {
+            assertTrue(Arrays.asList(AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_4).contains(emrClusterPriceDto.getAvailabilityZone()));
+        }
+    }
+
+    /**
+     * Tests when one cluster does not have core instance. In this case this cluster will be picked since the price for the cluster is now zero (the lowest)
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testGetEmrClusterPricesWithinLowestCoreInstancePriceEmptyCoreInstanceMultiplePricings() throws Exception
+    {
+        List<EmrClusterPriceDto> pricingList =
+            Arrays.asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE), createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, null));
+
+        List<EmrClusterPriceDto> lowestCoreInstancePriceClusters =
+            emrPricingHelper.getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(pricingList, TEN_PERCENT);
+        assertEquals(1, lowestCoreInstancePriceClusters.size());
+        for (EmrClusterPriceDto emrClusterPriceDto : lowestCoreInstancePriceClusters)
+        {
+            assertTrue(Arrays.asList(AVAILABILITY_ZONE_4).contains(emrClusterPriceDto.getAvailabilityZone()));
+        }
+    }
+
+    private EmrClusterPriceDto createSimpleEmrClusterPrice(final String availabilityZone, final BigDecimal instancePrice)
+    {
+        EmrClusterPriceDto emrClusterPriceDto = new EmrClusterPriceDto();
+
+        emrClusterPriceDto.setAvailabilityZone(availabilityZone);
+
+        if (instancePrice != null)
+        {
+            Ec2PriceDto corePrice = new Ec2PriceDto();
+            corePrice.setInstanceCount(1);
+            corePrice.setInstancePrice(instancePrice);
+            emrClusterPriceDto.setCorePrice(corePrice);
+        }
+
+        return emrClusterPriceDto;
     }
 
     /**
