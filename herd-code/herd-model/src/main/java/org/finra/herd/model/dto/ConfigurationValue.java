@@ -328,8 +328,8 @@ public enum ConfigurationValue
     EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS("emr.spot.price.history.product.descriptions", null),
 
     /**
-     * The threshold value in percentage when choosing an EMR cluster based on the lowest core instance price. It should be of string type so the precision can be
-     * kept. The default value is 10 percent.
+     * The threshold value in percentage when choosing an EMR cluster based on the lowest core instance price. It should be of string type so the precision
+     * can be kept. The default value is 10 percent.
      */
     EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE("emr.cluster.lowest.core.instance.price.threshold.percentage", "0.1"),
 
