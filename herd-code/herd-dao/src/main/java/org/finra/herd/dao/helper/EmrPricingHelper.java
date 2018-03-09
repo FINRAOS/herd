@@ -390,8 +390,8 @@ public class EmrPricingHelper extends AwsHelper
     List<EmrClusterPriceDto> getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(final List<EmrClusterPriceDto> emrClusterPrices,
         final BigDecimal lowestCoreInstancePriceThresholdPercentage)
     {
-        // Builds a tree map that has the core instance price as the key, and the list of pricing with the same core instance price as the value. The tree map is
-        // automatically sorted, so it is easy to find the lowest core instance price range.
+        // Builds a tree map that has the core instance price as the key, and the list of pricing with the same core instance price as the value. The tree map
+        // is automatically sorted, so it is easy to find the lowest core instance price range.
         TreeMap<BigDecimal, List<EmrClusterPriceDto>> emrClusterPriceMapKeyedByCoreInstancePrice = new TreeMap<>();
         for (final EmrClusterPriceDto emrClusterPriceDto : emrClusterPrices)
         {
