@@ -23,10 +23,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.amazonaws.ClientConfiguration;
 import io.searchbox.client.JestClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,27 +33,19 @@ import org.mockito.MockitoAnnotations;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.credstash.CredStash;
 import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
-import org.finra.herd.dao.helper.AwsHelper;
-import org.finra.herd.dao.helper.JsonHelper;
-import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.dao.helper.CredStashHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
 
 public class JestClientFactoryTest extends AbstractDaoTest
 {
     @Mock
-    private AwsHelper awsHelper;
-
-    @Mock
     private ConfigurationHelper configurationHelper;
 
     @Mock
-    private CredStashFactory credStashFactory;
+    private CredStashHelper credStashHelper;
 
     @InjectMocks
     private JestClientFactory jestClientFactory;
-
-    @Mock
-    private JsonHelper jsonHelper;
 
     @Before
     public void before()
@@ -68,20 +56,6 @@ public class JestClientFactoryTest extends AbstractDaoTest
     @Test
     public void testGetJestClientCredStashException() throws Exception
     {
-        // Build AWS parameters.
-        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
-
-        // Build AWS client configuration.
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-
-        // Create CredStash encryption context map.
-        Map<String, String> credStashEncryptionContextMap = new HashMap<>();
-        credStashEncryptionContextMap.put(KEY, VALUE);
-
-        // Mock the CredStash.
-        CredStash credStash = mock(CredStash.class);
-        when(credStash.getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap)).thenThrow(new Exception(ERROR_MESSAGE));
-
         // Mock the external calls.
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
@@ -91,12 +65,8 @@ public class JestClientFactoryTest extends AbstractDaoTest
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME)).thenReturn(USERNAME);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME)).thenReturn(USER_CREDENTIAL_NAME);
         when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn(TABLE_NAME);
-        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
-        when(awsHelper.getClientConfiguration(awsParamsDto)).thenReturn(clientConfiguration);
-        when(credStashFactory.getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration)).thenReturn(credStash);
-        when(jsonHelper.unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(credStashEncryptionContextMap);
+        when(credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME))
+            .thenThrow(new CredStashGetCredentialFailedException(ERROR_MESSAGE));
 
         // Try to call the method under test.
         try
@@ -106,9 +76,7 @@ public class JestClientFactoryTest extends AbstractDaoTest
         }
         catch (IllegalStateException e)
         {
-            assertEquals(String
-                .format("%s: Failed to obtain the keystore or truststore credential from cred stash.", CredStashGetCredentialFailedException.class.getName()),
-                e.getMessage());
+            assertEquals(String.format("%s: %s", CredStashGetCredentialFailedException.class.getName(), ERROR_MESSAGE), e.getMessage());
         }
 
         // Verify the external calls.
@@ -120,14 +88,7 @@ public class JestClientFactoryTest extends AbstractDaoTest
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
-        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
-        verify(awsHelper).getAwsParamsDto();
-        verify(awsHelper).getClientConfiguration(awsParamsDto);
-        verify(credStashFactory).getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration);
-        verify(jsonHelper).unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT);
-        verify(credStash).getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap);
-        verifyNoMoreInteractions(credStash);
+        verify(credStashHelper).getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -156,27 +117,13 @@ public class JestClientFactoryTest extends AbstractDaoTest
         verifyNoMoreInteractions(credStash);
         verifyNoMoreInteractionsHelper();
 
-        // Validate the result.
+        // Validate the results.
         assertNotNull(jestClient);
     }
 
     @Test
     public void testGetJestClientHttps() throws Exception
     {
-        // Build AWS parameters.
-        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
-
-        // Build AWS client configuration.
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-
-        // Create CredStash encryption context map.
-        Map<String, String> credStashEncryptionContextMap = new HashMap<>();
-        credStashEncryptionContextMap.put(KEY, VALUE);
-
-        // Mock the CredStash.
-        CredStash credStash = mock(CredStash.class);
-        when(credStash.getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap)).thenReturn(PASSWORD);
-
         // Mock the external calls.
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
@@ -186,12 +133,7 @@ public class JestClientFactoryTest extends AbstractDaoTest
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME)).thenReturn(USERNAME);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME)).thenReturn(USER_CREDENTIAL_NAME);
         when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn(TABLE_NAME);
-        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
-        when(awsHelper.getClientConfiguration(awsParamsDto)).thenReturn(clientConfiguration);
-        when(credStashFactory.getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration)).thenReturn(credStash);
-        when(jsonHelper.unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(credStashEncryptionContextMap);
+        when(credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME)).thenReturn(PASSWORD);
 
         // Call the method under test.
         JestClient jestClient = jestClientFactory.getJestClient();
@@ -205,84 +147,11 @@ public class JestClientFactoryTest extends AbstractDaoTest
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
-        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
-        verify(awsHelper).getAwsParamsDto();
-        verify(awsHelper).getClientConfiguration(awsParamsDto);
-        verify(credStashFactory).getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration);
-        verify(jsonHelper).unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT);
-        verify(credStash).getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap);
-        verifyNoMoreInteractions(credStash);
+        verify(credStashHelper).getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
         verifyNoMoreInteractionsHelper();
 
-        // Validate the result.
+        // Validate the results.
         assertNotNull(jestClient);
-    }
-
-    @Test
-    public void testGetJestClientPasswordIsNull() throws Exception
-    {
-        // Build AWS parameters.
-        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
-
-        // Build AWS client configuration.
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-
-        // Create CredStash encryption context map.
-        Map<String, String> credStashEncryptionContextMap = new HashMap<>();
-        credStashEncryptionContextMap.put(KEY, VALUE);
-
-        // Mock the CredStash.
-        CredStash credStash = mock(CredStash.class);
-        when(credStash.getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap)).thenReturn(null);
-
-        // Mock the external calls.
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("https");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(READ_TIMEOUT);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(CONNECTION_TIMEOUT);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME)).thenReturn(USERNAME);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME)).thenReturn(USER_CREDENTIAL_NAME);
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn(TABLE_NAME);
-        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
-        when(awsHelper.getClientConfiguration(awsParamsDto)).thenReturn(clientConfiguration);
-        when(credStashFactory.getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration)).thenReturn(credStash);
-        when(jsonHelper.unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(credStashEncryptionContextMap);
-
-        // Try to call the method under test.
-        try
-        {
-            jestClientFactory.getJestClient();
-            fail();
-        }
-        catch (IllegalStateException e)
-        {
-            assertEquals(String
-                .format("%s: Failed to obtain the keystore or truststore credential from cred stash.", CredStashGetCredentialFailedException.class.getName()),
-                e.getMessage());
-        }
-
-        // Verify the external calls.
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
-        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
-        verify(awsHelper).getAwsParamsDto();
-        verify(awsHelper).getClientConfiguration(awsParamsDto);
-        verify(credStashFactory).getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration);
-        verify(jsonHelper).unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT);
-        verify(credStash).getCredential(USER_CREDENTIAL_NAME, credStashEncryptionContextMap);
-        verifyNoMoreInteractions(credStash);
-        verifyNoMoreInteractionsHelper();
     }
 
     /**
@@ -290,6 +159,6 @@ public class JestClientFactoryTest extends AbstractDaoTest
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(awsHelper, configurationHelper, credStashFactory, jsonHelper);
+        verifyNoMoreInteractions(configurationHelper, credStashHelper);
     }
 }

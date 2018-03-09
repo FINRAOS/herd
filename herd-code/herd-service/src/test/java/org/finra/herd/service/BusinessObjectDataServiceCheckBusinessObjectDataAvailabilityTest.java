@@ -609,8 +609,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(request.getNamespace(), request.getBusinessObjectDefinitionName(),
-                    request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(request.getNamespace(), request.getBusinessObjectDefinitionName(),
+                        request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()),
                 e.getMessage());
         }
 
@@ -625,8 +625,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("The partition key \"%s\" does not exist in first %d partition columns in the schema for business object format " +
-                "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
-                "businessObjectFormatVersion: %d}.", request.getPartitionValueFilters().get(0).getPartitionKey(),
+                    "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+                    "businessObjectFormatVersion: %d}.", request.getPartitionValueFilters().get(0).getPartitionKey(),
                 BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1, request.getNamespace(), request.getBusinessObjectDefinitionName(),
                 request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -725,7 +725,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         catch (IllegalArgumentException e)
         {
             assertEquals(String
-                .format("The start partition value \"%s\" cannot be greater than the end partition value \"%s\".", END_PARTITION_VALUE, START_PARTITION_VALUE),
+                    .format("The start partition value \"%s\" cannot be greater than the end partition value \"%s\".", END_PARTITION_VALUE, START_PARTITION_VALUE),
                 e.getMessage());
         }
 
@@ -818,8 +818,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Partition key \"%s\" doesn't match configured business object format partition key \"%s\" and there is " +
-                "no schema defined to check subpartition columns for business object format {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
-                "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.",
+                    "no schema defined to check subpartition columns for business object format {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
+                    "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.",
                 request.getPartitionValueFilters().get(0).getPartitionKey(), PARTITION_KEY, request.getNamespace(), request.getBusinessObjectDefinitionName(),
                 request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -960,7 +960,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, StorageUnitStatusEntity.ARCHIVED))),
+                Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, StorageUnitStatusEntity.ARCHIVED))),
             result);
     }
 
@@ -1038,8 +1038,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("A partition key group, which is required to use partition value ranges, " +
-                "is not specified for the business object format {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
-                "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", request.getNamespace(),
+                    "is not specified for the business object format {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
+                    "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", request.getNamespace(),
                 request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
                 request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -1293,6 +1293,18 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
     }
 
     @Test
+    public void testCheckBusinessObjectDataAvailabilityPartitionValueListMaxPartitionValueTokenUpperCaseParameters()
+    {
+        runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(true, true);
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityPartitionValueListMaxPartitionValueTokenLowerCaseParameters()
+    {
+        runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(true, false);
+    }
+
+    @Test
     public void testCheckBusinessObjectDataAvailabilityPartitionValueListMaxPartitionValueTokenWhenLatestDataVersionInvalid()
     {
         // Prepare test business object data, where the maximum partition value has no VALID business object data version and the maximum
@@ -1392,6 +1404,18 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityPartitionValueListMinPartitionValueTokenUpperCaseParameters()
+    {
+        runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(false, true);
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityPartitionValueListMinPartitionValueTokenLowerCaseParameters()
+    {
+        runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(false, false);
     }
 
     @Test
@@ -1496,11 +1520,11 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
-            request.getPartitionValueFilters(), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-            businessObjectDataServiceTestHelper.getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false),
-            businessObjectDataServiceTestHelper.getTestBusinessObjectDataStatuses(NO_FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                MULTI_STORAGE_NOT_AVAILABLE_PARTITION_VALUES, null, NO_DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false)),
+                request.getPartitionValueFilters(), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
+                businessObjectDataServiceTestHelper.getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                    MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false),
+                businessObjectDataServiceTestHelper.getTestBusinessObjectDataStatuses(NO_FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                    MULTI_STORAGE_NOT_AVAILABLE_PARTITION_VALUES, null, NO_DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false)),
             resultBusinessObjectDataAvailability);
     }
 
@@ -1529,9 +1553,9 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             {
 
                 assertEquals(String.format("Failed to find %s partition value for partition key = \"%s\" due to no available business object data " +
-                    "in \"%s\" storage(s) that is registered using that partition. Business object data {namespace: \"%s\", " +
-                    "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
-                    "businessObjectFormatVersion: %d, businessObjectDataVersion: %d}",
+                        "in \"%s\" storage(s) that is registered using that partition. Business object data {namespace: \"%s\", " +
+                        "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+                        "businessObjectFormatVersion: %d, businessObjectDataVersion: %d}",
                     partitionValueToken.equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) ? "maximum" : "minimum", SECOND_PARTITION_COLUMN_NAME,
                     STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, DATA_VERSION), e.getMessage());
             }
@@ -1558,10 +1582,10 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Failed to find partition value which is the latest before partition value = \"%s\" " +
-                "for partition key = \"%s\" due to no available business object data " +
-                "in \"%s\" storage that satisfies the search criteria. Business object data {namespace: \"%s\", " +
-                "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
-                "businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", PARTITION_VALUE, PARTITION_KEY, STORAGE_NAME, NAMESPACE, BDEF_NAME,
+                    "for partition key = \"%s\" due to no available business object data " +
+                    "in \"%s\" storage that satisfies the search criteria. Business object data {namespace: \"%s\", " +
+                    "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+                    "businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", PARTITION_VALUE, PARTITION_KEY, STORAGE_NAME, NAMESPACE, BDEF_NAME,
                 FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, DATA_VERSION), e.getMessage());
         }
     }
@@ -1634,10 +1658,10 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Failed to find partition value which is the latest after partition value = \"%s\" " +
-                "for partition key = \"%s\" due to no available business object data " +
-                "in \"%s\" storage that satisfies the search criteria. Business object data {namespace: \"%s\", " +
-                "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
-                "businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", PARTITION_VALUE_2, PARTITION_KEY, STORAGE_NAME, NAMESPACE, BDEF_NAME,
+                    "for partition key = \"%s\" due to no available business object data " +
+                    "in \"%s\" storage that satisfies the search criteria. Business object data {namespace: \"%s\", " +
+                    "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+                    "businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", PARTITION_VALUE_2, PARTITION_KEY, STORAGE_NAME, NAMESPACE, BDEF_NAME,
                 FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, DATA_VERSION), e.getMessage());
         }
     }
@@ -1706,10 +1730,10 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, STORAGE_NAMES, NO_STORAGE_NAME, businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false),
-            businessObjectDataServiceTestHelper.getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                MULTI_STORAGE_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false)),
+                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                    MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false),
+                businessObjectDataServiceTestHelper.getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                    MULTI_STORAGE_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false)),
             resultBusinessObjectDataAvailability);
     }
 
@@ -2049,5 +2073,34 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
                 NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), NO_NOT_AVAILABLE_STATUSES), result);
+    }
+
+    private void runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(boolean useMaxPartitionValueToken, boolean isUpperCase)
+    {
+        // Prepare test data.
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
+
+        // Check business object data availability using maximum or minimum partition value token with business
+        // object format alternate key parameters in upper or lower case as per specified input parameters.
+        BusinessObjectDataAvailabilityRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(null);
+        List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
+        request.setPartitionValueFilters(partitionValueFilters);
+        partitionValueFilters.add(new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(
+            useMaxPartitionValueToken ? BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN : BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
+            NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE));
+        request.setNamespace(isUpperCase ? NAMESPACE.toUpperCase() : NAMESPACE.toLowerCase());
+        request.setBusinessObjectDefinitionName(isUpperCase ? BDEF_NAME.toUpperCase() : BDEF_NAME.toLowerCase());
+        request.setBusinessObjectFormatUsage(isUpperCase ? FORMAT_USAGE_CODE.toUpperCase() : FORMAT_USAGE_CODE.toLowerCase());
+        request.setBusinessObjectFormatFileType(isUpperCase ? FORMAT_FILE_TYPE_CODE.toUpperCase() : FORMAT_FILE_TYPE_CODE.toLowerCase());
+        BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
+
+        // Validate the results.
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                Arrays.asList(useMaxPartitionValueToken ? STORAGE_1_GREATEST_PARTITION_VALUE : STORAGE_1_LEAST_PARTITION_VALUE),
+                NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
 }

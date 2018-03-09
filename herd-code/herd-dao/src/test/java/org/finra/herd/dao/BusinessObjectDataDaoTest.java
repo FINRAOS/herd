@@ -2160,4 +2160,28 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
     }
+
+    @Test
+    public void testGetBusinessObjectDataMaxMinPartitionValueWhenBusinessObjectFormatKeyDoesNotExist()
+    {
+        // Create database entities required for testing.
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Create a business object format key that does not exist
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey("NAME_SPACE_VALUE_THAT_DOES_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+
+        // Get the maximum available partition value - should be null.
+        assertNull(businessObjectDataDao
+            .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, DATA_VERSION,
+                BusinessObjectDataStatusEntity.VALID, Collections.singletonList(STORAGE_NAME), null, null, null, null));
+
+        // Get the minimum available partition value - should be null.
+        assertNull(businessObjectDataDao
+            .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, DATA_VERSION,
+                BusinessObjectDataStatusEntity.VALID, Collections.singletonList(STORAGE_NAME), null, null));
+
+
+    }
 }
