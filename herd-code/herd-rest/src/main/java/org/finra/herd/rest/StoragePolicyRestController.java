@@ -47,7 +47,7 @@ public class StoragePolicyRestController extends HerdBaseController
 
     /**
      * Creates a new storage policy.
-     * <p>Requires WRITE permission on namespace and READ permission on filter namespace</p>
+     * <p>WRITE permission is required on both namespace and filter namespace</p>
      *
      * @param request the information needed to create the storage policy
      *
@@ -62,7 +62,7 @@ public class StoragePolicyRestController extends HerdBaseController
 
     /**
      * Updates an existing storage policy by key.
-     * <p>Requires WRITE permission on namespace and READ permission on filter namespace</p>
+     * <p>WRITE permission is required on both namespace and filter namespace</p>
      *
      * @param namespace the namespace
      * @param storagePolicyName the storage policy name
