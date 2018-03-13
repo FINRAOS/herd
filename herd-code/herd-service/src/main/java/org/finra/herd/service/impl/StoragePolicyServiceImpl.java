@@ -96,7 +96,7 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
     private StoragePolicyTransitionTypeDaoHelper storagePolicyTransitionTypeDaoHelper;
 
     @NamespacePermissions({@NamespacePermission(fields = "#request?.storagePolicyKey?.namespace", permissions = NamespacePermissionEnum.WRITE),
-        @NamespacePermission(fields = "#request?.storagePolicyFilter?.namespace", permissions = NamespacePermissionEnum.READ)})
+        @NamespacePermission(fields = "#request?.storagePolicyFilter?.namespace", permissions = NamespacePermissionEnum.WRITE)})
     @Override
     public StoragePolicy createStoragePolicy(StoragePolicyCreateRequest request)
     {
@@ -162,7 +162,7 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
     }
 
     @NamespacePermissions({@NamespacePermission(fields = "#storagePolicyKey?.namespace", permissions = NamespacePermissionEnum.WRITE), @NamespacePermission(
-        fields = "#request?.storagePolicyFilter?.namespace", permissions = NamespacePermissionEnum.READ)})
+        fields = "#request?.storagePolicyFilter?.namespace", permissions = NamespacePermissionEnum.WRITE)})
     @Override
     public StoragePolicy updateStoragePolicy(StoragePolicyKey storagePolicyKey, StoragePolicyUpdateRequest request)
     {
