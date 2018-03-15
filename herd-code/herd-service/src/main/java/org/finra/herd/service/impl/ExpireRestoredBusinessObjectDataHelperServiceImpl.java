@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.StorageFile;
@@ -84,6 +85,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
      * <p/>
      * This implementation starts a new transaction.
      */
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void completeStorageUnitExpiration(BusinessObjectDataRestoreDto businessObjectDataRestoreDto)
@@ -108,6 +110,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
      * <p/>
      * This implementation starts a new transaction.
      */
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDataRestoreDto prepareToExpireStorageUnit(BusinessObjectDataStorageUnitKey storageUnitKey)

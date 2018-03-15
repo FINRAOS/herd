@@ -32,7 +32,7 @@ public interface MessageNotificationEventService
      *
      * @return the list of notification messages that got queued for publishing
      */
-    public List<NotificationMessage> processBusinessObjectDataStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey,
+    List<NotificationMessage> processBusinessObjectDataStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey,
         String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
 
     /**
@@ -43,8 +43,21 @@ public interface MessageNotificationEventService
      *
      * @return the list of notification messages that got queued for publishing
      */
-    public List<NotificationMessage> processBusinessObjectFormatVersionChangeNotificationEvent(BusinessObjectFormatKey businessObjectFormatKey,
+    List<NotificationMessage> processBusinessObjectFormatVersionChangeNotificationEvent(BusinessObjectFormatKey businessObjectFormatKey,
         String oldBusinessObjectFormatVersion);
+
+    /**
+     * Handles notifications for the storage unit status changes.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param storageName the storage name
+     * @param newStorageUnitStatus the new storage unit status
+     * @param oldStorageUnitStatus the old storage unit status
+     *
+     * @return the list of notification messages that got queued for publishing
+     */
+    List<NotificationMessage> processStorageUnitStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey, String storageName,
+        String newStorageUnitStatus, String oldStorageUnitStatus);
 
     /**
      * Handles the system monitor event notification.
@@ -53,5 +66,5 @@ public interface MessageNotificationEventService
      *
      * @return the list of notification messages that got queued for publishing
      */
-    public List<NotificationMessage> processSystemMonitorNotificationEvent(String systemMonitorRequestPayload);
+    List<NotificationMessage> processSystemMonitorNotificationEvent(String systemMonitorRequestPayload);
 }

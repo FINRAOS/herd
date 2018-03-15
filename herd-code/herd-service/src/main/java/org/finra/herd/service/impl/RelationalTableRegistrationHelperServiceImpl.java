@@ -41,6 +41,7 @@ import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
 import org.finra.herd.dao.helper.CredStashHelper;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
@@ -75,6 +76,7 @@ import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.service.helper.StorageUnitDaoHelper;
 import org.finra.herd.service.helper.StorageUnitStatusDaoHelper;
 
 /**
@@ -136,6 +138,9 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
     private StorageHelper storageHelper;
 
     @Autowired
+    private StorageUnitDaoHelper storageUnitDaoHelper;
+
+    @Autowired
     private StorageUnitStatusDaoHelper storageUnitStatusDaoHelper;
 
     @Override
@@ -145,10 +150,10 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         return getRelationalStorageAttributesImpl(relationalTableRegistrationCreateRequest);
     }
 
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectData registerRelationalTable(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
-        List<SchemaColumn> schemaColumns)
+    public BusinessObjectData registerRelationalTable(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest, List<SchemaColumn> schemaColumns)
     {
         return registerRelationalTableImpl(relationalTableRegistrationCreateRequest, schemaColumns);
     }
@@ -315,11 +320,11 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         // Get the storage.
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(relationalTableRegistrationCreateRequest.getStorageName());
 
-        // Create a storage unit status entity.
+        // Create a storage unit entity.
         StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
         storageUnitEntity.setStorage(storageEntity);
         storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
-        storageUnitEntity.setStatus(storageUnitStatusEntity);
+        storageUnitDaoHelper.setStorageUnitStatus(storageUnitEntity, storageUnitStatusEntity);
         businessObjectDataEntity.setStorageUnits(Collections.singletonList(storageUnitEntity));
 
         // Persist the newly created business object data entity.

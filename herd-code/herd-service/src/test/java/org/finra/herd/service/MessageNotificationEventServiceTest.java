@@ -431,6 +431,208 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testProcessBusinessObjectFormatVersionChangeNotificationEvent() throws Exception
+    {
+        // Create a business object format entity.
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
+
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
+
+        // Get a business object data key.
+        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Trigger the notification.
+        List<NotificationMessage> result = messageNotificationEventService
+            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormatVersionChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
+                HerdDaoSecurityHelper.SYSTEM_USER, businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION,
+                Collections.singletonList(new MessageHeader(KEY, VALUE)), result.get(0));
+    }
+
+    @Test
+    public void testProcessBusinessObjectFormatVersionChangeNotificationEventHerdSqsNotificationNotEnabled() throws Exception
+    {
+        // Create a business object format entity.
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
+
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
+
+        // Get a business object data key.
+        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+
+        // Override configuration.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_ENABLED.getKey(), false);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            // Trigger the notification.
+            List<NotificationMessage> result = messageNotificationEventService
+                .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
+
+            // Validate the results.
+            assertTrue(CollectionUtils.isEmpty(result));
+        }
+        finally
+        {
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testProcessBusinessObjectFormatVersionChangeNotificationEventNoMessageDestination() throws Exception
+    {
+        // Create a business object format entity.
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
+
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
+
+        // Get a business object data key.
+        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+
+        // Override configuration, so there will be no message definition specified in the relative notification message definition.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION, MESSAGE_TEXT,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to trigger the notification.
+        try
+        {
+            // Trigger the notification.
+            messageNotificationEventService
+                .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
+
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testProcessBusinessObjectFormatVersionChangeNotificationEventNoMessageType() throws Exception
+    {
+        // Create a business object format entity.
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
+
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
+
+        // Get a business object data key.
+        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+
+        // Override configuration, so there will be no message type specified in the relative notification message definition.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(NO_MESSAGE_TYPE, MESSAGE_DESTINATION, MESSAGE_TEXT,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to trigger the notification.
+        try
+        {
+            // Trigger the notification.
+            messageNotificationEventService
+                .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
+
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testProcessBusinessObjectFormatVersionChangeNotificationEventWithNoMessageHeaders() throws Exception
+    {
+        // Create a business object format entity.
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
+
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
+
+        // Get a business object data key.
+        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Trigger the notification.
+        List<NotificationMessage> result = messageNotificationEventService
+            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormatVersionChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
+                HerdDaoSecurityHelper.SYSTEM_USER, businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION,
+                NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testProcessStorageUnitStatusChangeNotificationEvent() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createTestValidBusinessObjectData(SUBPARTITION_VALUES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Trigger the notification.
+        List<NotificationMessage> result = messageNotificationEventService
+            .processStorageUnitStatusChangeNotificationEvent(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+    }
+
+    @Test
     public void testProcessSystemMonitorNotificationEvent() throws Exception
     {
         // Override configuration.
@@ -526,181 +728,6 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         {
             // Restore the property sources so we don't affect other tests.
             restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
-    public void testProcessBusinessObjectFormatValueChangeNotificationEvent() throws Exception
-    {
-        // Create a business object format entity.
-        BusinessObjectDataInvalidateUnregisteredRequest request =
-            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
-
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
-
-        // Get a business object data key.
-        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
-
-        // Override configuration.
-        ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
-                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        // Trigger the notification.
-        List<NotificationMessage> result = messageNotificationEventService
-            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
-
-        // Validate the results.
-        assertEquals(1, CollectionUtils.size(result));
-        businessObjectFormatServiceTestHelper
-            .validateBusinessObjectFormatVersionChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
-                HerdDaoSecurityHelper.SYSTEM_USER, businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION,
-                Collections.singletonList(new MessageHeader(KEY, VALUE)), result.get(0));
-    }
-
-    @Test
-    public void testProcessBusinessObjectFormatValueChangeNotificationEventWithNoMessageHeaders() throws Exception
-    {
-        // Create a business object format entity.
-        BusinessObjectDataInvalidateUnregisteredRequest request =
-            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
-
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
-
-        // Get a business object data key.
-        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
-
-        // Override configuration.
-        ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
-                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        // Trigger the notification.
-        List<NotificationMessage> result = messageNotificationEventService
-            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
-
-        // Validate the results.
-        assertEquals(1, CollectionUtils.size(result));
-        businessObjectFormatServiceTestHelper
-            .validateBusinessObjectFormatVersionChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
-                HerdDaoSecurityHelper.SYSTEM_USER, businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION,
-                NO_MESSAGE_HEADERS, result.get(0));
-    }
-
-    @Test
-    public void testProcessBusinessObjectFormatVersionChangeNotificationEventHerdSqsNotificationNotEnabled() throws Exception
-    {
-        // Create a business object format entity.
-        BusinessObjectDataInvalidateUnregisteredRequest request =
-            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
-
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
-
-        // Get a business object data key.
-        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
-
-        // Override configuration.
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_ENABLED.getKey(), false);
-        modifyPropertySourceInEnvironment(overrideMap);
-
-        try
-        {
-            // Trigger the notification.
-            List<NotificationMessage> result = messageNotificationEventService
-                .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
-
-            // Validate the results.
-            assertTrue(CollectionUtils.isEmpty(result));
-        }
-        finally
-        {
-            // Restore the property sources so we don't affect other tests.
-            restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
-    public void testProcessBusinessObjectFormatVersionChangeNotificationEventNoMessageDestination() throws Exception
-    {
-        // Create a business object format entity.
-        BusinessObjectDataInvalidateUnregisteredRequest request =
-            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
-
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
-
-        // Get a business object data key.
-        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
-
-        // Override configuration, so there will be no message definition specified in the relative notification message definition.
-        ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION, MESSAGE_TEXT,
-                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        // Try to trigger the notification.
-        try
-        {
-            // Trigger the notification.
-            messageNotificationEventService
-                .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
-
-            fail();
-        }
-        catch (IllegalStateException e)
-        {
-            assertEquals(String.format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
-                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
-        }
-    }
-
-    @Test
-    public void testProcessBusinessObjectFormatVersionChangeNotificationEventNoMessageType() throws Exception
-    {
-        // Create a business object format entity.
-        BusinessObjectDataInvalidateUnregisteredRequest request =
-            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
-
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
-
-        // Get a business object data key.
-        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
-
-        // Override configuration, so there will be no message type specified in the relative notification message definition.
-        ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(NO_MESSAGE_TYPE, MESSAGE_DESTINATION, MESSAGE_TEXT,
-                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        // Try to trigger the notification.
-        try
-        {
-            // Trigger the notification.
-            messageNotificationEventService
-                .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
-
-            fail();
-        }
-        catch (IllegalStateException e)
-        {
-            assertEquals(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
-                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
         }
     }
 }

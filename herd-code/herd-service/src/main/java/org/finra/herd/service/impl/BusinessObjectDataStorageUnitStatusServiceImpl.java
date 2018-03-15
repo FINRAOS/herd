@@ -23,6 +23,7 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitStatusUpdateRequest;
@@ -60,6 +61,7 @@ public class BusinessObjectDataStorageUnitStatusServiceImpl implements BusinessO
      * <p/>
      * This implementation starts a new transaction.
      */
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDataStorageUnitKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
