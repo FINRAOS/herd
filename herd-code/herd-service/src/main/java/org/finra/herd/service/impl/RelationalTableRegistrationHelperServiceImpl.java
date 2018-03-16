@@ -153,7 +153,8 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
     @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectData registerRelationalTable(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest, List<SchemaColumn> schemaColumns)
+    public BusinessObjectData registerRelationalTable(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        List<SchemaColumn> schemaColumns)
     {
         return registerRelationalTableImpl(relationalTableRegistrationCreateRequest, schemaColumns);
     }
