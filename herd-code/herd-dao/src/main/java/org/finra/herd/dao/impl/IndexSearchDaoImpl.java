@@ -537,6 +537,13 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
         if (fieldType.equals(FIELD_TYPE_SHINGLES))
         {
+            // Get the slop value for this multi match query
+            Integer phraseQuerySlop = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_SLOP, Integer.class);
+
+            // Set a "slop" value to allow the matched phrase to be slightly different from an exact phrase match
+            // The slop parameter tells the match phrase query how far apart terms are allowed to be while still considering the document a match
+            multiMatchQueryBuilder.slop(phraseQuerySlop);
+
             // Get the configured value for 'shingles' fields and their respective boosts if any
             String shinglesFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_SHINGLES);
 
