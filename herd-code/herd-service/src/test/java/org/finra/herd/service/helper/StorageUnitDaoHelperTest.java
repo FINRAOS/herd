@@ -26,6 +26,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
+import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
@@ -115,6 +116,24 @@ public class StorageUnitDaoHelperTest extends AbstractServiceTest
             assertEquals(String.format("Business object data storage unit {%s, storageName: \"%s\"} doesn't exist.",
                 businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), STORAGE_NAME), e.getMessage());
         }
+    }
+
+    @Test
+    public void testSetStorageUnitStatus()
+    {
+        // Create and persist a storage unit entity.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+
+        // Create and persist a storage status entity.
+        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2);
+
+        // Update the storage unit status.
+        storageUnitDaoHelper.setStorageUnitStatus(storageUnitEntity, storageUnitStatusEntity);
+
+        // Validate the results.
+        assertEquals(STORAGE_UNIT_STATUS_2, storageUnitEntity.getStatus().getCode());
     }
 
     @Test

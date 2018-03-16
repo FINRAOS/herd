@@ -32,6 +32,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.StorageFile;
@@ -111,10 +112,10 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
     @Autowired
     private StorageUnitHelper storageUnitHelper;
 
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void initiateStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
-        StoragePolicySelection storagePolicySelection)
+    public void initiateStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto, StoragePolicySelection storagePolicySelection)
     {
         initiateStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto, storagePolicySelection);
     }
@@ -352,6 +353,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         }
     }
 
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void completeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)

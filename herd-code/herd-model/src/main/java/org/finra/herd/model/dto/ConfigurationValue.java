@@ -588,6 +588,13 @@ public enum ConfigurationValue
         null),
 
     /**
+     * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
+     * NotificationMessageDefinitions} to use when generating notification messages for a storage unit status change event. There is no default value which will
+     * cause no messages to be sent.
+     */
+    HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS("herd.notification.storage.unit.status.change.message.definitions", null),
+
+    /**
      * The cache time to live in seconds defined in net.sf.ehcache.config.CacheConfiguration.
      */
     HERD_CACHE_TIME_TO_LIVE_SECONDS("herd.cache.time.to.live.seconds", 300L),
