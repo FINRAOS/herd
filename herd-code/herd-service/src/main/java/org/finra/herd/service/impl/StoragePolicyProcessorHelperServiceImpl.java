@@ -115,7 +115,8 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
     @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void initiateStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto, StoragePolicySelection storagePolicySelection)
+    public void initiateStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
+        StoragePolicySelection storagePolicySelection)
     {
         initiateStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto, storagePolicySelection);
     }
