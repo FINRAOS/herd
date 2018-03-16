@@ -462,6 +462,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class)).thenReturn(1f);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class)).thenReturn(1f);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class)).thenReturn(1f);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_SLOP, Integer.class)).thenReturn(5);
 
         Map<String, String> fieldsBoostMap = new HashMap<>();
         fieldsBoostMap.put("displayName", "1.0");
@@ -618,6 +619,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_SLOP, Integer.class);
         verify(jsonHelper, times(4)).unmarshallJsonToObject(Map.class, "{\"displayName\":\"1.0\"}");
 
         if (CollectionUtils.isNotEmpty(indexSearchRequest.getIndexSearchFilters()))

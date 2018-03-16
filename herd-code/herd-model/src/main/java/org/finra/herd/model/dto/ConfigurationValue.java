@@ -786,6 +786,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_PHRASE_QUERY_BOOST("elasticsearch.phrase.query.boost", 1.0f),
 
     /**
+     * Phrase query slop value
+     */
+    ELASTICSEARCH_PHRASE_QUERY_SLOP("elasticsearch.phrase.query.slop", 5),
+
+    /**
      * Best fields query boost value
      */
     ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST("elasticsearch.best.fields.query.boost", 1.0f),
