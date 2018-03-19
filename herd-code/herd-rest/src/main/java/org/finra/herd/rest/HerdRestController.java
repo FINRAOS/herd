@@ -19,11 +19,14 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BuildInformation;
+import org.finra.herd.model.api.xml.TimeoutValidationResponse;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.ui.constants.UiConstants;
 
@@ -37,6 +40,7 @@ public class HerdRestController extends HerdBaseController
 {
     @Autowired
     private BuildInformation buildInformation;
+    private final Integer MAX_WAIT_FOR_SECONDS = 1800;
 
     /**
      * Gets the build information.
@@ -49,5 +53,20 @@ public class HerdRestController extends HerdBaseController
     public BuildInformation getBuildInfo()
     {
         return buildInformation;
+    }
+
+    /**
+     * Validates infrastructure timeouts.
+     * @param waitForSeconds number of seconds to wait that falls between 0 and 1800 inclusively
+     * @return the timeout validation response.
+     */
+    @ApiOperation(value = "Validates infrastructure timeouts", hidden = true)
+    @RequestMapping(value = "/timeoutValidation", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_TIMEOUT_VALIDATION_GET)
+    public TimeoutValidationResponse getTimeoutValidation(@RequestParam(value = "waitForSeconds") Integer waitForSeconds) throws InterruptedException {
+        Assert.isTrue(waitForSeconds >= 0 && waitForSeconds <= MAX_WAIT_FOR_SECONDS,
+            "Specified value (" + waitForSeconds +") does not fall within the range of 0 to 1800 seconds.");
+        Thread.sleep(waitForSeconds * 1000);
+        return new TimeoutValidationResponse("Successfully waited for " + waitForSeconds + " seconds.");
     }
 }
