@@ -47,27 +47,30 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
     @NamespacePermission(fields = "#relationalTableRegistrationCreateRequest.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
+    public BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition)
     {
-        return createRelationalTableRegistrationImpl(relationalTableRegistrationCreateRequest);
+        return createRelationalTableRegistrationImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
     }
 
     /**
      * Creates a new relational table registration.
      *
      * @param relationalTableRegistrationCreateRequest the relational table registration create request
+     * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
      * @return the information for the newly created business object data
      */
-    BusinessObjectData createRelationalTableRegistrationImpl(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
+    BusinessObjectData createRelationalTableRegistrationImpl(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition)
     {
         // Validate the relational table registration create request.
         relationalTableRegistrationHelperService.validateAndTrimRelationalTableRegistrationCreateRequest(relationalTableRegistrationCreateRequest);
 
         // Get storage attributes required to perform relation table registration.
         // This method also validates database entities per specified relational table registration create request.
-        RelationalStorageAttributesDto relationalStorageAttributesDto =
-            relationalTableRegistrationHelperService.getRelationalStorageAttributes(relationalTableRegistrationCreateRequest);
+        RelationalStorageAttributesDto relationalStorageAttributesDto = relationalTableRegistrationHelperService
+            .getRelationalStorageAttributes(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
 
         // Retrieve a list of actual schema columns for the specified relational table.
         // This method uses actual JDBC connection to retrieve a description of table columns.
@@ -76,6 +79,7 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
                 relationalTableRegistrationCreateRequest.getRelationalTableName());
 
         // Create a new relational table registration and return the information for the newly created business object data.
-        return relationalTableRegistrationHelperService.registerRelationalTable(relationalTableRegistrationCreateRequest, schemaColumns);
+        return relationalTableRegistrationHelperService
+            .registerRelationalTable(relationalTableRegistrationCreateRequest, schemaColumns, appendToExistingBusinessObjectDefinition);
     }
 }

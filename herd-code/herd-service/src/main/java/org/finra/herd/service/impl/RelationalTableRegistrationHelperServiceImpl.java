@@ -145,18 +145,19 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
+    public RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition)
     {
-        return getRelationalStorageAttributesImpl(relationalTableRegistrationCreateRequest);
+        return getRelationalStorageAttributesImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
     }
 
     @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectData registerRelationalTable(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
-        List<SchemaColumn> schemaColumns)
+        List<SchemaColumn> schemaColumns, Boolean appendToExistingBusinessObjectDefinition)
     {
-        return registerRelationalTableImpl(relationalTableRegistrationCreateRequest, schemaColumns);
+        return registerRelationalTableImpl(relationalTableRegistrationCreateRequest, schemaColumns, appendToExistingBusinessObjectDefinition);
     }
 
     @Override
@@ -209,10 +210,12 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
      * registration create request.
      *
      * @param relationalTableRegistrationCreateRequest the relational table registration create request
+     * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
      * @return the relational storage attributes DtO
      */
-    RelationalStorageAttributesDto getRelationalStorageAttributesImpl(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
+    RelationalStorageAttributesDto getRelationalStorageAttributesImpl(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition)
     {
         // Validate that specified namespace exists.
         namespaceDaoHelper.getNamespaceEntity(relationalTableRegistrationCreateRequest.getNamespace());
@@ -222,7 +225,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName());
 
         // Ensure that a business object definition with the specified key doesn't already exist.
-        if (businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey) != null)
+        if (!appendToExistingBusinessObjectDefinition && businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey) != null)
         {
             throw new AlreadyExistsException(String.format("Business object definition with name \"%s\" already exists for namespace \"%s\".",
                 businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace()));
@@ -269,17 +272,33 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
      *
      * @param relationalTableRegistrationCreateRequest the relational table registration create request
      * @param schemaColumns the list of schema columns
+     * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
      * @return the information for the newly created business object data
      */
     BusinessObjectData registerRelationalTableImpl(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
-        List<SchemaColumn> schemaColumns)
+        List<SchemaColumn> schemaColumns, Boolean appendToExistingBusinessObjectDefinition)
     {
-        // Create a business object definition.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.createBusinessObjectDefinitionEntity(
-            new BusinessObjectDefinitionCreateRequest(relationalTableRegistrationCreateRequest.getNamespace(),
-                relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName(), relationalTableRegistrationCreateRequest.getDataProviderName(),
-                null, relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionDisplayName(), null));
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity;
+
+        // If we are appending the new business object format to an already existing business object definition,
+        // then get the business object definition with the information in the relational table registration create request,
+        // else create a new business object definition with the information in the relational table registration create request.
+        if (appendToExistingBusinessObjectDefinition)
+        {
+            // Get the existing business object definition
+            businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(
+                new BusinessObjectDefinitionKey(relationalTableRegistrationCreateRequest.getNamespace(),
+                    relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName()));
+        }
+        else
+        {
+            // Create a business object definition.
+            businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.createBusinessObjectDefinitionEntity(
+                new BusinessObjectDefinitionCreateRequest(relationalTableRegistrationCreateRequest.getNamespace(),
+                    relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName(), relationalTableRegistrationCreateRequest.getDataProviderName(),
+                    null, relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionDisplayName(), null));
+        }
 
         // Notify the search index that a business object definition is created.
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_CREATE);

@@ -170,6 +170,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean ALLOW_MISSING_DATA = true;
 
+    public static final Boolean APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE = false;
+
+    public static final Boolean APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_TRUE = true;
+
     public static final String AWS_SECURITY_GROUP_ID = "UT_AwsSecurityGroupId_" + RANDOM_SUFFIX;
 
     public static final String AWS_SQS_QUEUE_NAME = "AWS_SQS_QUEUE_NAME";
