@@ -67,11 +67,11 @@ public class HerdRestControllerTest extends AbstractRestTest
     @Test
     public void testGetTimeoutValidation() throws InterruptedException
     {
-        long testSeconds = 5;
+        int testSeconds = 5;
         Date start = new Date();
         // Call the method under test.
         TimeoutValidationResponse result = herdRestController.getTimeoutValidation(5);
-        assertTrue( new Date().getTime() - start.getTime() >= testSeconds );
+        assertTrue(  (new Date().getTime() - start.getTime()) / 1000 >= testSeconds);
         // Validate the results.
         assertEquals("Successfully waited for " + testSeconds + " seconds.", result.getMessage());
     }
@@ -79,14 +79,14 @@ public class HerdRestControllerTest extends AbstractRestTest
     @Test
     public void testGetTimeoutValidationNegativeNumber() throws InterruptedException {
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Specified value (-1) does not fall within the range of 0 to 1800 seconds.");
+        thrown.expectMessage("Specified value \"-1\" does not fall within the range of 0 to 1800 seconds.");
         herdRestController.getTimeoutValidation(-1);
     }
 
     @Test
     public void testGetTimeoutValidationTooHighNumber() throws InterruptedException {
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Specified value (1900) does not fall within the range of 0 to 1800 seconds.");
+        thrown.expectMessage("Specified value \"1900\" does not fall within the range of 0 to 1800 seconds.");
         herdRestController.getTimeoutValidation(1900);
     }
 
