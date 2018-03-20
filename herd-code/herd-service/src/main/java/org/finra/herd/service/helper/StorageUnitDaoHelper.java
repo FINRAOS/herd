@@ -109,8 +109,9 @@ public class StorageUnitDaoHelper
         storageUnitEntity.setStatus(storageUnitStatusEntity);
 
         // Send a storage unit status change notification as per system configuration.
-        messageNotificationEventService.processBusinessObjectDataStatusChangeNotificationEvent(
-            businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()), storageUnitStatusEntity.getCode(), null);
+        messageNotificationEventService
+            .processStorageUnitStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()),
+                storageUnitEntity.getStorage().getName(), storageUnitStatusEntity.getCode(), null);
     }
 
     /**
@@ -156,7 +157,8 @@ public class StorageUnitDaoHelper
         storageUnitDao.saveAndRefresh(storageUnitEntity);
 
         // Send a storage unit status change notification as per system configuration.
-        messageNotificationEventService.processBusinessObjectDataStatusChangeNotificationEvent(
-            businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()), storageUnitStatusEntity.getCode(), oldStatus);
+        messageNotificationEventService
+            .processStorageUnitStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()),
+                storageUnitEntity.getStorage().getName(), storageUnitStatusEntity.getCode(), oldStatus);
     }
 }
