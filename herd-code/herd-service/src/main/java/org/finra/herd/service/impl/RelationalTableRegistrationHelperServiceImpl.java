@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Service;
@@ -225,7 +226,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName());
 
         // Ensure that a business object definition with the specified key doesn't already exist.
-        if (!appendToExistingBusinessObjectDefinition && businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey) != null)
+        if (BooleanUtils.isNotTrue(appendToExistingBusinessObjectDefinition) && businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey) != null)
         {
             throw new AlreadyExistsException(String.format("Business object definition with name \"%s\" already exists for namespace \"%s\".",
                 businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace()));
@@ -284,7 +285,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         // If we are appending the new business object format to an already existing business object definition,
         // then get the business object definition with the information in the relational table registration create request,
         // else create a new business object definition with the information in the relational table registration create request.
-        if (appendToExistingBusinessObjectDefinition)
+        if (BooleanUtils.isTrue(appendToExistingBusinessObjectDefinition))
         {
             // Get the existing business object definition
             businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(
