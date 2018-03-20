@@ -63,7 +63,8 @@ public class HerdRestController extends HerdBaseController
     @ApiOperation(value = "Validates infrastructure timeouts", hidden = true)
     @RequestMapping(value = "/timeoutValidation", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_TIMEOUT_VALIDATION_GET)
-    public TimeoutValidationResponse getTimeoutValidation(@RequestParam(value = "waitForSeconds") int waitForSeconds) throws InterruptedException {
+    public TimeoutValidationResponse getTimeoutValidation(@RequestParam(value = "waitForSeconds") Integer waitForSeconds) throws InterruptedException {
+        Assert.isTrue(waitForSeconds != null, "waitForSeconds query parameter is required.");
         Assert.isTrue(waitForSeconds >= 0 && waitForSeconds <= MAX_WAIT_FOR_SECONDS,
             "Specified value \"" + waitForSeconds +"\" does not fall within the range of 0 to 1800 seconds.");
         Thread.sleep(waitForSeconds * 1000);
