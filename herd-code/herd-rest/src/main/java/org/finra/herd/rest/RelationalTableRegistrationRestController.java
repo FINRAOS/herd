@@ -22,6 +22,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -42,13 +43,17 @@ public class RelationalTableRegistrationRestController extends HerdBaseControlle
      * Creates relational table registration
      *
      * @param relationalTableRegistrationCreateRequest relational table registration create request
+     * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
      * @return business object data
      */
     @RequestMapping(value = "/relationalTableRegistrations", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_RELATIONAL_TABLE_REGISTRATIONS_POST)
-    public BusinessObjectData createRelationalTableRegistration(@RequestBody RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
+    public BusinessObjectData createRelationalTableRegistration(@RequestBody RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        @RequestParam(value = "appendToExistingBusinessObjectDefinition", required = false, defaultValue = "false")
+            Boolean appendToExistingBusinessObjectDefinition)
     {
-       return relationalTableRegistrationService.createRelationalTableRegistration(relationalTableRegistrationCreateRequest);
+        return relationalTableRegistrationService
+            .createRelationalTableRegistration(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
     }
 }

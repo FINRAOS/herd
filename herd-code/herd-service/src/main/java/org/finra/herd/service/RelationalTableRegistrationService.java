@@ -29,8 +29,10 @@ public interface RelationalTableRegistrationService
      * platform type</li> <li>a business object data</li> <li>a storage unit that links together the business object data with the storage</li> </ul>
      *
      * @param relationalTableRegistrationCreateRequest the relational table registration create request
+     * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
      * @return the information for the newly created business object data
      */
-    BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest);
+    BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition);
 }

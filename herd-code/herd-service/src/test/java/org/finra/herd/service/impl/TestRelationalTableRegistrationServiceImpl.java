@@ -37,8 +37,9 @@ public class TestRelationalTableRegistrationServiceImpl extends RelationalTableR
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
+    public BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition)
     {
-        return createRelationalTableRegistrationImpl(relationalTableRegistrationCreateRequest);
+        return createRelationalTableRegistrationImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
     }
 }

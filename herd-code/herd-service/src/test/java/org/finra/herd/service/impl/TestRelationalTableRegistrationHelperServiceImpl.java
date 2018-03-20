@@ -38,9 +38,10 @@ public class TestRelationalTableRegistrationHelperServiceImpl extends Relational
      * This implementation keeps the current transaction context.
      */
     @Override
-    public RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
+    public RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition)
     {
-        return getRelationalStorageAttributesImpl(relationalTableRegistrationCreateRequest);
+        return getRelationalStorageAttributesImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
     }
 
     /**
@@ -50,9 +51,9 @@ public class TestRelationalTableRegistrationHelperServiceImpl extends Relational
      */
     @Override
     public BusinessObjectData registerRelationalTable(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
-        List<SchemaColumn> schemaColumns)
+        List<SchemaColumn> schemaColumns, Boolean appendToExistingBusinessObjectDefinition)
     {
-        return registerRelationalTableImpl(relationalTableRegistrationCreateRequest, schemaColumns);
+        return registerRelationalTableImpl(relationalTableRegistrationCreateRequest, schemaColumns, appendToExistingBusinessObjectDefinition);
     }
 
     /**
