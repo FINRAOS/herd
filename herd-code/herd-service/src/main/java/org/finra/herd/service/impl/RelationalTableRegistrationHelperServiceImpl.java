@@ -226,7 +226,8 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName());
 
         // Ensure that a business object definition with the specified key doesn't already exist.
-        if (BooleanUtils.isNotTrue(appendToExistingBusinessObjectDefinition) && businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey) != null)
+        if (BooleanUtils.isNotTrue(appendToExistingBusinessObjectDefinition) &&
+            businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey) != null)
         {
             throw new AlreadyExistsException(String.format("Business object definition with name \"%s\" already exists for namespace \"%s\".",
                 businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace()));
