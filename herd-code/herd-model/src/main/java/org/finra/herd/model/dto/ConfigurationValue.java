@@ -788,7 +788,7 @@ public enum ConfigurationValue
     /**
      * Phrase query slop value
      */
-    ELASTICSEARCH_PHRASE_QUERY_SLOP("elasticsearch.phrase.query.slop", 5),
+    ELASTICSEARCH_PHRASE_QUERY_SLOP("elasticsearch.phrase.query.slop", 6),
 
     /**
      * Best fields query boost value
