@@ -30,6 +30,7 @@ import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 import org.finra.herd.model.dto.RelationalStorageAttributesDto;
+import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 
 public class RelationalTableRegistrationHelperServiceTest extends AbstractServiceTest
@@ -60,6 +61,35 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             Assert.assertEquals(String.format("Business object definition with name \"%s\" already exists for namespace \"%s\".", BDEF_NAME, BDEF_NAMESPACE),
                 ex.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetRelationalStorageAttributesBusinessObjectFormatAlreadyExists()
+    {
+        // Create a namespace.
+        namespaceDaoTestHelper.createNamespaceEntity(BDEF_NAMESPACE);
+
+        // Create a business object definition.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, 1, FORMAT_DESCRIPTION,
+                true, PARTITION_KEY, PARTITION_KEY_GROUP);
+
+        // Try to a get relational storage attributes when specified business object definition already exists.
+        try
+        {
+            relationalTableRegistrationHelperService.getRelationalStorageAttributes(
+                new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
+                    RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_TRUE);
+            fail();
+        }
+        catch (AlreadyExistsException alreadyExistsException)
+        {
+            Assert.assertEquals(String.format("Format with file type \"%s\" and usage \"%s\" already exists for business object definition \"%s\".",
+                FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, FORMAT_USAGE_CODE, BDEF_NAME), alreadyExistsException.getMessage());
         }
     }
 

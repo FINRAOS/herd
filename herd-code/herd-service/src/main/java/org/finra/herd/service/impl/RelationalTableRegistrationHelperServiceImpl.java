@@ -38,6 +38,7 @@ import org.springframework.util.Assert;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
 import org.finra.herd.dao.helper.CredStashHelper;
@@ -49,6 +50,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
@@ -104,6 +106,9 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
 
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+
+    @Autowired
+    private BusinessObjectFormatDao businessObjectFormatDao;
 
     @Autowired
     private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
@@ -231,6 +236,21 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         {
             throw new AlreadyExistsException(String.format("Business object definition with name \"%s\" already exists for namespace \"%s\".",
                 businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace()));
+        }
+
+        // Get the latest format version for this business format, if it exists.
+        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
+            new BusinessObjectFormatKey(relationalTableRegistrationCreateRequest.getNamespace(),
+                relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName(),
+                relationalTableRegistrationCreateRequest.getBusinessObjectFormatUsage(), FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null));
+
+        // If the latest version exists, fail with an already exists exception.
+        if (latestVersionBusinessObjectFormatEntity != null)
+        {
+            throw new AlreadyExistsException(String
+                .format("Format with file type \"%s\" and usage \"%s\" already exists for business object definition \"%s\".",
+                    latestVersionBusinessObjectFormatEntity.getFileType().getCode(), latestVersionBusinessObjectFormatEntity.getUsage(),
+                    latestVersionBusinessObjectFormatEntity.getBusinessObjectDefinition().getName()));
         }
 
         // Validate that specified data provider exists.
