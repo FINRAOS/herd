@@ -140,11 +140,11 @@ public class StorageUnitDaoHelper
      */
     public void updateStorageUnitStatus(StorageUnitEntity storageUnitEntity, StorageUnitStatusEntity storageUnitStatusEntity, String reason)
     {
-        // Update the entity with the new values.
-        storageUnitEntity.setStatus(storageUnitStatusEntity);
-
         // Save the current status value.
         String oldStatus = storageUnitEntity.getStatus().getCode();
+
+        // Update the entity with the new values.
+        storageUnitEntity.setStatus(storageUnitStatusEntity);
 
         // Add an entry to the storage unit status history table.
         StorageUnitStatusHistoryEntity storageUnitStatusHistoryEntity = new StorageUnitStatusHistoryEntity();
