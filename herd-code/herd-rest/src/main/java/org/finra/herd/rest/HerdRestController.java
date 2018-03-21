@@ -40,7 +40,7 @@ public class HerdRestController extends HerdBaseController
 {
     @Autowired
     private BuildInformation buildInformation;
-    private final Integer maxWaitForSeconds = 1800;
+    private final static Integer MAX_WAIT_FOR_SECONDS = 1800;
 
     /**
      * Gets the build information.
@@ -67,7 +67,7 @@ public class HerdRestController extends HerdBaseController
     public TimeoutValidationResponse getTimeoutValidation(@RequestParam(value = "waitForSeconds") Integer waitForSeconds) throws InterruptedException
     {
         Assert.isTrue(waitForSeconds != null, "waitForSeconds query parameter is required.");
-        Assert.isTrue(waitForSeconds >= 0 && waitForSeconds <= maxWaitForSeconds,
+        Assert.isTrue(waitForSeconds >= 0 && waitForSeconds <= MAX_WAIT_FOR_SECONDS,
             "Specified value \"" + waitForSeconds +"\" does not fall within the range of 0 to 1800 seconds.");
         Thread.sleep(waitForSeconds * 1000L);
         return new TimeoutValidationResponse("Successfully waited for " + waitForSeconds + " seconds.");
