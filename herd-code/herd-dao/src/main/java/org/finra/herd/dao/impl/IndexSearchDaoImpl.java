@@ -242,9 +242,14 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             buildMultiMatchQuery(searchPhrase, PHRASE, configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class),
                 FIELD_TYPE_SHINGLES, match);
 
+        final MultiMatchQueryBuilder phraseStemmedMultiMatchQueryBuilder =
+            buildMultiMatchQuery(searchPhrase, PHRASE, configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class),
+                FIELD_TYPE_STEMMED, match);
+
         // Add the multi match queries to a dis max query and add to the parent bool query within a 'must' clause
         indexSearchQueryBuilder
-            .must(disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder).add(phraseMultiMatchQueryBuilder));
+            .must(disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder)
+                .add(phraseMultiMatchQueryBuilder).add(phraseStemmedMultiMatchQueryBuilder));
 
         // Add filter clauses if index search filters are specified in the request
         if (CollectionUtils.isNotEmpty(indexSearchRequest.getIndexSearchFilters()))
@@ -514,6 +519,9 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private MultiMatchQueryBuilder buildMultiMatchQuery(final String searchTerm, final MultiMatchQueryBuilder.Type queryType, final float queryBoost,
         final String fieldType, Set<String> match)
     {
+        // Get the slop value for this multi match query
+        Integer phraseQuerySlop = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_SLOP, Integer.class);
+
         MultiMatchQueryBuilder multiMatchQueryBuilder = QueryBuilders.multiMatchQuery(searchTerm).type(queryType);
         multiMatchQueryBuilder.boost(queryBoost);
 
@@ -524,6 +532,13 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
             // build the query
             buildMultiMatchQueryWithBoosts(multiMatchQueryBuilder, stemmedFieldsValue, match);
+
+            if (queryType.equals(PHRASE))
+            {
+                // Set a "slop" value to allow the matched phrase to be slightly different from an exact phrase match
+                // The slop parameter tells the match phrase query how far apart terms are allowed to be while still considering the document a match
+                multiMatchQueryBuilder.slop(phraseQuerySlop);
+            }
         }
 
         if (fieldType.equals(FIELD_TYPE_NGRAMS))
@@ -537,9 +552,6 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
         if (fieldType.equals(FIELD_TYPE_SHINGLES))
         {
-            // Get the slop value for this multi match query
-            Integer phraseQuerySlop = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_SLOP, Integer.class);
-
             // Set a "slop" value to allow the matched phrase to be slightly different from an exact phrase match
             // The slop parameter tells the match phrase query how far apart terms are allowed to be while still considering the document a match
             multiMatchQueryBuilder.slop(phraseQuerySlop);
