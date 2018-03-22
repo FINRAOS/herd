@@ -16,10 +16,12 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Date;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.BuildInformation;
+import org.finra.herd.model.api.xml.TimeoutValidationResponse;
 
 /**
  * This class tests various functionality within the herd REST controller.
@@ -54,6 +57,52 @@ public class HerdRestControllerTest extends AbstractRestTest
 
         // Validate the results.
         assertEquals(buildInformation, result);
+    }
+
+    @Test
+    public void testGetTimeoutValidation() throws InterruptedException
+    {
+        Integer testSeconds = 1;
+        Date start = new Date();
+        // Call the method under test.
+        TimeoutValidationResponse result = herdRestController.getTimeoutValidation(testSeconds);
+        long timeDiff = (new Date().getTime() - start.getTime()) / 1000;
+        assertTrue(  timeDiff >= testSeconds);
+        // Validate the results.
+        assertEquals("Successfully waited for " + testSeconds + " seconds.", result.getMessage());
+    }
+
+    @Test
+    public void testGetTimeoutValidationNegativeNumber() throws InterruptedException {
+        try
+        {
+            herdRestController.getTimeoutValidation(-1);
+            fail("Expected an IllegalArgumentException to be thrown");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Specified value \"-1\" does not fall within the range of 0 to 1800 seconds.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetTimeoutValidationTooHighNumber() throws InterruptedException {
+        try
+        {
+            herdRestController.getTimeoutValidation(1900);
+            fail("Expected an IllegalArgumentException to be thrown");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Specified value \"1900\" does not fall within the range of 0 to 1800 seconds.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetTimeoutValidationNullParameter() throws InterruptedException {
+        try
+        {
+            herdRestController.getTimeoutValidation(null);
+            fail("Expected an IllegalArgumentException to be thrown");
+        } catch (IllegalArgumentException e) {
+            assertEquals("waitForSeconds query parameter is required.", e.getMessage());
+        }
     }
 
     @Test

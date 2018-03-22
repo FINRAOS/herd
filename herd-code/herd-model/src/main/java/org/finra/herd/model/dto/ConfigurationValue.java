@@ -328,10 +328,10 @@ public enum ConfigurationValue
     EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS("emr.spot.price.history.product.descriptions", null),
 
     /**
-     * The threshold value in dollar amount when choosing an EMR cluster based on the lowest total cost. It should be of string type so the precision can be
-     * kept. The default value is 10 cents(0.1 dollar).
+     * The threshold value in percentage when choosing an EMR cluster based on the lowest core instance price. It should be of string type so the precision
+     * can be kept. The default value is 10 percent.
      */
-    EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS("emr.cluster.lowest.total.cost.threshold.dollars", "0.1"),
+    EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE("emr.cluster.lowest.core.instance.price.threshold.percentage", "0.1"),
 
     /**
      * S3 protocol for constructing an S3 URL. The default is the standard "s3" prefix.
@@ -588,6 +588,13 @@ public enum ConfigurationValue
         null),
 
     /**
+     * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
+     * NotificationMessageDefinitions} to use when generating notification messages for a storage unit status change event. There is no default value which will
+     * cause no messages to be sent.
+     */
+    HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS("herd.notification.storage.unit.status.change.message.definitions", null),
+
+    /**
      * The cache time to live in seconds defined in net.sf.ehcache.config.CacheConfiguration.
      */
     HERD_CACHE_TIME_TO_LIVE_SECONDS("herd.cache.time.to.live.seconds", 300L),
@@ -779,6 +786,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_PHRASE_QUERY_BOOST("elasticsearch.phrase.query.boost", 1.0f),
 
     /**
+     * Phrase query slop value
+     */
+    ELASTICSEARCH_PHRASE_QUERY_SLOP("elasticsearch.phrase.query.slop", 6),
+
+    /**
      * Best fields query boost value
      */
     ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST("elasticsearch.best.fields.query.boost", 1.0f),
@@ -958,11 +970,6 @@ public enum ConfigurationValue
      * The storage attribute name for the JDBC username. The default is "jdbc.username".
      */
     STORAGE_ATTRIBUTE_NAME_JDBC_USERNAME("storage.attribute.name.jdbc.useraname", "jdbc.username"),
-
-    /**
-     * The storage attribute name for the JDBC password. The default is "jdbc.password".
-     */
-    STORAGE_ATTRIBUTE_NAME_JDBC_PASSWORD("storage.attribute.name.jdbc.password", "jdbc.password"),
 
     /**
      * The storage attribute name for the JDBC user credential name. The default is "jdbc.user.credential.name".

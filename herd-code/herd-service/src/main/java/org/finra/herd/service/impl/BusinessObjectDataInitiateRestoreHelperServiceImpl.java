@@ -36,6 +36,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
@@ -109,6 +110,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
      * <p/>
      * This implementation starts a new transaction.
      */
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectData executeInitiateRestoreAfterStep(BusinessObjectDataRestoreDto businessObjectDataRestoreDto)
@@ -133,6 +135,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
      * <p/>
      * This implementation starts a new transaction.
      */
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)

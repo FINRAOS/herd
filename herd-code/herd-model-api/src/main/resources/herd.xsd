@@ -65,6 +65,22 @@
       </xs:sequence>
    </xs:complexType>
 
+   <!-- ***** Timeout Validation Response ***** -->
+
+   <xs:element name="timeoutValidationResponse" type="timeoutValidationResponse"/>
+   <xs:complexType name="timeoutValidationResponse">
+      <xs:annotation>
+         <xs:documentation>A wrapper for the timeout validation response</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="message" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>A description explaining how long the endpoint waited.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** Storage Platform ***** -->
 
    <xs:element name="storagePlatforms" type="storagePlatforms"/>

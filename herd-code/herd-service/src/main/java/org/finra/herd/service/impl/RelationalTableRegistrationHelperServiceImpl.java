@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Service;
@@ -37,16 +38,19 @@ import org.springframework.util.Assert;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
 import org.finra.herd.dao.helper.CredStashHelper;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
@@ -75,6 +79,7 @@ import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.service.helper.StorageUnitDaoHelper;
 import org.finra.herd.service.helper.StorageUnitStatusDaoHelper;
 
 /**
@@ -101,6 +106,9 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
 
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+
+    @Autowired
+    private BusinessObjectFormatDao businessObjectFormatDao;
 
     @Autowired
     private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
@@ -136,21 +144,26 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
     private StorageHelper storageHelper;
 
     @Autowired
+    private StorageUnitDaoHelper storageUnitDaoHelper;
+
+    @Autowired
     private StorageUnitStatusDaoHelper storageUnitStatusDaoHelper;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
+    public RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition)
     {
-        return getRelationalStorageAttributesImpl(relationalTableRegistrationCreateRequest);
+        return getRelationalStorageAttributesImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
     }
 
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectData registerRelationalTable(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
-        List<SchemaColumn> schemaColumns)
+        List<SchemaColumn> schemaColumns, Boolean appendToExistingBusinessObjectDefinition)
     {
-        return registerRelationalTableImpl(relationalTableRegistrationCreateRequest, schemaColumns);
+        return registerRelationalTableImpl(relationalTableRegistrationCreateRequest, schemaColumns, appendToExistingBusinessObjectDefinition);
     }
 
     @Override
@@ -177,11 +190,11 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
      */
     String getPassword(RelationalStorageAttributesDto relationalStorageAttributesDto)
     {
-        // Get the JDBC password value.
-        String password = relationalStorageAttributesDto.getJdbcPassword();
+        // Default password value to null.
+        String password = null;
 
-        // If password is not specified, check if we need to get a password from the credstash.
-        if (StringUtils.isBlank(password) && StringUtils.isNotBlank(relationalStorageAttributesDto.getJdbcUserCredentialName()))
+        // Check if we need to get a password value from the credstash.
+        if (StringUtils.isNotBlank(relationalStorageAttributesDto.getJdbcUserCredentialName()))
         {
             final String credStashEncryptionContext = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_RELATIONAL_STORAGE_ENCRYPTION_CONTEXT);
 
@@ -203,10 +216,12 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
      * registration create request.
      *
      * @param relationalTableRegistrationCreateRequest the relational table registration create request
+     * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
      * @return the relational storage attributes DtO
      */
-    RelationalStorageAttributesDto getRelationalStorageAttributesImpl(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest)
+    RelationalStorageAttributesDto getRelationalStorageAttributesImpl(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition)
     {
         // Validate that specified namespace exists.
         namespaceDaoHelper.getNamespaceEntity(relationalTableRegistrationCreateRequest.getNamespace());
@@ -216,10 +231,26 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName());
 
         // Ensure that a business object definition with the specified key doesn't already exist.
-        if (businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey) != null)
+        if (BooleanUtils.isNotTrue(appendToExistingBusinessObjectDefinition) &&
+            businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey) != null)
         {
             throw new AlreadyExistsException(String.format("Business object definition with name \"%s\" already exists for namespace \"%s\".",
                 businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace()));
+        }
+
+        // Get the latest format version for this business format, if it exists.
+        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
+            new BusinessObjectFormatKey(relationalTableRegistrationCreateRequest.getNamespace(),
+                relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName(),
+                relationalTableRegistrationCreateRequest.getBusinessObjectFormatUsage(), FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null));
+
+        // If the latest version exists, fail with an already exists exception.
+        if (latestVersionBusinessObjectFormatEntity != null)
+        {
+            throw new AlreadyExistsException(String
+                .format("Format with file type \"%s\" and usage \"%s\" already exists for business object definition \"%s\".",
+                    latestVersionBusinessObjectFormatEntity.getFileType().getCode(), latestVersionBusinessObjectFormatEntity.getUsage(),
+                    latestVersionBusinessObjectFormatEntity.getBusinessObjectDefinition().getName()));
         }
 
         // Validate that specified data provider exists.
@@ -242,11 +273,6 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USERNAME), storageEntity, false,
                 false);
 
-        // Get JDBC password for this storage. This storage attribute is not required and it is allowed to have a blank value.
-        String jdbcPassword = storageHelper
-            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_PASSWORD), storageEntity, false,
-                false);
-
         // Get JDBC user credential name for this storage. This storage attribute is not required and it is allowed to have a blank value.
         String jdbcUserCredentialName = storageHelper
             .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USER_CREDENTIAL_NAME), storageEntity,
@@ -256,7 +282,6 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         RelationalStorageAttributesDto relationalStorageAttributesDto = new RelationalStorageAttributesDto();
         relationalStorageAttributesDto.setJdbcUrl(jdbcUrl);
         relationalStorageAttributesDto.setJdbcUsername(jdbcUsername);
-        relationalStorageAttributesDto.setJdbcPassword(jdbcPassword);
         relationalStorageAttributesDto.setJdbcUserCredentialName(jdbcUserCredentialName);
 
         return relationalStorageAttributesDto;
@@ -269,17 +294,33 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
      *
      * @param relationalTableRegistrationCreateRequest the relational table registration create request
      * @param schemaColumns the list of schema columns
+     * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
      * @return the information for the newly created business object data
      */
     BusinessObjectData registerRelationalTableImpl(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
-        List<SchemaColumn> schemaColumns)
+        List<SchemaColumn> schemaColumns, Boolean appendToExistingBusinessObjectDefinition)
     {
-        // Create a business object definition.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.createBusinessObjectDefinitionEntity(
-            new BusinessObjectDefinitionCreateRequest(relationalTableRegistrationCreateRequest.getNamespace(),
-                relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName(), relationalTableRegistrationCreateRequest.getDataProviderName(),
-                null, relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionDisplayName(), null));
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity;
+
+        // If we are appending the new business object format to an already existing business object definition,
+        // then get the business object definition with the information in the relational table registration create request,
+        // else create a new business object definition with the information in the relational table registration create request.
+        if (BooleanUtils.isTrue(appendToExistingBusinessObjectDefinition))
+        {
+            // Get the existing business object definition
+            businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(
+                new BusinessObjectDefinitionKey(relationalTableRegistrationCreateRequest.getNamespace(),
+                    relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName()));
+        }
+        else
+        {
+            // Create a business object definition.
+            businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.createBusinessObjectDefinitionEntity(
+                new BusinessObjectDefinitionCreateRequest(relationalTableRegistrationCreateRequest.getNamespace(),
+                    relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName(), relationalTableRegistrationCreateRequest.getDataProviderName(),
+                    null, relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionDisplayName(), null));
+        }
 
         // Notify the search index that a business object definition is created.
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_CREATE);
@@ -321,11 +362,11 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         // Get the storage.
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(relationalTableRegistrationCreateRequest.getStorageName());
 
-        // Create a storage unit status entity.
+        // Create a storage unit entity.
         StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
         storageUnitEntity.setStorage(storageEntity);
         storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
-        storageUnitEntity.setStatus(storageUnitStatusEntity);
+        storageUnitDaoHelper.setStorageUnitStatus(storageUnitEntity, storageUnitStatusEntity);
         businessObjectDataEntity.setStorageUnits(Collections.singletonList(storageUnitEntity));
 
         // Persist the newly created business object data entity.

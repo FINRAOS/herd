@@ -71,14 +71,54 @@ public class RelationalTableRegistrationRestControllerTest extends AbstractRestT
         businessObjectData.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
 
 
-        when(relationalTableRegistrationService.createRelationalTableRegistration(createRequest))
+        when(relationalTableRegistrationService.createRelationalTableRegistration(createRequest, APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE))
             .thenReturn(businessObjectData);
 
-        BusinessObjectData returnedBusinessObjectData = relationalTableRegistrationRestController.createRelationalTableRegistration(createRequest);
+        BusinessObjectData returnedBusinessObjectData =
+            relationalTableRegistrationRestController.createRelationalTableRegistration(createRequest, APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
 
         // Verify the external calls.
-        verify(relationalTableRegistrationService).createRelationalTableRegistration(createRequest);
+        verify(relationalTableRegistrationService).createRelationalTableRegistration(createRequest, APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
         verifyNoMoreInteractions(relationalTableRegistrationService);
+
+        // Validate the returned object.
+        assertEquals(businessObjectData, returnedBusinessObjectData);
+    }
+
+    @Test
+    public void testRelationalTableRegistrationRestControllerWithAppendToExistingBusinessObjectDefinitionRequestParameterSetToTrue()
+    {
+        RelationalTableRegistrationCreateRequest createRequest = new RelationalTableRegistrationCreateRequest();
+        createRequest.setNamespace(BDEF_NAMESPACE);
+        createRequest.setDataProviderName(DATA_PROVIDER_NAME);
+        createRequest.setBusinessObjectDefinitionName(BDEF_NAME);
+        createRequest.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        createRequest.setRelationalTableName(RELATIONAL_TABLE_NAME);
+        createRequest.setStorageName(STORAGE_NAME);
+
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(businessObjectData.getId());
+        businessObjectData.setNamespace(BDEF_NAMESPACE);
+        businessObjectData.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectData.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectData.setVersion(0);
+        businessObjectData.setStatus("VALID");
+        businessObjectData.setLatestVersion(true);
+        businessObjectData.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
+        businessObjectData.setPartitionValue(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_VALUE);
+        businessObjectData.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
+
+
+        when(relationalTableRegistrationService.createRelationalTableRegistration(createRequest, APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_TRUE))
+            .thenReturn(businessObjectData);
+
+        BusinessObjectData returnedBusinessObjectData =
+            relationalTableRegistrationRestController.createRelationalTableRegistration(createRequest, APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_TRUE);
+
+        // Verify the external calls.
+        verify(relationalTableRegistrationService).createRelationalTableRegistration(createRequest, APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_TRUE);
+        verifyNoMoreInteractions(relationalTableRegistrationService);
+
         // Validate the returned object.
         assertEquals(businessObjectData, returnedBusinessObjectData);
     }

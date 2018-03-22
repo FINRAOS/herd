@@ -64,9 +64,15 @@ import org.finra.herd.model.dto.EmrVpcPricingState;
  */
 public class EmrPricingHelperTest extends AbstractDaoTest
 {
+    private static final BigDecimal ONE_POINT_ONE = new BigDecimal("1.1");
+
+    private static final BigDecimal ONE_POINT_ONE_ONE = new BigDecimal("1.11");
+
     private static final BigDecimal ONE_UNIT = new BigDecimal("0.00001");
 
     private static final BigDecimal FIVE_UNIT = new BigDecimal("0.00005");
+
+    private static final BigDecimal TEN_PERCENT = new BigDecimal("0.1");
 
     private static final BigDecimal ON_DEMAND = new BigDecimal("1.00");
 
@@ -552,8 +558,8 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     /**
-     * Tests case where instance count affect subnet selection. Tests case given - master instance is very expensive in one AZ but cheaper in the other - core
-     * instance is very cheap in one AZ but more expensive in the other When - Enough instances are specified such that the AZ with the expensive master is
+     * Tests case where instance count affect subnet selection. Tests case given - core instance is very expensive in one AZ but cheaper in the other - master
+     * instance is very cheap in one AZ but more expensive in the other When - Enough instances are specified such that the AZ with the expensive core is
      * selected
      * <p/>
      * Even though the core is more expensive, the master is cheap enough to warrant the use of the expensive core AZ.
@@ -561,19 +567,19 @@ public class EmrPricingHelperTest extends AbstractDaoTest
      * Test case reference ClusterSpotPriceAlgorithm 13
      */
     @Test
-    public void testBestPricePickMultipleInstancesSelectCheaperMaster()
+    public void testBestPricePickMultipleInstancesSelectCheaperCore()
     {
         String subnetId = SUBNET_1 + "," + SUBNET_4;
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
         masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_2);
-        masterInstanceDefinition.setInstanceSpotPrice(SPOT_PRICE_VERY_HIGH);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
 
         InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
-        coreInstanceDefinition.setInstanceCount(2);
-        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
-        coreInstanceDefinition.setInstanceSpotPrice(ON_DEMAND);
+        coreInstanceDefinition.setInstanceCount(1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_2);
+        coreInstanceDefinition.setInstanceSpotPrice(SPOT_PRICE_VERY_HIGH);
 
         InstanceDefinition taskInstanceDefinition = new InstanceDefinition();
         taskInstanceDefinition.setInstanceCount(1);
@@ -584,9 +590,9 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
-        assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
+        assertEquals("master instance bid price", ON_DEMAND,
             emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-        assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
+        assertEquals("core instance bid price", SPOT_PRICE_VERY_HIGH, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
         assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
         assertEquals("selected subnet", SUBNET_1, emrClusterDefinition.getSubnetId());
@@ -943,34 +949,35 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetEmrClusterLowestTotalCostEmptyPricingList() {
-        assertNull(emrPricingHelper.getEmrClusterPriceWithLowestTotalCost(Collections.emptyList()));
+    public void testGetEmrClusterLowestCoreInstancePriceEmptyPricingList()
+    {
+        assertNull(emrPricingHelper.getEmrClusterPriceWithLowestCoreInstancePrice(Collections.emptyList()));
     }
 
     @Test
-    public void testGetEmrClusterPricesWithinLowestTotalCostThresholdSinglePricing() throws Exception
+    public void testGetEmrClusterPricesWithinLowestCoreInstancePriceThresholdSinglePricing() throws Exception
     {
         List<EmrClusterPriceDto> pricingList = Arrays.asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE));
-        List<EmrClusterPriceDto> lowTotalCostPricings = emrPricingHelper.getEmrClusterPricesWithinLowestTotalCostThreshold(pricingList, FIVE_UNIT);
+        List<EmrClusterPriceDto> lowestCoreInstancePriceClusters =
+            emrPricingHelper.getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(pricingList, TEN_PERCENT);
 
-        assertEquals(1, lowTotalCostPricings.size());
-        assertEquals(AVAILABILITY_ZONE_1, lowTotalCostPricings.get(0).getAvailabilityZone());
+        assertEquals(1, lowestCoreInstancePriceClusters.size());
+        assertEquals(AVAILABILITY_ZONE_1, lowestCoreInstancePriceClusters.get(0).getAvailabilityZone());
     }
 
     @Test
-    public void testGetEmrClusterPricesWithinLowestTotalCostThresholdMultiplePricing() throws Exception
+    public void testGetEmrClusterPricesWithinLowestCoreInstancePriceThresholdMultiplePricing() throws Exception
     {
         List<EmrClusterPriceDto> pricingList = Arrays
-            .asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE),
-                createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
-                createSimpleEmrClusterPrice(AVAILABILITY_ZONE_3, BigDecimal.ONE.add(FIVE_UNIT)),
-                createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, BigDecimal.ONE.add(ONE_UNIT)));
+            .asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE), createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
+                createSimpleEmrClusterPrice(AVAILABILITY_ZONE_3, ONE_POINT_ONE), createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, ONE_POINT_ONE_ONE));
 
-        List<EmrClusterPriceDto> lowTotalCostPricings = emrPricingHelper.getEmrClusterPricesWithinLowestTotalCostThreshold(pricingList, FIVE_UNIT);
-        assertEquals(3, lowTotalCostPricings.size());
-        for (EmrClusterPriceDto emrClusterPriceDto : lowTotalCostPricings)
+        List<EmrClusterPriceDto> lowestCoreInstancePriceClusters =
+            emrPricingHelper.getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(pricingList, TEN_PERCENT);
+        assertEquals(2, lowestCoreInstancePriceClusters.size());
+        for (EmrClusterPriceDto emrClusterPriceDto : lowestCoreInstancePriceClusters)
         {
-            assertTrue(Arrays.asList(AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_3, AVAILABILITY_ZONE_4).contains(emrClusterPriceDto.getAvailabilityZone()));
+            assertTrue(Arrays.asList(AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_3).contains(emrClusterPriceDto.getAvailabilityZone()));
         }
     }
 
@@ -980,19 +987,39 @@ public class EmrPricingHelperTest extends AbstractDaoTest
      * @throws Exception
      */
     @Test
-    public void testGetEmrClusterPricesWithinLowestTotalCostZeroThresholdMultiplePricing() throws Exception
+    public void testGetEmrClusterPricesWithinLowestCoreInstancePriceZeroThresholdMultiplePricings() throws Exception
     {
         List<EmrClusterPriceDto> pricingList = Arrays
-            .asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE),
-                createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
+            .asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE), createSimpleEmrClusterPrice(AVAILABILITY_ZONE_2, BigDecimal.TEN),
                 createSimpleEmrClusterPrice(AVAILABILITY_ZONE_3, BigDecimal.ONE.add(FIVE_UNIT)),
                 createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, BigDecimal.ONE));
 
-        List<EmrClusterPriceDto> lowTotalCostPricings = emrPricingHelper.getEmrClusterPricesWithinLowestTotalCostThreshold(pricingList, BigDecimal.ZERO);
-        assertEquals(2, lowTotalCostPricings.size());
-        for (EmrClusterPriceDto emrClusterPriceDto : lowTotalCostPricings)
+        List<EmrClusterPriceDto> lowestCoreInstancePriceClusters =
+            emrPricingHelper.getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(pricingList, BigDecimal.ZERO);
+        assertEquals(2, lowestCoreInstancePriceClusters.size());
+        for (EmrClusterPriceDto emrClusterPriceDto : lowestCoreInstancePriceClusters)
         {
             assertTrue(Arrays.asList(AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_4).contains(emrClusterPriceDto.getAvailabilityZone()));
+        }
+    }
+
+    /**
+     * Tests when one cluster does not have core instance. In this case this cluster will be picked since the price for the cluster is now zero (the lowest)
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testGetEmrClusterPricesWithinLowestCoreInstancePriceEmptyCoreInstanceMultiplePricings() throws Exception
+    {
+        List<EmrClusterPriceDto> pricingList =
+            Arrays.asList(createSimpleEmrClusterPrice(AVAILABILITY_ZONE_1, BigDecimal.ONE), createSimpleEmrClusterPrice(AVAILABILITY_ZONE_4, null));
+
+        List<EmrClusterPriceDto> lowestCoreInstancePriceClusters =
+            emrPricingHelper.getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(pricingList, TEN_PERCENT);
+        assertEquals(1, lowestCoreInstancePriceClusters.size());
+        for (EmrClusterPriceDto emrClusterPriceDto : lowestCoreInstancePriceClusters)
+        {
+            assertTrue(Arrays.asList(AVAILABILITY_ZONE_4).contains(emrClusterPriceDto.getAvailabilityZone()));
         }
     }
 
@@ -1001,10 +1028,14 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterPriceDto emrClusterPriceDto = new EmrClusterPriceDto();
 
         emrClusterPriceDto.setAvailabilityZone(availabilityZone);
-        Ec2PriceDto masterPrice = new Ec2PriceDto();
-        masterPrice.setInstanceCount(1);
-        masterPrice.setInstancePrice(instancePrice);
-        emrClusterPriceDto.setMasterPrice(masterPrice);
+
+        if (instancePrice != null)
+        {
+            Ec2PriceDto corePrice = new Ec2PriceDto();
+            corePrice.setInstanceCount(1);
+            corePrice.setInstancePrice(instancePrice);
+            emrClusterPriceDto.setCorePrice(corePrice);
+        }
 
         return emrClusterPriceDto;
     }

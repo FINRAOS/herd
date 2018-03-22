@@ -212,7 +212,7 @@ public class EmrPricingHelper extends AwsHelper
         }
 
         // Find the best prices from the result list
-        EmrClusterPriceDto bestEmrClusterPrice = getEmrClusterPriceWithLowestTotalCost(emrClusterPrices);
+        EmrClusterPriceDto bestEmrClusterPrice = getEmrClusterPriceWithLowestCoreInstancePrice(emrClusterPrices);
 
         // Find the best subnet among the best AZ's
         Subnet bestEmrClusterSubnet = getBestSubnetForAvailabilityZone(bestEmrClusterPrice.getAvailabilityZone(), subnets);
@@ -345,28 +345,28 @@ public class EmrPricingHelper extends AwsHelper
     }
 
     /**
-     * Selects the EMR cluster pricing with the lowest total cost. We will select one pricing randomly if there are multiple pricings that meet the
-     * lowest total cost criteria.
+     * Selects the EMR cluster pricing with the lowest core instance price. We will select one pricing randomly if there are multiple pricings that meet the
+     * lowest core price criteria.
      * <p>
      * Returns null if the given list is empty
      *
      * @param emrClusterPrices the list of pricing to select from
      *
-     * @return the pricing with the lowest total cost
+     * @return the pricing with the lowest core price
      */
-    EmrClusterPriceDto getEmrClusterPriceWithLowestTotalCost(final List<EmrClusterPriceDto> emrClusterPrices)
+    EmrClusterPriceDto getEmrClusterPriceWithLowestCoreInstancePrice(final List<EmrClusterPriceDto> emrClusterPrices)
     {
-        final List<EmrClusterPriceDto> emrClusterPricesWithLowestTotalCost = getEmrClusterPricesWithinLowestTotalCostThreshold(emrClusterPrices,
-            configurationHelper.getNonNegativeBigDecimalRequiredProperty(ConfigurationValue.EMR_CLUSTER_LOWEST_TOTAL_COST_THRESHOLD_DOLLARS));
-        if (!emrClusterPricesWithLowestTotalCost.isEmpty())
+        final List<EmrClusterPriceDto> lowestCoreInstancePriceEmrClusters = getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(emrClusterPrices,
+            configurationHelper.getNonNegativeBigDecimalRequiredProperty(ConfigurationValue.EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE));
+        if (!lowestCoreInstancePriceEmrClusters.isEmpty())
         {
-            // Pick one randomly from the lowest total cost pricing list
+            // Pick one randomly from the lowest core instance price list
             final EmrClusterPriceDto selectedEmrClusterPriceDto =
-                emrClusterPricesWithLowestTotalCost.get(new Random().nextInt(emrClusterPricesWithLowestTotalCost.size()));
+                lowestCoreInstancePriceEmrClusters.get(new Random().nextInt(lowestCoreInstancePriceEmrClusters.size()));
 
             // Log the selected pricing as well as the pricing list
-            LOGGER.info("selectedEmrCluster={} from lowestTotalCostEmrClusters={}", jsonHelper.objectToJson(selectedEmrClusterPriceDto),
-                jsonHelper.objectToJson(emrClusterPricesWithLowestTotalCost));
+            LOGGER.info("selectedEmrCluster={} from lowestCoreInstancePriceEmrClusters={}", jsonHelper.objectToJson(selectedEmrClusterPriceDto),
+                jsonHelper.objectToJson(lowestCoreInstancePriceEmrClusters));
 
             return selectedEmrClusterPriceDto;
         }
@@ -377,58 +377,61 @@ public class EmrPricingHelper extends AwsHelper
     }
 
     /**
-     * Finds all the pricings that meet the lowest total cost criteria. The lowest total cost is defined as a range from the lowest total cost of all the
-     * pricings, to the lowest total cost plus the threshold value.
+     * Finds all the clusters that are within the range of lowest core instance price.
      * <p>
-     * For example, if the total costs are 0.30, 0.32, 0.34, 0.36, and the threshold value is 0.05, then the low total cost range should be [0.30, 0.35].
+     * For example, if the core prices are 0.30, 0.32, 0.34, 0.36, and the threshold value is 0.1(10%), then the lowest core price range should be [0.30, 0.33].
+     * The upper bound is derived by calculating 0.30*(1 + 0.1) = 0.33
      *
-     * @param emrClusterPrices the list of pricings to select from
-     * @param lowestTotalCostThresholdValue the threshold value that defines the range of low total cost
+     * @param emrClusterPrices the list of clusters to select from
+     * @param lowestCoreInstancePriceThresholdPercentage the threshold value that defines the range of lowest core instance price
      *
-     * @return the list of pricing that fall in low total cost range
+     * @return the list of clusters that fall in lowest core instance price range
      */
-    List<EmrClusterPriceDto> getEmrClusterPricesWithinLowestTotalCostThreshold(final List<EmrClusterPriceDto> emrClusterPrices,
-        final BigDecimal lowestTotalCostThresholdValue)
+    List<EmrClusterPriceDto> getEmrClusterPricesWithinLowestCoreInstancePriceThreshold(final List<EmrClusterPriceDto> emrClusterPrices,
+        final BigDecimal lowestCoreInstancePriceThresholdPercentage)
     {
-        // Builds a tree map that has the total cost as the key, and the list of pricing with the same total cost as the value. The tree map is
-        // automatically sorted, so it is easy to find the lowest total cost, and total costs within the threshold of lowest total cost.
-        TreeMap<BigDecimal, List<EmrClusterPriceDto>> emrClusterPriceMapKeyedByTotalCost = new TreeMap<>();
+        // Builds a tree map that has the core instance price as the key, and the list of pricing with the same core instance price as the value. The tree map
+        // is automatically sorted, so it is easy to find the lowest core instance price range.
+        TreeMap<BigDecimal, List<EmrClusterPriceDto>> emrClusterPriceMapKeyedByCoreInstancePrice = new TreeMap<>();
         for (final EmrClusterPriceDto emrClusterPriceDto : emrClusterPrices)
         {
-            final BigDecimal totalCost = getEmrClusterTotalCost(emrClusterPriceDto);
-            if (emrClusterPriceMapKeyedByTotalCost.containsKey(totalCost))
+            final BigDecimal coreInstancePrice = getEmrClusterCoreInstancePrice(emrClusterPriceDto);
+            if (emrClusterPriceMapKeyedByCoreInstancePrice.containsKey(coreInstancePrice))
             {
-                emrClusterPriceMapKeyedByTotalCost.get(totalCost).add(emrClusterPriceDto);
+                emrClusterPriceMapKeyedByCoreInstancePrice.get(coreInstancePrice).add(emrClusterPriceDto);
             }
             else
             {
                 List<EmrClusterPriceDto> emrClusterPriceList = new ArrayList<>();
                 emrClusterPriceList.add(emrClusterPriceDto);
-                emrClusterPriceMapKeyedByTotalCost.put(totalCost, emrClusterPriceList);
+                emrClusterPriceMapKeyedByCoreInstancePrice.put(coreInstancePrice, emrClusterPriceList);
             }
         }
 
         // Log all the information in the tree map
-        LOGGER.info("All available EMR clusters keyed by total cost: availableEmrClusters={}", jsonHelper.objectToJson(emrClusterPriceMapKeyedByTotalCost));
+        LOGGER.info("All available EMR clusters keyed by core instance price: availableEmrClusters={}",
+            jsonHelper.objectToJson(emrClusterPriceMapKeyedByCoreInstancePrice));
 
-        // Finds the list of pricing in the range of the lowest total cost
-        List<EmrClusterPriceDto> emrClusterPricesWithinLowestTotalCostThreshold = new ArrayList<>();
-        if (!emrClusterPriceMapKeyedByTotalCost.isEmpty())
+        // Finds the list of pricing in the range of the lowest core instance price
+        List<EmrClusterPriceDto> lowestCoreInstancePriceEmrClusters = new ArrayList<>();
+        if (!emrClusterPriceMapKeyedByCoreInstancePrice.isEmpty())
         {
-            // calculate the lowest total cost range
-            final BigDecimal lowestTotalCostLowerBound = emrClusterPriceMapKeyedByTotalCost.firstEntry().getKey();
-            final BigDecimal lowestTotalCostUpperBound = lowestTotalCostLowerBound.add(lowestTotalCostThresholdValue);
+            // calculate the lowest core instance price range
+            final BigDecimal lowestCoreInstancePriceLowerBound = emrClusterPriceMapKeyedByCoreInstancePrice.firstEntry().getKey();
+            final BigDecimal lowestCoreInstancePriceUpperBound =
+                lowestCoreInstancePriceLowerBound.multiply(BigDecimal.ONE.add(lowestCoreInstancePriceThresholdPercentage));
 
-            LOGGER.info("emrClusterLowestTotalCostRange={}", jsonHelper.objectToJson(Arrays.asList(lowestTotalCostLowerBound, lowestTotalCostUpperBound)));
+            LOGGER.info("emrClusterLowestCoreInstancePriceRange={}",
+                jsonHelper.objectToJson(Arrays.asList(lowestCoreInstancePriceLowerBound, lowestCoreInstancePriceUpperBound)));
 
-            for (final Map.Entry<BigDecimal, List<EmrClusterPriceDto>> entry : emrClusterPriceMapKeyedByTotalCost.entrySet())
+            for (final Map.Entry<BigDecimal, List<EmrClusterPriceDto>> entry : emrClusterPriceMapKeyedByCoreInstancePrice.entrySet())
             {
-                final BigDecimal totalCost = entry.getKey();
-                // Fall into the low cost range? add it to the list.
-                // There is no need to check the lower bound here, since the tree map is sorted, and lower bound is the lowest total cost in the tree map.
-                if (totalCost.compareTo(lowestTotalCostUpperBound) <= 0)
+                final BigDecimal coreInstancePrice = entry.getKey();
+                // Fall into the lowest price range? add it to the list.
+                // There is no need to check the lower bound here, since the tree map is sorted, and lower bound is the lowest core price in the tree map.
+                if (coreInstancePrice.compareTo(lowestCoreInstancePriceUpperBound) <= 0)
                 {
-                    emrClusterPricesWithinLowestTotalCostThreshold.addAll(entry.getValue());
+                    lowestCoreInstancePriceEmrClusters.addAll(entry.getValue());
                 }
                 else
                 {
@@ -437,38 +440,27 @@ public class EmrPricingHelper extends AwsHelper
                 }
             }
         }
-        return emrClusterPricesWithinLowestTotalCostThreshold;
+        return lowestCoreInstancePriceEmrClusters;
     }
 
     /**
-     * Gets the total cost of the given pricing. The total cost is the sum of master, core, and task prices - each multiplied by their instance count. Task
-     * price is optional and will be ignored if not specified.
+     * Gets the core instance price in the cluster.
      *
      * @param emrClusterPrice the pricing information
      *
-     * @return the total cost
+     * @return the core instance price
      */
 
-    private BigDecimal getEmrClusterTotalCost(EmrClusterPriceDto emrClusterPrice)
+    private BigDecimal getEmrClusterCoreInstancePrice(EmrClusterPriceDto emrClusterPrice)
     {
-        BigDecimal totalPrice = BigDecimal.ZERO;
-
-        BigDecimal masterPrice = getTotalCost(emrClusterPrice.getMasterPrice());
-        totalPrice = totalPrice.add(masterPrice);
+        BigDecimal coreInstancePrice = BigDecimal.ZERO;
 
         if (emrClusterPrice.getCorePrice() != null)
         {
-            BigDecimal corePrice = getTotalCost(emrClusterPrice.getCorePrice());
-            totalPrice = totalPrice.add(corePrice);
+            coreInstancePrice = emrClusterPrice.getCorePrice().getInstancePrice();
         }
 
-        if (emrClusterPrice.getTaskPrice() != null)
-        {
-            BigDecimal taskPrice = getTotalCost(emrClusterPrice.getTaskPrice());
-            totalPrice = totalPrice.add(taskPrice);
-        }
-
-        return totalPrice;
+        return coreInstancePrice;
     }
 
     /**
@@ -761,20 +753,5 @@ public class EmrPricingHelper extends AwsHelper
         }
 
         return ec2Dao.getSubnets(subnetIds, awsParamsDto);
-    }
-
-    /**
-     * Returns the total cost per hour to run the requested number of instances for the given price. Returns the instance price multiplied by the number of
-     * instances.
-     *
-     * @param ec2Price the EC2 pricing information
-     *
-     * @return the USD per hour
-     */
-    public BigDecimal getTotalCost(Ec2PriceDto ec2Price)
-    {
-        BigDecimal instancePrice = ec2Price.getInstancePrice();
-        Integer instanceCount = ec2Price.getInstanceCount();
-        return instancePrice.multiply(new BigDecimal(instanceCount));
     }
 }

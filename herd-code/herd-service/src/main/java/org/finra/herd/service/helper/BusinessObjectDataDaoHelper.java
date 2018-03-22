@@ -109,6 +109,9 @@ public class BusinessObjectDataDaoHelper
     private ExpectedPartitionValueDao expectedPartitionValueDao;
 
     @Autowired
+    private MessageNotificationEventService messageNotificationEventService;
+
+    @Autowired
     private NotificationEventService notificationEventService;
 
     @Autowired
@@ -116,9 +119,6 @@ public class BusinessObjectDataDaoHelper
 
     @Autowired
     private S3Service s3Service;
-
-    @Autowired
-    private MessageNotificationEventService sqsNotificationEventService;
 
     @Autowired
     private StorageDaoHelper storageDaoHelper;
@@ -134,6 +134,9 @@ public class BusinessObjectDataDaoHelper
 
     @Autowired
     private StorageUnitDao storageUnitDao;
+
+    @Autowired
+    private StorageUnitDaoHelper storageUnitDaoHelper;
 
     @Autowired
     private StorageUnitStatusDaoHelper storageUnitStatusDaoHelper;
@@ -300,7 +303,7 @@ public class BusinessObjectDataDaoHelper
         newVersionBusinessObjectDataEntity = businessObjectDataDao.saveAndRefresh(newVersionBusinessObjectDataEntity);
 
         // Create a status change notification to be sent on create business object data event.
-        sqsNotificationEventService
+        messageNotificationEventService
             .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(newVersionBusinessObjectDataEntity),
                 businessObjectDataStatusEntity.getCode(), null);
 
@@ -366,12 +369,6 @@ public class BusinessObjectDataDaoHelper
                 String.format("Storage \"%s\" has enabled path validation without S3 key prefix velocity template configured.", storageEntity.getName()));
         }
 
-        // Create storage unit entity and associated storage file entities.
-        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
-        storageUnitEntity.setStorage(storageEntity);
-        storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
-        storageUnitEntity.setStatus(storageUnitStatusEntity);
-
         // Process storage directory path if it is specified.
         String directoryPath = null;
         if (isStorageDirectorySpecified)
@@ -403,7 +400,11 @@ public class BusinessObjectDataDaoHelper
             directoryPath = expectedS3KeyPrefix;
         }
 
-        // Store the directory.
+        // Create a storage unit entity.
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setStorage(storageEntity);
+        storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
+        storageUnitDaoHelper.setStorageUnitStatus(storageUnitEntity, storageUnitStatusEntity);
         storageUnitEntity.setDirectoryPath(directoryPath);
 
         // Discover storage files if storage file discovery is enabled. Otherwise, get the storage files specified in the request, if any.
@@ -622,7 +623,7 @@ public class BusinessObjectDataDaoHelper
         businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
 
         // Sent a business object data status change notification.
-        sqsNotificationEventService
+        messageNotificationEventService
             .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity),
                 businessObjectDataStatusEntity.getCode(), oldStatus);
     }
@@ -956,9 +957,9 @@ public class BusinessObjectDataDaoHelper
         BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, List<String> storageNames)
     {
         return String.format("Failed to find partition value which is the latest %s partition value = \"%s\" for partition key = \"%s\" due to " +
-            "no available business object data in \"%s\" storage that satisfies the search criteria. " +
-            "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", boundType, boundPartitionValue,
+                "no available business object data in \"%s\" storage that satisfies the search criteria. " +
+                "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", boundType, boundPartitionValue,
             partitionKey, StringUtils.join(storageNames, ","), businessObjectFormatKey.getNamespace(),
             businessObjectFormatKey.getBusinessObjectDefinitionName(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
             businessObjectFormatKey.getBusinessObjectFormatFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(), businessObjectDataVersion);
@@ -1014,9 +1015,9 @@ public class BusinessObjectDataDaoHelper
         Integer businessObjectDataVersion, List<String> storageNames)
     {
         return String.format("Failed to find %s partition value for partition key = \"%s\" due to " +
-            "no available business object data in \"%s\" storage(s) that is registered using that partition. " +
-            "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", partitionValueType, partitionKey,
+                "no available business object data in \"%s\" storage(s) that is registered using that partition. " +
+                "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", partitionValueType, partitionKey,
             StringUtils.join(storageNames, ","), businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
             businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
             businessObjectFormatKey.getBusinessObjectFormatVersion(), businessObjectDataVersion);
@@ -1150,7 +1151,7 @@ public class BusinessObjectDataDaoHelper
 
             // Validate that expected partition value does not match to one of the partition value tokens.
             Assert.isTrue(!partitionValue.equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
-                !partitionValue.equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
+                    !partitionValue.equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
                 "A partition value token cannot be specified as one of the expected partition values.");
 
             resultPartitionValues.add(partitionValue);

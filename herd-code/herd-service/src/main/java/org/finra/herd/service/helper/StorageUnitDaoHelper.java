@@ -27,6 +27,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusHistoryEntity;
+import org.finra.herd.service.MessageNotificationEventService;
 
 /**
  * Helper for storage unit related operations which require DAO.
@@ -36,6 +37,9 @@ public class StorageUnitDaoHelper
 {
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Autowired
+    private MessageNotificationEventService messageNotificationEventService;
 
     @Autowired
     private StorageUnitDao storageUnitDao;
@@ -93,6 +97,24 @@ public class StorageUnitDaoHelper
     }
 
     /**
+     * Sets storage unit status value for a storage unit. This method also generates a storage unit status change notification event as per system
+     * configuration.
+     *
+     * @param storageUnitEntity the storage unit entity
+     * @param storageUnitStatusEntity the storage unit status entity
+     */
+    public void setStorageUnitStatus(StorageUnitEntity storageUnitEntity, StorageUnitStatusEntity storageUnitStatusEntity)
+    {
+        // Set the storage unit status value.
+        storageUnitEntity.setStatus(storageUnitStatusEntity);
+
+        // Send a storage unit status change notification as per system configuration.
+        messageNotificationEventService
+            .processStorageUnitStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()),
+                storageUnitEntity.getStorage().getName(), storageUnitStatusEntity.getCode(), null);
+    }
+
+    /**
      * Update the storage unit status.
      *
      * @param storageUnitEntity the storage unit entity
@@ -109,7 +131,8 @@ public class StorageUnitDaoHelper
     }
 
     /**
-     * Update the storage unit status.
+     * Updates storage unit status value for a storage unit.  This method also updates the storage unit status history and generates a storage unit status
+     * change notification event as per system configuration.
      *
      * @param storageUnitEntity the storage unit entity
      * @param storageUnitStatusEntity the new storage unit status entity
@@ -117,6 +140,9 @@ public class StorageUnitDaoHelper
      */
     public void updateStorageUnitStatus(StorageUnitEntity storageUnitEntity, StorageUnitStatusEntity storageUnitStatusEntity, String reason)
     {
+        // Save the current status value.
+        String oldStatus = storageUnitEntity.getStatus().getCode();
+
         // Update the entity with the new values.
         storageUnitEntity.setStatus(storageUnitStatusEntity);
 
@@ -129,5 +155,10 @@ public class StorageUnitDaoHelper
 
         // Persist the entity.
         storageUnitDao.saveAndRefresh(storageUnitEntity);
+
+        // Send a storage unit status change notification as per system configuration.
+        messageNotificationEventService
+            .processStorageUnitStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()),
+                storageUnitEntity.getStorage().getName(), storageUnitStatusEntity.getCode(), oldStatus);
     }
 }
