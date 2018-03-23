@@ -32,10 +32,12 @@ public interface RelationalTableRegistrationHelperService
      * registration create request.
      *
      * @param relationalTableRegistrationCreateRequest the relational table registration create request
+     * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
      * @return the relational storage attributes DtO
      */
-    RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest);
+    RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition);
 
     /**
      * Creates a new relational table registration. The relation table registration includes creation of the following entities: <ul> <li>a business object
@@ -43,11 +45,12 @@ public interface RelationalTableRegistrationHelperService
      * together the business object data with the storage specified in the create request</li> </ul>
      *
      * @param relationalTableRegistrationCreateRequest the relational table registration create request
+     * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
      * @return the information for the newly created business object data
      */
     BusinessObjectData registerRelationalTable(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
-        List<SchemaColumn> schemaColumns);
+        List<SchemaColumn> schemaColumns, Boolean appendToExistingBusinessObjectDefinition);
 
     /**
      * Retrieves a list of actual schema columns for the specified relational table. This method uses actual JDBC connection to retrieve a description of table

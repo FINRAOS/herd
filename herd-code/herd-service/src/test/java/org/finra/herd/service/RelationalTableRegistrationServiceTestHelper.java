@@ -66,6 +66,16 @@ class RelationalTableRegistrationServiceTestHelper
         // Create a data provider entity.
         dataProviderDaoTestHelper.createDataProviderEntity(dataProviderName);
 
+        createDatabaseEntitiesForRelationalTableRegistrationTesting(storageName);
+    }
+
+    /**
+     * Creates database entities required for relational table registration unit tests.
+     *
+     * @param storageName the storage name
+     */
+    void createDatabaseEntitiesForRelationalTableRegistrationTesting(String storageName)
+    {
         // Create RELATIONAL_TABLE file type entity.
         fileTypeDaoTestHelper.createFileTypeEntity(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, AbstractServiceTest.FORMAT_FILE_TYPE_DESCRIPTION);
 

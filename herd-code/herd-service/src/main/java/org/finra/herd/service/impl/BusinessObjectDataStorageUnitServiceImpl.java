@@ -26,6 +26,7 @@ import org.springframework.util.Assert;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitCreateResponse;
@@ -71,6 +72,7 @@ public class BusinessObjectDataStorageUnitServiceImpl implements BusinessObjectD
      * <p/>
      * This implementation starts a new transaction.
      */
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#request.businessObjectDataStorageUnitKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)

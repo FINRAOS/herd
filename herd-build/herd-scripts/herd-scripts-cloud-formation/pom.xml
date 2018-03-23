@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-scripts</artifactId>
-      <version>0.65.0-SNAPSHOT</version>
+      <version>0.66.0-SNAPSHOT</version>
    </parent>
 
    <name>herd scripts cloud formation</name>
