@@ -16,7 +16,7 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -71,6 +71,14 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
             notificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, oldBusinessObjectFormatVersion));
     }
 
+    @Override
+    public List<NotificationMessage> processStorageUnitStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey, String storageName,
+        String newStorageUnitStatus, String oldStorageUnitStatus)
+    {
+        return processNotificationMessages(
+            notificationMessageBuilder.buildStorageUnitStatusChangeMessages(businessObjectDataKey, storageName, newStorageUnitStatus, oldStorageUnitStatus));
+    }
+
     @PublishNotificationMessages
     @Override
     public List<NotificationMessage> processSystemMonitorNotificationEvent(String systemMonitorRequestPayload)
@@ -79,7 +87,7 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
         NotificationMessage notificationMessage = notificationMessageBuilder.buildSystemMonitorResponse(systemMonitorRequestPayload);
 
         // If message is null, send an empty list of notification messages to be processed.
-        return processNotificationMessages(notificationMessage == null ? new ArrayList<>() : Arrays.asList(notificationMessage));
+        return processNotificationMessages(notificationMessage == null ? new ArrayList<>() : Collections.singletonList(notificationMessage));
     }
 
     /**
@@ -89,7 +97,7 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
      *
      * @return the list of notification messages that got queued for publishing
      */
-    private List<NotificationMessage> processNotificationMessages(List<NotificationMessage> notificationMessages)
+    private List<NotificationMessage> processNotificationMessages(final List<NotificationMessage> notificationMessages)
     {
         // Create an empty result list.
         List<NotificationMessage> result = new ArrayList<>();

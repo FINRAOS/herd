@@ -110,7 +110,8 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
         {
             // Create a context map of values that can be used when building the message.
-            Map<String, Object> velocityContextMap = getVelocityContextMap(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus);
+            Map<String, Object> velocityContextMap =
+                getBusinessObjectDataStatusChangeMessageVelocityContextMap(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus);
 
             // Generate notification message for each notification message definition.
             for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
@@ -173,7 +174,8 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
         {
             // Create a context map of values that can be used when building the message.
-            Map<String, Object> velocityContextMap = getVelocityContextMap(businessObjectFormatKey, oldBusinessObjectFormatVersion);
+            Map<String, Object> velocityContextMap =
+                getBusinessObjectFormatVersionChangeMessageVelocityContextMap(businessObjectFormatKey, oldBusinessObjectFormatVersion);
 
             // Generate notification message for each notification message definition.
             for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
@@ -206,6 +208,70 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
                         messageHeaders.add(new MessageHeader(messageHeaderDefinition.getKey(),
                             evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
                                 String.format("businessObjectFormatVersionChangeEvent_messageHeader_%s", messageHeaderDefinition.getKey()))));
+                    }
+                }
+
+                // Create a notification message and add it to the result list.
+                notificationMessages.add(
+                    new NotificationMessage(notificationMessageDefinition.getMessageType(), notificationMessageDefinition.getMessageDestination(), messageText,
+                        messageHeaders));
+            }
+        }
+
+        // Return the results.
+        return notificationMessages;
+    }
+
+    @Override
+    public List<NotificationMessage> buildStorageUnitStatusChangeMessages(BusinessObjectDataKey businessObjectDataKey, String storageName,
+        String newStorageUnitStatus, String oldStorageUnitStatus)
+    {
+        // Create a result list.
+        List<NotificationMessage> notificationMessages = new ArrayList<>();
+
+        // Get notification message definitions.
+        NotificationMessageDefinitions notificationMessageDefinitions = configurationDaoHelper
+            .getXmlClobPropertyAndUnmarshallToObject(NotificationMessageDefinitions.class,
+                ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+
+        // Continue processing if notification message definitions are configured.
+        if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
+        {
+            // Create a context map of values that can be used when building the message.
+            Map<String, Object> velocityContextMap =
+                getStorageUnitStatusChangeMessageVelocityContextMap(businessObjectDataKey, storageName, newStorageUnitStatus, oldStorageUnitStatus);
+
+            // Generate notification message for each notification message definition.
+            for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
+            {
+                // Validate the notification message type.
+                if (StringUtils.isBlank(notificationMessageDefinition.getMessageType()))
+                {
+                    throw new IllegalStateException(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                        ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()));
+                }
+
+                // Validate the notification message destination.
+                if (StringUtils.isBlank(notificationMessageDefinition.getMessageDestination()))
+                {
+                    throw new IllegalStateException(String
+                        .format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                            ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()));
+                }
+
+                // Evaluate the template to generate the message text.
+                String messageText =
+                    evaluateVelocityTemplate(notificationMessageDefinition.getMessageVelocityTemplate(), velocityContextMap, "storageUnitStatusChangeEvent");
+
+                // Build a list of optional message headers.
+                List<MessageHeader> messageHeaders = new ArrayList<>();
+                if (CollectionUtils.isNotEmpty(notificationMessageDefinition.getMessageHeaderDefinitions()))
+                {
+                    for (MessageHeaderDefinition messageHeaderDefinition : notificationMessageDefinition.getMessageHeaderDefinitions())
+                    {
+                        messageHeaders.add(new MessageHeader(messageHeaderDefinition.getKey(),
+                            evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
+                                String.format("storageUnitStatusChangeEvent_messageHeader_%s", messageHeaderDefinition.getKey()))));
                     }
                 }
 
@@ -285,6 +351,81 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
 
         // Return the message text.
         return messageText;
+    }
+
+    /**
+     * Returns Velocity context map of additional keys and values to place in the velocity context.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param newBusinessObjectDataStatus the new business object data status
+     * @param oldBusinessObjectDataStatus the old business object data status
+     *
+     * @return the Velocity context map
+     */
+    private Map<String, Object> getBusinessObjectDataStatusChangeMessageVelocityContextMap(BusinessObjectDataKey businessObjectDataKey,
+        String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus)
+    {
+        // Create a context map of values that can be used when building the message.
+        Map<String, Object> velocityContextMap = new HashMap<>();
+        velocityContextMap.put("businessObjectDataKey", businessObjectDataKey);
+        velocityContextMap.put("newBusinessObjectDataStatus", newBusinessObjectDataStatus);
+        velocityContextMap.put("oldBusinessObjectDataStatus", oldBusinessObjectDataStatus);
+
+        // Retrieve business object data entity and business object data id to the context.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+        velocityContextMap.put("businessObjectDataId", businessObjectDataEntity.getId());
+
+        // Load all attribute definitions for this business object data in a map for easy access.
+        Map<String, BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntityMap =
+            businessObjectFormatHelper.getAttributeDefinitionEntities(businessObjectDataEntity.getBusinessObjectFormat());
+
+        // Build an ordered map of business object data attributes that are flagged to be published in notification messages.
+        Map<String, String> businessObjectDataAttributes = new LinkedHashMap<>();
+        if (!attributeDefinitionEntityMap.isEmpty())
+        {
+            for (BusinessObjectDataAttributeEntity attributeEntity : businessObjectDataEntity.getAttributes())
+            {
+                if (attributeDefinitionEntityMap.containsKey(attributeEntity.getName().toUpperCase()))
+                {
+                    BusinessObjectDataAttributeDefinitionEntity attributeDefinitionEntity =
+                        attributeDefinitionEntityMap.get(attributeEntity.getName().toUpperCase());
+
+                    if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublish()))
+                    {
+                        businessObjectDataAttributes.put(attributeEntity.getName(), attributeEntity.getValue());
+                    }
+                }
+            }
+        }
+
+        // Add the map of business object data attributes to the context.
+        velocityContextMap.put("businessObjectDataAttributes", businessObjectDataAttributes);
+
+        // Add the namespace to the header.
+        velocityContextMap.put("namespace", businessObjectDataKey.getNamespace());
+
+        return velocityContextMap;
+    }
+
+    /**
+     * Returns Velocity context map of additional keys and values to place in the velocity context.
+     *
+     * @param businessObjectFormatKey the business object format key
+     * @param oldBusinessObjectFormatVersion the old business object format version
+     *
+     * @return the Velocity context map
+     */
+    private Map<String, Object> getBusinessObjectFormatVersionChangeMessageVelocityContextMap(BusinessObjectFormatKey businessObjectFormatKey,
+        String oldBusinessObjectFormatVersion)
+    {
+        Map<String, Object> velocityContextMap = new HashMap<>();
+
+        velocityContextMap.put("businessObjectFormatKey", businessObjectFormatKey);
+        velocityContextMap.put("newBusinessObjectFormatVersion", businessObjectFormatKey.getBusinessObjectFormatVersion());
+        velocityContextMap.put("oldBusinessObjectFormatVersion", oldBusinessObjectFormatVersion);
+        velocityContextMap.put("namespace", businessObjectFormatKey.getNamespace());
+
+        return velocityContextMap;
     }
 
     /**
@@ -372,75 +513,26 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
     }
 
     /**
-     * Returns Velocity context map of additional keys and values to place in the velocity context
+     * Returns Velocity context map of additional keys and values to place in the velocity context.
      *
-     * @param businessObjectDataKey the business object data key for the object whose status changed
-     * @param newBusinessObjectDataStatus the new business object data status
-     * @param oldBusinessObjectDataStatus the old business object data status
+     * @param businessObjectDataKey the business object data key
+     * @param storageName the storage name
+     * @param newStorageUnitStatus the new storage unit status
+     * @param oldStorageUnitStatus the old storage unit status, may be null
      *
      * @return the Velocity context map
      */
-    private Map<String, Object> getVelocityContextMap(BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus,
-        String oldBusinessObjectDataStatus)
+    private Map<String, Object> getStorageUnitStatusChangeMessageVelocityContextMap(BusinessObjectDataKey businessObjectDataKey, String storageName,
+        String newStorageUnitStatus, String oldStorageUnitStatus)
     {
-        // Create a context map of values that can be used when building the message.
         Map<String, Object> velocityContextMap = new HashMap<>();
+
         velocityContextMap.put("businessObjectDataKey", businessObjectDataKey);
-        velocityContextMap.put("newBusinessObjectDataStatus", newBusinessObjectDataStatus);
-        velocityContextMap.put("oldBusinessObjectDataStatus", oldBusinessObjectDataStatus);
-
-        // Retrieve business object data entity and business object data id to the context.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
-        velocityContextMap.put("businessObjectDataId", businessObjectDataEntity.getId());
-
-        // Load all attribute definitions for this business object data in a map for easy access.
-        Map<String, BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntityMap =
-            businessObjectFormatHelper.getAttributeDefinitionEntities(businessObjectDataEntity.getBusinessObjectFormat());
-
-        // Build an ordered map of business object data attributes that are flagged to be published in notification messages.
-        Map<String, String> businessObjectDataAttributes = new LinkedHashMap<>();
-        if (!attributeDefinitionEntityMap.isEmpty())
-        {
-            for (BusinessObjectDataAttributeEntity attributeEntity : businessObjectDataEntity.getAttributes())
-            {
-                if (attributeDefinitionEntityMap.containsKey(attributeEntity.getName().toUpperCase()))
-                {
-                    BusinessObjectDataAttributeDefinitionEntity attributeDefinitionEntity =
-                        attributeDefinitionEntityMap.get(attributeEntity.getName().toUpperCase());
-
-                    if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublish()))
-                    {
-                        businessObjectDataAttributes.put(attributeEntity.getName(), attributeEntity.getValue());
-                    }
-                }
-            }
-        }
-
-        // Add the map of business object data attributes to the context.
-        velocityContextMap.put("businessObjectDataAttributes", businessObjectDataAttributes);
-
-        // Add the namespace to the header.
+        velocityContextMap.put("storageName", storageName);
+        velocityContextMap.put("newStorageUnitStatus", newStorageUnitStatus);
+        velocityContextMap.put("oldStorageUnitStatus", oldStorageUnitStatus);
         velocityContextMap.put("namespace", businessObjectDataKey.getNamespace());
 
-        return velocityContextMap;
-    }
-
-    /**
-     * Returns Velocity context map of additional keys and values to place in the velocity context
-     *
-     * @param businessObjectFormatKey the business object format key for the object whose version changed
-     * @param oldBusinessObjectFormatVersion the old business object format version
-     *
-     * @return the Velocity context map
-     */
-    private Map<String, Object> getVelocityContextMap(BusinessObjectFormatKey businessObjectFormatKey, String oldBusinessObjectFormatVersion)
-    {
-        // Create a context map of values that can be used when building the message.
-        Map<String, Object> velocityContextMap = new HashMap<>();
-        velocityContextMap.put("businessObjectFormatKey", businessObjectFormatKey);
-        velocityContextMap.put("newBusinessObjectFormatVersion", businessObjectFormatKey.getBusinessObjectFormatVersion());
-        velocityContextMap.put("oldBusinessObjectFormatVersion", oldBusinessObjectFormatVersion);
-        velocityContextMap.put("namespace", businessObjectFormatKey.getNamespace());
         return velocityContextMap;
     }
 }

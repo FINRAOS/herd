@@ -170,6 +170,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean ALLOW_MISSING_DATA = true;
 
+    public static final Boolean APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE = false;
+
+    public static final Boolean APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_TRUE = true;
+
     public static final String AWS_SECURITY_GROUP_ID = "UT_AwsSecurityGroupId_" + RANDOM_SUFFIX;
 
     public static final String AWS_SQS_QUEUE_NAME = "AWS_SQS_QUEUE_NAME";
@@ -659,6 +663,20 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
 
     public static final Integer STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS = getRandomInteger();
+
+    public static final String STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON =
+        "{\n" + "  \"eventDate\" : \"$current_time\",\n" + "  \"businessObjectDataKey\" : {\n" + "    \"namespace\" : \"$businessObjectDataKey.namespace\",\n" +
+            "    \"businessObjectDefinitionName\" : \"$businessObjectDataKey.businessObjectDefinitionName\",\n" +
+            "    \"businessObjectFormatUsage\" : \"$businessObjectDataKey.businessObjectFormatUsage\",\n" +
+            "    \"businessObjectFormatFileType\" : \"$businessObjectDataKey.businessObjectFormatFileType\",\n" +
+            "    \"businessObjectFormatVersion\" : $businessObjectDataKey.businessObjectFormatVersion,\n" +
+            "    \"partitionValue\" : \"$businessObjectDataKey.partitionValue\",\n" +
+            "#if($CollectionUtils.isNotEmpty($businessObjectDataKey.subPartitionValues))    \"subPartitionValues\" : [ " +
+            "\"$businessObjectDataKey.subPartitionValues.get(0)\"" +
+            "#foreach ($subPartitionValue in $businessObjectDataKey.subPartitionValues.subList(1, $businessObjectDataKey.subPartitionValues.size())), \"$subPartitionValue\"" +
+            "#end\n" + " ],\n" + "#end\n" + "    \"businessObjectDataVersion\" : $businessObjectDataKey.businessObjectDataVersion\n" + "  },\n" +
+            "  \"storageName\" : \"$storageName\",\n" + "  \"newStorageUnitStatus\" : \"$newStorageUnitStatus\"" +
+            "#if($StringUtils.isNotEmpty($oldStorageUnitStatus)),\n  \"oldStorageUnitStatus\" : \"$oldStorageUnitStatus\"" + "#end\n" + "}\n";
 
     public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
 

@@ -23,7 +23,6 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,7 +45,6 @@ import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
-import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
@@ -56,10 +54,8 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
-import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.ConfigurationEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
-import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
@@ -71,33 +67,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
     private NotificationMessageBuilder defaultNotificationMessageBuilder;
 
     @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesNoMessageDefinitions() throws Exception
-    {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
-
-        // Override configuration, so there will be no notification message definitions configured in the system.
-        ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(null);
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        // Trigger the notification and validate the results.
-        assertEquals(0,
-            messageNotificationEventService.processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2).size());
-
-        // Override configuration, so there will be an empty list of notification message definitions configured in the system.
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions()));
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        assertEquals(0,
-            messageNotificationEventService.processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2).size());
-    }
-
-    @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithJsonPayload() throws Exception
+    public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayload() throws Exception
     {
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
@@ -111,48 +81,10 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+                getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
-        // Build the notification message
-        List<NotificationMessage> result =
-            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
-
-        // Validate the notification message.
-        assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
-            NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
-    }
-
-    @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithJsonPayloadAndWithMessageHeaders() throws Exception
-    {
-        // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
-
-        // Get a business object data key.
-        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
-
-        // Create message header definitions.
-        List<MessageHeaderDefinition> messageHeaderDefinitions = new ArrayList<>();
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_ENVIRONMENT, "$herd_environment"));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_TYPE, MESSAGE_TYPE));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_VERSION, MESSAGE_VERSION));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_SOURCE_SYSTEM, SOURCE_SYSTEM));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_ID, "$uuid"));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_USER_ID, "$username"));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_NAMESPACE, "$namespace"));
-
-        // Override configuration.
-        ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                messageHeaderDefinitions)))));
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        // Build the notification message
+        // Build a notification message.
         List<NotificationMessage> result =
             defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
 
@@ -162,76 +94,11 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         String uuid = result.get(0).getMessageHeaders().get(4).getValue();
         assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
         validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
-            NO_ATTRIBUTES, Arrays
-                .asList(new MessageHeader(MESSAGE_HEADER_KEY_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)),
-                    new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_TYPE, MESSAGE_TYPE), new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_VERSION, MESSAGE_VERSION),
-                    new MessageHeader(MESSAGE_HEADER_KEY_SOURCE_SYSTEM, SOURCE_SYSTEM), new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_ID, uuid),
-                    new MessageHeader(MESSAGE_HEADER_KEY_USER_ID, HerdDaoSecurityHelper.SYSTEM_USER),
-                    new MessageHeader(MESSAGE_HEADER_KEY_NAMESPACE, NAMESPACE)), result.get(0));
+            NO_ATTRIBUTES, getExpectedMessageHeaders(uuid), result.get(0));
     }
 
     @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithJsonPayloadNoOldBusinessObjectDataStatus() throws Exception
-    {
-        // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
-
-        // Get a business object data key.
-        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
-
-        // Override configuration.
-        ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        // Build the notification message
-        List<NotificationMessage> result =
-            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, NO_BDATA_STATUS);
-
-        // Validate the notification message.
-        assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, NO_BDATA_STATUS,
-            NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
-    }
-
-    @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithJsonPayloadNoSubPartitionValues() throws Exception
-    {
-        // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(NO_SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
-
-        // Get a business object data key.
-        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
-
-        // Create the expected business object data key.
-        BusinessObjectDataKey expectedBusinessObjectDataKey = (BusinessObjectDataKey) businessObjectDataKey.clone();
-        expectedBusinessObjectDataKey.setSubPartitionValues(null);
-
-        // Override configuration.
-        ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        // Build the notification message
-        List<NotificationMessage> result =
-            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
-
-        // Validate the notification message.
-        assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, expectedBusinessObjectDataKey, BDATA_STATUS,
-            BDATA_STATUS_2, NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
-    }
-
-    @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithJsonPayloadWithMultipleAttributes() throws Exception
+    public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayloadMultipleAttributes() throws Exception
     {
         // Create a list of attributes.
         List<Attribute> attributes = new ArrayList<>();
@@ -259,7 +126,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
-        // Build the notification message
+        // Build a notification message.
         List<NotificationMessage> result =
             defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
 
@@ -270,7 +137,157 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
     }
 
     @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithJsonPayloadWithSingleAttribute() throws Exception
+    public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayloadNoMessageDestination() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayloadNoMessageHeaders() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result =
+            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
+
+        // Validate the notification message.
+        assertEquals(1, CollectionUtils.size(result));
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
+            NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayloadNoMessageType() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(NO_MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayloadNoOldBusinessObjectDataStatus() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result =
+            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, NO_BDATA_STATUS);
+
+        // Validate the notification message.
+        assertEquals(1, CollectionUtils.size(result));
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, NO_BDATA_STATUS,
+            NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayloadNoSubPartitionValues() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(NO_SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Create the expected business object data key.
+        BusinessObjectDataKey expectedBusinessObjectDataKey = (BusinessObjectDataKey) businessObjectDataKey.clone();
+        expectedBusinessObjectDataKey.setSubPartitionValues(null);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result =
+            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
+
+        // Validate the notification message.
+        assertEquals(1, CollectionUtils.size(result));
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, expectedBusinessObjectDataKey, BDATA_STATUS,
+            BDATA_STATUS_2, NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayloadSingleAttribute() throws Exception
     {
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
@@ -288,7 +305,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
-        // Build the notification message
+        // Build a notification message.
         List<NotificationMessage> result =
             defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
 
@@ -299,7 +316,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
     }
 
     @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithJsonPayloadWithSingleSubPartitionValue() throws Exception
+    public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayloadSingleSubPartitionValue() throws Exception
     {
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
@@ -316,7 +333,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
-        // Build the notification message
+        // Build a notification message.
         List<NotificationMessage> result =
             defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
 
@@ -327,21 +344,41 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
     }
 
     @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithXmlPayload() throws Exception
+    public void testBuildBusinessObjectDataStatusChangeMessagesNoMessageDefinitions() throws Exception
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Override configuration, so there will be no notification message definitions configured in the system.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(null);
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message and validate the results.
+        assertEquals(0,
+            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2).size());
+
+        // Override configuration, so there will be an empty list of notification message definitions configured in the system.
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions()));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message and validate the results.
+        assertEquals(0,
+            defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2).size());
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesXmlPayload() throws Exception
     {
         // Test message building with default user and maximum supported number of sub-partition values.
         testBuildBusinessObjectDataStatusChangeMessagesWithXmlPayloadHelper(SUBPARTITION_VALUES, HerdDaoSecurityHelper.SYSTEM_USER);
     }
 
     @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithXmlPayloadNoSubPartitionValues() throws Exception
-    {
-        // Test notification message building with default user and without sub-partition values.
-        testBuildBusinessObjectDataStatusChangeMessagesWithXmlPayloadHelper(NO_SUBPARTITION_VALUES, HerdDaoSecurityHelper.SYSTEM_USER);
-    }
-
-    @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithXmlPayloadWithMessageHeaders() throws Exception
+    public void testBuildBusinessObjectDataStatusChangeMessagesXmlPayloadAndMessageHeaders() throws Exception
     {
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
@@ -350,45 +387,39 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         // Get a business object data key.
         BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
 
-        // Create message header definitions.
-        List<MessageHeaderDefinition> messageHeaderDefinitions = new ArrayList<>();
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_ENVIRONMENT, "$herd_environment"));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_TYPE, MESSAGE_TYPE));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_VERSION, MESSAGE_VERSION));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_SOURCE_SYSTEM, SOURCE_SYSTEM));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_ID, "$uuid"));
-        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_USER_ID, "$username"));
-
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                messageHeaderDefinitions)))));
+                getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
-        // Build the notification message
+        // Build a notification message.
         List<NotificationMessage> result =
             defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
 
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
-        assertEquals(6, CollectionUtils.size(result.get(0).getMessageHeaders()));
+        assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
         String uuid = result.get(0).getMessageHeaders().get(4).getValue();
         assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
-                businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BDATA_STATUS, BDATA_STATUS_2, NO_ATTRIBUTES, Arrays
-                    .asList(new MessageHeader(MESSAGE_HEADER_KEY_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)),
-                        new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_TYPE, MESSAGE_TYPE),
-                        new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_VERSION, MESSAGE_VERSION),
-                        new MessageHeader(MESSAGE_HEADER_KEY_SOURCE_SYSTEM, SOURCE_SYSTEM), new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_ID, uuid),
-                        new MessageHeader(MESSAGE_HEADER_KEY_USER_ID, HerdDaoSecurityHelper.SYSTEM_USER)), result.get(0));
+                businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BDATA_STATUS, BDATA_STATUS_2, NO_ATTRIBUTES,
+                getExpectedMessageHeaders(uuid), result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesXmlPayloadNoSubPartitionValues() throws Exception
+    {
+        // Test notification message building with default user and without sub-partition values.
+        testBuildBusinessObjectDataStatusChangeMessagesWithXmlPayloadHelper(NO_SUBPARTITION_VALUES, HerdDaoSecurityHelper.SYSTEM_USER);
     }
 
     @SuppressWarnings("serial")
     @Test
-    public void testBuildBusinessObjectDataStatusChangeMessagesWithXmlPayloadWithUserInContext() throws Exception
+    public void testBuildBusinessObjectDataStatusChangeMessagesXmlPayloadUserInContext() throws Exception
     {
         Authentication originalAuthentication = SecurityContextHolder.getContext().getAuthentication();
         try
@@ -396,31 +427,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
             SecurityContextHolder.getContext().setAuthentication(new Authentication()
             {
                 @Override
-                public String getName()
-                {
-                    return null;
-                }
-
-                @Override
-                public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException
-                {
-                }
-
-                @Override
-                public boolean isAuthenticated()
-                {
-                    return false;
-                }
-
-                @Override
-                public Object getPrincipal()
-                {
-                    List<GrantedAuthority> authorities = Collections.emptyList();
-                    return new User("testUsername", "", authorities);
-                }
-
-                @Override
-                public Object getDetails()
+                public Collection<? extends GrantedAuthority> getAuthorities()
                 {
                     return null;
                 }
@@ -432,9 +439,33 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
                 }
 
                 @Override
-                public Collection<? extends GrantedAuthority> getAuthorities()
+                public Object getDetails()
                 {
                     return null;
+                }
+
+                @Override
+                public String getName()
+                {
+                    return null;
+                }
+
+                @Override
+                public Object getPrincipal()
+                {
+                    List<GrantedAuthority> authorities = Collections.emptyList();
+                    return new User("testUsername", "", authorities);
+                }
+
+                @Override
+                public boolean isAuthenticated()
+                {
+                    return false;
+                }
+
+                @Override
+                public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException
+                {
                 }
             });
 
@@ -449,17 +480,145 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
     }
 
     @Test
+    public void testBuildBusinessObjectFormatVersionChangeMessagesJsonPayload() throws Exception
+    {
+        // Create a business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, getMessageHeaderDefinitions())))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result =
+            defaultNotificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, FORMAT_VERSION_2.toString());
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
+        String uuid = result.get(0).getMessageHeaders().get(4).getValue();
+        assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
+        validateBusinessObjectFormatVersionChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
+            businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), FORMAT_VERSION_2.toString(), getExpectedMessageHeaders(uuid), result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectFormatVersionChangeMessagesJsonPayloadNoMessageDestination() throws Exception
+    {
+        // Create a business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            defaultNotificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, FORMAT_VERSION_2.toString());
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBuildBusinessObjectFormatVersionChangeMessagesJsonPayloadNoMessageHeaders() throws Exception
+    {
+        // Create a business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result =
+            defaultNotificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, FORMAT_VERSION_2.toString());
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        validateBusinessObjectFormatVersionChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
+            businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), FORMAT_VERSION_2.toString(), NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectFormatVersionChangeMessagesJsonPayloadNoMessageType() throws Exception
+    {
+        // Create a business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(NO_MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            defaultNotificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, FORMAT_VERSION_2.toString());
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBuildBusinessObjectFormatVersionChangeMessagesJsonPayloadNoOldBusinessObjectFormatVersion() throws Exception
+    {
+        // Create a business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result =
+            defaultNotificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        validateBusinessObjectFormatVersionChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
+            businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION, NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
     public void testBuildBusinessObjectFormatVersionChangeMessagesNoMessageDefinitions() throws Exception
     {
-        // Create a business object format entity.
-        BusinessObjectDataInvalidateUnregisteredRequest request =
-            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
-
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
-
-        // Get a business object data key.
-        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+        // Create a business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
 
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
@@ -467,124 +626,253 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         configurationEntity.setValueClob(null);
         configurationDao.saveAndRefresh(configurationEntity);
 
-        // Trigger the notification and validate the results.
-        assertEquals(0, messageNotificationEventService
-            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION).size());
+        // Try to build a notification message and validate the results.
+        assertEquals(0,
+            defaultNotificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION)
+                .size());
 
         // Override configuration, so there will be an empty list of notification message definitions configured in the system.
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions()));
         configurationDao.saveAndRefresh(configurationEntity);
 
-        assertEquals(0, messageNotificationEventService
-            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION).size());
+        // Try to build a notification message and validate the results.
+        assertEquals(0,
+            defaultNotificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION)
+                .size());
     }
 
     @Test
-    public void testBuildBusinessObjectFormatValueChangeMessagesWithJsonPayload() throws Exception
+    public void testBuildStorageUnitStatusChangeMessagesJsonPayload() throws Exception
     {
-        // Create a business object format entity.
-        BusinessObjectDataInvalidateUnregisteredRequest request =
-            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
-
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
-
-        // Get a business object data key.
-        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
 
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
-                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
-        // Trigger the notification.
-        List<NotificationMessage> result = messageNotificationEventService
-            .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
+        // Build a notification message.
+        List<NotificationMessage> result = defaultNotificationMessageBuilder
+            .buildStorageUnitStatusChangeMessages(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2);
 
-        // Validate the notification message.
+        // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectFormatVersionChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
-            businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION, result.get(0));
+        assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
+        String uuid = result.get(0).getMessageHeaders().get(4).getValue();
+        assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
+        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
+            STORAGE_UNIT_STATUS_2, getExpectedMessageHeaders(uuid), result.get(0));
     }
 
     @Test
-    public void testBuildBusinessObjectFormatValueChangeMessagesWithJsonPayloadWithNoMessageType() throws Exception
+    public void testBuildStorageUnitStatusChangeMessagesJsonPayloadNoMessageDestination() throws Exception
     {
-        // Create a business object format entity.
-        BusinessObjectDataInvalidateUnregisteredRequest request =
-            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
-
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
-
-        // Get a business object data key.
-        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
 
         // Override configuration.
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(NO_MESSAGE_TYPE, MESSAGE_DESTINATION,
-                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        try
-        {
-            // Trigger the notification.
-            messageNotificationEventService
-                .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
-
-            // Should not get here
-            fail();
-        }
-        catch (IllegalStateException illegalStateException)
-        {
-            assertEquals(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
-                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()), illegalStateException.getMessage());
-        }
-    }
-
-    @Test
-    public void testBuildBusinessObjectFormatValueChangeMessagesWithJsonPayloadWithNoMessageDestination() throws Exception
-    {
-        // Create a business object format entity.
-        BusinessObjectDataInvalidateUnregisteredRequest request =
-            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
-
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
-
-        // Get a business object data key.
-        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
-
-        // Override configuration.
-        ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
             new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
         configurationDao.saveAndRefresh(configurationEntity);
 
+        // Try to build a notification message.
         try
         {
-            // Trigger the notification.
-            messageNotificationEventService
-                .processBusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION);
-
-            // Should not get here
+            defaultNotificationMessageBuilder
+                .buildStorageUnitStatusChangeMessages(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2);
             fail();
         }
         catch (IllegalStateException illegalStateException)
         {
             assertEquals(String.format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
-                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey()), illegalStateException.getMessage());
+                ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()), illegalStateException.getMessage());
         }
+    }
+
+    @Test
+    public void testBuildStorageUnitStatusChangeMessagesJsonPayloadNoMessageHeaders() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result = defaultNotificationMessageBuilder
+            .buildStorageUnitStatusChangeMessages(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
+            STORAGE_UNIT_STATUS_2, NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testBuildStorageUnitStatusChangeMessagesJsonPayloadNoMessageType() throws Exception
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(NO_MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            defaultNotificationMessageBuilder
+                .buildStorageUnitStatusChangeMessages(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2);
+            fail();
+        }
+        catch (IllegalStateException illegalStateException)
+        {
+            assertEquals(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()), illegalStateException.getMessage());
+        }
+    }
+
+    @Test
+    public void testBuildStorageUnitStatusChangeMessagesJsonPayloadNoOldStorageUnitStatus() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result = defaultNotificationMessageBuilder
+            .buildStorageUnitStatusChangeMessages(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
+            NO_STORAGE_UNIT_STATUS, NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testBuildStorageUnitStatusChangeMessagesJsonPayloadNoSubPartitionValues() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(NO_SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Create the expected business object data key.
+        BusinessObjectDataKey expectedBusinessObjectDataKey = (BusinessObjectDataKey) businessObjectDataKey.clone();
+        expectedBusinessObjectDataKey.setSubPartitionValues(null);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result = defaultNotificationMessageBuilder
+            .buildStorageUnitStatusChangeMessages(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, expectedBusinessObjectDataKey, STORAGE_NAME,
+            STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2, NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testBuildStorageUnitStatusChangeMessagesJsonPayloadSingleSubPartitionValue() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES.subList(0, 1), NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result = defaultNotificationMessageBuilder
+            .buildStorageUnitStatusChangeMessages(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
+            STORAGE_UNIT_STATUS_2, NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testBuildStorageUnitStatusChangeMessagesNoMessageDefinitions() throws Exception
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Override configuration, so there will be no notification message definitions configured in the system.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(null);
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message and validate the results.
+        assertEquals(0, defaultNotificationMessageBuilder
+            .buildStorageUnitStatusChangeMessages(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2).size());
+
+        // Override configuration, so there will be an empty list of notification message definitions configured in the system.
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions()));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message and validate the results.
+        assertEquals(0, defaultNotificationMessageBuilder
+            .buildStorageUnitStatusChangeMessages(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2).size());
     }
 
     @Test
@@ -756,14 +1044,55 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         }
         catch (MethodInvocationException e)
         {
-            assertEquals("Variable $incoming_message_correlation_id has not been set at systemMonitorResponse[line 11, column 29]",
-                e.getMessage());
+            assertEquals("Variable $incoming_message_correlation_id has not been set at systemMonitorResponse[line 11, column 29]", e.getMessage());
         }
         finally
         {
             // Restore the property sources so we don't affect other tests.
             restorePropertySourceInEnvironment();
         }
+    }
+
+    /**
+     * Returns a list of expected message headers.
+     *
+     * @param expectedUuid the expected UUID
+     *
+     * @return the list of message headers
+     */
+    private List<MessageHeader> getExpectedMessageHeaders(String expectedUuid)
+    {
+        List<MessageHeader> messageHeaders = new ArrayList<>();
+
+        messageHeaders.add(new MessageHeader(MESSAGE_HEADER_KEY_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)));
+        messageHeaders.add(new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_TYPE, MESSAGE_TYPE));
+        messageHeaders.add(new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_VERSION, MESSAGE_VERSION));
+        messageHeaders.add(new MessageHeader(MESSAGE_HEADER_KEY_SOURCE_SYSTEM, SOURCE_SYSTEM));
+        messageHeaders.add(new MessageHeader(MESSAGE_HEADER_KEY_MESSAGE_ID, expectedUuid));
+        messageHeaders.add(new MessageHeader(MESSAGE_HEADER_KEY_USER_ID, HerdDaoSecurityHelper.SYSTEM_USER));
+        messageHeaders.add(new MessageHeader(MESSAGE_HEADER_KEY_NAMESPACE, BDEF_NAMESPACE));
+
+        return messageHeaders;
+    }
+
+    /**
+     * Returns a list of message header definitions.
+     *
+     * @return the list of message header definitions
+     */
+    private List<MessageHeaderDefinition> getMessageHeaderDefinitions()
+    {
+        List<MessageHeaderDefinition> messageHeaderDefinitions = new ArrayList<>();
+
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_ENVIRONMENT, "$herd_environment"));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_TYPE, MESSAGE_TYPE));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_VERSION, MESSAGE_VERSION));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_SOURCE_SYSTEM, SOURCE_SYSTEM));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_ID, "$uuid"));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_USER_ID, "$username"));
+        messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_NAMESPACE, "$namespace"));
+
+        return messageHeaderDefinitions;
     }
 
     /**
@@ -790,7 +1119,7 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
-        // Build the notification message
+        // Build a notification message.
         List<NotificationMessage> result =
             defaultNotificationMessageBuilder.buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2);
 
@@ -853,11 +1182,12 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
      * @param expectedBusinessObjectFormatKey the expected business object format key
      * @param expectedNewBusinessObjectFormatVersion the expected new business object format version
      * @param expectedOldBusinessObjectFormatVersion the expected old business object format version
+     * @param expectedMessageHeaders the list of expected message headers
      * @param notificationMessage the notification message to be validated
      */
     private void validateBusinessObjectFormatVersionChangeMessageWithJsonPayload(String expectedMessageType, String expectedMessageDestination,
         BusinessObjectFormatKey expectedBusinessObjectFormatKey, String expectedNewBusinessObjectFormatVersion, String expectedOldBusinessObjectFormatVersion,
-        NotificationMessage notificationMessage) throws IOException
+        List<MessageHeader> expectedMessageHeaders, NotificationMessage notificationMessage) throws IOException
     {
         assertNotNull(notificationMessage);
 
@@ -871,6 +1201,52 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         assertEquals(expectedBusinessObjectFormatKey, businessObjectFormatVersionChangeJsonMessagePayload.businessObjectFormatKey);
         assertEquals(expectedNewBusinessObjectFormatVersion, businessObjectFormatVersionChangeJsonMessagePayload.newBusinessObjectFormatVersion);
         assertEquals(expectedOldBusinessObjectFormatVersion, businessObjectFormatVersionChangeJsonMessagePayload.oldBusinessObjectFormatVersion);
+        assertEquals(expectedMessageHeaders, notificationMessage.getMessageHeaders());
+    }
+
+    /**
+     * Validates a storage unit status change notification message with JSON payload.
+     *
+     * @param expectedMessageType the expected message type
+     * @param expectedMessageDestination the expected message destination
+     * @param expectedBusinessObjectDataKey the expected business object data key
+     * @param expectedStorageName the expected storage name
+     * @param expectedNewStorageUnitStatus the expected new business object data status
+     * @param expectedOldStorageUnitStatus the expected old business object data status
+     * @param expectedMessageHeaders the list of expected message headers
+     * @param notificationMessage the notification message to be validated
+     */
+    private void validateStorageUnitStatusChangeMessageWithJsonPayload(String expectedMessageType, String expectedMessageDestination,
+        BusinessObjectDataKey expectedBusinessObjectDataKey, String expectedStorageName, String expectedNewStorageUnitStatus,
+        String expectedOldStorageUnitStatus, List<MessageHeader> expectedMessageHeaders, NotificationMessage notificationMessage) throws IOException
+    {
+        assertNotNull(notificationMessage);
+
+        assertEquals(expectedMessageType, notificationMessage.getMessageType());
+        assertEquals(expectedMessageDestination, notificationMessage.getMessageDestination());
+
+        StorageUnitStatusChangeJsonMessagePayload storageUnitStatusChangeJsonMessagePayload =
+            jsonHelper.unmarshallJsonToObject(StorageUnitStatusChangeJsonMessagePayload.class, notificationMessage.getMessageText());
+
+        assertEquals(StringUtils.length(storageUnitStatusChangeJsonMessagePayload.eventDate), StringUtils.length(HerdDateUtils.now().toString()));
+        assertEquals(expectedBusinessObjectDataKey, storageUnitStatusChangeJsonMessagePayload.businessObjectDataKey);
+        assertEquals(expectedStorageName, storageUnitStatusChangeJsonMessagePayload.storageName);
+        assertEquals(expectedNewStorageUnitStatus, storageUnitStatusChangeJsonMessagePayload.newStorageUnitStatus);
+        assertEquals(expectedOldStorageUnitStatus, storageUnitStatusChangeJsonMessagePayload.oldStorageUnitStatus);
+        assertEquals(expectedMessageHeaders, notificationMessage.getMessageHeaders());
+    }
+
+    private static class StorageUnitStatusChangeJsonMessagePayload
+    {
+        public BusinessObjectDataKey businessObjectDataKey;
+
+        public String eventDate;
+
+        public String newStorageUnitStatus;
+
+        public String oldStorageUnitStatus;
+
+        public String storageName;
     }
 
     private static class BusinessObjectDataStatusChangeJsonMessagePayload
