@@ -15,23 +15,17 @@
 */
 package org.finra.herd.service;
 
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-import org.finra.herd.dao.BusinessObjectDefinitionDaoTestHelper;
-import org.finra.herd.dao.FileTypeDaoTestHelper;
-import org.finra.herd.dao.StorageDaoTestHelper;
-import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
@@ -39,9 +33,12 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
+import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -50,329 +47,229 @@ import org.finra.herd.service.impl.BusinessObjectDataServiceImpl;
 public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
 {
     @Autowired
-    private BusinessObjectDefinitionDaoTestHelper businessObjectDefinitionDaoTestHelper;
-
-    @Autowired
-    private StorageDaoTestHelper storageDaoTestHelper;
-
-    @Autowired
-    private RelationalTableRegistrationService relationalTableRegistrationService;
-
-    @Autowired
-    private FileTypeDaoTestHelper fileTypeDaoTestHelper;
-
-    @Autowired
-    private BusinessObjectFormatService businessObjectFormatService;
-
-    @Autowired
-    private BusinessObjectDefinitionService businessObjectDefinitionService;
-
-    @Before
-    public void setupData()
-    {
-        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            businessObjectDefinitionServiceTestHelper.getNewAttributes());
-        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.RELATIONAL);
-        fileTypeDaoTestHelper.createFileTypeEntity(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
-    }
+    @Qualifier(value = "relationalTableRegistrationServiceImpl")
+    private RelationalTableRegistrationService relationalTableRegistrationServiceImpl;
 
     @Test
     public void testCreateRelationalTableRegistration()
     {
-        String businessObjectFormatAttributeName =
-            configurationHelper.getProperty(ConfigurationValue.RELATIONAL_TABLE_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME, String.class);
+        // Create database entities required for relational table registration testing.
+        relationalTableRegistrationServiceTestHelper
+            .createDatabaseEntitiesForRelationalTableRegistrationTesting(BDEF_NAMESPACE, DATA_PROVIDER_NAME, STORAGE_NAME);
 
-        RelationalTableRegistrationCreateRequest createRequest = new RelationalTableRegistrationCreateRequest();
-        createRequest.setNamespace(BDEF_NAMESPACE);
-        createRequest.setDataProviderName(DATA_PROVIDER_NAME);
-        createRequest.setBusinessObjectDefinitionName(BDEF_NAME);
-        createRequest.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        createRequest.setRelationalTableName(RELATIONAL_TABLE_NAME);
-        createRequest.setStorageName(STORAGE_NAME);
-        createRequest.setBusinessObjectDefinitionDisplayName(BDEF_DISPLAY_NAME);
+        // Pick one of the in-memory database tables to be registered as a relational table.
+        String relationalSchemaName = "PUBLIC";
+        String relationalTableName = BusinessObjectDefinitionEntity.TABLE_NAME.toUpperCase();
 
-        BusinessObjectData businessObjectData = relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
+        // Create a relational table registration create request for a table that is part of the in-memory database setup as part of DAO mocks.
+        RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest =
+            new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
+                relationalSchemaName, relationalTableName, STORAGE_NAME);
+
+        // Create a relational table registration.
+        BusinessObjectData businessObjectData = relationalTableRegistrationService
+            .createRelationalTableRegistration(relationalTableRegistrationCreateRequest, APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
+
+        // Create an expected storage unit.
+        StorageUnit expectedStorageUnit = new StorageUnit();
+        expectedStorageUnit
+            .setStorage(new Storage(STORAGE_NAME, StoragePlatformEntity.RELATIONAL, relationalTableRegistrationServiceTestHelper.getStorageAttributes()));
+        expectedStorageUnit.setStorageUnitStatus(StorageUnitStatusEntity.ENABLED);
+
+        // Create an expected business object data.
         BusinessObjectData expectedBusinessObjectData = new BusinessObjectData();
         expectedBusinessObjectData.setId(businessObjectData.getId());
         expectedBusinessObjectData.setNamespace(BDEF_NAMESPACE);
         expectedBusinessObjectData.setBusinessObjectDefinitionName(BDEF_NAME);
         expectedBusinessObjectData.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        expectedBusinessObjectData.setVersion(0);
-        expectedBusinessObjectData.setStatus("VALID");
-        expectedBusinessObjectData.setLatestVersion(true);
         expectedBusinessObjectData.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
+        expectedBusinessObjectData.setBusinessObjectFormatVersion(INITIAL_FORMAT_VERSION);
         expectedBusinessObjectData.setPartitionValue(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_VALUE);
-        expectedBusinessObjectData.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
-
-        StorageUnit expectedStorageUnit = new StorageUnit();
-        Storage expectedStorage = new Storage();
-        expectedStorage.setName(STORAGE_NAME);
-        expectedStorage.setStoragePlatformName(StoragePlatformEntity.RELATIONAL);
-        expectedStorageUnit.setStorage(expectedStorage);
-        expectedStorageUnit.setStorageUnitStatus(StorageUnitStatusEntity.ENABLED);
-
-        expectedBusinessObjectData.setStorageUnits(Arrays.asList(expectedStorageUnit));
         expectedBusinessObjectData.setSubPartitionValues(new ArrayList<>());
+        expectedBusinessObjectData.setVersion(INITIAL_DATA_VERSION);
+        expectedBusinessObjectData.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
+        expectedBusinessObjectData.setLatestVersion(LATEST_VERSION_FLAG_SET);
+        expectedBusinessObjectData.setStatus(BusinessObjectDataStatusEntity.VALID);
+        expectedBusinessObjectData.setStorageUnits(Collections.singletonList(expectedStorageUnit));
         expectedBusinessObjectData.setAttributes(new ArrayList<>());
         expectedBusinessObjectData.setBusinessObjectDataParents(new ArrayList<>());
         expectedBusinessObjectData.setBusinessObjectDataChildren(new ArrayList<>());
 
-        assertEquals(businessObjectData, expectedBusinessObjectData);
+        // Validate the response.
+        assertEquals(expectedBusinessObjectData, businessObjectData);
 
-        BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
-        businessObjectFormatKey.setNamespace(BDEF_NAMESPACE);
-        businessObjectFormatKey.setBusinessObjectDefinitionName(BDEF_NAME);
-        businessObjectFormatKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        businessObjectFormatKey.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
-        businessObjectFormatKey.setBusinessObjectFormatVersion(0);
+        // Create a business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, INITIAL_FORMAT_VERSION);
 
+        // Retrieve business object format that was created as part of the relational table registration.
         BusinessObjectFormat businessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKey);
+
+        // Create an expected schema.
+        Schema expectedSchema = new Schema();
+        expectedSchema.setColumns(relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns());
+        expectedSchema.setNullValue(EMPTY_STRING);
+
+        // Build an expected business object format.
         BusinessObjectFormat expectedBusinessObjectFormat = new BusinessObjectFormat();
         expectedBusinessObjectFormat.setId(businessObjectFormat.getId());
         expectedBusinessObjectFormat.setNamespace(BDEF_NAMESPACE);
         expectedBusinessObjectFormat.setBusinessObjectDefinitionName(BDEF_NAME);
-        expectedBusinessObjectFormat.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
         expectedBusinessObjectFormat.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
         expectedBusinessObjectFormat.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
-        expectedBusinessObjectFormat.setBusinessObjectFormatVersion(0);
-        expectedBusinessObjectFormat.setLatestVersion(true);
+        expectedBusinessObjectFormat.setBusinessObjectFormatVersion(INITIAL_FORMAT_VERSION);
+        expectedBusinessObjectFormat.setLatestVersion(LATEST_VERSION_FLAG_SET);
+        expectedBusinessObjectFormat.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
         expectedBusinessObjectFormat.setBusinessObjectFormatParents(new ArrayList<>());
         expectedBusinessObjectFormat.setBusinessObjectFormatChildren(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributeDefinitions(new ArrayList<>());
-        expectedBusinessObjectFormat.setAttributes(Arrays.asList(new Attribute(businessObjectFormatAttributeName, RELATIONAL_TABLE_NAME)));
+        expectedBusinessObjectFormat.setAttributes(Arrays.asList(
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
+                relationalSchemaName),
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
+                relationalTableName)));
+        expectedBusinessObjectFormat.setSchema(expectedSchema);
 
-        assertEquals(businessObjectFormat, expectedBusinessObjectFormat);
+        // Validate the newly created business object format.
+        assertEquals(expectedBusinessObjectFormat, businessObjectFormat);
 
-        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
-        businessObjectDefinitionKey.setNamespace(BDEF_NAMESPACE);
-        businessObjectDefinitionKey.setBusinessObjectDefinitionName(BDEF_NAME);
-        BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, false);
-        BusinessObjectDefinition expectedBusinessObjectDefinition = (BusinessObjectDefinition) businessObjectDefinition.clone();
+        // Create a business object definition key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
+
+        // Retrieve business object definition that was created as part of the relational table registration.
+        BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, true);
+
+        // Create an expected business object definition.
+        BusinessObjectDefinition expectedBusinessObjectDefinition = new BusinessObjectDefinition();
+        expectedBusinessObjectDefinition.setId(businessObjectDefinition.getId());
         expectedBusinessObjectDefinition.setNamespace(BDEF_NAMESPACE);
         expectedBusinessObjectDefinition.setBusinessObjectDefinitionName(BDEF_NAME);
         expectedBusinessObjectDefinition.setDataProviderName(DATA_PROVIDER_NAME);
         expectedBusinessObjectDefinition.setDisplayName(BDEF_DISPLAY_NAME);
+        expectedBusinessObjectDefinition.setAttributes(new ArrayList<>());
+        expectedBusinessObjectDefinition.setSampleDataFiles(new ArrayList<>());
+        expectedBusinessObjectDefinition.setCreatedByUserId(businessObjectDefinition.getCreatedByUserId());
+        expectedBusinessObjectDefinition.setLastUpdatedByUserId(businessObjectDefinition.getLastUpdatedByUserId());
+        expectedBusinessObjectDefinition.setLastUpdatedOn(businessObjectDefinition.getLastUpdatedOn());
+        expectedBusinessObjectDefinition.setBusinessObjectDefinitionChangeEvents(businessObjectDefinition.getBusinessObjectDefinitionChangeEvents());
 
-        assertEquals(businessObjectDefinition, expectedBusinessObjectDefinition);
+        // Validate the newly created business object definition.
+        assertEquals(expectedBusinessObjectDefinition, businessObjectDefinition);
     }
 
     @Test
-    public void testCreateRelationalTableRegistrationWithNullOptionalFields()
+    public void testCreateRelationalTableRegistrationWithAppendToExistingBusinessObjectDefinitionSetToTrue()
     {
-        String businessObjectFormatAttributeName =
-            configurationHelper.getProperty(ConfigurationValue.RELATIONAL_TABLE_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME, String.class);
+        // Create an existing business object definition.
+        BusinessObjectDefinitionEntity existingBusinessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, DESCRIPTION, BDEF_DISPLAY_NAME, new ArrayList<>());
 
-        RelationalTableRegistrationCreateRequest createRequest = new RelationalTableRegistrationCreateRequest();
-        createRequest.setNamespace(BDEF_NAMESPACE);
-        createRequest.setDataProviderName(DATA_PROVIDER_NAME);
-        createRequest.setBusinessObjectDefinitionName(BDEF_NAME);
-        createRequest.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        createRequest.setRelationalTableName(RELATIONAL_TABLE_NAME);
-        createRequest.setStorageName(STORAGE_NAME);
-        createRequest.setBusinessObjectDefinitionDisplayName(null);
+        // Create database entities required for relational table registration testing.
+        relationalTableRegistrationServiceTestHelper
+            .createDatabaseEntitiesForRelationalTableRegistrationTesting(STORAGE_NAME);
 
-        BusinessObjectData businessObjectData = relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
+        // Pick one of the in-memory database tables to be registered as a relational table.
+        String relationalSchemaName = "PUBLIC";
+        String relationalTableName = BusinessObjectDefinitionEntity.TABLE_NAME.toUpperCase();
+
+        // Create a relational table registration create request for a table that is part of the in-memory database setup as part of DAO mocks.
+        RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest =
+            new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
+                relationalSchemaName, relationalTableName, STORAGE_NAME);
+
+        // Create a relational table registration.
+        BusinessObjectData businessObjectData = relationalTableRegistrationService
+            .createRelationalTableRegistration(relationalTableRegistrationCreateRequest, APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_TRUE);
+
+        // Create an expected storage unit.
+        StorageUnit expectedStorageUnit = new StorageUnit();
+        expectedStorageUnit
+            .setStorage(new Storage(STORAGE_NAME, StoragePlatformEntity.RELATIONAL, relationalTableRegistrationServiceTestHelper.getStorageAttributes()));
+        expectedStorageUnit.setStorageUnitStatus(StorageUnitStatusEntity.ENABLED);
+
+        // Create an expected business object data.
         BusinessObjectData expectedBusinessObjectData = new BusinessObjectData();
         expectedBusinessObjectData.setId(businessObjectData.getId());
         expectedBusinessObjectData.setNamespace(BDEF_NAMESPACE);
         expectedBusinessObjectData.setBusinessObjectDefinitionName(BDEF_NAME);
         expectedBusinessObjectData.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        expectedBusinessObjectData.setVersion(0);
-        expectedBusinessObjectData.setStatus("VALID");
-        expectedBusinessObjectData.setLatestVersion(true);
         expectedBusinessObjectData.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
+        expectedBusinessObjectData.setBusinessObjectFormatVersion(INITIAL_FORMAT_VERSION);
         expectedBusinessObjectData.setPartitionValue(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_VALUE);
-        expectedBusinessObjectData.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
-
-        StorageUnit expectedStorageUnit = new StorageUnit();
-        Storage expectedStorage = new Storage();
-        expectedStorage.setName(STORAGE_NAME);
-        expectedStorage.setStoragePlatformName(StoragePlatformEntity.RELATIONAL);
-        expectedStorageUnit.setStorage(expectedStorage);
-        expectedStorageUnit.setStorageUnitStatus(StorageUnitStatusEntity.ENABLED);
-
-        expectedBusinessObjectData.setStorageUnits(Arrays.asList(expectedStorageUnit));
         expectedBusinessObjectData.setSubPartitionValues(new ArrayList<>());
+        expectedBusinessObjectData.setVersion(INITIAL_DATA_VERSION);
+        expectedBusinessObjectData.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
+        expectedBusinessObjectData.setLatestVersion(LATEST_VERSION_FLAG_SET);
+        expectedBusinessObjectData.setStatus(BusinessObjectDataStatusEntity.VALID);
+        expectedBusinessObjectData.setStorageUnits(Collections.singletonList(expectedStorageUnit));
         expectedBusinessObjectData.setAttributes(new ArrayList<>());
         expectedBusinessObjectData.setBusinessObjectDataParents(new ArrayList<>());
         expectedBusinessObjectData.setBusinessObjectDataChildren(new ArrayList<>());
 
-        assertEquals(businessObjectData, expectedBusinessObjectData);
+        // Validate the response.
+        assertEquals(expectedBusinessObjectData, businessObjectData);
 
-        BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
-        businessObjectFormatKey.setNamespace(BDEF_NAMESPACE);
-        businessObjectFormatKey.setBusinessObjectDefinitionName(BDEF_NAME);
-        businessObjectFormatKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        businessObjectFormatKey.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
-        businessObjectFormatKey.setBusinessObjectFormatVersion(0);
+        // Create a business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, INITIAL_FORMAT_VERSION);
 
+        // Retrieve business object format that was created as part of the relational table registration.
         BusinessObjectFormat businessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKey);
+
+        // Create an expected schema.
+        Schema expectedSchema = new Schema();
+        expectedSchema.setColumns(relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns());
+        expectedSchema.setNullValue(EMPTY_STRING);
+
+        // Build an expected business object format.
         BusinessObjectFormat expectedBusinessObjectFormat = new BusinessObjectFormat();
         expectedBusinessObjectFormat.setId(businessObjectFormat.getId());
         expectedBusinessObjectFormat.setNamespace(BDEF_NAMESPACE);
         expectedBusinessObjectFormat.setBusinessObjectDefinitionName(BDEF_NAME);
-        expectedBusinessObjectFormat.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
         expectedBusinessObjectFormat.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
         expectedBusinessObjectFormat.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
-        expectedBusinessObjectFormat.setBusinessObjectFormatVersion(0);
-        expectedBusinessObjectFormat.setLatestVersion(true);
+        expectedBusinessObjectFormat.setBusinessObjectFormatVersion(INITIAL_FORMAT_VERSION);
+        expectedBusinessObjectFormat.setLatestVersion(LATEST_VERSION_FLAG_SET);
+        expectedBusinessObjectFormat.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
         expectedBusinessObjectFormat.setBusinessObjectFormatParents(new ArrayList<>());
         expectedBusinessObjectFormat.setBusinessObjectFormatChildren(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributeDefinitions(new ArrayList<>());
-        expectedBusinessObjectFormat.setAttributes(Arrays.asList(new Attribute(businessObjectFormatAttributeName, RELATIONAL_TABLE_NAME)));
+        expectedBusinessObjectFormat.setAttributes(Arrays.asList(
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
+                relationalSchemaName),
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
+                relationalTableName)));
+        expectedBusinessObjectFormat.setSchema(expectedSchema);
 
-        assertEquals(businessObjectFormat, expectedBusinessObjectFormat);
+        // Validate the newly created business object format.
+        assertEquals(expectedBusinessObjectFormat, businessObjectFormat);
 
-        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
-        businessObjectDefinitionKey.setNamespace(BDEF_NAMESPACE);
-        businessObjectDefinitionKey.setBusinessObjectDefinitionName(BDEF_NAME);
-        BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey, false);
-        BusinessObjectDefinition expectedBusinessObjectDefinition = (BusinessObjectDefinition) businessObjectDefinition.clone();
-        expectedBusinessObjectDefinition.setNamespace(BDEF_NAMESPACE);
-        expectedBusinessObjectDefinition.setBusinessObjectDefinitionName(BDEF_NAME);
-        expectedBusinessObjectDefinition.setDataProviderName(DATA_PROVIDER_NAME);
-        expectedBusinessObjectDefinition.setDisplayName(null);
+        // Create a business object definition key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
 
-        assertEquals(businessObjectDefinition, expectedBusinessObjectDefinition);
+        // Retrieve business object definition that was created as part of the relational table registration.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey);
+
+        // Validate the newly created business object definition.
+        assertEquals(existingBusinessObjectDefinitionEntity, businessObjectDefinitionEntity);
     }
 
+    /**
+     * This unit test is to get coverage for the methods that have an explicit annotation for transaction propagation.
+     */
     @Test
-    public void testCreateRelationalTableRegistrationMissingRequiredParameters()
+    public void testRelationalTableRegistrationServiceMethodsNewTransactionPropagation()
     {
-        RelationalTableRegistrationCreateRequest createRequest = new RelationalTableRegistrationCreateRequest();
-        createRequest.setNamespace(BDEF_NAMESPACE);
-        createRequest.setDataProviderName(DATA_PROVIDER_NAME);
-        createRequest.setBusinessObjectDefinitionName(BDEF_NAME);
-        createRequest.setRelationalTableName(RELATIONAL_TABLE_NAME);
-        createRequest.setStorageName(STORAGE_NAME);
-        createRequest.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-
         try
         {
-            createRequest.setNamespace(null);
-            relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
+            relationalTableRegistrationServiceImpl
+                .createRelationalTableRegistration(new RelationalTableRegistrationCreateRequest(), APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
             fail();
         }
-        catch (IllegalArgumentException ex)
+        catch (IllegalArgumentException e)
         {
-            Assert.assertEquals("A namespace must be specified.", ex.getMessage());
-        }
-
-        createRequest.setNamespace(BDEF_NAMESPACE);
-        try
-        {
-            createRequest.setBusinessObjectDefinitionName("");
-            relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
-            fail();
-        }
-        catch (IllegalArgumentException ex)
-        {
-            Assert.assertEquals("A business object definition name must be specified.", ex.getMessage());
-        }
-
-        createRequest.setBusinessObjectDefinitionName(BDEF_NAME);
-        try
-        {
-            createRequest.setBusinessObjectFormatUsage("  ");
-            relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
-            fail();
-        }
-        catch (IllegalArgumentException ex)
-        {
-            Assert.assertEquals("A business object format usage must be specified.", ex.getMessage());
-        }
-    }
-
-    @Test
-    public void testCreateRelationalTableRegistrationRequiredEntityNotFound()
-    {
-        RelationalTableRegistrationCreateRequest createRequest = new RelationalTableRegistrationCreateRequest();
-        createRequest.setNamespace(BDEF_NAMESPACE);
-        createRequest.setDataProviderName(DATA_PROVIDER_NAME);
-        createRequest.setBusinessObjectDefinitionName(BDEF_NAME);
-        createRequest.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        createRequest.setRelationalTableName(RELATIONAL_TABLE_NAME);
-        createRequest.setStorageName(STORAGE_NAME);
-
-        createRequest.setNamespace(BDEF_NAMESPACE_2);
-        try
-        {
-            relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
-            fail();
-        }
-        catch (ObjectNotFoundException ex)
-        {
-            Assert.assertEquals(String.format("Namespace \"%s\" doesn't exist.", BDEF_NAMESPACE_2), ex.getMessage());
-        }
-
-        createRequest.setNamespace(BDEF_NAMESPACE);
-        createRequest.setDataProviderName(DATA_PROVIDER_NAME_2);
-        try
-        {
-            relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
-            fail();
-        }
-        catch (ObjectNotFoundException ex)
-        {
-            Assert.assertEquals(String.format("Data provider with name \"%s\" doesn't exist.", DATA_PROVIDER_NAME_2), ex.getMessage());
-        }
-
-        createRequest.setDataProviderName(DATA_PROVIDER_NAME);
-        createRequest.setStorageName(STORAGE_NAME_2);
-        try
-        {
-            relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
-            fail();
-        }
-        catch (ObjectNotFoundException ex)
-        {
-            Assert.assertEquals(String.format("Storage with name \"%s\" doesn't exist.", STORAGE_NAME_2), ex.getMessage());
-        }
-    }
-
-    @Test
-    public void testCreateRelationalTableRegistrationBusinessObjectDefinitionExists()
-    {
-        RelationalTableRegistrationCreateRequest createRequest = new RelationalTableRegistrationCreateRequest();
-        createRequest.setNamespace(BDEF_NAMESPACE);
-        createRequest.setDataProviderName(DATA_PROVIDER_NAME);
-        createRequest.setBusinessObjectDefinitionName(BDEF_NAME_2);
-        createRequest.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        createRequest.setRelationalTableName(RELATIONAL_TABLE_NAME);
-        createRequest.setStorageName(STORAGE_NAME);
-
-        try
-        {
-            relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
-            fail();
-        }
-        catch (AlreadyExistsException ex)
-        {
-            Assert.assertEquals(String.format("Unable to create business object definition with name \"%s\" because it already exists for namespace \"%s\".", BDEF_NAME_2, BDEF_NAMESPACE), ex.getMessage());
-        }
-    }
-
-    @Test
-    public void testCreateRelationalTableRegistrationWrongStorageName()
-    {
-        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.S3);
-
-        RelationalTableRegistrationCreateRequest createRequest = new RelationalTableRegistrationCreateRequest();
-        createRequest.setNamespace(BDEF_NAMESPACE);
-        createRequest.setDataProviderName(DATA_PROVIDER_NAME);
-        createRequest.setBusinessObjectDefinitionName(BDEF_NAME);
-        createRequest.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        createRequest.setRelationalTableName(RELATIONAL_TABLE_NAME);
-        createRequest.setStorageName(STORAGE_NAME_2);
-
-        try
-        {
-            relationalTableRegistrationService.createRelationalTableRegistration(createRequest);
-            fail();
-        }
-        catch (IllegalArgumentException ex)
-        {
-            Assert.assertEquals(String.format("Only %s storage platform is supported.", StoragePlatformEntity.RELATIONAL), ex.getMessage());
+            assertEquals("A namespace must be specified.", e.getMessage());
         }
     }
 }

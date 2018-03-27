@@ -864,7 +864,7 @@ public class BusinessObjectDataServiceTestHelper
     {
         // Create a persisted business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
+            .createBusinessObjectDataEntity(AbstractServiceTest.BDEF_NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                 AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE, subPartitionValues,
                 AbstractServiceTest.DATA_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
 

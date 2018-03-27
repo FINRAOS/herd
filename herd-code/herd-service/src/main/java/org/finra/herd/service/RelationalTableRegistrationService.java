@@ -19,17 +19,20 @@ import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 
 /**
- * relational table registration service
+ * The relational table registration service.
  */
 public interface RelationalTableRegistrationService
 {
     /**
-     * Create relational table registration in Herd
-     * Includes create business object definition, business object format and business object data
+     * Creates a new relational table registration. The relation table registration includes creation of the following entities: <ul> <li>a business object
+     * definition</li> <li>a business object format with schema extracted from the specified relational table in the specified storage of RELATIONAL storage
+     * platform type</li> <li>a business object data</li> <li>a storage unit that links together the business object data with the storage</li> </ul>
      *
-     * @param relationalTableRegistrationCreateRequest relational table registration create request
+     * @param relationalTableRegistrationCreateRequest the relational table registration create request
+     * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
-     * @return business object data
+     * @return the information for the newly created business object data
      */
-    public BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest);
+    BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+        Boolean appendToExistingBusinessObjectDefinition);
 }

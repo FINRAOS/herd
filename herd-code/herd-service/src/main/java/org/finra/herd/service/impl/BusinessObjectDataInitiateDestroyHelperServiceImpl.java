@@ -124,6 +124,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
      * <p/>
      * This implementation starts a new transaction.
      */
+    @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectData executeInitiateDestroyAfterStep(BusinessObjectDataDestroyDto businessObjectDataDestroyDto)

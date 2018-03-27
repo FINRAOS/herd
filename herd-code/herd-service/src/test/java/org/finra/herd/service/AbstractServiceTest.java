@@ -170,6 +170,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean ALLOW_MISSING_DATA = true;
 
+    public static final Boolean APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE = false;
+
+    public static final Boolean APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_TRUE = true;
+
     public static final String AWS_SECURITY_GROUP_ID = "UT_AwsSecurityGroupId_" + RANDOM_SUFFIX;
 
     public static final String AWS_SQS_QUEUE_NAME = "AWS_SQS_QUEUE_NAME";
@@ -272,6 +276,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final String BUSINESS_OBJECT_FORMAT_KEY_AS_STRING = "UT_BusinessObjectFormatKeyAsString_" + RANDOM_SUFFIX;
+
     public static final String BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
         "  \"eventDate\" : \"$current_time\",\n" +
         "  \"businessObjectFormatKey\" : {\n" +
@@ -327,8 +333,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "      <transmission-id>$uuid</transmission-id>\n" +
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
-
-    public static final String BUSINESS_OBJECT_FORMAT_KEY_AS_STRING = "UT_BusinessObjectFormatKeyAsString_" + RANDOM_SUFFIX;
 
     public static final Boolean CONTINUE_ON_ERROR = true;
 
@@ -607,6 +611,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
 
+    public static final String RELATIONAL_SCHEMA_NAME = "UT_RelationalSchemaName_" + RANDOM_SUFFIX;
+
+    public static final String RELATIONAL_TABLE_NAME = "UT_RelationalTableName_" + RANDOM_SUFFIX;
+
     public static final Integer RETENTION_PERIOD_DAYS = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean RETRIEVE_INSTANCE_FLEETS = true;
@@ -655,6 +663,20 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
 
     public static final Integer STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS = getRandomInteger();
+
+    public static final String STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON =
+        "{\n" + "  \"eventDate\" : \"$current_time\",\n" + "  \"businessObjectDataKey\" : {\n" + "    \"namespace\" : \"$businessObjectDataKey.namespace\",\n" +
+            "    \"businessObjectDefinitionName\" : \"$businessObjectDataKey.businessObjectDefinitionName\",\n" +
+            "    \"businessObjectFormatUsage\" : \"$businessObjectDataKey.businessObjectFormatUsage\",\n" +
+            "    \"businessObjectFormatFileType\" : \"$businessObjectDataKey.businessObjectFormatFileType\",\n" +
+            "    \"businessObjectFormatVersion\" : $businessObjectDataKey.businessObjectFormatVersion,\n" +
+            "    \"partitionValue\" : \"$businessObjectDataKey.partitionValue\",\n" +
+            "#if($CollectionUtils.isNotEmpty($businessObjectDataKey.subPartitionValues))    \"subPartitionValues\" : [ " +
+            "\"$businessObjectDataKey.subPartitionValues.get(0)\"" +
+            "#foreach ($subPartitionValue in $businessObjectDataKey.subPartitionValues.subList(1, $businessObjectDataKey.subPartitionValues.size())), \"$subPartitionValue\"" +
+            "#end\n" + " ],\n" + "#end\n" + "    \"businessObjectDataVersion\" : $businessObjectDataKey.businessObjectDataVersion\n" + "  },\n" +
+            "  \"storageName\" : \"$storageName\",\n" + "  \"newStorageUnitStatus\" : \"$newStorageUnitStatus\"" +
+            "#if($StringUtils.isNotEmpty($oldStorageUnitStatus)),\n  \"oldStorageUnitStatus\" : \"$oldStorageUnitStatus\"" + "#end\n" + "}\n";
 
     public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
 
@@ -713,8 +735,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean VERBOSE = true;
 
     public static final String ZERO_COLUMN_SIZE = "0";
-
-    public static final String RELATIONAL_TABLE_NAME = "UT_RELATIONAL_TABLE_" + RANDOM_SUFFIX;
 
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
@@ -946,6 +966,15 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected PartitionKeyGroupServiceTestHelper partitionKeyGroupServiceTestHelper;
+
+    @Autowired
+    protected RelationalTableRegistrationHelperService relationalTableRegistrationHelperService;
+
+    @Autowired
+    protected RelationalTableRegistrationService relationalTableRegistrationService;
+
+    @Autowired
+    protected RelationalTableRegistrationServiceTestHelper relationalTableRegistrationServiceTestHelper;
 
     @Autowired
     protected S3KeyPrefixHelper s3KeyPrefixHelper;

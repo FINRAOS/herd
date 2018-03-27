@@ -32,12 +32,12 @@ public interface NotificationMessageBuilder
      *
      * @param businessObjectDataKey the business object data key for the object whose status changed
      * @param newBusinessObjectDataStatus the new business object data status
-     * @param oldBusinessObjectDataStatus the old business object data status
+     * @param oldBusinessObjectDataStatus the old business object data status, may be null
      *
      * @return the list of business object data status change notification messages
      */
-    public List<NotificationMessage> buildBusinessObjectDataStatusChangeMessages(BusinessObjectDataKey businessObjectDataKey,
-        String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
+    List<NotificationMessage> buildBusinessObjectDataStatusChangeMessages(BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus,
+        String oldBusinessObjectDataStatus);
 
     /**
      * Builds a list of notification messages for the business object format version change event. The result list might be empty if if no messages should be
@@ -48,8 +48,22 @@ public interface NotificationMessageBuilder
      *
      * @return the list of business object data status change notification messages
      */
-    public List<NotificationMessage> buildBusinessObjectFormatVersionChangeMessages(BusinessObjectFormatKey businessObjectFormatKey,
+    List<NotificationMessage> buildBusinessObjectFormatVersionChangeMessages(BusinessObjectFormatKey businessObjectFormatKey,
         String oldBusinessObjectFormatVersion);
+
+    /**
+     * Builds a list of notification messages for the business object data status change event. The result list might be empty if if no messages should be
+     * sent.
+     *
+     * @param businessObjectDataKey the business object data key for the object whose status changed
+     * @param storageName the storage name
+     * @param newStorageUnitStatus the new storage unit status
+     * @param oldStorageUnitStatus the old storage unit status, may be null
+     *
+     * @return the list of business object data status change notification messages
+     */
+    List<NotificationMessage> buildStorageUnitStatusChangeMessages(BusinessObjectDataKey businessObjectDataKey, String storageName, String newStorageUnitStatus,
+        String oldStorageUnitStatus);
 
     /**
      * Builds the message for the ESB system monitor response.
@@ -58,5 +72,5 @@ public interface NotificationMessageBuilder
      *
      * @return the outgoing system monitor notification message or null if no message should be sent
      */
-    public NotificationMessage buildSystemMonitorResponse(String systemMonitorRequestPayload);
+    NotificationMessage buildSystemMonitorResponse(String systemMonitorRequestPayload);
 }

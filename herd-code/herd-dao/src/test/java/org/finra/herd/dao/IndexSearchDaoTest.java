@@ -462,6 +462,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class)).thenReturn(1f);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class)).thenReturn(1f);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class)).thenReturn(1f);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_SLOP, Integer.class)).thenReturn(5);
 
         Map<String, String> fieldsBoostMap = new HashMap<>();
         fieldsBoostMap.put("displayName", "1.0");
@@ -612,13 +613,14 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         verify(herdSearchQueryHelper).extractSearchPhrase(indexSearchRequest);
         verify(configurationHelper).getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
-        verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED);
+        verify(configurationHelper, times(3)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_SHINGLES);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class);
-        verify(jsonHelper, times(4)).unmarshallJsonToObject(Map.class, "{\"displayName\":\"1.0\"}");
+        verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class);
+        verify(configurationHelper, times(5)).getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_SLOP, Integer.class);
+        verify(jsonHelper, times(5)).unmarshallJsonToObject(Map.class, "{\"displayName\":\"1.0\"}");
 
         if (CollectionUtils.isNotEmpty(indexSearchRequest.getIndexSearchFilters()))
         {
@@ -666,7 +668,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         if (isHitHighlightingEnabled)
         {
             // verify interactions with the helpers which is required to fetch highlighting config
-            verify(jsonHelper, times(4)).unmarshallJsonToObject(eq(Map.class), any(String.class));
+            verify(jsonHelper, times(5)).unmarshallJsonToObject(eq(Map.class), any(String.class));
             verify(jsonHelper).unmarshallJsonToObject(eq(IndexSearchHighlightFields.class), any(String.class));
             verify(configurationHelper, times(3)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
             verify(configurationHelper, times(3)).getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);

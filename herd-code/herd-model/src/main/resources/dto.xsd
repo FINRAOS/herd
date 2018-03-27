@@ -352,6 +352,14 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="relationalStorageAttributesDto">
+      <xs:sequence>
+         <xs:element name="jdbcUrl" type="xs:string" minOccurs="0"/>
+         <xs:element name="jdbcUsername" type="xs:string" minOccurs="0"/>
+         <xs:element name="jdbcUserCredentialName" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="resultTypeIndexSearchResponseDto">
       <xs:sequence>
          <xs:element name="resultTypeCode" type="xs:string" minOccurs="0"/>

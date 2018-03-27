@@ -328,6 +328,12 @@ public enum ConfigurationValue
     EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS("emr.spot.price.history.product.descriptions", null),
 
     /**
+     * The threshold value in percentage when choosing an EMR cluster based on the lowest core instance price. It should be of string type so the precision
+     * can be kept. The default value is 10 percent.
+     */
+    EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE("emr.cluster.lowest.core.instance.price.threshold.percentage", "0.1"),
+
+    /**
      * S3 protocol for constructing an S3 URL. The default is the standard "s3" prefix.
      */
     S3_URL_PROTOCOL("s3.url.protocol", "s3://"),
@@ -582,6 +588,13 @@ public enum ConfigurationValue
         null),
 
     /**
+     * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
+     * NotificationMessageDefinitions} to use when generating notification messages for a storage unit status change event. There is no default value which will
+     * cause no messages to be sent.
+     */
+    HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS("herd.notification.storage.unit.status.change.message.definitions", null),
+
+    /**
      * The cache time to live in seconds defined in net.sf.ehcache.config.CacheConfiguration.
      */
     HERD_CACHE_TIME_TO_LIVE_SECONDS("herd.cache.time.to.live.seconds", 300L),
@@ -773,6 +786,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_PHRASE_QUERY_BOOST("elasticsearch.phrase.query.boost", 1.0f),
 
     /**
+     * Phrase query slop value
+     */
+    ELASTICSEARCH_PHRASE_QUERY_SLOP("elasticsearch.phrase.query.slop", 6),
+
+    /**
      * Best fields query boost value
      */
     ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST("elasticsearch.best.fields.query.boost", 1.0f),
@@ -878,6 +896,12 @@ public enum ConfigurationValue
     CREDSTASH_ENCRYPTION_CONTEXT("credstash.encryption.context", "{\"AGS\":\"AGS_VALUE\",\"SDLC\":\"SDLC_VALUE\",\"Component\":\"COMPONENT_VALUE\"}"),
 
     /**
+     * The Credstash encryption context key value map for RELATIONAL storage.
+     */
+    CREDSTASH_RELATIONAL_STORAGE_ENCRYPTION_CONTEXT("credstash.relational.storage.encryption.context",
+        "{\"AGS\":\"AGS_VALUE\",\"SDLC\":\"SDLC_VALUE\",\"Component\":\"RELATIONAL_STORAGE_COMPONENT_VALUE\"}"),
+
+    /**
      * The Credstash aws region name.
      */
     CREDSTASH_AWS_REGION_NAME("credstash.aws.region.name", "us-east-1"),
@@ -928,9 +952,29 @@ public enum ConfigurationValue
     S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null),
 
     /**
-     * The attribute name which the relational table registration put the table name in
+     * The business object format attribute name for the relational database schema name. The default is "relational.schema.name".
      */
-    RELATIONAL_TABLE_BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME("relationalTable.businessObjectFormat.attribute.name", "relational.table.name");
+    BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME("business.object.format.attribute.name.relational.schema.name", "relational.schema.name"),
+
+    /**
+     * The business object format attribute name for the relational table name. The default is "relational.table.name".
+     */
+    BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME("business.object.format.attribute.name.relational.table.name", "relational.table.name"),
+
+    /**
+     * The storage attribute name for the JDBC URL. The default is "jdbc.url".
+     */
+    STORAGE_ATTRIBUTE_NAME_JDBC_URL("storage.attribute.name.jdbc.url", "jdbc.url"),
+
+    /**
+     * The storage attribute name for the JDBC username. The default is "jdbc.username".
+     */
+    STORAGE_ATTRIBUTE_NAME_JDBC_USERNAME("storage.attribute.name.jdbc.useraname", "jdbc.username"),
+
+    /**
+     * The storage attribute name for the JDBC user credential name. The default is "jdbc.user.credential.name".
+     */
+    STORAGE_ATTRIBUTE_NAME_JDBC_USER_CREDENTIAL_NAME("storage.attribute.name.jdbc.user.credential.name", "jdbc.user.credential.name");
 
     private Object defaultValue;
 
