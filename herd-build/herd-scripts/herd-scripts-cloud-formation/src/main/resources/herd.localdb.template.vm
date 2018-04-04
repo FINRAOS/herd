@@ -167,25 +167,9 @@
             "PreInstallAndInstall" : [ "PreInstall", "Install" ]
           },
           "PreInstall": {
-            "files": {
-              "/etc/yum.repos.d/elasticsearch.repo": {
-                "content": {
-                  "Fn::Join": [
-                    "\n", [
-                      "[elasticsearch-5.x]",
-                      "name=Elasticsearch repository for 5.x packages",
-                      "baseurl=https://artifacts.elastic.co/packages/5.x/yum",
-                      "gpgcheck=1",
-                      "gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch",
-                      "enabled=1",
-                      "autorefresh=1",
-                      "type=rpm-md\n"
-                    ]
-                  ]
-                },
-                "mode": "000644",
-                "owner": "root",
-                "group": "root"
+            "packages": {
+              "rpm" : {
+                "elasticsearch" : "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.1.1.rpm"
               }
             }
           },
@@ -195,7 +179,6 @@
                 "java-1.8.0-openjdk": [],
                 "postgresql9*": [],
                 "tomcat8": [],
-                "elasticsearch": [],
                 "jq": [],
                 "httpd24": []
               }
@@ -461,6 +444,9 @@
           "exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1\n",
 
           "# Ensure Elasticsearch is running\n",
+          "echo -e \"script.engine.groovy.inline.search: on\" >> /etc/elasticsearch/elasticsearch.yml\n",
+          "service elasticsearch restart\n",
+          "\nsleep 30\n",
           "/usr/bin/curl -s -XGET http://localhost:9200\n",
 
           "# Configure Postgresql\n",
@@ -489,6 +475,7 @@
           "psql -f activiti.postgres.create.history.sql\n",
           "psql -f activiti.postgres.create.identity.sql\n",
           "psql -f quartz_tables_postgres.sql\n",
+          "psql -f elasticsearch.configuration.values.sql\n",
 
           "psql -c \"DELETE FROM cnfgn WHERE cnfgn_key_nm = 's3.managed.bucket.name';\"\n",
           "psql -c \"INSERT INTO cnfgn VALUES ('s3.managed.bucket.name','",{"Ref": "herdS3Bucket" },"', NULL);\"\n",
@@ -496,6 +483,12 @@
           "psql -c \"INSERT INTO cnfgn VALUES ('herd.notification.sqs.incoming.queue.name','",{"Fn::GetAtt": ["herdQueueIn", "QueueName"]},"', NULL);\"\n",
           "psql -c \"DELETE FROM cnfgn WHERE cnfgn_key_nm = 'search.index.update.sqs.queue.name';\"\n",
           "psql -c \"INSERT INTO cnfgn VALUES ('search.index.update.sqs.queue.name','",{"Fn::GetAtt": ["searchIndexUpdateSqsQueue", "QueueName"]},"', NULL);\"\n",
+          "psql -c \"INSERT INTO cnfgn VALUES ('elasticsearch.rest.client.scheme','http', NULL);\"\n",
+          "psql -c \"INSERT INTO cnfgn VALUES ('elasticsearch.rest.client.port','9200', NULL);\"\n",
+          "psql -c \"INSERT INTO cnfgn VALUES ('elasticsearch.rest.client.hostname','localhost', NULL);\"\n",
+          "psql -c \"INSERT INTO cnfgn VALUES ('elasticsearch.best.fields.query.boost','100', NULL);\"\n",
+          "psql -c \"INSERT INTO cnfgn VALUES ('elasticsearch.phrase.prefix.query.boost','1', NULL);\"\n",
+          "psql -c \"INSERT INTO cnfgn VALUES ('elasticsearch.phrase.query.boost','1000', NULL);\"\n",
 
           "# Configuring tomcat server\n",
 

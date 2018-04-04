@@ -11,5 +11,31 @@ before_script:
   - echo $MAVEN_OPTS
   - export MAVEN_OPTS='-Xmx4096m -XX:MaxPermSize=2048m'
   - echo $MAVEN_OPTS
+  - export REPO=`git config remote.origin.url`
+  - echo $REPO
+  - git clone $REPO public
+  - cd public
+  - git checkout gh-pages
+  - ls -la
+  - cd ..
 script:
-  - mvn clean install
+  - mvn clean install --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+  - export HERD_PROJECT_VERSION=`mvn --batch-mode -f pom.xml help:evaluate -Dexpression=project.version | grep -Ev '(^\[|Download\w+:)' | sed 's/-SNAPSHOT//'`
+  - echo ${HERD_PROJECT_VERSION}
+  - rm -rf public/docs/${HERD_PROJECT_VERSION}
+  - mkdir --parents public/docs/${HERD_PROJECT_VERSION}
+  - cp -a herd-code/herd-war/target/generated-resources/herd-docs-swagger-${HERD_PROJECT_VERSION}-SNAPSHOT/docs/rest/. public/docs/${HERD_PROJECT_VERSION}/rest
+  - cp -a herd-code/herd-war/target/generated-resources/javadoc/docs/javadoc/. public/docs/${HERD_PROJECT_VERSION}/javadoc
+  - rm -rf public/docs/latest
+  - mkdir --parents public/docs/latest
+  - cp -a herd-code/herd-war/target/generated-resources/herd-docs-swagger-${HERD_PROJECT_VERSION}-SNAPSHOT/docs/rest/. public/docs/latest/rest
+  - cp -a herd-code/herd-war/target/generated-resources/javadoc/docs/javadoc/. public/docs/latest/javadoc
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
+  keep-history: true
+  local-dir: "/public"
+  target-branch: gh-pages
+  on:
+    branch: master
