@@ -69,6 +69,7 @@ import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
+import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.SearchIndexStatistics;
@@ -544,6 +545,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<String> NO_PARTITION_VALUES = null;
 
     public static final List<PartitionValueFilter> NO_PARTITION_VALUE_FILTERS = new ArrayList<>();
+
+    public static final RegistrationDateRangeFilter NO_REGISTRATION_DATE_RANGE_FILTER = null;
 
     public static final PartitionValueRange NO_PARTITION_VALUE_RANGE = null;
 
