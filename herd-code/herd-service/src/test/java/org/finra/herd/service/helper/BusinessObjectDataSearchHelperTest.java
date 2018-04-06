@@ -114,6 +114,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         {
             businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
                 new BusinessObjectDataSearchKey(BLANK_TEXT, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER,
                     NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
             fail();
         }
@@ -126,7 +127,8 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         {
             businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
                 new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    NO_PARTITION_VALUE_FILTERS, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
+                    NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
+                    NO_FILTER_ON_RETENTION_EXPIRATION));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -138,6 +140,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         {
             businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
                 new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER,
                     NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
             fail();
         }
@@ -151,7 +154,8 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
             businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
                 new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Collections.singletonList(
                     new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(PARTITION_VALUE),
-                        NO_LATEST_AFTER_PARTITION_VALUE)), NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
+                        NO_LATEST_AFTER_PARTITION_VALUE)), NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
+                    NO_FILTER_ON_RETENTION_EXPIRATION));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -163,6 +167,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         {
             businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
                 new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER,
                     Collections.singletonList(new AttributeValueFilter(BLANK_TEXT, EMPTY_STRING)), NO_FILTER_ON_LATEST_VALID_VERSION,
                     NO_FILTER_ON_RETENTION_EXPIRATION));
             fail();
@@ -213,6 +218,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         attributeValueFilter.setAttributeValue(ATTRIBUTE_VALUE);
         businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                NO_REGISTRATION_DATE_RANGE_FILTER,
                 Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
 
         attributeValueFilter = new AttributeValueFilter();
@@ -220,6 +226,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         attributeValueFilter.setAttributeValue(null);
         businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                NO_REGISTRATION_DATE_RANGE_FILTER,
                 Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
 
         attributeValueFilter = new AttributeValueFilter();
@@ -227,6 +234,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         attributeValueFilter.setAttributeValue(ATTRIBUTE_VALUE);
         businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                NO_REGISTRATION_DATE_RANGE_FILTER,
                 Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
     }
 }

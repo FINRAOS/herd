@@ -3341,6 +3341,16 @@
                <xs:documentation>A container for Partition Value Filters</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="registrationDateRangeFilter" type="registrationDateRangeFilter" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the registration date range to check the availability between two dates or start from or end with. The request
+                  must contain either only start registration date or only end registration date or both start and end dates. If only start registration date is
+                  provided, all business object data registered on and after that date will be fetched. If only end registratoin date is provided, all business
+                  object data registered on or before that date will be fetched. And if both start and end registration dates are provided, all business object
+                  data registered in the range will be fetched
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="attributeValueFilters" type="attributeValueFilters" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A container for Attribute Value Filters</xs:documentation>
@@ -3785,6 +3795,21 @@
                <xs:documentation>The partition value that is an inclusive lower bound for the latest available partition value. Required when
                   latestAfterPartitionValue is present
                </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="registrationDateRangeFilter">
+      <xs:all>
+         <xs:element name="startRegistrationDate" type="xs:date" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The start date for the registration date range in YYYY-MM-DD format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="endRegiatrationDate" type="xs:date" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The end date for the registration date range in YYYY-MM-DD format</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
