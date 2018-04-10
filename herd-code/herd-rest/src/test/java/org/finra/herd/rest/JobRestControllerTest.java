@@ -145,7 +145,7 @@ public class JobRestControllerTest extends AbstractRestTest
         when(jobService.getJobs(JOB_NAMESPACE, JOB_NAME, JobStatusEnum.RUNNING, START_TIME, END_TIME)).thenReturn(jobSummaries);
 
         // Call the method under test.
-        JobSummaries result = jobRestController.getJobs(JOB_NAMESPACE, JOB_NAME, JobStatusEnum.RUNNING, START_TIME, END_TIME);
+        JobSummaries result = jobRestController.getJobs(JOB_NAMESPACE, JOB_NAME, JobStatusEnum.RUNNING, START_TIME.toString(), END_TIME.toString());
 
         // Verify the external calls.
         verify(jobService).getJobs(JOB_NAMESPACE, JOB_NAME, JobStatusEnum.RUNNING, START_TIME, END_TIME);
