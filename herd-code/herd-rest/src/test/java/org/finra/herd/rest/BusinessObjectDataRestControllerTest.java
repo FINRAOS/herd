@@ -36,6 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -83,6 +84,9 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
 
     @Mock
     private BusinessObjectDataService businessObjectDataService;
+
+    @Mock
+    private HerdStringHelper herdStringHelper;
 
     @Mock
     private StorageUnitService storageUnitService;
@@ -150,6 +154,7 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
 
         // Create a business object data.
         BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
 
         // Mock the external calls.
         when(businessObjectDataService.createBusinessObjectData(businessObjectDataCreateRequest)).thenReturn(businessObjectData);
@@ -234,18 +239,24 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
+
         // Create a business object data.
         BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
 
         // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
         when(businessObjectDataService.destroyBusinessObjectData(businessObjectDataKey)).thenReturn(businessObjectData);
 
         // Call the method under test.
         BusinessObjectData result = businessObjectDataRestController
             .destroyBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
-                getDelimitedFieldValues(SUBPARTITION_VALUES));
+                delimitedSubPartitionValues);
 
         // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
         verify(businessObjectDataService).destroyBusinessObjectData(businessObjectDataKey);
         verifyNoMoreInteractionsHelper();
 
@@ -357,20 +368,26 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
+
         // Create a business object data.
         BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
 
         // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
         when(businessObjectDataService.getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
             INCLUDE_STORAGE_UNIT_STATUS_HISTORY)).thenReturn(businessObjectData);
 
         // Call the method under test.
         BusinessObjectData result = businessObjectDataRestController
             .getBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, PARTITION_VALUE,
-                getDelimitedFieldValues(SUBPARTITION_VALUES), FORMAT_VERSION, DATA_VERSION, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                delimitedSubPartitionValues, FORMAT_VERSION, DATA_VERSION, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
                 INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
 
         // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
         verify(businessObjectDataService).getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
             INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
         verifyNoMoreInteractionsHelper();
@@ -387,6 +404,9 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
+
         // Create an AWS credential.
         AwsCredential awsCredential = new AwsCredential(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN,
             AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME);
@@ -395,14 +415,16 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
         StorageUnitDownloadCredential storageUnitDownloadCredential = new StorageUnitDownloadCredential(awsCredential);
 
         // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
         when(storageUnitService.getStorageUnitDownloadCredential(businessObjectDataKey, STORAGE_NAME)).thenReturn(storageUnitDownloadCredential);
 
         // Call the method under test.
         BusinessObjectDataDownloadCredential result = businessObjectDataRestController
             .getBusinessObjectDataDownloadCredential(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                DATA_VERSION, STORAGE_NAME, getDelimitedFieldValues(SUBPARTITION_VALUES));
+                DATA_VERSION, STORAGE_NAME, delimitedSubPartitionValues);
 
         // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
         verify(storageUnitService).getStorageUnitDownloadCredential(businessObjectDataKey, STORAGE_NAME);
         verifyNoMoreInteractionsHelper();
 
@@ -418,6 +440,9 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
+
         // Create an AWS credential.
         AwsCredential awsCredential = new AwsCredential(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN,
             AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME);
@@ -426,15 +451,17 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
         StorageUnitUploadCredential storageUnitUploadCredential = new StorageUnitUploadCredential(awsCredential, AWS_KMS_KEY_ID);
 
         // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
         when(storageUnitService.getStorageUnitUploadCredential(businessObjectDataKey, CREATE_NEW_VERSION, STORAGE_NAME))
             .thenReturn(storageUnitUploadCredential);
 
         // Call the method under test.
         BusinessObjectDataUploadCredential result = businessObjectDataRestController
             .getBusinessObjectDataUploadCredential(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                DATA_VERSION, CREATE_NEW_VERSION, STORAGE_NAME, getDelimitedFieldValues(SUBPARTITION_VALUES));
+                DATA_VERSION, CREATE_NEW_VERSION, STORAGE_NAME, delimitedSubPartitionValues);
 
         // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
         verify(storageUnitService).getStorageUnitUploadCredential(businessObjectDataKey, CREATE_NEW_VERSION, STORAGE_NAME);
         verifyNoMoreInteractionsHelper();
 
@@ -450,18 +477,23 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
+
         // Create a list of business object data versions.
         BusinessObjectDataVersions businessObjectDataVersions = new BusinessObjectDataVersions(Arrays.asList(new BusinessObjectDataVersion()));
 
         // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
         when(businessObjectDataService.getBusinessObjectDataVersions(businessObjectDataKey)).thenReturn(businessObjectDataVersions);
 
         // Call the method under test.
         BusinessObjectDataVersions result = businessObjectDataRestController
-            .getBusinessObjectDataVersions(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_VALUE,
-                getDelimitedFieldValues(SUBPARTITION_VALUES), FORMAT_VERSION, DATA_VERSION);
+            .getBusinessObjectDataVersions(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_VALUE, delimitedSubPartitionValues,
+                FORMAT_VERSION, DATA_VERSION);
 
         // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
         verify(businessObjectDataService).getBusinessObjectDataVersions(businessObjectDataKey);
         verifyNoMoreInteractionsHelper();
 
@@ -477,6 +509,9 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
+
         // Create an S3 key prefix information.
         S3KeyPrefixInformation s3KeyPrefixInformation = new S3KeyPrefixInformation();
 
@@ -485,14 +520,16 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
         when(servletRequest.getParameterMap()).thenReturn(new HashMap<>());
 
         // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
         when(storageUnitService.getS3KeyPrefix(businessObjectDataKey, PARTITION_KEY, STORAGE_NAME, CREATE_NEW_VERSION)).thenReturn(s3KeyPrefixInformation);
 
         // Call the method under test.
         S3KeyPrefixInformation result = businessObjectDataRestController
             .getS3KeyPrefix(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY, PARTITION_VALUE,
-                getDelimitedFieldValues(SUBPARTITION_VALUES), DATA_VERSION, STORAGE_NAME, CREATE_NEW_VERSION, servletRequest);
+                delimitedSubPartitionValues, DATA_VERSION, STORAGE_NAME, CREATE_NEW_VERSION, servletRequest);
 
         // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
         verify(storageUnitService).getS3KeyPrefix(businessObjectDataKey, PARTITION_KEY, STORAGE_NAME, CREATE_NEW_VERSION);
         verifyNoMoreInteractionsHelper();
 
@@ -535,18 +572,24 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
+
         // Create a business object data.
         BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
 
         // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
         when(businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS)).thenReturn(businessObjectData);
 
         // Call the method under test.
         BusinessObjectData result = businessObjectDataRestController
             .restoreBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
-                getDelimitedFieldValues(SUBPARTITION_VALUES), EXPIRATION_IN_DAYS);
+                delimitedSubPartitionValues, EXPIRATION_IN_DAYS);
 
         // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
         verify(businessObjectDataService).restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS);
         verifyNoMoreInteractionsHelper();
 
@@ -562,23 +605,29 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
+
         // Create a business object data retry storage policy transition request.
         BusinessObjectDataRetryStoragePolicyTransitionRequest businessObjectDataRetryStoragePolicyTransitionRequest =
             new BusinessObjectDataRetryStoragePolicyTransitionRequest();
 
         // Create a business object data.
         BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
 
         // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
         when(businessObjectDataService.retryStoragePolicyTransition(businessObjectDataKey, businessObjectDataRetryStoragePolicyTransitionRequest))
             .thenReturn(businessObjectData);
 
         // Call the method under test.
         BusinessObjectData result = businessObjectDataRestController
             .retryStoragePolicyTransition(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
-                getDelimitedFieldValues(SUBPARTITION_VALUES), businessObjectDataRetryStoragePolicyTransitionRequest);
+                delimitedSubPartitionValues, businessObjectDataRetryStoragePolicyTransitionRequest);
 
         // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
         verify(businessObjectDataService).retryStoragePolicyTransition(businessObjectDataKey, businessObjectDataRetryStoragePolicyTransitionRequest);
         verifyNoMoreInteractionsHelper();
 
@@ -696,6 +745,6 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataService, storageUnitService);
+        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataService, herdStringHelper, storageUnitService);
     }
 }

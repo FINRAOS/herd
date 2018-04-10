@@ -15,8 +15,6 @@
 */
 package org.finra.herd.rest;
 
-import java.util.List;
-
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 
@@ -30,19 +28,4 @@ import org.finra.herd.ui.AbstractUiTest;
 @WebAppConfiguration
 public abstract class AbstractRestTest extends AbstractUiTest
 {
-    /**
-     * Returns a DelimitedFieldValues instance initiated with the list values.
-     *
-     * @param list the list of string values
-     *
-     * @return the newly created DelimitedFieldValues instance
-     */
-    protected DelimitedFieldValues getDelimitedFieldValues(List<String> list)
-    {
-        DelimitedFieldValues delimitedFieldValues = new DelimitedFieldValues();
-
-        delimitedFieldValues.setValues(list);
-
-        return delimitedFieldValues;
-    }
 }
