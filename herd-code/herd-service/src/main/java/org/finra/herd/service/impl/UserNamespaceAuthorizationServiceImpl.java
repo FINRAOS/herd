@@ -32,6 +32,7 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.api.xml.UserAuthorizations;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorization;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationCreateRequest;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
@@ -39,6 +40,7 @@ import org.finra.herd.model.api.xml.UserNamespaceAuthorizationUpdateRequest;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizations;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
+import org.finra.herd.service.CurrentUserService;
 import org.finra.herd.service.UserNamespaceAuthorizationService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
@@ -53,6 +55,9 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private CurrentUserService currentUserService;
 
     @Autowired
     private NamespaceDaoHelper namespaceDaoHelper;
@@ -104,6 +109,19 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
 
         // Retrieve and ensure that a user namespace authorization exists with the specified key.
         UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = getUserNamespaceAuthorizationEntity(key);
+
+        // Get the current user
+        UserAuthorizations userAuthorizations = currentUserService.getCurrentUser();
+
+        // If the current user id is equal to the user id in the namespace authorization key
+        // and the user namespace authorization entity contains the grant permission
+        if (userAuthorizations.getUserId().equalsIgnoreCase(key.getUserId()) && userNamespaceAuthorizationEntity.getGrantPermission())
+        {
+            // Assert that the request contains the grant namespace permission
+            Assert.isTrue(request.getNamespacePermissions().contains(NamespacePermissionEnum.GRANT),
+                "Users are not allowed to remove their own GRANT namespace permission." +
+                    " Please include the GRANT namespace permission in this request, or have another user remove the GRANT permission.");
+        }
 
         // Update the permissions.
         updateNamespacePermissions(userNamespaceAuthorizationEntity, request.getNamespacePermissions());
