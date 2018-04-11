@@ -23,12 +23,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageUnit;
@@ -50,82 +55,6 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
         {
             // This method throws an exception when no override happens. Ignore the error.
         }
-    }
-
-    @Test
-    public void testGetPartitionValue()
-    {
-        // Create and persist test database entities.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
-
-        // Retrieve primary and sub-partition values along with trying the "out of bounds" cases.
-        assertEquals(null, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, 0));
-        assertEquals(PARTITION_VALUE, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, 1));
-        for (int partitionColumnPosition = 2; partitionColumnPosition <= BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1; partitionColumnPosition++)
-        {
-            assertEquals(SUBPARTITION_VALUES.get(partitionColumnPosition - 2),
-                businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, partitionColumnPosition));
-        }
-        assertEquals(null, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, BusinessObjectDataEntity.MAX_SUBPARTITIONS + 2));
-    }
-
-    @Test
-    public void testSubPartitions()
-    {
-        String namespace = NAMESPACE;
-        String dataProvider = DATA_PROVIDER_NAME;
-        String businessObjectDefinitionName = BDEF_NAME;
-        String businessObjectFormatUsage = FORMAT_USAGE_CODE;
-        String fileType = FORMAT_FILE_TYPE_CODE;
-        Integer businessObjectFormatVersion = FORMAT_VERSION;
-        String businessObjectFormatPartitionKey = PARTITION_KEY;
-        List<SchemaColumn> schemaColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
-        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
-        String partitionValue = PARTITION_VALUE;
-        List<String> subPartitionValues = SUBPARTITION_VALUES;
-        Integer businessObjectDataVersion = DATA_VERSION;
-
-        String actualS3KeyPrefix = buildS3KeyPrefix(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
-            businessObjectFormatPartitionKey, schemaColumns, partitionColumns, partitionValue, subPartitionValues, businessObjectDataVersion);
-
-        String expectedS3KeyPrefix =
-            getExpectedS3KeyPrefix(namespace, dataProvider, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
-                businessObjectFormatPartitionKey, partitionColumns, partitionValue, subPartitionValues, businessObjectDataVersion);
-
-        assertEquals(expectedS3KeyPrefix, actualS3KeyPrefix);
-    }
-
-    private String buildS3KeyPrefix(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage, String fileType,
-        Integer businessObjectFormatVersion, String businessObjectFormatPartitionKey, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns,
-        String partitionValue, List<String> subPartitionValues, Integer businessObjectDataVersion)
-    {
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, null,
-                LATEST_VERSION_FLAG_SET, businessObjectFormatPartitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, null, null, null, schemaColumns,
-                partitionColumns);
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, partitionValue,
-                subPartitionValues, businessObjectDataVersion);
-
-        return s3KeyPrefixHelper
-            .buildS3KeyPrefix(AbstractServiceTest.S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity, businessObjectDataKey, STORAGE_NAME);
-    }
-
-    private String getExpectedS3KeyPrefix(String namespace, String dataProvider, String businessObjectDefinitionName, String businessObjectFormatUsage,
-        String fileType, Integer businessObjectFormatVersion, String businessObjectFormatPartitionKey, List<SchemaColumn> partitionColumns,
-        String partitionValue, List<String> subPartitionValues, Integer businessObjectDataVersion)
-    {
-        partitionColumns = partitionColumns.subList(0, Math.min(partitionColumns.size(), 5));
-        SchemaColumn[] subPartitionKeys = new SchemaColumn[partitionColumns.size() - 1];
-        subPartitionKeys = partitionColumns.subList(1, partitionColumns.size()).toArray(subPartitionKeys);
-
-        String[] subPartitionValueArray = new String[subPartitionValues.size()];
-        subPartitionValueArray = subPartitionValues.toArray(subPartitionValueArray);
-
-        return getExpectedS3KeyPrefix(namespace, dataProvider, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
-            businessObjectFormatPartitionKey, partitionValue, subPartitionKeys, subPartitionValueArray, businessObjectDataVersion);
     }
 
     @Test
@@ -194,8 +123,8 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
 
         // Create the expected test output.
         String expectedOutput = String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
-            "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
+                "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             FORMAT_VERSION, PARTITION_VALUE, StringUtils.join(SUBPARTITION_VALUES, ","), DATA_VERSION);
 
         assertEquals(expectedOutput, businessObjectDataHelper.businessObjectDataKeyToString(testBusinessObjectDataKey));
@@ -207,7 +136,124 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
     @Test
     public void testBusinessObjectDataKeyToStringWithNull()
     {
-        BusinessObjectDataKey testBusinessObjectDataKey = null;
-        assertNull(businessObjectDataHelper.businessObjectDataKeyToString(testBusinessObjectDataKey));
+        assertNull(businessObjectDataHelper.businessObjectDataKeyToString(null));
+    }
+
+    @Test
+    public void testGetPartitionValue()
+    {
+        // Create and persist test database entities.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+
+        // Retrieve primary and sub-partition values along with trying the "out of bounds" cases.
+        assertEquals(null, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, 0));
+        assertEquals(PARTITION_VALUE, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, 1));
+        for (int partitionColumnPosition = 2; partitionColumnPosition <= BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1; partitionColumnPosition++)
+        {
+            assertEquals(SUBPARTITION_VALUES.get(partitionColumnPosition - 2),
+                businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, partitionColumnPosition));
+        }
+        assertEquals(null, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, BusinessObjectDataEntity.MAX_SUBPARTITIONS + 2));
+    }
+
+    @Test
+    public void testSubPartitions()
+    {
+        String namespace = NAMESPACE;
+        String businessObjectDefinitionName = BDEF_NAME;
+        String businessObjectFormatUsage = FORMAT_USAGE_CODE;
+        String fileType = FORMAT_FILE_TYPE_CODE;
+        Integer businessObjectFormatVersion = FORMAT_VERSION;
+        String businessObjectFormatPartitionKey = PARTITION_KEY;
+        List<SchemaColumn> schemaColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
+        String partitionValue = PARTITION_VALUE;
+        List<String> subPartitionValues = SUBPARTITION_VALUES;
+        Integer businessObjectDataVersion = DATA_VERSION;
+
+        String actualS3KeyPrefix = buildS3KeyPrefix(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
+            businessObjectFormatPartitionKey, schemaColumns, partitionColumns, partitionValue, subPartitionValues, businessObjectDataVersion);
+
+        String expectedS3KeyPrefix = getExpectedS3KeyPrefix(namespace, DATA_PROVIDER_NAME, businessObjectDefinitionName, businessObjectFormatUsage, fileType,
+            businessObjectFormatVersion, businessObjectFormatPartitionKey, partitionColumns, partitionValue, subPartitionValues, businessObjectDataVersion);
+
+        assertEquals(expectedS3KeyPrefix, actualS3KeyPrefix);
+    }
+
+    @Test
+    public void testValidateRegistrationDateRangeFilter() throws DatatypeConfigurationException
+    {
+        XMLGregorianCalendar start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2018-04-01");
+        XMLGregorianCalendar end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2018-04-02");
+
+        // Start date is less then end date
+        businessObjectDataHelper.validateRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+
+        // Start date is equel end date
+        businessObjectDataHelper.validateRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, start));
+    }
+
+    @Test
+    public void testValidateRegistrationDateRangeFilterMissingStartAndEndDate()
+    {
+        try
+        {
+            businessObjectDataHelper.validateRegistrationDateRangeFilter(new RegistrationDateRangeFilter());
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Either start registration date or end registration date must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testValidateRegistrationDateRangeFilterStartDateIsGreaterThenEndDate() throws DatatypeConfigurationException
+    {
+        XMLGregorianCalendar end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2018-04-01");
+        XMLGregorianCalendar start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2018-04-02");
+        try
+        {
+            businessObjectDataHelper.validateRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("The start registration date \"%s\" cannot be greater than the end registration date \"%s\".", start, end),
+                e.getMessage());
+        }
+    }
+
+    private String buildS3KeyPrefix(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage, String fileType,
+        Integer businessObjectFormatVersion, String businessObjectFormatPartitionKey, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns,
+        String partitionValue, List<String> subPartitionValues, Integer businessObjectDataVersion)
+    {
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, null,
+                LATEST_VERSION_FLAG_SET, businessObjectFormatPartitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, null, null, null, schemaColumns,
+                partitionColumns);
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, partitionValue,
+                subPartitionValues, businessObjectDataVersion);
+
+        return s3KeyPrefixHelper
+            .buildS3KeyPrefix(AbstractServiceTest.S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity, businessObjectDataKey, STORAGE_NAME);
+    }
+
+    private String getExpectedS3KeyPrefix(String namespace, String dataProvider, String businessObjectDefinitionName, String businessObjectFormatUsage,
+        String fileType, Integer businessObjectFormatVersion, String businessObjectFormatPartitionKey, List<SchemaColumn> partitionColumns,
+        String partitionValue, List<String> subPartitionValues, Integer businessObjectDataVersion)
+    {
+        partitionColumns = partitionColumns.subList(0, Math.min(partitionColumns.size(), 5));
+        SchemaColumn[] subPartitionKeys = new SchemaColumn[partitionColumns.size() - 1];
+        subPartitionKeys = partitionColumns.subList(1, partitionColumns.size()).toArray(subPartitionKeys);
+
+        String[] subPartitionValueArray = new String[subPartitionValues.size()];
+        subPartitionValueArray = subPartitionValues.toArray(subPartitionValueArray);
+
+        return getExpectedS3KeyPrefix(namespace, dataProvider, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
+            businessObjectFormatPartitionKey, partitionValue, subPartitionKeys, subPartitionValueArray, businessObjectDataVersion);
     }
 }
