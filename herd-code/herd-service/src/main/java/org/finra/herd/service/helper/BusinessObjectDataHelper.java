@@ -43,6 +43,7 @@ import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
 import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
+import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
@@ -588,8 +589,8 @@ public class BusinessObjectDataHelper
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateBusinessObjectDataKey(BusinessObjectDataKey key, boolean businessObjectFormatVersionRequired,
-        boolean businessObjectDataVersionRequired) throws IllegalArgumentException
+    public void validateBusinessObjectDataKey(BusinessObjectDataKey key, boolean businessObjectFormatVersionRequired, boolean businessObjectDataVersionRequired)
+        throws IllegalArgumentException
     {
         // Validate and remove leading and trailing spaces.
         Assert.notNull(key, "A business object data key must be specified.");
@@ -733,6 +734,24 @@ public class BusinessObjectDataHelper
                 Assert.hasText(latestAfterPartitionValue.getPartitionValue(), "A partition value must be specified.");
                 latestAfterPartitionValue.setPartitionValue(latestAfterPartitionValue.getPartitionValue().trim());
             }
+        }
+    }
+
+    /**
+     * Validates a registration date range filter. This method makes sure that a registration date range filter contains start date or end date or both.
+     *
+     * @param registrationDateRangeFilter the registration date range
+     */
+    public void validateRegistrationDateRangeFilter(RegistrationDateRangeFilter registrationDateRangeFilter)
+    {
+        Assert.isTrue(registrationDateRangeFilter.getStartRegistrationDate() != null || registrationDateRangeFilter.getEndRegistrationDate() != null,
+            "Either start registration date or end registration date must be specified.");
+
+        if (registrationDateRangeFilter.getStartRegistrationDate() != null && registrationDateRangeFilter.getEndRegistrationDate() != null)
+        {
+            Assert.isTrue(registrationDateRangeFilter.getStartRegistrationDate().compare(registrationDateRangeFilter.getEndRegistrationDate()) <= 0, String
+                .format("The start registration date \"%s\" cannot be greater than the end registration date \"%s\".",
+                    registrationDateRangeFilter.getStartRegistrationDate(), registrationDateRangeFilter.getEndRegistrationDate()));
         }
     }
 

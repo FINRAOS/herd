@@ -7,6 +7,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.AttributeValueFilter;
@@ -15,6 +19,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
+import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.service.AbstractServiceTest;
 
 public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
@@ -218,23 +223,31 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         attributeValueFilter.setAttributeValue(ATTRIBUTE_VALUE);
         businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER,
-                Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
+                NO_REGISTRATION_DATE_RANGE_FILTER, Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
 
         attributeValueFilter = new AttributeValueFilter();
         attributeValueFilter.setAttributeName(ATTRIBUTE_NAME);
         attributeValueFilter.setAttributeValue(null);
         businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER,
-                Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
+                NO_REGISTRATION_DATE_RANGE_FILTER, Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
 
         attributeValueFilter = new AttributeValueFilter();
         attributeValueFilter.setAttributeName(ATTRIBUTE_NAME);
         attributeValueFilter.setAttributeValue(ATTRIBUTE_VALUE);
         businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER,
-                Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
+                NO_REGISTRATION_DATE_RANGE_FILTER, Arrays.asList(attributeValueFilter), NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
+    }
+
+    @Test
+    public void testValidateBusinessObjectDataSearchKeyWithRegistrationDateRangeFilter() throws DatatypeConfigurationException
+    {
+        XMLGregorianCalendar start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2018-04-01");
+        XMLGregorianCalendar end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2018-04-02");
+        businessObjectDataSearchHelper.validateBusinessObjectDataSearchKey(
+            new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                new RegistrationDateRangeFilter(start, end), NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION));
+
     }
 }

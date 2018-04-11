@@ -141,6 +141,12 @@ public class BusinessObjectDataSearchHelper
             }
         }
 
+        // Validate registration date range filter, if specified.
+        if (businessObjectDataSearchKey.getRegistrationDateRangeFilter() != null)
+        {
+            businessObjectDataHelper.validateRegistrationDateRangeFilter(businessObjectDataSearchKey.getRegistrationDateRangeFilter());
+        }
+
         // Validate attribute value filters, if specified.
         if (CollectionUtils.isNotEmpty(businessObjectDataSearchKey.getAttributeValueFilters()))
         {
