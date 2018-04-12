@@ -61,6 +61,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
+import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity_;
@@ -519,7 +520,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     /**
      * Retrieves partition value per specified parameters that includes the aggregate function.
-     *
      * <p>
      * Returns null if the business object format key does not exist.
      *
@@ -888,6 +888,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             predicate = createAttributeValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);
         }
 
+        // Apply registration date range filter, if specified.
+        if (businessDataSearchKey.getRegistrationDateRangeFilter() != null)
+        {
+            predicate = applyRegistrationDateRangeFilter(businessDataSearchKey.getRegistrationDateRangeFilter(), businessObjectDataEntity, builder, predicate);
+        }
+
         if (BooleanUtils.isTrue(businessDataSearchKey.isFilterOnLatestValidVersion()))
         {
             String validStatus = BusinessObjectDataStatusEntity.VALID;
@@ -1147,6 +1153,36 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                         builder.and(predicate, builder.like(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.value), "%" + attributeValue + "%"));
                 }
             }
+        }
+
+        return predicate;
+    }
+
+    /**
+     * Apply a predicate for registration date range filter.
+     *
+     * @param registrationDateRangeFilter the registration date range filter, not null
+     * @param businessObjectDataEntity the business object data entity
+     * @param builder the query builder
+     * @param predicate the predicate to be updated
+     *
+     * @return the predicate with added registration date range filter
+     */
+    private Predicate applyRegistrationDateRangeFilter(RegistrationDateRangeFilter registrationDateRangeFilter,
+        Root<BusinessObjectDataEntity> businessObjectDataEntity, CriteriaBuilder builder, Predicate predicate)
+    {
+        // Apply predicate for registration start date and removed the time portion of the date.
+        if (registrationDateRangeFilter.getStartRegistrationDate() != null)
+        {
+            predicate = builder.and(predicate, builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn),
+                HerdDateUtils.resetTimeToMidnight(registrationDateRangeFilter.getStartRegistrationDate())));
+        }
+
+        // Apply predicate for registration end date. Removed time portion of the date and added one day to get the result till the end of the day
+        if (registrationDateRangeFilter.getEndRegistrationDate() != null)
+        {
+            predicate = builder.and(predicate, builder.lessThan(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn),
+                HerdDateUtils.addDays(HerdDateUtils.resetTimeToMidnight(registrationDateRangeFilter.getEndRegistrationDate()), 1)));
         }
 
         return predicate;

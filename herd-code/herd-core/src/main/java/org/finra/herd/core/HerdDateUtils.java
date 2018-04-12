@@ -202,4 +202,17 @@ public class HerdDateUtils extends DateUtils
         calendar.setTimeInMillis(timestamp.getTime());
         return new Timestamp(addMinutes(calendar.getTime(), amount).getTime());
     }
+
+    /**
+     * Removes time portion of the date time object.
+     *
+     * @param xmlGregorianCalendar the xmlGregorianCalendar, not null
+     *
+     * @return the new {@code Timestamp} with reset time portion
+     */
+    public static Timestamp resetTimeToMidnight(XMLGregorianCalendar xmlGregorianCalendar)
+    {
+        Date date = xmlGregorianCalendar.toGregorianCalendar().getTime();
+        return new Timestamp(DateUtils.truncate(date, Calendar.DATE).getTime());
+    }
 }
