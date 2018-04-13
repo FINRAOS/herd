@@ -23,11 +23,15 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.service.RelationalTableRegistrationService;
 
 /**
  * The system job that updates schema for all relational tables registered in the system.
@@ -39,6 +43,12 @@ public class RelationalTableSchemaUpdateSystemJob extends AbstractSystemJob
     public static final String JOB_NAME = "relationalTableSchemaUpdate";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RelationalTableSchemaUpdateSystemJob.class);
+
+    @Autowired
+    private JsonHelper jsonHelper;
+
+    @Autowired
+    private RelationalTableRegistrationService relationalTableRegistrationService;
 
     @Override
     public String getCronExpression()
@@ -64,6 +74,38 @@ public class RelationalTableSchemaUpdateSystemJob extends AbstractSystemJob
     {
         // Log that the system job is started.
         LOGGER.info("Started system job. systemJobName=\"{}\"", JOB_NAME);
+
+        // Initialize a counter for number of schema updates.
+        int updatedRelationalTableSchemaCount = 0;
+
+        // Select relational table registration registered in the system.
+        List<BusinessObjectDataStorageUnitKey> storageUnitKeys = relationalTableRegistrationService.getRelationalTableRegistrationsForSchemaUpdate();
+
+        // Log the number of storage units selected for processing.
+        LOGGER.info("Selected relational table registrations for schema update. systemJobName=\"{}\" storageUnitCount={}", JOB_NAME, storageUnitKeys.size());
+
+        // Check if we need to update relational schema for each of the selected storage units.
+        for (BusinessObjectDataStorageUnitKey storageUnitKey : storageUnitKeys)
+        {
+            try
+            {
+                if (relationalTableRegistrationService.processRelationalTableRegistrationForSchemaUpdate(storageUnitKey) != null)
+                {
+                    updatedRelationalTableSchemaCount += 1;
+                }
+            }
+            catch (RuntimeException runtimeException)
+            {
+                // Log the exception.
+                LOGGER.error("Failed to process relational table registration for schema update. systemJobName=\"{}\" storageUnitKey={}", JOB_NAME,
+                    storageUnitKey, jsonHelper.objectToJson(storageUnitKey), runtimeException);
+            }
+        }
+
+        // Log the number of finalized restores.
+        LOGGER.info("Finished processing relational table registrations for schema update. systemJobName=\"{}\" updatedRelationalTableSchemaCount={}", JOB_NAME,
+            updatedRelationalTableSchemaCount);
+
 
         // Log that the system job is ended.
         LOGGER.info("Completed system job. systemJobName=\"{}\"", JOB_NAME);

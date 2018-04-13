@@ -80,6 +80,7 @@
          <Class name="~org.finra.herd.model.dto.PagingInfoDto"/>
          <Class name="~org.finra.herd.model.dto.RegServerAccessParamsDto"/>
          <Class name="~org.finra.herd.model.dto.RelationalStorageAttributesDto"/>
+         <Class name="~org.finra.herd.model.dto.RelationalTableRegistrationDto"/>
          <Class name="~org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.S3FileCopyRequestParamsDto"/>
          <Class name="~org.finra.herd.model.dto.S3FileCopyRequestParamsDto\$Builder"/>

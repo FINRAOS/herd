@@ -27,9 +27,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 import org.finra.herd.model.dto.RelationalStorageAttributesDto;
+import org.finra.herd.model.dto.RelationalTableRegistrationDto;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 
@@ -40,7 +44,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
     private RelationalTableRegistrationHelperService relationalTableRegistrationHelperServiceImpl;
 
     @Test
-    public void testGetRelationalStorageAttributesBusinessObjectDefinitionAlreadyExists()
+    public void testPrepareForRelationalTableRegistrationBusinessObjectDefinitionAlreadyExists()
     {
         // Create a namespace.
         namespaceDaoTestHelper.createNamespaceEntity(BDEF_NAMESPACE);
@@ -52,7 +56,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         // Try to a get relational storage attributes when specified business object definition already exists.
         try
         {
-            relationalTableRegistrationHelperService.getRelationalStorageAttributes(
+            relationalTableRegistrationHelperService.prepareForRelationalTableRegistration(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
                     RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
             fail();
@@ -65,7 +69,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
     }
 
     @Test
-    public void testGetRelationalStorageAttributesBusinessObjectFormatAlreadyExists()
+    public void testPrepareForRelationalTableRegistrationBusinessObjectFormatAlreadyExists()
     {
         // Create a namespace.
         namespaceDaoTestHelper.createNamespaceEntity(BDEF_NAMESPACE);
@@ -81,7 +85,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         // Try to a get relational storage attributes when specified business object definition already exists.
         try
         {
-            relationalTableRegistrationHelperService.getRelationalStorageAttributes(
+            relationalTableRegistrationHelperService.prepareForRelationalTableRegistration(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
                     RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_TRUE);
             fail();
@@ -94,7 +98,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
     }
 
     @Test
-    public void testGetRelationalStorageAttributesInvalidStoragePlatform()
+    public void testPrepareForRelationalTableRegistrationInvalidStoragePlatform()
     {
         // Create database entities required for relational table registration testing.
         relationalTableRegistrationServiceTestHelper
@@ -106,7 +110,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         // Try to a get relational storage attributes when specified storage has an invalid storage platform type.
         try
         {
-            relationalTableRegistrationHelperService.getRelationalStorageAttributes(
+            relationalTableRegistrationHelperService.prepareForRelationalTableRegistration(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
                     RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME_2), APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
             fail();
@@ -120,7 +124,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
     }
 
     @Test
-    public void testGetRelationalStorageAttributesRequiredDatabaseEntitiesNoExist()
+    public void testPrepareForRelationalTableRegistrationRequiredDatabaseEntitiesNoExist()
     {
         // Create database entities required for relational table registration testing.
         relationalTableRegistrationServiceTestHelper
@@ -129,7 +133,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         // Try to get a relational storage attributes when specified namespace does not exist.
         try
         {
-            relationalTableRegistrationHelperService.getRelationalStorageAttributes(
+            relationalTableRegistrationHelperService.prepareForRelationalTableRegistration(
                 new RelationalTableRegistrationCreateRequest(I_DO_NOT_EXIST, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
                     RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
             fail();
@@ -142,7 +146,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         // Try to get a relational storage attributes when specified data provider does not exist.
         try
         {
-            relationalTableRegistrationHelperService.getRelationalStorageAttributes(
+            relationalTableRegistrationHelperService.prepareForRelationalTableRegistration(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST,
                     RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
             fail();
@@ -155,7 +159,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         // Try to get a relational storage attributes when specified storage does not exist.
         try
         {
-            relationalTableRegistrationHelperService.getRelationalStorageAttributes(
+            relationalTableRegistrationHelperService.prepareForRelationalTableRegistration(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
                     RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, I_DO_NOT_EXIST), APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
             fail();
@@ -273,7 +277,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
     {
         try
         {
-            relationalTableRegistrationHelperServiceImpl.getRelationalStorageAttributes(
+            relationalTableRegistrationHelperServiceImpl.prepareForRelationalTableRegistration(
                 new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
                     RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME, STORAGE_NAME), APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
             fail();
@@ -281,6 +285,21 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Namespace \"%s\" doesn't exist.", BDEF_NAMESPACE), e.getMessage());
+        }
+
+        try
+        {
+            relationalTableRegistrationHelperServiceImpl.prepareForRelationalTableSchemaUpdate(
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Business object data storage unit {%s, storageName: \"%s\"} doesn't exist.", businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataKeyAsString(
+                    new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        SUBPARTITION_VALUES, DATA_VERSION)), STORAGE_NAME), e.getMessage());
         }
 
         try
@@ -306,6 +325,21 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
             assertEquals(String.format(
                 "Failed to retrieve description of a relational table with \"%s\" name under \"%s\" schema at jdbc.url=\"%s\" using jdbc.username=\"%s\". " +
                     "Reason: Wrong user name or password [28000-196]", RELATIONAL_TABLE_NAME, RELATIONAL_SCHEMA_NAME, JDBC_URL, USERNAME), e.getMessage());
+        }
+
+        try
+        {
+            relationalTableRegistrationHelperServiceImpl.updateRelationalTableSchema(new RelationalTableRegistrationDto(
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME), new RelationalStorageAttributesDto(), RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME,
+                new BusinessObjectFormat(ID, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
+                    PARTITION_KEY, DESCRIPTION, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_BUSINESS_OBJECT_FORMAT_PARENTS,
+                    NO_BUSINESS_OBJECT_FORMAT_CHILDREN, NO_RECORDFLAG, NO_RETENTIONPERIODINDAYS, NO_RETENTIONTYPE)), NO_COLUMNS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A schema must have at least one column.", e.getMessage());
         }
 
         try

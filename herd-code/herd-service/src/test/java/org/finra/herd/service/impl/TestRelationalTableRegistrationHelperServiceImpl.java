@@ -23,9 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.dto.RelationalStorageAttributesDto;
+import org.finra.herd.model.dto.RelationalTableRegistrationDto;
 
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
@@ -38,10 +40,21 @@ public class TestRelationalTableRegistrationHelperServiceImpl extends Relational
      * This implementation keeps the current transaction context.
      */
     @Override
-    public RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
-        Boolean appendToExistingBusinessObjectDefinition)
+    public RelationalStorageAttributesDto prepareForRelationalTableRegistration(
+        RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest, Boolean appendToExistingBusinessObjectDefinition)
     {
-        return getRelationalStorageAttributesImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
+        return prepareForRelationalTableRegistrationImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public RelationalTableRegistrationDto prepareForRelationalTableSchemaUpdate(BusinessObjectDataStorageUnitKey storageUnitKey)
+    {
+        return prepareForRelationalTableSchemaUpdateImpl(storageUnitKey);
     }
 
     /**
@@ -66,6 +79,17 @@ public class TestRelationalTableRegistrationHelperServiceImpl extends Relational
         String relationalTableName)
     {
         return retrieveRelationalTableColumnsImpl(relationalStorageAttributesDto, relationalSchemaName, relationalTableName);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public BusinessObjectData updateRelationalTableSchema(RelationalTableRegistrationDto relationalTableRegistrationDto, List<SchemaColumn> schemaColumns)
+    {
+        return updateRelationalTableSchemaImpl(relationalTableRegistrationDto, schemaColumns);
     }
 
     /**

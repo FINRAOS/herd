@@ -18,9 +18,11 @@ package org.finra.herd.service;
 import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.dto.RelationalStorageAttributesDto;
+import org.finra.herd.model.dto.RelationalTableRegistrationDto;
 
 /**
  * The helper service class for the relational table registration service.
@@ -28,16 +30,26 @@ import org.finra.herd.model.dto.RelationalStorageAttributesDto;
 public interface RelationalTableRegistrationHelperService
 {
     /**
-     * Gets storage attributes required to perform relation table registration. This method also validates database entities per specified relational table
-     * registration create request.
+     * Prepares for relational table registration by validating database entities per specified relational table registration create request. This method
+     * returns storage attributes required to perform relation table registration.
      *
      * @param relationalTableRegistrationCreateRequest the relational table registration create request
      * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
-     * @return the relational storage attributes DtO
+     * @return the relational storage attributes DTO
      */
-    RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+    RelationalStorageAttributesDto prepareForRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
         Boolean appendToExistingBusinessObjectDefinition);
+
+    /**
+     * Prepares for relational table schema update by validating database entities per specified storage unit key. This method returns a relational table
+     * registration DTO which contains attributes required to retrieve the current relation table schema.
+     *
+     * @param storageUnitKey the storage unit key for the relational table registration
+     *
+     * @return the relational table registration DTO
+     */
+    RelationalTableRegistrationDto prepareForRelationalTableSchemaUpdate(BusinessObjectDataStorageUnitKey storageUnitKey);
 
     /**
      * Creates a new relational table registration. The relation table registration includes creation of the following entities: <ul> <li>a business object
@@ -64,6 +76,19 @@ public interface RelationalTableRegistrationHelperService
      */
     List<SchemaColumn> retrieveRelationalTableColumns(RelationalStorageAttributesDto relationalStorageAttributesDto, String relationalSchemaName,
         String relationalTableName);
+
+    /**
+     * Updates relational table schema for an already existing relational table registration. The relation table schema update includes creation of the
+     * following entities: <ul> <li>a new version of the business object format with updated schema as extracted from the specified relational table in the
+     * specified storage of RELATIONAL storage platform type</li> <li>a business object data that is associated with the new business object format version</li>
+     * <li>a storage unit that links together the newly created business object data with the storage</li> </ul>
+     *
+     * @param relationalTableRegistrationDto the relational table registration DTO
+     * @param schemaColumns the new relational table schema
+     *
+     * @return the information for the business object data created for the updated relational table registration
+     */
+    BusinessObjectData updateRelationalTableSchema(RelationalTableRegistrationDto relationalTableRegistrationDto, List<SchemaColumn> schemaColumns);
 
     /**
      * Validates a relational table registration create request. This method also trims the request parameters.
