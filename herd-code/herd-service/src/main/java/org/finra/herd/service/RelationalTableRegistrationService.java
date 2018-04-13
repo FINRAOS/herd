@@ -15,7 +15,10 @@
 */
 package org.finra.herd.service;
 
+import java.util.List;
+
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 
 /**
@@ -35,4 +38,23 @@ public interface RelationalTableRegistrationService
      */
     BusinessObjectData createRelationalTableRegistration(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
         Boolean appendToExistingBusinessObjectDefinition);
+
+    /**
+     * Returns latest versions of all relational tables registered in the system.
+     *
+     * @return the list of relational table registrations
+     */
+    List<BusinessObjectDataStorageUnitKey> getRelationalTableRegistrationsForSchemaUpdate();
+
+    /**
+     * Updates relational table schema, if changes are detected, for an already existing relational table registration. The relation table schema update
+     * includes creation of the following entities: <ul> <li>a new version of the business object format with updated schema as extracted from the specified
+     * relational table in the specified storage of RELATIONAL storage platform type</li> <li>a business object data that is associated with the new business
+     * object format version</li> <li>a storage unit that links together the newly created business object data with the storage</li> </ul>
+     *
+     * @param storageUnitKey the storage unit key for relational table registration
+     *
+     * @return the information for the newly created business object data, if schema was updated; null otherwise
+     */
+    BusinessObjectData processRelationalTableRegistrationForSchemaUpdate(BusinessObjectDataStorageUnitKey storageUnitKey);
 }

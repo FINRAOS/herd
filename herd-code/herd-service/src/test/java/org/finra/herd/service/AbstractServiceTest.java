@@ -484,6 +484,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<BusinessObjectDefinitionColumnChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_COLUMN_CHANGE_EVENTS = new ArrayList<>();
 
+    public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_CHILDREN = null;
+
     public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
 
     public static final String NO_COLUMN_DEFAULT_VALUE = null;
@@ -546,13 +548,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<PartitionValueFilter> NO_PARTITION_VALUE_FILTERS = new ArrayList<>();
 
-    public static final RegistrationDateRangeFilter NO_REGISTRATION_DATE_RANGE_FILTER = null;
-
     public static final PartitionValueRange NO_PARTITION_VALUE_RANGE = null;
 
     public static final boolean NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.FALSE;
 
     public static final boolean NO_RECORDFLAG = false;
+
+    public static final RegistrationDateRangeFilter NO_REGISTRATION_DATE_RANGE_FILTER = null;
 
     public static final Integer NO_RETENTIONPERIODINDAYS = null;
 

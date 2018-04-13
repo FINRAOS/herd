@@ -62,6 +62,41 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDao
 {
     @Override
+    public List<StorageUnitEntity> getLatestVersionStorageUnitsByStoragePlatformAndFileType(String storagePlatform, String businessObjectFormatFileType)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<StorageUnitEntity> criteria = builder.createQuery(StorageUnitEntity.class);
+
+        // The criteria root is the storage unit.
+        Root<StorageUnitEntity> storageUnitEntityRoot = criteria.from(StorageUnitEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.storage);
+        Join<StorageEntity, StoragePlatformEntity> storagePlatformEntityJoin = storageEntityJoin.join(StorageEntity_.storagePlatform);
+        Join<StorageUnitEntity, BusinessObjectDataEntity> businessObjectDataEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.businessObjectData);
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
+            businessObjectDataEntityJoin.join(BusinessObjectDataEntity_.businessObjectFormat);
+        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntityJoin = businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.fileType);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(builder.upper(storagePlatformEntityJoin.get(StoragePlatformEntity_.name)), storagePlatform.toUpperCase()));
+        predicates.add(builder.equal(builder.upper(fileTypeEntityJoin.get(FileTypeEntity_.code)), businessObjectFormatFileType.toUpperCase()));
+        predicates.add(builder.isTrue(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.latestVersion)));
+        predicates.add(builder.isTrue(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.latestVersion)));
+
+        // Order by storage unit created on timestamp.
+        Order orderBy = builder.asc(storageUnitEntityRoot.get(StorageUnitEntity_.createdOn));
+
+        // Add the clauses for the query.
+        criteria.select(storageUnitEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderBy);
+
+        // Execute the query and return the results.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
     public List<StorageUnitEntity> getS3StorageUnitsToCleanup(int maxResult)
     {
         // Create the criteria builder and the criteria.
