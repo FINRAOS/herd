@@ -94,7 +94,7 @@ import org.finra.herd.service.helper.StorageUnitStatusDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class RelationalTableRegistrationHelperServiceImpl implements RelationalTableRegistrationHelperService
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(NotificationMessagePublishingServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RelationalTableRegistrationHelperServiceImpl.class);
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;

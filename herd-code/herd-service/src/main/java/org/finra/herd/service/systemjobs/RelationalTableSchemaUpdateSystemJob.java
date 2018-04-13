@@ -78,7 +78,7 @@ public class RelationalTableSchemaUpdateSystemJob extends AbstractSystemJob
         // Initialize a counter for number of schema updates.
         int updatedRelationalTableSchemaCount = 0;
 
-        // Select relational table registration registered int he system.
+        // Select relational table registration registered in the system.
         List<BusinessObjectDataStorageUnitKey> storageUnitKeys = relationalTableRegistrationService.getRelationalTableRegistrationsForSchemaUpdate();
 
         // Log the number of storage units selected for processing.
