@@ -49,39 +49,43 @@ import org.finra.herd.service.Ec2OnDemandPricingUpdateService;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUpdateService
 {
-    public static final String JSON_ATTRIBUTE_NAME_INSTANCE_TYPE = "instanceType";
+    static final String JSON_ATTRIBUTE_NAME_INSTANCE_TYPE = "instanceType";
 
-    public static final String JSON_ATTRIBUTE_NAME_LOCATION = "location";
+    static final String JSON_ATTRIBUTE_NAME_LOCATION = "location";
 
-    public static final String JSON_ATTRIBUTE_NAME_OPERATING_SYSTEM = "operatingSystem";
+    static final String JSON_ATTRIBUTE_NAME_OPERATING_SYSTEM = "operatingSystem";
 
-    public static final String JSON_ATTRIBUTE_NAME_TENANCY = "tenancy";
+    static final String JSON_ATTRIBUTE_NAME_PRE_INSTALLED_SOFTWARE = "preInstalledSw";
 
-    public static final String JSON_ATTRIBUTE_NAME_USAGE_TYPE = "usagetype";
+    static final String JSON_ATTRIBUTE_NAME_TENANCY = "tenancy";
 
-    public static final String JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM = "Linux";
+    static final String JSON_ATTRIBUTE_NAME_USAGE_TYPE = "usagetype";
 
-    public static final String JSON_ATTRIBUTE_VALUE_TENANCY = "Shared";
+    static final String JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM = "Linux";
 
-    public static final String JSON_KEY_NAME_ATTRIBUTES = "attributes";
+    static final String JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE = "NA";
 
-    public static final String JSON_KEY_NAME_ON_DEMAND = "OnDemand";
+    static final String JSON_ATTRIBUTE_VALUE_TENANCY = "Shared";
 
-    public static final String JSON_KEY_NAME_PRICE_DIMENSIONS = "priceDimensions";
+    static final String JSON_KEY_NAME_ATTRIBUTES = "attributes";
 
-    public static final String JSON_KEY_NAME_PRICE_PER_UNIT = "pricePerUnit";
+    static final String JSON_KEY_NAME_ON_DEMAND = "OnDemand";
 
-    public static final String JSON_KEY_NAME_PRODUCTS = "products";
+    static final String JSON_KEY_NAME_PRICE_DIMENSIONS = "priceDimensions";
 
-    public static final String JSON_KEY_NAME_SKU = "sku";
+    static final String JSON_KEY_NAME_PRICE_PER_UNIT = "pricePerUnit";
 
-    public static final String JSON_KEY_NAME_TERMS = "terms";
+    static final String JSON_KEY_NAME_PRODUCTS = "products";
 
-    public static final String JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX = ".6YS6EN2CT7";
+    static final String JSON_KEY_NAME_SKU = "sku";
 
-    public static final String JSON_PRICE_PER_UNIT_WRAPPER = "USD";
+    static final String JSON_KEY_NAME_TERMS = "terms";
 
-    public static final String JSON_SKU_WRAPPER_SUFFIX = ".JRTCKXETXF";
+    static final String JSON_PRICE_DIMENSIONS_WRAPPER_SUFFIX = ".6YS6EN2CT7";
+
+    static final String JSON_PRICE_PER_UNIT_WRAPPER = "USD";
+
+    static final String JSON_SKU_WRAPPER_SUFFIX = ".JRTCKXETXF";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Ec2OnDemandPricingUpdateServiceImpl.class);
 
@@ -127,9 +131,11 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
             Object instanceType = attributes.get(JSON_ATTRIBUTE_NAME_INSTANCE_TYPE);
             Object tenancy = attributes.get(JSON_ATTRIBUTE_NAME_TENANCY);
             Object usageType = attributes.get(JSON_ATTRIBUTE_NAME_USAGE_TYPE);
+            Object preInstalledSoftware = attributes.get(JSON_ATTRIBUTE_NAME_PRE_INSTALLED_SOFTWARE);
 
             // Validate the parameters and create an EC2 on-demand pricing entry.
-            Ec2OnDemandPricing ec2OnDemandPricing = createEc2OnDemandPricingEntry(sku, location, operatingSystem, instanceType, tenancy, usageType);
+            Ec2OnDemandPricing ec2OnDemandPricing =
+                createEc2OnDemandPricingEntry(sku, location, operatingSystem, instanceType, tenancy, usageType, preInstalledSoftware);
 
             // Check if this EC2 on-demand pricing entry got created (the relative parameters passed validation checks).
             if (ec2OnDemandPricing != null)
@@ -285,7 +291,7 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
      *
      * @return the region name
      */
-    protected String convertLocationToRegionName(String location)
+    String convertLocationToRegionName(String location)
     {
         String region;
 
@@ -354,21 +360,21 @@ public class Ec2OnDemandPricingUpdateServiceImpl implements Ec2OnDemandPricingUp
      * @param instanceType the EC2 instance type, maybe null
      * @param tenancy the EC2 tenancy, maybe null
      * @param usageType the usage type, maybe null
+     * @param preInstalledSoftware the pre-installed software, maybe null
      *
      * @return the EC2 on-demand pricing or null if input parameters fail validation
      */
-    protected Ec2OnDemandPricing createEc2OnDemandPricingEntry(String sku, Object location, Object operatingSystem, Object instanceType, Object tenancy,
-        Object usageType)
+    Ec2OnDemandPricing createEc2OnDemandPricingEntry(String sku, Object location, Object operatingSystem, Object instanceType, Object tenancy, Object usageType,
+        Object preInstalledSoftware)
     {
         Ec2OnDemandPricing result = null;
 
         // The extra check for usage type is added below to exclude any dedicated/reserved hosts that are marked as having "Shared" tenancy by mistake.
-        if (location != null && operatingSystem != null && instanceType != null && tenancy != null && usageType != null &&
-            StringUtils.isNotBlank(location.toString()) &&
-            operatingSystem.toString().equalsIgnoreCase(JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM) &&
-            StringUtils.isNotBlank(instanceType.toString()) &&
-            tenancy.toString().equalsIgnoreCase(JSON_ATTRIBUTE_VALUE_TENANCY) &&
-            (usageType.toString().startsWith("BoxUsage") || usageType.toString().contains("-BoxUsage")))
+        if (location != null && operatingSystem != null && instanceType != null && tenancy != null && usageType != null && preInstalledSoftware != null &&
+            StringUtils.isNotBlank(location.toString()) && operatingSystem.toString().equalsIgnoreCase(JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM) &&
+            StringUtils.isNotBlank(instanceType.toString()) && tenancy.toString().equalsIgnoreCase(JSON_ATTRIBUTE_VALUE_TENANCY) &&
+            (usageType.toString().startsWith("BoxUsage") || usageType.toString().contains("-BoxUsage")) &&
+            preInstalledSoftware.toString().equalsIgnoreCase(JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE))
         {
             result = new Ec2OnDemandPricing(new Ec2OnDemandPricingKey(convertLocationToRegionName(location.toString()), instanceType.toString()), null, sku);
         }
