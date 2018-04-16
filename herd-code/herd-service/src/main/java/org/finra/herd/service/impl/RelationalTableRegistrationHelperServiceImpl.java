@@ -468,7 +468,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             }
 
             // Retrieve the relational table columns.
-            try (ResultSet columns = databaseMetaData.getColumns(null, null, relationalTableName, null))
+            try (ResultSet columns = databaseMetaData.getColumns(null, relationalSchemaName, relationalTableName, null))
             {
                 while (columns.next())
                 {
