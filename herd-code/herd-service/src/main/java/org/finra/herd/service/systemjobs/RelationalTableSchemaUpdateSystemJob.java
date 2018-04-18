@@ -98,7 +98,7 @@ public class RelationalTableSchemaUpdateSystemJob extends AbstractSystemJob
             {
                 // Log the exception.
                 LOGGER.error("Failed to process relational table registration for schema update. systemJobName=\"{}\" storageUnitKey={}", JOB_NAME,
-                    storageUnitKey, jsonHelper.objectToJson(storageUnitKey), runtimeException);
+                    jsonHelper.objectToJson(storageUnitKey), runtimeException);
             }
         }
 
