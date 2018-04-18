@@ -371,7 +371,8 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         // Notify the search index that a business object definition is created.
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
-        // Create a business object format. Store the relational table name as a business object format attribute per attribute name configured in the system.
+        // Build a business object format create request.
+        // Store the relational table name as a business object format attribute per attribute name configured in the system.
         BusinessObjectFormatCreateRequest businessObjectFormatCreateRequest = new BusinessObjectFormatCreateRequest();
         businessObjectFormatCreateRequest.setNamespace(relationalTableRegistrationCreateRequest.getNamespace());
         businessObjectFormatCreateRequest.setBusinessObjectDefinitionName(relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName());
@@ -384,6 +385,11 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
                 relationalTableRegistrationCreateRequest.getRelationalTableName())));
         businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null));
+
+        // Log the business object format create request.
+        LOGGER.info("Registering relational table... businessObjectFormatCreateRequest={}", jsonHelper.objectToJson(businessObjectFormatCreateRequest));
+
+        // Create a business object format.
         BusinessObjectFormat businessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatCreateRequest);
 
         // Retrieve the newly created business object format entity.
@@ -514,7 +520,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         businessObjectFormatCreateRequest.setAttributes(relationalTableRegistrationDto.getBusinessObjectFormat().getAttributes());
         businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null));
 
-        // Log the business object format create request.
+        // Log the relational table registration DTO along with the business object format create request.
         LOGGER.info("Updating relational table schema... relationalTableRegistrationDto={} businessObjectFormatCreateRequest={}",
             jsonHelper.objectToJson(relationalTableRegistrationDto), jsonHelper.objectToJson(businessObjectFormatCreateRequest));
 
