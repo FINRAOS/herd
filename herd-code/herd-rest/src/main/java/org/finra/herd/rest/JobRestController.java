@@ -16,7 +16,6 @@
 package org.finra.herd.rest;
 
 import io.swagger.annotations.Api;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -80,10 +79,10 @@ public class JobRestController extends HerdBaseController
     @Secured(SecurityFunctions.FN_JOBS_GET)
     public JobSummaries getJobs(@RequestParam(value = "namespace", required = false) String namespace,
         @RequestParam(value = "jobName", required = false) String jobName, @RequestParam(value = "status", required = false) JobStatusEnum status,
-        @RequestParam(value = "startTime", required = false) DateTime startTime, @RequestParam(value = "endTime", required = false) DateTime endTime)
+        @RequestParam(value = "startTime", required = false) String startTime, @RequestParam(value = "endTime", required = false) String endTime)
         throws Exception
     {
-        return jobService.getJobs(namespace, jobName, status, startTime, endTime);
+        return jobService.getJobs(namespace, jobName, status, getDateTime(startTime), getDateTime(endTime));
     }
 
     /**

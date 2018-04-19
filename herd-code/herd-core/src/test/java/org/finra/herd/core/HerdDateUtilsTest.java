@@ -24,6 +24,8 @@ import static org.junit.Assert.assertEquals;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.junit.Test;
@@ -114,7 +116,6 @@ public class HerdDateUtilsTest extends AbstractCoreTest
         assertEquals(Timestamp.valueOf("2015-09-13 10:34:11"), HerdDateUtils.addDays(testTimestamp, -daysDiff));
     }
 
-
     @Test
     public void testAddMinutes()
     {
@@ -124,5 +125,13 @@ public class HerdDateUtilsTest extends AbstractCoreTest
         assertEquals(Timestamp.valueOf("2015-12-21 12:13:11"), HerdDateUtils.addMinutes(testTimestamp, minutesDiff));
         assertEquals(testTimestamp, HerdDateUtils.addMinutes(testTimestamp, 0));
         assertEquals(Timestamp.valueOf("2015-12-21 08:55:11"), HerdDateUtils.addMinutes(testTimestamp, -minutesDiff));
+    }
+
+    @Test
+    public void testResetTimeToMidnight() throws DatatypeConfigurationException
+    {
+        XMLGregorianCalendar gregorianCalendar = DatatypeFactory.newInstance().newXMLGregorianCalendar("2015-12-21T21:32:52");
+        Timestamp result = HerdDateUtils.resetTimeToMidnight(gregorianCalendar);
+        assertEquals(Timestamp.valueOf("2015-12-21 00:00:00.0"), result);
     }
 }

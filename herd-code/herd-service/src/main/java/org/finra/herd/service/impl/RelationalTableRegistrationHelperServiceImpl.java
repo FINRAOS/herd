@@ -28,6 +28,8 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.BooleanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Service;
@@ -42,10 +44,12 @@ import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
 import org.finra.herd.dao.helper.CredStashHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
@@ -56,6 +60,7 @@ import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.RelationalStorageAttributesDto;
+import org.finra.herd.model.dto.RelationalTableRegistrationDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -89,6 +94,8 @@ import org.finra.herd.service.helper.StorageUnitStatusDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class RelationalTableRegistrationHelperServiceImpl implements RelationalTableRegistrationHelperService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RelationalTableRegistrationHelperServiceImpl.class);
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -129,6 +136,9 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
     private DataProviderDaoHelper dataProviderDaoHelper;
 
     @Autowired
+    private JsonHelper jsonHelper;
+
+    @Autowired
     private MessageNotificationEventService messageNotificationEventService;
 
     @Autowired
@@ -151,10 +161,17 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public RelationalStorageAttributesDto getRelationalStorageAttributes(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
-        Boolean appendToExistingBusinessObjectDefinition)
+    public RelationalStorageAttributesDto prepareForRelationalTableRegistration(
+        RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest, Boolean appendToExistingBusinessObjectDefinition)
     {
-        return getRelationalStorageAttributesImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
+        return prepareForRelationalTableRegistrationImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public RelationalTableRegistrationDto prepareForRelationalTableSchemaUpdate(BusinessObjectDataStorageUnitKey storageUnitKey)
+    {
+        return prepareForRelationalTableSchemaUpdateImpl(storageUnitKey);
     }
 
     @PublishNotificationMessages
@@ -172,6 +189,14 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         String relationalTableName)
     {
         return retrieveRelationalTableColumnsImpl(relationalStorageAttributesDto, relationalSchemaName, relationalTableName);
+    }
+
+    @PublishNotificationMessages
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public BusinessObjectData updateRelationalTableSchema(RelationalTableRegistrationDto relationalTableRegistrationDto, List<SchemaColumn> schemaColumns)
+    {
+        return updateRelationalTableSchemaImpl(relationalTableRegistrationDto, schemaColumns);
     }
 
     @Override
@@ -212,15 +237,15 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
     }
 
     /**
-     * Gets storage attributes required to perform relation table registration. This method also validates database entities per specified relational table
-     * registration create request.
+     * Prepares for relational table registration by validating database entities per specified relational table registration create request. This method
+     * returns storage attributes required to perform relation table registration.
      *
      * @param relationalTableRegistrationCreateRequest the relational table registration create request
      * @param appendToExistingBusinessObjectDefinition boolean flag that determines if the format should be appended to an existing business object definition
      *
-     * @return the relational storage attributes DtO
+     * @return the relational storage attributes DTO
      */
-    RelationalStorageAttributesDto getRelationalStorageAttributesImpl(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
+    RelationalStorageAttributesDto prepareForRelationalTableRegistrationImpl(RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest,
         Boolean appendToExistingBusinessObjectDefinition)
     {
         // Validate that specified namespace exists.
@@ -264,27 +289,48 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             "Cannot register relational table in \"%s\" storage of %s storage platform type. Only %s storage platform type is supported by this feature.",
             storageEntity.getName(), storageEntity.getStoragePlatform().getName(), StoragePlatformEntity.RELATIONAL));
 
-        // Get JDBC URL for this storage. This storage attribute is required and must have a non-blank value.
-        String jdbcUrl = storageHelper
-            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_URL), storageEntity, true, true);
+        // Get and return the relational storage attributes required to access relation table schema.
+        return getRelationalStorageAttributes(storageEntity);
+    }
 
-        // Get JDBC username for this storage. This storage attribute is not required and it is allowed to have a blank value.
-        String jdbcUsername = storageHelper
-            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USERNAME), storageEntity, false,
-                false);
+    /**
+     * Prepares for relational table schema update by validating database entities per specified storage unit key. This method returns a relational table
+     * registration DTO which contains attributes required to retrieve the current relation table schema.
+     *
+     * @param storageUnitKey the storage unit key for the relational table registration
+     *
+     * @return the relational table registration DTO
+     */
+    RelationalTableRegistrationDto prepareForRelationalTableSchemaUpdateImpl(BusinessObjectDataStorageUnitKey storageUnitKey)
+    {
+        // Log the business object format create request.
+        LOGGER.info("Checking relational table registration for schema update... storageUnitKey={}", jsonHelper.objectToJson(storageUnitKey));
 
-        // Get JDBC user credential name for this storage. This storage attribute is not required and it is allowed to have a blank value.
-        String jdbcUserCredentialName = storageHelper
-            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USER_CREDENTIAL_NAME), storageEntity,
-                false, false);
+        // Get the storage unit.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntityByKey(storageUnitKey);
 
-        // Create and initialize a relational storage attributes DTO.
-        RelationalStorageAttributesDto relationalStorageAttributesDto = new RelationalStorageAttributesDto();
-        relationalStorageAttributesDto.setJdbcUrl(jdbcUrl);
-        relationalStorageAttributesDto.setJdbcUsername(jdbcUsername);
-        relationalStorageAttributesDto.setJdbcUserCredentialName(jdbcUserCredentialName);
+        // Get the business object format entity for this relation table registration.
+        BusinessObjectFormatEntity businessObjectFormatEntity = storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat();
 
-        return relationalStorageAttributesDto;
+        // Get relational schema name from the business object format. This business object format attribute is required and must have a non-blank value.
+        String relationalSchemaName = businessObjectFormatDaoHelper.getBusinessObjectFormatAttributeValueByName(
+            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME), businessObjectFormatEntity, true,
+            true);
+
+        // Get relational table name from the business object format. This business object format attribute is required and must have a non-blank value.
+        String relationalTableName = businessObjectFormatDaoHelper.getBusinessObjectFormatAttributeValueByName(
+            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME), businessObjectFormatEntity, true,
+            true);
+
+        // Get relational storage attributes required to access relation table schema.
+        RelationalStorageAttributesDto relationalStorageAttributesDto = getRelationalStorageAttributes(storageUnitEntity.getStorage());
+
+        // Get business object format for the relational table registration.
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
+
+        // Create and return a relational storage attributes DTO.
+        return new RelationalTableRegistrationDto(storageUnitKey, relationalStorageAttributesDto, relationalSchemaName, relationalTableName,
+            businessObjectFormat);
     }
 
     /**
@@ -325,7 +371,8 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         // Notify the search index that a business object definition is created.
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
-        // Create a business object format. Store the relational table name as a business object format attribute per attribute name configured in the system.
+        // Build a business object format create request.
+        // Store the relational table name as a business object format attribute per attribute name configured in the system.
         BusinessObjectFormatCreateRequest businessObjectFormatCreateRequest = new BusinessObjectFormatCreateRequest();
         businessObjectFormatCreateRequest.setNamespace(relationalTableRegistrationCreateRequest.getNamespace());
         businessObjectFormatCreateRequest.setBusinessObjectDefinitionName(relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionName());
@@ -338,6 +385,11 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
                 relationalTableRegistrationCreateRequest.getRelationalTableName())));
         businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null));
+
+        // Log the business object format create request.
+        LOGGER.info("Registering relational table... businessObjectFormatCreateRequest={}", jsonHelper.objectToJson(businessObjectFormatCreateRequest));
+
+        // Create a business object format.
         BusinessObjectFormat businessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatCreateRequest);
 
         // Retrieve the newly created business object format entity.
@@ -422,7 +474,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             }
 
             // Retrieve the relational table columns.
-            try (ResultSet columns = databaseMetaData.getColumns(null, null, relationalTableName, null))
+            try (ResultSet columns = databaseMetaData.getColumns(null, relationalSchemaName, relationalTableName, null))
             {
                 while (columns.next())
                 {
@@ -444,6 +496,76 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         }
 
         return schemaColumns;
+    }
+
+    /**
+     * Updates relational table schema for an already existing relational table registration.
+     *
+     * @param relationalTableRegistrationDto the relational table registration DTO
+     * @param schemaColumns the new relational table schema
+     *
+     * @return the information for the business object data created for the updated relational table registration
+     */
+    BusinessObjectData updateRelationalTableSchemaImpl(RelationalTableRegistrationDto relationalTableRegistrationDto, List<SchemaColumn> schemaColumns)
+    {
+        // Build a create request for a new version of the business object format.
+        BusinessObjectFormatCreateRequest businessObjectFormatCreateRequest = new BusinessObjectFormatCreateRequest();
+        businessObjectFormatCreateRequest.setNamespace(relationalTableRegistrationDto.getBusinessObjectFormat().getNamespace());
+        businessObjectFormatCreateRequest
+            .setBusinessObjectDefinitionName(relationalTableRegistrationDto.getBusinessObjectFormat().getBusinessObjectDefinitionName());
+        businessObjectFormatCreateRequest.setBusinessObjectFormatUsage(relationalTableRegistrationDto.getBusinessObjectFormat().getBusinessObjectFormatUsage());
+        businessObjectFormatCreateRequest
+            .setBusinessObjectFormatFileType(relationalTableRegistrationDto.getBusinessObjectFormat().getBusinessObjectFormatFileType());
+        businessObjectFormatCreateRequest.setPartitionKey(relationalTableRegistrationDto.getBusinessObjectFormat().getPartitionKey());
+        businessObjectFormatCreateRequest.setAttributes(relationalTableRegistrationDto.getBusinessObjectFormat().getAttributes());
+        businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null));
+
+        // Log the relational table registration DTO along with the business object format create request.
+        LOGGER.info("Updating relational table schema... relationalTableRegistrationDto={} businessObjectFormatCreateRequest={}",
+            jsonHelper.objectToJson(relationalTableRegistrationDto), jsonHelper.objectToJson(businessObjectFormatCreateRequest));
+
+        // Create a new version of the business object format.
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatCreateRequest);
+
+        // Retrieve the newly created business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity =
+            businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormat));
+
+        // Get a business object data status entity for the VALID status.
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
+            businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+        businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+        businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
+        businessObjectDataEntity.setVersion(0);
+        businessObjectDataEntity.setLatestVersion(true);
+        businessObjectDataEntity.setPartitionValue(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_VALUE);
+
+        // Get a storage unit status entity for the ENABLED status.
+        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ENABLED);
+
+        // Get the storage.
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(relationalTableRegistrationDto.getStorageUnitKey().getStorageName());
+
+        // Create a storage unit entity.
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setStorage(storageEntity);
+        storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
+        storageUnitDaoHelper.setStorageUnitStatus(storageUnitEntity, storageUnitStatusEntity);
+        businessObjectDataEntity.setStorageUnits(Collections.singletonList(storageUnitEntity));
+
+        // Persist the newly created business object data entity.
+        businessObjectDataEntity = businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+
+        // Create a status change notification to be sent on create business object data event.
+        messageNotificationEventService
+            .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity),
+                businessObjectDataStatusEntity.getCode(), null);
+
+        // Create and return business object data information from the newly created business object data entity.
+        return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);
     }
 
     /**
@@ -477,5 +599,32 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             relationalTableRegistrationCreateRequest
                 .setBusinessObjectDefinitionDisplayName(relationalTableRegistrationCreateRequest.getBusinessObjectDefinitionDisplayName().trim());
         }
+    }
+
+    /**
+     * Returns storage attributes required to access relation table schema.
+     *
+     * @param storageEntity the storage entity
+     *
+     * @return the relational storage attributes DTO
+     */
+    private RelationalStorageAttributesDto getRelationalStorageAttributes(StorageEntity storageEntity)
+    {
+        // Get JDBC URL for this storage. This storage attribute is required and must have a non-blank value.
+        String jdbcUrl = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_URL), storageEntity, true, true);
+
+        // Get JDBC username for this storage. This storage attribute is not required and it is allowed to have a blank value.
+        String jdbcUsername = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USERNAME), storageEntity, false,
+                false);
+
+        // Get JDBC user credential name for this storage. This storage attribute is not required and it is allowed to have a blank value.
+        String jdbcUserCredentialName = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.STORAGE_ATTRIBUTE_NAME_JDBC_USER_CREDENTIAL_NAME), storageEntity,
+                false, false);
+
+        // Create and return a relational storage attributes DTO.
+        return new RelationalStorageAttributesDto(jdbcUrl, jdbcUsername, jdbcUserCredentialName);
     }
 }

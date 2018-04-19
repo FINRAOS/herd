@@ -26,6 +26,17 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 public interface StorageUnitDao extends BaseJpaDao
 {
     /**
+     * Retrieves a list of storage units that belong to storage of the specified storage platform type and to business object format of the specified file type.
+     * Only storage units that belong to the latest versions of the relative business object format and business object data are selected.
+     *
+     * @param storagePlatform the storage platform
+     * @param businessObjectFormatFileType the business object format file type
+     *
+     * @return the list of storage units
+     */
+    List<StorageUnitEntity> getLatestVersionStorageUnitsByStoragePlatformAndFileType(String storagePlatform, String businessObjectFormatFileType);
+
+    /**
      * Retrieves a list of storage units that belong to S3 storage, and has a final destroy on timestamp < current time, has a DISABLED status, and associated
      * BData has a DELETED status. The returned list is ordered by the "finalDestroyOn" timestamp of the S3 storage units, starting with an S3 storage unit that
      * is final destroy on the longest.
@@ -34,7 +45,7 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return the list of storage unit entities
      */
-    public List<StorageUnitEntity> getS3StorageUnitsToCleanup(int maxResult);
+    List<StorageUnitEntity> getS3StorageUnitsToCleanup(int maxResult);
 
     /**
      * Retrieves a list of storage units that belong to S3 storage, have RESTORED status, and ready to be expired. The returned list is ordered by the
@@ -44,7 +55,7 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return the list of storage unit entities
      */
-    public List<StorageUnitEntity> getS3StorageUnitsToExpire(int maxResult);
+    List<StorageUnitEntity> getS3StorageUnitsToExpire(int maxResult);
 
     /**
      * Retrieves a list of storage units that belong to S3 storage and have the relative S3 storage unit in RESTORING state. The returned list is ordered by the
@@ -54,7 +65,7 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return the list of storage unit entities
      */
-    public List<StorageUnitEntity> getS3StorageUnitsToRestore(int maxResult);
+    List<StorageUnitEntity> getS3StorageUnitsToRestore(int maxResult);
 
     /**
      * Gets a storage unit identified by the given business object data entity and storage entity. Returns {@code null} if storage unit entity does not exist.
@@ -64,7 +75,7 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return {@link StorageUnitEntity} or {@code null}
      */
-    public StorageUnitEntity getStorageUnitByBusinessObjectDataAndStorage(BusinessObjectDataEntity businessObjectDataEntity, StorageEntity storageEntity);
+    StorageUnitEntity getStorageUnitByBusinessObjectDataAndStorage(BusinessObjectDataEntity businessObjectDataEntity, StorageEntity storageEntity);
 
     /**
      * Gets a storage unit identified by the given business object data entity and storage name. Returns {@code null} if storage unit entity does not exist.
@@ -74,7 +85,7 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return {@link StorageUnitEntity} or {@code null}
      */
-    public StorageUnitEntity getStorageUnitByBusinessObjectDataAndStorageName(BusinessObjectDataEntity businessObjectDataEntity, String storageName);
+    StorageUnitEntity getStorageUnitByBusinessObjectDataAndStorageName(BusinessObjectDataEntity businessObjectDataEntity, String storageName);
 
     /**
      * Gets a storage unit identified by the given business object data storage unit key. Returns {@code null} if storage unit does not exist.
@@ -83,7 +94,7 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return {@link StorageUnitEntity} or {@code null}
      */
-    public StorageUnitEntity getStorageUnitByKey(BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey);
+    StorageUnitEntity getStorageUnitByKey(BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey);
 
     /**
      * Returns a first discovered storage unit in the specified storage that overlaps with the directory path.
@@ -93,7 +104,7 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return the first found storage unit in the specified storage that overlaps with the directory path or null if none were found
      */
-    public StorageUnitEntity getStorageUnitByStorageNameAndDirectoryPath(String storageName, String directoryPath);
+    StorageUnitEntity getStorageUnitByStorageNameAndDirectoryPath(String storageName, String directoryPath);
 
     /**
      * Retrieves a list of storage unit entities per specified parameters.
@@ -116,9 +127,9 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return the list of storage unit entities sorted by partition values and storage names
      */
-    public List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey,
-        List<List<String>> partitionFilters, Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames,
-        String storagePlatformType, String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits);
+    List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
+        Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
+        String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits);
 
     /**
      * Retrieves a list of storage units that belong to the specified storage for the specified business object data.
@@ -128,7 +139,7 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return the list of storage unit entities
      */
-    public List<StorageUnitEntity> getStorageUnitsByStorageAndBusinessObjectData(StorageEntity storageEntity,
+    List<StorageUnitEntity> getStorageUnitsByStorageAndBusinessObjectData(StorageEntity storageEntity,
         List<BusinessObjectDataEntity> businessObjectDataEntities);
 
     /**
@@ -139,6 +150,5 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return the list of storage unit entities
      */
-    public List<StorageUnitEntity> getStorageUnitsByStoragePlatformAndBusinessObjectData(String storagePlatform,
-        BusinessObjectDataEntity businessObjectDataEntity);
+    List<StorageUnitEntity> getStorageUnitsByStoragePlatformAndBusinessObjectData(String storagePlatform, BusinessObjectDataEntity businessObjectDataEntity);
 }

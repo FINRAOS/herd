@@ -125,7 +125,8 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
                     new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Collections
                         .singletonList(
                             new PartitionValueFilter(NO_PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                                NO_LATEST_AFTER_PARTITION_VALUE)), NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
+                                NO_LATEST_AFTER_PARTITION_VALUE)), NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS,
+                        NO_FILTER_ON_LATEST_VALID_VERSION,
                         NO_FILTER_ON_RETENTION_EXPIRATION))))));
             fail();
         }
@@ -487,7 +488,8 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
             businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections
                 .singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
                     new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
-                        NO_PARTITION_VALUE_FILTERS, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+                        NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
+                        NO_FILTER_ON_RETENTION_EXPIRATION))))));
             fail();
         }
         catch (IllegalArgumentException e)

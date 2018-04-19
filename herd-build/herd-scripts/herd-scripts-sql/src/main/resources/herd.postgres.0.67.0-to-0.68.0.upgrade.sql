@@ -13,23 +13,4 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.rest;
 
-import java.beans.PropertyEditorSupport;
-
-import org.apache.commons.lang3.StringUtils;
-import org.joda.time.format.ISODateTimeFormat;
-import org.springframework.stereotype.Component;
-
-/**
- * Property editor for Joda DateTime.
- */
-@Component
-public class DateTimeEditor extends PropertyEditorSupport
-{
-    @Override
-    public void setAsText(String text) throws IllegalArgumentException
-    {
-        setValue(StringUtils.isBlank(text) ? null : ISODateTimeFormat.dateTimeParser().parseDateTime(text.trim()));
-    }
-}
