@@ -189,6 +189,11 @@ public enum ConfigurationValue
         "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/index.json"),
 
     /**
+     * The cron expression to schedule "relationalTableSchemaUpdate" system job.  Default is to run this system job every night at 8 AM.
+     */
+    RELATIONAL_TABLE_SCHEMA_UPDATE_JOB_CRON_EXPRESSION("relational.table.schema.update.job.cron.expression", "0 0 8 * * ?"),
+
+    /**
      * The cron expression to schedule "storagePolicySelector" system job.  Default is to run the system job every night at 2 AM.
      */
     STORAGE_POLICY_SELECTOR_JOB_CRON_EXPRESSION("storage.policy.selector.job.cron.expression", "0 0 2 * * ?"),
@@ -255,7 +260,6 @@ public enum ConfigurationValue
      * default is 1000 business object data instances.
      */
     CLEANUP_DESTROYED_BDATA_JOB_MAX_BDATA_INSTANCES("cleanup.destroyed.business.object.data.job.max.business.object.data.instances", "1000"),
-
 
     /**
      * The default value for the expiration time for the business object data restore. The default is 30 days
@@ -328,8 +332,8 @@ public enum ConfigurationValue
     EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS("emr.spot.price.history.product.descriptions", null),
 
     /**
-     * The threshold value in percentage when choosing an EMR cluster based on the lowest core instance price. It should be of string type so the precision
-     * can be kept. The default value is 10 percent.
+     * The threshold value in percentage when choosing an EMR cluster based on the lowest core instance price. It should be of string type so the precision can
+     * be kept. The default value is 10 percent.
      */
     EMR_CLUSTER_LOWEST_CORE_INSTANCE_PRICE_PERCENTAGE("emr.cluster.lowest.core.instance.price.threshold.percentage", "0.1"),
 

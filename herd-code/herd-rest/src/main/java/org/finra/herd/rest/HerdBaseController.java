@@ -15,7 +15,6 @@
 */
 package org.finra.herd.rest;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +22,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.security.access.annotation.Secured;
 
 import org.finra.herd.model.dto.PagingInfoDto;
@@ -71,18 +72,6 @@ public abstract class HerdBaseController
     }
 
     /**
-     * Gets the given delimited field values as a list. If delimited field values is null, returns an empty list.
-     *
-     * @param delimitedFieldValues Delimited field values
-     *
-     * @return List of values
-     */
-    protected List<String> getList(DelimitedFieldValues delimitedFieldValues)
-    {
-        return delimitedFieldValues == null ? new ArrayList<>() : delimitedFieldValues.getValues();
-    }
-
-    /**
      * Validates that the query string parameters aren't duplicated for a list of expected parameters.
      *
      * @param parameterMap the query string parameter map.
@@ -117,5 +106,17 @@ public abstract class HerdBaseController
         httpServletResponse.setHeader(HTTP_HEADER_PAGING_TOTAL_RECORDS_ON_PAGE, String.valueOf(pagingInfo.getTotalRecordsOnPage()));
         httpServletResponse.setHeader(HTTP_HEADER_PAGING_TOTAL_RECORD_COUNT, String.valueOf(pagingInfo.getTotalRecordCount()));
         httpServletResponse.setHeader(HTTP_HEADER_PAGING_MAX_RESULTS_PER_PAGE, String.valueOf(pagingInfo.getMaxResultsPerPage()));
+    }
+
+    /**
+     * Parses a date-time from the given text, returning a new DateTime.
+     *
+     * @param text the text to parse, may be null
+     *
+     * @return the parsed date-time, or null if text is null
+     */
+    DateTime getDateTime(String text)
+    {
+        return StringUtils.isBlank(text) ? null : ISODateTimeFormat.dateTimeParser().parseDateTime(text.trim());
     }
 }

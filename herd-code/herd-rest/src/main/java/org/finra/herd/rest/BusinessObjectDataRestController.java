@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailability;
@@ -78,6 +79,9 @@ public class BusinessObjectDataRestController extends HerdBaseController
 
     @Autowired
     private BusinessObjectDataService businessObjectDataService;
+
+    @Autowired
+    private HerdStringHelper herdStringHelper;
 
     @Autowired
     private StorageUnitService storageUnitService;
@@ -357,11 +361,12 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
         @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues)
     {
         return businessObjectDataService.destroyBusinessObjectData(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion));
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+                businessObjectDataVersion));
     }
 
     /**
@@ -483,7 +488,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
         @RequestParam(value = "partitionKey", required = false) String businessObjectFormatPartitionKey, @RequestParam("partitionValue") String partitionValue,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues,
         @RequestParam(value = "businessObjectFormatVersion", required = false) Integer businessObjectFormatVersion,
         @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
         @RequestParam(value = "businessObjectDataStatus", required = false) String businessObjectDataStatus,
@@ -492,8 +497,9 @@ public class BusinessObjectDataRestController extends HerdBaseController
     {
         return businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), businessObjectFormatPartitionKey,
-            businessObjectDataStatus, includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+                businessObjectDataVersion), businessObjectFormatPartitionKey, businessObjectDataStatus, includeBusinessObjectDataStatusHistory,
+            includeStorageUnitStatusHistory);
     }
 
     /**
@@ -523,11 +529,12 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
         @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestParam(value = "storageName", required = true) String storageName,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues)
     {
         StorageUnitDownloadCredential storageUnitDownloadCredential = storageUnitService.getStorageUnitDownloadCredential(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), storageName);
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+                businessObjectDataVersion), storageName);
 
         return new BusinessObjectDataDownloadCredential(storageUnitDownloadCredential.getAwsCredential());
     }
@@ -562,11 +569,12 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
         @RequestParam(value = "createNewVersion", required = false) Boolean createNewVersion,
         @RequestParam(value = "storageName", required = true) String storageName,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues)
     {
         StorageUnitUploadCredential storageUnitUploadCredential = storageUnitService.getStorageUnitUploadCredential(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), createNewVersion, storageName);
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+                businessObjectDataVersion), createNewVersion, storageName);
 
         return new BusinessObjectDataUploadCredential(storageUnitUploadCredential.getAwsCredential(), storageUnitUploadCredential.getAwsKmsKeyId());
     }
@@ -595,13 +603,14 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType, @RequestParam("partitionValue") String partitionValue,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues,
         @RequestParam(value = "businessObjectFormatVersion", required = false) Integer businessObjectFormatVersion,
         @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion)
     {
         return businessObjectDataService.getBusinessObjectDataVersions(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion));
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+                businessObjectDataVersion));
     }
 
     /**
@@ -636,7 +645,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
         @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion,
         @RequestParam(value = "partitionKey", required = false) String partitionKey, @RequestParam("partitionValue") String partitionValue,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues,
         @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
         @RequestParam(value = "storageName", required = false) String storageName,
         @RequestParam(value = "createNewVersion", required = false, defaultValue = "false") Boolean createNewVersion, ServletRequest servletRequest)
@@ -696,12 +705,13 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
         @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues,
         @RequestParam(value = "expirationInDays", required = false) Integer expirationInDays)
     {
         return businessObjectDataService.restoreBusinessObjectData(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), expirationInDays);
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+                businessObjectDataVersion), expirationInDays);
     }
 
     /**
@@ -734,12 +744,13 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
         @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues,
         @RequestBody BusinessObjectDataRetryStoragePolicyTransitionRequest request)
     {
         return businessObjectDataService.retryStoragePolicyTransition(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), request);
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+                businessObjectDataVersion), request);
     }
 
     /**
@@ -975,7 +986,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @param businessObjectFormatFileType the business object format type
      * @param businessObjectFormatVersion the business object format version
      * @param partitionValue the partition value
-     * @param subPartitionValues the list of sub-partition values
+     * @param subPartitionValues the sub-partition values
      * @param businessObjectDataVersion the business object data version
      * @param servletRequest the servlet request
      *
@@ -983,13 +994,14 @@ public class BusinessObjectDataRestController extends HerdBaseController
      */
     private BusinessObjectDataKey validateRequestAndCreateBusinessObjectDataKey(String namespace, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue,
-        DelimitedFieldValues subPartitionValues, Integer businessObjectDataVersion, ServletRequest servletRequest)
+        String subPartitionValues, Integer businessObjectDataVersion, ServletRequest servletRequest)
     {
         // Ensure there are no duplicate query string parameters.
         validateNoDuplicateQueryStringParams(servletRequest.getParameterMap(), "partitionKey", "partitionValue");
 
         // Invoke the service.
         return new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-            businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion);
+            businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+            businessObjectDataVersion);
     }
 }

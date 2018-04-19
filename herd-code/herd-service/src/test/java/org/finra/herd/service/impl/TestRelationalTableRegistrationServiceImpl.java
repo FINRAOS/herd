@@ -15,12 +15,15 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 
 /**
@@ -41,5 +44,27 @@ public class TestRelationalTableRegistrationServiceImpl extends RelationalTableR
         Boolean appendToExistingBusinessObjectDefinition)
     {
         return createRelationalTableRegistrationImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public List<BusinessObjectDataStorageUnitKey> getRelationalTableRegistrationsForSchemaUpdate()
+    {
+        return getRelationalTableRegistrationsForSchemaUpdateImpl();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public BusinessObjectData processRelationalTableRegistrationForSchemaUpdate(BusinessObjectDataStorageUnitKey storageUnitKey)
+    {
+        return processRelationalTableRegistrationForSchemaUpdateImpl(storageUnitKey);
     }
 }

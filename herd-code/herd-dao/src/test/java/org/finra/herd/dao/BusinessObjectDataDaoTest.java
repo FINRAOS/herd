@@ -31,11 +31,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Test;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -44,6 +48,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
+import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
@@ -1579,6 +1584,102 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             assertEquals(FORMAT_USAGE_CODE, data.getBusinessObjectFormatUsage());
             assertEquals(FORMAT_FILE_TYPE_CODE, data.getBusinessObjectFormatFileType());
             assertTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+        }
+    }
+
+    @Test
+    public void testBusinessObjectDataSearchWithRegistrationDateRangeFilter() throws DatatypeConfigurationException
+    {
+        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectEntityForPartitionValueFilterTest();
+        String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
+        String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
+        String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
+        String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
+        int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
+
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+
+        businessObjectDataSearchKey.setNamespace(namespace);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
+
+        XMLGregorianCalendar start;
+        XMLGregorianCalendar end;
+
+        // Start date is less then createdOn and end date is greater then createdOn.
+        start = HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), -1));
+        end = HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), 1));
+        businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        assertEquals(1, result.size());
+
+        for (BusinessObjectData data : result)
+        {
+            assertEquals(namespace, data.getNamespace());
+            assertEquals(bDefName, data.getBusinessObjectDefinitionName());
+            assertEquals(usage, data.getBusinessObjectFormatUsage());
+            assertEquals(fileTypeCode, data.getBusinessObjectFormatFileType());
+            assertTrue(formatVersion == data.getBusinessObjectFormatVersion());
+        }
+
+        // Start date is less then createdOn and end date is null.
+        start = HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), -1));
+        businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, null));
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        assertEquals(1, result.size());
+
+        for (BusinessObjectData data : result)
+        {
+            assertEquals(namespace, data.getNamespace());
+            assertEquals(bDefName, data.getBusinessObjectDefinitionName());
+            assertEquals(usage, data.getBusinessObjectFormatUsage());
+            assertEquals(fileTypeCode, data.getBusinessObjectFormatFileType());
+            assertTrue(formatVersion == data.getBusinessObjectFormatVersion());
+        }
+
+        // Start date is null and end date is greater then createdOn.
+        end = HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), 1));
+        businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(null, end));
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        assertEquals(1, result.size());
+
+        for (BusinessObjectData data : result)
+        {
+            assertEquals(namespace, data.getNamespace());
+            assertEquals(bDefName, data.getBusinessObjectDefinitionName());
+            assertEquals(usage, data.getBusinessObjectFormatUsage());
+            assertEquals(fileTypeCode, data.getBusinessObjectFormatFileType());
+            assertTrue(formatVersion == data.getBusinessObjectFormatVersion());
+        }
+
+        // Start date is greater then createdOn and end date is null.
+        start = HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), 1));
+        businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, null));
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        assertEquals(0, result.size());
+
+        // Start date is null and end date is less then createdOn.
+        end = HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), -1));
+        businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(null, end));
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        assertEquals(0, result.size());
+
+        // Start date is equal to createdOn and end date is equal to createdOn.
+        start = HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDataEntity.getCreatedOn());
+        end = HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDataEntity.getCreatedOn());
+        businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        assertEquals(1, result.size());
+
+        for (BusinessObjectData data : result)
+        {
+            assertEquals(namespace, data.getNamespace());
+            assertEquals(bDefName, data.getBusinessObjectDefinitionName());
+            assertEquals(usage, data.getBusinessObjectFormatUsage());
+            assertEquals(fileTypeCode, data.getBusinessObjectFormatFileType());
+            assertTrue(formatVersion == data.getBusinessObjectFormatVersion());
         }
     }
 

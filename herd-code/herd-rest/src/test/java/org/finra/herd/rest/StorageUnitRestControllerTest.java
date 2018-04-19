@@ -16,30 +16,28 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import java.util.Arrays;
-
-import com.google.common.base.Objects;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.api.xml.StorageUnitUploadCredential;
 import org.finra.herd.service.StorageUnitService;
 
-public class StorageUnitRestControllerTest
+public class StorageUnitRestControllerTest extends AbstractRestTest
 {
+    @Mock
+    private HerdStringHelper herdStringHelper;
+
     @InjectMocks
     private StorageUnitRestController storageUnitRestController;
 
@@ -55,88 +53,76 @@ public class StorageUnitRestControllerTest
     @Test
     public void getStorageUnitDownloadCredential()
     {
-        String namespace = "namespace";
-        String businessObjectDefinitionName = "businessObjectDefinitionName";
-        String businessObjectFormatUsage = "businessObjectFormatUsage";
-        String businessObjectFormatFileType = "businessObjectFormatFileType";
-        Integer businessObjectFormatVersion = 1234;
-        String partitionValue = "partitionValue";
-        Integer businessObjectDataVersion = 2345;
-        String storageName = "storageName";
-        DelimitedFieldValues subPartitionValues = new DelimitedFieldValues();
-        subPartitionValues.setValues(Arrays.asList("a", "b", "c", "d"));
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
 
-        StorageUnitDownloadCredential expectedResult = new StorageUnitDownloadCredential();
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
 
-        when(storageUnitService.getStorageUnitDownloadCredential(any(), any())).thenReturn(expectedResult);
+        // Create a storage unit download credential.
+        StorageUnitDownloadCredential storageUnitDownloadCredential = new StorageUnitDownloadCredential(
+            new AwsCredential(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN,
+                AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME));
 
-        StorageUnitDownloadCredential actualResult = storageUnitRestController
-            .getStorageUnitDownloadCredential(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, businessObjectDataVersion, storageName, subPartitionValues);
+        // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
+        when(storageUnitService.getStorageUnitDownloadCredential(businessObjectDataKey, STORAGE_NAME)).thenReturn(storageUnitDownloadCredential);
 
-        verify(storageUnitService).getStorageUnitDownloadCredential(
-            businessObjectDataKeyEq(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, businessObjectDataVersion, subPartitionValues), eq(storageName));
-        verifyNoMoreInteractions(storageUnitService);
+        // Call the method under test.
+        StorageUnitDownloadCredential result = storageUnitRestController
+            .getStorageUnitDownloadCredential(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                DATA_VERSION, STORAGE_NAME, delimitedSubPartitionValues);
 
-        assertEquals(expectedResult, actualResult);
+        // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
+        verify(storageUnitService).getStorageUnitDownloadCredential(businessObjectDataKey, STORAGE_NAME);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(storageUnitDownloadCredential, result);
     }
 
     @Test
     public void getStorageUnitUploadCredential()
     {
-        String namespace = "namespace";
-        String businessObjectDefinitionName = "businessObjectDefinitionName";
-        String businessObjectFormatUsage = "businessObjectFormatUsage";
-        String businessObjectFormatFileType = "businessObjectFormatFileType";
-        Integer businessObjectFormatVersion = 1234;
-        String partitionValue = "partitionValue";
-        Integer businessObjectDataVersion = 2345;
-        String storageName = "storageName";
-        DelimitedFieldValues subPartitionValues = new DelimitedFieldValues();
-        subPartitionValues.setValues(Arrays.asList("a", "b", "c", "d"));
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
 
-        StorageUnitUploadCredential expectedResult = new StorageUnitUploadCredential();
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
 
-        when(storageUnitService.getStorageUnitUploadCredential(any(), any(), any())).thenReturn(expectedResult);
+        // Create a storage unit upload credential.
+        StorageUnitUploadCredential storageUnitUploadCredential = new StorageUnitUploadCredential(
+            new AwsCredential(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN,
+                AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME), AWS_KMS_KEY_ID);
 
-        StorageUnitUploadCredential actualResult = storageUnitRestController
-            .getStorageUnitUploadCredential(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, businessObjectDataVersion, storageName, subPartitionValues);
+        // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
+        when(storageUnitService.getStorageUnitUploadCredential(businessObjectDataKey, null, STORAGE_NAME)).thenReturn(storageUnitUploadCredential);
 
-        verify(storageUnitService).getStorageUnitUploadCredential(
-            businessObjectDataKeyEq(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, businessObjectDataVersion, subPartitionValues), isNull(Boolean.class), eq(storageName));
-        verifyNoMoreInteractions(storageUnitService);
+        // Call the method under test.
+        StorageUnitUploadCredential result = storageUnitRestController
+            .getStorageUnitUploadCredential(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
+                STORAGE_NAME, delimitedSubPartitionValues);
 
-        assertEquals(expectedResult, actualResult);
+        // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
+        verify(storageUnitService).getStorageUnitUploadCredential(businessObjectDataKey, null, STORAGE_NAME);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(storageUnitUploadCredential, result);
     }
 
     /**
-     * Returns an argument matcher which matches a BusinessObjectDataKey
-     *
-     * @param namespace The namespace
-     * @param businessObjectDefinitionName The business object definition name
-     * @param businessObjectFormatUsage The business object format usage
-     * @param businessObjectFormatFileType The business obejct format file type
-     * @param businessObjectFormatVersion The business object format version
-     * @param partitionValue The partition value
-     * @param businessObjectDataVersion The business object data version
-     * @param subPartitionValues The sub-partition values
-     *
-     * @return The argument matcher
+     * Checks if any of the mocks has any interaction.
      */
-    private BusinessObjectDataKey businessObjectDataKeyEq(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
-        String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue, Integer businessObjectDataVersion,
-        DelimitedFieldValues subPartitionValues)
+    private void verifyNoMoreInteractionsHelper()
     {
-        return argThat(businessObjectDataKey -> Objects.equal(namespace, businessObjectDataKey.getNamespace()) &&
-                    Objects.equal(businessObjectDefinitionName, businessObjectDataKey.getBusinessObjectDefinitionName()) &&
-                    Objects.equal(businessObjectFormatUsage, businessObjectDataKey.getBusinessObjectFormatUsage()) &&
-                    Objects.equal(businessObjectFormatFileType, businessObjectDataKey.getBusinessObjectFormatFileType()) &&
-                    Objects.equal(businessObjectFormatVersion, businessObjectDataKey.getBusinessObjectFormatVersion()) &&
-                    Objects.equal(partitionValue, businessObjectDataKey.getPartitionValue()) &&
-                    Objects.equal(businessObjectDataVersion, businessObjectDataKey.getBusinessObjectDataVersion()) &&
-                    Objects.equal(subPartitionValues.getValues(), businessObjectDataKey.getSubPartitionValues()));
+        verifyNoMoreInteractions(herdStringHelper, storageUnitService);
     }
 }

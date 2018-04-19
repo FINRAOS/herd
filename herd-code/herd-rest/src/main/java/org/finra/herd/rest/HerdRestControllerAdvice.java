@@ -15,14 +15,8 @@
 */
 package org.finra.herd.rest;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.InitBinder;
 
 import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
 
@@ -34,24 +28,11 @@ import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
 // Only handle REST exceptions and not UI exceptions which are defined in a different Java root package.
 public class HerdRestControllerAdvice extends HerdErrorInformationExceptionHandler implements InitializingBean
 {
-    @Autowired
-    private DateTimeEditor dateTimeEditor;
-
-    @Autowired
-    private DelimitedFieldValuesEditor delimitedFieldValuesEditor;
-
     @Override
     public void afterPropertiesSet() throws Exception
     {
         // When using this bean as a controller advice, we want logging enabled as opposed to when the base class bean is used (not as advice) where we want
         // logging disabled.
         setLoggingEnabled(true);
-    }
-
-    @InitBinder
-    protected void initBinder(HttpServletRequest request, ServletRequestDataBinder binder)
-    {
-        binder.registerCustomEditor(DelimitedFieldValues.class, delimitedFieldValuesEditor);
-        binder.registerCustomEditor(DateTime.class, dateTimeEditor);
     }
 }

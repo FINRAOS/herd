@@ -69,6 +69,7 @@ import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
+import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.SearchIndexStatistics;
@@ -483,6 +484,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<BusinessObjectDefinitionColumnChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_COLUMN_CHANGE_EVENTS = new ArrayList<>();
 
+    public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_CHILDREN = null;
+
     public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
 
     public static final String NO_COLUMN_DEFAULT_VALUE = null;
@@ -550,6 +553,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final boolean NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.FALSE;
 
     public static final boolean NO_RECORDFLAG = false;
+
+    public static final RegistrationDateRangeFilter NO_REGISTRATION_DATE_RANGE_FILTER = null;
 
     public static final Integer NO_RETENTIONPERIODINDAYS = null;
 

@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusInformation;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
@@ -50,6 +51,9 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
 
     @Autowired
     private BusinessObjectDataStatusService businessObjectDataStatusService;
+
+    @Autowired
+    private HerdStringHelper herdStringHelper;
 
     @Autowired
     private NotificationEventService notificationEventService;
@@ -80,13 +84,14 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
         @RequestParam(value = "partitionKey", required = false) String businessObjectFormatPartitionKey, @RequestParam("partitionValue") String partitionValue,
-        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues,
         @RequestParam(value = "businessObjectFormatVersion", required = false) Integer businessObjectFormatVersion,
         @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion)
     {
         return businessObjectDataStatusService.getBusinessObjectDataStatus(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), businessObjectFormatPartitionKey);
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+                businessObjectDataVersion), businessObjectFormatPartitionKey);
     }
 
     /**

@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Sets;
@@ -97,54 +98,74 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         assertEquals(new Ec2OnDemandPricing(new Ec2OnDemandPricingKey(AWS_REGION_NAME, EC2_INSTANCE_TYPE), NO_HOURLY_PRICE, SKU),
             ec2OnDemandPricingUpdateServiceImpl
                 .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM,
-                    EC2_INSTANCE_TYPE, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+                    EC2_INSTANCE_TYPE, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX,
+                    Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertEquals(new Ec2OnDemandPricing(new Ec2OnDemandPricingKey(AWS_REGION_NAME, EC2_INSTANCE_TYPE), NO_HOURLY_PRICE, SKU),
             ec2OnDemandPricingUpdateServiceImpl
                 .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM,
-                    EC2_INSTANCE_TYPE, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, RANDOM_SUFFIX + "-BoxUsage" + RANDOM_SUFFIX));
+                    EC2_INSTANCE_TYPE, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, RANDOM_SUFFIX + "-BoxUsage" + RANDOM_SUFFIX,
+                    Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
 
         // Missing required input parameters passed as nulls.
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, null, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
-                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, null, EC2_INSTANCE_TYPE, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY,
-                "BoxUsage" + RANDOM_SUFFIX));
+                "BoxUsage" + RANDOM_SUFFIX, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, null,
-                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
-                null, "BoxUsage" + RANDOM_SUFFIX));
+                null, "BoxUsage" + RANDOM_SUFFIX, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
-                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, null));
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, null,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX, null));
 
         // Missing required input parameters passed as empty strings.
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, BLANK_TEXT, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
-                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertNull(ec2OnDemandPricingUpdateServiceImpl.createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, BLANK_TEXT, EC2_INSTANCE_TYPE,
-            Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+            Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX,
+            Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, BLANK_TEXT,
-                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
-                BLANK_TEXT, "BoxUsage" + RANDOM_SUFFIX));
+                BLANK_TEXT, "BoxUsage" + RANDOM_SUFFIX, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
-                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, BLANK_TEXT));
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, BLANK_TEXT,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX, BLANK_TEXT));
 
         // Invalid input parameters.
-        assertNull(ec2OnDemandPricingUpdateServiceImpl.createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, STRING_VALUE, EC2_INSTANCE_TYPE,
-            Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl.createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, INVALID_VALUE, EC2_INSTANCE_TYPE,
+            Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX,
+            Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
-                STRING_VALUE, "BoxUsage" + RANDOM_SUFFIX));
+                INVALID_VALUE, "BoxUsage" + RANDOM_SUFFIX, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
         assertNull(ec2OnDemandPricingUpdateServiceImpl
             .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
-                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, STRING_VALUE));
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, INVALID_VALUE,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE));
+        assertNull(ec2OnDemandPricingUpdateServiceImpl
+            .createEc2OnDemandPricingEntry(SKU, AWS_REGION_NAME, Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_OPERATING_SYSTEM, EC2_INSTANCE_TYPE,
+                Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY, "BoxUsage" + RANDOM_SUFFIX, INVALID_VALUE));
     }
 
     @Test
@@ -163,6 +184,8 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_TENANCY))
             .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY);
         when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_USAGE_TYPE)).thenReturn("BoxUsage");
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_PRE_INSTALLED_SOFTWARE))
+            .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE);
         JSONObject terms = mock(JSONObject.class);
         JSONObject onDemand = mock(JSONObject.class);
         JSONObject onDemandSkuInformation = mock(JSONObject.class);
@@ -214,7 +237,8 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(Arrays.asList(new Ec2OnDemandPricing(new Ec2OnDemandPricingKey(AWS_REGION_NAME, EC2_INSTANCE_TYPE), HOURLY_PRICE, SKU)), result);
+        assertEquals(Collections.singletonList(new Ec2OnDemandPricing(new Ec2OnDemandPricingKey(AWS_REGION_NAME, EC2_INSTANCE_TYPE), HOURLY_PRICE, SKU)),
+            result);
     }
 
     @Test
@@ -233,6 +257,8 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_TENANCY))
             .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY);
         when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_USAGE_TYPE)).thenReturn("BoxUsage");
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_PRE_INSTALLED_SOFTWARE))
+            .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE);
 
         // Mock the external calls.
         when(urlHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
@@ -251,7 +277,7 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String
-                .format("Found duplicate EC2 on-demand pricing entry for \"%s\" AWS region and \"%s\" EC2 instance type.", AWS_REGION_NAME, EC2_INSTANCE_TYPE),
+                    .format("Found duplicate EC2 on-demand pricing entry for \"%s\" AWS region and \"%s\" EC2 instance type.", AWS_REGION_NAME, EC2_INSTANCE_TYPE),
                 e.getMessage());
         }
 
@@ -281,6 +307,8 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_TENANCY))
             .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY);
         when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_USAGE_TYPE)).thenReturn("BoxUsage");
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_PRE_INSTALLED_SOFTWARE))
+            .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE);
 
         // Mock the external calls.
         when(urlHelper.parseJsonObjectFromUrl(EC2_PRICING_LIST_URL)).thenReturn(jsonObject);
@@ -320,6 +348,8 @@ public class Ec2OnDemandPricingUpdateServiceImplTest extends AbstractServiceTest
         when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_TENANCY))
             .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_TENANCY);
         when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_USAGE_TYPE)).thenReturn("BoxUsage");
+        when(attributes.get(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_NAME_PRE_INSTALLED_SOFTWARE))
+            .thenReturn(Ec2OnDemandPricingUpdateServiceImpl.JSON_ATTRIBUTE_VALUE_PRE_INSTALLED_SOFTWARE);
         JSONObject terms = mock(JSONObject.class);
         JSONObject onDemand = mock(JSONObject.class);
         JSONObject onDemandSkuInformation = mock(JSONObject.class);

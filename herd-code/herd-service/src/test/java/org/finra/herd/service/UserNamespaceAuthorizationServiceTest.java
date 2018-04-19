@@ -22,19 +22,32 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import org.junit.Test;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.NamespaceAuthorization;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorization;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationCreateRequest;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationUpdateRequest;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizations;
+import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.SecurityRoleEntity;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
 
 /**
@@ -280,6 +293,42 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateUserNamespaceAuthorization()
     {
+        // Override the security context to return an application user populated with test values.
+        Authentication originalAuthentication = overrideSecurityContext();
+
+        // Create a user namespace authorization key.
+        UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
+
+        // Create and persist the relative database entities.
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.GRANT));
+
+        // Update a user namespace authorization.
+        UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService.updateUserNamespaceAuthorization(key,
+            new UserNamespaceAuthorizationUpdateRequest(Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT)));
+
+        // Validate the returned object.
+        assertEquals(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key,
+            Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT)), resultUserNamespaceAuthorization);
+
+        // Revert the update. This is done for the branch unit test coverage.
+        resultUserNamespaceAuthorization = userNamespaceAuthorizationService.updateUserNamespaceAuthorization(key,
+            new UserNamespaceAuthorizationUpdateRequest(Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.GRANT)));
+
+        // Validate the returned object.
+        assertEquals(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key,
+            Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.GRANT)), resultUserNamespaceAuthorization);
+
+        // Restore the original authentication.
+        restoreSecurityContext(originalAuthentication);
+    }
+
+    @Test
+    public void testUpdateUserNamespaceAuthorizationGrantException()
+    {
+        // Override the security context to return an application user populated with test values.
+        Authentication originalAuthentication = overrideSecurityContext();
+
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
@@ -295,13 +344,22 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         assertEquals(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key,
             Arrays.asList(NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT)), resultUserNamespaceAuthorization);
 
-        // Revert the update. This is done for the branch unit test coverage.
-        resultUserNamespaceAuthorization = userNamespaceAuthorizationService.updateUserNamespaceAuthorization(key,
-            new UserNamespaceAuthorizationUpdateRequest(Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE)));
+        // Revert the update. This should fail because we are removing our own GRANT permission
+        try
+        {
+            userNamespaceAuthorizationService.updateUserNamespaceAuthorization(key,
+                new UserNamespaceAuthorizationUpdateRequest(Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE)));
+            fail("Should throw an Exception when user attempts to remove their own GRANT namespace permission.");
+        }
+        catch (final IllegalArgumentException illegalArgumentException)
+        {
+            assertEquals("Users are not allowed to remove their own GRANT namespace permission."
+                + " Please include the GRANT namespace permission in this request, or have another user remove the GRANT permission.",
+                illegalArgumentException.getMessage());
+        }
 
-        // Validate the returned object.
-        assertEquals(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key,
-            Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE)), resultUserNamespaceAuthorization);
+        // Restore the original authentication.
+        restoreSecurityContext(originalAuthentication);
     }
 
     @Test
@@ -372,6 +430,9 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateUserNamespaceAuthorizationTrimParameters()
     {
+        // Override the security context to return an application user populated with test values.
+        Authentication originalAuthentication = overrideSecurityContext();
+
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
@@ -387,11 +448,17 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS),
             resultUserNamespaceAuthorization);
+
+        // Restore the original authentication.
+        restoreSecurityContext(originalAuthentication);
     }
 
     @Test
     public void testUpdateUserNamespaceAuthorizationUpperCaseParameters()
     {
+        // Override the security context to return an application user populated with test values.
+        Authentication originalAuthentication = overrideSecurityContext();
+
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
@@ -407,11 +474,17 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS),
             resultUserNamespaceAuthorization);
+
+        // Restore the original authentication.
+        restoreSecurityContext(originalAuthentication);
     }
 
     @Test
     public void testUpdateUserNamespaceAuthorizationLowerCaseParameters()
     {
+        // Override the security context to return an application user populated with test values.
+        Authentication originalAuthentication = overrideSecurityContext();
+
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
@@ -427,6 +500,9 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS),
             resultUserNamespaceAuthorization);
+
+        // Restore the original authentication.
+        restoreSecurityContext(originalAuthentication);
     }
 
     @Test
@@ -1002,5 +1078,81 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorizations(), resultUserNamespaceAuthorizations);
+    }
+
+    private void restoreSecurityContext(final Authentication originalAuthentication)
+    {
+        // Restore the original authentication.
+        SecurityContextHolder.getContext().setAuthentication(originalAuthentication);
+    }
+
+    private Authentication overrideSecurityContext()
+    {
+        // Create a set of test namespace authorizations.
+        Set<NamespaceAuthorization> namespaceAuthorizations = new LinkedHashSet<>();
+        namespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE, SUPPORTED_NAMESPACE_PERMISSIONS));
+        namespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_2, SUPPORTED_NAMESPACE_PERMISSIONS));
+
+        // Create test roles
+        List<SecurityRoleEntity> securityRoleEntities = securityRoleDaoTestHelper.createTestSecurityRoles();
+
+        // Fetch the security role codes to add to the application user.
+        Set<String> roles = securityRoleEntities.stream().map(SecurityRoleEntity::getCode).collect(Collectors.toSet());
+
+        // Override the security context to return an application user populated with test values.
+        final Authentication originalAuthentication = SecurityContextHolder.getContext().getAuthentication();
+
+        SecurityContextHolder.getContext().setAuthentication(new Authentication()
+        {
+            @Override
+            public String getName()
+            {
+                return null;
+            }
+
+            @Override
+            public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException
+            {
+            }
+
+            @Override
+            public boolean isAuthenticated()
+            {
+                return false;
+            }
+
+            @Override
+            public Object getPrincipal()
+            {
+                List<SimpleGrantedAuthority> authorities = Lists.newArrayList(new SimpleGrantedAuthority(SECURITY_FUNCTION));
+
+                ApplicationUser applicationUser = new ApplicationUser(this.getClass());
+                applicationUser.setUserId(USER_ID);
+                applicationUser.setRoles(roles);
+                applicationUser.setNamespaceAuthorizations(namespaceAuthorizations);
+
+                return new SecurityUserWrapper(USER_ID, STRING_VALUE, true, true, true, true, authorities, applicationUser);
+            }
+
+            @Override
+            public Object getDetails()
+            {
+                return null;
+            }
+
+            @Override
+            public Object getCredentials()
+            {
+                return null;
+            }
+
+            @Override
+            public Collection<? extends GrantedAuthority> getAuthorities()
+            {
+                return null;
+            }
+        });
+
+        return originalAuthentication;
     }
 }

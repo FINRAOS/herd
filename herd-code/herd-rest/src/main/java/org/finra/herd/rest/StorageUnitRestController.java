@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.api.xml.StorageUnitUploadCredential;
@@ -36,6 +37,9 @@ import org.finra.herd.ui.constants.UiConstants;
 @Api(tags = "Storage Unit")
 public class StorageUnitRestController extends HerdBaseController
 {
+    @Autowired
+    private HerdStringHelper herdStringHelper;
+
     @Autowired
     private StorageUnitService storageUnitService;
 
@@ -64,12 +68,13 @@ public class StorageUnitRestController extends HerdBaseController
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
         @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
-        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @PathVariable("storageName") String storageName, @RequestParam(
-        value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @PathVariable("storageName") String storageName,
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues)
     {
         return storageUnitService.getStorageUnitUploadCredential(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), null, storageName);
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+                businessObjectDataVersion), null, storageName);
     }
 
     /**
@@ -97,11 +102,12 @@ public class StorageUnitRestController extends HerdBaseController
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
         @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
-        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @PathVariable("storageName") String storageName, @RequestParam(
-        value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @PathVariable("storageName") String storageName,
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues)
     {
         return storageUnitService.getStorageUnitDownloadCredential(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), storageName);
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
+                businessObjectDataVersion), storageName);
     }
 }
