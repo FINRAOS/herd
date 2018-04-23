@@ -7556,7 +7556,7 @@
 
    <xs:complexType name="indexSearchRequest">
       <xs:all>
-         <xs:element name="searchTerm" type="xs:string" minOccurs="1">
+         <xs:element name="searchTerm" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The search term upon which to search</xs:documentation>
             </xs:annotation>
@@ -7627,6 +7627,12 @@
          <xs:element name="indexSearchResultTypeKey" type="indexSearchResultTypeKey" minOccurs="0" maxOccurs="1">
             <xs:annotation>
                <xs:documentation>An optional index search result type key. Only one is allowed
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="includeTagHierarchy" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if business object definition associated with entire tag hierarchy is to be retrieved
                </xs:documentation>
             </xs:annotation>
          </xs:element>

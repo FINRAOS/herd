@@ -534,6 +534,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY = false;
 
+    public static final Boolean NO_INCLUDE_TAG_HIERARCHY = false;
+
     public static final LatestAfterPartitionValue NO_LATEST_AFTER_PARTITION_VALUE = null;
 
     public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;

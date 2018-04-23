@@ -995,6 +995,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TAG_TYPE_CODE = "UT_TagTypeCode_1_" + RANDOM_SUFFIX;
 
+    public static final String TAG_TYPE_CODE_2 = "UT_TagTypeCode_2_" + RANDOM_SUFFIX;
+
     public static final long TAG_TYPE_COUNT = 240;
 
     public static final String TAG_TYPE_DESCRIPTION = "UT_TagTypeDescription_1_" + RANDOM_SUFFIX;

@@ -52,7 +52,7 @@ import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
-import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.dao.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.impl.IndexSearchServiceImpl;
 
@@ -95,10 +95,10 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         TagKey tagKey = new TagKey(TAG_TYPE_CODE, TAG_CODE);
 
         // Create an index search request.
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, ImmutableList
-            .of(new IndexSearchFilter(EXCLUSION_SEARCH_FILTER, ImmutableList.of(new IndexSearchKey(tagKey, NO_INDEX_SEARCH_RESULT_TYPE_KEY))),
-                new IndexSearchFilter(EXCLUSION_SEARCH_FILTER,
-                    ImmutableList.of(new IndexSearchKey(NO_TAG_KEY, new IndexSearchResultTypeKey(INDEX_SEARCH_RESULT_TYPE))))),
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, ImmutableList.of(new IndexSearchFilter(EXCLUSION_SEARCH_FILTER,
+                ImmutableList.of(new IndexSearchKey(tagKey, NO_INDEX_SEARCH_RESULT_TYPE_KEY, NO_INCLUDE_TAG_HIERARCHY))),
+            new IndexSearchFilter(EXCLUSION_SEARCH_FILTER,
+                ImmutableList.of(new IndexSearchKey(NO_TAG_KEY, new IndexSearchResultTypeKey(INDEX_SEARCH_RESULT_TYPE), NO_INCLUDE_TAG_HIERARCHY)))),
             Collections.singletonList(ElasticsearchHelper.TAG_FACET), ENABLE_HIT_HIGHLIGHTING);
 
         // Create a set of fields.
@@ -171,10 +171,10 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         TagKey tagKey = new TagKey(TAG_TYPE_CODE, TAG_CODE);
 
         // Create an index search request.
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, ImmutableList
-            .of(new IndexSearchFilter(EXCLUSION_SEARCH_FILTER, ImmutableList.of(new IndexSearchKey(tagKey, NO_INDEX_SEARCH_RESULT_TYPE_KEY))),
-                new IndexSearchFilter(EXCLUSION_SEARCH_FILTER,
-                    ImmutableList.of(new IndexSearchKey(NO_TAG_KEY, new IndexSearchResultTypeKey(INDEX_SEARCH_RESULT_TYPE))))),
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, ImmutableList.of(new IndexSearchFilter(EXCLUSION_SEARCH_FILTER,
+                ImmutableList.of(new IndexSearchKey(tagKey, NO_INDEX_SEARCH_RESULT_TYPE_KEY, NO_INCLUDE_TAG_HIERARCHY))),
+            new IndexSearchFilter(EXCLUSION_SEARCH_FILTER,
+                ImmutableList.of(new IndexSearchKey(NO_TAG_KEY, new IndexSearchResultTypeKey(INDEX_SEARCH_RESULT_TYPE), NO_INCLUDE_TAG_HIERARCHY)))),
             Collections.singletonList(ElasticsearchHelper.TAG_FACET), ENABLE_HIT_HIGHLIGHTING);
 
         // Create a set of fields.
@@ -295,8 +295,8 @@ public class IndexSearchServiceTest extends AbstractServiceTest
 
         // Create an index search filter that contains index search keys for tag and result type.
         final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, ImmutableList
-            .of(new IndexSearchKey(tagKey, NO_INDEX_SEARCH_RESULT_TYPE_KEY),
-                new IndexSearchKey(NO_TAG_KEY, new IndexSearchResultTypeKey(INDEX_SEARCH_RESULT_TYPE))));
+            .of(new IndexSearchKey(tagKey, NO_INDEX_SEARCH_RESULT_TYPE_KEY, NO_INCLUDE_TAG_HIERARCHY),
+                new IndexSearchKey(NO_TAG_KEY, new IndexSearchResultTypeKey(INDEX_SEARCH_RESULT_TYPE), NO_INCLUDE_TAG_HIERARCHY)));
 
         // Create an index search request.
         final IndexSearchRequest indexSearchRequest =
@@ -338,7 +338,8 @@ public class IndexSearchServiceTest extends AbstractServiceTest
     public void testIndexSearchInvalidIndexSearchKey()
     {
         // Create an index search key that contains both tag and result type keys.
-        final IndexSearchKey indexSearchKey = new IndexSearchKey(new TagKey(TAG_TYPE_CODE, TAG_CODE), new IndexSearchResultTypeKey(INDEX_SEARCH_RESULT_TYPE));
+        final IndexSearchKey indexSearchKey =
+            new IndexSearchKey(new TagKey(TAG_TYPE_CODE, TAG_CODE), new IndexSearchResultTypeKey(INDEX_SEARCH_RESULT_TYPE), NO_INCLUDE_TAG_HIERARCHY);
 
         // Create an index search filter.
         final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, Collections.singletonList(indexSearchKey));
@@ -438,9 +439,9 @@ public class IndexSearchServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testIndexSearchNoSearchTerm()
+    public void testIndexSearchNoSearchTermAndNoSearchFilter()
     {
-        // Create an index search request without a search term.
+        // Create an index search request without a search term and without a search filter.
         final IndexSearchRequest indexSearchRequest =
             new IndexSearchRequest(null, NO_INDEX_SEARCH_FILTERS, NO_INDEX_SEARCH_FACET_FIELDS, NO_ENABLE_HIT_HIGHLIGHTING);
 
@@ -455,7 +456,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A search term must be specified.", e.getMessage());
+            assertEquals("A search term or a search filter must be specified.", e.getMessage());
         }
     }
 

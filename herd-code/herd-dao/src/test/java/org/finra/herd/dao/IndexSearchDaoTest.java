@@ -52,6 +52,7 @@ import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.text.Text;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.SearchShardTarget;
@@ -427,6 +428,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         searchHitArray[0] = searchHit1;
         searchHitArray[1] = searchHit2;
 
+        BoolQueryBuilder boolQueryBuilder = mock(BoolQueryBuilder.class);
+
         HighlightField highlightField = mock(HighlightField.class);
         when(highlightField.getName()).thenReturn("displayName");
 
@@ -553,7 +556,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(elasticsearchHelper
             .getFacetsResponse(any(ElasticsearchResponseDto.class), eq(BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME), eq(TAG_SEARCH_INDEX_NAME)))
             .thenCallRealMethod();
-        when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(), any(), any())).thenCallRealMethod();
+        when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(), any(), any())).thenReturn(boolQueryBuilder);
         when(elasticsearchHelper.addFacetFieldAggregations(any(), any(SearchRequestBuilder.class))).thenReturn(searchRequestBuilder);
 
         when(herdSearchQueryHelper.determineNegationTermsPresent(any(IndexSearchRequest.class))).thenCallRealMethod();
