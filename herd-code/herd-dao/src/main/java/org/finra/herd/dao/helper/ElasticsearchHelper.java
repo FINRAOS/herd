@@ -48,6 +48,7 @@ import org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
+import org.finra.herd.model.jpa.TagEntity;
 
 @Component
 public class ElasticsearchHelper
@@ -56,6 +57,9 @@ public class ElasticsearchHelper
 
     @Autowired
     private JsonHelper jsonHelper;
+
+    @Autowired
+    private TagDaoHelper tagDaoHelper;
 
     /**
      * Source string for the display name
@@ -251,15 +255,29 @@ public class ElasticsearchHelper
         {
             if (indexSearchKey.getTagKey() != null)
             {
-                // Add constant-score term queries for tagType-code and tag-code from the tag-key.
-                ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery().should(
-                    QueryBuilders.boolQuery().must(QueryBuilders.termQuery(BDEF_TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
-                        .must(QueryBuilders.termQuery(BDEF_TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode()))).should(
-                    QueryBuilders.boolQuery().must(QueryBuilders.termQuery(TAG_TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
-                        .must(QueryBuilders.termQuery(TAG_TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode()))));
+                List<TagEntity> tagEntities = new ArrayList<>();
+                TagEntity indexSearchTagEntity = tagDaoHelper.getTagEntity(indexSearchKey.getTagKey());
 
-                // Individual index search keys are OR-ed
-                indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
+                // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag.
+                tagEntities.add(indexSearchTagEntity);
+                if (BooleanUtils.isTrue(indexSearchKey.isIncludeTagHierarchy()))
+                {
+                    tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(indexSearchTagEntity));
+                }
+
+                // For each tag entity add it to the search query
+                for (TagEntity tagEntity : tagEntities)
+                {
+                    // Add constant-score term queries for tagType-code and tag-code from the tag-key.
+                    ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery().should(
+                        QueryBuilders.boolQuery().must(QueryBuilders.termQuery(BDEF_TAGTYPE_CODE_FIELD, tagEntity.getTagType().getCode()))
+                            .must(QueryBuilders.termQuery(BDEF_TAG_CODE_FIELD, tagEntity.getTagCode()))).should(
+                        QueryBuilders.boolQuery().must(QueryBuilders.termQuery(TAG_TAGTYPE_CODE_FIELD, tagEntity.getTagType().getCode()))
+                            .must(QueryBuilders.termQuery(TAG_TAG_CODE_FIELD, tagEntity.getTagCode()))));
+
+                    // Individual index search keys are OR-ed
+                    indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
+                }
             }
             if (indexSearchKey.getIndexSearchResultTypeKey() != null)
             {

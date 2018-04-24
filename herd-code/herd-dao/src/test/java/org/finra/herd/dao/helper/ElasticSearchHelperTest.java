@@ -1,3 +1,18 @@
+/*
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.helper;
 
 import static org.finra.herd.dao.helper.ElasticsearchHelper.RESULT_TYPE_AGGS;
@@ -16,6 +31,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -26,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import io.searchbox.core.SearchResult;
 import io.searchbox.core.search.aggregation.MetricAggregation;
@@ -56,6 +73,8 @@ import org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
+import org.finra.herd.model.jpa.TagEntity;
+import org.finra.herd.model.jpa.TagTypeEntity;
 
 public class ElasticSearchHelperTest extends AbstractDaoTest
 {
@@ -88,6 +107,9 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
     @Mock
     private JsonHelper jsonHelper;
+
+    @Mock
+    private TagDaoHelper tagDaoHelper;
 
     @Before
     public void before()
@@ -219,10 +241,84 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         indexSearchFilters.add(indexSearchFilter1);
         indexSearchFilters.add(indexSearchFilter2);
+
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode(tagKey.getTagCode());
+
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode(tagKey.getTagCode());
+        tagEntity.setTagType(tagTypeEntity);
+
+        // Setup the when clauses
+        when(tagDaoHelper.getTagEntity(tagKey)).thenReturn(tagEntity);
+
         BoolQueryBuilder result = elasticsearchHelper.addIndexSearchFilterBooleanClause(indexSearchFilters, "bdefIndex", "tagIndex");
         assertThat("Result is null.", result, is(notNullValue()));
+
+        // Verify the when clauses
+        verify(tagDaoHelper, times(2)).getTagEntity(tagKey);
+        verifyNoMoreInteractionsHelper();
     }
 
+    @Test
+    public void testAddIndexSearchFilterBooleanClauseWithTagHierarchy()
+    {
+        TagKey tagKey = new TagKey();
+        tagKey.setTagCode(TAG_CODE);
+        tagKey.setTagTypeCode(TAG_TYPE_CODE);
+
+        TagKey childTagKey = new TagKey();
+        childTagKey.setTagCode(TAG_CODE_2);
+        childTagKey.setTagTypeCode(TAG_TYPE_CODE);
+
+        IndexSearchResultTypeKey indexSearchResultTypeKey = new IndexSearchResultTypeKey();
+        indexSearchResultTypeKey.setIndexSearchResultType(INDEX_SEARCH_RESULT_TYPE);
+
+        List<IndexSearchKey> indexSearchKeys = new ArrayList<>();
+        IndexSearchKey indexSearchKey = new IndexSearchKey();
+        indexSearchKey.setIncludeTagHierarchy(true);
+        indexSearchKey.setTagKey(tagKey);
+        indexSearchKey.setIndexSearchResultTypeKey(indexSearchResultTypeKey);
+        indexSearchKeys.add(indexSearchKey);
+
+        List<IndexSearchFilter> indexSearchFilters = new ArrayList<>();
+        IndexSearchFilter indexSearchFilter1 = new IndexSearchFilter();
+        indexSearchFilter1.setIsExclusionSearchFilter(true);
+        indexSearchFilter1.setIndexSearchKeys(indexSearchKeys);
+
+        IndexSearchFilter indexSearchFilter2 = new IndexSearchFilter();
+        indexSearchFilter2.setIsExclusionSearchFilter(false);
+        indexSearchFilter2.setIndexSearchKeys(indexSearchKeys);
+
+        indexSearchFilters.add(indexSearchFilter1);
+        indexSearchFilters.add(indexSearchFilter2);
+
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode(tagKey.getTagCode());
+
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode(tagKey.getTagCode());
+        tagEntity.setTagType(tagTypeEntity);
+
+        TagEntity childTagEntity = new TagEntity();
+        childTagEntity.setTagCode(childTagKey.getTagCode());
+        childTagEntity.setTagType(tagTypeEntity);
+        childTagEntity.setParentTagEntity(tagEntity);
+
+        tagEntity.setChildrenTagEntities(Lists.newArrayList(childTagEntity));
+
+        // Setup the when clauses
+        when(tagDaoHelper.getTagEntity(tagKey)).thenReturn(tagEntity);
+        when(tagDaoHelper.getTagChildrenEntities(tagEntity)).thenReturn(Lists.newArrayList(childTagEntity));
+
+        BoolQueryBuilder result = elasticsearchHelper.addIndexSearchFilterBooleanClause(indexSearchFilters, "bdefIndex", "tagIndex");
+        assertThat("Result is null.", result, is(notNullValue()));
+
+        // Verify the when clauses
+        verify(tagDaoHelper, times(2)).getTagEntity(tagKey);
+        verify(tagDaoHelper, times(2)).getTagChildrenEntities(tagEntity);
+        verifyNoMoreInteractionsHelper();
+    }
 
     @Test
     public void testAddFacetFieldAggregationsWithFacetFields()
@@ -697,6 +793,6 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(jsonHelper);
+        verifyNoMoreInteractions(jsonHelper, tagDaoHelper);
     }
 }

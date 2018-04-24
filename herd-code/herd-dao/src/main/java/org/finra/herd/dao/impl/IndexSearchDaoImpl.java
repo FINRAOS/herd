@@ -35,6 +35,7 @@ import io.searchbox.core.SearchResult;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -202,54 +203,59 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     public IndexSearchResponse indexSearch(final IndexSearchRequest indexSearchRequest, final Set<String> fields, final Set<String> match,
         final String bdefActiveIndex, final String tagActiveIndex)
     {
-        boolean negationTermsExist = herdSearchQueryHelper.determineNegationTermsPresent(indexSearchRequest);
-
         // Build a basic Boolean query upon which add all the necessary clauses as needed
         BoolQueryBuilder indexSearchQueryBuilder = QueryBuilders.boolQuery();
 
         String searchPhrase = indexSearchRequest.getSearchTerm();
 
-        // Add the negation queries builder within a 'must-not' clause to the parent bool query if negation terms exist
-        if (negationTermsExist)
+        // If there is a search phrase, then process it
+        if (StringUtils.isNotEmpty(searchPhrase))
         {
-            // Build negation queries- each term is added to the query with a 'must-not' clause,
-            List<String> negationTerms = herdSearchQueryHelper.extractNegationTerms(indexSearchRequest);
+            // Determine if negation terms are present
+            boolean negationTermsExist = herdSearchQueryHelper.determineNegationTermsPresent(indexSearchRequest);
 
-            if (CollectionUtils.isNotEmpty(negationTerms))
+            // Add the negation queries builder within a 'must-not' clause to the parent bool query if negation terms exist
+            if (negationTermsExist)
             {
-                negationTerms.forEach(term ->
+                // Build negation queries- each term is added to the query with a 'must-not' clause,
+                List<String> negationTerms = herdSearchQueryHelper.extractNegationTerms(indexSearchRequest);
+
+                if (CollectionUtils.isNotEmpty(negationTerms))
                 {
-                    indexSearchQueryBuilder.mustNot(buildMultiMatchQuery(term, PHRASE, 100f, FIELD_TYPE_STEMMED, match));
-                });
+                    negationTerms.forEach(term ->
+                    {
+                        indexSearchQueryBuilder.mustNot(buildMultiMatchQuery(term, PHRASE, 100f, FIELD_TYPE_STEMMED, match));
+                    });
+                }
+
+                // Remove the negation terms from the search phrase
+                searchPhrase = herdSearchQueryHelper.extractSearchPhrase(indexSearchRequest);
             }
 
-            // Remove the negation terms from the search phrase
-            searchPhrase = herdSearchQueryHelper.extractSearchPhrase(indexSearchRequest);
+            // Build a Dismax query with three primary components (multi-match queries) with boost values, these values can be configured in the
+            // DB which provides a way to dynamically tune search behavior at runtime:
+            //  1. Phrase match query on shingles fields.
+            //  2. Phrase prefix query on stemmed fields.
+            //  3. Best fields query on ngrams fields.
+            final MultiMatchQueryBuilder phrasePrefixMultiMatchQueryBuilder = buildMultiMatchQuery(searchPhrase, PHRASE_PREFIX,
+                configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class), FIELD_TYPE_STEMMED, match);
+
+            final MultiMatchQueryBuilder bestFieldsMultiMatchQueryBuilder = buildMultiMatchQuery(searchPhrase, BEST_FIELDS,
+                configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class), FIELD_TYPE_NGRAMS, match);
+
+            final MultiMatchQueryBuilder phraseMultiMatchQueryBuilder =
+                buildMultiMatchQuery(searchPhrase, PHRASE, configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class),
+                    FIELD_TYPE_SHINGLES, match);
+
+            final MultiMatchQueryBuilder phraseStemmedMultiMatchQueryBuilder =
+                buildMultiMatchQuery(searchPhrase, PHRASE, configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class),
+                    FIELD_TYPE_STEMMED, match);
+
+            // Add the multi match queries to a dis max query and add to the parent bool query within a 'must' clause
+            indexSearchQueryBuilder.must(
+                disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder).add(phraseMultiMatchQueryBuilder)
+                    .add(phraseStemmedMultiMatchQueryBuilder));
         }
-
-        // Build a Dismax query with three primary components (multi-match queries) with boost values, these values can be configured in the
-        // DB which provides a way to dynamically tune search behavior at runtime:
-        //  1. Phrase match query on shingles fields.
-        //  2. Phrase prefix query on stemmed fields.
-        //  3. Best fields query on ngrams fields.
-        final MultiMatchQueryBuilder phrasePrefixMultiMatchQueryBuilder = buildMultiMatchQuery(searchPhrase, PHRASE_PREFIX,
-            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_PREFIX_QUERY_BOOST, Float.class), FIELD_TYPE_STEMMED, match);
-
-        final MultiMatchQueryBuilder bestFieldsMultiMatchQueryBuilder = buildMultiMatchQuery(searchPhrase, BEST_FIELDS,
-            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BEST_FIELDS_QUERY_BOOST, Float.class), FIELD_TYPE_NGRAMS, match);
-
-        final MultiMatchQueryBuilder phraseMultiMatchQueryBuilder =
-            buildMultiMatchQuery(searchPhrase, PHRASE, configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class),
-                FIELD_TYPE_SHINGLES, match);
-
-        final MultiMatchQueryBuilder phraseStemmedMultiMatchQueryBuilder =
-            buildMultiMatchQuery(searchPhrase, PHRASE, configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_PHRASE_QUERY_BOOST, Float.class),
-                FIELD_TYPE_STEMMED, match);
-
-        // Add the multi match queries to a dis max query and add to the parent bool query within a 'must' clause
-        indexSearchQueryBuilder
-            .must(disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder)
-                .add(phraseMultiMatchQueryBuilder).add(phraseStemmedMultiMatchQueryBuilder));
 
         // Add filter clauses if index search filters are specified in the request
         if (CollectionUtils.isNotEmpty(indexSearchRequest.getIndexSearchFilters()))
