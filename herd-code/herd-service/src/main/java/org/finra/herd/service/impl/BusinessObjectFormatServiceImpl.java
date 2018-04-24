@@ -675,22 +675,39 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     public BusinessObjectFormat updateBusinessObjectFormatRetentionInformation(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatRetentionInformationUpdateRequest updateRequest)
     {
-        Assert.notNull(updateRequest, "A Business Object Format Retention Information Update Request is required.");
-        Assert.notNull(updateRequest.isRecordFlag(), "A Record Flag in Business Object Format Retention Information Update Request is required.");
-        // Perform validation and trim the alternate key parameters.
+        // Validate and trim the business object format retention information update request update request.
+        Assert.notNull(updateRequest, "A business object format retention information update request must be specified.");
+        Assert.notNull(updateRequest.isRecordFlag(), "A record flag in business object format retention information update request must be specified.");
         businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
-
         Assert.isNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version must not be specified.");
-        //Retrieve and ensure that record retention type exists if the request's retention type is not null
+
+        // Validate business object format retention information.
         RetentionTypeEntity recordRetentionTypeEntity = null;
         if (updateRequest.getRetentionType() != null)
         {
-            Assert.notNull(updateRequest.getRetentionPeriodInDays(), "A retention period in days must be specified when retention type is present.");
-            Assert.isTrue(updateRequest.getRetentionPeriodInDays() > 0, "A positive retention period in days must be specified.");
-            // Perform trim business object format retention in update request
+            // Trim the business object format retention in update request.
             updateRequest.setRetentionType(updateRequest.getRetentionType().trim());
-            // Retrieve the retention type entity
+
+            // Retrieve and ensure that a retention type exists.
             recordRetentionTypeEntity = businessObjectFormatDaoHelper.getRecordRetentionTypeEntity(updateRequest.getRetentionType());
+
+            if (recordRetentionTypeEntity.getCode().equals(RetentionTypeEntity.PARTITION_VALUE))
+            {
+                Assert.notNull(updateRequest.getRetentionPeriodInDays(),
+                    String.format("A retention period in days must be specified for %s retention type.", RetentionTypeEntity.PARTITION_VALUE));
+                Assert.isTrue(updateRequest.getRetentionPeriodInDays() > 0,
+                    String.format("A positive retention period in days must be specified for %s retention type.", RetentionTypeEntity.PARTITION_VALUE));
+            }
+            else
+            {
+                Assert.isNull(updateRequest.getRetentionPeriodInDays(),
+                    String.format("A retention period in days cannot be specified for %s retention type.", recordRetentionTypeEntity.getCode()));
+            }
+        }
+        else
+        {
+            // Do not allow retention period to be specified without retention type.
+            Assert.isNull(updateRequest.getRetentionPeriodInDays(), "A retention period in days cannot be specified without retention type.");
         }
 
         // Retrieve and ensure that a business object format exists.
@@ -705,7 +722,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
-
 
     /**
      * Validates the business object format create request, except for the alternate key values. This method also trims request parameters.

@@ -559,7 +559,7 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         BusinessObjectData expectedBusinessObjectData =
             new BusinessObjectData(businessObjectDataEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_KEY, PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
+                NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE);
 
         // Run the activiti task and validate the returned response object.
         Map<String, Object> variableValuesToValidate = new HashMap<>();
@@ -612,7 +612,7 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
                 NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, Arrays.asList(
                 new BusinessObjectDataStatusChangeEvent(BusinessObjectDataStatusEntity.VALID,
                     HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(businessObjectDataEntity.getHistoricalStatuses(), 0).getCreatedOn()),
-                    HerdDaoSecurityHelper.SYSTEM_USER)));
+                    HerdDaoSecurityHelper.SYSTEM_USER)), NO_RETENTION_EXPIRATION_DATE);
 
         // Run the activiti task and validate the returned response object.
         Map<String, Object> variableValuesToValidate = new HashMap<>();
@@ -675,7 +675,7 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
                     .asList(new StorageUnitStatusChangeEvent(StorageUnitStatusEntity.ENABLED,
                         HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(storageUnitEntity.getHistoricalStatuses(), 0).getCreatedOn()),
                         HerdDaoSecurityHelper.SYSTEM_USER)), NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS,
-                NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
+                NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE);
 
         // Run the activiti task and validate the returned response object.
         Map<String, Object> variableValuesToValidate = new HashMap<>();

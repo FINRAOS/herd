@@ -30,6 +30,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequ
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
@@ -88,6 +89,17 @@ public interface BusinessObjectDataService
      */
     public BusinessObjectData updateBusinessObjectDataAttributes(BusinessObjectDataKey businessObjectDataKey,
         BusinessObjectDataAttributesUpdateRequest businessObjectDataAttributesUpdateRequest);
+
+    /**
+     * Updates retention information for an existing business object data.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param businessObjectDataRetentionInformationUpdateRequest the business object data retention information update request
+     *
+     * @return the business object data information
+     */
+    public BusinessObjectData updateBusinessObjectDataRetentionInformation(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataRetentionInformationUpdateRequest businessObjectDataRetentionInformationUpdateRequest);
 
     /**
      * Deletes an existing business object data.

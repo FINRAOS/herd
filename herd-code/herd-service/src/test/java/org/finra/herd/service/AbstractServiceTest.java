@@ -554,13 +554,15 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final boolean NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.FALSE;
 
-    public static final boolean NO_RECORDFLAG = false;
+    public static final Boolean NO_RECORD_FLAG_SET = false;
 
     public static final RegistrationDateRangeFilter NO_REGISTRATION_DATE_RANGE_FILTER = null;
 
-    public static final Integer NO_RETENTIONPERIODINDAYS = null;
+    public static final XMLGregorianCalendar NO_RETENTION_EXPIRATION_DATE = null;
 
-    public static final String NO_RETENTIONTYPE = null;
+    public static final Integer NO_RETENTION_PERIOD_IN_DAYS = null;
+
+    public static final String NO_RETENTION_TYPE = null;
 
     public static final Long NO_ROW_COUNT = null;
 
@@ -618,9 +620,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
 
+    public static final Boolean RECORD_FLAG_SET = true;
+
     public static final String RELATIONAL_SCHEMA_NAME = "UT_RelationalSchemaName_" + RANDOM_SUFFIX;
 
     public static final String RELATIONAL_TABLE_NAME = "UT_RelationalTableName_" + RANDOM_SUFFIX;
+
+    public static final XMLGregorianCalendar RETENTION_EXPIRATION_DATE = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final Integer RETENTION_PERIOD_DAYS = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
