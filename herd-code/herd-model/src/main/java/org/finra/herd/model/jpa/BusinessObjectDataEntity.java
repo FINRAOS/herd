@@ -15,6 +15,7 @@
 */
 package org.finra.herd.model.jpa;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
 
@@ -118,6 +119,9 @@ public class BusinessObjectDataEntity extends AuditableEntity
     @OneToMany(mappedBy = "businessObjectData", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("createdOn DESC")
     private Collection<BusinessObjectDataStatusHistoryEntity> historicalStatuses;
+
+    @Column(name = "rtntn_xprtn_ts")
+    private Timestamp retentionExpiration;
 
     public Integer getId()
     {
@@ -267,5 +271,15 @@ public class BusinessObjectDataEntity extends AuditableEntity
     public void setHistoricalStatuses(Collection<BusinessObjectDataStatusHistoryEntity> historicalStatuses)
     {
         this.historicalStatuses = historicalStatuses;
+    }
+
+    public Timestamp getRetentionExpiration()
+    {
+        return retentionExpiration;
+    }
+
+    public void setRetentionExpiration(Timestamp retentionExpiration)
+    {
+        this.retentionExpiration = retentionExpiration;
     }
 }

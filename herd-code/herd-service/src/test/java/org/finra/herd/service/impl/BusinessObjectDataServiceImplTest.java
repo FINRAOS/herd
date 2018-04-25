@@ -16,6 +16,7 @@
 package org.finra.herd.service.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,12 +43,15 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
+import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
 import org.finra.herd.service.BusinessObjectDataInitiateDestroyHelperService;
@@ -304,6 +309,244 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         // Verify the external calls.
         verify(businessObjectDataHelper, times(2)).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
         verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataRetentionInformation()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data retention information update request.
+        BusinessObjectDataRetentionInformationUpdateRequest businessObjectDataRetentionInformationUpdateRequest =
+            new BusinessObjectDataRetentionInformationUpdateRequest(RETENTION_EXPIRATION_DATE);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+
+        // Create a business object format key without version.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION);
+
+        // Create a retention type entity for BDATA_RETENTION_DATE.
+        RetentionTypeEntity retentionTypeEntity = new RetentionTypeEntity();
+        retentionTypeEntity.setCode(RetentionTypeEntity.BDATA_RETENTION_DATE);
+
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
+        businessObjectFormatEntity.setRetentionType(retentionTypeEntity);
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+        when(businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey)).thenReturn(businessObjectFormatEntity);
+        when(businessObjectDataDao.saveAndRefresh(businessObjectDataEntity)).thenReturn(businessObjectDataEntity);
+        when(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity)).thenReturn(businessObjectData);
+
+        // Call the method under test.
+        BusinessObjectData result = businessObjectDataServiceImpl
+            .updateBusinessObjectDataRetentionInformation(businessObjectDataKey, businessObjectDataRetentionInformationUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
+        verify(businessObjectFormatDaoHelper).getBusinessObjectFormatEntity(businessObjectFormatKey);
+        verify(businessObjectDataDao).saveAndRefresh(businessObjectDataEntity);
+        verify(businessObjectDataHelper).createBusinessObjectDataFromEntity(businessObjectDataEntity);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectData, result);
+        assertEquals(businessObjectDataEntity.getRetentionExpiration(), new Timestamp(RETENTION_EXPIRATION_DATE.toGregorianCalendar().getTimeInMillis()));
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataRetentionInformationBusinessObjectFormatHasInvalidRetentionType()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data retention information update request.
+        BusinessObjectDataRetentionInformationUpdateRequest businessObjectDataRetentionInformationUpdateRequest =
+            new BusinessObjectDataRetentionInformationUpdateRequest(RETENTION_EXPIRATION_DATE);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+
+        // Create a business object format key without version.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION);
+
+        // Create a retention type entity for an invalid retention type.
+        RetentionTypeEntity retentionTypeEntity = new RetentionTypeEntity();
+        retentionTypeEntity.setCode(INVALID_VALUE);
+
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
+        businessObjectFormatEntity.setRetentionType(retentionTypeEntity);
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+        when(businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey)).thenReturn(businessObjectFormatEntity);
+        when(businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)).thenReturn(BUSINESS_OBJECT_FORMAT_KEY_AS_STRING);
+
+        // Try to call the method under test when business object format has an invalid retention type.
+        try
+        {
+            businessObjectDataServiceImpl
+                .updateBusinessObjectDataRetentionInformation(businessObjectDataKey, businessObjectDataRetentionInformationUpdateRequest);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Retention information with %s retention type must be configured for business object format. Business object format: {%s}",
+                    RetentionTypeEntity.BDATA_RETENTION_DATE, BUSINESS_OBJECT_FORMAT_KEY_AS_STRING), e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
+        verify(businessObjectFormatDaoHelper).getBusinessObjectFormatEntity(businessObjectFormatKey);
+        verify(businessObjectFormatHelper).businessObjectFormatKeyToString(businessObjectFormatKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(businessObjectDataEntity.getRetentionExpiration());
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataRetentionInformationBusinessObjectFormatHasNoRetentionType()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data retention information update request.
+        BusinessObjectDataRetentionInformationUpdateRequest businessObjectDataRetentionInformationUpdateRequest =
+            new BusinessObjectDataRetentionInformationUpdateRequest(RETENTION_EXPIRATION_DATE);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+
+        // Create a business object format key without version.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION);
+
+        // Create a business object format entity without a retention type.
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+        when(businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey)).thenReturn(businessObjectFormatEntity);
+        when(businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)).thenReturn(BUSINESS_OBJECT_FORMAT_KEY_AS_STRING);
+
+        // Try to call the method under test when business object format has no retention type configured.
+        try
+        {
+            businessObjectDataServiceImpl
+                .updateBusinessObjectDataRetentionInformation(businessObjectDataKey, businessObjectDataRetentionInformationUpdateRequest);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Retention information with %s retention type must be configured for business object format. Business object format: {%s}",
+                    RetentionTypeEntity.BDATA_RETENTION_DATE, BUSINESS_OBJECT_FORMAT_KEY_AS_STRING), e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
+        verify(businessObjectFormatDaoHelper).getBusinessObjectFormatEntity(businessObjectFormatKey);
+        verify(businessObjectFormatHelper).businessObjectFormatKeyToString(businessObjectFormatKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(businessObjectDataEntity.getRetentionExpiration());
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataRetentionInformationMissingOptionalParameters()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data retention information update request with retention expiration date set to null.
+        BusinessObjectDataRetentionInformationUpdateRequest businessObjectDataRetentionInformationUpdateRequest =
+            new BusinessObjectDataRetentionInformationUpdateRequest(NO_RETENTION_EXPIRATION_DATE);
+
+        // Create a business object data entity with a retention expiration date.
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+        businessObjectDataEntity.setRetentionExpiration(new Timestamp(RETENTION_EXPIRATION_DATE.toGregorianCalendar().getTimeInMillis()));
+
+        // Create a business object format key without version.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION);
+
+        // Create a retention type entity for BDATA_RETENTION_DATE.
+        RetentionTypeEntity retentionTypeEntity = new RetentionTypeEntity();
+        retentionTypeEntity.setCode(RetentionTypeEntity.BDATA_RETENTION_DATE);
+
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
+        businessObjectFormatEntity.setRetentionType(retentionTypeEntity);
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+        when(businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey)).thenReturn(businessObjectFormatEntity);
+        when(businessObjectDataDao.saveAndRefresh(businessObjectDataEntity)).thenReturn(businessObjectDataEntity);
+        when(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity)).thenReturn(businessObjectData);
+
+        // Call the method under test.
+        BusinessObjectData result = businessObjectDataServiceImpl
+            .updateBusinessObjectDataRetentionInformation(businessObjectDataKey, businessObjectDataRetentionInformationUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
+        verify(businessObjectFormatDaoHelper).getBusinessObjectFormatEntity(businessObjectFormatKey);
+        verify(businessObjectDataDao).saveAndRefresh(businessObjectDataEntity);
+        verify(businessObjectDataHelper).createBusinessObjectDataFromEntity(businessObjectDataEntity);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectData, result);
+        assertNull(businessObjectDataEntity.getRetentionExpiration());
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataRetentionInformationMissingRequiredParameters()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Try to call the method under test without specifying a business object data retention information update request.
+        try
+        {
+            businessObjectDataServiceImpl.updateBusinessObjectDataRetentionInformation(businessObjectDataKey, null);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object data retention information update request must be specified.", e.getMessage());
+        }
     }
 
     /**

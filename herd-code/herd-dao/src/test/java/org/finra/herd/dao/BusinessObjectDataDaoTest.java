@@ -1980,7 +1980,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
                 expectedBData1 =
                     new BusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                         AbstractDaoTest.PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, version, businessObjectDataEntity.getLatestVersion(), BData_Status,
-                        null, null, null, null, null);
+                        null, null, null, null, null, null);
             }
         }
 
@@ -1996,7 +1996,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
                 expectedBData2 =
                     new BusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2,
                         AbstractDaoTest.PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, version, businessObjectDataEntity.getLatestVersion(), BData_Status,
-                        null, null, null, null, null);
+                        null, null, null, null, null, null);
             }
         }
 
@@ -2060,7 +2060,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
                 expectedBData =
                     new BusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                         AbstractDaoTest.PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, version, businessObjectDataEntity.getLatestVersion(), BData_Status,
-                        null, null, null, null, null);
+                        null, null, null, null, null, null);
             }
 
         }

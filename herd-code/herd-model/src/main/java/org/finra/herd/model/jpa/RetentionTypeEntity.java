@@ -28,7 +28,9 @@ public class RetentionTypeEntity extends AuditableEntity
      * The table name.
      */
     public static final String TABLE_NAME = "rtntn_type_cd_lk";
-    // common value
+
+    public static final String BDATA_RETENTION_DATE = "BDATA_RETENTION_DATE";
+
     public static final String PARTITION_VALUE = "PARTITION_VALUE";
 
     @Id
