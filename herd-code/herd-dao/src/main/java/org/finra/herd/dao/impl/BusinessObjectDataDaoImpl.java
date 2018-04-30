@@ -987,7 +987,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // If specified namespace does not exist, then return an empty result list.
         if (namespaceEntity == null)
         {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
 
         // If file type is specified, fetch the relative entity to optimize the main query.
@@ -999,7 +999,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             // If specified file type does not exist, then return an empty result list.
             if (fileTypeEntity == null)
             {
-                return new ArrayList<>();
+                return Collections.emptyList();
             }
         }
 
@@ -1012,7 +1012,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         catch (IllegalArgumentException ex)
         {
             // This exception means that there are no records found for the query, thus return an empty result list.
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
 
         // Add all clauses for the query.
