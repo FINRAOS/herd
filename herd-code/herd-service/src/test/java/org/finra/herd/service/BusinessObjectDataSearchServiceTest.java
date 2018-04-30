@@ -39,258 +39,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
     private static final Integer PAGE_SIZE = 100;
 
     @Test
-    public void testSearchBusinessObjectData()
-    {
-        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
-
-        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-        request.setBusinessObjectDataSearchFilters(filters);
-
-        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
-
-        assertTrue(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size() == 2);
-
-        for (BusinessObjectData data : result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements())
-        {
-            assertEquals(NAMESPACE, data.getNamespace());
-            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
-        }
-
-        // Validate the paging information.
-        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
-        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
-        assertEquals(Long.valueOf(1), result.getPageCount());
-        assertEquals(Long.valueOf(2), result.getTotalRecordsOnPage());
-        assertEquals(Long.valueOf(2), result.getTotalRecordCount());
-        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
-    }
-
-    @Test
-    public void testSearchBusinessObjectDataWithPartitionFilterValues()
-    {
-        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
-
-        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-
-        List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
-        PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
-        partitionValueFilters.add(partitionValueFilter);
-        partitionValueFilter.setPartitionKey(PARTITION_KEY);
-        List<String> values = new ArrayList<>();
-        values.add(PARTITION_VALUE);
-        partitionValueFilter.setPartitionValues(values);
-        key.setPartitionValueFilters(partitionValueFilters);
-
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-        request.setBusinessObjectDataSearchFilters(filters);
-
-        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
-
-        // The result list should be empty, as no schema column is registered.
-        assertEquals(0, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
-
-        // Validate the paging information.
-        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
-        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
-        assertEquals(Long.valueOf(0), result.getPageCount());
-        assertEquals(Long.valueOf(0), result.getTotalRecordsOnPage());
-        assertEquals(Long.valueOf(0), result.getTotalRecordCount());
-        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
-    }
-
-    @Test
-    public void testSearchBusinessObjectDataWithPartitionFilterBadRequest()
-    {
-        try
-        {
-            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections.singletonList(
-                new BusinessObjectDataSearchFilter(Collections.singletonList(
-                    new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Collections
-                        .singletonList(
-                            new PartitionValueFilter(NO_PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                                NO_LATEST_AFTER_PARTITION_VALUE)), NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS,
-                        NO_FILTER_ON_LATEST_VALID_VERSION,
-                        NO_FILTER_ON_RETENTION_EXPIRATION))))));
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals("A partition key must be specified.", e.getMessage());
-        }
-    }
-
-    @Test
-    public void testSearchBusinessObjectDataWithAttributeFilterBadRequest()
-    {
-        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
-
-        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
-        businessObjectDataSearchKey.setNamespace(NAMESPACE);
-        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
-        businessObjectDataSearchKeys.add(businessObjectDataSearchKey);
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-        request.setBusinessObjectDataSearchFilters(filters);
-
-        // Try to search with a null attribute name and a null attribute value.
-        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
-        attributeValueFilters.add(new AttributeValueFilter(null, null));
-        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
-        try
-        {
-            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
-            fail();
-        }
-        catch (IllegalArgumentException ex)
-        {
-            assertEquals("Either attribute name or attribute value filter must be specified.", ex.getMessage());
-        }
-
-        // Try to search with an empty attribute name and a null attribute value.
-        attributeValueFilters = new ArrayList<>();
-        attributeValueFilters.add(new AttributeValueFilter(" ", null));
-        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
-        try
-        {
-            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
-            fail();
-        }
-        catch (IllegalArgumentException ex)
-        {
-            assertEquals("Either attribute name or attribute value filter must be specified.", ex.getMessage());
-        }
-
-        // Try to search with an empty attribute name and empty attribute value.
-        attributeValueFilters = new ArrayList<>();
-        attributeValueFilters.add(new AttributeValueFilter(" ", ""));
-        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
-        try
-        {
-            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
-            fail();
-        }
-        catch (IllegalArgumentException ex)
-        {
-            assertEquals("Either attribute name or attribute value filter must be specified.", ex.getMessage());
-        }
-    }
-
-    @Test
-    public void testSearchBusinessObjectDataWithAttributeFilterValues()
-    {
-        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
-
-        businessObjectDataAttributeDaoTestHelper
-            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
-                DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
-
-        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-
-        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
-        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
-
-        key.setAttributeValueFilters(attributeValueFilters);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-        request.setBusinessObjectDataSearchFilters(filters);
-
-        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
-        List<BusinessObjectData> resultList = result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements();
-        assertEquals(1, resultList.size());
-
-        for (BusinessObjectData data : resultList)
-        {
-            assertEquals(NAMESPACE, data.getNamespace());
-            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
-            assertEquals(ATTRIBUTE_NAME_1_MIXED_CASE, data.getAttributes().get(0).getName());
-            assertEquals(ATTRIBUTE_VALUE_1, data.getAttributes().get(0).getValue());
-        }
-
-        // Validate the paging information.
-        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
-        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
-        assertEquals(Long.valueOf(1), result.getPageCount());
-        assertEquals(Long.valueOf(1), result.getTotalRecordsOnPage());
-        assertEquals(Long.valueOf(1), result.getTotalRecordCount());
-        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
-    }
-
-    @Test
-    public void testSearchBusinessObjectDataWithAttributeFilterValuesWithMixedCaseAndSpace()
-    {
-        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
-
-        businessObjectDataAttributeDaoTestHelper
-            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
-                DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
-
-        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
-        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-        key.setNamespace(NAMESPACE);
-        key.setBusinessObjectDefinitionName(BDEF_NAME);
-
-        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
-        attributeValueFilters.add(new AttributeValueFilter("  " + ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase() + "  ", ATTRIBUTE_VALUE_1));
-
-        key.setAttributeValueFilters(attributeValueFilters);
-        businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
-        request.setBusinessObjectDataSearchFilters(filters);
-
-        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
-        List<BusinessObjectData> resultList = result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements();
-        assertEquals(1, resultList.size());
-
-        for (BusinessObjectData data : resultList)
-        {
-            assertEquals(NAMESPACE, data.getNamespace());
-            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
-            assertEquals(ATTRIBUTE_NAME_1_MIXED_CASE, data.getAttributes().get(0).getName());
-            assertEquals(ATTRIBUTE_VALUE_1, data.getAttributes().get(0).getValue());
-        }
-
-        // Validate the paging information.
-        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
-        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
-        assertEquals(Long.valueOf(1), result.getPageCount());
-        assertEquals(Long.valueOf(1), result.getTotalRecordsOnPage());
-        assertEquals(Long.valueOf(1), result.getTotalRecordCount());
-        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
-    }
-
-    @Test
-    public void testSearchBusinessObjectDataWithAttributeFilterValuesWithMultipleFilters()
+    public void testSearchBusinessObjectDataAttributeValueFilters()
     {
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
@@ -365,7 +114,510 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testSearchBusinessObjectDataWithPageNumPageSize()
+    public void testSearchBusinessObjectDataAttributeValueFiltersAttributeNameInMixedCaseAndRequireTrim()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter("  " + ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase() + "  ", ATTRIBUTE_VALUE_1));
+
+        key.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
+        List<BusinessObjectData> resultList = result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements();
+        assertEquals(1, resultList.size());
+
+        for (BusinessObjectData data : resultList)
+        {
+            assertEquals(NAMESPACE, data.getNamespace());
+            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
+            assertEquals(ATTRIBUTE_NAME_1_MIXED_CASE, data.getAttributes().get(0).getName());
+            assertEquals(ATTRIBUTE_VALUE_1, data.getAttributes().get(0).getValue());
+        }
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
+        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
+        assertEquals(Long.valueOf(1), result.getPageCount());
+        assertEquals(Long.valueOf(1), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(1), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataAttributeValueFiltersMissingRequiredParameters()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKeys.add(businessObjectDataSearchKey);
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        // Try to search with a null attribute name and a null attribute value.
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(null, null));
+        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
+            fail();
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals("Either attribute name or attribute value filter must be specified.", ex.getMessage());
+        }
+
+        // Try to search with an empty attribute name and a null attribute value.
+        attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(" ", null));
+        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
+            fail();
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals("Either attribute name or attribute value filter must be specified.", ex.getMessage());
+        }
+
+        // Try to search with an empty attribute name and empty attribute value.
+        attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(" ", ""));
+        businessObjectDataSearchKey.setAttributeValueFilters(attributeValueFilters);
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
+            fail();
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals("Either attribute name or attribute value filter must be specified.", ex.getMessage());
+        }
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataAttributeValueFiltersSingleFilter()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
+
+        key.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
+        List<BusinessObjectData> resultList = result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements();
+        assertEquals(1, resultList.size());
+
+        for (BusinessObjectData data : resultList)
+        {
+            assertEquals(NAMESPACE, data.getNamespace());
+            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
+            assertEquals(ATTRIBUTE_NAME_1_MIXED_CASE, data.getAttributes().get(0).getName());
+            assertEquals(ATTRIBUTE_VALUE_1, data.getAttributes().get(0).getValue());
+        }
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
+        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
+        assertEquals(Long.valueOf(1), result.getPageCount());
+        assertEquals(Long.valueOf(1), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(1), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataNoFilters()
+    {
+        // Create business object data entities required for testing.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        // Search business object data by specifying all business object data search key parameters, except for filters.
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE,
+            new BusinessObjectDataSearchRequest(Collections.singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(1, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+        for (BusinessObjectData businessObjectData : result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements())
+        {
+            assertEquals(NAMESPACE, businessObjectData.getNamespace());
+            assertEquals(BDEF_NAME, businessObjectData.getBusinessObjectDefinitionName());
+            assertEquals(FORMAT_USAGE_CODE, businessObjectData.getBusinessObjectFormatUsage());
+            assertEquals(FORMAT_FILE_TYPE_CODE, businessObjectData.getBusinessObjectFormatFileType());
+            assertEquals(FORMAT_VERSION, Integer.valueOf(businessObjectData.getBusinessObjectFormatVersion()));
+        }
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
+        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
+        assertEquals(Long.valueOf(1), result.getPageCount());
+        assertEquals(Long.valueOf(1), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(1), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataNoFiltersLowerCaseParameters()
+    {
+        // Create business object data entities required for testing.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        // Search business object data by specifying all business object data search key parameters in lowercase.
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE,
+            new BusinessObjectDataSearchRequest(Collections.singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+                    FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER,
+                    NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(1, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+        for (BusinessObjectData businessObjectData : result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements())
+        {
+            assertEquals(NAMESPACE, businessObjectData.getNamespace());
+            assertEquals(BDEF_NAME, businessObjectData.getBusinessObjectDefinitionName());
+            assertEquals(FORMAT_USAGE_CODE, businessObjectData.getBusinessObjectFormatUsage());
+            assertEquals(FORMAT_FILE_TYPE_CODE, businessObjectData.getBusinessObjectFormatFileType());
+            assertEquals(FORMAT_VERSION, Integer.valueOf(businessObjectData.getBusinessObjectFormatVersion()));
+        }
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
+        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
+        assertEquals(Long.valueOf(1), result.getPageCount());
+        assertEquals(Long.valueOf(1), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(1), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataNoFiltersMissingOptionalParametersPassedAsNulls()
+    {
+        // Create business object data entities required for testing.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        // Search business object data by specifying only parameters that are required for a business object data search key.
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE,
+            new BusinessObjectDataSearchRequest(Collections.singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
+                    NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
+                    NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(2, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+        for (BusinessObjectData businessObjectData : result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements())
+        {
+            assertEquals(NAMESPACE, businessObjectData.getNamespace());
+            assertEquals(BDEF_NAME, businessObjectData.getBusinessObjectDefinitionName());
+        }
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
+        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
+        assertEquals(Long.valueOf(1), result.getPageCount());
+        assertEquals(Long.valueOf(2), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(2), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataNoFiltersMissingOptionalParametersPassedAsWhitespace()
+    {
+        // Create business object data entities required for testing.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        // Search business object data by specifying only parameters that are required for a business object data search key.
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE,
+            new BusinessObjectDataSearchRequest(Collections.singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, BLANK_TEXT, BLANK_TEXT, NO_FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(2, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+        for (BusinessObjectData businessObjectData : result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements())
+        {
+            assertEquals(NAMESPACE, businessObjectData.getNamespace());
+            assertEquals(BDEF_NAME, businessObjectData.getBusinessObjectDefinitionName());
+        }
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
+        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
+        assertEquals(Long.valueOf(1), result.getPageCount());
+        assertEquals(Long.valueOf(2), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(2), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataNoFiltersMissingRequiredParameters()
+    {
+        // Try to search business object data without specifying a namespace.
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections.singletonList(
+                new BusinessObjectDataSearchFilter(Collections.singletonList(
+                    new BusinessObjectDataSearchKey(BLANK_TEXT, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                        NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
+                        NO_FILTER_ON_RETENTION_EXPIRATION))))));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        // Try to search business object data without specifying a business object definition name.
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections.singletonList(
+                new BusinessObjectDataSearchFilter(Collections.singletonList(
+                    new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                        NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
+                        NO_FILTER_ON_RETENTION_EXPIRATION))))));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object definition name must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataNoFiltersRelativeEntitiesNoExist()
+    {
+        // Create business object data entities required for testing.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        // Search business object data by specifying all business object data search key parameters, except for filters.
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE,
+            new BusinessObjectDataSearchRequest(Collections.singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(1, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+
+        // Search business object data by specifying a non-existing namespace.
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections
+            .singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(0, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+
+        // Search business object data by specifying a non-existing business object definition name.
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections
+            .singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(0, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+
+        // Search business object data by specifying a non-existing business object format usage.
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections
+            .singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(0, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+
+        // Search business object data by specifying a non-existing business object format file type.
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections
+            .singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(0, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+
+        // Search business object data by specifying a non-existing business object format version.
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections
+            .singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, NO_PARTITION_VALUE_FILTERS,
+                    NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(0, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataNoFiltersTrimParameters()
+    {
+        // Create business object data entities required for testing.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        // Search business object data by specifying all business object data search key string parameters with leading and trailing empty spaces.
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE,
+            new BusinessObjectDataSearchRequest(Collections.singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
+                    addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER,
+                    NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(1, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+        for (BusinessObjectData businessObjectData : result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements())
+        {
+            assertEquals(NAMESPACE, businessObjectData.getNamespace());
+            assertEquals(BDEF_NAME, businessObjectData.getBusinessObjectDefinitionName());
+            assertEquals(FORMAT_USAGE_CODE, businessObjectData.getBusinessObjectFormatUsage());
+            assertEquals(FORMAT_FILE_TYPE_CODE, businessObjectData.getBusinessObjectFormatFileType());
+            assertEquals(FORMAT_VERSION, Integer.valueOf(businessObjectData.getBusinessObjectFormatVersion()));
+        }
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
+        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
+        assertEquals(Long.valueOf(1), result.getPageCount());
+        assertEquals(Long.valueOf(1), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(1), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataNoFiltersUpperCaseParameters()
+    {
+        // Create business object data entities required for testing.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        // Search business object data by specifying all business object data search key parameters in uppercase.
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE,
+            new BusinessObjectDataSearchRequest(Collections.singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                new BusinessObjectDataSearchKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+                    FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER,
+                    NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
+
+        // Validate the results.
+        assertEquals(1, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+        for (BusinessObjectData businessObjectData : result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements())
+        {
+            assertEquals(NAMESPACE, businessObjectData.getNamespace());
+            assertEquals(BDEF_NAME, businessObjectData.getBusinessObjectDefinitionName());
+            assertEquals(FORMAT_USAGE_CODE, businessObjectData.getBusinessObjectFormatUsage());
+            assertEquals(FORMAT_FILE_TYPE_CODE, businessObjectData.getBusinessObjectFormatFileType());
+            assertEquals(FORMAT_VERSION, Integer.valueOf(businessObjectData.getBusinessObjectFormatVersion()));
+        }
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
+        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
+        assertEquals(Long.valueOf(1), result.getPageCount());
+        assertEquals(Long.valueOf(1), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(1), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataPagingMaxRecordsExceeded() throws Exception
+    {
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE, null,
+                DATA_VERSION, true, "VALID");
+
+        // Override configuration.
+        int maxBusinessObjectDataSearchResultCount = 2;
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT.getKey(), maxBusinessObjectDataSearchResultCount);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections
+                .singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
+                    new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
+                        NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
+                        NO_FILTER_ON_RETENTION_EXPIRATION))))));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Result limit of %d exceeded. Total result size %d. Modify filters to further limit results.", maxBusinessObjectDataSearchResultCount,
+                    3), e.getMessage());
+        }
+        finally
+        {
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataPagingPageSizeGreaterThanMaximumPageSize()
+    {
+        // Get the maximum page size configured in the system.
+        int maxPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
+
+        // Try to search business object data.
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, maxPageSize + 1,
+                businessObjectDataServiceTestHelper.createSimpleBusinessObjectDataSearchRequest(NAMESPACE, BDEF_NAME));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("A pageSize less than %d must be specified.", maxPageSize), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataPagingTraverseAllPages()
     {
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
@@ -441,67 +693,63 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testSearchBusinessObjectDataWithPageSizeGreaterThanMaximumPageSize()
+    public void testSearchBusinessObjectDataPartitionValueFilters()
     {
-        // Get the maximum page size configured in the system.
-        int maxPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
-        // Try to search business object data.
-        try
-        {
-            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, maxPageSize + 1,
-                businessObjectDataServiceTestHelper.createSimpleBusinessObjectDataSearchRequest(NAMESPACE, BDEF_NAME));
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(String.format("A pageSize less than %d must be specified.", maxPageSize), e.getMessage());
-        }
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+
+        List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
+        PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
+        partitionValueFilters.add(partitionValueFilter);
+        partitionValueFilter.setPartitionKey(PARTITION_KEY);
+        List<String> values = new ArrayList<>();
+        values.add(PARTITION_VALUE);
+        partitionValueFilter.setPartitionValues(values);
+        key.setPartitionValueFilters(partitionValueFilters);
+
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
+
+        // The result list should be empty, as no schema column is registered.
+        assertEquals(0, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
+        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
+        assertEquals(Long.valueOf(0), result.getPageCount());
+        assertEquals(Long.valueOf(0), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(0), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
     }
 
     @Test
-    public void testSearchBusinessObjectDataWithMaxRecordsExceeded() throws Exception
+    public void testSearchBusinessObjectDataPartitionValueFiltersMissingRequiredParameters()
     {
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-                true, "VALID");
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-                true, "INVALID");
-
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE, null,
-                DATA_VERSION, true, "INVALID");
-
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE, null,
-                DATA_VERSION, true, "VALID");
-
-        // Override configuration.
-        int maxBusinessObjectDataSearchResultCount = 2;
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT.getKey(), maxBusinessObjectDataSearchResultCount);
-        modifyPropertySourceInEnvironment(overrideMap);
-
         try
         {
-            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections
-                .singletonList(new BusinessObjectDataSearchFilter(Collections.singletonList(
-                    new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
-                        NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
-                        NO_FILTER_ON_RETENTION_EXPIRATION))))));
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, new BusinessObjectDataSearchRequest(Collections.singletonList(
+                new BusinessObjectDataSearchFilter(Collections.singletonList(
+                    new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Collections
+                        .singletonList(
+                            new PartitionValueFilter(NO_PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                                NO_LATEST_AFTER_PARTITION_VALUE)), NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS,
+                        NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION))))));
             fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("Result limit of %d exceeded. Total result size %d. Modify filters to further limit results.", maxBusinessObjectDataSearchResultCount,
-                    3), e.getMessage());
-        }
-        finally
-        {
-            // Restore the property sources so we don't affect other tests.
-            restorePropertySourceInEnvironment();
+            assertEquals("A partition key must be specified.", e.getMessage());
         }
     }
 }
