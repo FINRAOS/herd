@@ -100,7 +100,7 @@
          <xs:element name="newStorageUnitStatus" type="xs:string" minOccurs="0"/>
          <xs:element name="oldStorageUnitStatus" type="xs:string" minOccurs="0"/>
          <xs:element name="storageFiles" type="storageFile" minOccurs="0" maxOccurs="unbounded"/>
-         <xs:element name="exception" type="exception" minOccurs="0"/>
+         <xs:element name="exception" type="runtimeException" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 
@@ -254,14 +254,6 @@
       </xs:sequence>
    </xs:complexType>
 
-   <xs:complexType name="exception">
-      <xs:annotation>
-         <xs:appinfo>
-            <jaxb:class ref="java.lang.Exception"/>
-         </xs:appinfo>
-      </xs:annotation>
-   </xs:complexType>
-
    <xs:simpleType name="facetTypeEnum">
       <xs:restriction base="xs:string">
          <xs:enumeration value="ResultType"/>
@@ -392,6 +384,14 @@
          <xs:element name="count" type="xs:long"/>
          <xs:element name="resultTypeDisplayName" type="xs:string" minOccurs="0"/>
       </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="runtimeException">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="java.lang.RuntimeException"/>
+         </xs:appinfo>
+      </xs:annotation>
    </xs:complexType>
 
    <xs:complexType name="s3FileCopyRequestParamsDto">

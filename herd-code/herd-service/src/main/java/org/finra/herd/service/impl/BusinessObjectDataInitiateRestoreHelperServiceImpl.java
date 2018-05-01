@@ -16,7 +16,6 @@
 package org.finra.herd.service.impl;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -209,28 +208,32 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
                 .validateRegisteredS3Files(businessObjectDataRestoreDto.getStorageFiles(), actualS3Files, businessObjectDataRestoreDto.getStorageName(),
                     businessObjectDataRestoreDto.getBusinessObjectDataKey());
 
-            // Build a list of files to restore by selection only objects that are currently archived in Glacier (have Glacier storage class).
-            List<S3ObjectSummary> glacierS3Files = new ArrayList<>();
+            // Validate that all files to be restored are currently archived in Glacier (have Glacier storage class).
+            // Fail on any S3 file that does not have Glacier storage class. This can happen when request to restore business object
+            // data is posted after business object data archiving transition is executed (relative S3 objects get tagged),
+            // but before AWS actually transitions the S3 files to Glacier (changes S3 object storage class to Glacier).
             for (S3ObjectSummary s3ObjectSummary : actualS3Files)
             {
-                if (StorageClass.Glacier.toString().equals(s3ObjectSummary.getStorageClass()))
+                if (!StringUtils.equals(s3ObjectSummary.getStorageClass(), StorageClass.Glacier.toString()))
                 {
-                    glacierS3Files.add(s3ObjectSummary);
+                    throw new IllegalArgumentException(String
+                        .format("S3 file \"%s\" is not archived (found %s storage class when expecting %s). S3 Bucket Name: \"%s\"", s3ObjectSummary.getKey(),
+                            s3ObjectSummary.getStorageClass(), StorageClass.Glacier.toString(), s3FileTransferRequestParamsDto.getS3BucketName()));
                 }
             }
 
             // Set a list of files to restore.
-            s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(glacierS3Files)));
+            s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(actualS3Files)));
 
             // Initiate restore requests for the list of objects in the Glacier bucket.
             // TODO: Make "expirationInDays" value configurable with default value set to 99 years (36135 days).
             s3Service.restoreObjects(s3FileTransferRequestParamsDto, 36135);
         }
-        catch (Exception e)
+        catch (RuntimeException e)
         {
             // Log the exception.
             LOGGER.error("Failed to initiate a restore request for the business object data. businessObjectDataKey={}",
-                jsonHelper.objectToJson(businessObjectDataRestoreDto.getBusinessObjectDataKey()), businessObjectDataRestoreDto.getException());
+                jsonHelper.objectToJson(businessObjectDataRestoreDto.getBusinessObjectDataKey()), e);
 
             // Update the DTO with the caught exception.
             businessObjectDataRestoreDto.setException(e);
@@ -296,8 +299,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
             else
             {
                 throw new IllegalArgumentException(String.format("Business object data is not archived. " +
-                    "S3 storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. " +
-                    "Business object data: {%s}", storageName, StorageUnitStatusEntity.ARCHIVED, storageUnitStatus,
+                        "S3 storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}", storageName,
+                    StorageUnitStatusEntity.ARCHIVED, storageUnitStatus,
                     businessObjectDataHelper.businessObjectDataEntityAltKeyToString(storageUnitEntity.getBusinessObjectData())));
             }
         }

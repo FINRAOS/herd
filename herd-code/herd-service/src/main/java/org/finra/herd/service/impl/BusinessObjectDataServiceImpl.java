@@ -1106,7 +1106,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 businessObjectDataRestoreDto.getNewStorageUnitStatus(), businessObjectDataRestoreDto.getOldStorageUnitStatus());
 
             // Re-throw the original exception.
-            throw new IllegalStateException(businessObjectDataRestoreDto.getException());
+            throw businessObjectDataRestoreDto.getException();
         }
         else
         {

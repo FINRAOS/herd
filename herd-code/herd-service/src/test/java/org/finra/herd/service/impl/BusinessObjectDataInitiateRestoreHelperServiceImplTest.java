@@ -16,6 +16,7 @@
 package org.finra.herd.service.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -122,7 +124,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
                 DATA_VERSION);
 
         // Create a list of storage files to be passed as an input.
-        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT));
+        List<StorageFile> storageFiles = Collections.singletonList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT));
 
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
@@ -130,7 +132,75 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
                 NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION);
 
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto initialS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+        // Create an updated version of the S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto updatedS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+        updatedS3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
+        updatedS3FileTransferRequestParamsDto.setS3Endpoint(S3_ENDPOINT);
+        updatedS3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX + "/");
+
+        // Create a mock S3 object summary for an S3 object that does belong to Glacier storage class.
+        S3ObjectSummary glacierS3ObjectSummary = mock(S3ObjectSummary.class);
+        when(glacierS3ObjectSummary.getStorageClass()).thenReturn(StorageClass.Glacier.toString());
+
+        // Create a list of actual S3 files.
+        List<S3ObjectSummary> actualS3Files = Collections.singletonList(glacierS3ObjectSummary);
+
+        // Create a list of storage files that represent actual S3 objects.
+        List<StorageFile> storageFilesCreatedFromActualS3Files = Collections.singletonList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT));
+
+        // Create a list of files selected for S3 object tagging.
+        List<File> filesToBeRestored = Collections.singletonList(new File(S3_KEY));
+
+        // Create a final version of DTO for business object data restore parameters.
+        S3FileTransferRequestParamsDto finalS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+        finalS3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
+        finalS3FileTransferRequestParamsDto.setS3Endpoint(S3_ENDPOINT);
+        finalS3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX + "/");
+        finalS3FileTransferRequestParamsDto.setFiles(filesToBeRestored);
+
+        // Mock the external calls.
+        when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(initialS3FileTransferRequestParamsDto);
+        when(s3Service.listDirectory(updatedS3FileTransferRequestParamsDto, true)).thenReturn(actualS3Files);
+        when(storageFileHelper.createStorageFilesFromS3ObjectSummaries(actualS3Files)).thenReturn(storageFilesCreatedFromActualS3Files);
+        when(storageFileHelper.getFiles(storageFilesCreatedFromActualS3Files)).thenReturn(filesToBeRestored);
+
+        // Call the method under test.
+        businessObjectDataInitiateRestoreHelperServiceImpl.executeS3SpecificSteps(businessObjectDataRestoreDto);
+
+        // Verify the external calls.
+        verify(storageHelper).getS3FileTransferRequestParamsDto();
+        verify(s3Service).listDirectory(any(S3FileTransferRequestParamsDto.class), eq(true));
+        verify(storageFileHelper).validateRegisteredS3Files(storageFiles, actualS3Files, STORAGE_NAME, businessObjectDataKey);
+        verify(storageFileHelper).createStorageFilesFromS3ObjectSummaries(actualS3Files);
+        verify(storageFileHelper).getFiles(storageFilesCreatedFromActualS3Files);
+        verify(s3Service).restoreObjects(finalS3FileTransferRequestParamsDto, 36135);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results. The business object data restore DTO is expected not to be updated.
+        assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION), businessObjectDataRestoreDto);
+    }
+
+    @Test
+    public void testExecuteS3SpecificStepsNonGlacierObjectFound()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a list of storage files to be passed as an input.
+        List<StorageFile> storageFiles = Collections.singletonList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT));
+
+        // Create a DTO for business object data restore parameters.
+        BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
+            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION);
+
+        // Create an S3 file transfer parameters DTO to access the S3 bucket.
+        S3FileTransferRequestParamsDto initialS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
 
         // Create an updated version of the S3 file transfer request parameters DTO.
         S3FileTransferRequestParamsDto updatedS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
@@ -139,37 +209,16 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         updatedS3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX + "/");
 
         // Create a mock S3 object summary for S3 object that does not belong to Glacier storage class.
-        S3ObjectSummary glacierS3ObjectSummary = mock(S3ObjectSummary.class);
-        when(glacierS3ObjectSummary.getStorageClass()).thenReturn(StorageClass.Glacier.toString());
-
-        // Create a mock S3 object summary for S3 object that does not belong to Glacier storage class.
         S3ObjectSummary standardS3ObjectSummary = mock(S3ObjectSummary.class);
+        when(standardS3ObjectSummary.getKey()).thenReturn(S3_KEY);
         when(standardS3ObjectSummary.getStorageClass()).thenReturn(StorageClass.Standard.toString());
 
-        // Create a list of S3 files.
-        List<S3ObjectSummary> s3Files = Arrays.asList(glacierS3ObjectSummary, standardS3ObjectSummary);
-
-        // Create a list of S3 objects that belong to Glacier storage class.
-        List<S3ObjectSummary> glacierS3Files = Arrays.asList(glacierS3ObjectSummary);
-
-        // Create a list of storage files that represent S3 objects of Glacier storage class.
-        List<StorageFile> glacierStorageFiles = Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT));
-
-        // Create a list of storage files selected for S3 object tagging.
-        List<File> filesSelectedForRestore = Arrays.asList(new File(S3_KEY));
-
-        // Create a final version of DTO for business object data restore parameters.
-        S3FileTransferRequestParamsDto finalS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
-        finalS3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
-        finalS3FileTransferRequestParamsDto.setS3Endpoint(S3_ENDPOINT);
-        finalS3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX + "/");
-        finalS3FileTransferRequestParamsDto.setFiles(filesSelectedForRestore);
+        // Create a list of actual S3 files.
+        List<S3ObjectSummary> actualS3Files = Collections.singletonList(standardS3ObjectSummary);
 
         // Mock the external calls.
-        when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(s3FileTransferRequestParamsDto);
-        when(s3Service.listDirectory(updatedS3FileTransferRequestParamsDto, true)).thenReturn(s3Files);
-        when(storageFileHelper.createStorageFilesFromS3ObjectSummaries(glacierS3Files)).thenReturn(glacierStorageFiles);
-        when(storageFileHelper.getFiles(glacierStorageFiles)).thenReturn(filesSelectedForRestore);
+        when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(initialS3FileTransferRequestParamsDto);
+        when(s3Service.listDirectory(updatedS3FileTransferRequestParamsDto, true)).thenReturn(actualS3Files);
 
         // Call the method under test.
         businessObjectDataInitiateRestoreHelperServiceImpl.executeS3SpecificSteps(businessObjectDataRestoreDto);
@@ -177,11 +226,18 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         // Verify the external calls.
         verify(storageHelper).getS3FileTransferRequestParamsDto();
         verify(s3Service).listDirectory(any(S3FileTransferRequestParamsDto.class), eq(true));
-        verify(storageFileHelper).validateRegisteredS3Files(storageFiles, s3Files, STORAGE_NAME, businessObjectDataKey);
-        verify(storageFileHelper).createStorageFilesFromS3ObjectSummaries(glacierS3Files);
-        verify(storageFileHelper).getFiles(glacierStorageFiles);
-        verify(s3Service).restoreObjects(finalS3FileTransferRequestParamsDto, 36135);
+        verify(storageFileHelper).validateRegisteredS3Files(storageFiles, actualS3Files, STORAGE_NAME, businessObjectDataKey);
+        verify(jsonHelper).objectToJson(businessObjectDataKey);
         verifyNoMoreInteractionsHelper();
+
+        // Validate the results. The business object data restore DTO is expected to be updated with an exception resulted from a non-Glacier S3 object.
+        assertNotNull(businessObjectDataRestoreDto.getException());
+        assertEquals(IllegalArgumentException.class, businessObjectDataRestoreDto.getException().getClass());
+        assertEquals(String.format("S3 file \"%s\" is not archived (found %s storage class when expecting %s). S3 Bucket Name: \"%s\"", S3_KEY,
+            StorageClass.Standard.toString(), StorageClass.Glacier.toString(), S3_BUCKET_NAME), businessObjectDataRestoreDto.getException().getMessage());
+        businessObjectDataRestoreDto.setException(NO_EXCEPTION);
+        assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION), businessObjectDataRestoreDto);
     }
 
     @Test
@@ -200,7 +256,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
 
         // Mock the external calls.
         when(storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity))
-            .thenReturn(Arrays.asList(storageUnitEntity));
+            .thenReturn(Collections.singletonList(storageUnitEntity));
 
         // Call the method under test.
         StorageUnitEntity result = businessObjectDataInitiateRestoreHelperServiceImpl.getStorageUnit(businessObjectDataEntity);
@@ -266,7 +322,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
 
         // Mock the external calls.
         when(storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity))
-            .thenReturn(Arrays.asList(storageUnitEntity));
+            .thenReturn(Collections.singletonList(storageUnitEntity));
         when(businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING);
 
         // Try to call the method under test.
@@ -308,7 +364,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
 
         // Mock the external calls.
         when(storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity))
-            .thenReturn(Arrays.asList(storageUnitEntity));
+            .thenReturn(Collections.singletonList(storageUnitEntity));
         when(businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING);
 
         // Try to call the method under test.
@@ -378,7 +434,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
 
         // Mock the external calls.
         when(storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity))
-            .thenReturn(Arrays.asList(storageUnitEntity));
+            .thenReturn(Collections.singletonList(storageUnitEntity));
         when(businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING);
 
         // Try to call the method under test.

@@ -16,16 +16,17 @@
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.util.Collections;
 
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.StorageClass;
+import com.google.common.collect.Iterables;
 import org.junit.Test;
 
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
@@ -152,8 +153,8 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
             }
             catch (IllegalStateException e)
             {
-                assertEquals(String.format("java.lang.IllegalStateException: Failed to initiate a restore request for \"%s/%s\" key in \"%s\" bucket. " +
-                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", s3KeyPrefix,
+                assertEquals(String.format("Failed to initiate a restore request for \"%s/%s\" key in \"%s\" bucket. " +
+                        "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", s3KeyPrefix,
                     MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, S3_BUCKET_NAME), e.getMessage());
             }
 
@@ -185,8 +186,9 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.S3_BUCKET_NAME,
+                StorageUnitStatusEntity.ARCHIVED, Collections.singletonList(LOCAL_FILE));
 
         // Get the storage unit entity.
         StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
@@ -203,22 +205,21 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
                     new ByteArrayInputStream(new byte[storageFileEntity.getFileSizeBytes().intValue()]), metadata), NO_S3_CLIENT);
             }
 
-            // Initiate a restore request for the business object data.
-            BusinessObjectData businessObjectData = businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS);
-
-            // Validate the returned object.
-            businessObjectDataServiceTestHelper
-                .validateBusinessObjectData(businessObjectDataEntity.getId(), businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS, businessObjectData);
-
-            // Validate that the origin storage unit status is RESTORING.
-            assertEquals(StorageUnitStatusEntity.RESTORING, storageUnitEntity.getStatus().getCode());
-
-            // Validate that there is still no ongoing restore request for all non-Glacier objects.
-            for (StorageFileEntity storageFileEntity : storageUnitEntity.getStorageFiles())
+            // Try to initiate a restore request for the business object data.
+            try
             {
-                ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(S3_BUCKET_NAME, storageFileEntity.getPath(), NO_S3_CLIENT);
-                assertFalse(objectMetadata.getOngoingRestore());
+                businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS);
+                fail();
             }
+            catch (IllegalArgumentException e)
+            {
+                assertEquals(String.format("S3 file \"%s\" is not archived (found %s storage class when expecting %s). S3 Bucket Name: \"%s\"",
+                    Iterables.get(storageUnitEntity.getStorageFiles(), 0).getPath(), StorageClass.Standard.toString(), StorageClass.Glacier.toString(),
+                    S3_BUCKET_NAME), e.getMessage());
+            }
+
+            // Validate that the storage unit status is still ARCHIVED.
+            assertEquals(StorageUnitStatusEntity.ARCHIVED, storageUnitEntity.getStatus().getCode());
         }
         finally
         {

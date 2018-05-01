@@ -510,7 +510,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final DateTime NO_END_TIME = null;
 
-    public static final Exception NO_EXCEPTION = null;
+    public static final RuntimeException NO_EXCEPTION = null;
 
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = false;
 
