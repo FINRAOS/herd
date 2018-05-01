@@ -638,7 +638,7 @@ public class BusinessObjectDataServiceTestHelper
     public BusinessObjectDataEntity createDatabaseEntitiesForInitiateRestoreTesting(BusinessObjectDataKey businessObjectDataKey)
     {
         return createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.S3_BUCKET_NAME,
-            StorageUnitStatusEntity.ARCHIVED);
+            StorageUnitStatusEntity.ARCHIVED, AbstractServiceTest.LOCAL_FILES);
     }
 
     /**
@@ -648,11 +648,12 @@ public class BusinessObjectDataServiceTestHelper
      * @param storageName the storage name
      * @param s3BucketName the S3 bucket name
      * @param storageUnitStatus the storage unit status
+     * @param localFiles the list of local files to create relative storage files
      *
      * @return the business object data entity
      */
     public BusinessObjectDataEntity createDatabaseEntitiesForInitiateRestoreTesting(BusinessObjectDataKey businessObjectDataKey, String storageName,
-        String s3BucketName, String storageUnitStatus)
+        String s3BucketName, String storageUnitStatus, List<String> localFiles)
     {
         // Create and persist a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
@@ -682,7 +683,7 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.NO_SUB_PARTITION_KEYS);
 
         // Create and add storage file entities to the storage unit.
-        for (String relativeFilePath : AbstractServiceTest.LOCAL_FILES)
+        for (String relativeFilePath : localFiles)
         {
             storageFileDaoTestHelper
                 .createStorageFileEntity(storageUnitEntity, String.format("%s/%s", s3KeyPrefix, relativeFilePath), AbstractServiceTest.FILE_SIZE_1_KB,
