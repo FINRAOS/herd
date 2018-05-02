@@ -321,17 +321,17 @@
                <xs:documentation>The user id</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="namespaceAuthorizations" type="namespaceAuthorizations">
+         <xs:element name="namespaceAuthorizations" type="namespaceAuthorizations" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The list of namespace authorizations</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="securityRoles" type="securityRoles">
+         <xs:element name="securityRoles" type="securityRoles" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The list of security roles</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="securityFunctions" type="securityFunctions">
+         <xs:element name="securityFunctions" type="securityFunctions" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The list of security functions</xs:documentation>
             </xs:annotation>
