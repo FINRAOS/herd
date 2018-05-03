@@ -75,7 +75,7 @@ import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
-import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.dao.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.impl.BusinessObjectDefinitionServiceImpl;
 

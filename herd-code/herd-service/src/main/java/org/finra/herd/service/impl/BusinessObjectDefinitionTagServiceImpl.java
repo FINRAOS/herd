@@ -44,7 +44,7 @@ import org.finra.herd.service.BusinessObjectDefinitionTagService;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.SearchIndexUpdateHelper;
-import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.dao.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
 /**

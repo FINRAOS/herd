@@ -16,6 +16,7 @@
 package org.finra.herd.service.impl;
 
 import java.io.File;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +57,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequ
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
@@ -78,6 +80,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
+import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
@@ -608,6 +611,47 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);
     }
 
+    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public BusinessObjectData updateBusinessObjectDataRetentionInformation(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataRetentionInformationUpdateRequest businessObjectDataRetentionInformationUpdateRequest)
+    {
+        // Validate and trim the business object data key.
+        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+
+        // Validate the update request.
+        Assert.notNull(businessObjectDataRetentionInformationUpdateRequest, "A business object data retention information update request must be specified.");
+
+        // Retrieve the business object data and ensure it exists.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+
+        // Get the latest version of the business object format for this business object data.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(), null);
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+
+        // Fail if business object format for this business object data does not have
+        // retention information configured with BDATA_RETENTION_DATE retention type.
+        if (businessObjectFormatEntity.getRetentionType() == null ||
+            !businessObjectFormatEntity.getRetentionType().getCode().equals(RetentionTypeEntity.BDATA_RETENTION_DATE))
+        {
+            throw new IllegalArgumentException(String
+                .format("Retention information with %s retention type must be configured for business object format. Business object format: {%s}",
+                    RetentionTypeEntity.BDATA_RETENTION_DATE, businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
+        }
+
+        // Update the retention information.
+        businessObjectDataEntity.setRetentionExpiration(businessObjectDataRetentionInformationUpdateRequest.getRetentionExpirationDate() != null ?
+            new Timestamp(businessObjectDataRetentionInformationUpdateRequest.getRetentionExpirationDate().toGregorianCalendar().getTimeInMillis()) : null);
+
+        // Persist and refresh the entity.
+        businessObjectDataEntity = businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+
+        // Create and return the business object data object from the persisted entity.
+        return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);
+    }
+
     /**
      * Updates the list of not-available statuses by adding business object data status instances created from discovered "non-available" registered
      * sub-partitions as per list of "matched" partition filters to the specified list of not-available statuses.
@@ -1062,7 +1106,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 businessObjectDataRestoreDto.getNewStorageUnitStatus(), businessObjectDataRestoreDto.getOldStorageUnitStatus());
 
             // Re-throw the original exception.
-            throw new IllegalStateException(businessObjectDataRestoreDto.getException());
+            throw businessObjectDataRestoreDto.getException();
         }
         else
         {

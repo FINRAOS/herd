@@ -1478,8 +1478,9 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
                     new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE), Boolean.TRUE.toString()),
                     new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.TRUE.toString()))),
                     new StorageDirectory(testS3KeyPrefix), businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false),
-                    StorageUnitStatusEntity.ENABLED, NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES,
-                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY), resultBusinessObjectData);
+                    StorageUnitStatusEntity.ENABLED, NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)),
+                NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                NO_RETENTION_EXPIRATION_DATE), resultBusinessObjectData);
     }
 
     @Test
@@ -1619,8 +1620,9 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
                     Arrays.asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), testBucketName))),
                     new StorageDirectory(testStorageDirectoryPath),
                     businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false), StorageUnitStatusEntity.ENABLED,
-                    NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS,
-                NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY), resultBusinessObjectData);
+                    NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES,
+                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE),
+            resultBusinessObjectData);
     }
 
     @Test

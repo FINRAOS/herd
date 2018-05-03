@@ -48,6 +48,7 @@ import org.finra.herd.dao.helper.HerdCollectionHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
+import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.DataProviderKey;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
@@ -55,6 +56,8 @@ import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.api.xml.PartitionValueFilter;
+import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
@@ -541,6 +544,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<AttributeDefinition> NO_ATTRIBUTE_DEFINITIONS = new ArrayList<>();
 
+    public static final List<AttributeValueFilter> NO_ATTRIBUTE_VALUE_FILTERS = new ArrayList<>();
+
     public static final String NO_AWS_ACCESS_KEY = null;
 
     public static final String NO_AWS_SECRET_KEY = null;
@@ -586,6 +591,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer NO_EXPIRATION_IN_DAYS = null;
 
     public static final Set<String> NO_FIELDS = new HashSet<>();
+
+    public static final Boolean NO_FILTER_ON_LATEST_VALID_VERSION = false;
+
+    public static final Boolean NO_FILTER_ON_RETENTION_EXPIRATION = false;
 
     public static final String NO_FORMAT_DESCRIPTION = null;
 
@@ -641,9 +650,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_PARTITION_KEY_GROUP = null;
 
+    public static final List<PartitionValueFilter> NO_PARTITION_VALUE_FILTERS = new ArrayList<>();
+
     public static final String NO_PASSWORD = null;
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
+
+    public static final RegistrationDateRangeFilter NO_REGISTRATION_DATE_RANGE_FILTER = null;
 
     public static final XMLGregorianCalendar NO_RESTORE_EXPIRATION_ON = null;
 
@@ -994,6 +1007,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_CODE = "UT_TagTypeCode_1_" + RANDOM_SUFFIX;
+
+    public static final String TAG_TYPE_CODE_2 = "UT_TagTypeCode_2_" + RANDOM_SUFFIX;
 
     public static final long TAG_TYPE_COUNT = 240;
 

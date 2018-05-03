@@ -321,17 +321,17 @@
                <xs:documentation>The user id</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="namespaceAuthorizations" type="namespaceAuthorizations">
+         <xs:element name="namespaceAuthorizations" type="namespaceAuthorizations" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The list of namespace authorizations</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="securityRoles" type="securityRoles">
+         <xs:element name="securityRoles" type="securityRoles" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The list of security roles</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="securityFunctions" type="securityFunctions">
+         <xs:element name="securityFunctions" type="securityFunctions" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The list of security functions</xs:documentation>
             </xs:annotation>
@@ -2141,13 +2141,14 @@
          </xs:element>
          <xs:element name="retentionPeriodInDays" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Retention period (in days) for business object data registered with this format
+               <xs:documentation>Retention period (in days) for business object data registered with this format. This value must only be specified for
+                  PARTITION_VALUE retention type
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="retentionType" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE
+               <xs:documentation>Retention type. Supported retention types are: PARTITION_VALUE, BDATA_RETENTION_DATE
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -2901,6 +2902,17 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDataRetentionInformationUpdateRequest" type="businessObjectDataRetentionInformationUpdateRequest"/>
+   <xs:complexType name="businessObjectDataRetentionInformationUpdateRequest">
+      <xs:all>
+         <xs:element name="retentionExpirationDate" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The retention expiration date for this business object data in YYYY-MM-DD format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="businessObjectData" type="businessObjectData"/>
    <xs:complexType name="businessObjectData">
       <xs:annotation>
@@ -3008,6 +3020,11 @@
          <xs:element name="businessObjectDataStatusHistory" type="businessObjectDataStatusHistory" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Lists all business object data status change events for this business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retentionExpirationDate" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The retention expiration date for this business object data</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3301,12 +3318,12 @@
 
    <xs:complexType name="businessObjectDataSearchKey">
       <xs:all>
-         <xs:element name="namespace" type="xs:string" minOccurs="0">
+         <xs:element name="namespace" type="xs:string">
             <xs:annotation>
                <xs:documentation>The Namespace to which a Business Object Format is related</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="businessObjectDefinitionName" type="xs:string" minOccurs="0">
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
             <xs:annotation>
                <xs:documentation>The name of the Business Object Definition to which a Business Object Format is related</xs:documentation>
             </xs:annotation>
@@ -7556,7 +7573,7 @@
 
    <xs:complexType name="indexSearchRequest">
       <xs:all>
-         <xs:element name="searchTerm" type="xs:string" minOccurs="1">
+         <xs:element name="searchTerm" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The search term upon which to search</xs:documentation>
             </xs:annotation>
@@ -7627,6 +7644,12 @@
          <xs:element name="indexSearchResultTypeKey" type="indexSearchResultTypeKey" minOccurs="0" maxOccurs="1">
             <xs:annotation>
                <xs:documentation>An optional index search result type key. Only one is allowed
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="includeTagHierarchy" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if business object definition associated with entire tag hierarchy is to be retrieved
                </xs:documentation>
             </xs:annotation>
          </xs:element>

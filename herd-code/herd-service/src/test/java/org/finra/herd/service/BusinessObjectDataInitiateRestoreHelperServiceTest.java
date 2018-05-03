@@ -519,7 +519,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
 
         // Create database entities required for testing with the storage not having S3 bucket name configured.
         businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, NO_S3_BUCKET_NAME, StorageUnitStatusEntity.ARCHIVED);
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, NO_S3_BUCKET_NAME, StorageUnitStatusEntity.ARCHIVED,
+                LOCAL_FILES);
 
         // Try to execute a before step for the initiate a business object data restore request
         // when the storage does not have an S3 bucket name configured.
@@ -545,7 +546,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
 
         // Create database entities required for testing with a storage unit already being restored.
         businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, StorageUnitStatusEntity.RESTORING);
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, StorageUnitStatusEntity.RESTORING,
+                LOCAL_FILES);
 
         // Try to execute a before step for the initiate a business object data restore request when storage unit is already being restored.
         try
@@ -570,7 +572,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
 
         // Create database entities required for testing.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, StorageUnitStatusEntity.ARCHIVED);
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, StorageUnitStatusEntity.ARCHIVED,
+                LOCAL_FILES);
 
         // Get the storage unit entity.
         StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
