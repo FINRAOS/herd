@@ -286,6 +286,12 @@ public class BusinessObjectDataHelper
             }
         }
 
+        // If specified, add business object data retention information.
+        if (businessObjectDataEntity.getRetentionExpiration() != null)
+        {
+            businessObjectData.setRetentionExpirationDate(HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDataEntity.getRetentionExpiration()));
+        }
+
         return businessObjectData;
     }
 

@@ -55,6 +55,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequ
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
@@ -738,6 +739,45 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
             verify(businessObjectDataService).updateBusinessObjectDataAttributes(businessObjectDataKey, businessObjectDataAttributesUpdateRequest);
         }
         verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataRetentionInformation()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
+
+        // Create a business object data retention information update request.
+        BusinessObjectDataRetentionInformationUpdateRequest businessObjectDataRetentionInformationUpdateRequest =
+            new BusinessObjectDataRetentionInformationUpdateRequest(RETENTION_EXPIRATION_DATE);
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
+
+        // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
+        when(businessObjectDataService.updateBusinessObjectDataRetentionInformation(businessObjectDataKey, businessObjectDataRetentionInformationUpdateRequest))
+            .thenReturn(businessObjectData);
+
+        // Call the method under test.
+        BusinessObjectData result = businessObjectDataRestController
+            .updateBusinessObjectDataRetentionInformation(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                DATA_VERSION, delimitedSubPartitionValues, businessObjectDataRetentionInformationUpdateRequest);
+
+        // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
+        verify(businessObjectDataService)
+            .updateBusinessObjectDataRetentionInformation(businessObjectDataKey, businessObjectDataRetentionInformationUpdateRequest);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectData, result);
     }
 
     /**

@@ -70,7 +70,7 @@ import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.SearchIndexUpdateHelper;
-import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.dao.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.helper.TagTypeDaoHelper;
 

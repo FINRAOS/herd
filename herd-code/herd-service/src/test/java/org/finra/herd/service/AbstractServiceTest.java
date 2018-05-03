@@ -54,7 +54,6 @@ import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
-import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
@@ -69,7 +68,6 @@ import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
-import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.SearchIndexStatistics;
@@ -406,6 +404,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long FILE_SIZE_2 = (long) (Math.random() * Long.MAX_VALUE);
 
+    public static final Boolean FILTER_ON_LATEST_VALID_VERSION = true;
+
+    public static final Boolean FILTER_ON_RETENTION_EXPIRATION = true;
+
     public static final String HERD_OUTGOING_QUEUE = "HERD_OUTGOING_QUEUE";
 
     public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
@@ -466,8 +468,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_ALLOW_MISSING_DATA = false;
 
-    public static final List<AttributeValueFilter> NO_ATTRIBUTE_VALUE_FILTERS = new ArrayList<>();
-
     public static final List<BusinessObjectDataStatus> NO_AVAILABLE_STATUSES = new ArrayList<>();
 
     public static final Boolean NO_BOOLEAN_DEFAULT_VALUE = null;
@@ -510,15 +510,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final DateTime NO_END_TIME = null;
 
-    public static final Exception NO_EXCEPTION = null;
+    public static final RuntimeException NO_EXCEPTION = null;
 
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = false;
 
     public static final Long NO_FILE_SIZE = null;
-
-    public static final Boolean NO_FILTER_ON_LATEST_VALID_VERSION = false;
-
-    public static final Boolean NO_FILTER_ON_RETENTION_EXPIRATION = false;
 
     public static final Integer NO_ID = null;
 
@@ -534,6 +530,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY = false;
 
+    public static final Boolean NO_INCLUDE_TAG_HIERARCHY = false;
+
     public static final LatestAfterPartitionValue NO_LATEST_AFTER_PARTITION_VALUE = null;
 
     public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;
@@ -546,19 +544,17 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<String> NO_PARTITION_VALUES = null;
 
-    public static final List<PartitionValueFilter> NO_PARTITION_VALUE_FILTERS = new ArrayList<>();
-
     public static final PartitionValueRange NO_PARTITION_VALUE_RANGE = null;
 
     public static final boolean NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.FALSE;
 
-    public static final boolean NO_RECORDFLAG = false;
+    public static final Boolean NO_RECORD_FLAG_SET = false;
 
-    public static final RegistrationDateRangeFilter NO_REGISTRATION_DATE_RANGE_FILTER = null;
+    public static final XMLGregorianCalendar NO_RETENTION_EXPIRATION_DATE = null;
 
-    public static final Integer NO_RETENTIONPERIODINDAYS = null;
+    public static final Integer NO_RETENTION_PERIOD_IN_DAYS = null;
 
-    public static final String NO_RETENTIONTYPE = null;
+    public static final String NO_RETENTION_TYPE = null;
 
     public static final Long NO_ROW_COUNT = null;
 
@@ -616,9 +612,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
 
+    public static final Boolean RECORD_FLAG_SET = true;
+
     public static final String RELATIONAL_SCHEMA_NAME = "UT_RelationalSchemaName_" + RANDOM_SUFFIX;
 
     public static final String RELATIONAL_TABLE_NAME = "UT_RelationalTableName_" + RANDOM_SUFFIX;
+
+    public static final XMLGregorianCalendar RETENTION_EXPIRATION_DATE = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final Integer RETENTION_PERIOD_DAYS = (int) (Math.random() * (Short.MAX_VALUE << 1));
 

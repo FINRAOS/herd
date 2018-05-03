@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -60,7 +61,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         StorageUnitCreateRequest storageUnit = request.getStorageUnits().get(0);
 
         // Create the business object data.
-        businessObjectDataService.createBusinessObjectData(request);
+        BusinessObjectData createdBusinessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Retrieve the business object data.
         BusinessObjectData businessObjectData = businessObjectDataService.getBusinessObjectData(
@@ -71,7 +72,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
 
         // Verify the results.
         assertNotNull(businessObjectData);
-        assertNotNull(businessObjectData.getId());
+        assertEquals(createdBusinessObjectData.getId(), businessObjectData.getId());
         assertTrue(businessObjectData.getBusinessObjectDefinitionName().equals(request.getBusinessObjectDefinitionName()));
         assertTrue(businessObjectData.getBusinessObjectFormatUsage().equals(request.getBusinessObjectFormatUsage()));
         assertTrue(businessObjectData.getBusinessObjectFormatFileType().equals(request.getBusinessObjectFormatFileType()));
@@ -97,7 +98,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
 
         // Validate the parents.
         assertTrue(businessObjectData.getBusinessObjectDataParents().size() == 2);
-        Collections.sort(request.getBusinessObjectDataParents(), new BusinessObjectDataKeyComparator());
+        request.getBusinessObjectDataParents().sort(new BusinessObjectDataKeyComparator());
         assertEquals(request.getBusinessObjectDataParents(), businessObjectData.getBusinessObjectDataParents());
 
         // Ensure no children exist since the entity is new.
@@ -247,7 +248,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    Arrays.asList(BLANK_TEXT), DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                    Collections.singletonList(BLANK_TEXT), DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
                 NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
             fail("Should throw an IllegalArgumentException when subpartition value is not specified.");
         }
@@ -637,10 +638,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         BusinessObjectData expectedBusinessObjectData =
             new BusinessObjectData(businessObjectDataEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, Arrays.asList(
+                NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, Collections.singletonList(
                 new BusinessObjectDataStatusChangeEvent(BusinessObjectDataStatusEntity.VALID,
                     HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(businessObjectDataEntity.getHistoricalStatuses(), 0).getCreatedOn()),
-                    HerdDaoSecurityHelper.SYSTEM_USER)));
+                    HerdDaoSecurityHelper.SYSTEM_USER)), NO_RETENTION_EXPIRATION_DATE);
 
         // Validate the returned response object.
         assertEquals(expectedBusinessObjectData, resultBusinessObjectData);
@@ -675,15 +676,46 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Build the expected response object. The storage unit history record is expected to have system username for the createdBy auditable field.
         BusinessObjectData expectedBusinessObjectData =
             new BusinessObjectData(storageUnitEntity.getBusinessObjectData().getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, Arrays.asList(
-                new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), NO_STORAGE_DIRECTORY, null, StorageUnitStatusEntity.ENABLED, Arrays
-                    .asList(new StorageUnitStatusChangeEvent(StorageUnitStatusEntity.ENABLED,
-                        HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(storageUnitEntity.getHistoricalStatuses(), 0).getCreatedOn()),
-                        HerdDaoSecurityHelper.SYSTEM_USER)), NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS,
-                NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
+                FORMAT_VERSION, PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, Collections
+                .singletonList(
+                    new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), NO_STORAGE_DIRECTORY, null, StorageUnitStatusEntity.ENABLED,
+                        Collections.singletonList(new StorageUnitStatusChangeEvent(StorageUnitStatusEntity.ENABLED,
+                            HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(storageUnitEntity.getHistoricalStatuses(), 0).getCreatedOn()),
+                            HerdDaoSecurityHelper.SYSTEM_USER)), NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES,
+                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE);
 
         // Validate the returned response object.
         assertEquals(expectedBusinessObjectData, resultBusinessObjectData);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataWithRetentionExpirationDate()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data entity with retention expiration date.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+        businessObjectDataEntity.setRetentionExpiration(new Timestamp(RETENTION_EXPIRATION_DATE.toGregorianCalendar().getTimeInMillis()));
+
+        // Retrieve the business object data.
+        BusinessObjectData result = businessObjectDataService.getBusinessObjectData(
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+            NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
+
+        // Build the expected response object.
+        BusinessObjectData expectedBusinessObjectData =
+            new BusinessObjectData(businessObjectDataEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
+                NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                RETENTION_EXPIRATION_DATE);
+
+        // Validate the returned response object.
+        assertEquals(expectedBusinessObjectData, result);
     }
 
     /**

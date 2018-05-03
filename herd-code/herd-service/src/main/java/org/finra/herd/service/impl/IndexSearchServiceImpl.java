@@ -42,7 +42,7 @@ import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
-import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.dao.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
 /**
@@ -99,14 +99,8 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         // Validate the search response match
         validateSearchMatchFields(match);
 
-        // Validate the search term
-        validateIndexSearchRequestSearchTerm(request.getSearchTerm());
-
-        // Validate the index search filters if specified in the request
-        if (request.getIndexSearchFilters() != null)
-        {
-            validateIndexSearchFilters(request.getIndexSearchFilters());
-        }
+        // Validate the search request
+        validateIndexSearchRequest(request);
 
         Set<String> facetFields = new HashSet<>();
         if (CollectionUtils.isNotEmpty(request.getFacetFields()))
@@ -125,15 +119,35 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     }
 
     /**
+     * Private method to validate the index search request.
+     *
+     * @param request the index search request
+     */
+    private void validateIndexSearchRequest(final IndexSearchRequest request)
+    {
+        // Validate that either a search term or search filter is provided
+        Assert.isTrue(request.getSearchTerm() != null || request.getIndexSearchFilters() != null, "A search term or a search filter must be specified.");
+
+        // Validate the search term if specified in the request
+        if (request.getSearchTerm() != null)
+        {
+            validateIndexSearchRequestSearchTerm(request.getSearchTerm());
+        }
+
+        // Validate the index search filters if specified in the request
+        if (request.getIndexSearchFilters() != null)
+        {
+            validateIndexSearchFilters(request.getIndexSearchFilters());
+        }
+    }
+
+    /**
      * Private method to validate the index search request search term.
      *
      * @param indexSearchTerm the index search term string
      */
     private void validateIndexSearchRequestSearchTerm(final String indexSearchTerm)
     {
-        // A search term must be provided
-        Assert.notNull(indexSearchTerm, "A search term must be specified.");
-
         // The following characters will be react like spaces during the search: '-' and '_'
         // Confirm that the search term is long enough
         Assert.isTrue(indexSearchTerm.replace('-', ' ').replace('_', ' ').trim().length() >= SEARCH_TERM_MINIMUM_ALLOWABLE_LENGTH,
@@ -249,7 +263,6 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         localCopy.stream().filter(StringUtils::isNotBlank).map(String::trim).map(String::toLowerCase).forEachOrdered(match::add);
 
         // Validate the field names
-        match.forEach(
-            field -> Assert.isTrue(getValidSearchMatchFields().contains(field), String.format("Search match field \"%s\" is not supported.", field)));
+        match.forEach(field -> Assert.isTrue(getValidSearchMatchFields().contains(field), String.format("Search match field \"%s\" is not supported.", field)));
     }
 }
