@@ -100,3 +100,4 @@ insert into msg_type_cd_lk (msg_type_cd, creat_ts, creat_user_id, updt_ts, updt_
 
 -- Retention Type
 insert into rtntn_type_cd_lk(rtntn_type_cd) values ('PARTITION_VALUE');
+insert into rtntn_type_cd_lk(rtntn_type_cd) values ('BDATA_RETENTION_DATE');
