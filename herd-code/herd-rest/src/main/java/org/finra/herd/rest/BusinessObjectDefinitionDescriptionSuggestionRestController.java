@@ -29,6 +29,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestio
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.BusinessObjectDefinitionDescriptionSuggestionService;
 import org.finra.herd.ui.constants.UiConstants;
@@ -105,11 +106,14 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestController extends
      *
      * @return the list of retrieved business object definition description suggestion keys
      */
-    @RequestMapping(value = BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTIONS_URI_PREFIX, method = RequestMethod.GET)
+    @RequestMapping(value = BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTIONS_URI_PREFIX +
+        "/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTIONS_ALL_GET)
-    public BusinessObjectDefinitionDescriptionSuggestionKeys getBusinessObjectDefinitionDescriptionSuggestions()
+    public BusinessObjectDefinitionDescriptionSuggestionKeys getBusinessObjectDefinitionDescriptionSuggestions(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName)
     {
-        return businessObjectDefinitionDescriptionSuggestionService.getBusinessObjectDefinitionDescriptionSuggestions();
+        return businessObjectDefinitionDescriptionSuggestionService
+            .getBusinessObjectDefinitionDescriptionSuggestions(new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName));
     }
 
     /**

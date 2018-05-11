@@ -114,6 +114,11 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @OrderBy("createdOn DESC")
     private Collection<BusinessObjectDefinitionChangeEventEntity> changeEvents;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("user_id")
+    private Collection<BusinessObjectDefinitionDescriptionSuggestionEntity> descriptionSuggestions;
+
     public BigDecimal getTagSearchScoreMultiplier()
     {
         return tagSearchScoreMultiplier;

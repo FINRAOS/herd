@@ -20,12 +20,15 @@ import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.google.common.collect.Lists;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionDao;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -65,5 +68,44 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoImpl extends Abstra
 
         return executeSingleResultQuery(criteria, String.format("Found more than one business object definition description suggestion with parameters " +
             "{namespace=\"%s\", businessObjectDefinitionName=\"%s\", userId=\"%s\"}.", namespace, businessObjectDefinitionName, userId));
+    }
+
+    @Override
+    public List<BusinessObjectDefinitionDescriptionSuggestionKey> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> criteria = builder.createQuery(String.class);
+
+        // The criteria root is the business object definition description suggestion.
+        Root<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntity =
+            criteria.from(BusinessObjectDefinitionDescriptionSuggestionEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder
+            .equal(businessObjectDefinitionDescriptionSuggestionEntity.get(BusinessObjectDefinitionDescriptionSuggestionEntity_.businessObjectDefinition),
+                businessObjectDefinitionEntity));
+
+        // Get the columns.
+        Path<String> userIdColumn = businessObjectDefinitionDescriptionSuggestionEntity.get(BusinessObjectDefinitionDescriptionSuggestionEntity_.userId);
+
+        // Add the clauses for the query.
+        criteria.select(userIdColumn).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(builder.asc(userIdColumn));
+
+        // Run the query to get a list of userIds back.
+        List<String> userIds = entityManager.createQuery(criteria).getResultList();
+
+        // Build a list of business object definition description suggestion keys
+        List<BusinessObjectDefinitionDescriptionSuggestionKey> businessObjectDefinitionDescriptionSuggestionKeys = Lists.newArrayList();
+        for (String userId : userIds)
+        {
+            businessObjectDefinitionDescriptionSuggestionKeys.add(
+                new BusinessObjectDefinitionDescriptionSuggestionKey(businessObjectDefinitionEntity.getNamespace().getCode(),
+                    businessObjectDefinitionEntity.getName(), userId));
+        }
+
+        return businessObjectDefinitionDescriptionSuggestionKeys;
     }
 }

@@ -15,9 +15,6 @@
  */
 package org.finra.herd.service.impl;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,23 +136,16 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
     }
 
     @Override
-    public BusinessObjectDefinitionDescriptionSuggestionKeys getBusinessObjectDefinitionDescriptionSuggestions()
+    public BusinessObjectDefinitionDescriptionSuggestionKeys getBusinessObjectDefinitionDescriptionSuggestions(
+        BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
-        // Find all business object definition description suggestion entities.
-        final List<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntities =
-            businessObjectDefinitionDescriptionSuggestionDao.findAll(BusinessObjectDefinitionDescriptionSuggestionEntity.class);
-
-        // Convert the business object definition description suggestion entities list to a list of business object definition description suggestion keys.
-        final List<BusinessObjectDefinitionDescriptionSuggestionKey> businessObjectDefinitionDescriptionSuggestionKeys = Lists.newArrayList();
-        for (final BusinessObjectDefinitionDescriptionSuggestionEntity entity : businessObjectDefinitionDescriptionSuggestionEntities)
-        {
-            businessObjectDefinitionDescriptionSuggestionKeys.add(
-                new BusinessObjectDefinitionDescriptionSuggestionKey(entity.getBusinessObjectDefinition().getNamespace().getCode(),
-                    entity.getBusinessObjectDefinition().getName(), entity.getUserId()));
-        }
+        // Retrieve the business object definition entity by key.
+        final BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         // Return the business object definition description suggestion keys.
-        return new BusinessObjectDefinitionDescriptionSuggestionKeys(businessObjectDefinitionDescriptionSuggestionKeys);
+        return new BusinessObjectDefinitionDescriptionSuggestionKeys(businessObjectDefinitionDescriptionSuggestionDao
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(businessObjectDefinitionEntity));
     }
 
     @Override

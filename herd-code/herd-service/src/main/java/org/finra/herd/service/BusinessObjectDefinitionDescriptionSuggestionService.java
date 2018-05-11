@@ -20,6 +20,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestio
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 
 /**
  * The business object definition description suggestion service.
@@ -57,9 +58,12 @@ public interface BusinessObjectDefinitionDescriptionSuggestionService
     /**
      * Gets all existing business object definition description suggestion keys.
      *
+     * @param businessObjectDefinitionKey the business object definition key used to get the business object definition suggestion keys
+     *
      * @return the list of retrieved business object definition description suggestion keys
      */
-    BusinessObjectDefinitionDescriptionSuggestionKeys getBusinessObjectDefinitionDescriptionSuggestions();
+    BusinessObjectDefinitionDescriptionSuggestionKeys getBusinessObjectDefinitionDescriptionSuggestions(
+        BusinessObjectDefinitionKey businessObjectDefinitionKey);
 
     /**
      * Updates an existing business object definition description suggestion by key.

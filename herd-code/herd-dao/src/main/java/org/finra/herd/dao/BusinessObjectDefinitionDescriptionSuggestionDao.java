@@ -15,6 +15,9 @@
  */
 package org.finra.herd.dao;
 
+import java.util.List;
+
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 
@@ -26,8 +29,18 @@ public interface BusinessObjectDefinitionDescriptionSuggestionDao extends BaseJp
      * @param businessObjectDefinitionEntity the business object definition entity associated with the description suggestion
      * @param userId the user id associated with the description suggestion
      *
-     * @return the business object definition description suggestion for the specified key
+     * @return the business object definition description suggestion for the specified business object definition and user id.
      */
     BusinessObjectDefinitionDescriptionSuggestionEntity getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String userId);
+
+    /**
+     * Gets a collection of business object definition description suggestion keys by business object definition entity.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity associated with the description suggestions
+     *
+     * @return the business object definition description suggestions for the specified business object definition
+     */
+    List<BusinessObjectDefinitionDescriptionSuggestionKey> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
 }

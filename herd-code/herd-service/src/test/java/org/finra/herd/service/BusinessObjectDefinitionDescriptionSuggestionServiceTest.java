@@ -3,6 +3,7 @@ package org.finra.herd.service;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -24,7 +25,6 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.DescriptionSuggestion;
@@ -476,15 +476,14 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         // Create objects needed for test
         BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
             new BusinessObjectDefinitionDescriptionSuggestionKey(NAMESPACE, BDEF_NAME, USER_ID);
-        DescriptionSuggestion descriptionSuggestion = new DescriptionSuggestion(DESCRIPTION_SUGGESTION);
 
         BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey2 =
             new BusinessObjectDefinitionDescriptionSuggestionKey(NAMESPACE_2, BDEF_NAME_2, USER_ID_2);
-        DescriptionSuggestion descriptionSuggestion2 = new DescriptionSuggestion(DESCRIPTION_SUGGESTION_2);
 
-        BusinessObjectDefinitionDescriptionSuggestionKeys businessObjectDefinitionDescriptionSuggestionKeys =
-            new BusinessObjectDefinitionDescriptionSuggestionKeys(
-                Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionKey, businessObjectDefinitionDescriptionSuggestionKey2));
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+
+        List<BusinessObjectDefinitionDescriptionSuggestionKey> businessObjectDefinitionDescriptionSuggestionKeyList =
+            Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionKey, businessObjectDefinitionDescriptionSuggestionKey2);
 
         NamespaceEntity namespaceEntity = new NamespaceEntity();
         namespaceEntity.setCode(businessObjectDefinitionDescriptionSuggestionKey.getNamespace());
@@ -492,43 +491,30 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         businessObjectDefinitionEntity.setNamespace(namespaceEntity);
         businessObjectDefinitionEntity.setName(businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
 
-        NamespaceEntity namespaceEntity2 = new NamespaceEntity();
-        namespaceEntity2.setCode(businessObjectDefinitionDescriptionSuggestionKey2.getNamespace());
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity2 = new BusinessObjectDefinitionEntity();
-        businessObjectDefinitionEntity2.setNamespace(namespaceEntity2);
-        businessObjectDefinitionEntity2.setName(businessObjectDefinitionDescriptionSuggestionKey2.getBusinessObjectDefinitionName());
-
-        BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
-            new BusinessObjectDefinitionDescriptionSuggestionEntity();
-        businessObjectDefinitionDescriptionSuggestionEntity.setId(ID);
-        businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        businessObjectDefinitionDescriptionSuggestionEntity.setUserId(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
-        businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(descriptionSuggestion.getDescriptionSuggestion());
-
-        BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity2 =
-            new BusinessObjectDefinitionDescriptionSuggestionEntity();
-        businessObjectDefinitionDescriptionSuggestionEntity2.setId(ID_2);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setBusinessObjectDefinition(businessObjectDefinitionEntity2);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setUserId(businessObjectDefinitionDescriptionSuggestionKey2.getUserId());
-        businessObjectDefinitionDescriptionSuggestionEntity2.setDescriptionSuggestion(descriptionSuggestion2.getDescriptionSuggestion());
-
-        List<BusinessObjectDefinitionDescriptionSuggestionEntity> BusinessObjectDefinitionDescriptionSuggestionEntities =
-            Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionEntity, businessObjectDefinitionDescriptionSuggestionEntity2);
-
         // Mock the call to external methods
-        when(businessObjectDefinitionDescriptionSuggestionDao.findAll(BusinessObjectDefinitionDescriptionSuggestionEntity.class))
-            .thenReturn(BusinessObjectDefinitionDescriptionSuggestionEntities);
+        when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
+        when(businessObjectDefinitionDescriptionSuggestionDao
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(businessObjectDefinitionEntity))
+            .thenReturn(businessObjectDefinitionDescriptionSuggestionKeyList);
 
         // Call the method under test
-        BusinessObjectDefinitionDescriptionSuggestionKeys result =
-            businessObjectDefinitionDescriptionSuggestionService.getBusinessObjectDefinitionDescriptionSuggestions();
+        List<BusinessObjectDefinitionDescriptionSuggestionKey> results =
+            businessObjectDefinitionDescriptionSuggestionService.getBusinessObjectDefinitionDescriptionSuggestions(businessObjectDefinitionKey)
+                .getBusinessObjectDefinitionDescriptionSuggestionKeys();
 
-        // Validate result
-        assertThat("Result does not equal businessObjectDefinitionDescriptionSuggestionKeys.", result,
-            is(equalTo(businessObjectDefinitionDescriptionSuggestionKeys)));
+        // Validate results.
+        for (int i = 0; i < results.size(); i++)
+        {
+            assertEquals(businessObjectDefinitionDescriptionSuggestionKeyList.get(i).getNamespace(), results.get(i).getNamespace());
+            assertEquals(businessObjectDefinitionDescriptionSuggestionKeyList.get(i).getBusinessObjectDefinitionName(),
+                results.get(i).getBusinessObjectDefinitionName());
+            assertEquals(businessObjectDefinitionDescriptionSuggestionKeyList.get(i).getUserId(), results.get(i).getUserId());
+        }
 
         // Verify the calls to external methods
-        verify(businessObjectDefinitionDescriptionSuggestionDao).findAll(BusinessObjectDefinitionDescriptionSuggestionEntity.class);
+        verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        verify(businessObjectDefinitionDescriptionSuggestionDao)
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(businessObjectDefinitionEntity);
         verifyNoMoreInteractionsHelper();
     }
 

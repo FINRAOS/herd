@@ -32,6 +32,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestio
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.DescriptionSuggestion;
 import org.finra.herd.service.BusinessObjectDefinitionDescriptionSuggestionService;
 
@@ -118,23 +119,27 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
     @Test
     public void testGetBusinessObjectDefinitionDescriptionSuggestions()
     {
-        // Create a business object definition description suggestion key.
+        // Create the business object definition key used to get the business object definition description suggestions
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+
+        // Create business object definition description suggestion keys.
         BusinessObjectDefinitionDescriptionSuggestionKey key = new BusinessObjectDefinitionDescriptionSuggestionKey(NAMESPACE, BDEF_NAME, USER_ID);
+        BusinessObjectDefinitionDescriptionSuggestionKey key2 = new BusinessObjectDefinitionDescriptionSuggestionKey(NAMESPACE, BDEF_NAME, USER_ID_2);
 
         // Create a list of business object definition description suggestion keys.
         BusinessObjectDefinitionDescriptionSuggestionKeys businessObjectDefinitionDescriptionSuggestionKeys =
-            new BusinessObjectDefinitionDescriptionSuggestionKeys(Lists.newArrayList(key));
+            new BusinessObjectDefinitionDescriptionSuggestionKeys(Lists.newArrayList(key, key2));
 
         // Mock calls to external method.
-        when(businessObjectDefinitionDescriptionSuggestionService.getBusinessObjectDefinitionDescriptionSuggestions())
+        when(businessObjectDefinitionDescriptionSuggestionService.getBusinessObjectDefinitionDescriptionSuggestions(businessObjectDefinitionKey))
             .thenReturn(businessObjectDefinitionDescriptionSuggestionKeys);
 
         // Get all business object definition description suggestions.
         BusinessObjectDefinitionDescriptionSuggestionKeys resultBusinessObjectDefinitionDescriptionSuggestionKeys =
-            businessObjectDefinitionDescriptionSuggestionRestController.getBusinessObjectDefinitionDescriptionSuggestions();
+            businessObjectDefinitionDescriptionSuggestionRestController.getBusinessObjectDefinitionDescriptionSuggestions(NAMESPACE, BDEF_NAME);
 
         // Verify the external calls.
-        verify(businessObjectDefinitionDescriptionSuggestionService).getBusinessObjectDefinitionDescriptionSuggestions();
+        verify(businessObjectDefinitionDescriptionSuggestionService).getBusinessObjectDefinitionDescriptionSuggestions(businessObjectDefinitionKey);
         verifyNoMoreInteractions(businessObjectDefinitionDescriptionSuggestionService);
 
         // Validate the returned object.
