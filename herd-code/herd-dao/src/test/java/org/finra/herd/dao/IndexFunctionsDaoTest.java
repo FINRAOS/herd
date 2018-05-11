@@ -18,6 +18,9 @@ package org.finra.herd.dao;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -32,33 +35,27 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.searchbox.client.JestResult;
 import io.searchbox.core.SearchResult;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.shard.DocsStats;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JestClientHelper;
-import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.IndexFunctionsDaoImpl;
 
-public class IndexFunctionsDaoTest
+public class IndexFunctionsDaoTest extends AbstractDaoTest
 {
     @InjectMocks
     private IndexFunctionsDaoImpl indexFunctionsDao;
 
     @Mock
-    private HerdStringHelper herdStringHelper;
-
-    @Mock
-    private JsonHelper jsonHelper;
-
-    @Mock
     private JestClientHelper jestClientHelper;
-
 
     @Before
     public void before()
@@ -378,8 +375,8 @@ public class IndexFunctionsDaoTest
         verify(searchResult).getJsonObject();
         verify(jestClientHelper).searchScrollExecute(any());
         verify(jestResult).getSourceAsStringList();
+        verifyNoMoreInteractions(jestClientHelper);
     }
-
 
     @Test
     public void testUpdateIndexDocumentsFunction()
@@ -428,6 +425,168 @@ public class IndexFunctionsDaoTest
 
         // Verify the calls to external methods
         verify(jestClientHelper, times(3)).executeAction(any());
+        verifyNoMoreInteractions(jestClientHelper);
+    }
+
+    @Test
+    public void testGetIndexSettings()
+    {
+        // Create a mocked jest result.
+        JestResult jestResult = mock(JestResult.class);
+        JsonObject jsonObject =
+            new JsonParser().parse(String.format("{\"%s\": {\"settings\": {\"%s\": \"%s\"}}}", SEARCH_INDEX_NAME, ATTRIBUTE_NAME, ATTRIBUTE_VALUE))
+                .getAsJsonObject();
+        when(jestResult.isSucceeded()).thenReturn(true);
+        when(jestResult.getJsonObject()).thenReturn(jsonObject);
+
+        // Mock the external calls.
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
+
+        // Call the method under test.
+        Settings result = indexFunctionsDao.getIndexSettings(SEARCH_INDEX_NAME);
+
+        // Verify the external calls.
+        verify(jestClientHelper).executeAction(any());
+        verifyNoMoreInteractions(jestClientHelper);
+
+        // Validate the results.
+        assertEquals(Settings.builder().put(ATTRIBUTE_NAME, ATTRIBUTE_VALUE).build(), result);
+    }
+
+    @Test
+    public void testGetIndexSettingsInvalidResponse()
+    {
+        // Create a mocked jest result.
+        JestResult jestResult = mock(JestResult.class);
+        JsonObject jsonObject = new JsonObject();
+        when(jestResult.isSucceeded()).thenReturn(true);
+        when(jestResult.getJsonObject()).thenReturn(jsonObject);
+
+        // Mock the external calls.
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
+
+        // Try to call the method under test.
+        try
+        {
+            indexFunctionsDao.getIndexSettings(SEARCH_INDEX_NAME);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Unexpected response received when attempting to retrieve settings for \"%s\" index.", SEARCH_INDEX_NAME), e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(jestClientHelper).executeAction(any());
+        verifyNoMoreInteractions(jestClientHelper);
+    }
+
+    @Test
+    public void testGetIndexSettingsJestClientExecuteNoSucceeded()
+    {
+        // Create a mocked jest result.
+        JestResult jestResult = mock(JestResult.class);
+        when(jestResult.isSucceeded()).thenReturn(false);
+        when(jestResult.getErrorMessage()).thenReturn(ERROR_MESSAGE);
+
+        // Mock the external calls.
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
+
+        // Try to call the method under test.
+        try
+        {
+            indexFunctionsDao.getIndexSettings(SEARCH_INDEX_NAME);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Unable to retrieve settings for \"%s\" index. Error: %s", SEARCH_INDEX_NAME, ERROR_MESSAGE), e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(jestClientHelper).executeAction(any());
+        verifyNoMoreInteractions(jestClientHelper);
+    }
+
+    @Test
+    public void testGetIndexStats()
+    {
+        // Create a mocked jest result.
+        JestResult jestResult = mock(JestResult.class);
+        JsonObject jsonObject = new JsonParser().parse(String
+            .format("{\"indices\": {\"%s\": {\"primaries\": {\"docs\": {\"count\": %d, \"deleted\": %d}}}}}", SEARCH_INDEX_NAME, LONG_VALUE, LONG_VALUE_2))
+            .getAsJsonObject();
+        when(jestResult.isSucceeded()).thenReturn(true);
+        when(jestResult.getJsonObject()).thenReturn(jsonObject);
+
+        // Mock the external calls.
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
+
+        // Call the method under test.
+        DocsStats result = indexFunctionsDao.getIndexStats(SEARCH_INDEX_NAME);
+
+        // Verify the external calls.
+        verify(jestClientHelper).executeAction(any());
+        verifyNoMoreInteractions(jestClientHelper);
+
+        // Validate the results.
+        assertNotNull(result);
+        assertEquals(LONG_VALUE.longValue(), result.getCount());
+        assertEquals(LONG_VALUE_2.longValue(), result.getDeleted());
+    }
+
+    @Test
+    public void testGetIndexStatsInvalidResponse()
+    {
+        // Create a mocked jest result.
+        JestResult jestResult = mock(JestResult.class);
+        JsonObject jsonObject = new JsonObject();
+        when(jestResult.isSucceeded()).thenReturn(true);
+        when(jestResult.getJsonObject()).thenReturn(jsonObject);
+
+        // Mock the external calls.
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
+
+        // Try to call the method under test.
+        try
+        {
+            indexFunctionsDao.getIndexStats(SEARCH_INDEX_NAME);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Unexpected response received when attempting to retrieve stats for \"%s\" index.", SEARCH_INDEX_NAME), e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(jestClientHelper).executeAction(any());
+        verifyNoMoreInteractions(jestClientHelper);
+    }
+
+    @Test
+    public void testGetIndexStatsJestClientExecuteNoSucceeded()
+    {
+        // Create a mocked jest result.
+        JestResult jestResult = mock(JestResult.class);
+        when(jestResult.isSucceeded()).thenReturn(false);
+        when(jestResult.getErrorMessage()).thenReturn(ERROR_MESSAGE);
+
+        // Mock the external calls.
+        when(jestClientHelper.executeAction(any())).thenReturn(jestResult);
+
+        // Try to call the method under test.
+        try
+        {
+            indexFunctionsDao.getIndexStats(SEARCH_INDEX_NAME);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Unable to retrieve stats for \"%s\" index. Error: %s", SEARCH_INDEX_NAME, ERROR_MESSAGE), e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(jestClientHelper).executeAction(any());
         verifyNoMoreInteractions(jestClientHelper);
     }
 }
