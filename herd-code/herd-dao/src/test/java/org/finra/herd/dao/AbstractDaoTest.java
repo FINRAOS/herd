@@ -285,6 +285,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String DESCRIPTION_2 = "UT_Description_2_" + RANDOM_SUFFIX;
 
+    public static final String DESCRIPTION_SUGGESTION = "UT_Description_Suggestion_1_" + RANDOM_SUFFIX;
+
+    public static final String DESCRIPTION_SUGGESTION_2 = "UT_Description_Suggestion_2_" + RANDOM_SUFFIX;
+
     public static final boolean DISABLE_COLUMN_FIELDS = false;
 
     public static final String DISPLAY_NAME_FIELD = "displayname";
@@ -1133,6 +1137,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected BusinessObjectDefinitionDaoTestHelper businessObjectDefinitionDaoTestHelper;
+
+    @Autowired
+    protected BusinessObjectDefinitionDescriptionSuggestionDao businessObjectDefinitionDescriptionSuggestionDao;
 
     @Autowired
     protected BusinessObjectDefinitionSubjectMatterExpertDao businessObjectDefinitionSubjectMatterExpertDao;
