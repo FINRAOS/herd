@@ -370,8 +370,8 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         }
         catch (RuntimeException e)
         {
-            // Log the error along with the get index settings response and throw the exception.
-            LOGGER.error("Failed to parse get index settings response for \"{}\" index. Response: {}", indexName, jestResult.getJsonObject(), e);
+            // Log the error along with the get index settings response.
+            LOGGER.error("Failed to parse get index settings response. indexName=\"{}\" jestResultJsonObject={}", indexName, jestResult.getJsonObject(), e);
 
             // Throw an exception.
             throw new IllegalStateException(String.format("Unexpected response received when attempting to retrieve settings for \"%s\" index.", indexName));
@@ -400,8 +400,8 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         }
         catch (RuntimeException e)
         {
-            // Log the error along with the get index stats response and throw the exception.
-            LOGGER.error("Failed to parse get index stats response for \"{}\" index. Response: {}", indexName, jestResult.getJsonObject(), e);
+            // Log the error along with the get index stats response.
+            LOGGER.error("Failed to parse get index stats response. indexName=\"{}\" jestResultJsonObject={}", indexName, jestResult.getJsonObject(), e);
 
             // Throw an exception.
             throw new IllegalStateException(String.format("Unexpected response received when attempting to retrieve stats for \"%s\" index.", indexName));
