@@ -36,6 +36,7 @@ import org.finra.herd.service.BusinessObjectDefinitionDescriptionSuggestionServi
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDescriptionSuggestionDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 
 /**
  * The business object definition description suggestion service implementation.
@@ -55,6 +56,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
     @Autowired
     private BusinessObjectDefinitionDescriptionSuggestionDaoHelper businessObjectDefinitionDescriptionSuggestionDaoHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
 
     @Override
@@ -139,6 +143,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
     public BusinessObjectDefinitionDescriptionSuggestionKeys getBusinessObjectDefinitionDescriptionSuggestions(
         BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
+        // Perform validation and trim.
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+
         // Retrieve the business object definition entity by key.
         final BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);

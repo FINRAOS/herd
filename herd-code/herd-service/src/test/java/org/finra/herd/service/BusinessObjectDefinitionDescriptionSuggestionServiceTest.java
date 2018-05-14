@@ -34,6 +34,7 @@ import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDescriptionSuggestionDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.impl.BusinessObjectDefinitionDescriptionSuggestionServiceImpl;
 
 /**
@@ -55,6 +56,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
 
     @Mock
     private BusinessObjectDefinitionDescriptionSuggestionDaoHelper businessObjectDefinitionDescriptionSuggestionDaoHelper;
+
+    @Mock
+    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
     @InjectMocks
     private BusinessObjectDefinitionDescriptionSuggestionServiceImpl businessObjectDefinitionDescriptionSuggestionService;
@@ -512,6 +516,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         }
 
         // Verify the calls to external methods
+        verify(businessObjectDefinitionHelper).validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDescriptionSuggestionDao)
             .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(businessObjectDefinitionEntity);

@@ -83,7 +83,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestController extends
     }
 
     /**
-     * Gets an existing business object definition description suggestion by key.
+     * Retrieves an existing business object definition description suggestion by key.
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -102,7 +102,11 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestController extends
     }
 
     /**
-     * Gets all existing business object definition description suggestion keys.
+     * Retrieves a list of business object definition description suggestion keys for all suggestions registered for a specific business object definition.
+     * The result list is sorted by userId in ascending order.
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
      *
      * @return the list of retrieved business object definition description suggestion keys
      */
