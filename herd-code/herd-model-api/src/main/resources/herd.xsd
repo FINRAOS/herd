@@ -1836,7 +1836,7 @@
                <xs:documentation>The business object definition description suggestion key</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="descriptionSuggestion" type="descriptionSuggestion">
+         <xs:element name="descriptionSuggestion" type="xs:string">
             <xs:annotation>
                <xs:documentation>The description suggestion</xs:documentation>
             </xs:annotation>
@@ -1847,7 +1847,7 @@
    <xs:element name="businessObjectDefinitionDescriptionSuggestionUpdateRequest" type="businessObjectDefinitionDescriptionSuggestionUpdateRequest"/>
    <xs:complexType name="businessObjectDefinitionDescriptionSuggestionUpdateRequest">
       <xs:all>
-         <xs:element name="descriptionSuggestion" type="descriptionSuggestion">
+         <xs:element name="descriptionSuggestion" type="xs:string">
             <xs:annotation>
                <xs:documentation>The description suggestion</xs:documentation>
             </xs:annotation>
@@ -1868,7 +1868,7 @@
                <xs:documentation>The business object definition description suggestion key</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="descriptionSuggestion" type="descriptionSuggestion">
+         <xs:element name="descriptionSuggestion" type="xs:string">
             <xs:annotation>
                <xs:documentation>The description suggestion</xs:documentation>
             </xs:annotation>
@@ -1903,16 +1903,6 @@
          <xs:element name="userId" type="xs:string">
             <xs:annotation>
                <xs:documentation>The user id</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
-   <xs:complexType name="descriptionSuggestion">
-      <xs:all>
-         <xs:element name="descriptionSuggestion" type="xs:string">
-            <xs:annotation>
-               <xs:documentation>The description suggestion</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
