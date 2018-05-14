@@ -29,7 +29,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestio
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.herd.model.api.xml.DescriptionSuggestion;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.service.BusinessObjectDefinitionDescriptionSuggestionService;
@@ -70,7 +69,6 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
         // Get the business object definition description suggestion key and description suggestion from the request object.
         final BusinessObjectDefinitionDescriptionSuggestionKey key = request.getBusinessObjectDefinitionDescriptionSuggestionKey();
-        final DescriptionSuggestion descriptionSuggestion = request.getDescriptionSuggestion();
 
         // Retrieve the business object definition entity from the request.
         final BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper
@@ -90,12 +88,12 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
             new BusinessObjectDefinitionDescriptionSuggestionEntity();
         businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
         businessObjectDefinitionDescriptionSuggestionEntity.setUserId(key.getUserId());
-        businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(descriptionSuggestion.getDescriptionSuggestion());
+        businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(request.getDescriptionSuggestion());
         final BusinessObjectDefinitionDescriptionSuggestionEntity createdBusinessObjectDefinitionDescriptionSuggestionEntity =
             businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
 
         return new BusinessObjectDefinitionDescriptionSuggestion(createdBusinessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            descriptionSuggestion);
+            request.getDescriptionSuggestion());
     }
 
     @Override
@@ -116,7 +114,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         businessObjectDefinitionDescriptionSuggestionDao.delete(businessObjectDefinitionDescriptionSuggestionEntity);
 
         return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            new DescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion()));
+            businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion());
     }
 
     @Override
@@ -136,7 +134,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
                 .getBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, key.getUserId());
 
         return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            new DescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion()));
+            businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion());
     }
 
     @Override
@@ -165,9 +163,6 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         // Validate the business object definition description suggestion key.
         validateBusinessObjectDefinitionDescriptionSuggestionKey(key);
 
-        // Get the business object definition description suggestion key and description suggestion from the request object.
-        final DescriptionSuggestion descriptionSuggestion = request.getDescriptionSuggestion();
-
         // Retrieve the business object definition entity from the request.
         final BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper
             .getBusinessObjectDefinitionEntity(new BusinessObjectDefinitionKey(key.getNamespace(), key.getBusinessObjectDefinitionName()));
@@ -176,10 +171,11 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         final BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
             businessObjectDefinitionDescriptionSuggestionDaoHelper
                 .getBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, key.getUserId());
-        businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(descriptionSuggestion.getDescriptionSuggestion());
+        businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(request.getDescriptionSuggestion());
         businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
 
-        return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key, descriptionSuggestion);
+        return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
+            request.getDescriptionSuggestion());
     }
 
     /**
@@ -195,7 +191,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         validateBusinessObjectDefinitionDescriptionSuggestionKey(request.getBusinessObjectDefinitionDescriptionSuggestionKey());
 
         // Validate the business object definition description suggestion.
-        validateBusinessObjectDefinitionDescriptionSuggestionDescriptionSuggestion(request.getDescriptionSuggestion());
+        Assert.notNull(request.getDescriptionSuggestion(), "A business object definition description suggestion must be specified.");
     }
 
     /**
@@ -208,21 +204,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         Assert.notNull(request, "A business object definition description suggestion update request must be specified.");
 
         // Validate the business object definition description suggestion.
-        validateBusinessObjectDefinitionDescriptionSuggestionDescriptionSuggestion(request.getDescriptionSuggestion());
-    }
-
-    /**
-     * Validates the business object definition description suggestion description suggestion.
-     *
-     * @param descriptionSuggestion the business object definition description suggestion description suggestion
-     */
-    private void validateBusinessObjectDefinitionDescriptionSuggestionDescriptionSuggestion(DescriptionSuggestion descriptionSuggestion)
-    {
-        // Validate the business object definition description suggestion.
-        Assert.notNull(descriptionSuggestion, "A business object definition description suggestion must be specified.");
-
-        // Validate the description suggestion string.
-        Assert.notNull(descriptionSuggestion.getDescriptionSuggestion(), "A business object definition description suggestion must be specified.");
+        Assert.notNull(request.getDescriptionSuggestion(), "A business object definition description suggestion must be specified.");
     }
 
     /**
