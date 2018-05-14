@@ -352,60 +352,22 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     @Override
     public Settings getIndexSettings(String indexName)
     {
-        // Retrieve settings for the specified index.
         GetSettings getSettings = new GetSettings.Builder().addIndex(indexName).build();
-        JestResult jestResult = jestClientHelper.executeAction(getSettings);
-
-        // Check if client successfully retrieved the index settings.
-        if (!jestResult.isSucceeded())
-        {
-            throw new IllegalStateException(String.format("Unable to retrieve settings for \"%s\" index. Error: %s", indexName, jestResult.getErrorMessage()));
-        }
-
-        try
-        {
-            // Parse the response and return the results.
-            JsonObject settingsJson = jestResult.getJsonObject().getAsJsonObject(indexName).getAsJsonObject("settings");
-            return Settings.builder().loadFromSource(settingsJson.toString()).build();
-        }
-        catch (RuntimeException e)
-        {
-            // Log the error along with the get index settings response.
-            LOGGER.error("Failed to parse get index settings response. indexName=\"{}\" jestResultJsonObject={}", indexName, jestResult.getJsonObject(), e);
-
-            // Throw an exception.
-            throw new IllegalStateException(String.format("Unexpected response received when attempting to retrieve settings for \"%s\" index.", indexName));
-        }
+        JestResult result = jestClientHelper.executeAction(getSettings);
+        Assert.isTrue(result.isSucceeded(), result.getErrorMessage());
+        JsonObject json = result.getJsonObject().getAsJsonObject(indexName).getAsJsonObject("settings");
+        return Settings.builder().loadFromSource(json.toString()).build();
     }
 
     @Override
     public DocsStats getIndexStats(String indexName)
     {
-        // Retrieve stats for the specified index.
         Action getStats = new Stats.Builder().addIndex(indexName).build();
         JestResult jestResult = jestClientHelper.executeAction(getStats);
-
-        // Check if client successfully retrieved the index stats.
-        if (!jestResult.isSucceeded())
-        {
-            throw new IllegalStateException(String.format("Unable to retrieve stats for \"%s\" index. Error: %s", indexName, jestResult.getErrorMessage()));
-        }
-
-        try
-        {
-            // Parse the response and return the results.
-            JsonObject statsJson = jestResult.getJsonObject().getAsJsonObject("indices").getAsJsonObject(indexName).getAsJsonObject("primaries");
-            JsonObject docsJson = statsJson.getAsJsonObject("docs");
-            return new DocsStats(docsJson.get("count").getAsLong(), docsJson.get("deleted").getAsLong());
-        }
-        catch (RuntimeException e)
-        {
-            // Log the error along with the get index stats response.
-            LOGGER.error("Failed to parse get index stats response. indexName=\"{}\" jestResultJsonObject={}", indexName, jestResult.getJsonObject(), e);
-
-            // Throw an exception.
-            throw new IllegalStateException(String.format("Unexpected response received when attempting to retrieve stats for \"%s\" index.", indexName));
-        }
+        Assert.isTrue(jestResult.isSucceeded(), jestResult.getErrorMessage());
+        JsonObject statsJson = jestResult.getJsonObject().getAsJsonObject("indices").getAsJsonObject(indexName).getAsJsonObject("primaries");
+        JsonObject docsJson = statsJson.getAsJsonObject("docs");
+        return new DocsStats(docsJson.get("count").getAsLong(), docsJson.get("deleted").getAsLong());
     }
 
     private List<String> getAliases(String aliasName)

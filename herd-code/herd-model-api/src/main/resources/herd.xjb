@@ -54,6 +54,9 @@
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDefinitionColumnKeys']//xs:element[@name='businessObjectDefinitionColumnKey']">
          <jaxb:property name="businessObjectDefinitionColumnKeys"/>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='businessObjectDefinitionDescriptionSuggestionKeys']//xs:element[@name='businessObjectDefinitionDescriptionSuggestionKey']">
+         <jaxb:property name="businessObjectDefinitionDescriptionSuggestionKeys"/>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDefinitionTagKeys']//xs:element[@name='businessObjectDefinitionTagKey']">
          <jaxb:property name="businessObjectDefinitionTagKeys"/>
       </jaxb:bindings>

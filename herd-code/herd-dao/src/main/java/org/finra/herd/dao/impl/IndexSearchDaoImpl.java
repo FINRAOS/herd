@@ -339,91 +339,79 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
         List<IndexSearchResult> indexSearchResults = new ArrayList<>();
 
-        try
-        {
-            final List<SearchResult.Hit<Map, Void>> searchHitList = searchResult.getHits(Map.class);
+        final List<SearchResult.Hit<Map, Void>> searchHitList = searchResult.getHits(Map.class);
 
-            // For each indexSearch hit
-            for (final SearchResult.Hit<Map, Void> hit : searchHitList)
+        // For each indexSearch hit
+        for (final SearchResult.Hit<Map, Void> hit : searchHitList)
+        {
+            // Get the source map from the indexSearch hit
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> sourceMap = hit.source;
+
+            // Get the index from which this result is from
+            final String index = hit.index;
+
+            // Create a new document to populate with the indexSearch results
+            final IndexSearchResult indexSearchResult = new IndexSearchResult();
+
+            // Populate the results
+            indexSearchResult.setSearchIndexKey(new SearchIndexKey(index));
+            if (fields.contains(DISPLAY_NAME_FIELD))
             {
-                // Get the source map from the indexSearch hit
-                @SuppressWarnings("unchecked")
-                final Map<String, Object> sourceMap = hit.source;
-
-                // Get the index from which this result is from
-                final String index = hit.index;
-
-                // Create a new document to populate with the indexSearch results
-                final IndexSearchResult indexSearchResult = new IndexSearchResult();
-
-                // Populate the results
-                indexSearchResult.setSearchIndexKey(new SearchIndexKey(index));
-                if (fields.contains(DISPLAY_NAME_FIELD))
-                {
-                    indexSearchResult.setDisplayName((String) sourceMap.get(DISPLAY_NAME_SOURCE));
-                }
-
-                // Populate tag index specific key
-                if (index.equals(tagActiveIndex))
-                {
-                    if (fields.contains(SHORT_DESCRIPTION_FIELD))
-                    {
-                        indexSearchResult
-                            .setShortDescription(HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), tagShortDescMaxLength));
-                    }
-
-                    final TagKey tagKey = new TagKey();
-                    tagKey.setTagCode((String) sourceMap.get(TAG_CODE_SOURCE));
-                    tagKey.setTagTypeCode((String) ((Map) sourceMap.get(TAG_TYPE)).get(CODE));
-                    indexSearchResult.setIndexSearchResultType(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
-                    indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(tagKey, null));
-                }
-                // Populate business object definition key
-                else if (index.equals(bdefActiveIndex))
-                {
-                    if (fields.contains(SHORT_DESCRIPTION_FIELD))
-                    {
-                        indexSearchResult.setShortDescription(
-                            HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), businessObjectDefinitionShortDescMaxLength));
-                    }
-
-                    final BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
-                    businessObjectDefinitionKey.setNamespace((String) ((Map) sourceMap.get(NAMESPACE)).get(CODE));
-                    businessObjectDefinitionKey.setBusinessObjectDefinitionName((String) sourceMap.get(NAME_SOURCE));
-                    indexSearchResult.setIndexSearchResultType(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
-                    indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(null, businessObjectDefinitionKey));
-                }
-                else
-                {
-                    throw new IllegalStateException(String
-                        .format("Search result index name \"%s\" does not match any of the active search indexes. tagActiveIndex=\"%s\" bdefActiveIndex=\"%s\"",
-                            index, tagActiveIndex, bdefActiveIndex));
-                }
-
-                if (BooleanUtils.isTrue(isHighlightingEnabled))
-                {
-                    // Fetch configured 'tag' values for highlighting
-                    String preTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
-                    String postTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
-
-                    // Extract highlighted content from the search hit and clean html tags except the pre/post-tags as configured
-                    Highlight highlightedContent = extractHighlightedContent(hit, preTag, postTag);
-
-                    // Set highlighted content in the response element
-                    indexSearchResult.setHighlight(highlightedContent);
-                }
-
-                indexSearchResults.add(indexSearchResult);
+                indexSearchResult.setDisplayName((String) sourceMap.get(DISPLAY_NAME_SOURCE));
             }
-        }
-        catch (RuntimeException e)
-        {
-            // Log the error along with the search response and throw the exception.
-            LOGGER.error("Failed to parse search results. tagActiveIndex=\"{}\" bdefActiveIndex=\"{}\" fields={} isHighlightingEnabled={} searchResult={}",
-                tagActiveIndex, bdefActiveIndex, jsonHelper.objectToJson(fields), isHighlightingEnabled, jsonHelper.objectToJson(searchResult), e);
 
-            // Throw an exception.
-            throw new IllegalStateException("Unexpected response received when attempting to retrieve search results.");
+            // Populate tag index specific key
+            if (index.equals(tagActiveIndex))
+            {
+                if (fields.contains(SHORT_DESCRIPTION_FIELD))
+                {
+                    indexSearchResult
+                        .setShortDescription(HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), tagShortDescMaxLength));
+                }
+
+                final TagKey tagKey = new TagKey();
+                tagKey.setTagCode((String) sourceMap.get(TAG_CODE_SOURCE));
+                tagKey.setTagTypeCode((String) ((Map) sourceMap.get(TAG_TYPE)).get(CODE));
+                indexSearchResult.setIndexSearchResultType(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+                indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(tagKey, null));
+            }
+            // Populate business object definition key
+            else if (index.equals(bdefActiveIndex))
+            {
+                if (fields.contains(SHORT_DESCRIPTION_FIELD))
+                {
+                    indexSearchResult.setShortDescription(
+                        HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), businessObjectDefinitionShortDescMaxLength));
+                }
+
+                final BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
+                businessObjectDefinitionKey.setNamespace((String) ((Map) sourceMap.get(NAMESPACE)).get(CODE));
+                businessObjectDefinitionKey.setBusinessObjectDefinitionName((String) sourceMap.get(NAME_SOURCE));
+                indexSearchResult.setIndexSearchResultType(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+                indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(null, businessObjectDefinitionKey));
+            }
+            else
+            {
+                throw new IllegalStateException(String
+                    .format("Search result index name \"%s\" does not match any of the active search indexes. tagActiveIndex=%s bdefActiveIndex=%s", index,
+                        tagActiveIndex, bdefActiveIndex));
+            }
+
+            if (BooleanUtils.isTrue(isHighlightingEnabled))
+            {
+                // Fetch configured 'tag' values for highlighting
+                String preTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
+                String postTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
+
+                // Extract highlighted content from the search hit and clean html tags except the pre/post-tags as configured
+                Highlight highlightedContent = extractHighlightedContent(hit, preTag, postTag);
+
+                // Set highlighted content in the response element
+                indexSearchResult.setHighlight(highlightedContent);
+            }
+
+            indexSearchResults.add(indexSearchResult);
         }
 
         return indexSearchResults;
