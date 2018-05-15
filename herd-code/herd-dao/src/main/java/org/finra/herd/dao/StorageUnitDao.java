@@ -99,12 +99,12 @@ public interface StorageUnitDao extends BaseJpaDao
     /**
      * Returns a first discovered storage unit in the specified storage that overlaps with the directory path.
      *
-     * @param storageName the storage name (case-insensitive)
+     * @param storageEntity the storage entity
      * @param directoryPath the directory path
      *
      * @return the first found storage unit in the specified storage that overlaps with the directory path or null if none were found
      */
-    StorageUnitEntity getStorageUnitByStorageNameAndDirectoryPath(String storageName, String directoryPath);
+    StorageUnitEntity getStorageUnitByStorageAndDirectoryPath(StorageEntity storageEntity, String directoryPath);
 
     /**
      * Retrieves a list of storage unit entities per specified parameters.
