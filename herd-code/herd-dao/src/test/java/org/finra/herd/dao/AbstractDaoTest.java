@@ -285,6 +285,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String DESCRIPTION_2 = "UT_Description_2_" + RANDOM_SUFFIX;
 
+    public static final String DESCRIPTION_SUGGESTION = "UT_Description_Suggestion_1_" + RANDOM_SUFFIX;
+
+    public static final String DESCRIPTION_SUGGESTION_2 = "UT_Description_Suggestion_2_" + RANDOM_SUFFIX;
+
     public static final boolean DISABLE_COLUMN_FIELDS = false;
 
     public static final String DISPLAY_NAME_FIELD = "displayname";
@@ -358,6 +362,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
 
     public static final Integer FIFTH_FORMAT_VERSION = 4;
+
+    public static final Boolean FILTER_ON_RETENTION_EXPIRATION = true;
 
     public static final String FIRST_COLUMN_DATA_TYPE = "TINYINT";
 
@@ -740,6 +746,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer READ_TIMEOUT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final String REASON = "UT_Reason_1_" + RANDOM_SUFFIX;
+
+    public static final Integer RETENTION_PERIOD_DAYS = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final String S3_ATTRIBUTE_NAME_BUCKET_NAME = "UT_S3_Attribute_Name_Bucket_Name_" + RANDOM_SUFFIX;
 
@@ -1129,6 +1137,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected BusinessObjectDefinitionDaoTestHelper businessObjectDefinitionDaoTestHelper;
+
+    @Autowired
+    protected BusinessObjectDefinitionDescriptionSuggestionDao businessObjectDefinitionDescriptionSuggestionDao;
 
     @Autowired
     protected BusinessObjectDefinitionSubjectMatterExpertDao businessObjectDefinitionSubjectMatterExpertDao;

@@ -1826,6 +1826,88 @@
       </xs:all>
    </xs:complexType>
 
+   <!-- ***** Business Object Definition Description Suggestion ***** -->
+
+   <xs:element name="businessObjectDefinitionDescriptionSuggestionCreateRequest" type="businessObjectDefinitionDescriptionSuggestionCreateRequest"/>
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionCreateRequest">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionDescriptionSuggestionKey" type="businessObjectDefinitionDescriptionSuggestionKey">
+            <xs:annotation>
+               <xs:documentation>The business object definition description suggestion key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="descriptionSuggestion" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The description suggestion</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionDescriptionSuggestionUpdateRequest" type="businessObjectDefinitionDescriptionSuggestionUpdateRequest"/>
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionUpdateRequest">
+      <xs:all>
+         <xs:element name="descriptionSuggestion" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The description suggestion</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionDescriptionSuggestion" type="businessObjectDefinitionDescriptionSuggestion"/>
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestion">
+      <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>A system unique ID of this business object definition description suggestion</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionDescriptionSuggestionKey" type="businessObjectDefinitionDescriptionSuggestionKey">
+            <xs:annotation>
+               <xs:documentation>The business object definition description suggestion key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="descriptionSuggestion" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The description suggestion</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionDescriptionSuggestionKeys" type="businessObjectDefinitionDescriptionSuggestionKeys"/>
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionDescriptionSuggestionKey" type="businessObjectDefinitionDescriptionSuggestionKey" minOccurs="0"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The business object definition description suggestion key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the Business Object Definition to which this description suggestion is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The user id</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** File Type ***** -->
 
    <xs:element name="fileTypeKeys" type="fileTypeKeys"/>

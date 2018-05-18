@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -911,7 +910,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         if (BooleanUtils.isTrue(businessObjectDataSearchKey.isFilterOnRetentionExpiration()))
         {
-            predicate = createRetentionExpirationFilter(businessObjectDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
+            predicate = applyRetentionExpirationFilter(businessObjectDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
         }
 
         return predicate;
@@ -1096,76 +1095,92 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     /**
-     * Create predicate for retention expiration filter
+     * Apply retention expiration filter to the main query predicate.
      *
-     * @param businessDataSearchKey businessDataSearchKey
-     * @param businessObjectDataEntity businessObjectDataEntity
-     * @param businessObjectFormatEntity businessObjectFormatEntity
-     * @param builder builder
-     * @param predicatePram predicate prameter
+     * @param businessObjectDataSearchKey the business object data search key
+     * @param businessObjectDataEntityRoot the criteria root which is a business object data entity
+     * @param businessObjectFormatEntityJoin the join with the business object format table
+     * @param builder the criteria builder
+     * @param mainQueryPredicate the main query predicate to be updated
      *
-     * @return the predicate
+     * @return the updated main query predicate
      */
-    private Predicate createRetentionExpirationFilter(BusinessObjectDataSearchKey businessDataSearchKey,
-        Root<BusinessObjectDataEntity> businessObjectDataEntity, Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity,
-        CriteriaBuilder builder, Predicate predicatePram)
+    private Predicate applyRetentionExpirationFilter(BusinessObjectDataSearchKey businessObjectDataSearchKey,
+        Root<BusinessObjectDataEntity> businessObjectDataEntityRoot, Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin,
+        CriteriaBuilder builder, Predicate mainQueryPredicate)
     {
-        Predicate predicate = predicatePram;
-        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
-        businessObjectDefinitionKey.setBusinessObjectDefinitionName(businessDataSearchKey.getBusinessObjectDefinitionName());
-        businessObjectDefinitionKey.setNamespace(businessDataSearchKey.getNamespace());
-        List<BusinessObjectFormatEntity> businessObjectFormatKeys =
+        // Create a business object definition key per specified search key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey =
+            new BusinessObjectDefinitionKey(businessObjectDataSearchKey.getNamespace(), businessObjectDataSearchKey.getBusinessObjectDefinitionName());
+
+        // Get latest versions of all business object formats that registered with the business object definition.
+        List<BusinessObjectFormatEntity> businessObjectFormatEntities =
             businessObjectFormatDao.getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(businessObjectDefinitionKey);
-        Map<BusinessObjectFormatKey, Integer> businessObjectFormatKeyRetentionDaysMap = new HashMap<>();
-        for (BusinessObjectFormatEntity businessObjectformatKeyEntity : businessObjectFormatKeys)
+
+        // Create a result predicate to join all retention expiration predicates created per selected business object formats.
+        Predicate businessObjectDefinitionRetentionExpirationPredicate = null;
+
+        // Get the current database timestamp to be used to select expired business object data per BDATA_RETENTION_DATE retention type.
+        Timestamp currentTimestamp = getCurrentTimestamp();
+
+        // Create a predicate for each business object format with the retention information.
+        for (BusinessObjectFormatEntity businessObjectFormatEntity : businessObjectFormatEntities)
         {
-            if (businessObjectformatKeyEntity.getRetentionType() != null && businessObjectformatKeyEntity.getRetentionPeriodInDays() != null &&
-                RetentionTypeEntity.PARTITION_VALUE.equals(businessObjectformatKeyEntity.getRetentionType().getCode()))
+            if (businessObjectFormatEntity.getRetentionType() != null)
             {
-                BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
-                businessObjectFormatKey.setBusinessObjectFormatFileType(businessObjectformatKeyEntity.getFileType().getCode());
-                businessObjectFormatKey.setBusinessObjectFormatUsage(businessObjectformatKeyEntity.getUsage());
-                businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectformatKeyEntity.getBusinessObjectDefinition().getName());
-                businessObjectFormatKey.setNamespace(businessObjectformatKeyEntity.getBusinessObjectDefinition().getNamespace().getCode());
-                businessObjectFormatKeyRetentionDaysMap.put(businessObjectFormatKey, businessObjectformatKeyEntity.getRetentionPeriodInDays());
+                // Create a retention expiration predicate for this business object format.
+                Predicate businessObjectFormatRetentionExpirationPredicate = null;
+
+                if (StringUtils.equals(businessObjectFormatEntity.getRetentionType().getCode(), RetentionTypeEntity.BDATA_RETENTION_DATE))
+                {
+                    // Select business object data that has expired per its explicitly configured retention expiration date.
+                    businessObjectFormatRetentionExpirationPredicate =
+                        builder.lessThan(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.retentionExpiration), currentTimestamp);
+                }
+                else if (StringUtils.equals(businessObjectFormatEntity.getRetentionType().getCode(), RetentionTypeEntity.PARTITION_VALUE) &&
+                    businessObjectFormatEntity.getRetentionPeriodInDays() != null)
+                {
+                    // Compute the retention expiration date and convert it to the date format to match against partition values.
+                    String retentionExpirationDate = DateFormatUtils
+                        .format(DateUtils.addDays(new Date(), -1 * businessObjectFormatEntity.getRetentionPeriodInDays()), DEFAULT_SINGLE_DAY_DATE_MASK);
+
+                    // Create a predicate to compare business object data primary partition value against the retention expiration date.
+                    businessObjectFormatRetentionExpirationPredicate =
+                        builder.lessThan(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.partitionValue), retentionExpirationDate);
+                }
+
+                // If it was initialize, complete processing of retention expiration predicate for this business object format.
+                if (businessObjectFormatRetentionExpirationPredicate != null)
+                {
+                    // Update the predicate to match this business object format w/o version.
+                    businessObjectFormatRetentionExpirationPredicate = builder.and(businessObjectFormatRetentionExpirationPredicate, builder
+                        .equal(builder.upper(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage)),
+                            businessObjectFormatEntity.getUsage().toUpperCase()));
+                    businessObjectFormatRetentionExpirationPredicate = builder.and(businessObjectFormatRetentionExpirationPredicate,
+                        builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.fileType), businessObjectFormatEntity.getFileType()));
+
+                    // Add this business object format specific retention expiration predicate to other
+                    // retention expiration predicates created for the specified business object definition.
+                    if (businessObjectDefinitionRetentionExpirationPredicate == null)
+                    {
+                        businessObjectDefinitionRetentionExpirationPredicate = businessObjectFormatRetentionExpirationPredicate;
+                    }
+                    else
+                    {
+                        businessObjectDefinitionRetentionExpirationPredicate =
+                            builder.or(businessObjectDefinitionRetentionExpirationPredicate, businessObjectFormatRetentionExpirationPredicate);
+                    }
+                }
             }
         }
-        Assert.isTrue(businessObjectFormatKeyRetentionDaysMap.size() > 0, String
-            .format("No business object format for business object definition %s %s has retention type %s.", businessObjectDefinitionKey.getNamespace(),
-                businessObjectDefinitionKey.getBusinessObjectDefinitionName(), RetentionTypeEntity.PARTITION_VALUE));
-        Predicate retentionPredicate = null;
-        for (Map.Entry<BusinessObjectFormatKey, Integer> entry : businessObjectFormatKeyRetentionDaysMap.entrySet())
-        {
-            BusinessObjectFormatKey businessObjectFormatKey = entry.getKey();
-            int retentionPeriod = entry.getValue();
-            String retentionQueryDate = DateFormatUtils.format(DateUtils.addDays(new Date(), -1 * retentionPeriod), DEFAULT_SINGLE_DAY_DATE_MASK);
-            // retention predate for this business object format key
-            Predicate retentionPredicateFormat = null;
-            retentionPredicateFormat = builder.lessThan(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), retentionQueryDate);
 
-            retentionPredicateFormat = builder.and(retentionPredicateFormat, builder
-                .equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
-                    businessObjectFormatKey.getBusinessObjectFormatUsage().toUpperCase()));
+        // Fail if no retention expiration predicates got created per specified business objject definition.
+        Assert.notNull(businessObjectDefinitionRetentionExpirationPredicate, String
+            .format("Business object definition with name \"%s\" and namespace \"%s\" has no business object formats with supported retention type.",
+                businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace()));
 
-            retentionPredicateFormat = builder.and(retentionPredicateFormat, builder
-                .equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType).get(FileTypeEntity_.code)),
-                    businessObjectFormatKey.getBusinessObjectFormatFileType().toUpperCase()));
-
-            // the first retention format predicate
-            if (retentionPredicate == null)
-            {
-                retentionPredicate = retentionPredicateFormat;
-            }
-            // build 'or' query for all the formats
-            else
-            {
-                retentionPredicate = builder.or(retentionPredicate, retentionPredicateFormat);
-            }
-        }
-        //add the retention predicate
-        predicate = builder.and(predicate, retentionPredicate);
-
-        return predicate;
+        // Add created business object definition retention expiration predicate to the main query predicate passed to this method and return the result.
+        return builder.and(mainQueryPredicate, businessObjectDefinitionRetentionExpirationPredicate);
     }
 
     /**

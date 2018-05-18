@@ -311,28 +311,26 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
     }
 
     @Override
-    public StorageUnitEntity getStorageUnitByStorageNameAndDirectoryPath(String storageName, String directoryPath)
+    public StorageUnitEntity getStorageUnitByStorageAndDirectoryPath(StorageEntity storageEntity, String directoryPath)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<StorageUnitEntity> criteria = builder.createQuery(StorageUnitEntity.class);
 
-        // The criteria root is the storage units.
-        Root<StorageUnitEntity> storageUnitEntity = criteria.from(StorageUnitEntity.class);
-
-        // Join to the other tables we can filter on.
-        Join<StorageUnitEntity, StorageEntity> storageEntity = storageUnitEntity.join(StorageUnitEntity_.storage);
+        // The criteria root is the storage unit.
+        Root<StorageUnitEntity> storageUnitEntityRoot = criteria.from(StorageUnitEntity.class);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate storageNameRestriction = builder.equal(builder.upper(storageEntity.get(StorageEntity_.name)), storageName.toUpperCase());
-        Predicate directoryPathRestriction = builder.equal(storageUnitEntity.get(StorageUnitEntity_.directoryPath), directoryPath);
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(storageUnitEntityRoot.get(StorageUnitEntity_.storage), storageEntity));
+        predicates.add(builder.equal(storageUnitEntityRoot.get(StorageUnitEntity_.directoryPath), directoryPath));
 
-        criteria.select(storageUnitEntity).where(builder.and(storageNameRestriction, directoryPathRestriction));
+        // Add all clauses for the query.
+        criteria.select(storageUnitEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
 
-        List<StorageUnitEntity> resultList = entityManager.createQuery(criteria).getResultList();
-
-        // Return the first found storage unit or null if none were found.
-        return resultList.size() >= 1 ? resultList.get(0) : null;
+        // Execute the query and return the first found storage unit or null if none were found.
+        List<StorageUnitEntity> storageUnitEntities = entityManager.createQuery(criteria).getResultList();
+        return storageUnitEntities.size() >= 1 ? storageUnitEntities.get(0) : null;
     }
 
     @Override
