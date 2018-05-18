@@ -384,8 +384,7 @@ public class BusinessObjectDataDaoHelper
                     String.format("Specified directory path \"%s\" does not match the expected S3 key prefix \"%s\".", directoryPath, expectedS3KeyPrefix));
 
                 // Ensure that the directory path is not already registered with another business object data instance.
-                StorageUnitEntity alreadyRegisteredStorageUnitEntity =
-                    storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(storageEntity.getName(), directoryPath);
+                StorageUnitEntity alreadyRegisteredStorageUnitEntity = storageUnitDao.getStorageUnitByStorageAndDirectoryPath(storageEntity, directoryPath);
                 if (alreadyRegisteredStorageUnitEntity != null)
                 {
                     throw new AlreadyExistsException(String

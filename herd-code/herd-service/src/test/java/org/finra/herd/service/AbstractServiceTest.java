@@ -406,8 +406,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean FILTER_ON_LATEST_VALID_VERSION = true;
 
-    public static final Boolean FILTER_ON_RETENTION_EXPIRATION = true;
-
     public static final String HERD_OUTGOING_QUEUE = "HERD_OUTGOING_QUEUE";
 
     public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
@@ -619,8 +617,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String RELATIONAL_TABLE_NAME = "UT_RelationalTableName_" + RANDOM_SUFFIX;
 
     public static final XMLGregorianCalendar RETENTION_EXPIRATION_DATE = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
-
-    public static final Integer RETENTION_PERIOD_DAYS = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final Boolean RETRIEVE_INSTANCE_FLEETS = true;
 
