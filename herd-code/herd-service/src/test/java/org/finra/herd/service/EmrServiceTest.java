@@ -67,6 +67,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
 import org.finra.herd.model.api.xml.EmrHadoopJarStep;
 import org.finra.herd.model.api.xml.EmrHadoopJarStepAddRequest;
 import org.finra.herd.model.api.xml.EmrHiveStepAddRequest;
@@ -1646,7 +1647,8 @@ public class EmrServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
+            assertEquals(String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", EMR_CLUSTER_DEFINITION_NAME, NAMESPACE),
+                e.getMessage());
         }
 
         try
@@ -1657,7 +1659,8 @@ public class EmrServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
+            assertEquals(String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", EMR_CLUSTER_DEFINITION_NAME, NAMESPACE),
+                e.getMessage());
         }
 
         try
@@ -1668,7 +1671,8 @@ public class EmrServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
+            assertEquals(String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", EMR_CLUSTER_DEFINITION_NAME, NAMESPACE),
+                e.getMessage());
         }
 
         try
@@ -1681,7 +1685,8 @@ public class EmrServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
+            assertEquals(String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", EMR_CLUSTER_DEFINITION_NAME, NAMESPACE),
+                e.getMessage());
         }
 
         try
@@ -1694,7 +1699,8 @@ public class EmrServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
+            assertEquals(String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", EMR_CLUSTER_DEFINITION_NAME, NAMESPACE),
+                e.getMessage());
         }
     }
 
@@ -2070,11 +2076,11 @@ public class EmrServiceTest extends AbstractServiceTest
 
         AwsParamsDto awsParamsDto = new AwsParamsDto();
         when(mockEmrHelper.getAwsParamsDtoByAcccountId(any())).thenReturn(awsParamsDto);
-        NamespaceEntity namespaceEntity = new NamespaceEntity();
-        when(mockNamespaceDaoHelper.getNamespaceEntity(any())).thenReturn(namespaceEntity);
 
+        NamespaceEntity namespaceEntity = new NamespaceEntity();
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = new EmrClusterDefinitionEntity();
-        when(mockEmrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(any(), any())).thenReturn(emrClusterDefinitionEntity);
+        emrClusterDefinitionEntity.setNamespace(namespaceEntity);
+        when(mockEmrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(any())).thenReturn(emrClusterDefinitionEntity);
 
         String buildEmrClusterNameResult = "buildEmrClusterNameResult";
         when(mockEmrHelper.buildEmrClusterName(any(), any(), any())).thenReturn(buildEmrClusterNameResult);
@@ -2088,9 +2094,8 @@ public class EmrServiceTest extends AbstractServiceTest
         verify(mockAlternateKeyHelper).validateStringParameter("namespace", namespace);
         verify(mockAlternateKeyHelper).validateStringParameter("An", "EMR cluster definition name", emrClusterDefinitionName);
         verify(mockAlternateKeyHelper).validateStringParameter("An", "EMR cluster name", emrClusterName);
-        verify(mockNamespaceDaoHelper).getNamespaceEntity(emrClusterAlternateKeyDto.getNamespace());
-        verify(mockEmrClusterDefinitionDaoHelper)
-            .getEmrClusterDefinitionEntity(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName());
+        verify(mockEmrClusterDefinitionDaoHelper).getEmrClusterDefinitionEntity(
+            new EmrClusterDefinitionKey(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName()));
         verify(mockEmrHelper)
             .buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
         verify(mockEmrHelper).getActiveEmrClusterId(emrClusterId, buildEmrClusterNameResult, null);

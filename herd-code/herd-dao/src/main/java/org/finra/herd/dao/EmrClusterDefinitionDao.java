@@ -19,34 +19,27 @@ import java.util.List;
 
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
 
 public interface EmrClusterDefinitionDao extends BaseJpaDao
 {
     /**
-     * Retrieves EMR cluster definition entity by alternate key.
+     * Retrieves an EMR cluster definition entity by namespace entity and EMR cluster definition name.
      *
-     * @param emrClusterDefinitionKey the EMR cluster definition key
-     *
-     * @return the EMR cluster definition entity
-     */
-    public EmrClusterDefinitionEntity getEmrClusterDefinitionByAltKey(EmrClusterDefinitionKey emrClusterDefinitionKey);
-
-    /**
-     * Retrieves EMR cluster definition entity by alternate key.
-     *
-     * @param namespace the namespace (case-insensitive)
-     * @param definitionName the EMR cluster definition name (case-insensitive)
+     * @param namespaceEntity the namespace entity
+     * @param emrClusterDefinitionName the name of the EMR cluster definition (case-insensitive)
      *
      * @return the EMR cluster definition entity
      */
-    public EmrClusterDefinitionEntity getEmrClusterDefinitionByAltKey(String namespace, String definitionName);
+    EmrClusterDefinitionEntity getEmrClusterDefinitionByNamespaceAndName(NamespaceEntity namespaceEntity, String emrClusterDefinitionName);
 
     /**
-     * Gets a list of keys for all EMR cluster definitions defined in the system for the specified namespace.
+     * Gets a list of keys for all EMR cluster definitions defined in the system for the specified namespace. The result list is sorted by EMR cluster
+     * definition name in ascending order.
      *
-     * @param namespace the namespace (case-insensitive)
+     * @param namespaceEntity the namespace entity
      *
      * @return the list of EMR cluster definition keys
      */
-    public List<EmrClusterDefinitionKey> getEmrClusterDefinitionsByNamespace(String namespace);
+    List<EmrClusterDefinitionKey> getEmrClusterDefinitionKeysByNamespace(NamespaceEntity namespaceEntity);
 }
