@@ -16,13 +16,16 @@
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -32,107 +35,80 @@ import org.finra.herd.model.jpa.NamespaceEntity;
 
 public class EmrClusterDefinitionDaoTest extends AbstractDaoTest
 {
-    /**
-     * Tests the happy path scenario by providing all the parameters.
-     */
     @Test
-    public void testGetEmrClusterDefinitionByAltKey() throws IOException
+    public void testGetEmrClusterDefinitionByNamespaceAndName() throws IOException
     {
-        // Create and persist an EMR cluster definition entity.
-        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+        // Create two namespace entities.
+        List<NamespaceEntity> namespaceEntities =
+            Arrays.asList(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2));
 
-        // Call the API to query the newly added entity by providing the app and EMT cluster definition details
-        EmrClusterDefinitionEntity emrClusterDefinitionEntityResult =
-            emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
+        // Create an EMR cluster definition entity for the first namespace.
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
+            .createEmrClusterDefinitionEntity(namespaceEntities.get(0), EMR_CLUSTER_DEFINITION_NAME,
+                IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
-        // Fail if there is any problem in the result
-        assertNotNull(emrClusterDefinitionEntityResult);
-        assertEquals(NAMESPACE, emrClusterDefinitionEntityResult.getNamespace().getCode());
-        assertEquals(EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionEntityResult.getName());
+        // Retrieve the relative EMR cluster definition entity.
+        assertEquals(emrClusterDefinitionEntity,
+            emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntities.get(0), EMR_CLUSTER_DEFINITION_NAME));
+
+        // Test case insensitivity of EMR cluster definition name.
+        assertEquals(emrClusterDefinitionEntity,
+            emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntities.get(0), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
+        assertEquals(emrClusterDefinitionEntity,
+            emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntities.get(0), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
+
+        // Confirm that no EMR cluster definition gets selected when using wrong input parameters.
+        assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntities.get(1), EMR_CLUSTER_DEFINITION_NAME));
+        assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntities.get(0), I_DO_NOT_EXIST));
     }
 
-    /**
-     * Tests the scenario by providing a EMR Cluster name that doesn't exist.
-     */
     @Test
-    public void testGetEmrClusterDefinitionByAltKeyDefinitionNameNoExists() throws IOException
+    public void testGetEmrClusterDefinitionByNamespaceAndNameMultipleRecordsFound() throws IOException
     {
-        // Create and persist an EMR Cluster definition entity.
-        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
-
-        // Call the API to query the newly added entity by providing the app and a definition name that doesn't exist.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntityResult =
-            emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME_2);
-
-        // Validate the results.
-        assertNull(emrClusterDefinitionEntityResult);
-    }
-
-    /**
-     * Tests the scenario by providing the wrong app name.
-     */
-    @Test
-    public void testGetEmrClusterDefinitionByAltKeyNamespaceNoExists() throws IOException
-    {
-        // Create namespace database entities.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
-
-        // Create a EMR Cluster definition entity
-        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
-
-        // Call the API to query the newly added entity by providing the app and a definition name that doesn't exist.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntityResult =
-            emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE_2, EMR_CLUSTER_DEFINITION_NAME_2);
-
-        // Validate the results.
-        assertNull(emrClusterDefinitionEntityResult);
-    }
-
-    /**
-     * Tests the scenario by finding multiple EMR Cluster definition records.
-     */
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetEmrClusterDefinitionByAltKeyMultipleRecordsFound() throws IOException
-    {
-        // Create namespace database entities.
+        // Create a namespace entity.
         NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
-        // Create two EMR cluster definitions different.
-        for (String definitionName : Arrays.asList(EMR_CLUSTER_DEFINITION_NAME.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()))
+        // Create two EMR cluster definitions with the same EMR cluster definition name, but with different capitalization/case.
+        for (String emrClusterDefinitionName : Arrays.asList(EMR_CLUSTER_DEFINITION_NAME.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()))
         {
-            // Create a EMR cluster definition entity.
-            emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, definitionName,
-                IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, emrClusterDefinitionName,
+                IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
         }
 
-        // Try to retrieve the the job definition.
-        emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
+        // Try to retrieve EMR cluster definition by namespace entity and EMR cluster definition name.
+        try
+        {
+            emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Found more than one EMR cluster definition with parameters {namespace=\"%s\", emrClusterDefinitionName=\"%s\"}.", NAMESPACE,
+                    EMR_CLUSTER_DEFINITION_NAME), e.getMessage());
+        }
     }
 
     @Test
-    public void testGetEmrClusterDefinitionsByNamespace() throws IOException
+    public void testGetEmrClusterDefinitionKeysByNamespace() throws IOException
     {
-        // Create and persist an EMR cluster definition entity.
-        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+        // Create two namespace entities.
+        List<NamespaceEntity> namespaceEntities =
+            Arrays.asList(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2));
 
-        // Create an EMR cluster definition key.
-        EmrClusterDefinitionKey emrClusterDefinitionKey = new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
+        // Create two EMR cluster definitions for the first namespace with EMR cluster definition names sorted in descending order.
+        for (String emrClusterDefinitionName : Lists.newArrayList(EMR_CLUSTER_DEFINITION_NAME_2, EMR_CLUSTER_DEFINITION_NAME))
+        {
+            emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntities.get(0), emrClusterDefinitionName,
+                IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
+        }
 
         // Retrieve a list of EMR cluster definition keys.
-        assertEquals(Arrays.asList(emrClusterDefinitionKey), emrClusterDefinitionDao.getEmrClusterDefinitionsByNamespace(NAMESPACE));
+        assertEquals(Lists.newArrayList(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
+            new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME_2)),
+            emrClusterDefinitionDao.getEmrClusterDefinitionKeysByNamespace(namespaceEntities.get(0)));
 
-        // Get business object data attribute by passing namespace parameter value in uppercase.
-        assertEquals(Arrays.asList(emrClusterDefinitionKey), emrClusterDefinitionDao.getEmrClusterDefinitionsByNamespace(NAMESPACE.toUpperCase()));
-
-        // Get business object data attribute by passing namespace parameter value in lowercase.
-        assertEquals(Arrays.asList(emrClusterDefinitionKey), emrClusterDefinitionDao.getEmrClusterDefinitionsByNamespace(NAMESPACE.toLowerCase()));
-
-        // Try an invalid value for the namespace input parameter.
-        assertTrue(emrClusterDefinitionDao.getEmrClusterDefinitionsByNamespace("I_DO_NO_EXIST").isEmpty());
+        // Confirm that no EMR cluster definition keys get selected when passing wrong namespace entity.
+        assertTrue(emrClusterDefinitionDao.getEmrClusterDefinitionKeysByNamespace(namespaceEntities.get(1)).isEmpty());
     }
 }

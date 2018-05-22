@@ -1059,7 +1059,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Validate that this EMR cluster definition exists.
-        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
+        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME));
 
         executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
             // Delete this EMR cluster definition.
@@ -1071,7 +1071,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
 
             // Ensure that this EMR cluster definition is no longer there.
-            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
+            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME));
         });
     }
 
@@ -1113,7 +1113,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Validate that this EMR cluster definition exists.
-        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
+        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME));
 
         executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
             // Delete this EMR cluster definition by passing namespace and EMR cluster definition name with leading and trailing whitespace characters.
@@ -1125,7 +1125,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
 
             // Ensure that this EMR cluster definition is no longer there.
-            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
+            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME));
         });
     }
 
@@ -1141,7 +1141,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Validate that this EMR cluster definition exists.
-        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
+        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
 
         executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
             // Delete this EMR cluster definition by passing the EMR cluster definition name key parameters in upper case.
@@ -1153,7 +1153,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
 
             // Ensure that this EMR cluster definition is no longer there.
-            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
+            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
         });
     }
 
@@ -1169,7 +1169,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Validate that this EMR cluster definition exists.
-        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
+        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
 
         executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
             // Delete this EMR cluster definition by passing the EMR cluster definition name key parameters in lower case.
@@ -1181,7 +1181,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
 
             // Ensure that this EMR cluster definition is no longer there.
-            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
+            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByNamespaceAndName(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
         });
     }
 
