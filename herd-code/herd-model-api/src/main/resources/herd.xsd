@@ -2154,7 +2154,7 @@
              the field as null. The validation that this field is required is handled via the service layer validation.
             -->
             <xs:annotation>
-               <xs:documentation>If true,allows non backwards compatible changes to the schema
+               <xs:documentation>If true, allows non backwards compatible changes to the schema
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -2265,13 +2265,13 @@
          </xs:element>
          <xs:element name="retentionType" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE , BDATA_RETENTION_TYPE.
+               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE, BDATA_RETENTION_TYPE.
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="allowNonBackwardsCompatibleChanges" type="xs:boolean" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>If true,allows non backwards compatible changes to the schema.
+               <xs:documentation>If true, allows non backwards compatible changes to the schema
                </xs:documentation>
             </xs:annotation>
          </xs:element>
