@@ -146,4 +146,11 @@
       <additionalSlaveSecurityGroup>additionalSlaveSecurityGroup</additionalSlaveSecurityGroup>
    </additionalSlaveSecurityGroups>
    <scaleDownBehavior>scaleDownBehavior</scaleDownBehavior>
+   <kerberosAttributes>
+      <aDDomainJoinPassword>aDDomainJoinPassword</aDDomainJoinPassword>
+      <aDDomainJoinUser>aDDomainJoinUser</aDDomainJoinUser>
+      <crossRealmTrustPrincipalPassword>crossRealmTrustPrincipalPassword</crossRealmTrustPrincipalPassword>
+      <kdcAdminPassword>kdcAdminPassword</kdcAdminPassword>
+      <realm>realm</realm>
+   </kerberosAttributes>
 </emrClusterDefinition>

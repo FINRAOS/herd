@@ -5600,6 +5600,11 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="kerberosAttributes" type="emrClusterDefinitionKerberosAttributes" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Attributes for Kerberos configuration when Kerberos authentication is enabled using a security configuration</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -6447,6 +6452,38 @@
          <xs:element name="keyValueShortcut" type="xs:string"/>
          <xs:element name="attribKey" type="xs:string"/>
          <xs:element name="attribVal" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionKerberosAttributes">
+      <xs:all>
+         <xs:element name="aDDomainJoinPassword" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The Active Directory password for ADDomainJoinUser</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="aDDomainJoinUser" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Required only when establishing a cross-realm trust with an Active Directory domain</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="crossRealmTrustPrincipalPassword" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Required only when establishing a cross-realm trust with a KDC in a different realm</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="kdcAdminPassword" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The password used within the cluster for the kadmin service on the cluster-dedicated KDC, which maintains Kerberos principals,
+                  password policies, and keytabs for the cluster
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="realm" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The name of the Kerberos realm to which all nodes in a cluster belong</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 

@@ -80,6 +80,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ACTIVITI_ID_4 = "UT_Activiti_ID_4_" + RANDOM_SUFFIX;
 
+    public static final String AD_DOMAIN_JOIN_PASSWORD = "UT_ADDomainJoinPassword_" + RANDOM_SUFFIX;
+
+    public static final String AD_DOMAIN_JOIN_USER = "UT_ADDomainJoinUser_" + RANDOM_SUFFIX;
+
     public static final String AGGREGATION_NAME = "UT_AggregationName_" + RANDOM_SUFFIX;
 
     public static final String ALLOWED_ATTRIBUTE_VALUE = "UT_ALLOWED_ATTRIBUTE_VALUE" + RANDOM_SUFFIX;
@@ -265,6 +269,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final XMLGregorianCalendar CREATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String CREDSTASH_ENCRYPTION_CONTEXT = "UT_CredStashEncryptionContext_" + RANDOM_SUFFIX;
+
+    public static final String CROSS_REALM_TRUST_PRINCIPAL_PASSWORD = "UT_CrossRealmTrustPrincipalPassword_" + RANDOM_SUFFIX;
 
     public static final String CUSTOM_DDL_NAME = "UT_CustomDdl" + RANDOM_SUFFIX;
 
@@ -470,6 +476,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String JOB_RECEIVE_TASK_ID = "UT_JobReceiveTaskId_" + RANDOM_SUFFIX;
 
     public static final String JSON_STRING = "UT_JsonString_" + RANDOM_SUFFIX;
+
+    public static final String KDC_ADMIN_PASSWORD = "UT_KdcAdminPassword" + RANDOM_SUFFIX;
 
     public static final String KEY = "UT_Key_" + RANDOM_SUFFIX;
 
@@ -744,6 +752,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean PUBLISH_ATTRIBUTE = true;
 
     public static final Integer READ_TIMEOUT = (int) (Math.random() * (Short.MAX_VALUE << 1));
+
+    public static final String REALM = "UT_Realm_" + RANDOM_SUFFIX;
 
     public static final String REASON = "UT_Reason_1_" + RANDOM_SUFFIX;
 
