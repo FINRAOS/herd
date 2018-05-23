@@ -52,6 +52,7 @@ import com.amazonaws.services.elasticmapreduce.model.InstanceFleetConfig;
 import com.amazonaws.services.elasticmapreduce.model.InstanceGroupConfig;
 import com.amazonaws.services.elasticmapreduce.model.InstanceTypeConfig;
 import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
+import com.amazonaws.services.elasticmapreduce.model.KerberosAttributes;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesRequest;
@@ -82,6 +83,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionKerberosAttributes;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
 import org.finra.herd.model.api.xml.HadoopJarStep;
 import org.finra.herd.model.api.xml.InstanceDefinition;
@@ -514,6 +516,9 @@ public class EmrDaoTest extends AbstractDaoTest
 
         emrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP);
         emrClusterDefinition.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP);
+        emrClusterDefinition.setKerberosAttributes(
+            new EmrClusterDefinitionKerberosAttributes(AD_DOMAIN_JOIN_PASSWORD, AD_DOMAIN_JOIN_USER, CROSS_REALM_TRUST_PRINCIPAL_PASSWORD, KDC_ADMIN_PASSWORD,
+                REALM));
         String clusterId = "clusterId";
 
         when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
@@ -625,6 +630,9 @@ public class EmrDaoTest extends AbstractDaoTest
                 assertEquals("scaleDownBehavior", runJobFlowRequest.getScaleDownBehavior());
                 assertEquals(EMR_MASTER_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedMasterSecurityGroup());
                 assertEquals(EMR_SLAVE_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedSlaveSecurityGroup());
+                assertEquals(new KerberosAttributes().withADDomainJoinPassword(AD_DOMAIN_JOIN_PASSWORD).withADDomainJoinUser(AD_DOMAIN_JOIN_USER)
+                        .withCrossRealmTrustPrincipalPassword(CROSS_REALM_TRUST_PRINCIPAL_PASSWORD).withKdcAdminPassword(KDC_ADMIN_PASSWORD).withRealm(REALM),
+                    runJobFlowRequest.getKerberosAttributes());
                 return clusterId;
             }
         });

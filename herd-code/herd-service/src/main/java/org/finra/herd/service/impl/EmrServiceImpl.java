@@ -581,6 +581,10 @@ public class EmrServiceImpl implements EmrService
             {
                 emrClusterDefinition.setScaleDownBehavior(emrClusterDefinitionOverride.getScaleDownBehavior());
             }
+            if (emrClusterDefinitionOverride.getKerberosAttributes() != null)
+            {
+                emrClusterDefinition.setKerberosAttributes(emrClusterDefinitionOverride.getKerberosAttributes());
+            }
         }
     }
 

@@ -67,6 +67,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionKerberosAttributes;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
 import org.finra.herd.model.api.xml.EmrHadoopJarStep;
 import org.finra.herd.model.api.xml.EmrHadoopJarStepAddRequest;
@@ -235,6 +236,7 @@ public class EmrServiceTest extends AbstractServiceTest
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         assertEquals("scaleDownBehavior", expectedEmrClusterDefinition.getScaleDownBehavior());
+        assertNotNull(expectedEmrClusterDefinition.getKerberosAttributes());
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
         // Create a new EMR cluster create request
@@ -374,6 +376,7 @@ public class EmrServiceTest extends AbstractServiceTest
         emrClusterDefinition.setAmiVersion(null);
         emrClusterDefinition.setServiceIamRole(emrClusterDefinition.getEc2NodeIamProfileName());
         emrClusterDefinition.setScaleDownBehavior(null);
+        emrClusterDefinition.setKerberosAttributes(null);
 
         configXml = xmlHelper.objectToXml(emrClusterDefinition);
 
@@ -1024,6 +1027,10 @@ public class EmrServiceTest extends AbstractServiceTest
         expectedEmrClusterDefinition.setTerminationProtection(emrClusterDefinitionOverride.isTerminationProtection());
         emrClusterDefinitionOverride.setVisibleToAll(!expectedEmrClusterDefinition.isVisibleToAll());
         expectedEmrClusterDefinition.setVisibleToAll(emrClusterDefinitionOverride.isVisibleToAll());
+        emrClusterDefinitionOverride.setKerberosAttributes(
+            new EmrClusterDefinitionKerberosAttributes("test" + Math.random(), "test" + Math.random(), "test" + Math.random(), "test" + Math.random(),
+                "test" + Math.random()));
+        expectedEmrClusterDefinition.setKerberosAttributes(emrClusterDefinitionOverride.getKerberosAttributes());
         request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
 
         EmrCluster emrCluster = emrService.createCluster(request);
