@@ -152,18 +152,22 @@ public interface BusinessObjectFormatService
         BusinessObjectFormatAttributeDefinitionsUpdateRequest businessObjectFormatAttributeDefinitionsUpdateRequest);
 
     /**
-     * Update business object format retention information
+     * Updates business object format retention information
+     *
      * @param businessObjectFormatKey the business object format alternate key
      * @param businessObjectFormatRetentionInformationUpdateRequest business object format retention information update request
+     *
      * @return updated business object format
      */
     public BusinessObjectFormat updateBusinessObjectFormatRetentionInformation(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatRetentionInformationUpdateRequest businessObjectFormatRetentionInformationUpdateRequest);
 
     /**
-     * Update business object format schema backwards compatible changes
+     * Updates business object format schema backwards compatible changes
+     *
      * @param businessObjectFormatKey the business object format alternate key
      * @param businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest business object format schema backwards compatible changes update request
+     *
      * @return updated business object format
      */
     public BusinessObjectFormat updateBusinessObjectFormatSchemaBackwardsCompatibilityChanges(BusinessObjectFormatKey businessObjectFormatKey,

@@ -554,7 +554,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String NO_RETENTION_TYPE = null;
 
-    public static final Boolean NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET = null;
+    public static final Boolean NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET = false;
 
     public static final Long NO_ROW_COUNT = null;
 

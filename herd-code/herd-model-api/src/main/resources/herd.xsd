@@ -2154,7 +2154,7 @@
              the field as null. The validation that this field is required is handled via the service layer validation.
             -->
             <xs:annotation>
-               <xs:documentation>If true,allows non backwards compatible changes to the schema.
+               <xs:documentation>If true,allows non backwards compatible changes to the schema
                </xs:documentation>
             </xs:annotation>
          </xs:element>
