@@ -61,6 +61,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
 import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatSchemaBackwardsCompatibilityUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
@@ -478,8 +479,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     }
 
     @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE),
-        @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]",
-            permissions = NamespacePermissionEnum.READ)})
+        @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]", permissions = NamespacePermissionEnum.READ)})
     @Override
     public BusinessObjectFormat updateBusinessObjectFormatParents(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatParentsUpdateRequest businessObjectFormatParentsUpdateRequest)
@@ -721,6 +721,22 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
+    }
+
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public BusinessObjectFormat updateBusinessObjectFormatSchemaBackwardsCompatibilityChanges(BusinessObjectFormatKey businessObjectFormatKey,
+        BusinessObjectFormatSchemaBackwardsCompatibilityUpdateRequest businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest)
+    {
+        // Validate and trim the business object format schema backwards compatibility changes update request.
+        Assert.notNull(businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest,
+            "A business object format schema backwards compatibility changes update request must be specified.");
+        Assert.notNull(businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest.isAllowNonBackwardsCompatibleChanges(),
+            "allowNonBackwardsCompatibleChanges flag in business object format schema backwards compatibility changes update request must be specified.");
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
+        Assert.isNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version must not be specified.");
+
+        return null;
     }
 
     /**

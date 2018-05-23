@@ -28,6 +28,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
 import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatSchemaBackwardsCompatibilityUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
 
 /**
@@ -158,4 +159,13 @@ public interface BusinessObjectFormatService
      */
     public BusinessObjectFormat updateBusinessObjectFormatRetentionInformation(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatRetentionInformationUpdateRequest businessObjectFormatRetentionInformationUpdateRequest);
+
+    /**
+     * Update business object format schema backwards compatible changes
+     * @param businessObjectFormatKey the business object format alternate key
+     * @param businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest business object format schema backwards compatible changes update request
+     * @return updated business object format
+     */
+    public BusinessObjectFormat updateBusinessObjectFormatSchemaBackwardsCompatibilityChanges(BusinessObjectFormatKey businessObjectFormatKey,
+        BusinessObjectFormatSchemaBackwardsCompatibilityUpdateRequest businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest);
 }
