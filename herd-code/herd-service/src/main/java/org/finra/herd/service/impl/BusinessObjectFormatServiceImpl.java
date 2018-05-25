@@ -170,15 +170,17 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Get the latest format version for this business format, if it exists.
         BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
 
-        // If the latest version exists, perform the additive schema validation and update the latest entity.
+        // Check if the latest version exists.
         if (latestVersionBusinessObjectFormatEntity != null)
         {
             // Get the latest version business object format model object.
             BusinessObjectFormat latestVersionBusinessObjectFormat =
                 businessObjectFormatHelper.createBusinessObjectFormatFromEntity(latestVersionBusinessObjectFormatEntity);
 
-            // If the latest version format has schema, check the new format version schema is "additive" to the previous format version.
-            if (latestVersionBusinessObjectFormat.getSchema() != null)
+            // If the latest version format schema exists and allowNonBackwardsCompatibleChanges is not true,
+            // then perform the additive schema validation and update the latest entity.
+            if (latestVersionBusinessObjectFormat.getSchema() != null &&
+                BooleanUtils.isNotTrue(latestVersionBusinessObjectFormat.isAllowNonBackwardsCompatibleChanges()))
             {
                 validateNewSchemaIsAdditiveToOldSchema(request.getSchema(), latestVersionBusinessObjectFormat.getSchema());
             }
@@ -229,11 +231,19 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             newBusinessObjectFormatEntity.setRetentionPeriodInDays(latestVersionBusinessObjectFormatEntity.getRetentionPeriodInDays());
             newBusinessObjectFormatEntity.setRecordFlag(latestVersionBusinessObjectFormatEntity.isRecordFlag());
             newBusinessObjectFormatEntity.setRetentionType(latestVersionBusinessObjectFormatEntity.getRetentionType());
+
+            // Carry the schema backwards compatibility changes from the latest entity to the new entity.
+            newBusinessObjectFormatEntity.setAllowNonBackwardsCompatibleChanges(latestVersionBusinessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges());
+
             businessObjectFormatDao.saveAndRefresh(newBusinessObjectFormatEntity);
-            //reset the retention information of the latest version business object format
+
+            //reset the retention information of the latest version business object format.
             latestVersionBusinessObjectFormatEntity.setRetentionType(null);
             latestVersionBusinessObjectFormatEntity.setRecordFlag(null);
             latestVersionBusinessObjectFormatEntity.setRetentionPeriodInDays(null);
+
+            // Reset the schema backwards compatibility changes of the latest version business object format.
+            latestVersionBusinessObjectFormatEntity.setAllowNonBackwardsCompatibleChanges(null);
 
             businessObjectFormatDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
         }
@@ -729,15 +739,26 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     public BusinessObjectFormat updateBusinessObjectFormatSchemaBackwardsCompatibilityChanges(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatSchemaBackwardsCompatibilityUpdateRequest businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest)
     {
-        // Validate and trim the business object format schema backwards compatibility changes update request.
+        // Validate business object format schema backwards compatibility changes update request.
         Assert.notNull(businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest,
             "A business object format schema backwards compatibility changes update request must be specified.");
         Assert.notNull(businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest.isAllowNonBackwardsCompatibleChanges(),
             "allowNonBackwardsCompatibleChanges flag in business object format schema backwards compatibility changes update request must be specified.");
+
+        // Validate and trim the business object format key parameters.
         businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
         Assert.isNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version must not be specified.");
 
-        return null;
+        // Retrieve and ensure that a business object format exists.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+        businessObjectFormatEntity.setAllowNonBackwardsCompatibleChanges(
+            BooleanUtils.isTrue(businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest.isAllowNonBackwardsCompatibleChanges()));
+
+        // Persist and refresh the entity.
+        businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
+
+        // Create and return the business object format object from the persisted entity.
+        return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
 
     /**

@@ -34,6 +34,7 @@ import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatSchemaBackwardsCompatibilityUpdateRequest;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -395,6 +396,81 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         // Verify the external calls.
         verify(businessObjectFormatHelper).validateBusinessObjectFormatKey(businessObjectFormatKey, false);
         verify(businessObjectFormatDaoHelper).getRecordRetentionTypeEntity(RetentionTypeEntity.BDATA_RETENTION_DATE);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaBackwardsCompatibilityChanges()
+    {
+        // Create a business object format key without version.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION);
+
+        // Create a business object format schema backwards compatibility changes update request.
+        BusinessObjectFormatSchemaBackwardsCompatibilityUpdateRequest businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest =
+            new BusinessObjectFormatSchemaBackwardsCompatibilityUpdateRequest(ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET);
+
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
+
+        // Create a business object format.
+        BusinessObjectFormat businessObjectFormat = new BusinessObjectFormat();
+        businessObjectFormat.setId(ID);
+
+        // Mock the external calls.
+        when(businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey)).thenReturn(businessObjectFormatEntity);
+        when(businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity)).thenReturn(businessObjectFormatEntity);
+        when(businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity)).thenReturn(businessObjectFormat);
+
+        // Call the method under test.
+        BusinessObjectFormat result = businessObjectFormatServiceImpl.updateBusinessObjectFormatSchemaBackwardsCompatibilityChanges(businessObjectFormatKey,
+            businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectFormatHelper).validateBusinessObjectFormatKey(businessObjectFormatKey, false);
+        verify(businessObjectFormatDaoHelper).getBusinessObjectFormatEntity(businessObjectFormatKey);
+        verify(businessObjectFormatDao).saveAndRefresh(businessObjectFormatEntity);
+        verify(businessObjectFormatHelper).createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectFormat, result);
+        assertEquals(businessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges(), ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaBackwardsCompatibilityChangesMissingRequiredParameters()
+    {
+        // Create a business object format key without version.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION);
+
+        // Try to call the method under test without specifying a business object format schema backwards compatibility changes update request.
+        try
+        {
+            businessObjectFormatServiceImpl.updateBusinessObjectFormatSchemaBackwardsCompatibilityChanges(businessObjectFormatKey, null);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object format schema backwards compatibility changes update request must be specified.", e.getMessage());
+        }
+
+        // Try to call the method under test without specifying a record flag.
+        try
+        {
+            businessObjectFormatServiceImpl.updateBusinessObjectFormatSchemaBackwardsCompatibilityChanges(businessObjectFormatKey,
+                new BusinessObjectFormatSchemaBackwardsCompatibilityUpdateRequest(null));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(
+                "allowNonBackwardsCompatibleChanges flag in business object format schema backwards compatibility changes update request must be specified.",
+                e.getMessage());
+        }
+
+        // Verify the external calls.
         verifyNoMoreInteractionsHelper();
     }
 
