@@ -614,6 +614,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean RECORD_FLAG_SET = true;
 
+    public static final Boolean ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET = true;
+
     public static final String RELATIONAL_SCHEMA_NAME = "UT_RelationalSchemaName_" + RANDOM_SUFFIX;
 
     public static final String RELATIONAL_TABLE_NAME = "UT_RelationalTableName_" + RANDOM_SUFFIX;

@@ -130,6 +130,10 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Type(type = "yes_no")
     private Boolean recordFlag;
 
+    @Column(name = "alw_non_bckwrds_cmptbl_chgs_fl", nullable = true)
+    @Type(type = "yes_no")
+    private Boolean allowNonBackwardsCompatibleChanges;
+
     @Column(name = "rtntn_prd_days", nullable = true)
     private Integer retentionPeriodInDays;
 
@@ -335,5 +339,15 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setRetentionType(RetentionTypeEntity retentionType)
     {
         this.retentionType = retentionType;
+    }
+
+    public Boolean isAllowNonBackwardsCompatibleChanges()
+    {
+        return allowNonBackwardsCompatibleChanges;
+    }
+
+    public void setAllowNonBackwardsCompatibleChanges(Boolean allowNonBackwardsCompatibleChanges)
+    {
+        this.allowNonBackwardsCompatibleChanges = allowNonBackwardsCompatibleChanges;
     }
 }

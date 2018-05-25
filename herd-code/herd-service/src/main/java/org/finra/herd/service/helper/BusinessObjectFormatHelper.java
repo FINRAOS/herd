@@ -239,6 +239,9 @@ public class BusinessObjectFormatHelper
             businessObjectFormat.setRetentionType(latestVersionBusinessObjectFormatEntity.getRetentionType().getCode());
         }
 
+        // Add business object format schema backwards compatibility changes flag.
+        businessObjectFormat.setAllowNonBackwardsCompatibleChanges(latestVersionBusinessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges());
+
         return businessObjectFormat;
     }
     
