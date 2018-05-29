@@ -427,6 +427,12 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 previousVersionBusinessObjectFormatEntity.setRecordFlag(businessObjectFormatEntity.isRecordFlag());
                 previousVersionBusinessObjectFormatEntity.setRetentionPeriodInDays(businessObjectFormatEntity.getRetentionPeriodInDays());
                 previousVersionBusinessObjectFormatEntity.setRetentionType(businessObjectFormatEntity.getRetentionType());
+
+                // Update the previous version schema compatibility changes information.
+                previousVersionBusinessObjectFormatEntity
+                    .setAllowNonBackwardsCompatibleChanges(businessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges());
+
+                // Save the updated entity.
                 businessObjectFormatDao.saveAndRefresh(previousVersionBusinessObjectFormatEntity);
             }
         }

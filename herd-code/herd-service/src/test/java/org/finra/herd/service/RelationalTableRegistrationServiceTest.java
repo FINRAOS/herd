@@ -137,6 +137,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
             new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
                 relationalTableName)));
         expectedBusinessObjectFormat.setSchema(expectedSchema);
+        expectedBusinessObjectFormat.setAllowNonBackwardsCompatibleChanges(true);
 
         // Validate the newly created business object format.
         assertEquals(expectedBusinessObjectFormat, resultBusinessObjectFormat);
@@ -248,6 +249,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
             new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
                 relationalTableName)));
         expectedBusinessObjectFormat.setSchema(expectedSchema);
+        expectedBusinessObjectFormat.setAllowNonBackwardsCompatibleChanges(true);
 
         // Validate the newly created business object format.
         assertEquals(expectedBusinessObjectFormat, businessObjectFormat);

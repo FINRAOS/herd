@@ -4661,26 +4661,27 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper.createTestDatabaseEntitiesForBusinessObjectFormatTesting();
 
         // Create an initial version of a business object format with a schema.
-        BusinessObjectFormat businessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
+        BusinessObjectFormat businessObjectFormatV0 = businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
                 businessObjectFormatServiceTestHelper.getTestSchema()));
 
-        // Validate allowNonBackwardsCompatibleChanges is not set.
-        assertNull(businessObjectFormat.isAllowNonBackwardsCompatibleChanges());
+        // Validate allowNonBackwardsCompatibleChanges is not set on businessObjectFormatV0
+        assertNull(businessObjectFormatV0.isAllowNonBackwardsCompatibleChanges());
 
-        // Create business object format key for the initial version of the format.
-        BusinessObjectFormatKey businessObjectFormatKey =
+        // Create business object format key for format V0.
+        BusinessObjectFormatKey businessObjectFormatKeyV0 =
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION);
 
-        // Create a business object format create request with non-backwards compatible schema changes.
-        // Try to create a second version of the business object format with a schema that has a different null value.
-        Schema newSchema = businessObjectFormatServiceTestHelper.getTestSchema();
-        newSchema.setNullValue(SCHEMA_NULL_VALUE_NULL_WORD);
+        // Create a business object format create request with non-backwards compatible schema changes, schema that has a different null value.
+        Schema nonBackwardsCompatibleSchema = businessObjectFormatServiceTestHelper.getTestSchema();
+        nonBackwardsCompatibleSchema.setNullValue(SCHEMA_NULL_VALUE_NULL_WORD);
         BusinessObjectFormatCreateRequest businessObjectFormatCreateRequest = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), newSchema);
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                nonBackwardsCompatibleSchema);
 
+        // Try to create a second version of the business object format with non-backwards compatible schema changes.
         // We expected to fail as allowNonBackwardsCompatibleChanges is not set.
         try
         {
@@ -4693,14 +4694,15 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 "New format version null value does not match to the previous format version null value.", e.getMessage());
         }
 
-        // Get the business object format entity by alternate key.
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
-        assertNotNull(businessObjectFormatEntity);
+        // Get the initial format version of the business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntityV0 = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKeyV0);
+        assertNotNull(businessObjectFormatEntityV0);
 
-        // Update allowNonBackwardsCompatibleChanges to false.
-        businessObjectFormatEntity.setAllowNonBackwardsCompatibleChanges(false);
-        assertFalse(businessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges());
+        // Update businessObjectFormatEntityV0 to allowNonBackwardsCompatibleChanges to false.
+        businessObjectFormatEntityV0.setAllowNonBackwardsCompatibleChanges(false);
+        assertFalse(businessObjectFormatEntityV0.isAllowNonBackwardsCompatibleChanges());
 
+        // Try to create a second version of the business object format with non-backwards compatible schema changes..
         // We expected to fail as allowNonBackwardsCompatibleChanges is set to false.
         try
         {
@@ -4713,21 +4715,43 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 "New format version null value does not match to the previous format version null value.", e.getMessage());
         }
 
-        // Get the business object format entity by alternate key.
-        businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
-        assertNotNull(businessObjectFormatEntity);
+        // Get the initial format version and validate that the allowNonBackwardsCompatibleChanges is set to false.
+        businessObjectFormatV0 = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKeyV0);
+        assertFalse(businessObjectFormatV0.isAllowNonBackwardsCompatibleChanges());
 
-        // Update allowNonBackwardsCompatibleChanges to true.
-        businessObjectFormatEntity.setAllowNonBackwardsCompatibleChanges(true);
-        assertTrue(businessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges());
+        // Update businessObjectFormatEntityV0 to allowNonBackwardsCompatibleChanges to true.
+        businessObjectFormatEntityV0.setAllowNonBackwardsCompatibleChanges(true);
+        assertTrue(businessObjectFormatEntityV0.isAllowNonBackwardsCompatibleChanges());
 
         // Call create business object format when allowNonBackwardsCompatibleChanges is set to true.
-        businessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatCreateRequest);
+        BusinessObjectFormat businessObjectFormatV1 = businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatCreateRequest);
 
-        // Validate results.
-        assertNotNull(businessObjectFormat);
-        assertEquals(true, businessObjectFormat.isAllowNonBackwardsCompatibleChanges());
-        assertEquals(SECOND_FORMAT_VERSION, Integer.valueOf(businessObjectFormat.getBusinessObjectFormatVersion()));
+        // Validate businessObjectFormatV1 and businessObjectFormatEntityV0.
+        assertNotNull(businessObjectFormatV1);
+        assertEquals(true, businessObjectFormatV1.isAllowNonBackwardsCompatibleChanges());
+        assertEquals(SECOND_FORMAT_VERSION, Integer.valueOf(businessObjectFormatV1.getBusinessObjectFormatVersion()));
+        assertNull(businessObjectFormatEntityV0.isAllowNonBackwardsCompatibleChanges());
+
+        // Get the initial format version and validate that the allowNonBackwardsCompatibleChanges is set to true.
+        businessObjectFormatV0 = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKeyV0);
+        assertTrue(businessObjectFormatV0.isAllowNonBackwardsCompatibleChanges());
+
+        // Delete the second version of business object format.
+        BusinessObjectFormat deletedBusinessObjectFormat = businessObjectFormatService
+            .deleteBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION));
+        assertNotNull(deletedBusinessObjectFormat);
+        assertTrue(deletedBusinessObjectFormat.isAllowNonBackwardsCompatibleChanges());
+
+        // Get the initial format version of the business object format entity.
+        businessObjectFormatEntityV0 = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKeyV0);
+
+        // Validate the schema compatibility changes got propagated to the latest format version.
+        assertNotNull(businessObjectFormatEntityV0);
+        assertEquals(true, businessObjectFormatEntityV0.isAllowNonBackwardsCompatibleChanges());
+        assertEquals(INITIAL_FORMAT_VERSION, Integer.valueOf(businessObjectFormatEntityV0.getBusinessObjectFormatVersion()));
+
+        // Validate initial version business object format entity.
+        assertTrue(businessObjectFormatEntityV0.isAllowNonBackwardsCompatibleChanges());
     }
 
     private GlobalAttributeDefinitionEntity createGlobalAttributeDefinitionEntityWithAllowedAttributeValues()
