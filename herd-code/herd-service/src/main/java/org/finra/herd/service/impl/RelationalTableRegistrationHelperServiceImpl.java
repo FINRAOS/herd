@@ -396,6 +396,10 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         BusinessObjectFormatEntity businessObjectFormatEntity =
             businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormat));
 
+        // Allow non-backwards-compatible schema changes.
+        businessObjectFormatEntity.setAllowNonBackwardsCompatibleChanges(true);
+        businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
+
         // Get a business object data status entity for the VALID status.
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
             businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
