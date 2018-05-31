@@ -1259,29 +1259,6 @@
       </xs:annotation>
    </xs:element>
 
-   <xs:element name="businessObjectDefinitionIndexSearchRequest" type="businessObjectDefinitionIndexSearchRequest">
-      <xs:annotation>
-         <xs:documentation>A wrapper for business Object Definition indexed search request. The request accepts multiple search filters and a multiple search
-            keys
-         </xs:documentation>
-      </xs:annotation>
-   </xs:element>
-
-   <xs:complexType name="businessObjectDefinitionIndexSearchRequest">
-      <xs:all>
-         <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>A list of business Object Definition indexed search filters. Multiple search filters are supported</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="facetFields" type="facetFields" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag facet information is supported</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
    <xs:complexType name="businessObjectDefinitionSearchRequest">
       <xs:all>
          <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters" minOccurs="0">
@@ -1355,33 +1332,6 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="businessObjectDefinitionIndexSearchResponse" type="businessObjectDefinitionIndexSearchResponse"/>
-   <xs:complexType name="businessObjectDefinitionIndexSearchResponse">
-      <xs:all>
-         <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>Values that identify a business object definition search response</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="facets" type="facets" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>Values that identifies a list of facet information response</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
-   <xs:element name="facets" type="facets"/>
-   <xs:complexType name="facets">
-      <xs:sequence>
-         <xs:element name="facet" type="facet" minOccurs="0" maxOccurs="unbounded">
-            <xs:annotation>
-               <xs:documentation>facet information</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:sequence>
-   </xs:complexType>
-
    <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions"/>
    <xs:complexType name="businessObjectDefinitions">
       <xs:sequence>
@@ -1389,49 +1339,6 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
-
-   <xs:complexType name="facetFields">
-      <xs:sequence>
-         <xs:element name="facetField" type="xs:string" minOccurs="0" maxOccurs="unbounded">
-            <xs:annotation>
-               <xs:documentation>The Facet field information to be included with the response. Only Tag facet field is supported.
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:sequence>
-   </xs:complexType>
-
-   <xs:element name="facet" type="facet"/>
-   <xs:complexType name="facet">
-      <xs:all>
-         <xs:element name="facetDisplayName" type="xs:string" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>Display name of the facet</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="facetCount" type="xs:long" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>count of the facet</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="facetType" type="xs:string" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>Type of the facet</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="facetId" type="xs:string" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>unique identifier of the facet</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="facets" type="facets" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>list of facets</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
 
    <xs:element name="businessObjectDefinitionIndexResponse" type="businessObjectDefinitionIndexResponse"/>
    <xs:complexType name="businessObjectDefinitionIndexResponse">
@@ -2237,6 +2144,23 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest" type="businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatSchemaBackwardsCompatibilityUpdateRequest">
+      <xs:all>
+         <xs:element name="allowNonBackwardsCompatibleChanges" type="xs:boolean" minOccurs="0">
+            <!--
+             This is required, but is left as optional here so the auto-generated object becomes "Boolean" and not "boolean".
+             That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "false" and instead will leave
+             the field as null. The validation that this field is required is handled via the service layer validation.
+            -->
+            <xs:annotation>
+               <xs:documentation>If true, allows non backwards compatible changes to the schema
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="businessObjectFormat" type="businessObjectFormat"/>
    <xs:complexType name="businessObjectFormat">
       <xs:all>
@@ -2341,7 +2265,13 @@
          </xs:element>
          <xs:element name="retentionType" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE
+               <xs:documentation>Retention type. Supported retention types: PARTITION_VALUE, BDATA_RETENTION_TYPE.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allowNonBackwardsCompatibleChanges" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>If true, allows non backwards compatible changes to the schema
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -5670,6 +5600,11 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="kerberosAttributes" type="emrClusterDefinitionKerberosAttributes" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Attributes for Kerberos configuration when Kerberos authentication is enabled using a security configuration</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -6517,6 +6452,38 @@
          <xs:element name="keyValueShortcut" type="xs:string"/>
          <xs:element name="attribKey" type="xs:string"/>
          <xs:element name="attribVal" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionKerberosAttributes">
+      <xs:all>
+         <xs:element name="aDDomainJoinPassword" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The Active Directory password for ADDomainJoinUser</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="aDDomainJoinUser" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Required only when establishing a cross-realm trust with an Active Directory domain</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="crossRealmTrustPrincipalPassword" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Required only when establishing a cross-realm trust with a KDC in a different realm</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="kdcAdminPassword" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The password used within the cluster for the kadmin service on the cluster-dedicated KDC, which maintains Kerberos principals,
+                  password policies, and keytabs for the cluster
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="realm" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The name of the Kerberos realm to which all nodes in a cluster belong</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -7891,6 +7858,57 @@
             </xs:annotation>
          </xs:element>
       </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="facets">
+      <xs:sequence>
+         <xs:element name="facet" type="facet" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>facet information</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="facetFields">
+      <xs:sequence>
+         <xs:element name="facetField" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The Facet field information to be included with the response. Only Tag facet field is supported.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="facet">
+      <xs:all>
+         <xs:element name="facetDisplayName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Display name of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetCount" type="xs:long" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>count of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Type of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>unique identifier of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facets" type="facets" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>list of facets</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
    </xs:complexType>
 
    <!-- ***** Global Attribute Definition ***** -->

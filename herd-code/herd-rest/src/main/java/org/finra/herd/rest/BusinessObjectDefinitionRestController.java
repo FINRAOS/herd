@@ -30,8 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
@@ -187,23 +185,4 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
     {
         return businessObjectDefinitionService.searchBusinessObjectDefinitions(request, fields);
     }
-
-    /**
-     * Searches across all business object definitions that are in search index per specified search filters and keys
-     *
-     * @param fields A comma-separated list of fields to be retrieved with each business object definition entity. Valid options: dataProviderName,
-     * shortDescription, displayName
-     * @param request the information needed to search across the business object definitions
-     *
-     * @return the retrieved business object definition list
-     */
-    @RequestMapping(value = "/businessObjectDefinitions/indexSearch", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_INDEX_SEARCH_POST)
-    public BusinessObjectDefinitionIndexSearchResponse indexSearchBusinessObjectDefinitions(
-        @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields,
-        @RequestBody BusinessObjectDefinitionIndexSearchRequest request)
-    {
-        return businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(request, fields);
-    }
-
 }

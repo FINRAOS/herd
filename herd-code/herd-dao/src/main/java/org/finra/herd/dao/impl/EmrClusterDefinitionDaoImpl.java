@@ -18,14 +18,13 @@ package org.finra.herd.dao.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.google.common.collect.Lists;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.EmrClusterDefinitionDao;
@@ -33,83 +32,65 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity_;
 import org.finra.herd.model.jpa.NamespaceEntity;
-import org.finra.herd.model.jpa.NamespaceEntity_;
 
 @Repository
 public class EmrClusterDefinitionDaoImpl extends AbstractHerdDao implements EmrClusterDefinitionDao
 {
     @Override
-    public EmrClusterDefinitionEntity getEmrClusterDefinitionByAltKey(EmrClusterDefinitionKey emrClusterDefinitionKey)
+    public EmrClusterDefinitionEntity getEmrClusterDefinitionByNamespaceAndName(NamespaceEntity namespaceEntity, String emrClusterDefinitionName)
     {
-        return getEmrClusterDefinitionByAltKey(emrClusterDefinitionKey.getNamespace(), emrClusterDefinitionKey.getEmrClusterDefinitionName());
-    }
-
-    @Override
-    public EmrClusterDefinitionEntity getEmrClusterDefinitionByAltKey(String namespaceCd, String definitionName)
-    {
-        // Create the criteria builder and the criteria.
+        // Create criteria builder and a top-level query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<EmrClusterDefinitionEntity> criteria = builder.createQuery(EmrClusterDefinitionEntity.class);
 
         // The criteria root is the EMR cluster definition.
-        Root<EmrClusterDefinitionEntity> emrClusterDefinition = criteria.from(EmrClusterDefinitionEntity.class);
-
-        // Join to the other tables we can filter on.
-        Join<EmrClusterDefinitionEntity, NamespaceEntity> namespace = emrClusterDefinition.join(EmrClusterDefinitionEntity_.namespace);
+        Root<EmrClusterDefinitionEntity> emrClusterDefinitionEntityRoot = criteria.from(EmrClusterDefinitionEntity.class);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate namespaceRestriction = builder.equal(builder.upper(namespace.get(NamespaceEntity_.code)), namespaceCd.toUpperCase());
-        Predicate definitionNameRestriction =
-            builder.equal(builder.upper(emrClusterDefinition.get(EmrClusterDefinitionEntity_.name)), definitionName.toUpperCase());
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(emrClusterDefinitionEntityRoot.get(EmrClusterDefinitionEntity_.namespace), namespaceEntity));
+        predicates
+            .add(builder.equal(builder.upper(emrClusterDefinitionEntityRoot.get(EmrClusterDefinitionEntity_.name)), emrClusterDefinitionName.toUpperCase()));
 
-        criteria.select(emrClusterDefinition).where(builder.and(namespaceRestriction, definitionNameRestriction));
+        // Add all clauses for the query.
+        criteria.select(emrClusterDefinitionEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
 
+        // Execute query and return result.
         return executeSingleResultQuery(criteria, String
-            .format("Found more than one EMR cluster definition with parameters {namespace=\"%s\", clusterDefinitionName=\"%s\"}.", namespace, definitionName));
+            .format("Found more than one EMR cluster definition with parameters {namespace=\"%s\", emrClusterDefinitionName=\"%s\"}.",
+                namespaceEntity.getCode(), emrClusterDefinitionName));
     }
 
     @Override
-    public List<EmrClusterDefinitionKey> getEmrClusterDefinitionsByNamespace(String namespace)
+    public List<EmrClusterDefinitionKey> getEmrClusterDefinitionKeysByNamespace(NamespaceEntity namespaceEntity)
     {
-        // Create the criteria builder and a tuple style criteria query.
+        // Create criteria builder and a top-level query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
+        CriteriaQuery<String> criteria = builder.createQuery(String.class);
 
         // The criteria root is the EMR cluster definition.
         Root<EmrClusterDefinitionEntity> emrClusterDefinitionEntityRoot = criteria.from(EmrClusterDefinitionEntity.class);
 
-        // Join to the other tables we can filter on.
-        Join<EmrClusterDefinitionEntity, NamespaceEntity> namespaceEntityJoin = emrClusterDefinitionEntityRoot.join(EmrClusterDefinitionEntity_.namespace);
-
-        // Get the columns.
-        Path<String> namespaceCodeColumn = namespaceEntityJoin.get(NamespaceEntity_.code);
+        // Get the EMR cluster definition name column.
         Path<String> emrClusterDefinitionNameColumn = emrClusterDefinitionEntityRoot.get(EmrClusterDefinitionEntity_.name);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate queryRestriction = builder.equal(builder.upper(namespaceEntityJoin.get(NamespaceEntity_.code)), namespace.toUpperCase());
+        Predicate predicate = builder.equal(emrClusterDefinitionEntityRoot.get(EmrClusterDefinitionEntity_.namespace), namespaceEntity);
 
-        // Add the select clause.
-        criteria.multiselect(namespaceCodeColumn, emrClusterDefinitionNameColumn);
+        // Add all clauses for the query.
+        criteria.select(emrClusterDefinitionNameColumn).where(predicate).orderBy(builder.asc(emrClusterDefinitionNameColumn));
 
-        // Add the where clause.
-        criteria.where(queryRestriction);
+        // Execute the query to get a list of EMR cluster definition names back.
+        List<String> emrClusterDefinitionNames = entityManager.createQuery(criteria).getResultList();
 
-        // Add the order by clause.
-        criteria.orderBy(builder.asc(emrClusterDefinitionNameColumn));
-
-        // Run the query to get a list of tuples back.
-        List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
-
-        // Populate the "keys" objects from the returned tuples (i.e. 1 tuple for each row).
-        List<EmrClusterDefinitionKey> emrClusterDefinitionKeys = new ArrayList<>();
-        for (Tuple tuple : tuples)
+        // Build a list of EMR cluster definition keys.
+        List<EmrClusterDefinitionKey> emrClusterDefinitionKeys = Lists.newArrayList();
+        for (String emrClusterDefinitionName : emrClusterDefinitionNames)
         {
-            EmrClusterDefinitionKey emrClusterDefinitionKey = new EmrClusterDefinitionKey();
-            emrClusterDefinitionKeys.add(emrClusterDefinitionKey);
-            emrClusterDefinitionKey.setNamespace(tuple.get(namespaceCodeColumn));
-            emrClusterDefinitionKey.setEmrClusterDefinitionName(tuple.get(emrClusterDefinitionNameColumn));
+            emrClusterDefinitionKeys.add(new EmrClusterDefinitionKey(namespaceEntity.getCode(), emrClusterDefinitionName));
         }
 
+        // Return the list of keys.
         return emrClusterDefinitionKeys;
     }
 }

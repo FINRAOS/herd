@@ -88,7 +88,8 @@ public class EmrClusterDefinitionServiceImpl implements EmrClusterDefinitionServ
             request.getEmrClusterDefinition().getEc2NodeIamProfileName());
 
         // Ensure a EMR cluster definition with the specified name doesn't already exist.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(request.getEmrClusterDefinitionKey());
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDao
+            .getEmrClusterDefinitionByNamespaceAndName(namespaceEntity, request.getEmrClusterDefinitionKey().getEmrClusterDefinitionName());
         if (emrClusterDefinitionEntity != null)
         {
             throw new AlreadyExistsException(String
@@ -184,7 +185,7 @@ public class EmrClusterDefinitionServiceImpl implements EmrClusterDefinitionServ
 
         // Retrieve and return the list of EMR cluster definition keys.
         EmrClusterDefinitionKeys emrClusterDefinitionKeys = new EmrClusterDefinitionKeys();
-        emrClusterDefinitionKeys.getEmrClusterDefinitionKeys().addAll(emrClusterDefinitionDao.getEmrClusterDefinitionsByNamespace(namespace.trim()));
+        emrClusterDefinitionKeys.getEmrClusterDefinitionKeys().addAll(emrClusterDefinitionDaoHelper.getEmrClusterDefinitionKeys(namespace.trim()));
         return emrClusterDefinitionKeys;
     }
 
