@@ -31,16 +31,17 @@ public class EmrClusterDefinitionDaoTestHelper
      * Creates and persists a new EMR cluster definition entity.
      *
      * @param namespaceEntity the namespace entity
-     * @param definitionName the cluster definition name
-     * @param configurationXml the cluster configuration XML
+     * @param emrClusterDefinitionName the EMR cluster definition name
+     * @param configurationXml the EMR cluster configuration XML
      *
-     * @return the newly created job definition entity
+     * @return the newly created EMR cluster definition entity
      */
-    public EmrClusterDefinitionEntity createEmrClusterDefinitionEntity(NamespaceEntity namespaceEntity, String definitionName, String configurationXml)
+    public EmrClusterDefinitionEntity createEmrClusterDefinitionEntity(NamespaceEntity namespaceEntity, String emrClusterDefinitionName,
+        String configurationXml)
     {
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = new EmrClusterDefinitionEntity();
         emrClusterDefinitionEntity.setNamespace(namespaceEntity);
-        emrClusterDefinitionEntity.setName(definitionName);
+        emrClusterDefinitionEntity.setName(emrClusterDefinitionName);
         emrClusterDefinitionEntity.setConfiguration(configurationXml);
         return emrClusterDefinitionDao.saveAndRefresh(emrClusterDefinitionEntity);
     }

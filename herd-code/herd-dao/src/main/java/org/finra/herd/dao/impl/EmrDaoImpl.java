@@ -42,6 +42,7 @@ import com.amazonaws.services.elasticmapreduce.model.InstanceGroupType;
 import com.amazonaws.services.elasticmapreduce.model.InstanceRoleType;
 import com.amazonaws.services.elasticmapreduce.model.InstanceTypeConfig;
 import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
+import com.amazonaws.services.elasticmapreduce.model.KerberosAttributes;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
@@ -83,6 +84,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsBlockDeviceConfig;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionKerberosAttributes;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionSpotSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
@@ -542,6 +544,30 @@ public class EmrDaoImpl implements EmrDao
         }
 
         return instanceTypeConfigs;
+    }
+
+    /**
+     * Creates an instance of {@link KerberosAttributes} from a given instance of {@link EmrClusterDefinitionKerberosAttributes}.
+     *
+     * @param emrClusterDefinitionKerberosAttributes the instance of {@link EmrClusterDefinitionKerberosAttributes}, may be null
+     *
+     * @return the instance of {@link KerberosAttributes}
+     */
+    protected KerberosAttributes getKerberosAttributes(EmrClusterDefinitionKerberosAttributes emrClusterDefinitionKerberosAttributes)
+    {
+        KerberosAttributes kerberosAttributes = null;
+
+        if (emrClusterDefinitionKerberosAttributes != null)
+        {
+            kerberosAttributes = new KerberosAttributes();
+            kerberosAttributes.setADDomainJoinPassword(emrClusterDefinitionKerberosAttributes.getADDomainJoinPassword());
+            kerberosAttributes.setADDomainJoinUser(emrClusterDefinitionKerberosAttributes.getADDomainJoinUser());
+            kerberosAttributes.setCrossRealmTrustPrincipalPassword(emrClusterDefinitionKerberosAttributes.getCrossRealmTrustPrincipalPassword());
+            kerberosAttributes.setKdcAdminPassword(emrClusterDefinitionKerberosAttributes.getKdcAdminPassword());
+            kerberosAttributes.setRealm(emrClusterDefinitionKerberosAttributes.getRealm());
+        }
+
+        return kerberosAttributes;
     }
 
     /**
@@ -1026,6 +1052,9 @@ public class EmrDaoImpl implements EmrDao
         {
             runJobFlowRequest.setScaleDownBehavior(emrClusterDefinition.getScaleDownBehavior());
         }
+
+        // Assign Kerberos attributes.
+        runJobFlowRequest.setKerberosAttributes(getKerberosAttributes(emrClusterDefinition.getKerberosAttributes()));
 
         // Return the object
         return runJobFlowRequest;

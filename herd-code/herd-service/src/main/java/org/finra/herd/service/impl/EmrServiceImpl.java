@@ -53,6 +53,7 @@ import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.EmrCluster;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroup;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroupAddRequest;
 import org.finra.herd.model.api.xml.EmrStep;
@@ -64,7 +65,6 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
-import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.EmrService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
@@ -160,18 +160,14 @@ public class EmrServiceImpl implements EmrService
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
 
-        // Get the namespace and ensure it exists.
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(emrClusterAlternateKeyDto.getNamespace());
-
         // Get the EMR cluster definition and ensure it exists.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper
-            .getEmrClusterDefinitionEntity(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName());
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(
+            new EmrClusterDefinitionKey(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName()));
 
-        EmrCluster emrCluster =
-            createEmrClusterFromRequest(null, namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName(),
-                accountId, null, null, null, null);
-        String clusterName =
-            emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
+        EmrCluster emrCluster = createEmrClusterFromRequest(null, emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
+            emrClusterAlternateKeyDto.getEmrClusterName(), accountId, null, null, null, null);
+        String clusterName = emrHelper.buildEmrClusterName(emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
+            emrClusterAlternateKeyDto.getEmrClusterName());
         try
         {
             // Get Cluster status if clusterId is specified
@@ -346,12 +342,9 @@ public class EmrServiceImpl implements EmrService
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
 
-        // Get the namespace and ensure it exists.
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(emrClusterAlternateKeyDto.getNamespace());
-
         // Get the EMR cluster definition and ensure it exists.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper
-            .getEmrClusterDefinitionEntity(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName());
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(
+            new EmrClusterDefinitionKey(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName()));
 
         // Replace all S3 managed location variables in xml
         String toReplace = getS3ManagedReplaceString();
@@ -392,8 +385,8 @@ public class EmrServiceImpl implements EmrService
              * If the cluster already exists, record the existing cluster ID.
              * If there is any error while attempting to check for existing cluster or create a new one, handle the exception to throw appropriate exception.
              */
-            String clusterName =
-                emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
+            String clusterName = emrHelper.buildEmrClusterName(emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
+                emrClusterAlternateKeyDto.getEmrClusterName());
             try
             {
                 // Try to get an active EMR cluster by its name.
@@ -433,7 +426,7 @@ public class EmrServiceImpl implements EmrService
             emrClusterCreated = false;
         }
 
-        return createEmrClusterFromRequest(clusterId, namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(),
+        return createEmrClusterFromRequest(clusterId, emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
             emrClusterAlternateKeyDto.getEmrClusterName(), accountId, emrClusterStatus, emrClusterCreated, request.isDryRun(), emrClusterDefinition);
     }
 
@@ -588,6 +581,10 @@ public class EmrServiceImpl implements EmrService
             {
                 emrClusterDefinition.setScaleDownBehavior(emrClusterDefinitionOverride.getScaleDownBehavior());
             }
+            if (emrClusterDefinitionOverride.getKerberosAttributes() != null)
+            {
+                emrClusterDefinition.setKerberosAttributes(emrClusterDefinitionOverride.getKerberosAttributes());
+            }
         }
     }
 
@@ -624,16 +621,13 @@ public class EmrServiceImpl implements EmrService
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
 
-        // Get the namespace and ensure it exists.
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(emrClusterAlternateKeyDto.getNamespace());
-
         // Get the EMR cluster definition and ensure it exists.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper
-            .getEmrClusterDefinitionEntity(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName());
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(
+            new EmrClusterDefinitionKey(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName()));
 
         String clusterId = null;
-        String clusterName =
-            emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
+        String clusterName = emrHelper.buildEmrClusterName(emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
+            emrClusterAlternateKeyDto.getEmrClusterName());
         try
         {
             clusterId = emrHelper.getActiveEmrClusterId(emrClusterId, clusterName, accountId);
@@ -644,7 +638,7 @@ public class EmrServiceImpl implements EmrService
             handleAmazonException(ex, "An Amazon exception occurred while terminating EMR cluster with name \"" + clusterName + "\".");
         }
 
-        return createEmrClusterFromRequest(clusterId, namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(),
+        return createEmrClusterFromRequest(clusterId, emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
             emrClusterAlternateKeyDto.getEmrClusterName(), accountId, emrDao.getEmrClusterStatusById(clusterId, awsParamsDto), null, null, null);
     }
 
@@ -729,19 +723,16 @@ public class EmrServiceImpl implements EmrService
         String accountId = stepHelper.getRequestAccountId(request);
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
 
-        // Get the namespace and ensure it exists.
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(stepHelper.getRequestNamespace(request));
-
         // Get the EMR cluster definition and ensure it exists.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper
-            .getEmrClusterDefinitionEntity(stepHelper.getRequestNamespace(request), stepHelper.getRequestEmrClusterDefinitionName(request));
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(
+            new EmrClusterDefinitionKey(stepHelper.getRequestNamespace(request), stepHelper.getRequestEmrClusterDefinitionName(request)));
 
         // Update the namespace and cluster definition name in request from database.
-        stepHelper.setRequestNamespace(request, namespaceEntity.getCode());
+        stepHelper.setRequestNamespace(request, emrClusterDefinitionEntity.getNamespace().getCode());
         stepHelper.setRequestEmrClusterDefinitionName(request, emrClusterDefinitionEntity.getName());
 
-        String clusterName =
-            emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), stepHelper.getRequestEmrClusterName(request));
+        String clusterName = emrHelper.buildEmrClusterName(emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
+            stepHelper.getRequestEmrClusterName(request));
         Object emrStep = stepHelper.buildResponseFromRequest(request);
 
         try
@@ -821,15 +812,13 @@ public class EmrServiceImpl implements EmrService
         String accountId = request.getAccountId();
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
 
-        // Get the namespace and ensure it exists.
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(request.getNamespace());
-
         // Get the EMR cluster definition and ensure it exists.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity =
-            emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(request.getNamespace(), request.getEmrClusterDefinitionName());
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper
+            .getEmrClusterDefinitionEntity(new EmrClusterDefinitionKey(request.getNamespace(), request.getEmrClusterDefinitionName()));
 
         List<String> groupIds = null;
-        String clusterName = emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), request.getEmrClusterName());
+        String clusterName = emrHelper
+            .buildEmrClusterName(emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(), request.getEmrClusterName());
         try
         {
             groupIds = emrDao.addEmrMasterSecurityGroups(emrHelper.getActiveEmrClusterId(request.getEmrClusterId(), clusterName, request.getAccountId()),
@@ -838,11 +827,11 @@ public class EmrServiceImpl implements EmrService
         catch (AmazonServiceException ex)
         {
             handleAmazonException(ex, "An Amazon exception occurred while adding EMR security groups: " +
-                herdStringHelper.buildStringWithDefaultDelimiter(request.getSecurityGroupIds()) +
-                " to cluster: " + clusterName);
+                herdStringHelper.buildStringWithDefaultDelimiter(request.getSecurityGroupIds()) + " to cluster: " + clusterName);
         }
 
-        return createEmrClusterMasterGroupFromRequest(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), request.getEmrClusterName(), groupIds);
+        return createEmrClusterMasterGroupFromRequest(emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
+            request.getEmrClusterName(), groupIds);
     }
 
     /**

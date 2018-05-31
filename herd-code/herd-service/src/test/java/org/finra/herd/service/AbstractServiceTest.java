@@ -554,6 +554,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String NO_RETENTION_TYPE = null;
 
+    public static final Boolean NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET = false;
+
     public static final Long NO_ROW_COUNT = null;
 
     public static final SearchIndexStatistics NO_SEARCH_INDEX_STATISTICS = null;
@@ -611,6 +613,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<String> PROCESS_DATE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-04", "2014-04-07", "2014-04-08");
 
     public static final Boolean RECORD_FLAG_SET = true;
+
+    public static final Boolean ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET = true;
 
     public static final String RELATIONAL_SCHEMA_NAME = "UT_RelationalSchemaName_" + RANDOM_SUFFIX;
 
