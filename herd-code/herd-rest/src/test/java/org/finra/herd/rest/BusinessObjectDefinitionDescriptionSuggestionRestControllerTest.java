@@ -15,10 +15,16 @@
  */
 package org.finra.herd.rest;
 
+import static org.finra.herd.service.impl.BusinessObjectDefinitionDescriptionSuggestionServiceImpl.CREATED_BY_USER_ID_FIELD;
+import static org.finra.herd.service.impl.BusinessObjectDefinitionDescriptionSuggestionServiceImpl.DESCRIPTION_SUGGESTION_FIELD;
+import static org.finra.herd.service.impl.BusinessObjectDefinitionDescriptionSuggestionServiceImpl.STATUS_FIELD;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import org.junit.Before;
@@ -31,6 +37,10 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestio
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.service.BusinessObjectDefinitionDescriptionSuggestionService;
@@ -64,7 +74,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
 
         // Create the business object definition description suggestion.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION);
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS);
 
         // Mock calls to external method.
         when(businessObjectDefinitionDescriptionSuggestionService.createBusinessObjectDefinitionDescriptionSuggestion(request))
@@ -90,7 +100,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
 
         // Create the business object definition description suggestion.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION);
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS);
 
         // Mock calls to external method.
         when(businessObjectDefinitionDescriptionSuggestionService.deleteBusinessObjectDefinitionDescriptionSuggestion(key))
@@ -147,7 +157,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
 
         // Create the business object definition description suggestion.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION);
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS);
 
         // Mock calls to external method.
         when(businessObjectDefinitionDescriptionSuggestionService.getBusinessObjectDefinitionDescriptionSuggestionByKey(key))
@@ -167,6 +177,50 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
     }
 
     @Test
+    public void testSearchBusinessObjectDefinitionDescriptionSuggestions()
+    {
+        // Create the business object definition description suggestion search request.
+        BusinessObjectDefinitionDescriptionSuggestionSearchKey businessObjectDefinitionDescriptionSuggestionSearchKey =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchKey(NAMESPACE, BDEF_NAME, BDEF_DESCRIPTION_SUGGESTION_STATUS);
+        BusinessObjectDefinitionDescriptionSuggestionSearchFilter businessObjectDefinitionDescriptionSuggestionSearchFilter =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchFilter(Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionSearchKey));
+        BusinessObjectDefinitionDescriptionSuggestionSearchRequest request =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchRequest(Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionSearchFilter));
+
+        // Create a business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey key = new BusinessObjectDefinitionDescriptionSuggestionKey(NAMESPACE, BDEF_NAME, USER_ID);
+
+        // Create the business object definition description suggestion.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS);
+
+        // Create the business object definition description suggestion search response.
+        BusinessObjectDefinitionDescriptionSuggestionSearchResponse businessObjectDefinitionDescriptionSuggestionSearchResponse =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchResponse(Lists.newArrayList(businessObjectDefinitionDescriptionSuggestion));
+
+        // Build the fields set
+        Set<String> fields = new HashSet<>();
+        fields.add(CREATED_BY_USER_ID_FIELD);
+        fields.add(DESCRIPTION_SUGGESTION_FIELD);
+        fields.add(STATUS_FIELD);
+
+        // Mock calls to external method.
+        when(businessObjectDefinitionDescriptionSuggestionService.searchBusinessObjectDefinitionDescriptionSuggestions(request, fields))
+            .thenReturn(businessObjectDefinitionDescriptionSuggestionSearchResponse);
+
+        // Search business object definition description suggestions.
+        BusinessObjectDefinitionDescriptionSuggestionSearchResponse response =
+            businessObjectDefinitionDescriptionSuggestionRestController.searchBusinessObjectDefinitionDescriptionSuggestions(fields, request);
+
+        // Verify the external calls.
+        verify(businessObjectDefinitionDescriptionSuggestionService).searchBusinessObjectDefinitionDescriptionSuggestions(request, fields);
+        verifyNoMoreInteractions(businessObjectDefinitionDescriptionSuggestionService);
+
+        // Validate the returned object.
+        assertEquals(businessObjectDefinitionDescriptionSuggestionSearchResponse, response);
+    }
+
+    @Test
     public void testUpdateBusinessObjectDefinitionDescriptionSuggestion()
     {
         // Create a business object definition description suggestion key.
@@ -178,7 +232,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
 
         // Create the business object definition description suggestion.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION);
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS);
 
         // Mock calls to external method.
         when(businessObjectDefinitionDescriptionSuggestionService.updateBusinessObjectDefinitionDescriptionSuggestion(key, request))

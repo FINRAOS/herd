@@ -15,6 +15,8 @@
  */
 package org.finra.herd.rest;
 
+import java.util.Set;
+
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -22,12 +24,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.dto.SecurityFunctions;
@@ -118,6 +123,25 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestController extends
     {
         return businessObjectDefinitionDescriptionSuggestionService
             .getBusinessObjectDefinitionDescriptionSuggestions(new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName));
+    }
+
+    /**
+     * Retrieve a list of business object definition description suggestions meeting the search criteria filters and fields request.
+     *
+     * @param request the search criteria needed to find a list of business object definition description suggestions
+     * @param fields the field options for the business object definition description suggestions search response.
+     * The valid field options are: status, descriptionSuggestion, createdByUserId
+     *
+     * @return the list of business object definition description suggestions
+     */
+    @RequestMapping(value = BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTIONS_URI_PREFIX + "/search", method = RequestMethod.POST, consumes = {
+        "application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTIONS_SEARCH_POST)
+    public BusinessObjectDefinitionDescriptionSuggestionSearchResponse searchBusinessObjectDefinitionDescriptionSuggestions(
+        @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields,
+        @RequestBody BusinessObjectDefinitionDescriptionSuggestionSearchRequest request)
+    {
+        return businessObjectDefinitionDescriptionSuggestionService.searchBusinessObjectDefinitionDescriptionSuggestions(request, fields);
     }
 
     /**

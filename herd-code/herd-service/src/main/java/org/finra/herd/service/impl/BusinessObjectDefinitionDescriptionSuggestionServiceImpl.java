@@ -15,6 +15,8 @@
  */
 package org.finra.herd.service.impl;
 
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,14 +29,18 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestio
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.service.BusinessObjectDefinitionDescriptionSuggestionService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDescriptionSuggestionDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionDescriptionSuggestionStatusDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 
 /**
@@ -44,6 +50,15 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements BusinessObjectDefinitionDescriptionSuggestionService
 {
+    // Constant to hold the created by user ID field option for the search response.
+    public final static String CREATED_BY_USER_ID_FIELD = "createdByUserId".toLowerCase();
+
+    // Constant to hold the description suggestion field option for the search response.
+    public final static String DESCRIPTION_SUGGESTION_FIELD = "descriptionSuggestion".toLowerCase();
+
+    // Constant to hold the status field option for the search response.
+    public final static String STATUS_FIELD = "status".toLowerCase();
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -55,6 +70,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
     @Autowired
     private BusinessObjectDefinitionDescriptionSuggestionDaoHelper businessObjectDefinitionDescriptionSuggestionDaoHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionDescriptionSuggestionStatusDaoHelper businessObjectDefinitionDescriptionSuggestionStatusDaoHelper;
 
     @Autowired
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
@@ -89,11 +107,14 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
         businessObjectDefinitionDescriptionSuggestionEntity.setUserId(key.getUserId());
         businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(request.getDescriptionSuggestion());
+        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusDaoHelper
+            .getBusinessObjectDefinitionDescriptionSuggestionStatusEntity(
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name()));
         final BusinessObjectDefinitionDescriptionSuggestionEntity createdBusinessObjectDefinitionDescriptionSuggestionEntity =
             businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
 
         return new BusinessObjectDefinitionDescriptionSuggestion(createdBusinessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            request.getDescriptionSuggestion());
+            request.getDescriptionSuggestion(), createdBusinessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode());
     }
 
     @Override
@@ -114,7 +135,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         businessObjectDefinitionDescriptionSuggestionDao.delete(businessObjectDefinitionDescriptionSuggestionEntity);
 
         return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion());
+            businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
+            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode());
     }
 
     @Override
@@ -134,7 +156,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
                 .getBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, key.getUserId());
 
         return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion());
+            businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
+            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode());
     }
 
     @Override
@@ -151,6 +174,14 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         // Return the business object definition description suggestion keys.
         return new BusinessObjectDefinitionDescriptionSuggestionKeys(businessObjectDefinitionDescriptionSuggestionDao
             .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(businessObjectDefinitionEntity));
+    }
+
+    @Override
+    public BusinessObjectDefinitionDescriptionSuggestionSearchResponse searchBusinessObjectDefinitionDescriptionSuggestions(
+        BusinessObjectDefinitionDescriptionSuggestionSearchRequest request, Set<String> fields)
+    {
+        // #TODO: implement this method
+        return null;
     }
 
     @Override
@@ -175,7 +206,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
 
         return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            request.getDescriptionSuggestion());
+            request.getDescriptionSuggestion(), businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode());
     }
 
     /**

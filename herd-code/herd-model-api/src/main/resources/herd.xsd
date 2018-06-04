@@ -1780,6 +1780,12 @@
                <xs:documentation>The description suggestion</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="status" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the business object definition description suggestion. One of the following values: PENDING, ACCEPTED
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -1813,6 +1819,102 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
+   </xs:complexType>
+
+
+   <xs:element name="businessObjectDefinitionDescriptionSuggestionSearchRequest" type="businessObjectDefinitionDescriptionSuggestionSearchRequest">
+      <xs:annotation>
+         <xs:documentation>A wrapper for a business object definition description suggestion search request. The request will accept only a single search
+            filter and a single search key
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionSearchRequest">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionDescriptionSuggestionSearchFilters" type="businessObjectDefinitionDescriptionSuggestionSearchFilters">
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionSearchFilters">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionDescriptionSuggestionSearchFilter" type="businessObjectDefinitionDescriptionSuggestionSearchFilter"
+                     minOccurs="1" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A business object definition description suggestion search filter</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionSearchFilter">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionDescriptionSuggestionSearchKeys" type="businessObjectDefinitionDescriptionSuggestionSearchKeys">
+            <xs:annotation>
+               <xs:documentation>A list of business object definition description suggestion search keys. Only a single search key is supported
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionSearchKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionDescriptionSuggestionSearchKey" type="businessObjectDefinitionDescriptionSuggestionSearchKey" minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A business object definition description suggestion search key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionSearchKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The namespace to which a business object definition description suggestion is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The name of the business object definition to which a business object definition description suggestion is related
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="status" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The status code of the business object definition description suggestion</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionDescriptionSuggestionSearchResponse" type="businessObjectDefinitionDescriptionSuggestionSearchResponse">
+      <xs:annotation>
+         <xs:documentation>A wrapper for business object definition description suggestion search response</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionSearchResponse">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionDescriptionSuggestions" type="businessObjectDefinitionDescriptionSuggestions">
+            <xs:annotation>
+               <xs:documentation>An list of business object definition description suggestions</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestions">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionDescriptionSuggestion" type="businessObjectDefinitionDescriptionSuggestion" minOccurs="0"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A wrapper for business object definition description suggestion information</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <!-- ***** File Type ***** -->
