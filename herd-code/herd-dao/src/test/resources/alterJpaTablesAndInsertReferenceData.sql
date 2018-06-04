@@ -101,3 +101,7 @@ insert into msg_type_cd_lk (msg_type_cd, creat_ts, creat_user_id, updt_ts, updt_
 -- Retention Type
 insert into rtntn_type_cd_lk(rtntn_type_cd) values ('PARTITION_VALUE');
 insert into rtntn_type_cd_lk(rtntn_type_cd) values ('BDATA_RETENTION_DATE');
+
+-- Business object definition description suggestion
+insert into bus_objct_dfntn_dscr_sgstn_stts_cd_lk(bus_objct_dfntn_dscr_sgstn_stts_cd) values ('PENDING');
+insert into bus_objct_dfntn_dscr_sgstn_stts_cd_lk(bus_objct_dfntn_dscr_sgstn_stts_cd) values ('ACCEPTED');

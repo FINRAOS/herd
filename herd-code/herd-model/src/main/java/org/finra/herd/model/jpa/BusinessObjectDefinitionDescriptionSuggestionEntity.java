@@ -61,6 +61,13 @@ public class BusinessObjectDefinitionDescriptionSuggestionEntity extends Auditab
     @Column(name = "dscr_sgstn_tx", nullable = false)
     private String descriptionSuggestion;
 
+    /**
+     * The business object definition description suggestion status column.
+     */
+    @ManyToOne
+    @JoinColumn(name = "bus_objct_dfntn_dscr_sgstn_stts_cd", referencedColumnName = "bus_objct_dfntn_dscr_sgstn_stts_cd", nullable = false)
+    private BusinessObjectDefinitionDescriptionSuggestionStatusEntity status;
+
     public Integer getId()
     {
         return id;
@@ -99,5 +106,15 @@ public class BusinessObjectDefinitionDescriptionSuggestionEntity extends Auditab
     public void setDescriptionSuggestion(String descriptionSuggestion)
     {
         this.descriptionSuggestion = descriptionSuggestion;
+    }
+
+    public BusinessObjectDefinitionDescriptionSuggestionStatusEntity getStatus()
+    {
+        return status;
+    }
+
+    public void setStatus(BusinessObjectDefinitionDescriptionSuggestionStatusEntity status)
+    {
+        this.status = status;
     }
 }

@@ -28,11 +28,13 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestio
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDescriptionSuggestionDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionDescriptionSuggestionStatusDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.impl.BusinessObjectDefinitionDescriptionSuggestionServiceImpl;
 
@@ -55,6 +57,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
 
     @Mock
     private BusinessObjectDefinitionDescriptionSuggestionDaoHelper businessObjectDefinitionDescriptionSuggestionDaoHelper;
+
+    @Mock
+    private BusinessObjectDefinitionDescriptionSuggestionStatusDaoHelper businessObjectDefinitionDescriptionSuggestionStatusDaoHelper;
 
     @Mock
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
@@ -85,16 +90,23 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         businessObjectDefinitionEntity.setNamespace(namespaceEntity);
         businessObjectDefinitionEntity.setName(businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
 
+        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
+            new BusinessObjectDefinitionDescriptionSuggestionStatusEntity();
+        businessObjectDefinitionDescriptionSuggestionStatusEntity
+            .setCode(BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name());
+
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
             new BusinessObjectDefinitionDescriptionSuggestionEntity();
         businessObjectDefinitionDescriptionSuggestionEntity.setId(ID);
         businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
         businessObjectDefinitionDescriptionSuggestionEntity.setUserId(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
         businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
+        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
 
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
             new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(),
-                businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION);
+                businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode());
 
         // Mock the call to external methods
         when(alternateKeyHelper.validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace()))
@@ -105,6 +117,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         when(alternateKeyHelper.validateStringParameter("user id", businessObjectDefinitionDescriptionSuggestionKey.getUserId()))
             .thenReturn(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
+        when(businessObjectDefinitionDescriptionSuggestionStatusDaoHelper.getBusinessObjectDefinitionDescriptionSuggestionStatusEntity(
+            BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name()))
+            .thenReturn(businessObjectDefinitionDescriptionSuggestionStatusEntity);
         when(businessObjectDefinitionDescriptionSuggestionDao
             .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity,
                 businessObjectDefinitionDescriptionSuggestionKey.getUserId())).thenReturn(null);
@@ -125,6 +140,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
             .validateStringParameter("business object definition name", businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
         verify(alternateKeyHelper).validateStringParameter("user id", businessObjectDefinitionDescriptionSuggestionKey.getUserId());
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        verify(businessObjectDefinitionDescriptionSuggestionStatusDaoHelper).getBusinessObjectDefinitionDescriptionSuggestionStatusEntity(
+            BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name());
         verify(businessObjectDefinitionDescriptionSuggestionDao)
             .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity,
                 businessObjectDefinitionDescriptionSuggestionKey.getUserId());
@@ -291,16 +308,23 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         businessObjectDefinitionEntity.setNamespace(namespaceEntity);
         businessObjectDefinitionEntity.setName(businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
 
+        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
+            new BusinessObjectDefinitionDescriptionSuggestionStatusEntity();
+        businessObjectDefinitionDescriptionSuggestionStatusEntity
+            .setCode(BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name());
+
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
             new BusinessObjectDefinitionDescriptionSuggestionEntity();
         businessObjectDefinitionDescriptionSuggestionEntity.setId(ID);
         businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
         businessObjectDefinitionDescriptionSuggestionEntity.setUserId(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
         businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
+        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
 
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
             new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(),
-                businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION);
+                businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode());
 
         // Mock the call to external methods
         when(alternateKeyHelper.validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace()))
@@ -368,16 +392,23 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         businessObjectDefinitionEntity.setNamespace(namespaceEntity);
         businessObjectDefinitionEntity.setName(businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
 
+        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
+            new BusinessObjectDefinitionDescriptionSuggestionStatusEntity();
+        businessObjectDefinitionDescriptionSuggestionStatusEntity
+            .setCode(BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name());
+
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
             new BusinessObjectDefinitionDescriptionSuggestionEntity();
         businessObjectDefinitionDescriptionSuggestionEntity.setId(ID);
         businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
         businessObjectDefinitionDescriptionSuggestionEntity.setUserId(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
         businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
+        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
 
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
             new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(),
-                businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION);
+                businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode());
 
         // Mock the call to external methods
         when(alternateKeyHelper.validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace()))
@@ -495,16 +526,23 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         businessObjectDefinitionEntity.setNamespace(namespaceEntity);
         businessObjectDefinitionEntity.setName(businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
 
+        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
+            new BusinessObjectDefinitionDescriptionSuggestionStatusEntity();
+        businessObjectDefinitionDescriptionSuggestionStatusEntity
+            .setCode(BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name());
+
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
             new BusinessObjectDefinitionDescriptionSuggestionEntity();
         businessObjectDefinitionDescriptionSuggestionEntity.setId(ID);
         businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
         businessObjectDefinitionDescriptionSuggestionEntity.setUserId(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
         businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
+        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
 
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
             new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(),
-                businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION);
+                businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode());
 
         // Mock the call to external methods
         when(alternateKeyHelper.validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace()))
