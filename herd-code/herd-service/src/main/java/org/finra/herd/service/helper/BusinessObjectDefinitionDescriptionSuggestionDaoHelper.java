@@ -15,12 +15,17 @@
  */
 package org.finra.herd.service.helper;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionDao;
+import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionStatusDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 
 /**
@@ -31,6 +36,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelper
 {
     @Autowired
     private BusinessObjectDefinitionDescriptionSuggestionDao businessObjectDefinitionDescriptionSuggestionDao;
+
+    @Autowired
+    private BusinessObjectDefinitionDescriptionSuggestionStatusDao businessObjectDefinitionDescriptionSuggestionStatusDao;
 
     /**
      * Gets a business object definition description suggestion entity on the key and makes sure that it exists.
@@ -55,5 +63,36 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelper
         }
 
         return businessObjectDefinitionDescriptionSuggestionEntity;
+    }
+
+
+    /**
+     * Gets a collection of business object definition description suggestions by business object definition entity and status.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity associated with the description suggestions
+     * @param status the status of the business object definition description suggestions
+     *
+     * @return the business object definition description suggestions for the specified business object definition and status
+     */
+    public List<BusinessObjectDefinitionDescriptionSuggestionEntity> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(
+        final BusinessObjectDefinitionEntity businessObjectDefinitionEntity, final String status)
+    {
+        // First get the status entity.
+        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
+            businessObjectDefinitionDescriptionSuggestionStatusDao.getBusinessObjectDefinitionDescriptionSuggestionStatusByCode(status);
+
+        // The list of business object definition description suggestions.
+        List<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntities =
+            businessObjectDefinitionDescriptionSuggestionDao
+                .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
+                    businessObjectDefinitionDescriptionSuggestionStatusEntity);
+
+        // If businessObjectDefinitionDescriptionSuggestionEntities is null, make it an empty list instead.
+        if (businessObjectDefinitionDescriptionSuggestionEntities == null)
+        {
+            businessObjectDefinitionDescriptionSuggestionEntities = Lists.newArrayList();
+        }
+
+        return businessObjectDefinitionDescriptionSuggestionEntities;
     }
 }

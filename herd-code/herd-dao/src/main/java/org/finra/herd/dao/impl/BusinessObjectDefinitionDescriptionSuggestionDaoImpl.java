@@ -31,6 +31,7 @@ import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionDao;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity_;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 
 @Repository
@@ -107,5 +108,37 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoImpl extends Abstra
         }
 
         return businessObjectDefinitionDescriptionSuggestionKeys;
+    }
+
+    @Override
+    public List<BusinessObjectDefinitionDescriptionSuggestionEntity> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDefinitionDescriptionSuggestionEntity> criteria =
+            builder.createQuery(BusinessObjectDefinitionDescriptionSuggestionEntity.class);
+
+        // The criteria root is the business object definition description suggestion.
+        Root<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntity =
+            criteria.from(BusinessObjectDefinitionDescriptionSuggestionEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder
+            .equal(businessObjectDefinitionDescriptionSuggestionEntity.get(BusinessObjectDefinitionDescriptionSuggestionEntity_.businessObjectDefinition),
+                businessObjectDefinitionEntity));
+
+        if (businessObjectDefinitionDescriptionSuggestionStatusEntity != null)
+        {
+            predicates.add(builder.equal(businessObjectDefinitionDescriptionSuggestionEntity.get(BusinessObjectDefinitionDescriptionSuggestionEntity_.status),
+                businessObjectDefinitionDescriptionSuggestionStatusEntity));
+        }
+
+        // Add the clauses for the query.
+        criteria.select(businessObjectDefinitionDescriptionSuggestionEntity).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
+
+        return entityManager.createQuery(criteria).getResultList();
     }
 }

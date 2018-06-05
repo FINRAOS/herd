@@ -74,7 +74,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
 
         // Create the business object definition description suggestion.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS);
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS, USER_ID);
 
         // Mock calls to external method.
         when(businessObjectDefinitionDescriptionSuggestionService.createBusinessObjectDefinitionDescriptionSuggestion(request))
@@ -100,7 +100,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
 
         // Create the business object definition description suggestion.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS);
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS, USER_ID);
 
         // Mock calls to external method.
         when(businessObjectDefinitionDescriptionSuggestionService.deleteBusinessObjectDefinitionDescriptionSuggestion(key))
@@ -157,7 +157,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
 
         // Create the business object definition description suggestion.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS);
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS, USER_ID);
 
         // Mock calls to external method.
         when(businessObjectDefinitionDescriptionSuggestionService.getBusinessObjectDefinitionDescriptionSuggestionByKey(key))
@@ -192,7 +192,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
 
         // Create the business object definition description suggestion.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS);
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS, USER_ID);
 
         // Create the business object definition description suggestion search response.
         BusinessObjectDefinitionDescriptionSuggestionSearchResponse businessObjectDefinitionDescriptionSuggestionSearchResponse =
@@ -232,7 +232,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
 
         // Create the business object definition description suggestion.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS);
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS, USER_ID);
 
         // Mock calls to external method.
         when(businessObjectDefinitionDescriptionSuggestionService.updateBusinessObjectDefinitionDescriptionSuggestion(key, request))
