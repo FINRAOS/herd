@@ -15,12 +15,19 @@
  */
 package org.finra.herd.service.helper;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionDao;
+import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionStatusDao;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 
 /**
@@ -30,7 +37,13 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 public class BusinessObjectDefinitionDescriptionSuggestionDaoHelper
 {
     @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
     private BusinessObjectDefinitionDescriptionSuggestionDao businessObjectDefinitionDescriptionSuggestionDao;
+
+    @Autowired
+    private BusinessObjectDefinitionDescriptionSuggestionStatusDao businessObjectDefinitionDescriptionSuggestionStatusDao;
 
     /**
      * Gets a business object definition description suggestion entity on the key and makes sure that it exists.
@@ -55,5 +68,57 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelper
         }
 
         return businessObjectDefinitionDescriptionSuggestionEntity;
+    }
+
+
+    /**
+     * Gets a collection of business object definition description suggestions by business object definition entity and status.
+     *
+     * @param businessObjectDefinitionKey the business object definition key associated with the description suggestions
+     * @param status the status of the business object definition description suggestions
+     *
+     * @return the business object definition description suggestions for the specified business object definition and status
+     */
+    public List<BusinessObjectDefinitionDescriptionSuggestionEntity> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(
+        final BusinessObjectDefinitionKey businessObjectDefinitionKey, final String status)
+    {
+        // Retrieve the business object definition and ensure it exists.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey);
+
+        // If the business object definition entity does not exist return an empty list.
+        if (businessObjectDefinitionEntity == null)
+        {
+            return Lists.newArrayList();
+        }
+
+        // First get the status entity.
+        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity = null;
+        if (status != null)
+        {
+            // Attempt to find the status entity associated with the status string.
+            businessObjectDefinitionDescriptionSuggestionStatusEntity =
+                businessObjectDefinitionDescriptionSuggestionStatusDao.getBusinessObjectDefinitionDescriptionSuggestionStatusByCode(status);
+
+            // If the status was not found in the status table return an empty list.
+            if (businessObjectDefinitionDescriptionSuggestionStatusEntity == null)
+            {
+                return Lists.newArrayList();
+            }
+        }
+
+        // The list of business object definition description suggestions.
+        List<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntities =
+            businessObjectDefinitionDescriptionSuggestionDao
+                .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
+                    businessObjectDefinitionDescriptionSuggestionStatusEntity);
+
+        // If business object definition description suggestion entities do not exist return an empty list.
+        if (businessObjectDefinitionDescriptionSuggestionEntities == null)
+        {
+            return Lists.newArrayList();
+        }
+
+        return businessObjectDefinitionDescriptionSuggestionEntities;
     }
 }

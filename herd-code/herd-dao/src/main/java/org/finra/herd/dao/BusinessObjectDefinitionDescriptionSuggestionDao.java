@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 
 public interface BusinessObjectDefinitionDescriptionSuggestionDao extends BaseJpaDao
@@ -43,4 +44,16 @@ public interface BusinessObjectDefinitionDescriptionSuggestionDao extends BaseJp
      */
     List<BusinessObjectDefinitionDescriptionSuggestionKey> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
+
+    /**
+     * Gets a collection of business object definition description suggestions by business object definition entity and status.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity associated with the description suggestions
+     * @param businessObjectDefinitionDescriptionSuggestionStatusEntity the status of the business object definition description suggestions
+     *
+     * @return the business object definition description suggestions for the specified business object definition and status
+     */
+    List<BusinessObjectDefinitionDescriptionSuggestionEntity> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity);
 }

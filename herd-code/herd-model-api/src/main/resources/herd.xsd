@@ -1775,15 +1775,20 @@
                <xs:documentation>The business object definition description suggestion key</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="descriptionSuggestion" type="xs:string">
+         <xs:element name="descriptionSuggestion" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The description suggestion</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="status" type="xs:string">
+         <xs:element name="status" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The status of the business object definition description suggestion. One of the following values: PENDING, ACCEPTED
                </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="createdByUserId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who created this business object definition description suggestion</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
