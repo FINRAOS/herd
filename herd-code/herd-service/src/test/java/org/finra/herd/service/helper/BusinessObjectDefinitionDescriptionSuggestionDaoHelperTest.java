@@ -18,9 +18,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionStatusDao;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -32,6 +34,9 @@ import org.finra.herd.service.AbstractServiceTest;
  */
 public class BusinessObjectDefinitionDescriptionSuggestionDaoHelperTest extends AbstractServiceTest
 {
+    @Mock
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
     @Mock
     private BusinessObjectDefinitionDescriptionSuggestionDao businessObjectDefinitionDescriptionSuggestionDao;
 
@@ -124,6 +129,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelperTest extends 
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
             .createBusinessObjectDefinitionEntity(namespaceEntity.getCode(), BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+
         BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
             businessObjectDefinitionDescriptionSuggestionStatusDaoTestHelper
                 .createBusinessObjectDefinitionDescriptionSuggestionStatusEntity(BDEF_DESCRIPTION_SUGGESTION_STATUS);
@@ -147,6 +154,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelperTest extends 
             Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionEntity, businessObjectDefinitionDescriptionSuggestionEntity2);
 
         // Setup mock interactions.
+        when(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
         when(businessObjectDefinitionDescriptionSuggestionStatusDao
             .getBusinessObjectDefinitionDescriptionSuggestionStatusByCode(BDEF_DESCRIPTION_SUGGESTION_STATUS))
             .thenReturn(businessObjectDefinitionDescriptionSuggestionStatusEntity);
@@ -156,7 +164,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelperTest extends 
 
         // Call method under test.
         List<BusinessObjectDefinitionDescriptionSuggestionEntity> result = businessObjectDefinitionDescriptionSuggestionDaoHelper
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionKey,
                 BDEF_DESCRIPTION_SUGGESTION_STATUS);
 
         // Validate results.
@@ -170,12 +178,74 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelperTest extends 
         }
 
         // Verify mocks interactions.
+        verify(businessObjectDefinitionDao).getBusinessObjectDefinitionByKey(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDescriptionSuggestionStatusDao)
             .getBusinessObjectDefinitionDescriptionSuggestionStatusByCode(BDEF_DESCRIPTION_SUGGESTION_STATUS);
         verify(businessObjectDefinitionDescriptionSuggestionDao)
             .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
                 businessObjectDefinitionDescriptionSuggestionStatusEntity);
-        verifyNoMoreInteractions(businessObjectDefinitionDescriptionSuggestionDao, businessObjectDefinitionDescriptionSuggestionStatusDao);
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionDescriptionSuggestionDao,
+            businessObjectDefinitionDescriptionSuggestionStatusDao);
+    }
+
+    @Test
+    public void testGetBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatusWithNullStatus()
+    {
+        // Create the relative entities.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(namespaceEntity.getCode(), BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+
+        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
+            businessObjectDefinitionDescriptionSuggestionStatusDaoTestHelper
+                .createBusinessObjectDefinitionDescriptionSuggestionStatusEntity(BDEF_DESCRIPTION_SUGGESTION_STATUS);
+
+        // Create new business object definition description suggestion entities.
+        BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
+            new BusinessObjectDefinitionDescriptionSuggestionEntity();
+        businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
+        businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
+        businessObjectDefinitionDescriptionSuggestionEntity.setUserId(USER_ID);
+        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
+
+        BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity2 =
+            new BusinessObjectDefinitionDescriptionSuggestionEntity();
+        businessObjectDefinitionDescriptionSuggestionEntity2.setBusinessObjectDefinition(businessObjectDefinitionEntity);
+        businessObjectDefinitionDescriptionSuggestionEntity2.setDescriptionSuggestion(DESCRIPTION_SUGGESTION_2);
+        businessObjectDefinitionDescriptionSuggestionEntity2.setUserId(USER_ID_2);
+        businessObjectDefinitionDescriptionSuggestionEntity2.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
+
+        List<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntities =
+            Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionEntity, businessObjectDefinitionDescriptionSuggestionEntity2);
+
+        // Setup mock interactions.
+        when(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
+        when(businessObjectDefinitionDescriptionSuggestionDao
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity, null))
+            .thenReturn(businessObjectDefinitionDescriptionSuggestionEntities);
+
+        // Call method under test.
+        List<BusinessObjectDefinitionDescriptionSuggestionEntity> result = businessObjectDefinitionDescriptionSuggestionDaoHelper
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionKey, null);
+
+        // Validate results.
+        assertThat("Result size does not equal businessObjectDefinitionDescriptionSuggestionEntities.", result.size(),
+            is(equalTo(businessObjectDefinitionDescriptionSuggestionEntities.size())));
+
+        for (int i = 0; i < result.size(); i++)
+        {
+            assertThat("Result is not equal businessObjectDefinitionDescriptionSuggestionEntity.", result.get(i),
+                is(equalTo(businessObjectDefinitionDescriptionSuggestionEntities.get(i))));
+        }
+
+        // Verify mocks interactions.
+        verify(businessObjectDefinitionDao).getBusinessObjectDefinitionByKey(businessObjectDefinitionKey);
+        verify(businessObjectDefinitionDescriptionSuggestionDao)
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity, null);
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionDescriptionSuggestionDao,
+            businessObjectDefinitionDescriptionSuggestionStatusDao);
     }
 
     @Test
@@ -186,11 +256,14 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelperTest extends 
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
             .createBusinessObjectDefinitionEntity(namespaceEntity.getCode(), BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+
         BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
             businessObjectDefinitionDescriptionSuggestionStatusDaoTestHelper
                 .createBusinessObjectDefinitionDescriptionSuggestionStatusEntity(BDEF_DESCRIPTION_SUGGESTION_STATUS);
 
         // Setup mock interactions.
+        when(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
         when(businessObjectDefinitionDescriptionSuggestionStatusDao
             .getBusinessObjectDefinitionDescriptionSuggestionStatusByCode(BDEF_DESCRIPTION_SUGGESTION_STATUS))
             .thenReturn(businessObjectDefinitionDescriptionSuggestionStatusEntity);
@@ -200,19 +273,19 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelperTest extends 
 
         // Call method under test.
         List<BusinessObjectDefinitionDescriptionSuggestionEntity> result = businessObjectDefinitionDescriptionSuggestionDaoHelper
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionKey,
                 BDEF_DESCRIPTION_SUGGESTION_STATUS);
 
         // Validate results.
-        assertThat("Result size does not equal zero.", result.size(),
-            is(equalTo(0)));
+        assertThat("Result size does not equal zero.", result.size(), is(equalTo(0)));
 
         // Verify mocks interactions.
+        verify(businessObjectDefinitionDao).getBusinessObjectDefinitionByKey(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDescriptionSuggestionStatusDao)
             .getBusinessObjectDefinitionDescriptionSuggestionStatusByCode(BDEF_DESCRIPTION_SUGGESTION_STATUS);
         verify(businessObjectDefinitionDescriptionSuggestionDao)
             .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
                 businessObjectDefinitionDescriptionSuggestionStatusEntity);
-        verifyNoMoreInteractions(businessObjectDefinitionDescriptionSuggestionDao, businessObjectDefinitionDescriptionSuggestionStatusDao);
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionDescriptionSuggestionDao, businessObjectDefinitionDescriptionSuggestionStatusDao);
     }
 }

@@ -568,20 +568,17 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         fields.add(DESCRIPTION_SUGGESTION_FIELD);
         fields.add(STATUS_FIELD);
 
-        List<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntities = Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionEntity);
+        List<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntities =
+            Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionEntity);
 
         // Mock the call to external methods
-        when(alternateKeyHelper.validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace()))
-            .thenReturn(NAMESPACE);
+        when(alternateKeyHelper.validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace())).thenReturn(NAMESPACE);
         when(alternateKeyHelper
             .validateStringParameter("business object definition name", businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName()))
             .thenReturn(BDEF_NAME);
-        when(alternateKeyHelper.validateStringParameter("status", businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode()))
-            .thenReturn(BDEF_DESCRIPTION_SUGGESTION_STATUS);
-        when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
-        when(businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
-                businessObjectDefinitionDescriptionSuggestionEntity.getStatus())).thenReturn(businessObjectDefinitionDescriptionSuggestionEntities);
+        when(businessObjectDefinitionDescriptionSuggestionDaoHelper
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionKey,
+                BDEF_DESCRIPTION_SUGGESTION_STATUS)).thenReturn(businessObjectDefinitionDescriptionSuggestionEntities);
 
         // Call the method under test
         BusinessObjectDefinitionDescriptionSuggestionSearchResponse result =
@@ -595,10 +592,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         verify(alternateKeyHelper).validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace());
         verify(alternateKeyHelper)
             .validateStringParameter("business object definition name", businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
-        verify(alternateKeyHelper).validateStringParameter("status", businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode());
-        verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
-        verify(businessObjectDefinitionDescriptionSuggestionDao).getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
-            businessObjectDefinitionDescriptionSuggestionEntity.getStatus());
+        verify(businessObjectDefinitionDescriptionSuggestionDaoHelper)
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionKey,
+                BDEF_DESCRIPTION_SUGGESTION_STATUS);
         verifyNoMoreInteractionsHelper();
     }
 

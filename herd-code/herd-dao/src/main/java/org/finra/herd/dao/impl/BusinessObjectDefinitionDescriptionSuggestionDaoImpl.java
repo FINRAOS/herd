@@ -139,6 +139,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoImpl extends Abstra
         // Add the clauses for the query.
         criteria.select(businessObjectDefinitionDescriptionSuggestionEntity).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
 
+        // Order by business object definition description suggestion id descending.  This will list the newest created description suggestions first.
+        criteria.orderBy(builder.desc(businessObjectDefinitionDescriptionSuggestionEntity.get(BusinessObjectDefinitionDescriptionSuggestionEntity_.id)));
+
         return entityManager.createQuery(criteria).getResultList();
     }
 }

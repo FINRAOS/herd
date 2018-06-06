@@ -222,20 +222,21 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
         // Validate results.
         assertEquals("Result size not equal to one.", results.size(), 2);
 
+        // The most recently created description suggestion should be listed first.
         assertEquals(NAMESPACE, results.get(0).getBusinessObjectDefinition().getNamespace().getCode());
         assertEquals(BDEF_NAME, results.get(0).getBusinessObjectDefinition().getName());
-        assertEquals(USER_ID, results.get(0).getUserId());
-        assertEquals(DESCRIPTION_SUGGESTION, results.get(0).getDescriptionSuggestion());
-        assertEquals(businessObjectDefinitionDescriptionSuggestionStatusEntity, results.get(0).getStatus());
-        assertEquals(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(), results.get(0).getCreatedBy());
-        assertEquals(businessObjectDefinitionDescriptionSuggestionEntity.getId(), results.get(0).getId());
+        assertEquals(USER_ID_2, results.get(0).getUserId());
+        assertEquals(DESCRIPTION_SUGGESTION_2, results.get(0).getDescriptionSuggestion());
+        assertEquals(businessObjectDefinitionDescriptionSuggestionStatusEntity2, results.get(0).getStatus());
+        assertEquals(businessObjectDefinitionDescriptionSuggestionEntity2.getCreatedBy(), results.get(0).getCreatedBy());
+        assertEquals(businessObjectDefinitionDescriptionSuggestionEntity2.getId(), results.get(0).getId());
 
         assertEquals(NAMESPACE, results.get(1).getBusinessObjectDefinition().getNamespace().getCode());
         assertEquals(BDEF_NAME, results.get(1).getBusinessObjectDefinition().getName());
-        assertEquals(USER_ID_2, results.get(1).getUserId());
-        assertEquals(DESCRIPTION_SUGGESTION_2, results.get(1).getDescriptionSuggestion());
-        assertEquals(businessObjectDefinitionDescriptionSuggestionStatusEntity2, results.get(1).getStatus());
-        assertEquals(businessObjectDefinitionDescriptionSuggestionEntity2.getCreatedBy(), results.get(1).getCreatedBy());
-        assertEquals(businessObjectDefinitionDescriptionSuggestionEntity2.getId(), results.get(1).getId());
+        assertEquals(USER_ID, results.get(1).getUserId());
+        assertEquals(DESCRIPTION_SUGGESTION, results.get(1).getDescriptionSuggestion());
+        assertEquals(businessObjectDefinitionDescriptionSuggestionStatusEntity, results.get(1).getStatus());
+        assertEquals(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(), results.get(1).getCreatedBy());
+        assertEquals(businessObjectDefinitionDescriptionSuggestionEntity.getId(), results.get(1).getId());
     }
 }

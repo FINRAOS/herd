@@ -21,6 +21,7 @@ import java.util.Set;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +30,6 @@ import org.springframework.util.Assert;
 import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
@@ -217,23 +217,10 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
             request.getBusinessObjectDefinitionDescriptionSuggestionSearchFilters().get(0).getBusinessObjectDefinitionDescriptionSuggestionSearchKeys().get(0)
                 .getStatus();
 
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity;
-
-        // Retrieve the business object definition and ensure it exists.
-        try
-        {
-            businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
-        }
-        catch (ObjectNotFoundException objectNotFoundException)
-        {
-            // If the business object definition is not found then return an empty list in the response
-            return new BusinessObjectDefinitionDescriptionSuggestionSearchResponse(Lists.newArrayList());
-        }
-
         // The list of business object definition description suggestions
         List<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntities =
             businessObjectDefinitionDescriptionSuggestionDaoHelper
-                .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity, status);
+                .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionKey, status);
 
         // Populate the business object definition description suggestions list.
         List<BusinessObjectDefinitionDescriptionSuggestion> businessObjectDefinitionDescriptionSuggestions = Lists.newArrayList();
@@ -376,9 +363,12 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         businessObjectDefinitionDescriptionSuggestionSearchKey.setBusinessObjectDefinitionName(alternateKeyHelper
             .validateStringParameter("business object definition name",
                 businessObjectDefinitionDescriptionSuggestionSearchKey.getBusinessObjectDefinitionName()));
-        businessObjectDefinitionDescriptionSuggestionSearchKey
-            .setStatus(alternateKeyHelper.validateStringParameter("status", businessObjectDefinitionDescriptionSuggestionSearchKey.getStatus()));
 
+        // If there is a status string, then trim it.
+        if (StringUtils.isNotEmpty(businessObjectDefinitionDescriptionSuggestionSearchKey.getStatus()))
+        {
+            businessObjectDefinitionDescriptionSuggestionSearchKey.setStatus(businessObjectDefinitionDescriptionSuggestionSearchKey.getStatus().trim());
+        }
     }
 
     /**
