@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
@@ -60,6 +61,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 {
     // Constant to hold the created by user ID field option for the search response.
     public final static String CREATED_BY_USER_ID_FIELD = "createdByUserId".toLowerCase();
+
+    // Constant to hold the created on field option for the search response.
+    public final static String CREATED_ON_FIELD = "createdOn".toLowerCase();
 
     // Constant to hold the description suggestion field option for the search response.
     public final static String DESCRIPTION_SUGGESTION_FIELD = "descriptionSuggestion".toLowerCase();
@@ -123,7 +127,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
         return new BusinessObjectDefinitionDescriptionSuggestion(createdBusinessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
             request.getDescriptionSuggestion(), createdBusinessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(),
-            businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy());
+            createdBusinessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(createdBusinessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
     }
 
     @Override
@@ -145,7 +150,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
         return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
             businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
-            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(), businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy());
+            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(), businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
     }
 
     @Override
@@ -166,7 +172,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
         return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
             businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
-            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(), businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy());
+            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(), businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
     }
 
     @Override
@@ -193,7 +200,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
     @Override
     public Set<String> getValidSearchResponseFields()
     {
-        return ImmutableSet.of(CREATED_BY_USER_ID_FIELD, DESCRIPTION_SUGGESTION_FIELD, STATUS_FIELD);
+        return ImmutableSet.of(CREATED_BY_USER_ID_FIELD, CREATED_ON_FIELD, DESCRIPTION_SUGGESTION_FIELD, STATUS_FIELD);
     }
 
     @Override
@@ -255,7 +262,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
         return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
             request.getDescriptionSuggestion(), businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(),
-            businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy());
+            businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
     }
 
     /**
@@ -278,6 +286,12 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         if (fields.contains(CREATED_BY_USER_ID_FIELD))
         {
             businessObjectDefinitionDescriptionSuggestion.setCreatedByUserId(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy());
+        }
+
+        if (fields.contains(CREATED_ON_FIELD))
+        {
+            businessObjectDefinitionDescriptionSuggestion
+                .setCreatedOn(HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
         }
 
         if (fields.contains(DESCRIPTION_SUGGESTION_FIELD))
