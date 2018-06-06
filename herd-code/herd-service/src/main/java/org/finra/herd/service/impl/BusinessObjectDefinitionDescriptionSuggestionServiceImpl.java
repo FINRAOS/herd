@@ -102,7 +102,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
         // Validate that the business object definition description suggestion does not exist.
         if (businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity, key.getUserId()) != null)
+            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(businessObjectDefinitionEntity, key.getUserId()) != null)
         {
             throw new AlreadyExistsException(String.format("A business object definition description suggestion already exists with the parameters " +
                     "{namespace=\"%s\", businessObjectDefinitionName=\"%s\", userId=\"%s\"}.", key.getNamespace(), key.getBusinessObjectDefinitionName(),
@@ -182,7 +182,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
         // Return the business object definition description suggestion keys.
         return new BusinessObjectDefinitionDescriptionSuggestionKeys(businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(businessObjectDefinitionEntity));
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinition(businessObjectDefinitionEntity));
     }
 
     /**
@@ -220,7 +220,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         // The list of business object definition description suggestions
         List<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntities =
             businessObjectDefinitionDescriptionSuggestionDaoHelper
-                .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionKey, status);
+                .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionAndStatus(businessObjectDefinitionKey, status);
 
         // Populate the business object definition description suggestions list.
         List<BusinessObjectDefinitionDescriptionSuggestion> businessObjectDefinitionDescriptionSuggestions = Lists.newArrayList();

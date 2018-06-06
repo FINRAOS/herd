@@ -58,7 +58,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelper
     {
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
             businessObjectDefinitionDescriptionSuggestionDao
-                .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity, userId);
+                .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(businessObjectDefinitionEntity, userId);
 
         if (businessObjectDefinitionDescriptionSuggestionEntity == null)
         {
@@ -72,14 +72,14 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelper
 
 
     /**
-     * Gets a collection of business object definition description suggestions by business object definition entity and status.
+     * Gets a collection of business object definition description suggestions by business object definition and status.
      *
      * @param businessObjectDefinitionKey the business object definition key associated with the description suggestions
      * @param status the status of the business object definition description suggestions
      *
      * @return the business object definition description suggestions for the specified business object definition and status
      */
-    public List<BusinessObjectDefinitionDescriptionSuggestionEntity> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(
+    public List<BusinessObjectDefinitionDescriptionSuggestionEntity> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionAndStatus(
         final BusinessObjectDefinitionKey businessObjectDefinitionKey, final String status)
     {
         // Retrieve the business object definition and ensure it exists.
@@ -110,7 +110,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelper
         // The list of business object definition description suggestions.
         List<BusinessObjectDefinitionDescriptionSuggestionEntity> businessObjectDefinitionDescriptionSuggestionEntities =
             businessObjectDefinitionDescriptionSuggestionDao
-                .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
+                .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionAndStatus(businessObjectDefinitionEntity,
                     businessObjectDefinitionDescriptionSuggestionStatusEntity);
 
         // If business object definition description suggestion entities do not exist return an empty list.

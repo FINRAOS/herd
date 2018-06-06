@@ -130,7 +130,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
             BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name()))
             .thenReturn(businessObjectDefinitionDescriptionSuggestionStatusEntity);
         when(businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity,
+            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(businessObjectDefinitionEntity,
                 businessObjectDefinitionDescriptionSuggestionKey.getUserId())).thenReturn(null);
         when(businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(any(BusinessObjectDefinitionDescriptionSuggestionEntity.class)))
             .thenReturn(businessObjectDefinitionDescriptionSuggestionEntity);
@@ -152,7 +152,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         verify(businessObjectDefinitionDescriptionSuggestionStatusDaoHelper).getBusinessObjectDefinitionDescriptionSuggestionStatusEntity(
             BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name());
         verify(businessObjectDefinitionDescriptionSuggestionDao)
-            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity,
+            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(businessObjectDefinitionEntity,
                 businessObjectDefinitionDescriptionSuggestionKey.getUserId());
         verify(businessObjectDefinitionDescriptionSuggestionDao).saveAndRefresh(any(BusinessObjectDefinitionDescriptionSuggestionEntity.class));
         verifyNoMoreInteractionsHelper();
@@ -192,7 +192,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
             .thenReturn(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
         when(businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity,
+            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(businessObjectDefinitionEntity,
                 businessObjectDefinitionDescriptionSuggestionKey.getUserId())).thenReturn(businessObjectDefinitionDescriptionSuggestionEntity);
 
         try
@@ -214,7 +214,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         // Verify the calls to external methods
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDescriptionSuggestionDao)
-            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity,
+            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(businessObjectDefinitionEntity,
                 businessObjectDefinitionDescriptionSuggestionKey.getUserId());
         verify(alternateKeyHelper).validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace());
         verify(alternateKeyHelper)
@@ -493,7 +493,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         // Mock the call to external methods
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
         when(businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(businessObjectDefinitionEntity))
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinition(businessObjectDefinitionEntity))
             .thenReturn(businessObjectDefinitionDescriptionSuggestionKeyList);
 
         // Call the method under test
@@ -514,7 +514,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         verify(businessObjectDefinitionHelper).validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDescriptionSuggestionDao)
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(businessObjectDefinitionEntity);
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinition(businessObjectDefinitionEntity);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -577,7 +577,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
             .validateStringParameter("business object definition name", businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName()))
             .thenReturn(BDEF_NAME);
         when(businessObjectDefinitionDescriptionSuggestionDaoHelper
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionKey,
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionAndStatus(businessObjectDefinitionKey,
                 BDEF_DESCRIPTION_SUGGESTION_STATUS)).thenReturn(businessObjectDefinitionDescriptionSuggestionEntities);
 
         // Call the method under test
@@ -593,8 +593,129 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         verify(alternateKeyHelper)
             .validateStringParameter("business object definition name", businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
         verify(businessObjectDefinitionDescriptionSuggestionDaoHelper)
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionKey,
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionAndStatus(businessObjectDefinitionKey,
                 BDEF_DESCRIPTION_SUGGESTION_STATUS);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionDescriptionSuggestionsWithNullSearchRequest()
+    {
+        try
+        {
+            // Call the method under test
+            businessObjectDefinitionDescriptionSuggestionService.searchBusinessObjectDefinitionDescriptionSuggestions(null, new HashSet<>());
+            fail();
+        }
+        catch (IllegalArgumentException illegalArgumentException)
+        {
+            // Validate result
+            assertThat("Exception message is not correct.", illegalArgumentException.getMessage(),
+                is(equalTo("A business object definition description suggestion search request must be specified.")));
+        }
+
+        // Verify the calls to external methods
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionDescriptionSuggestionsWithWrongNumberOfSearchFilters()
+    {
+        // Zero search filters
+        try
+        {
+            // Call the method under test
+            businessObjectDefinitionDescriptionSuggestionService
+                .searchBusinessObjectDefinitionDescriptionSuggestions(new BusinessObjectDefinitionDescriptionSuggestionSearchRequest(Lists.newArrayList()),
+                    new HashSet<>());
+            fail();
+        }
+        catch (IllegalArgumentException illegalArgumentException)
+        {
+            // Validate result
+            assertThat("Exception message is not correct.", illegalArgumentException.getMessage(),
+                is(equalTo("Exactly one business object definition description suggestion search filter must be specified.")));
+        }
+
+        // Two search filters
+        BusinessObjectDefinitionDescriptionSuggestionSearchFilter businessObjectDefinitionDescriptionSuggestionSearchFilter1 =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchFilter(Lists.newArrayList());
+        BusinessObjectDefinitionDescriptionSuggestionSearchFilter businessObjectDefinitionDescriptionSuggestionSearchFilter2 =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchFilter(Lists.newArrayList());
+        BusinessObjectDefinitionDescriptionSuggestionSearchRequest request = new BusinessObjectDefinitionDescriptionSuggestionSearchRequest(
+            Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionSearchFilter1, businessObjectDefinitionDescriptionSuggestionSearchFilter2));
+
+        try
+        {
+            // Call the method under test
+            businessObjectDefinitionDescriptionSuggestionService.searchBusinessObjectDefinitionDescriptionSuggestions(request, new HashSet<>());
+            fail();
+        }
+        catch (IllegalArgumentException illegalArgumentException)
+        {
+            // Validate result
+            assertThat("Exception message is not correct.", illegalArgumentException.getMessage(),
+                is(equalTo("Exactly one business object definition description suggestion search filter must be specified.")));
+        }
+
+        // Verify the calls to external methods
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionDescriptionSuggestionsWithZeroSearchKeys()
+    {
+        // Zero search keys
+        BusinessObjectDefinitionDescriptionSuggestionSearchFilter businessObjectDefinitionDescriptionSuggestionSearchFilter =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchFilter(Lists.newArrayList());
+        BusinessObjectDefinitionDescriptionSuggestionSearchRequest request =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchRequest(Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionSearchFilter));
+
+        try
+        {
+            // Call the method under test
+            businessObjectDefinitionDescriptionSuggestionService.searchBusinessObjectDefinitionDescriptionSuggestions(request, new HashSet<>());
+            fail();
+        }
+        catch (IllegalArgumentException illegalArgumentException)
+        {
+            // Validate result
+            assertThat("Exception message is not correct.", illegalArgumentException.getMessage(),
+                is(equalTo("Exactly one business object definition description suggestion search key must be specified.")));
+        }
+
+        // Verify the calls to external methods
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionDescriptionSuggestionsWithTwoSearchKeys()
+    {
+        // Two search keys
+        BusinessObjectDefinitionDescriptionSuggestionSearchKey businessObjectDefinitionDescriptionSuggestionSearchKey1 =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchKey(NAMESPACE, BDEF_NAME, BDEF_DESCRIPTION_SUGGESTION_STATUS);
+        BusinessObjectDefinitionDescriptionSuggestionSearchKey businessObjectDefinitionDescriptionSuggestionSearchKey2 =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchKey(NAMESPACE_2, BDEF_NAME_2, BDEF_DESCRIPTION_SUGGESTION_STATUS_2);
+        BusinessObjectDefinitionDescriptionSuggestionSearchFilter businessObjectDefinitionDescriptionSuggestionSearchFilter =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchFilter(
+                Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionSearchKey1, businessObjectDefinitionDescriptionSuggestionSearchKey2));
+        BusinessObjectDefinitionDescriptionSuggestionSearchRequest request =
+            new BusinessObjectDefinitionDescriptionSuggestionSearchRequest(Lists.newArrayList(businessObjectDefinitionDescriptionSuggestionSearchFilter));
+
+        try
+        {
+            // Call the method under test
+            businessObjectDefinitionDescriptionSuggestionService.searchBusinessObjectDefinitionDescriptionSuggestions(request, new HashSet<>());
+            fail();
+        }
+        catch (IllegalArgumentException illegalArgumentException)
+        {
+            // Validate result
+            assertThat("Exception message is not correct.", illegalArgumentException.getMessage(),
+                is(equalTo("Exactly one business object definition description suggestion search key must be specified.")));
+        }
+
+        // Verify the calls to external methods
         verifyNoMoreInteractionsHelper();
     }
 

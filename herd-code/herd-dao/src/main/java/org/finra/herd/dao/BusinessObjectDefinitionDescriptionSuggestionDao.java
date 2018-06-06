@@ -25,35 +25,35 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 public interface BusinessObjectDefinitionDescriptionSuggestionDao extends BaseJpaDao
 {
     /**
-     * Gets a business object definition description suggestion by business object definition entity and user id.
+     * Gets a business object definition description suggestion by business object definition and user id.
      *
      * @param businessObjectDefinitionEntity the business object definition entity associated with the description suggestion
      * @param userId the user id associated with the description suggestion
      *
      * @return the business object definition description suggestion for the specified business object definition and user id.
      */
-    BusinessObjectDefinitionDescriptionSuggestionEntity getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(
+    BusinessObjectDefinitionDescriptionSuggestionEntity getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String userId);
 
     /**
-     * Gets a collection of business object definition description suggestion keys by business object definition entity.
+     * Gets a collection of business object definition description suggestion keys by business object definition.
      *
      * @param businessObjectDefinitionEntity the business object definition entity associated with the description suggestions
      *
      * @return the business object definition description suggestions for the specified business object definition
      */
-    List<BusinessObjectDefinitionDescriptionSuggestionKey> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(
+    List<BusinessObjectDefinitionDescriptionSuggestionKey> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinition(
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
 
     /**
-     * Gets a collection of business object definition description suggestions by business object definition entity and status.
+     * Gets a collection of business object definition description suggestions by business object definition and status.
      *
      * @param businessObjectDefinitionEntity the business object definition entity associated with the description suggestions
      * @param businessObjectDefinitionDescriptionSuggestionStatusEntity the status of the business object definition description suggestions
      *
      * @return the business object definition description suggestions for the specified business object definition and status
      */
-    List<BusinessObjectDefinitionDescriptionSuggestionEntity> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(
+    List<BusinessObjectDefinitionDescriptionSuggestionEntity> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionAndStatus(
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity);
 }
