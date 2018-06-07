@@ -130,7 +130,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestController extends
      *
      * @param request the search criteria needed to find a list of business object definition description suggestions
      * @param fields the field options for the business object definition description suggestions search response.
-     * The valid field options are: status, descriptionSuggestion, createdByUserId
+     * The valid field options are: status, descriptionSuggestion, createdByUserId, createdOn
      *
      * @return the list of business object definition description suggestions
      */

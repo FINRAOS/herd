@@ -38,7 +38,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 public class BusinessObjectDefinitionDescriptionSuggestionDaoImpl extends AbstractHerdDao implements BusinessObjectDefinitionDescriptionSuggestionDao
 {
     @Override
-    public BusinessObjectDefinitionDescriptionSuggestionEntity getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(
+    public BusinessObjectDefinitionDescriptionSuggestionEntity getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String userId)
     {
         // Create the criteria builder and the criteria.
@@ -72,7 +72,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoImpl extends Abstra
     }
 
     @Override
-    public List<BusinessObjectDefinitionDescriptionSuggestionKey> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(
+    public List<BusinessObjectDefinitionDescriptionSuggestionKey> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinition(
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
         // Create the criteria builder and the criteria.
@@ -111,7 +111,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoImpl extends Abstra
     }
 
     @Override
-    public List<BusinessObjectDefinitionDescriptionSuggestionEntity> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(
+    public List<BusinessObjectDefinitionDescriptionSuggestionEntity> getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionAndStatus(
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity)
     {

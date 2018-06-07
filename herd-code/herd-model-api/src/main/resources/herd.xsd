@@ -1791,6 +1791,11 @@
                <xs:documentation>The User ID of the user who created this business object definition description suggestion</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="createdOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp when this business object definition description suggestion was created on</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 

@@ -54,21 +54,21 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
 
         // Get a business object definition description suggestion and validate the result.
         assertEquals(businessObjectDefinitionDescriptionSuggestionEntity, businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity, USER_ID));
+            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(businessObjectDefinitionEntity, USER_ID));
 
         // Test case insensitivity of user id.
         assertEquals(businessObjectDefinitionDescriptionSuggestionEntity, businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity, USER_ID.toUpperCase()));
+            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(businessObjectDefinitionEntity, USER_ID.toUpperCase()));
 
         // Try to retrieve a business object definition description suggestion using invalid input parameters.
         assertNull(businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(businessObjectDefinitionEntity, "I_DO_NOT_EXIST"));
+            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(businessObjectDefinitionEntity, "I_DO_NOT_EXIST"));
         assertNull(businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId(null, USER_ID));
+            .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(null, USER_ID));
     }
 
     @Test
-    public void testGetBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndUserId()
+    public void testGetBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId()
     {
         // Create and persist the relative database entities.
         NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
@@ -112,7 +112,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
 
         // Get business object definition description suggestion keys and validate the result.
         List<BusinessObjectDefinitionDescriptionSuggestionKey> results = businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(businessObjectDefinitionEntity);
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinition(businessObjectDefinitionEntity);
 
         // Validate results.
         for (int i = 0; i < results.size(); i++)
@@ -125,11 +125,11 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
 
         // Try to retrieve business object definition description suggestion keys using invalid input parameters.
         assertEquals(
-            businessObjectDefinitionDescriptionSuggestionDao.getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntity(null).size(), 0);
+            businessObjectDefinitionDescriptionSuggestionDao.getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinition(null).size(), 0);
     }
 
     @Test
-    public void testGetBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndStatus()
+    public void testGetBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndStatus()
     {
         // Create and persist the relative database entities.
         NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
@@ -163,7 +163,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
 
         // Get business object definition description suggestion keys and validate the result.
         List<BusinessObjectDefinitionDescriptionSuggestionEntity> results = businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionAndStatus(businessObjectDefinitionEntity,
                 businessObjectDefinitionDescriptionSuggestionStatusEntity);
 
         // Validate results.
@@ -178,11 +178,11 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
 
         // Try to retrieve business object definition description suggestions using invalid input parameters.
         assertEquals(businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(null, null).size(), 0);
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionAndStatus(null, null).size(), 0);
     }
 
     @Test
-    public void testGetBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionEntityAndStatusWithNullStatus()
+    public void testGetBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndStatusWithNullStatus()
     {
         // Create and persist the relative database entities.
         NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
@@ -216,7 +216,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
 
         // Get business object definition description suggestion keys and validate the result.
         List<BusinessObjectDefinitionDescriptionSuggestionEntity> results = businessObjectDefinitionDescriptionSuggestionDao
-            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionEntityAndStatus(businessObjectDefinitionEntity,
+            .getBusinessObjectDefinitionDescriptionSuggestionsByBusinessObjectDefinitionAndStatus(businessObjectDefinitionEntity,
                 null);
 
         // Validate results.
