@@ -45,12 +45,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
 
         // Create a new business object definition description suggestion entity and persist the new entity.
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
-            new BusinessObjectDefinitionDescriptionSuggestionEntity();
-        businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
-        businessObjectDefinitionDescriptionSuggestionEntity.setUserId(USER_ID);
-        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
-        businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
+            businessObjectDefinitionDescriptionSuggestionDaoTestHelper
+                .createBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, DESCRIPTION_SUGGESTION, USER_ID,
+                    businessObjectDefinitionDescriptionSuggestionStatusEntity);
 
         // Get a business object definition description suggestion and validate the result.
         assertEquals(businessObjectDefinitionDescriptionSuggestionEntity, businessObjectDefinitionDescriptionSuggestionDao
@@ -75,7 +72,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
             .createBusinessObjectDefinitionEntity(namespaceEntity.getCode(), BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
-        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity1 =
+        BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
             businessObjectDefinitionDescriptionSuggestionStatusDaoTestHelper
                 .createBusinessObjectDefinitionDescriptionSuggestionStatusEntity(BDEF_DESCRIPTION_SUGGESTION_STATUS);
 
@@ -84,21 +81,13 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
                 .createBusinessObjectDefinitionDescriptionSuggestionStatusEntity(BDEF_DESCRIPTION_SUGGESTION_STATUS_2);
 
         // Create new business object definition description suggestion entities and persist the new entities.
-        BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
-            new BusinessObjectDefinitionDescriptionSuggestionEntity();
-        businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
-        businessObjectDefinitionDescriptionSuggestionEntity.setUserId(USER_ID);
-        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity1);
-        businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
+        businessObjectDefinitionDescriptionSuggestionDaoTestHelper
+            .createBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, DESCRIPTION_SUGGESTION, USER_ID,
+                businessObjectDefinitionDescriptionSuggestionStatusEntity);
 
-        BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity2 =
-            new BusinessObjectDefinitionDescriptionSuggestionEntity();
-        businessObjectDefinitionDescriptionSuggestionEntity2.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setDescriptionSuggestion(DESCRIPTION_SUGGESTION_2);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setUserId(USER_ID_2);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity2);
-        businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity2);
+        businessObjectDefinitionDescriptionSuggestionDaoTestHelper
+            .createBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, DESCRIPTION_SUGGESTION_2, USER_ID_2,
+                businessObjectDefinitionDescriptionSuggestionStatusEntity2);
 
         // Create business object definition description suggestion keys.
         BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
@@ -146,20 +135,13 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
 
         // Create new business object definition description suggestion entities and persist the new entities.
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
-            new BusinessObjectDefinitionDescriptionSuggestionEntity();
-        businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
-        businessObjectDefinitionDescriptionSuggestionEntity.setUserId(USER_ID);
-        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
-        businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
+            businessObjectDefinitionDescriptionSuggestionDaoTestHelper
+                .createBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, DESCRIPTION_SUGGESTION, USER_ID,
+                    businessObjectDefinitionDescriptionSuggestionStatusEntity);
 
-        BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity2 =
-            new BusinessObjectDefinitionDescriptionSuggestionEntity();
-        businessObjectDefinitionDescriptionSuggestionEntity2.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setDescriptionSuggestion(DESCRIPTION_SUGGESTION_2);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setUserId(USER_ID_2);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity2);
-        businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity2);
+        businessObjectDefinitionDescriptionSuggestionDaoTestHelper
+            .createBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, DESCRIPTION_SUGGESTION_2, USER_ID_2,
+                businessObjectDefinitionDescriptionSuggestionStatusEntity2);
 
         // Get business object definition description suggestion keys and validate the result.
         List<BusinessObjectDefinitionDescriptionSuggestionEntity> results = businessObjectDefinitionDescriptionSuggestionDao
@@ -199,20 +181,14 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoTest extends Abstra
 
         // Create new business object definition description suggestion entities and persist the new entities.
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
-            new BusinessObjectDefinitionDescriptionSuggestionEntity();
-        businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
-        businessObjectDefinitionDescriptionSuggestionEntity.setUserId(USER_ID);
-        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
-        businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
+            businessObjectDefinitionDescriptionSuggestionDaoTestHelper
+                .createBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, DESCRIPTION_SUGGESTION, USER_ID,
+                    businessObjectDefinitionDescriptionSuggestionStatusEntity);
 
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity2 =
-            new BusinessObjectDefinitionDescriptionSuggestionEntity();
-        businessObjectDefinitionDescriptionSuggestionEntity2.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setDescriptionSuggestion(DESCRIPTION_SUGGESTION_2);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setUserId(USER_ID_2);
-        businessObjectDefinitionDescriptionSuggestionEntity2.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity2);
-        businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity2);
+            businessObjectDefinitionDescriptionSuggestionDaoTestHelper
+                .createBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, DESCRIPTION_SUGGESTION_2, USER_ID_2,
+                    businessObjectDefinitionDescriptionSuggestionStatusEntity2);
 
         // Get business object definition description suggestion keys and validate the result.
         List<BusinessObjectDefinitionDescriptionSuggestionEntity> results = businessObjectDefinitionDescriptionSuggestionDao
