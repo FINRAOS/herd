@@ -18,6 +18,7 @@ package org.finra.herd.service.helper;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -94,7 +95,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionDaoHelper
 
         // First get the status entity.
         BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity = null;
-        if (status != null)
+        if (StringUtils.isNotBlank(status))
         {
             // Attempt to find the status entity associated with the status string.
             businessObjectDefinitionDescriptionSuggestionStatusEntity =
