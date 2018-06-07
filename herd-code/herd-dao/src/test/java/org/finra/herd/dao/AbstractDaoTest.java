@@ -1156,6 +1156,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected BusinessObjectDefinitionDescriptionSuggestionDao businessObjectDefinitionDescriptionSuggestionDao;
 
     @Autowired
+    protected BusinessObjectDefinitionDescriptionSuggestionDaoTestHelper businessObjectDefinitionDescriptionSuggestionDaoTestHelper;
+
+    @Autowired
     protected BusinessObjectDefinitionDescriptionSuggestionStatusDao businessObjectDefinitionDescriptionSuggestionStatusDao;
 
     @Autowired
