@@ -22,6 +22,7 @@ tags:
 - name: "File Type"
 - name: "Business Object Data Status"
 - name: "Namespace IAM Role Authorization"
+- name: "Business Object Data Attribute"
 - name: "Upload and Download"
 - name: "Storage Unit"
 - name: "Business Object Definition Description Suggestion"
@@ -50,7 +51,6 @@ tags:
 - name: "Attribute Value List"
 - name: "Custom DDL"
 - name: "Expected Partition Value"
-- name: "Business Object Data Attribute"
 paths:
   /allowedAttributeValues:
     post:
