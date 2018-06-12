@@ -18,6 +18,9 @@ package org.finra.herd.tools.retention.destroyer;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
@@ -49,8 +52,12 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
      * @throws IOException if an I/O error was encountered
      * @throws JAXBException if a JAXB error was encountered
      * @throws URISyntaxException if an URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
-    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey) throws IOException, JAXBException, URISyntaxException
+    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         String uriPath = HERD_APP_REST_URI_PREFIX + "/businessObjectData/destroy" + "/namespaces/" + businessObjectDataKey.getNamespace() +
             "/businessObjectDefinitionNames/" + businessObjectDataKey.getBusinessObjectDefinitionName() + "/businessObjectFormatUsages/" +
@@ -69,7 +76,8 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
 
         URI uri = uriBuilder.build();
 
-        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient client = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
             HttpPost request = new HttpPost(uri);
             request.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);

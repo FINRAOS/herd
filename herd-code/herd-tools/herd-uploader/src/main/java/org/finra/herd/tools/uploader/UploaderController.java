@@ -19,6 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -100,16 +103,19 @@ public class UploaderController extends DataBridgeController
      * @param maxRetryAttempts the maximum number of the business object data registration retry attempts
      * @param retryDelaySecs the delay in seconds between the business object data registration retry attempts
      *
-     * @throws InterruptedException if the upload thread was interrupted.
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws IOException if an I/O error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
+     * @throws InterruptedException if the upload thread was interrupted
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE",
         justification = "manifestReader.readJsonManifest will always return an UploaderInputManifestDto object.")
     public void performUpload(RegServerAccessParamsDto regServerAccessParamsDto, File manifestPath, S3FileTransferRequestParamsDto params,
         Boolean createNewVersion, Boolean force, Integer maxRetryAttempts, Integer retryDelaySecs)
-        throws InterruptedException, JAXBException, IOException, URISyntaxException
+        throws InterruptedException, JAXBException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         boolean cleanUpS3KeyPrefixOnFailure = false;
         BusinessObjectDataKey businessObjectDataKey = null;
@@ -243,12 +249,16 @@ public class UploaderController extends DataBridgeController
      * @param maxRetryAttempts Maximum number of retry attempts on error
      * @param retryDelaySecs Delay in seconds between retries
      *
-     * @throws IOException When a IO error occurs
-     * @throws JAXBException When JAXB serialization/deserialization error occurs
-     * @throws URISyntaxException When request URI is invalid
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     private void addStorageFilesWithRetry(BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest, S3FileTransferRequestParamsDto params,
-        String storageName, Integer maxRetryAttempts, Integer retryDelaySecs) throws IOException, JAXBException, URISyntaxException
+        String storageName, Integer maxRetryAttempts, Integer retryDelaySecs)
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         // Initialize a retry count to know the number of times we re-try calling the method.
         int retryCount = 0;
@@ -295,11 +305,15 @@ public class UploaderController extends DataBridgeController
      * @param manifest the uploader input manifest
      * @param force if set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version
      *
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws IOException if an I/O error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
-    private void checkLatestBusinessObjectDataVersion(UploaderInputManifestDto manifest, Boolean force) throws JAXBException, IOException, URISyntaxException
+    private void checkLatestBusinessObjectDataVersion(UploaderInputManifestDto manifest, Boolean force)
+        throws JAXBException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         // Retrieve all already registered versions for this business object data.
         BusinessObjectDataVersions businessObjectDataVersions = uploaderWebClient.getBusinessObjectDataVersions(
@@ -328,11 +342,11 @@ public class UploaderController extends DataBridgeController
                 else
                 {
                     // Fail the upload due to the status of the latest business object data version being UPLOADING.
-                    throw new IllegalArgumentException(String
-                        .format("Unable to register business object data because the latest business object data version is detected in UPLOADING state. " +
+                    throw new IllegalArgumentException(String.format(
+                        "Unable to register business object data because the latest business object data version is detected in UPLOADING state. " +
                             "Please use -force option to invalidate the latest business object version and allow upload to proceed. " +
                             "Business object data {%s}",
-                            businessObjectDataHelper.businessObjectDataKeyToString(latestBusinessObjectDataVersion.getBusinessObjectDataKey())));
+                        businessObjectDataHelper.businessObjectDataKeyToString(latestBusinessObjectDataVersion.getBusinessObjectDataKey())));
                 }
             }
         }

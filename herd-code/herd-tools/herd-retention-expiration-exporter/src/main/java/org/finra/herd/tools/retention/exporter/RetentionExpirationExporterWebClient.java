@@ -20,6 +20,9 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import javax.xml.bind.JAXBContext;
@@ -59,9 +62,12 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
      * @throws JAXBException if a JAXB error was encountered
      * @throws IOException if an I/O error was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     BusinessObjectDefinition getBusinessObjectDefinition(String namespace, String businessObjectDefinitionName)
-        throws IOException, JAXBException, URISyntaxException
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info("Retrieving business object definition information from the registration server...");
 
@@ -74,7 +80,8 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
 
         URI uri = uriBuilder.build();
 
-        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient client = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
             HttpGet request = new HttpGet(uri);
             request.addHeader("Accepts", DEFAULT_ACCEPT);
@@ -106,9 +113,12 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
      * @throws JAXBException if a JAXB error was encountered
      * @throws IOException if an I/O error was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest businessObjectDataSearchRequest, Integer pageNum)
-        throws IOException, JAXBException, URISyntaxException
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info("Sending business object data search request to the registration server...");
 
@@ -127,7 +137,8 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
         StringWriter stringWriter = new StringWriter();
         requestMarshaller.marshal(businessObjectDataSearchRequest, stringWriter);
 
-        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient client = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
             HttpPost request = new HttpPost(uri);
             request.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);
