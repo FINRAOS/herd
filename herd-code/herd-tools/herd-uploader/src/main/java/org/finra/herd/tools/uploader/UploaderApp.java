@@ -156,7 +156,8 @@ public class UploaderApp extends DataBridgeApp
         UploaderController controller = applicationContext.getBean(UploaderController.class);
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(regServerHost).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt)).build();
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt))
+                .withTrustSelfSignedCertificate(trustSelfSignedCertificate).withDisableHostnameVerification(disableHostnameVerification).build();
         controller.performUpload(regServerAccessParamsDto, argParser.getFileValue(manifestPathOpt), params, argParser.getBooleanValue(createNewVersionOpt),
             argParser.getBooleanValue(forceOpt), maxRetryAttempts, retryDelaySecs);
 

@@ -39,7 +39,6 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicStatusLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,12 +98,6 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
 
     @Autowired
     private XmlHelper xmlHelper;
-
-    @Override
-    public CloseableHttpClient createHttpClient()
-    {
-        return HttpClientBuilder.create().build();
-    }
 
     @Override
     public CloseableHttpResponse execute(CloseableHttpClient httpClient, HttpUriRequest request) throws IOException, JAXBException
@@ -390,8 +383,8 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
             String businessObjectFormatType = getGroup(matcher, "businessObjectFormatFileType");
             String businessObjectDefinitionName = getGroup(matcher, "businessObjectDefinitionName");
             String businessObjectFormatVersion = getGroup(matcher, "businessObjectFormatVersion");
-            s3KeyPrefixInformation
-                .setS3KeyPrefix(namespace.toLowerCase().replace('_', '-') + "/exchange-a/" + businessObjectFormatUsage.toLowerCase().replace('_', '-') + "/" +
+            s3KeyPrefixInformation.setS3KeyPrefix(
+                namespace.toLowerCase().replace('_', '-') + "/exchange-a/" + businessObjectFormatUsage.toLowerCase().replace('_', '-') + "/" +
                     businessObjectFormatType.toLowerCase().replace('_', '-') + "/" + businessObjectDefinitionName.toLowerCase().replace('_', '-') + "/frmt-v" +
                     businessObjectFormatVersion + "/data-v0/process-date=2014-01-31");
 

@@ -55,9 +55,79 @@ public class DownloaderAppTest extends AbstractDownloaderTest
         final String[] args =
             new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m",
                 manifestFile.getPath(), "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME,
-                "-w", WEB_SERVICE_HTTPS_PASSWORD, "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
+                "-w", WEB_SERVICE_HTTPS_PASSWORD, "-C", "true", "-d", "true", "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
 
         runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.SUCCESS);
+    }
+
+    @Test
+    public void testDownloaderAppHelpOptionSet() throws Exception
+    {
+        // Displaying help is a success condition.
+        runDataBridgeAndCheckReturnValue(downloaderApp, new String[] {"-h"}, null, DataBridgeApp.ReturnValue.SUCCESS);
+        runDataBridgeAndCheckReturnValue(downloaderApp, new String[] {"--help"}, null, DataBridgeApp.ReturnValue.SUCCESS);
+        runDataBridgeAndCheckReturnValue(downloaderApp, new String[] {"-h", "-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY}, null, DataBridgeApp.ReturnValue.SUCCESS);
+    }
+
+    @Test
+    public void testDownloaderAppInvalidArguments() throws Exception
+    {
+        // Run the uploader with no arguments which is invalid.
+        runDataBridgeAndCheckReturnValue(downloaderApp, new String[] {}, DownloaderApp.class, DataBridgeApp.ReturnValue.FAILURE);
+    }
+
+    @Test
+    public void testDownloaderAppInvalidBooleanValueForDisableHostnameVerificationOption() throws Exception
+    {
+        // Set the SSL argument value to an invalid boolean value.
+        final String[] args =
+            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m", STRING_VALUE,
+                "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME, "-w",
+                WEB_SERVICE_HTTPS_PASSWORD, "-C", "true", "-d", "INVALID_BOOLEAN_VALUE", "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
+
+        // We are expecting this to fail since SSL is enabled and password is not passed.
+        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.FAILURE);
+    }
+
+    @Test
+    public void testDownloaderAppInvalidBooleanValueForSslOption() throws Exception
+    {
+        // Set the SSL argument value to an invalid boolean value.
+        final String[] args =
+            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m", STRING_VALUE,
+                "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "INVALID_BOOLEAN_VALUE", "-u", WEB_SERVICE_HTTPS_USERNAME, "-w",
+                WEB_SERVICE_HTTPS_PASSWORD, "-C", "true", "-d", "true", "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
+
+        // We are expecting this to fail since SSL is enabled and password is not passed.
+        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.FAILURE);
+    }
+
+    @Test
+    public void testDownloaderAppInvalidBooleanValueForTrustSelfSignedCertificateOption() throws Exception
+    {
+        // Set the SSL argument value to an invalid boolean value.
+        final String[] args =
+            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m", STRING_VALUE,
+                "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME, "-w",
+                WEB_SERVICE_HTTPS_PASSWORD, "-C", "INVALID_BOOLEAN_VALUE", "-d", "true", "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
+
+        // We are expecting this to fail since SSL is enabled and password is not passed.
+        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.FAILURE);
+    }
+
+    @Test
+    public void testDownloaderAppInvalidS3Endpoint() throws Exception
+    {
+        // Create the downloader manifest file.
+        File manifestFile = createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), getTestDownloaderInputManifestDto());
+
+        final String[] args =
+            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", "INVALID_S3_ENDPOINT", "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m",
+                manifestFile.getPath(), "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME,
+                "-w", WEB_SERVICE_HTTPS_PASSWORD, "-C", "true", "-d", "true", "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
+
+        // We are expecting this to fail with a IllegalArgumentException when AwsHostNameUtils is trying to parse a region name.
+        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, new IllegalArgumentException());
     }
 
     @Test
@@ -70,35 +140,10 @@ public class DownloaderAppTest extends AbstractDownloaderTest
             new String[] {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
                 LOCAL_TEMP_PATH_OUTPUT.toString(), "--manifestPath", manifestFile.getPath(), "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
                 WEB_SERVICE_HTTPS_PORT.toString(), "--ssl", "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD,
-                "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString()};
+                "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true", "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort",
+                HTTP_PROXY_PORT.toString()};
 
         runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.SUCCESS);
-    }
-
-    @Test
-    public void testDownloaderAppSslEnabledMissingUsername() throws Exception
-    {
-        // Set an SSL option without providing a username.
-        final String[] args =
-            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m", STRING_VALUE, "-H", WEB_SERVICE_HOSTNAME,
-                "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-w", WEB_SERVICE_HTTPS_PASSWORD, "-n", HTTP_PROXY_HOST, "-o",
-                HTTP_PROXY_PORT.toString()};
-
-        // We are expecting this to fail since SSL is enabled and username is not passed.
-        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.FAILURE);
-    }
-
-    @Test
-    public void testDownloaderAppSslEnabledMissingPassword() throws Exception
-    {
-        // Set an SSL option without providing a password.
-        final String[] args =
-            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m", STRING_VALUE, "-H", WEB_SERVICE_HOSTNAME,
-                "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME, "-n", HTTP_PROXY_HOST, "-o",
-                HTTP_PROXY_PORT.toString()};
-
-        // We are expecting this to fail since SSL is enabled and password is not passed.
-        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.FAILURE);
     }
 
     @Test
@@ -131,47 +176,29 @@ public class DownloaderAppTest extends AbstractDownloaderTest
     }
 
     @Test
-    public void testDownloaderAppInvalidS3Endpoint() throws Exception
+    public void testDownloaderAppSslEnabledMissingPassword() throws Exception
     {
-        // Create the downloader manifest file.
-        File manifestFile = createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), getTestDownloaderInputManifestDto());
-
+        // Set an SSL option without providing a password.
         final String[] args =
-            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", "INVALID_S3_ENDPOINT", "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m",
-                manifestFile.getPath(), "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME,
-                "-w", WEB_SERVICE_HTTPS_PASSWORD, "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
-
-        // We are expecting this to fail with a IllegalArgumentException when AwsHostNameUtils is trying to parse a region name.
-        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, new IllegalArgumentException());
-    }
-
-    @Test
-    public void testDownloaderAppInvalidArguments() throws Exception
-    {
-        // Run the uploader with no arguments which is invalid.
-        runDataBridgeAndCheckReturnValue(downloaderApp, new String[] {}, DownloaderApp.class, DataBridgeApp.ReturnValue.FAILURE);
-    }
-
-    @Test
-    public void testDownloaderAppInvalidBooleanValueForSslOption() throws Exception
-    {
-        // Set the SSL argument value to an invalid boolean value.
-        final String[] args =
-            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m", STRING_VALUE,
-                "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "INVALID_BOOLEAN_VALUE", "-u", WEB_SERVICE_HTTPS_USERNAME, "-w",
-                WEB_SERVICE_HTTPS_PASSWORD, "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString()};
+            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m", STRING_VALUE, "-H", WEB_SERVICE_HOSTNAME,
+                "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME, "-C", "true", "-d", "true", "-n", HTTP_PROXY_HOST,
+                "-o", HTTP_PROXY_PORT.toString()};
 
         // We are expecting this to fail since SSL is enabled and password is not passed.
         runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.FAILURE);
     }
 
     @Test
-    public void testDownloaderAppHelpOptionSet() throws Exception
+    public void testDownloaderAppSslEnabledMissingUsername() throws Exception
     {
-        // Displaying help is a success condition.
-        runDataBridgeAndCheckReturnValue(downloaderApp, new String[] {"-h"}, null, DataBridgeApp.ReturnValue.SUCCESS);
-        runDataBridgeAndCheckReturnValue(downloaderApp, new String[] {"--help"}, null, DataBridgeApp.ReturnValue.SUCCESS);
-        runDataBridgeAndCheckReturnValue(downloaderApp, new String[] {"-h", "-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY}, null, DataBridgeApp.ReturnValue.SUCCESS);
+        // Set an SSL option without providing a username.
+        final String[] args =
+            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m", STRING_VALUE, "-H", WEB_SERVICE_HOSTNAME,
+                "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-w", WEB_SERVICE_HTTPS_PASSWORD, "-C", "true", "-d", "true", "-n", HTTP_PROXY_HOST,
+                "-o", HTTP_PROXY_PORT.toString()};
+
+        // We are expecting this to fail since SSL is enabled and username is not passed.
+        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.FAILURE);
     }
 
     @Test

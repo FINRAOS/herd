@@ -39,11 +39,34 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
     };
 
     @Test
+    public void testGoInvalidDisableHostnameVerificationValue() throws Exception
+    {
+        String[] arguments =
+            {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "--trustSelfSignedCertificate", "true",
+                "--disableHostnameVerification", "INVALID_BOOLEAN_VALUE"};
+
+        runApplicationAndCheckReturnValue(exporterApp, arguments, ToolsCommonConstants.ReturnValue.FAILURE);
+    }
+
+    @Test
     public void testGoInvalidSslValue() throws Exception
     {
         String[] arguments =
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
-                "INVALID_BOOLEAN_VALUE", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
+                "INVALID_BOOLEAN_VALUE", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "--trustSelfSignedCertificate",
+                "true", "--disableHostnameVerification", "true"};
+
+        runApplicationAndCheckReturnValue(exporterApp, arguments, ToolsCommonConstants.ReturnValue.FAILURE);
+    }
+
+    @Test
+    public void testGoInvalidTrustSelfSignedCertificateValue() throws Exception
+    {
+        String[] arguments =
+            {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "--trustSelfSignedCertificate",
+                "INVALID_BOOLEAN_VALUE", "--disableHostnameVerification", "true"};
 
         runApplicationAndCheckReturnValue(exporterApp, arguments, ToolsCommonConstants.ReturnValue.FAILURE);
     }
@@ -63,7 +86,8 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
     {
         String[] arguments =
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
-                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "--trustSelfSignedCertificate", "true",
+                "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an FileNotFoundException.
         runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
@@ -85,7 +109,8 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
     {
         String[] arguments =
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", "INVALID_INTEGER", "--ssl", "true", "--username",
-                WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD};
+                WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "--trustSelfSignedCertificate", "true", "--disableHostnameVerification",
+                "true"};
 
         // We are expecting this to fail with a NumberFormatException.
         runApplicationAndCheckReturnValue(exporterApp, arguments, new NumberFormatException());
@@ -102,7 +127,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
     {
         String[] arguments =
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
-                "true", "--username", WEB_SERVICE_HTTPS_USERNAME};
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true"};
         assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 
@@ -111,7 +136,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
     {
         String[] arguments =
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
-                "true", "--password", WEB_SERVICE_HTTPS_PASSWORD};
+                "true", "--password", WEB_SERVICE_HTTPS_PASSWORD, "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true"};
         assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 
@@ -135,7 +160,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
     {
         String[] arguments =
             {"-i", LOCAL_INPUT_FILE, "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME, "-w",
-                WEB_SERVICE_HTTPS_PASSWORD};
+                WEB_SERVICE_HTTPS_PASSWORD, "-C", "true", "-d", "true"};
         assertNull(exporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 }

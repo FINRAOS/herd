@@ -21,6 +21,9 @@ import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.dao.helper.HttpClientHelper;
 import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.dao.impl.MockCloseableHttpResponse;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
@@ -63,6 +67,9 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     private HerdStringHelper herdStringHelper;
 
     @Autowired
+    private HttpClientHelper httpClientHelper;
+
+    @Autowired
     private HttpClientOperations httpClientOperations;
 
     @Autowired
@@ -81,6 +88,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         regServerAccessParamsDto.setRegServerPort(8080);
         dataBridgeWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
 
+        dataBridgeWebClient.httpClientHelper = httpClientHelper;
         dataBridgeWebClient.httpClientOperations = httpClientOperations;
         dataBridgeWebClient.herdStringHelper = herdStringHelper;
     }
@@ -354,11 +362,15 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      *
      * @param useSsl specifies whether to use SSL or not
      *
-     * @throws IOException
-     * @throws JAXBException
-     * @throws URISyntaxException
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
-    private void testAddStorageFiles(boolean useSsl) throws IOException, JAXBException, URISyntaxException
+    private void testAddStorageFiles(boolean useSsl)
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
@@ -381,7 +393,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      * @param businessObjectDataVersion the version of the business object data, may be null
      * @param useSsl specifies whether to use SSL or not
      *
-     * @throws Exception
+     * @throws Exception if an error is encountered
      */
     private void testGetS3KeyPrefix(String namespace, List<String> subPartitionValues, Integer businessObjectDataVersion, String storageName, boolean useSsl)
         throws Exception
@@ -404,11 +416,15 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      *
      * @param useSsl specifies whether to use SSL or not
      *
-     * @throws IOException
-     * @throws JAXBException
-     * @throws URISyntaxException
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
-    private void testGetStorage(boolean useSsl) throws IOException, JAXBException, URISyntaxException
+    private void testGetStorage(boolean useSsl)
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
@@ -426,11 +442,15 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      * @param attributes a map of business object data attributes
      * @param useSsl specifies whether to use SSL or not
      *
-     * @throws IOException
-     * @throws JAXBException
-     * @throws URISyntaxException
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
-    private void testPreRegisterBusinessObjectData(HashMap<String, String> attributes, boolean useSsl) throws IOException, JAXBException, URISyntaxException
+    private void testPreRegisterBusinessObjectData(HashMap<String, String> attributes, boolean useSsl)
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
@@ -449,11 +469,15 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      *
      * @param useSsl specifies whether to use SSL or not
      *
-     * @throws IOException
-     * @throws JAXBException
-     * @throws URISyntaxException
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
-    private void testUpdateBusinessObjectDataStatus(List<String> subPartitionValues, boolean useSsl) throws IOException, JAXBException, URISyntaxException
+    private void testUpdateBusinessObjectDataStatus(List<String> subPartitionValues, boolean useSsl)
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
