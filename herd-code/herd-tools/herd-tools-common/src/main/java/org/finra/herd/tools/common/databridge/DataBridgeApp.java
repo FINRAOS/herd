@@ -109,7 +109,8 @@ public abstract class DataBridgeApp
      */
     public enum ReturnValue
     {
-        SUCCESS(0), FAILURE(1);
+        SUCCESS(0),
+        FAILURE(1);
 
         private int returnCode;
 

@@ -55,12 +55,12 @@ public class HttpClientHelper
         HttpClientBuilder httpClientBuilder = HttpClients.custom();
 
         // Create an SSL context builder.
-        SSLContextBuilder builder = SSLContexts.custom();
+        SSLContextBuilder sslContextBuilder = SSLContexts.custom();
 
         // If specified, setup a trust strategy that allows all certificates.
         if (BooleanUtils.isTrue(trustSelfSignedCertificate))
         {
-            builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+            sslContextBuilder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
         }
 
         // If specified, turn hostname verification off.
@@ -68,7 +68,7 @@ public class HttpClientHelper
             disableHostnameVerification ? SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER : SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER;
 
         // Create and assign an SSL connection socket factory.
-        SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(builder.build(), hostnameVerifier);
+        SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContextBuilder.build(), hostnameVerifier);
         httpClientBuilder.setSSLSocketFactory(sslConnectionSocketFactory);
 
         // Build and return an HTTP client.
