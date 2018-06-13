@@ -64,8 +64,8 @@ public class HttpClientHelper
         }
 
         // If specified, turn hostname verification off.
-        HostnameVerifier hostnameVerifier =
-            disableHostnameVerification ? SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER : SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER;
+        HostnameVerifier hostnameVerifier = BooleanUtils.isTrue(disableHostnameVerification) ? SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER :
+            SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER;
 
         // Create and assign an SSL connection socket factory.
         SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContextBuilder.build(), hostnameVerifier);
