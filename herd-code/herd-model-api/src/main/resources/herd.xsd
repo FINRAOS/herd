@@ -1927,6 +1927,17 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:element name="businessObjectDefinitionDescriptionSuggestionAcceptanceRequest" type="businessObjectDefinitionDescriptionSuggestionAcceptanceRequest"/>
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionAcceptanceRequest">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionDescriptionSuggestionKey" type="businessObjectDefinitionDescriptionSuggestionKey">
+            <xs:annotation>
+               <xs:documentation>The business object definition description suggestion key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** File Type ***** -->
 
    <xs:element name="fileTypeKeys" type="fileTypeKeys"/>

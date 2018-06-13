@@ -15,6 +15,8 @@
  */
 package org.finra.herd.service.impl;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
+
 import java.util.List;
 import java.util.Set;
 
@@ -28,10 +30,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
@@ -51,6 +55,7 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDescriptionSuggestionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDescriptionSuggestionStatusDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
+import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 
 /**
  * The business object definition description suggestion service implementation.
@@ -88,6 +93,12 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
     @Autowired
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
 
     @Override
@@ -266,6 +277,64 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
             HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
     }
 
+    @Override
+    public BusinessObjectDefinitionDescriptionSuggestion acceptBusinessObjectDefinitionDescriptionSuggestion(
+        BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest request)
+    {
+        // Validate and trim the business object definition description suggestion acceptance request.
+        validateBusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest(request);
+
+        // Get the business object definition description suggestion key from the request.
+        BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
+            request.getBusinessObjectDefinitionDescriptionSuggestionKey();
+
+        // Get the business object definition key from the request.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey =
+            new BusinessObjectDefinitionKey(businessObjectDefinitionDescriptionSuggestionKey.getNamespace(),
+                businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
+
+        // Get business object definition entity and make sure it exists.
+        final BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+
+        // Get business object definition description suggestion entity and make sure it exists.
+        final BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
+            businessObjectDefinitionDescriptionSuggestionDaoHelper.getBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity,
+                businessObjectDefinitionDescriptionSuggestionKey.getUserId());
+
+        // Check if retrieved entity has PENDING status.
+        Assert.isTrue(StringUtils
+            .equals(BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(),
+                businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode()), String
+            .format("A Business object definition description suggestion status is expected to be \"%s\" but was \"%s\"",
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(),
+                businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode()));
+
+        // Get business object definition description suggestion status entity for ACCEPTED status and make sure it exists.
+        // Update the business object definition description suggestion entity with the new status.
+        businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusDaoHelper
+            .getBusinessObjectDefinitionDescriptionSuggestionStatusEntity(
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.ACCEPTED.name()));
+        businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
+
+        // Update business object definition description.
+        businessObjectDefinitionEntity.setDescription(businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion());
+        businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+
+        // Save a change event in the business object definition history table.
+        businessObjectDefinitionDaoHelper.saveBusinessObjectDefinitionChangeEvents(businessObjectDefinitionEntity);
+
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Build and return the response object.
+        return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(),
+            businessObjectDefinitionDescriptionSuggestionKey, businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
+            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(),
+            businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
+    }
+
     /**
      * Creates a business object definition description suggestion from the persisted entity.
      *
@@ -396,6 +465,19 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
         // Validate the business object definition description suggestion.
         Assert.notNull(request.getDescriptionSuggestion(), "A business object definition description suggestion must be specified.");
+    }
+
+    /**
+     * Validates the business object definition description suggestion acceptance request.
+     *
+     * @param request the business object definition description suggestion acceptance request
+     */
+    private void validateBusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest(BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest request)
+    {
+        Assert.notNull(request, "A business object definition description suggestion acceptance request must be specified.");
+
+        // Validate the business object definition description suggestion key.
+        validateBusinessObjectDefinitionDescriptionSuggestionKey(request.getBusinessObjectDefinitionDescriptionSuggestionKey());
     }
 
     /**

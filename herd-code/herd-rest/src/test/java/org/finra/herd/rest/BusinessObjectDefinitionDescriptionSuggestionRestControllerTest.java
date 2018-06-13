@@ -34,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
@@ -244,6 +245,35 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestControllerTest ext
 
         // Verify the external calls.
         verify(businessObjectDefinitionDescriptionSuggestionService).updateBusinessObjectDefinitionDescriptionSuggestion(key, request);
+        verifyNoMoreInteractions(businessObjectDefinitionDescriptionSuggestionService);
+
+        // Validate the returned object.
+        assertEquals(businessObjectDefinitionDescriptionSuggestion, response);
+    }
+
+    @Test
+    public void testAcceptBusinessObjectDefinitionDescriptionSuggestion()
+    {
+        // Create a business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey key = new BusinessObjectDefinitionDescriptionSuggestionKey(NAMESPACE, BDEF_NAME, USER_ID);
+
+        // Create the business object definition description suggestion acceptance request.
+        BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest request = new BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest(key);
+
+        // Create the business object definition description suggestion.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, key, DESCRIPTION_SUGGESTION, BDEF_DESCRIPTION_SUGGESTION_STATUS, USER_ID, CREATED_ON);
+
+        // Mock calls to external method.
+        when(businessObjectDefinitionDescriptionSuggestionService.acceptBusinessObjectDefinitionDescriptionSuggestion(request))
+            .thenReturn(businessObjectDefinitionDescriptionSuggestion);
+
+        // Call business object definition description suggestion acceptance.
+        BusinessObjectDefinitionDescriptionSuggestion response =
+            businessObjectDefinitionDescriptionSuggestionRestController.acceptBusinessObjectDefinitionDescriptionSuggestion(request);
+
+        // Verify the external calls.
+        verify(businessObjectDefinitionDescriptionSuggestionService).acceptBusinessObjectDefinitionDescriptionSuggestion(request);
         verifyNoMoreInteractions(businessObjectDefinitionDescriptionSuggestionService);
 
         // Validate the returned object.
