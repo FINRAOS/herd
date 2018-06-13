@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
@@ -164,5 +165,21 @@ public class BusinessObjectDefinitionDescriptionSuggestionRestController extends
     {
         return businessObjectDefinitionDescriptionSuggestionService.updateBusinessObjectDefinitionDescriptionSuggestion(
             new BusinessObjectDefinitionDescriptionSuggestionKey(namespace, businessObjectDefinitionName, userId), request);
+    }
+
+    /**
+     * Accepts suggested business object definition description suggestion by key and updates the corresponding business object definition description.
+     *
+     * @param request the information needed to accept the business object definition description suggestion.
+     *
+     * @return the accepted business object definition description suggestion.
+     */
+    @RequestMapping(value = BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTIONS_URI_PREFIX + "/acceptance", method = RequestMethod.POST, consumes = {
+        "application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTIONS_ACCEPTANCE_POST)
+    public BusinessObjectDefinitionDescriptionSuggestion acceptBusinessObjectDefinitionDescriptionSuggestion(
+        @RequestBody BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest request)
+    {
+        return businessObjectDefinitionDescriptionSuggestionService.acceptBusinessObjectDefinitionDescriptionSuggestion(request);
     }
 }
