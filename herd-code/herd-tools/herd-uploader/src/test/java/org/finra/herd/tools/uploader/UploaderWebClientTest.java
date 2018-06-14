@@ -21,6 +21,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -63,8 +66,8 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         AwsCredential awsCredential = businessObjectDataUploadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
         Assert.assertEquals("http://testWebServiceHostname:1234/herd-app/rest/businessObjectData/upload/credential/namespaces/test1" +
-            "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
-            "/partitionValues/test6?storageName=test8&subPartitionValues=test7%7Ctest8&businessObjectDataVersion=1234&createNewVersion=false",
+                "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
+                "/partitionValues/test6?storageName=test8&subPartitionValues=test7%7Ctest8&businessObjectDataVersion=1234&createNewVersion=false",
             awsCredential.getAwsAccessKey());
     }
 
@@ -194,12 +197,15 @@ public class UploaderWebClientTest extends AbstractUploaderTest
      * @param businessObjectDataVersion the business object data version
      * @param useSsl specifies whether to use SSL or not
      *
-     * @throws java.io.IOException
-     * @throws javax.xml.bind.JAXBException
-     * @throws java.net.URISyntaxException
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     private void testGetBusinessObjectDataVersions(List<String> subPartitionValues, Integer businessObjectFormatVersion, Integer businessObjectDataVersion,
-        boolean useSsl) throws IOException, JAXBException, URISyntaxException
+        boolean useSsl) throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         uploaderWebClient.getRegServerAccessParamsDto().setUseSsl(useSsl);
 

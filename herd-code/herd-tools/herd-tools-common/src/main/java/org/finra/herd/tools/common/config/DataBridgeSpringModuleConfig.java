@@ -29,6 +29,7 @@ import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
 import org.finra.herd.dao.StsDao;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.dao.helper.HttpClientHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.S3DaoImpl;
@@ -89,6 +90,12 @@ public class DataBridgeSpringModuleConfig
     public HerdStringHelper herdStringHelper()
     {
         return new HerdStringHelper();
+    }
+
+    @Bean
+    public HttpClientHelper httpClientHelper()
+    {
+        return new HttpClientHelper();
     }
 
     // This dependency is required when S3Dao is used.
