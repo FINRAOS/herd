@@ -317,12 +317,10 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
                 BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.ACCEPTED.name()));
         businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
 
-        // Update business object definition description.
+        // Update description of the business object definition and save this change event in the business object definition history table.
         businessObjectDefinitionEntity.setDescription(businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion());
-        businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
-
-        // Save a change event in the business object definition history table.
         businessObjectDefinitionDaoHelper.saveBusinessObjectDefinitionChangeEvents(businessObjectDefinitionEntity);
+        businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
 
         // Notify the search index that a business object definition must be updated.
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
