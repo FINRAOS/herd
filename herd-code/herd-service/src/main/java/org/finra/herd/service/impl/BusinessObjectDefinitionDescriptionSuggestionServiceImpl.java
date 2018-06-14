@@ -310,7 +310,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         Assert.isTrue(StringUtils
             .equals(BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(),
                 businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode()), String
-            .format("A Business object definition description suggestion status is expected to be \"%s\" but was \"%s\"",
+            .format("A business object definition description suggestion status is expected to be \"%s\" but was \"%s\".",
                 BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(),
                 businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode()));
 
@@ -333,9 +333,12 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
 
         // Build and return the response object.
         return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(),
-            businessObjectDefinitionDescriptionSuggestionKey, businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
-            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(),
-            businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
+            new BusinessObjectDefinitionDescriptionSuggestionKey(
+                businessObjectDefinitionDescriptionSuggestionEntity.getBusinessObjectDefinition().getNamespace().getCode(),
+                businessObjectDefinitionDescriptionSuggestionEntity.getBusinessObjectDefinition().getName(),
+                businessObjectDefinitionDescriptionSuggestionEntity.
+                    getUserId()), businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
+            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(), businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
             HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
     }
 

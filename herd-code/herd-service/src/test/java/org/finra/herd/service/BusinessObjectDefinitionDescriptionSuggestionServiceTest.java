@@ -1180,7 +1180,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         {
             // Validate response
             assertThat("Exception message is not correct.", illegalArgumentException.getMessage(),
-                is(equalTo("A Business object definition description suggestion status is expected to be \"PENDING\" but was \"ACCEPTED\"")));
+                is(equalTo("A business object definition description suggestion status is expected to be \"PENDING\" but was \"ACCEPTED\".")));
         }
     }
 
