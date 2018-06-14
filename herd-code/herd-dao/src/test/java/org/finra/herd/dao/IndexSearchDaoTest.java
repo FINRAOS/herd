@@ -192,10 +192,11 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         }
         catch (IllegalStateException e)
         {
-            assertEquals(String
-                .format("Search result index name \"%s\" does not match any of the active search indexes. tagActiveIndex=%s bdefActiveIndex=%s", INVALID_VALUE,
-                    TAG_SEARCH_INDEX_NAME, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME), e.getMessage());
+            assertEquals("Unexpected response received when attempting to retrieve search results.", e.getMessage());
         }
+
+        // Verify external calls.
+        verify(jsonHelper, times(2)).objectToJson(any());
     }
 
     @Test
