@@ -19,6 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -96,16 +99,20 @@ public class DownloaderController extends DataBridgeController
      * @param manifestPath the local path to the manifest file
      * @param s3FileTransferRequestParamsDto the S3 file transfer DTO request parameters
      *
-     * @throws InterruptedException if the upload thread was interrupted.
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws IOException if an I/O error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
+     * @throws InterruptedException if the upload thread was interrupted
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
-    @SuppressFBWarnings(value = {"BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"},
-        justification = "manifestReader.readJsonManifest will always return an DownloaderInputManifestDto object. targetLocalDirectory.list().length will not" +
+    @SuppressFBWarnings(value = {"BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"}, justification =
+        "manifestReader.readJsonManifest will always return an DownloaderInputManifestDto object. targetLocalDirectory.list().length will not" +
             " return a NullPointerException.")
     public void performDownload(RegServerAccessParamsDto regServerAccessParamsDto, File manifestPath,
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException, JAXBException, IOException, URISyntaxException
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto)
+        throws InterruptedException, JAXBException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         boolean cleanUpTargetLocalDirectoryOnFailure = false;
         File targetLocalDirectory = null;

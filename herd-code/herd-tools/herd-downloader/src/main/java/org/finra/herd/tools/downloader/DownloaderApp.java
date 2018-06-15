@@ -76,7 +76,8 @@ public class DownloaderApp extends DataBridgeApp
         DownloaderController controller = applicationContext.getBean(DownloaderController.class);
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(regServerHost).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt)).build();
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt))
+                .withTrustSelfSignedCertificate(trustSelfSignedCertificate).withDisableHostnameVerification(disableHostnameVerification).build();
         controller.performDownload(regServerAccessParamsDto, argParser.getFileValue(manifestPathOpt), params);
 
         // No exceptions were returned so return success.

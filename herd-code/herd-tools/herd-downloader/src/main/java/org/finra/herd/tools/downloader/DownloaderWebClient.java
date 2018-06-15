@@ -18,6 +18,9 @@ package org.finra.herd.tools.downloader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
@@ -46,41 +49,20 @@ public class DownloaderWebClient extends DataBridgeWebClient
     private static final Logger LOGGER = LoggerFactory.getLogger(DownloaderWebClient.class);
 
     /**
-     * Retrieves S3 key prefix from the herd registration server.
-     *
-     * @param businessObjectData the business object data
-     *
-     * @return the S3 key prefix
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws IOException if an I/O error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
-     */
-    public S3KeyPrefixInformation getS3KeyPrefix(BusinessObjectData businessObjectData) throws IOException, JAXBException, URISyntaxException
-    {
-        DataBridgeBaseManifestDto dataBridgeBaseManifestDto = new DataBridgeBaseManifestDto();
-        dataBridgeBaseManifestDto.setNamespace(businessObjectData.getNamespace());
-        dataBridgeBaseManifestDto.setBusinessObjectDefinitionName(businessObjectData.getBusinessObjectDefinitionName());
-        dataBridgeBaseManifestDto.setBusinessObjectFormatUsage(businessObjectData.getBusinessObjectFormatUsage());
-        dataBridgeBaseManifestDto.setBusinessObjectFormatFileType(businessObjectData.getBusinessObjectFormatFileType());
-        dataBridgeBaseManifestDto.setBusinessObjectFormatVersion(String.valueOf(businessObjectData.getBusinessObjectFormatVersion()));
-        dataBridgeBaseManifestDto.setPartitionKey(businessObjectData.getPartitionKey());
-        dataBridgeBaseManifestDto.setPartitionValue(businessObjectData.getPartitionValue());
-        dataBridgeBaseManifestDto.setSubPartitionValues(businessObjectData.getSubPartitionValues());
-        dataBridgeBaseManifestDto.setStorageName(businessObjectData.getStorageUnits().get(0).getStorage().getName());
-        return super.getS3KeyPrefix(dataBridgeBaseManifestDto, businessObjectData.getVersion(), Boolean.FALSE);
-    }
-
-    /**
      * Retrieves business object data from the herd registration server.
      *
      * @param manifest the downloader input manifest file information
      *
      * @return the business object data information
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws IOException if an I/O error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
-    public BusinessObjectData getBusinessObjectData(DownloaderInputManifestDto manifest) throws IOException, JAXBException, URISyntaxException
+    public BusinessObjectData getBusinessObjectData(DownloaderInputManifestDto manifest)
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info("Retrieving business object data information from the registration server...");
 
@@ -108,7 +90,8 @@ public class DownloaderWebClient extends DataBridgeWebClient
 
         URI uri = uriBuilder.build();
 
-        CloseableHttpClient client = httpClientOperations.createHttpClient();
+        CloseableHttpClient client = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification());
         HttpGet request = new HttpGet(uri);
         request.addHeader("Accepts", "application/xml");
 
@@ -130,18 +113,50 @@ public class DownloaderWebClient extends DataBridgeWebClient
     }
 
     /**
+     * Retrieves S3 key prefix from the herd registration server.
+     *
+     * @param businessObjectData the business object data
+     *
+     * @return the S3 key prefix
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
+     */
+    public S3KeyPrefixInformation getS3KeyPrefix(BusinessObjectData businessObjectData)
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
+        DataBridgeBaseManifestDto dataBridgeBaseManifestDto = new DataBridgeBaseManifestDto();
+        dataBridgeBaseManifestDto.setNamespace(businessObjectData.getNamespace());
+        dataBridgeBaseManifestDto.setBusinessObjectDefinitionName(businessObjectData.getBusinessObjectDefinitionName());
+        dataBridgeBaseManifestDto.setBusinessObjectFormatUsage(businessObjectData.getBusinessObjectFormatUsage());
+        dataBridgeBaseManifestDto.setBusinessObjectFormatFileType(businessObjectData.getBusinessObjectFormatFileType());
+        dataBridgeBaseManifestDto.setBusinessObjectFormatVersion(String.valueOf(businessObjectData.getBusinessObjectFormatVersion()));
+        dataBridgeBaseManifestDto.setPartitionKey(businessObjectData.getPartitionKey());
+        dataBridgeBaseManifestDto.setPartitionValue(businessObjectData.getPartitionValue());
+        dataBridgeBaseManifestDto.setSubPartitionValues(businessObjectData.getSubPartitionValues());
+        dataBridgeBaseManifestDto.setStorageName(businessObjectData.getStorageUnits().get(0).getStorage().getName());
+        return super.getS3KeyPrefix(dataBridgeBaseManifestDto, businessObjectData.getVersion(), Boolean.FALSE);
+    }
+
+    /**
      * Gets the storage unit download credentials.
      *
      * @param manifest The manifest
      * @param storageName The storage name
      *
      * @return StorageUnitDownloadCredential
-     * @throws URISyntaxException When error occurs while URI creation
-     * @throws IOException When error occurs communicating with server
-     * @throws JAXBException When error occurs parsing XML
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     public StorageUnitDownloadCredential getStorageUnitDownloadCredential(DownloaderInputManifestDto manifest, String storageName)
-        throws URISyntaxException, IOException, JAXBException
+        throws URISyntaxException, IOException, JAXBException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         URIBuilder uriBuilder =
             new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
@@ -160,7 +175,8 @@ public class DownloaderWebClient extends DataBridgeWebClient
         {
             httpGet.addHeader(getAuthorizationHeader());
         }
-        try (CloseableHttpClient httpClient = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient httpClient = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
             LOGGER.info("Retrieving download credentials from registration server...");
             return getStorageUnitDownloadCredential(httpClientOperations.execute(httpClient, httpGet));

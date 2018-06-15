@@ -177,6 +177,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String AWS_SQS_QUEUE_NAME = "AWS_SQS_QUEUE_NAME";
 
+    public static final String BOGUS_SEARCH_FIELD = "BOGUS_SEARCH_FIELD".toLowerCase();
+
     public static final Boolean BOOLEAN_DEFAULT_VALUE = false;
 
     public static final Boolean BOOLEAN_VALUE = true;
