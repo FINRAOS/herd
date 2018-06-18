@@ -15,10 +15,15 @@
  */
 package org.finra.herd.service;
 
+import java.util.Set;
+
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 
@@ -66,6 +71,17 @@ public interface BusinessObjectDefinitionDescriptionSuggestionService
         BusinessObjectDefinitionKey businessObjectDefinitionKey);
 
     /**
+     * Search business object definition description suggestions based on the request
+     *
+     * @param request search request
+     * @param fields business object definition description suggestions optional fields to return
+     *
+     * @return business object definition description suggestion search response
+     */
+    BusinessObjectDefinitionDescriptionSuggestionSearchResponse searchBusinessObjectDefinitionDescriptionSuggestions(
+        BusinessObjectDefinitionDescriptionSuggestionSearchRequest request, Set<String> fields);
+
+    /**
      * Updates an existing business object definition description suggestion by key.
      *
      * @param key the business object definition description suggestion key
@@ -75,4 +91,14 @@ public interface BusinessObjectDefinitionDescriptionSuggestionService
      */
     BusinessObjectDefinitionDescriptionSuggestion updateBusinessObjectDefinitionDescriptionSuggestion(BusinessObjectDefinitionDescriptionSuggestionKey key,
         BusinessObjectDefinitionDescriptionSuggestionUpdateRequest request);
+
+    /**
+     * Accepts the business object definition description suggestion and updates business object definition description.
+     *
+     * @param request the information needed to accept the business object definition description suggestion.
+     *
+     * @return the accepted business object definition description suggestion.
+     */
+    BusinessObjectDefinitionDescriptionSuggestion acceptBusinessObjectDefinitionDescriptionSuggestion(
+        BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest request);
 }

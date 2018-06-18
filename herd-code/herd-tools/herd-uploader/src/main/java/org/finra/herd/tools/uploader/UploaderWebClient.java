@@ -17,6 +17,9 @@ package org.finra.herd.tools.uploader;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
@@ -57,12 +60,16 @@ public class UploaderWebClient extends DataBridgeWebClient
      * @param createNewVersion specifies to provide credentials fof the next business object data version
      *
      * @return {@link BusinessObjectDataUploadCredential}
-     * @throws URISyntaxException When error occurs while URI creation
-     * @throws IOException When error occurs communicating with server
-     * @throws JAXBException When error occurs parsing the XML
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     public BusinessObjectDataUploadCredential getBusinessObjectDataUploadCredential(DataBridgeBaseManifestDto manifest, String storageName,
-        Integer businessObjectDataVersion, Boolean createNewVersion) throws URISyntaxException, IOException, JAXBException
+        Integer businessObjectDataVersion, Boolean createNewVersion)
+        throws URISyntaxException, IOException, JAXBException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         URIBuilder uriBuilder =
             new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
@@ -89,7 +96,8 @@ public class UploaderWebClient extends DataBridgeWebClient
         {
             httpGet.addHeader(getAuthorizationHeader());
         }
-        try (CloseableHttpClient httpClient = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient httpClient = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
             LOGGER.info("Retrieving upload credentials from registration server...");
             return getBusinessObjectDataUploadCredential(httpClientOperations.execute(httpClient, httpGet));
@@ -102,17 +110,21 @@ public class UploaderWebClient extends DataBridgeWebClient
      * @param businessObjectDataKey the business object data key
      *
      * @return {@link org.finra.herd.model.api.xml.BusinessObjectDataVersions}
-     * @throws URISyntaxException When error occurs while URI creation
-     * @throws IOException When error occurs communicating with server
-     * @throws JAXBException When error occurs parsing the XML
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey)
-        throws URISyntaxException, IOException, JAXBException
+        throws URISyntaxException, IOException, JAXBException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info("Retrieving business object data versions from the registration server...");
 
         BusinessObjectDataVersions businessObjectDataVersions;
-        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient client = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
             StringBuilder uriPathBuilder = new StringBuilder(300);
             uriPathBuilder.append(HERD_APP_REST_URI_PREFIX);

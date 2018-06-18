@@ -43,7 +43,6 @@ public abstract class DataBridgeApp
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataBridgeApp.class);
 
-    // The common command line options.
     protected Option s3AccessKeyOpt;
 
     protected Option s3SecretKeyOpt;
@@ -68,6 +67,10 @@ public abstract class DataBridgeApp
 
     protected Option passwordOpt;
 
+    protected Option trustSelfSignedCertificateOpt;
+
+    protected Option disableHostnameVerificationOpt;
+
     protected Option helpOpt;
 
     protected Option versionOpt;
@@ -80,14 +83,22 @@ public abstract class DataBridgeApp
 
     protected Option socketTimeoutOpt;
 
-    // Boolean values for command line options that are of type "Boolean".
+    // Boolean value for useSsl command line option that is of type "Boolean".
     protected Boolean useSsl;
 
-    // Integer values for command line options that are of type "Integer".
+    // Boolean value for trustSelfSignedCertificate command line option that is of type "Boolean".
+    protected Boolean trustSelfSignedCertificate;
+
+    // Boolean value for disableHostnameVerification command line option that is of type "Boolean".
+    protected Boolean disableHostnameVerification;
+
+    // Integer value for regServerPort command line option that is of type "Integer".
     protected Integer regServerPort;
 
+    // Integer value for httpProxyPort command line option that is of type "Integer".
     protected Integer httpProxyPort;
 
+    // Integer value for maxThreads command line option that is of type "Integer".
     protected Integer maxThreads;
 
     // The registration server hostname.
@@ -163,6 +174,10 @@ public abstract class DataBridgeApp
             sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
             usernameOpt = argParser.addArgument("u", "username", true, "The username for HTTPS client authentication.", false);
             passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
+            trustSelfSignedCertificateOpt =
+                argParser.addArgument("C", "trustSelfSignedCertificate", true, "If set to true, makes HTTPS client trust self-signed certificate.", false);
+            disableHostnameVerificationOpt =
+                argParser.addArgument("d", "disableHostnameVerification", true, "If set to true, turns off hostname verification.", false);
             helpOpt = argParser.addArgument("h", "help", false, "Display usage information and exit.", false);
             versionOpt = argParser.addArgument("v", "version", false, "Display version information and exit.", false);
             httpProxyHostOpt = argParser.addArgument("n", "httpProxyHost", true, "HTTP proxy host.", false);
@@ -194,8 +209,10 @@ public abstract class DataBridgeApp
             // Parse command line arguments for the second time, enforcing the required arguments by passing "true" as the second argument.
             argParser.parseArguments(args, true);
 
-            // Extract a boolean option value passing "false" as a default value.
+            // Extract boolean option values passing "false" as a default value.
             useSsl = argParser.getStringValueAsBoolean(sslOpt, false);
+            trustSelfSignedCertificate = argParser.getStringValueAsBoolean(trustSelfSignedCertificateOpt, false);
+            disableHostnameVerification = argParser.getStringValueAsBoolean(disableHostnameVerificationOpt, false);
 
             // Username and password are required when useSsl is enabled.
             if (useSsl && (StringUtils.isBlank(argParser.getStringValue(usernameOpt)) || StringUtils.isBlank(argParser.getStringValue(passwordOpt))))

@@ -23,6 +23,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,6 +57,7 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.dao.helper.HttpClientHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
@@ -80,16 +84,19 @@ import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
  */
 public abstract class DataBridgeWebClient
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataBridgeWebClient.class);
-
     protected static final String DEFAULT_ACCEPT = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString();
 
     protected static final String DEFAULT_CONTENT_TYPE = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString();
 
     protected static final String HERD_APP_REST_URI_PREFIX = "/herd-app/rest";
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataBridgeWebClient.class);
+
     @Autowired
     protected HerdStringHelper herdStringHelper;
+
+    @Autowired
+    protected HttpClientHelper httpClientHelper;
 
     @Autowired
     protected HttpClientOperations httpClientOperations;
@@ -108,13 +115,17 @@ public abstract class DataBridgeWebClient
      * @param storageName the storage name
      *
      * @return the business object data create storage files response turned by the registration server.
-     * @throws IOException if an I/O error was encountered.
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
+     * @throws IOException if an I/O error was encountered
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
     public BusinessObjectDataStorageFilesCreateResponse addStorageFiles(BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest,
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, String storageName) throws IOException, JAXBException, URISyntaxException
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, String storageName)
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info("Adding storage files to the business object data ...");
 
@@ -156,7 +167,8 @@ public abstract class DataBridgeWebClient
         requestMarshaller.marshal(request, sw);
 
         BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse;
-        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient client = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
             URI uri = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
                 .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(HERD_APP_REST_URI_PREFIX + "/businessObjectDataStorageFiles").build();
@@ -214,11 +226,15 @@ public abstract class DataBridgeWebClient
      * @param storageName the storage name
      *
      * @return the storage information
-     * @throws IOException if an I/O error was encountered.
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
+     * @throws IOException if an I/O error was encountered
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
-    public Storage getStorage(String storageName) throws IOException, JAXBException, URISyntaxException
+    public Storage getStorage(String storageName)
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info(String.format("Retrieving storage information for \"%s\" storage name from the registration server...", storageName));
 
@@ -229,7 +245,8 @@ public abstract class DataBridgeWebClient
                 .setPath(URI_PATH);
 
         Storage storage;
-        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient client = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
             HttpGet request = new HttpGet(uriBuilder.build());
             request.addHeader("Accepts", DEFAULT_ACCEPT);
@@ -266,13 +283,16 @@ public abstract class DataBridgeWebClient
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
      *
      * @return the business object data returned by the registration server.
-     * @throws IOException if an I/O error was encountered.
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
+     * @throws IOException if an I/O error was encountered
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
     public BusinessObjectData preRegisterBusinessObjectData(UploaderInputManifestDto manifest, String storageName, Boolean createNewVersion)
-        throws IOException, JAXBException, URISyntaxException
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info("Pre-registering business object data with the registration server...");
 
@@ -322,7 +342,8 @@ public abstract class DataBridgeWebClient
         requestMarshaller.marshal(request, sw);
 
         BusinessObjectData businessObjectData;
-        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient client = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
             URI uri = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
                 .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(HERD_APP_REST_URI_PREFIX + "/businessObjectData").build();
@@ -360,12 +381,15 @@ public abstract class DataBridgeWebClient
      * @param businessObjectDataStatus the status of the business object data
      *
      * @return {@link org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse}
-     * @throws URISyntaxException When error occurs while URI creation
-     * @throws IOException When error occurs communicating with server
-     * @throws JAXBException When error occurs parsing the XML
+     * @throws URISyntaxException if error occurs while URI creation
+     * @throws IOException if error occurs communicating with server
+     * @throws JAXBException if error occurs parsing the XML
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
-        throws URISyntaxException, IOException, JAXBException
+        throws URISyntaxException, IOException, JAXBException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         BusinessObjectDataStatusUpdateRequest request = new BusinessObjectDataStatusUpdateRequest();
         request.setStatus(businessObjectDataStatus);
@@ -380,7 +404,8 @@ public abstract class DataBridgeWebClient
         requestMarshaller.marshal(request, sw);
 
         BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse;
-        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient client = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
 
             StringBuilder uriPathBuilder = new StringBuilder(300);
@@ -485,12 +510,15 @@ public abstract class DataBridgeWebClient
      * business object data version is specified.
      *
      * @return the S3 key prefix
-     * @throws IOException if an I/O error was encountered.
-     * @throws JAXBException if a JAXB error was encountered.
-     * @throws URISyntaxException if a URI syntax error was encountered.
+     * @throws IOException if an I/O error was encountered
+     * @throws JAXBException if a JAXB error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     protected S3KeyPrefixInformation getS3KeyPrefix(DataBridgeBaseManifestDto manifest, Integer businessObjectDataVersion, Boolean createNewVersion)
-        throws IOException, JAXBException, URISyntaxException
+        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info("Retrieving S3 key prefix from the registration server...");
 
@@ -530,7 +558,8 @@ public abstract class DataBridgeWebClient
         }
 
         S3KeyPrefixInformation s3KeyPrefixInformation;
-        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        try (CloseableHttpClient client = httpClientHelper
+            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
         {
             HttpGet request = new HttpGet(uriBuilder.build());
             request.addHeader("Accepts", DEFAULT_ACCEPT);

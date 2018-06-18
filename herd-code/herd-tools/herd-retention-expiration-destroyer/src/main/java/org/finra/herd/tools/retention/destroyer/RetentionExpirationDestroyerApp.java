@@ -44,6 +44,10 @@ public class RetentionExpirationDestroyerApp
 
     private ArgumentParser argParser;
 
+    private Boolean disableHostnameVerification;
+
+    private Option disableHostnameVerificationOpt;
+
     private Option localInputFileOpt;
 
     private Option passwordOpt;
@@ -51,6 +55,10 @@ public class RetentionExpirationDestroyerApp
     private Option regServerHostOpt;
 
     private Integer regServerPort;
+
+    private Boolean trustSelfSignedCertificate;
+
+    private Option trustSelfSignedCertificateOpt;
 
     private Boolean useSsl;
 
@@ -119,7 +127,8 @@ public class RetentionExpirationDestroyerApp
         // Create a DTO to communicate with herd registration server.
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(argParser.getStringValue(regServerHostOpt)).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt)).build();
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt))
+                .withTrustSelfSignedCertificate(trustSelfSignedCertificate).withDisableHostnameVerification(disableHostnameVerification).build();
 
         // Call the controller with the user specified parameters to perform the upload.
         RetentionExpirationDestroyerController controller = applicationContext.getBean(RetentionExpirationDestroyerController.class);
@@ -151,6 +160,10 @@ public class RetentionExpirationDestroyerApp
             Option sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
             usernameOpt = argParser.addArgument("u", "username", true, "The username for HTTPS client authentication.", false);
             passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
+            trustSelfSignedCertificateOpt =
+                argParser.addArgument("C", "trustSelfSignedCertificate", true, "If set to true, makes HTTPS client trust self-signed certificate.", false);
+            disableHostnameVerificationOpt =
+                argParser.addArgument("d", "disableHostnameVerification", true, "If set to true, turns off hostname verification.", false);
             Option helpOpt = argParser.addArgument("h", "help", false, "Display usage information and exit.", false);
             Option versionOpt = argParser.addArgument("v", "version", false, "Display version information and exit.", false);
 
@@ -177,8 +190,10 @@ public class RetentionExpirationDestroyerApp
             // Parse command line arguments for the second time, enforcing the required arguments by passing "true" as the second argument.
             argParser.parseArguments(args, true);
 
-            // Extract a boolean option value passing "false" as a default value.
+            // Extract boolean option values passing "false" as a default value.
             useSsl = argParser.getStringValueAsBoolean(sslOpt, false);
+            trustSelfSignedCertificate = argParser.getStringValueAsBoolean(trustSelfSignedCertificateOpt, false);
+            disableHostnameVerification = argParser.getStringValueAsBoolean(disableHostnameVerificationOpt, false);
 
             // Username and password are required when useSsl is enabled.
             if (useSsl && (StringUtils.isBlank(argParser.getStringValue(usernameOpt)) || StringUtils.isBlank(argParser.getStringValue(passwordOpt))))
