@@ -8034,6 +8034,52 @@
       </xs:all>
    </xs:complexType>
 
+
+   <!-- ***** Security Function ***** -->
+
+   <xs:element name="securityFunctionCreateRequest" type="securityFunctionCreateRequest"/>
+   <xs:complexType name="securityFunctionCreateRequest">
+      <xs:all>
+         <xs:element name="securityFunctionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The security function name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="securityFunction" type="securityFunction"/>
+   <xs:complexType name="securityFunction">
+      <xs:all>
+         <xs:element name="securityFunctionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The security function name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="securityFunctionKeys" type="securityFunctionKeys">
+      <xs:annotation>
+         <xs:documentation>The list of security function keys</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="securityFunctionKeys">
+      <xs:sequence>
+         <xs:element name="securityFunctionKey" type="securityFunctionKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies a Security Function</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="securityFunctionKey">
+      <xs:all>
+         <xs:element name="securityFunctionName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** Global Attribute Definition ***** -->
 
    <xs:element name="globalAttributeDefinition" type="globalAttributeDefinition"/>

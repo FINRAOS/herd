@@ -38,6 +38,23 @@ public class SecurityFunctionDaoTest extends AbstractDaoTest
     private CacheManager cacheManager;
 
     @Test
+    public void testGetgetSecurityFunctionByName() {
+        SecurityFunctionEntity securityFunctionEntity = createSecurityFunctionEntity(SECURITY_FUNCTION);
+        SecurityFunctionEntity securityFunction2Entity = createSecurityFunctionEntity(SECURITY_FUNCTION_2.toUpperCase());
+
+        // test the exact match
+        SecurityFunctionEntity searchResult = securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION);
+        assertEquals(SECURITY_FUNCTION, searchResult.getCode());
+        assertEquals(securityFunctionEntity.getCreatedOn(), searchResult.getCreatedOn());
+
+        //test that the security function name is case insensitive
+        searchResult = securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION_2.toLowerCase());
+        assertNotEquals(SECURITY_FUNCTION_2.toUpperCase(), SECURITY_FUNCTION_2.toLowerCase());
+        assertEquals(SECURITY_FUNCTION_2.toUpperCase(), searchResult.getCode());
+        assertEquals(securityFunction2Entity.getCode(), searchResult.getCode());
+    }
+
+    @Test
     public void testGetSecurityFunctions() throws Exception
     {
         List<String> functions = securityFunctionDao.getSecurityFunctions();

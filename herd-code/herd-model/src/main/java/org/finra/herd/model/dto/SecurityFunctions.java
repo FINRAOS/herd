@@ -329,6 +329,14 @@ public class SecurityFunctions
 
     public static final String FN_SEARCH_INDEXES_VALIDATION_POST = "FN_SEARCH_INDEXES_VALIDATION_POST";
 
+    public static final String FN_SECURITY_FUNCTIONS_ALL_GET = "FN_SECURITY_FUNCTIONS_ALL_GET";
+
+    public static final String FN_SECURITY_FUNCTIONS_DELETE = "FN_SECURITY_FUNCTIONS_DELETE";
+
+    public static final String FN_SECURITY_FUNCTIONS_GET = "FN_SECURITY_FUNCTIONS_GET";
+
+    public static final String FN_SECURITY_FUNCTIONS_POST = "FN_SECURITY_FUNCTIONS_POST";
+
     public static final String FN_STORAGES_ALL_GET = "FN_STORAGES_ALL_GET";
 
     public static final String FN_STORAGES_DELETE = "FN_STORAGES_DELETE";
