@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.impl;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
@@ -287,6 +288,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         try
         {
             businessObjectDataInitiateRestoreHelperServiceImpl.getStorageUnit(businessObjectDataEntity);
+            fail();
         }
         catch (IllegalArgumentException e)
         {
@@ -329,6 +331,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         try
         {
             businessObjectDataInitiateRestoreHelperServiceImpl.getStorageUnit(businessObjectDataEntity);
+            fail();
         }
         catch (IllegalArgumentException e)
         {
@@ -371,6 +374,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         try
         {
             businessObjectDataInitiateRestoreHelperServiceImpl.getStorageUnit(businessObjectDataEntity);
+            fail();
         }
         catch (IllegalArgumentException e)
         {
@@ -399,6 +403,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         try
         {
             businessObjectDataInitiateRestoreHelperServiceImpl.getStorageUnit(businessObjectDataEntity);
+            fail();
         }
         catch (IllegalArgumentException e)
         {
@@ -441,6 +446,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         try
         {
             businessObjectDataInitiateRestoreHelperServiceImpl.getStorageUnit(businessObjectDataEntity);
+            fail();
         }
         catch (IllegalArgumentException e)
         {
