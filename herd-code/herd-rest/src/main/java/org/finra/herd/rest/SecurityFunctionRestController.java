@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.SecurityFunction;
 import org.finra.herd.model.api.xml.SecurityFunctionCreateRequest;
+import org.finra.herd.model.api.xml.SecurityFunctionKey;
 import org.finra.herd.model.api.xml.SecurityFunctionKeys;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.SecurityFunctionService;
@@ -67,7 +68,7 @@ public class SecurityFunctionRestController
     @Secured(SecurityFunctions.FN_SECURITY_FUNCTIONS_GET)
     public SecurityFunction getSecurityFunction(@PathVariable("securityFunctionName") String securityFunctionName)
     {
-        return securityFunctionService.getSecurityFunction(securityFunctionName);
+        return securityFunctionService.getSecurityFunction(new SecurityFunctionKey(securityFunctionName));
     }
 
     /**
@@ -81,7 +82,7 @@ public class SecurityFunctionRestController
     @Secured(SecurityFunctions.FN_SECURITY_FUNCTIONS_DELETE)
     public SecurityFunction deleteSecurityFunction(@PathVariable("securityFunctionName") String securityFunctionName)
     {
-        return securityFunctionService.deleteSecurityFunction(securityFunctionName);
+        return securityFunctionService.deleteSecurityFunction(new SecurityFunctionKey(securityFunctionName));
     }
 
     /**

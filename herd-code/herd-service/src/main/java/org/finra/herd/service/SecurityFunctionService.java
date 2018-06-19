@@ -17,6 +17,7 @@ package org.finra.herd.service;
 
 import org.finra.herd.model.api.xml.SecurityFunction;
 import org.finra.herd.model.api.xml.SecurityFunctionCreateRequest;
+import org.finra.herd.model.api.xml.SecurityFunctionKey;
 import org.finra.herd.model.api.xml.SecurityFunctionKeys;
 
 /**
@@ -34,22 +35,22 @@ public interface SecurityFunctionService
     public SecurityFunction createSecurityFunction(SecurityFunctionCreateRequest securityFunctionCreateRequest);
 
     /**
-     * Gets a security function for the specified name.
+     * Gets a security function for the specified key.
      *
-     * @param securityFunctionName the security function name
+     * @param securityFunctionKey the security function key
      *
      * @return the security function
      */
-    public SecurityFunction getSecurityFunction(String securityFunctionName);
+    public SecurityFunction getSecurityFunction(SecurityFunctionKey securityFunctionKey);
 
     /**
      * Deletes a security function for the specified name.
      *
-     * @param securityFunctionName the security function name
+     * @param securityFunctionKey the security function key
      *
      * @return the security function that was deleted
      */
-    public SecurityFunction deleteSecurityFunction(String securityFunctionName);
+    public SecurityFunction deleteSecurityFunction(SecurityFunctionKey securityFunctionKey);
 
     /**
      * Gets a list of security function keys for all security functions defined in the system.

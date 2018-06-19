@@ -3,6 +3,7 @@ package org.finra.herd.service.helper;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
@@ -50,6 +51,8 @@ public class SecurityFunctionDaoHelperTest extends AbstractServiceTest
         SecurityFunctionEntity securityFunctionEntity = securityFunctionDaoHelper.getSecurityFunctionEntityByName(SECURITY_FUNCTION);
         assertEquals(SECURITY_FUNCTION, securityFunctionEntity.getCode());
         verify(securityFunctionDao, times(1)).getSecurityFunctionByName(SECURITY_FUNCTION);
+
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
@@ -60,5 +63,13 @@ public class SecurityFunctionDaoHelperTest extends AbstractServiceTest
 
         when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(null);
         securityFunctionDaoHelper.getSecurityFunctionEntityByName(SECURITY_FUNCTION);
+    }
+
+    /**
+     * Checks if any of the mocks has any interaction.
+     */
+    private void verifyNoMoreInteractionsHelper()
+    {
+        verifyNoMoreInteractions(securityFunctionDao);
     }
 }

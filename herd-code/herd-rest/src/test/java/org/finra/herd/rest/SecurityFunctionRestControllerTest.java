@@ -77,12 +77,12 @@ public class SecurityFunctionRestControllerTest extends AbstractRestTest
         // Create a security function.
         SecurityFunction securityFunction = new SecurityFunction(SECURITY_FUNCTION);
 
-        when(securityFunctionService.deleteSecurityFunction(SECURITY_FUNCTION)).thenReturn(securityFunction);
+        when(securityFunctionService.deleteSecurityFunction(new SecurityFunctionKey(SECURITY_FUNCTION))).thenReturn(securityFunction);
 
         SecurityFunction deletedSecurityFunction = securityFunctionRestController.deleteSecurityFunction(SECURITY_FUNCTION);
 
         // Verify the external calls.
-        verify(securityFunctionService).deleteSecurityFunction(SECURITY_FUNCTION);
+        verify(securityFunctionService).deleteSecurityFunction(new SecurityFunctionKey(SECURITY_FUNCTION));
         verifyNoMoreInteractions(securityFunctionService);
         // Validate the returned object.
         assertEquals(securityFunction, deletedSecurityFunction);
@@ -92,13 +92,13 @@ public class SecurityFunctionRestControllerTest extends AbstractRestTest
     public void testGetSecurityFunction() throws Exception
     {
         SecurityFunction securityFunction = new SecurityFunction(SECURITY_FUNCTION);
-        when(securityFunctionService.getSecurityFunction(SECURITY_FUNCTION)).thenReturn(securityFunction);
+        when(securityFunctionService.getSecurityFunction(new SecurityFunctionKey(SECURITY_FUNCTION))).thenReturn(securityFunction);
 
         // Retrieve the security function.
         SecurityFunction resultSecurityFunction = securityFunctionRestController.getSecurityFunction(SECURITY_FUNCTION);
 
         // Verify the external calls.
-        verify(securityFunctionService).getSecurityFunction(SECURITY_FUNCTION);
+        verify(securityFunctionService).getSecurityFunction(new SecurityFunctionKey(SECURITY_FUNCTION));
         verifyNoMoreInteractions(securityFunctionService);
         // Validate the returned object.
         assertEquals(securityFunction, resultSecurityFunction);

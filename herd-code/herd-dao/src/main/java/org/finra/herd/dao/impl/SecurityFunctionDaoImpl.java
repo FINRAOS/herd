@@ -42,7 +42,6 @@ import org.finra.herd.model.jpa.SecurityRoleFunctionEntity_;
 public class SecurityFunctionDaoImpl extends AbstractHerdDao implements SecurityFunctionDao
 {
     @Override
-    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public SecurityFunctionEntity getSecurityFunctionByName(String securityFunctionName)
     {
         // Create the criteria builder and the criteria.

@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
@@ -46,6 +46,16 @@ public class SecurityFunctionServiceImplTest extends AbstractServiceTest
     }};
 
     private static final SecurityFunctionCreateRequest SECURITY_FUNCTION_CREATE_REQUEST_WITH_EXTRA_SPACES_IN_NAME = new SecurityFunctionCreateRequest()
+    {{
+        setSecurityFunctionName(SECURITY_FUNCTION_NAME_WITH_EXTRA_SPACES);
+    }};
+
+    private static final SecurityFunctionKey SECURITY_FUNCTION_KEY = new SecurityFunctionKey()
+    {{
+        setSecurityFunctionName(SECURITY_FUNCTION);
+    }};
+
+    private static final SecurityFunctionKey SECURITY_FUNCTION_KEY_WITH_EXTRA_SPACES_IN_NAME = new SecurityFunctionKey()
     {{
         setSecurityFunctionName(SECURITY_FUNCTION_NAME_WITH_EXTRA_SPACES);
     }};
@@ -107,26 +117,43 @@ public class SecurityFunctionServiceImplTest extends AbstractServiceTest
     @Test
     public void testGetSecurityFunction()
     {
-        validateGetSecurityFunctionByName(SECURITY_FUNCTION);
+        validateGetSecurityFunctionByKey(SECURITY_FUNCTION_KEY);
     }
 
+    @Test
+    public void testGetSecurityFunctionNullKey()
+    {
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage("A security function key must be specified");
+
+        securityFunctionService.getSecurityFunction(null);
+    }
 
     @Test
     public void testGetSecurityFunctionWithExtraSpacesInName()
     {
-        validateGetSecurityFunctionByName(SECURITY_FUNCTION_NAME_WITH_EXTRA_SPACES);
+        validateGetSecurityFunctionByKey(SECURITY_FUNCTION_KEY_WITH_EXTRA_SPACES_IN_NAME);
     }
 
     @Test
     public void testDeleteSecurityFunction()
     {
-        validateDeleteSecurityFunctionByName(SECURITY_FUNCTION);
+        validateDeleteSecurityFunctionByKey(SECURITY_FUNCTION_KEY, SECURITY_FUNCTION);
     }
 
     @Test
     public void testDeleteSecurityFunctionWithExtraSpacesInName()
     {
-        validateDeleteSecurityFunctionByName(SECURITY_FUNCTION_NAME_WITH_EXTRA_SPACES);
+        validateDeleteSecurityFunctionByKey(SECURITY_FUNCTION_KEY_WITH_EXTRA_SPACES_IN_NAME, SECURITY_FUNCTION_NAME_WITH_EXTRA_SPACES);
+    }
+
+    @Test
+    public void testDeleteSecurityFunctionNullKey()
+    {
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage("A security function key must be specified");
+
+        securityFunctionService.deleteSecurityFunction(null);
     }
 
     @Test
@@ -145,7 +172,9 @@ public class SecurityFunctionServiceImplTest extends AbstractServiceTest
         assertEquals(SECURITY_FUNCTION_2, securityFunctionKeyList.get(1).getSecurityFunctionName());
         assertEquals(SECURITY_FUNCTION_3, securityFunctionKeyList.get(2).getSecurityFunctionName());
 
-        verify(securityFunctionDao, times(1)).getUnrestrictedSecurityFunctions();
+        verify(securityFunctionDao).getUnrestrictedSecurityFunctions();
+
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
@@ -157,7 +186,9 @@ public class SecurityFunctionServiceImplTest extends AbstractServiceTest
         assertNotNull(securityFunctionKeys);
         assertEquals(0, securityFunctionKeys.getSecurityFunctionKeys().size());
 
-        verify(securityFunctionDao, times(1)).getUnrestrictedSecurityFunctions();
+        verify(securityFunctionDao).getUnrestrictedSecurityFunctions();
+
+        verifyNoMoreInteractionsHelper();
     }
 
     private void validateCreateSecurityFunction(SecurityFunctionCreateRequest securityFunctionCreateRequest, String securityFunctionName)
@@ -169,31 +200,45 @@ public class SecurityFunctionServiceImplTest extends AbstractServiceTest
         SecurityFunction securityFunction = securityFunctionService.createSecurityFunction(securityFunctionCreateRequest);
         assertEquals(SECURITY_FUNCTION, securityFunction.getSecurityFunctionName());
 
-        verify(alternateKeyHelper, times(1)).validateStringParameter("security function name", securityFunctionName);
-        verify(securityFunctionDao, times(1)).getSecurityFunctionByName(SECURITY_FUNCTION);
-        verify(securityFunctionDao, times(1)).saveAndRefresh(any(SecurityFunctionEntity.class));
+        verify(alternateKeyHelper).validateStringParameter("security function name", securityFunctionName);
+        verify(securityFunctionDao).getSecurityFunctionByName(SECURITY_FUNCTION);
+        verify(securityFunctionDao).saveAndRefresh(any(SecurityFunctionEntity.class));
+
+        verifyNoMoreInteractionsHelper();
     }
 
-    private void validateGetSecurityFunctionByName(String securityFunctionName)
+    private void validateGetSecurityFunctionByKey(SecurityFunctionKey securityFunctionKey)
     {
         when(securityFunctionDaoHelper.getSecurityFunctionEntityByName(SECURITY_FUNCTION)).thenReturn(SECURITY_FUNCTION_ENTITY);
         when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(SECURITY_FUNCTION);
 
-        SecurityFunction securityFunction = securityFunctionService.getSecurityFunction(securityFunctionName);
+        SecurityFunction securityFunction = securityFunctionService.getSecurityFunction(securityFunctionKey);
         assertEquals(SECURITY_FUNCTION, securityFunction.getSecurityFunctionName());
-        verify(alternateKeyHelper, times(1)).validateStringParameter("security function name", securityFunctionName);
-        verify(securityFunctionDaoHelper, times(1)).getSecurityFunctionEntityByName(SECURITY_FUNCTION);
+        verify(alternateKeyHelper).validateStringParameter("security function name", securityFunctionKey.getSecurityFunctionName());
+        verify(securityFunctionDaoHelper).getSecurityFunctionEntityByName(SECURITY_FUNCTION);
+
+        verifyNoMoreInteractionsHelper();
     }
 
-    private void validateDeleteSecurityFunctionByName(String securityFunctionName)
+    private void validateDeleteSecurityFunctionByKey(SecurityFunctionKey securityFunctionKey, String securityFunctionName)
     {
         when(securityFunctionDaoHelper.getSecurityFunctionEntityByName(SECURITY_FUNCTION)).thenReturn(SECURITY_FUNCTION_ENTITY);
         when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(SECURITY_FUNCTION);
 
-        SecurityFunction securityFunction = securityFunctionService.deleteSecurityFunction(securityFunctionName);
+        SecurityFunction securityFunction = securityFunctionService.deleteSecurityFunction(securityFunctionKey);
         assertEquals(SECURITY_FUNCTION, securityFunction.getSecurityFunctionName());
-        verify(alternateKeyHelper, times(1)).validateStringParameter("security function name", securityFunctionName);
-        verify(securityFunctionDaoHelper, times(1)).getSecurityFunctionEntityByName(SECURITY_FUNCTION);
-        verify(securityFunctionDao, times(1)).delete(SECURITY_FUNCTION_ENTITY);
+        verify(alternateKeyHelper).validateStringParameter("security function name", securityFunctionName);
+        verify(securityFunctionDaoHelper).getSecurityFunctionEntityByName(SECURITY_FUNCTION);
+        verify(securityFunctionDao).delete(SECURITY_FUNCTION_ENTITY);
+
+        verifyNoMoreInteractionsHelper();
+    }
+
+    /**
+     * Checks if any of the mocks has any interaction.
+     */
+    private void verifyNoMoreInteractionsHelper()
+    {
+        verifyNoMoreInteractions(securityFunctionDaoHelper, alternateKeyHelper, securityFunctionDao);
     }
 }

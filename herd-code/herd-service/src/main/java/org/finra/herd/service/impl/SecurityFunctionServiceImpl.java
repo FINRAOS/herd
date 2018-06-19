@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import org.finra.herd.dao.SecurityFunctionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -74,26 +75,28 @@ public class SecurityFunctionServiceImpl implements SecurityFunctionService
     }
 
     @Override
-    public SecurityFunction getSecurityFunction(String securityFunctionName)
+    public SecurityFunction getSecurityFunction(SecurityFunctionKey securityFunctionKey)
     {
         // Perform validation and trim.
-        securityFunctionName = validateSecurityFunctionName(securityFunctionName);
+        validateAndTrimSecurityFunctionKey(securityFunctionKey);
 
         // Retrieve and ensure that a security function already exists with the specified key.
-        SecurityFunctionEntity securityFunctionEntity = securityFunctionDaoHelper.getSecurityFunctionEntityByName(securityFunctionName);
+        SecurityFunctionEntity securityFunctionEntity =
+            securityFunctionDaoHelper.getSecurityFunctionEntityByName(securityFunctionKey.getSecurityFunctionName());
 
         // Create and return the security function object from the persisted entity.
         return createSecurityFunctionFromEntity(securityFunctionEntity);
     }
 
     @Override
-    public SecurityFunction deleteSecurityFunction(String securityFunctionName)
+    public SecurityFunction deleteSecurityFunction(SecurityFunctionKey securityFunctionKey)
     {
         // Perform validation and trim.
-        securityFunctionName = validateSecurityFunctionName(securityFunctionName);
+        validateAndTrimSecurityFunctionKey(securityFunctionKey);
 
-        // Retrieve and ensure that a security function already exists with the specified key.
-        SecurityFunctionEntity securityFunctionEntity = securityFunctionDaoHelper.getSecurityFunctionEntityByName(securityFunctionName);
+        // Retrieve and ensure that a security function already exists with the specified name.
+        SecurityFunctionEntity securityFunctionEntity =
+            securityFunctionDaoHelper.getSecurityFunctionEntityByName(securityFunctionKey.getSecurityFunctionName());
 
         // Delete the security function.
         securityFunctionDao.delete(securityFunctionEntity);
@@ -124,16 +127,18 @@ public class SecurityFunctionServiceImpl implements SecurityFunctionService
     }
 
     /**
-     * Validates a security function name. This method also trims the key parameters.
+     * Validates a security function key. This method also trims the key parameters.
      *
-     * @param securityFunctionName the security function name
+     * @param securityFunctionKey the security function key
      *
      * @return the the trimmed security function name
      * @throws IllegalArgumentException if any validation errors were found
      */
-    private String validateSecurityFunctionName(String securityFunctionName) throws IllegalArgumentException
+    private void validateAndTrimSecurityFunctionKey(SecurityFunctionKey securityFunctionKey) throws IllegalArgumentException
     {
-        return alternateKeyHelper.validateStringParameter("security function name", securityFunctionName);
+        Assert.notNull(securityFunctionKey, "A security function key must be specified.");
+        securityFunctionKey
+            .setSecurityFunctionName(alternateKeyHelper.validateStringParameter("security function name", securityFunctionKey.getSecurityFunctionName()));
     }
 
     /**
