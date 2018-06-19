@@ -45,6 +45,9 @@
       <jaxb:bindings node="//xs:complexType[@name='dataProviderKeys']//xs:element[@name='dataProviderKey']">
          <jaxb:property name="dataProviderKeys"/>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='securityFunctionKeys']//xs:element[@name='securityFunctionKey']">
+         <jaxb:property name="securityFunctionKeys"/>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='tagTypeKeys']//xs:element[@name='tagTypeKey']">
          <jaxb:property name="tagTypeKeys"/>
       </jaxb:bindings>

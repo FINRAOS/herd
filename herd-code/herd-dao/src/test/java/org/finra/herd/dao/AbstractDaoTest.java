@@ -61,6 +61,7 @@ import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.api.xml.SecurityFunction;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
@@ -1344,6 +1345,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected SecurityFunctionDao securityFunctionDao;
+
+    @Autowired
+    protected SecurityFunctionDaoTestHelper securityFunctionDaoTestHelper;
 
     @Autowired
     protected SecurityRoleDao securityRoleDao;
