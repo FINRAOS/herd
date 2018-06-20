@@ -178,9 +178,9 @@ public enum ConfigurationValue
     JMS_PUBLISHING_JOB_CRON_EXPRESSION("jms.publishing.job.cron.expression", "0 0/5 * * * ?"),
 
     /**
-     * The cron expression to schedule "ec2OnDemandPricingUpdate" system job.  Default is to run the system job at 06:00 on Sunday.
+     * The cron expression to schedule "ec2OnDemandPricingUpdate" system job. Default is to disable the job by scheduling it to run way in the future.
      */
-    EC2_ON_DEMAND_PRICING_UPDATE_JOB_CRON_EXPRESSION("ec2.on.demand.pricing.update.job.cron.expression", "0 0 6 ? * SUN"),
+    EC2_ON_DEMAND_PRICING_UPDATE_JOB_CRON_EXPRESSION("ec2.on.demand.pricing.update.job.cron.expression", "59 59 23 31 12 ? 2099"),
 
     /**
      * The URL of the Amazon EC2 pricing list in JSON format. Default is set to the URL specified by Amazon.
