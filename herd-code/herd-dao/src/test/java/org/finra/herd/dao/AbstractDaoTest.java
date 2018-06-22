@@ -392,6 +392,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String FORMAT_FILE_TYPE_CODE_2 = "UT_FileType_2" + RANDOM_SUFFIX;
 
+    public static final String FORMAT_FILE_TYPE_CODE_3 = "UT_FileType_3" + RANDOM_SUFFIX;
+
     public static final String FORMAT_FILE_TYPE_DESCRIPTION = "UT_Description of " + FORMAT_FILE_TYPE_CODE;
 
     public static final String FORMAT_USAGE_CODE = "UT_Usage" + RANDOM_SUFFIX;

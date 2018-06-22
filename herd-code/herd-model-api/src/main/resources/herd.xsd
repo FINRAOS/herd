@@ -1939,6 +1939,27 @@
    </xs:complexType>
 
    <!-- ***** File Type ***** -->
+   <xs:element name="fileTypeCreateRequest" type="fileTypeCreateRequest"/>
+   <xs:complexType name="fileTypeCreateRequest">
+      <xs:all>
+         <xs:element name="fileTypeCode" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The file type code</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="fileType" type="fileType"/>
+   <xs:complexType name="fileType">
+      <xs:all>
+         <xs:element name="fileTypeCode" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The file type code</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
 
    <xs:element name="fileTypeKeys" type="fileTypeKeys"/>
    <xs:complexType name="fileTypeKeys">

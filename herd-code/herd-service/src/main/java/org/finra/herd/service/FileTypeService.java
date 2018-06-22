@@ -15,6 +15,9 @@
 */
 package org.finra.herd.service;
 
+import org.finra.herd.model.api.xml.FileType;
+import org.finra.herd.model.api.xml.FileTypeCreateRequest;
+import org.finra.herd.model.api.xml.FileTypeKey;
 import org.finra.herd.model.api.xml.FileTypeKeys;
 
 /**
@@ -22,6 +25,33 @@ import org.finra.herd.model.api.xml.FileTypeKeys;
  */
 public interface FileTypeService
 {
+    /**
+     * Creates a new file type.
+     *
+     * @param fileTypeCreateRequest the file type create request
+     *
+     * @return the created file type
+     */
+    public FileType createFileType(FileTypeCreateRequest fileTypeCreateRequest);
+
+    /**
+     * Gets a file type for the specified key.
+     *
+     * @param fileTypeKey the file type key
+     *
+     * @return the file type
+     */
+    public FileType getFileType(FileTypeKey fileTypeKey);
+
+    /**
+     * Deletes a file type for the specified name.
+     *
+     * @param fileTypeKey the file type key
+     *
+     * @return the file type that was deleted
+     */
+    public FileType deleteFileType(FileTypeKey fileTypeKey);
+
     /**
      * Gets a list of file type keys for all file types defined in the system.
      *
