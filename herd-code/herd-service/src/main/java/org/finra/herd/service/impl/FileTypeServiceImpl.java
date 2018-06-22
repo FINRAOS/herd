@@ -116,7 +116,7 @@ public class FileTypeServiceImpl implements FileTypeService
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    private void validateFileTypeCreateRequest(FileTypeCreateRequest request) throws IllegalArgumentException
+    void validateFileTypeCreateRequest(FileTypeCreateRequest request) throws IllegalArgumentException
     {
         request.setFileTypeCode(alternateKeyHelper.validateStringParameter("file type code", request.getFileTypeCode()));
     }
@@ -129,7 +129,7 @@ public class FileTypeServiceImpl implements FileTypeService
      * @return the the trimmed file type code
      * @throws IllegalArgumentException if any validation errors were found
      */
-    private void validateAndTrimFileTypeKey(FileTypeKey fileTypeKey) throws IllegalArgumentException
+    void validateAndTrimFileTypeKey(FileTypeKey fileTypeKey) throws IllegalArgumentException
     {
         Assert.notNull(fileTypeKey, "A file type key must be specified.");
         fileTypeKey.setFileTypeCode(alternateKeyHelper.validateStringParameter("file type code", fileTypeKey.getFileTypeCode()));
@@ -160,8 +160,6 @@ public class FileTypeServiceImpl implements FileTypeService
     private FileType createFileTypeFromEntity(FileTypeEntity fileTypeEntity)
     {
         // Create the file type information.
-        FileType fileType = new FileType();
-        fileType.setFileTypeCode(fileTypeEntity.getCode());
-        return fileType;
+        return new FileType(fileTypeEntity.getCode());
     }
 }

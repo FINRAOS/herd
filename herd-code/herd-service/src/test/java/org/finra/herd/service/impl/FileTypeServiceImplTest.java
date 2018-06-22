@@ -1,5 +1,10 @@
 package org.finra.herd.service.impl;
 
+import static org.finra.herd.dao.AbstractDaoTest.CREATED_BY;
+import static org.finra.herd.dao.AbstractDaoTest.CREATED_ON;
+import static org.finra.herd.dao.AbstractDaoTest.FORMAT_FILE_TYPE_CODE;
+import static org.finra.herd.dao.AbstractDaoTest.FORMAT_FILE_TYPE_CODE_2;
+import static org.finra.herd.dao.AbstractDaoTest.FORMAT_FILE_TYPE_CODE_3;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,15 +33,13 @@ import org.finra.herd.model.api.xml.FileTypeCreateRequest;
 import org.finra.herd.model.api.xml.FileTypeKey;
 import org.finra.herd.model.api.xml.FileTypeKeys;
 import org.finra.herd.model.jpa.FileTypeEntity;
-import org.finra.herd.service.AbstractServiceTest;
-import org.finra.herd.service.FileTypeService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.FileTypeDaoHelper;
 
 /**
  * This class tests functionality within the file type service implementation.
  */
-public class FileTypeServiceImplTest extends AbstractServiceTest
+public class FileTypeServiceImplTest
 {
     private static final String FILE_TYPE_CODE_WITH_EXTRA_SPACES = FORMAT_FILE_TYPE_CODE + "    ";
 
@@ -68,8 +71,7 @@ public class FileTypeServiceImplTest extends AbstractServiceTest
         setCreatedOn(new Timestamp(CREATED_ON.getMillisecond()));
     }};
 
-    private static final List<FileTypeKey> ALL_FILE_TYPE_KEYS = Arrays.asList(
-        new FileTypeKey()
+    private static final List<FileTypeKey> ALL_FILE_TYPE_KEYS = Arrays.asList(new FileTypeKey()
         {{
             setFileTypeCode(FORMAT_FILE_TYPE_CODE);
         }},
@@ -82,11 +84,10 @@ public class FileTypeServiceImplTest extends AbstractServiceTest
         new FileTypeKey()
         {{
             setFileTypeCode(FORMAT_FILE_TYPE_CODE_3);
-        }}
-    );
+        }});
 
     @InjectMocks
-    private FileTypeService fileTypeMockService = new FileTypeServiceImpl();
+    private FileTypeServiceImpl fileTypeMockService;
 
     @Mock
     private AlternateKeyHelper alternateKeyHelper;
@@ -109,13 +110,18 @@ public class FileTypeServiceImplTest extends AbstractServiceTest
     @Test
     public void testCreateFileType()
     {
-        validateCreateFileType(FILE_TYPE_CREATE_REQUEST, FORMAT_FILE_TYPE_CODE);
-    }
+        when(fileTypeMockDao.getFileTypeByCode(FORMAT_FILE_TYPE_CODE)).thenReturn(null);
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(FORMAT_FILE_TYPE_CODE);
+        when(fileTypeMockDao.saveAndRefresh(any(FileTypeEntity.class))).thenReturn(FILE_TYPE_ENTITY);
 
-    @Test
-    public void testCreateFileTypeWithExtraSpacesInName()
-    {
-        validateCreateFileType(FILE_TYPE_CREATE_REQUEST_WITH_EXTRA_SPACES_IN_NAME, FILE_TYPE_CODE_WITH_EXTRA_SPACES);
+        FileType fileType = fileTypeMockService.createFileType(FILE_TYPE_CREATE_REQUEST);
+        assertEquals(FORMAT_FILE_TYPE_CODE, fileType.getFileTypeCode());
+
+        verify(alternateKeyHelper).validateStringParameter("file type code", FORMAT_FILE_TYPE_CODE);
+        verify(fileTypeMockDao).getFileTypeByCode(FORMAT_FILE_TYPE_CODE);
+        verify(fileTypeMockDao).saveAndRefresh(any(FileTypeEntity.class));
+
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
@@ -132,7 +138,15 @@ public class FileTypeServiceImplTest extends AbstractServiceTest
     @Test
     public void testGetFileType()
     {
-        validateGetFileTypeByKey(FILE_TYPE_KEY);
+        when(fileTypeDaoHelper.getFileTypeEntity(FORMAT_FILE_TYPE_CODE)).thenReturn(FILE_TYPE_ENTITY);
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(FORMAT_FILE_TYPE_CODE);
+
+        FileType fileType = fileTypeMockService.getFileType(FILE_TYPE_KEY);
+        assertEquals(FORMAT_FILE_TYPE_CODE, fileType.getFileTypeCode());
+        verify(alternateKeyHelper).validateStringParameter("file type code", FILE_TYPE_KEY.getFileTypeCode());
+        verify(fileTypeDaoHelper).getFileTypeEntity(FORMAT_FILE_TYPE_CODE);
+
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
@@ -145,21 +159,18 @@ public class FileTypeServiceImplTest extends AbstractServiceTest
     }
 
     @Test
-    public void testGetFileTypeWithExtraSpacesInName()
-    {
-        validateGetFileTypeByKey(FILE_TYPE_KEY_WITH_EXTRA_SPACES_IN_NAME);
-    }
-
-    @Test
     public void testDeleteFileType()
     {
-        validateDeleteFileTypeByKey(FILE_TYPE_KEY, FORMAT_FILE_TYPE_CODE);
-    }
+        when(fileTypeDaoHelper.getFileTypeEntity(FORMAT_FILE_TYPE_CODE)).thenReturn(FILE_TYPE_ENTITY);
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(FORMAT_FILE_TYPE_CODE);
 
-    @Test
-    public void testDeleteFileTypeWithExtraSpacesInName()
-    {
-        validateDeleteFileTypeByKey(FILE_TYPE_KEY_WITH_EXTRA_SPACES_IN_NAME, FILE_TYPE_CODE_WITH_EXTRA_SPACES);
+        FileType fileType = fileTypeMockService.deleteFileType(FILE_TYPE_KEY);
+        assertEquals(FORMAT_FILE_TYPE_CODE, fileType.getFileTypeCode());
+        verify(alternateKeyHelper).validateStringParameter("file type code", FORMAT_FILE_TYPE_CODE);
+        verify(fileTypeDaoHelper).getFileTypeEntity(FORMAT_FILE_TYPE_CODE);
+        verify(fileTypeMockDao).delete(FILE_TYPE_ENTITY);
+
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
@@ -179,13 +190,7 @@ public class FileTypeServiceImplTest extends AbstractServiceTest
         FileTypeKeys fileTypeKeys = fileTypeMockService.getFileTypes();
 
         assertNotNull(fileTypeKeys);
-        List<FileTypeKey> fileTypeKeyList = fileTypeKeys.getFileTypeKeys();
-        assertEquals(ALL_FILE_TYPE_KEYS.size(), fileTypeKeyList.size());
-
-        // verify the order is reserved
-        assertEquals(FORMAT_FILE_TYPE_CODE, fileTypeKeyList.get(0).getFileTypeCode());
-        assertEquals(FORMAT_FILE_TYPE_CODE_2, fileTypeKeyList.get(1).getFileTypeCode());
-        assertEquals(FORMAT_FILE_TYPE_CODE_3, fileTypeKeyList.get(2).getFileTypeCode());
+        assertEquals(ALL_FILE_TYPE_KEYS, fileTypeKeys.getFileTypeKeys());
 
         verify(fileTypeMockDao).getFileTypes();
 
@@ -206,47 +211,24 @@ public class FileTypeServiceImplTest extends AbstractServiceTest
         verifyNoMoreInteractionsHelper();
     }
 
-    private void validateCreateFileType(FileTypeCreateRequest fileTypeCreateRequest, String fileTypeCode)
-    {
-        when(fileTypeMockDao.getFileTypeByCode(FORMAT_FILE_TYPE_CODE)).thenReturn(null);
+    @Test
+    public void testValidateFileTypeCreateRequestExtraSpaces() {
         when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(FORMAT_FILE_TYPE_CODE);
-        when(fileTypeMockDao.saveAndRefresh(any(FileTypeEntity.class))).thenReturn(FILE_TYPE_ENTITY);
 
-        FileType fileType = fileTypeMockService.createFileType(fileTypeCreateRequest);
-        assertEquals(FORMAT_FILE_TYPE_CODE, fileType.getFileTypeCode());
-
-        verify(alternateKeyHelper).validateStringParameter("file type code", fileTypeCode);
-        verify(fileTypeMockDao).getFileTypeByCode(FORMAT_FILE_TYPE_CODE);
-        verify(fileTypeMockDao).saveAndRefresh(any(FileTypeEntity.class));
-
-        verifyNoMoreInteractionsHelper();
+        assertEquals(FILE_TYPE_CODE_WITH_EXTRA_SPACES, FILE_TYPE_CREATE_REQUEST_WITH_EXTRA_SPACES_IN_NAME.getFileTypeCode());
+        fileTypeMockService.validateFileTypeCreateRequest(FILE_TYPE_CREATE_REQUEST_WITH_EXTRA_SPACES_IN_NAME);
+        // White space should be trimmed now
+        assertEquals(FORMAT_FILE_TYPE_CODE, FILE_TYPE_CREATE_REQUEST_WITH_EXTRA_SPACES_IN_NAME.getFileTypeCode());
     }
 
-    private void validateGetFileTypeByKey(FileTypeKey fileTypeKey)
-    {
-        when(fileTypeDaoHelper.getFileTypeEntity(FORMAT_FILE_TYPE_CODE)).thenReturn(FILE_TYPE_ENTITY);
+    @Test
+    public void testValidateAndTrimFileTypeKeyExtraSpaces() {
         when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(FORMAT_FILE_TYPE_CODE);
 
-        FileType fileType = fileTypeMockService.getFileType(fileTypeKey);
-        assertEquals(FORMAT_FILE_TYPE_CODE, fileType.getFileTypeCode());
-        verify(alternateKeyHelper).validateStringParameter("file type code", fileTypeKey.getFileTypeCode());
-        verify(fileTypeDaoHelper).getFileTypeEntity(FORMAT_FILE_TYPE_CODE);
-
-        verifyNoMoreInteractionsHelper();
-    }
-
-    private void validateDeleteFileTypeByKey(FileTypeKey fileTypeKey, String fileTypeCode)
-    {
-        when(fileTypeDaoHelper.getFileTypeEntity(FORMAT_FILE_TYPE_CODE)).thenReturn(FILE_TYPE_ENTITY);
-        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(FORMAT_FILE_TYPE_CODE);
-
-        FileType fileType = fileTypeMockService.deleteFileType(fileTypeKey);
-        assertEquals(FORMAT_FILE_TYPE_CODE, fileType.getFileTypeCode());
-        verify(alternateKeyHelper).validateStringParameter("file type code", fileTypeCode);
-        verify(fileTypeDaoHelper).getFileTypeEntity(FORMAT_FILE_TYPE_CODE);
-        verify(fileTypeMockDao).delete(FILE_TYPE_ENTITY);
-
-        verifyNoMoreInteractionsHelper();
+        assertEquals(FILE_TYPE_CODE_WITH_EXTRA_SPACES, FILE_TYPE_KEY_WITH_EXTRA_SPACES_IN_NAME.getFileTypeCode());
+        fileTypeMockService.validateAndTrimFileTypeKey(FILE_TYPE_KEY_WITH_EXTRA_SPACES_IN_NAME);
+        // White space should be trimmed now
+        assertEquals(FORMAT_FILE_TYPE_CODE, FILE_TYPE_KEY_WITH_EXTRA_SPACES_IN_NAME.getFileTypeCode());
     }
 
     /**
