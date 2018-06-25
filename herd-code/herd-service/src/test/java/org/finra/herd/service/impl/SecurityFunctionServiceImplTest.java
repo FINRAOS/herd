@@ -174,7 +174,7 @@ public class SecurityFunctionServiceImplTest
     @Test
     public void testGetSecurityFunctions()
     {
-        when(securityFunctionDao.getUnrestrictedSecurityFunctions()).thenReturn(ALL_SECURITY_FUNCTION_NAMES);
+        when(securityFunctionDao.getSecurityFunctions()).thenReturn(ALL_SECURITY_FUNCTION_NAMES);
 
         SecurityFunctionKeys securityFunctionKeys = securityFunctionService.getSecurityFunctions();
 
@@ -187,7 +187,7 @@ public class SecurityFunctionServiceImplTest
         assertEquals(SECURITY_FUNCTION_2, securityFunctionKeyList.get(1).getSecurityFunctionName());
         assertEquals(SECURITY_FUNCTION_3, securityFunctionKeyList.get(2).getSecurityFunctionName());
 
-        verify(securityFunctionDao).getUnrestrictedSecurityFunctions();
+        verify(securityFunctionDao).getSecurityFunctions();
 
         verifyNoMoreInteractionsHelper();
     }
@@ -195,13 +195,13 @@ public class SecurityFunctionServiceImplTest
     @Test
     public void testGetSecurityFunctionsEmptyList()
     {
-        when(securityFunctionDao.getUnrestrictedSecurityFunctions()).thenReturn(Collections.emptyList());
+        when(securityFunctionDao.getSecurityFunctions()).thenReturn(Collections.emptyList());
         SecurityFunctionKeys securityFunctionKeys = securityFunctionService.getSecurityFunctions();
 
         assertNotNull(securityFunctionKeys);
         assertEquals(0, securityFunctionKeys.getSecurityFunctionKeys().size());
 
-        verify(securityFunctionDao).getUnrestrictedSecurityFunctions();
+        verify(securityFunctionDao).getSecurityFunctions();
 
         verifyNoMoreInteractionsHelper();
     }

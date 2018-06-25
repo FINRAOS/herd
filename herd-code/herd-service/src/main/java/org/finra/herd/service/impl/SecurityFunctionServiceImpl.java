@@ -110,7 +110,7 @@ public class SecurityFunctionServiceImpl implements SecurityFunctionService
     {
         SecurityFunctionKeys securityFunctionKeys = new SecurityFunctionKeys();
         securityFunctionKeys.getSecurityFunctionKeys()
-            .addAll(securityFunctionDao.getUnrestrictedSecurityFunctions().stream().map(SecurityFunctionKey::new).collect(Collectors.toList()));
+            .addAll(securityFunctionDao.getSecurityFunctions().stream().map(SecurityFunctionKey::new).collect(Collectors.toList()));
         return securityFunctionKeys;
     }
 
