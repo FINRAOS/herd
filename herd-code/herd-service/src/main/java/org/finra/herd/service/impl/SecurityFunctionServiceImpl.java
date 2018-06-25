@@ -131,7 +131,6 @@ public class SecurityFunctionServiceImpl implements SecurityFunctionService
      *
      * @param securityFunctionKey the security function key
      *
-     * @return the the trimmed security function name
      * @throws IllegalArgumentException if any validation errors were found
      */
     void validateAndTrimSecurityFunctionKey(SecurityFunctionKey securityFunctionKey) throws IllegalArgumentException
