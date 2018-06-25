@@ -110,7 +110,7 @@ public class SecurityFunctionServiceImpl implements SecurityFunctionService
     {
         SecurityFunctionKeys securityFunctionKeys = new SecurityFunctionKeys();
         securityFunctionKeys.getSecurityFunctionKeys()
-            .addAll(securityFunctionDao.getUnrestrictedSecurityFunctions().stream().map(SecurityFunctionKey::new).collect(Collectors.toList()));
+            .addAll(securityFunctionDao.getSecurityFunctions().stream().map(SecurityFunctionKey::new).collect(Collectors.toList()));
         return securityFunctionKeys;
     }
 
@@ -121,7 +121,7 @@ public class SecurityFunctionServiceImpl implements SecurityFunctionService
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    private void validateSecurityFunctionCreateRequest(SecurityFunctionCreateRequest request) throws IllegalArgumentException
+    void validateSecurityFunctionCreateRequest(SecurityFunctionCreateRequest request) throws IllegalArgumentException
     {
         request.setSecurityFunctionName(alternateKeyHelper.validateStringParameter("security function name", request.getSecurityFunctionName()));
     }
@@ -134,7 +134,7 @@ public class SecurityFunctionServiceImpl implements SecurityFunctionService
      * @return the the trimmed security function name
      * @throws IllegalArgumentException if any validation errors were found
      */
-    private void validateAndTrimSecurityFunctionKey(SecurityFunctionKey securityFunctionKey) throws IllegalArgumentException
+    void validateAndTrimSecurityFunctionKey(SecurityFunctionKey securityFunctionKey) throws IllegalArgumentException
     {
         Assert.notNull(securityFunctionKey, "A security function key must be specified.");
         securityFunctionKey
