@@ -878,8 +878,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SECURITY_ROLE = "UT_SecurityRole_" + RANDOM_SUFFIX;
 
-//    public static final List<SecurityRoleKey> SECURITY_ROLE_KEYS = Collections
-//        .unmodifiableList(Arrays.asList(new SecurityRoleKey("UT_SecurityRole_1_" + RANDOM_SUFFIX), new SecurityRoleKey("UT_SecurityRole_2_" + RANDOM_SUFFIX)));
+    public static final List<SecurityRoleKey> SECURITY_ROLE_KEYS = Collections
+        .unmodifiableList(Arrays.asList(new SecurityRoleKey("UT_SecurityRole_1_" + RANDOM_SUFFIX), new SecurityRoleKey("UT_SecurityRole_2_" + RANDOM_SUFFIX)));
 
     public static final String SECURITY_ROLE_1 = "FN_UT_SECURITY_ROLE_A_" + RANDOM_SUFFIX;
 
