@@ -993,6 +993,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected S3Service s3Service;
 
     @Autowired
+    protected SecurityRoleService securityRoleService;
+
+    @Autowired
     protected SearchIndexDaoHelper searchIndexDaoHelper;
 
     @Autowired
