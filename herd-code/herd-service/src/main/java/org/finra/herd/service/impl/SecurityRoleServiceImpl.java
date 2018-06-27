@@ -76,10 +76,10 @@ public class SecurityRoleServiceImpl implements SecurityRoleService
     public SecurityRole getSecurityRole(SecurityRoleKey securityRoleKey)
     {
         // validate and trim security role key.
-        validateSecurityRoleKey(securityRoleKey);
+        String securityRole = validateSecurityRoleKey(securityRoleKey);
 
         // get the security role entity.
-        SecurityRoleEntity securityRoleEntity = getSecurityRoleEntityByName(securityRoleKey);
+        SecurityRoleEntity securityRoleEntity = getSecurityRoleEntityByName(new SecurityRoleKey(securityRole));
 
         // create and return the security role from the security role entity.
         return createSecurityRoleFromEntity(securityRoleEntity);
@@ -89,10 +89,10 @@ public class SecurityRoleServiceImpl implements SecurityRoleService
     public SecurityRole deleteSecurityRole(SecurityRoleKey securityRoleKey)
     {
         // validate and trim security role key.
-        validateSecurityRoleKey(securityRoleKey);
+        String securityRole = validateSecurityRoleKey(securityRoleKey);
 
         // get the security role entity.
-        SecurityRoleEntity securityRoleEntity = getSecurityRoleEntityByName(securityRoleKey);
+        SecurityRoleEntity securityRoleEntity = getSecurityRoleEntityByName(new SecurityRoleKey(securityRole));
 
         // Delete the security role.
         securityRoleDao.delete(securityRoleEntity);
@@ -105,13 +105,13 @@ public class SecurityRoleServiceImpl implements SecurityRoleService
     public SecurityRole updateSecurityRole(SecurityRoleKey securityRoleKey, SecurityRoleUpdateRequest securityRoleUpdateRequest)
     {
         // Validate and trim security role key.
-        validateSecurityRoleKey(securityRoleKey);
+        String securityRole = validateSecurityRoleKey(securityRoleKey);
 
         // Validate security role update request.
         Assert.notNull(securityRoleUpdateRequest, "A security role update request must be specified.");
 
         // Retrieve and ensure that the security role exists.
-        SecurityRoleEntity securityRoleEntity = getSecurityRoleEntityByName(securityRoleKey);
+        SecurityRoleEntity securityRoleEntity = getSecurityRoleEntityByName(new SecurityRoleKey(securityRole));
 
         // Update the security role entity.
         securityRoleEntity.setDescription(securityRoleUpdateRequest.getDescription());

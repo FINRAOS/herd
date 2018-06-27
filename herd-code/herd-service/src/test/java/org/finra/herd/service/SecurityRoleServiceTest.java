@@ -129,6 +129,18 @@ public class SecurityRoleServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testGetSecurityRoleTrimParameters()
+    {
+        // Create and persist a security role entity.
+        securityRoleDaoTestHelper.createSecurityRoleEntity(SECURITY_ROLE, DESCRIPTION);
+
+        // Get a security role using input parameters with leading and trailing empty spaces.
+        SecurityRole securityRole = securityRoleService.getSecurityRole(new SecurityRoleKey(addWhitespace(SECURITY_ROLE)));
+
+        assertEquals(new SecurityRole(SECURITY_ROLE, DESCRIPTION), securityRole);
+    }
+
+    @Test
     public void testUpdateSecurityRole() throws Exception
     {
         // Create and persist a security role entity.
@@ -147,13 +159,26 @@ public class SecurityRoleServiceTest extends AbstractServiceTest
     {
         try
         {
-            securityRoleService.updateSecurityRole(new SecurityRoleKey(SECURITY_ROLE),new SecurityRoleUpdateRequest(DESCRIPTION));
+            securityRoleService.updateSecurityRole(new SecurityRoleKey(SECURITY_ROLE), new SecurityRoleUpdateRequest(DESCRIPTION));
             fail("Should throw ObjectNotFoundException when security role does not exist.");
         }
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Security role with name \"%s\" doesn't exist.", SECURITY_ROLE), e.getMessage());
         }
+    }
+
+    @Test
+    public void testUpdateSecurityRoleTrimParameters()
+    {
+        // Create and persist a security role entity.
+        securityRoleDaoTestHelper.createSecurityRoleEntity(SECURITY_ROLE, DESCRIPTION);
+
+        // Get a security role using input parameters with leading and trailing empty spaces.
+        SecurityRole securityRole = securityRoleService
+            .updateSecurityRole(new SecurityRoleKey(addWhitespace(SECURITY_ROLE)), new SecurityRoleUpdateRequest(addWhitespace(DESCRIPTION)));
+
+        assertEquals(new SecurityRole(SECURITY_ROLE, addWhitespace(DESCRIPTION)), securityRole);
     }
 
     @Test
@@ -166,6 +191,18 @@ public class SecurityRoleServiceTest extends AbstractServiceTest
         SecurityRole securityRole = securityRoleService.deleteSecurityRole(new SecurityRoleKey(SECURITY_ROLE));
 
         // Validate the response.
+        assertEquals(new SecurityRole(SECURITY_ROLE, DESCRIPTION), securityRole);
+    }
+
+    @Test
+    public void testDeleteSecurityRoleTrimParameters()
+    {
+        // Create and persist a security role entity.
+        securityRoleDaoTestHelper.createSecurityRoleEntity(SECURITY_ROLE, DESCRIPTION);
+
+        // Get a security role using input parameters with leading and trailing empty spaces.
+        SecurityRole securityRole = securityRoleService.deleteSecurityRole(new SecurityRoleKey(addWhitespace(SECURITY_ROLE)));
+
         assertEquals(new SecurityRole(SECURITY_ROLE, DESCRIPTION), securityRole);
     }
 

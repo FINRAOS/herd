@@ -32,9 +32,9 @@ public interface SecurityRoleDao extends BaseJpaDao
     /**
      * Gets a security role by it's name.
      *
-     * @param securityRoleName the security function name (case-insensitive)
+     * @param securityRoleName the security role name (case-insensitive)
      *
-     * @return the security role for the specified key
+     * @return the security role for the specified role
      */
     SecurityRoleEntity getSecurityRoleByName(String securityRoleName);
 

@@ -49,8 +49,8 @@
          <jaxb:property name="securityFunctionKeys"/>
       </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='securityRoleKeys']//xs:element[@name='securityRoleKey']">
-               <jaxb:property name="securityRoleKeys"/>
-            </jaxb:bindings>
+         <jaxb:property name="securityRoleKeys"/>
+         </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='tagTypeKeys']//xs:element[@name='tagTypeKey']">
          <jaxb:property name="tagTypeKeys"/>
       </jaxb:bindings>
