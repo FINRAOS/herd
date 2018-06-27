@@ -342,6 +342,16 @@ public class SecurityFunctions
 
     public static final String FN_SECURITY_FUNCTIONS_POST = "FN_SECURITY_FUNCTIONS_POST";
 
+    public static final String FN_SECURITY_ROLES_POST = "FN_SECURITY_ROLES_POST";
+
+    public static final String FN_SECURITY_ROLES_GET = "FN_SECURITY_ROLES_GET";
+
+    public static final String FN_SECURITY_ROLES_PUT = "FN_SECURITY_ROLES_PUT";
+
+    public static final String FN_SECURITY_ROLES_DELETE = "FN_SECURITY_ROLES_DELETE";
+
+    public static final String FN_SECURITY_ROLES_ALL_GET = "FN_SECURITY_ROLES_ALL_GET";
+
     public static final String FN_STORAGES_ALL_GET = "FN_STORAGES_ALL_GET";
 
     public static final String FN_STORAGES_DELETE = "FN_STORAGES_DELETE";

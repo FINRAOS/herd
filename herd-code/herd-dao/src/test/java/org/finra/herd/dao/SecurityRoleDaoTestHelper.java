@@ -75,4 +75,21 @@ public class SecurityRoleDaoTestHelper
         }
         return securityRoleEntities;
     }
+
+    /**
+     * Creates and persists a security role entity
+     *
+     * @param code the name of the security role
+     *
+     * @param description the description of the security role
+     *
+     * @return the security role entity
+     */
+    public SecurityRoleEntity createSecurityRoleEntity(String code,String description)
+    {
+        SecurityRoleEntity securityRoleEntity = new SecurityRoleEntity();
+        securityRoleEntity.setCode(code);
+        securityRoleEntity.setDescription(description);
+        return securityRoleDao.saveAndRefresh(securityRoleEntity);
+    }
 }
