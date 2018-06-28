@@ -17,6 +17,7 @@ package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.api.xml.SecurityRoleKey;
 import org.finra.herd.model.jpa.SecurityRoleEntity;
 
 public class SecurityRoleDaoTest extends AbstractDaoTest
@@ -74,4 +76,33 @@ public class SecurityRoleDaoTest extends AbstractDaoTest
         assertTrue(securityRoleEntities.indexOf(testSecurityRoleEntities.get(1)) > securityRoleEntities.indexOf(testSecurityRoleEntities.get(0)));
     }
 
+    @Test
+    public void testGetSecurityRoleByName()
+    {
+        // Create a security role entity.
+        SecurityRoleEntity securityRoleEntity = securityRoleDaoTestHelper.createSecurityRoleEntity(SECURITY_ROLE, DESCRIPTION);
+
+        // Retrieve the security role entity.
+        assertEquals(securityRoleEntity, securityRoleDao.getSecurityRoleByName(SECURITY_ROLE));
+
+        // Test case insensitivity of security role name.
+        assertEquals(securityRoleEntity, securityRoleDao.getSecurityRoleByName(SECURITY_ROLE.toUpperCase()));
+        assertEquals(securityRoleEntity, securityRoleDao.getSecurityRoleByName(SECURITY_ROLE.toLowerCase()));
+    }
+
+    @Test
+    public void testGetSecurityRoleKeys()
+    {
+        // Create and persist security role entities.
+        for (SecurityRoleKey key : SECURITY_ROLE_KEYS)
+        {
+            securityRoleDaoTestHelper.createSecurityRoleEntity(key.getSecurityRoleName());
+        }
+
+        // Get all security roles
+        List<SecurityRoleKey> securityRoleKeys = securityRoleDao.getSecurityRoleKeys();
+
+        // Validate the returned object.
+        assertEquals(SECURITY_ROLE_KEYS, securityRoleKeys);
+    }
 }

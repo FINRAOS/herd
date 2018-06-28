@@ -17,6 +17,7 @@ package org.finra.herd.dao;
 
 import java.util.List;
 
+import org.finra.herd.model.api.xml.SecurityRoleKey;
 import org.finra.herd.model.jpa.SecurityRoleEntity;
 
 public interface SecurityRoleDao extends BaseJpaDao
@@ -26,6 +27,21 @@ public interface SecurityRoleDao extends BaseJpaDao
      *
      * @return the list of security role entities
      */
-    public List<SecurityRoleEntity> getAllSecurityRoles();
+    List<SecurityRoleEntity> getAllSecurityRoles();
 
+    /**
+     * Gets a security role by it's name.
+     *
+     * @param securityRoleName the security role name (case-insensitive)
+     *
+     * @return the security role for the specified role
+     */
+    SecurityRoleEntity getSecurityRoleByName(String securityRoleName);
+
+    /**
+     * Gets all the security roles in ascending order of security role names.
+     *
+     * @return the security role for the specified key
+     */
+    List<SecurityRoleKey> getSecurityRoleKeys();
 }

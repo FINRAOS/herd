@@ -15,12 +15,14 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
@@ -39,6 +41,27 @@ import org.finra.herd.model.jpa.SecurityRoleFunctionEntity_;
 @Repository
 public class SecurityFunctionDaoImpl extends AbstractHerdDao implements SecurityFunctionDao
 {
+    @Override
+    public SecurityFunctionEntity getSecurityFunctionByName(String securityFunctionName)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<SecurityFunctionEntity> criteria = builder.createQuery(SecurityFunctionEntity.class);
+
+        // The criteria root is the security role function.
+        Root<SecurityFunctionEntity> securityFunctionEntity = criteria.from(SecurityFunctionEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(builder.upper(securityFunctionEntity.get(SecurityFunctionEntity_.code)), securityFunctionName.toUpperCase()));
+
+        // Add the clauses for the query.
+        criteria.select(securityFunctionEntity).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
+
+        return executeSingleResultQuery(criteria,
+            String.format("Found more than one security function with parameters {securityFunctionName=\"%s\"}.", securityFunctionName));
+    }
+
     @Override
     @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public List<String> getSecurityFunctions()

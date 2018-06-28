@@ -198,8 +198,7 @@ public class SecurityFunctions
 
     public static final String FN_BUSINESS_OBJECT_FORMAT_RETENTION_INFORMATION_PUT = "FN_BUSINESS_OBJECT_FORMAT_RETENTION_INFORMATION_PUT";
 
-    public static final String FN_BUSINESS_OBJECT_FORMAT_SCHEMA_BACKWARDS_COMPATIBILITY_PUT =
-        "FN_BUSINESS_OBJECT_FORMAT_SCHEMA_BACKWARDS_COMPATIBILITY_PUT";
+    public static final String FN_BUSINESS_OBJECT_FORMAT_SCHEMA_BACKWARDS_COMPATIBILITY_PUT = "FN_BUSINESS_OBJECT_FORMAT_SCHEMA_BACKWARDS_COMPATIBILITY_PUT";
 
     public static final String FN_CUSTOM_DDLS_ALL_GET = "FN_CUSTOM_DDLS_ALL_GET";
 
@@ -257,7 +256,13 @@ public class SecurityFunctions
 
     public static final String FN_EXPECTED_PARTITION_VALUES_POST = "FN_EXPECTED_PARTITION_VALUES_POST";
 
+    public static final String FN_FILE_TYPES_DELETE = "FN_FILE_TYPES_DELETE";
+
+    public static final String FN_FILE_TYPES_GET = "FN_FILE_TYPES_GET";
+
     public static final String FN_FILE_TYPES_ALL_GET = "FN_FILE_TYPES_ALL_GET";
+
+    public static final String FN_FILE_TYPES_POST = "FN_FILE_TYPES_POST";
 
     public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_ALL_GET = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_ALL_GET";
 
@@ -328,6 +333,24 @@ public class SecurityFunctions
     public static final String FN_SEARCH_INDEXES_POST = "FN_SEARCH_INDEXES_POST";
 
     public static final String FN_SEARCH_INDEXES_VALIDATION_POST = "FN_SEARCH_INDEXES_VALIDATION_POST";
+
+    public static final String FN_SECURITY_FUNCTIONS_ALL_GET = "FN_SECURITY_FUNCTIONS_ALL_GET";
+
+    public static final String FN_SECURITY_FUNCTIONS_DELETE = "FN_SECURITY_FUNCTIONS_DELETE";
+
+    public static final String FN_SECURITY_FUNCTIONS_GET = "FN_SECURITY_FUNCTIONS_GET";
+
+    public static final String FN_SECURITY_FUNCTIONS_POST = "FN_SECURITY_FUNCTIONS_POST";
+
+    public static final String FN_SECURITY_ROLES_POST = "FN_SECURITY_ROLES_POST";
+
+    public static final String FN_SECURITY_ROLES_GET = "FN_SECURITY_ROLES_GET";
+
+    public static final String FN_SECURITY_ROLES_PUT = "FN_SECURITY_ROLES_PUT";
+
+    public static final String FN_SECURITY_ROLES_DELETE = "FN_SECURITY_ROLES_DELETE";
+
+    public static final String FN_SECURITY_ROLES_ALL_GET = "FN_SECURITY_ROLES_ALL_GET";
 
     public static final String FN_STORAGES_ALL_GET = "FN_STORAGES_ALL_GET";
 
