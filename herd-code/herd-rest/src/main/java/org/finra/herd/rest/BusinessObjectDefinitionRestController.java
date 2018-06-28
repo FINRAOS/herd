@@ -67,6 +67,17 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
     /**
      * Updates an existing business object definition by key. <p>Requires WRITE permission on namespace</p>
      *
+     * <p>
+     * If attributes are supplied in the request, this endpoint replaces the entire list of attributes on the business object definition with the contents
+     * of the request. Observe this example:
+     *   <ol>
+     *       <li>Three attributes present on the existing business object definition.</li>
+     *       <li>This endpoint is called with a single attribute in the request with an updated value.</li>
+     *       <li>After this operation the business object definition will have only one attribute – which is probably not the desired outcome.</li>
+     *       <li>Instead, supply all existing attributes and provide updated values and additional attributes as needed.
+     *       The only case when an existing attribute should be left out is to remove the attribute.</li>
+     *   </ol>
+     * </p>
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the name of the business object definition to update
      * @param request the information needed to update the business object definition
