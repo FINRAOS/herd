@@ -34,7 +34,7 @@ public class SecurityRoleEntity extends AuditableEntity
     @Column(name = "scrty_role_cd")
     private String code;
 
-    @Column(name = "scrty_role_ds", length = 500)
+    @Column(name = "scrty_role_ds")
     private String description;
 
     public String getCode()

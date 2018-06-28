@@ -408,6 +408,72 @@
       </xs:sequence>
    </xs:complexType>
 
+   <!-- ***** Security Role ***** -->
+
+   <xs:element name="securityRoleCreateRequest" type="securityRoleCreateRequest"/>
+   <xs:complexType name="securityRoleCreateRequest">
+      <xs:all>
+         <xs:element name="securityRoleName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The security role name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional description of this security role</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="securityRoleUpdateRequest" type="securityRoleUpdateRequest"/>
+   <xs:complexType name="securityRoleUpdateRequest">
+      <xs:all>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional description of this security role</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="securityRole" type="securityRole"/>
+   <xs:complexType name="securityRole">
+      <xs:all>
+         <xs:element name="securityRoleName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The security role name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional description of this security role</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="securityRoleKeys" type="securityRoleKeys">
+      <xs:annotation>
+         <xs:documentation>The list of security role keys</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="securityRoleKeys">
+      <xs:sequence>
+         <xs:element name="securityRoleKey" type="securityRoleKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies a security role</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="securityRoleKey">
+      <xs:all>
+         <xs:element name="securityRoleName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** User Namespace Authorization ***** -->
 
    <xs:element name="userNamespaceAuthorizationCreateRequest" type="userNamespaceAuthorizationCreateRequest"/>
@@ -1939,6 +2005,27 @@
    </xs:complexType>
 
    <!-- ***** File Type ***** -->
+   <xs:element name="fileTypeCreateRequest" type="fileTypeCreateRequest"/>
+   <xs:complexType name="fileTypeCreateRequest">
+      <xs:all>
+         <xs:element name="fileTypeCode" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The file type code</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="fileType" type="fileType"/>
+   <xs:complexType name="fileType">
+      <xs:all>
+         <xs:element name="fileTypeCode" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The file type code</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
 
    <xs:element name="fileTypeKeys" type="fileTypeKeys"/>
    <xs:complexType name="fileTypeKeys">
@@ -8031,6 +8118,52 @@
                <xs:documentation>list of facets</xs:documentation>
             </xs:annotation>
          </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+
+   <!-- ***** Security Function ***** -->
+
+   <xs:element name="securityFunctionCreateRequest" type="securityFunctionCreateRequest"/>
+   <xs:complexType name="securityFunctionCreateRequest">
+      <xs:all>
+         <xs:element name="securityFunctionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The security function name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="securityFunction" type="securityFunction"/>
+   <xs:complexType name="securityFunction">
+      <xs:all>
+         <xs:element name="securityFunctionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The security function name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="securityFunctionKeys" type="securityFunctionKeys">
+      <xs:annotation>
+         <xs:documentation>The list of security function keys</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="securityFunctionKeys">
+      <xs:sequence>
+         <xs:element name="securityFunctionKey" type="securityFunctionKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies a Security Function</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="securityFunctionKey">
+      <xs:all>
+         <xs:element name="securityFunctionName" type="xs:string"/>
       </xs:all>
    </xs:complexType>
 

@@ -17,8 +17,20 @@ package org.finra.herd.dao;
 
 import java.util.List;
 
+import org.finra.herd.model.jpa.SecurityFunctionEntity;
+
 public interface SecurityFunctionDao extends BaseJpaDao
 {
+
+    /**
+     * Gets a security function by it's name.
+     *
+     * @param securityFunctionName the security function name (case-insensitive)
+     *
+     * @return the security function for the specified key
+     */
+    public SecurityFunctionEntity getSecurityFunctionByName(String securityFunctionName);
+
     /**
      * Gets a list of security functions.
      *

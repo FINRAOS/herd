@@ -15,11 +15,14 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.springframework.cache.annotation.Cacheable;
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.SecurityRoleDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.api.xml.SecurityRoleKey;
 import org.finra.herd.model.jpa.SecurityRoleEntity;
 import org.finra.herd.model.jpa.SecurityRoleEntity_;
 
@@ -55,5 +59,49 @@ public class SecurityRoleDaoImpl extends AbstractHerdDao implements SecurityRole
 
         // run the query to get the list of security role entities and return them
         return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    public SecurityRoleEntity getSecurityRoleByName(String securityRoleName)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<SecurityRoleEntity> criteria = builder.createQuery(SecurityRoleEntity.class);
+
+        // The criteria root is the security role.
+        Root<SecurityRoleEntity> securityRoleEntity = criteria.from(SecurityRoleEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(builder.upper(securityRoleEntity.get(SecurityRoleEntity_.code)), securityRoleName.toUpperCase()));
+
+        // Add the clauses for the query.
+        criteria.select(securityRoleEntity).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
+
+        return executeSingleResultQuery(criteria,
+            String.format("Found more than one security role with parameters {securityRoleName=\"%s\"}.", securityRoleName));
+    }
+
+    @Override
+    public List<SecurityRoleKey> getSecurityRoleKeys()
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> criteria = builder.createQuery(String.class);
+
+        // The criteria root is the security role.
+        Root<SecurityRoleEntity> securityRoleEntity = criteria.from(SecurityRoleEntity.class);
+
+        // Get the columns.
+        Path<String> roleCodeColumn = securityRoleEntity.get(SecurityRoleEntity_.code);
+
+        // Add the clauses for the query.
+        criteria.select(roleCodeColumn).orderBy(builder.asc(roleCodeColumn));
+
+        // Run the query to get a list of security roles.
+        List<String> securityRoles = entityManager.createQuery(criteria).getResultList();
+
+        // Populate the "keys" objects from the security roles and return it.
+        return securityRoles.stream().map(SecurityRoleKey::new).collect(Collectors.toList());
     }
 }
