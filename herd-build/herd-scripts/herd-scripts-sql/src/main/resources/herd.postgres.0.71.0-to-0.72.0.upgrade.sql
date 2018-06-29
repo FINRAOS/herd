@@ -27,9 +27,6 @@ create table bus_objct_dfntn_dscr_sgstn_stts_cd_lk
 
 alter table bus_objct_dfntn_dscr_sgstn_stts_cd_lk add constraint bus_objct_dfntn_dscr_sgstn_stts_cd_lk_pk  primary key (bus_objct_dfntn_dscr_sgstn_stts_cd); 
 
-grant select, insert, update, delete on bus_objct_dfntn_dscr_sgstn_stts_cd_lk to dmr_rw_role;
-grant select on bus_objct_dfntn_dscr_sgstn_stts_cd_lk to dmr_ro_role;
-
 insert into bus_objct_dfntn_dscr_sgstn_stts_cd_lk (bus_objct_dfntn_dscr_sgstn_stts_cd, creat_ts, creat_user_id, updt_ts, updt_user_id)
 values ('ACCEPTED', current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
 
