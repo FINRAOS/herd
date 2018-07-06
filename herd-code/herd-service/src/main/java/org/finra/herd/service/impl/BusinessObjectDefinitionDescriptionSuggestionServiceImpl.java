@@ -35,6 +35,7 @@ import org.finra.herd.dao.BusinessObjectDefinitionDescriptionSuggestionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionAcceptanceRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionCreateRequest;
@@ -51,6 +52,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionEnt
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.service.BusinessObjectDefinitionDescriptionSuggestionService;
+import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
@@ -82,6 +84,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
     private AlternateKeyHelper alternateKeyHelper;
 
     @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Autowired
@@ -97,12 +102,12 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
     @Autowired
-    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+    private MessageNotificationEventService messageNotificationEventService;
 
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
-
+    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionDescriptionSuggestion createBusinessObjectDefinitionDescriptionSuggestion(
         BusinessObjectDefinitionDescriptionSuggestionCreateRequest request)
@@ -138,10 +143,19 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         final BusinessObjectDefinitionDescriptionSuggestionEntity createdBusinessObjectDefinitionDescriptionSuggestionEntity =
             businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
 
-        return new BusinessObjectDefinitionDescriptionSuggestion(createdBusinessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            request.getDescriptionSuggestion(), createdBusinessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(),
-            createdBusinessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(createdBusinessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
+        // Create a business object definition description suggestion from the persisted entity.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            createBusinessObjectDefinitionDescriptionSuggestionFromEntity(createdBusinessObjectDefinitionDescriptionSuggestionEntity);
+
+        // Process a business object definition description suggestion change notification event.
+        messageNotificationEventService
+            .processBusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent(businessObjectDefinitionDescriptionSuggestion,
+                createdBusinessObjectDefinitionDescriptionSuggestionEntity.getUpdatedBy(),
+                HerdDateUtils.getXMLGregorianCalendarValue(createdBusinessObjectDefinitionDescriptionSuggestionEntity.getUpdatedOn()),
+                createdBusinessObjectDefinitionDescriptionSuggestionEntity.getBusinessObjectDefinition().getNamespace());
+
+        // Return the business object definition description suggestion created from the persisted entity.
+        return businessObjectDefinitionDescriptionSuggestion;
     }
 
     @Override
@@ -161,10 +175,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
                 .getBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, key.getUserId());
         businessObjectDefinitionDescriptionSuggestionDao.delete(businessObjectDefinitionDescriptionSuggestionEntity);
 
-        return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
-            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(), businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
+        // Create and return a business object definition description suggestion.
+        return createBusinessObjectDefinitionDescriptionSuggestionFromEntity(businessObjectDefinitionDescriptionSuggestionEntity);
     }
 
     @Override
@@ -183,10 +195,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
             businessObjectDefinitionDescriptionSuggestionDaoHelper
                 .getBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, key.getUserId());
 
-        return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
-            businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(), businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
+        // Create and return a business object definition description suggestion.
+        return createBusinessObjectDefinitionDescriptionSuggestionFromEntity(businessObjectDefinitionDescriptionSuggestionEntity);
     }
 
     @Override
@@ -252,6 +262,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         return new BusinessObjectDefinitionDescriptionSuggestionSearchResponse(businessObjectDefinitionDescriptionSuggestions);
     }
 
+    @PublishNotificationMessages
     @Override
     public BusinessObjectDefinitionDescriptionSuggestion updateBusinessObjectDefinitionDescriptionSuggestion(
         BusinessObjectDefinitionDescriptionSuggestionKey key, BusinessObjectDefinitionDescriptionSuggestionUpdateRequest request)
@@ -273,10 +284,19 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(request.getDescriptionSuggestion());
         businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
 
-        return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(), key,
-            request.getDescriptionSuggestion(), businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(),
-            businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
-            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
+        // Create a business object definition description suggestion from the updated entity.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            createBusinessObjectDefinitionDescriptionSuggestionFromEntity(businessObjectDefinitionDescriptionSuggestionEntity);
+
+        // Process a business object definition description suggestion change notification event.
+        messageNotificationEventService
+            .processBusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent(businessObjectDefinitionDescriptionSuggestion,
+                businessObjectDefinitionDescriptionSuggestionEntity.getUpdatedBy(),
+                HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getUpdatedOn()),
+                businessObjectDefinitionDescriptionSuggestionEntity.getBusinessObjectDefinition().getNamespace());
+
+        // Return the business object definition description suggestion created from the updated entity.
+        return businessObjectDefinitionDescriptionSuggestion;
     }
 
     @NamespacePermission(fields = "#request.businessObjectDefinitionDescriptionSuggestionKey.namespace", permissions = {
@@ -329,13 +349,26 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         // Notify the search index that a business object definition must be updated.
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
-        // Build and return the response object.
+        // Create and return a business object definition description suggestion.
+        return createBusinessObjectDefinitionDescriptionSuggestionFromEntity(businessObjectDefinitionDescriptionSuggestionEntity);
+    }
+
+    /**
+     * Creates a business object definition description suggestion from the persisted entity.
+     *
+     * @param businessObjectDefinitionDescriptionSuggestionEntity the business object definition description suggestion entity
+     *
+     * @return the business object definition description suggestion
+     */
+    private BusinessObjectDefinitionDescriptionSuggestion createBusinessObjectDefinitionDescriptionSuggestionFromEntity(
+        BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity)
+    {
         return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(),
             new BusinessObjectDefinitionDescriptionSuggestionKey(
                 businessObjectDefinitionDescriptionSuggestionEntity.getBusinessObjectDefinition().getNamespace().getCode(),
                 businessObjectDefinitionDescriptionSuggestionEntity.getBusinessObjectDefinition().getName(),
-                businessObjectDefinitionDescriptionSuggestionEntity.
-                    getUserId()), businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
+                businessObjectDefinitionDescriptionSuggestionEntity.getUserId()),
+            businessObjectDefinitionDescriptionSuggestionEntity.getDescriptionSuggestion(),
             businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(), businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
             HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
     }

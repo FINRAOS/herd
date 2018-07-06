@@ -17,9 +17,13 @@ package org.finra.herd.service.helper;
 
 import java.util.List;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.NotificationMessage;
+import org.finra.herd.model.jpa.NamespaceEntity;
 
 /**
  * The builder that builds notification messages.
@@ -38,6 +42,21 @@ public interface NotificationMessageBuilder
      */
     List<NotificationMessage> buildBusinessObjectDataStatusChangeMessages(BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus,
         String oldBusinessObjectDataStatus);
+
+    /**
+     * Builds a list of notification messages for the business object definition description suggestion change event. The result list might be empty if if no
+     * messages should be sent.
+     *
+     * @param businessObjectDefinitionDescriptionSuggestion the business object definition description suggestion
+     * @param lastUpdatedByUserId the User ID of the user who last updated this business object definition description suggestion
+     * @param lastUpdatedOn the timestamp when this business object definition description suggestion was last updated on
+     * @param namespaceEntity the namespace entity
+     *
+     * @return the list of notification messages
+     */
+    List<NotificationMessage> buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion, String lastUpdatedByUserId,
+        XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity);
 
     /**
      * Builds a list of notification messages for the business object format version change event. The result list might be empty if if no messages should be
