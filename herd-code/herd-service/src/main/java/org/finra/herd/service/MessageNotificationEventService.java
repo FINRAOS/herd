@@ -17,9 +17,13 @@ package org.finra.herd.service;
 
 import java.util.List;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.NotificationMessage;
+import org.finra.herd.model.jpa.NamespaceEntity;
 
 public interface MessageNotificationEventService
 {
@@ -34,6 +38,20 @@ public interface MessageNotificationEventService
      */
     List<NotificationMessage> processBusinessObjectDataStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey,
         String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
+
+    /**
+     * Handles notifications for business object definition description suggestion changes.
+     *
+     * @param businessObjectDefinitionDescriptionSuggestion the business object definition description suggestion
+     * @param lastUpdatedByUserId the User ID of the user who last updated this business object definition description suggestion
+     * @param lastUpdatedOn the timestamp when this business object definition description suggestion was last updated on
+     * @param namespaceEntity the namespace entity
+     *
+     * @return the list of notification messages that got queued for publishing
+     */
+    List<NotificationMessage> processBusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent(
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion, String lastUpdatedByUserId,
+        XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity);
 
     /**
      * Handles notifications for the business object format version changes.

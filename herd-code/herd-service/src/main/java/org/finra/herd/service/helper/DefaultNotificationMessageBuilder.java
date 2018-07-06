@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
+import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -41,9 +42,11 @@ import org.xml.sax.InputSource;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.UserNamespaceAuthorizationDao;
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
@@ -55,6 +58,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
 
 /**
  * Default implementation of the builder for notification messages. Constructs an ESB message based on given data. To use a different implementation overwrite
@@ -65,6 +69,12 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
 {
     @Autowired
     private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionDescriptionSuggestionDaoHelper businessObjectDefinitionDescriptionSuggestionDaoHelper;
 
     @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
@@ -82,6 +92,9 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
 
     @Autowired
     private JavaPropertiesHelper javaPropertiesHelper;
+
+    @Autowired
+    private UserNamespaceAuthorizationDao userNamespaceAuthorizationDao;
 
     @Autowired
     private VelocityHelper velocityHelper;
@@ -144,6 +157,72 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
                         messageHeaders.add(new MessageHeader(messageHeaderDefinition.getKey(),
                             evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
                                 String.format("businessObjectDataStatusChangeEvent_messageHeader_%s", messageHeaderDefinition.getKey()))));
+                    }
+                }
+
+                // Create a notification message and add it to the result list.
+                notificationMessages.add(
+                    new NotificationMessage(notificationMessageDefinition.getMessageType(), notificationMessageDefinition.getMessageDestination(), messageText,
+                        messageHeaders));
+            }
+        }
+
+        // Return the results.
+        return notificationMessages;
+    }
+
+    @Override
+    public List<NotificationMessage> buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion, String lastUpdatedByUserId,
+        XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity)
+    {
+        // Create a result list.
+        List<NotificationMessage> notificationMessages = new ArrayList<>();
+
+        // Get notification message definitions.
+        NotificationMessageDefinitions notificationMessageDefinitions = configurationDaoHelper
+            .getXmlClobPropertyAndUnmarshallToObject(NotificationMessageDefinitions.class,
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+
+        // Continue processing if notification message definitions are configured.
+        if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
+        {
+            // Create a context map of values that can be used when building the message.
+            Map<String, Object> velocityContextMap =
+                getBusinessObjectDefinitionDescriptionSuggestionChangeMessageVelocityContextMap(businessObjectDefinitionDescriptionSuggestion,
+                    lastUpdatedByUserId, lastUpdatedOn, namespaceEntity);
+
+            // Generate notification message for each notification message definition.
+            for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
+            {
+                // Validate the notification message type.
+                if (StringUtils.isBlank(notificationMessageDefinition.getMessageType()))
+                {
+                    throw new IllegalStateException(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                        ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey()));
+                }
+
+                // Validate the notification message destination.
+                if (StringUtils.isBlank(notificationMessageDefinition.getMessageDestination()))
+                {
+                    throw new IllegalStateException(String
+                        .format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                            ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey()));
+                }
+
+                // Evaluate the template to generate the message text.
+                String messageText = evaluateVelocityTemplate(notificationMessageDefinition.getMessageVelocityTemplate(), velocityContextMap,
+                    "businessObjectDefinitionDescriptionSuggestionChangeEvent");
+
+                // Build a list of optional message headers.
+                List<MessageHeader> messageHeaders = new ArrayList<>();
+                if (CollectionUtils.isNotEmpty(notificationMessageDefinition.getMessageHeaderDefinitions()))
+                {
+                    for (MessageHeaderDefinition messageHeaderDefinition : notificationMessageDefinition.getMessageHeaderDefinitions())
+                    {
+                        messageHeaders.add(new MessageHeader(messageHeaderDefinition.getKey(),
+                            evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
+                                String.format("businessObjectDefinitionDescriptionSuggestionChangeEvent_messageHeader_%s", messageHeaderDefinition.getKey()))));
                     }
                 }
 
@@ -404,6 +483,42 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         // Add the namespace to the header.
         velocityContextMap.put("namespace", businessObjectDataKey.getNamespace());
 
+        return velocityContextMap;
+    }
+
+    /**
+     * Returns Velocity context map of additional keys and values to place in the velocity context.
+     *
+     * @param businessObjectDefinitionDescriptionSuggestion the business object definition description suggestion
+     * @param lastUpdatedByUserId the User ID of the user who last updated this business object definition description suggestion
+     * @param lastUpdatedOn the timestamp when this business object definition description suggestion was last updated on
+     * @param namespaceEntity the namespace entity
+     *
+     * @return the Velocity context map
+     */
+    private Map<String, Object> getBusinessObjectDefinitionDescriptionSuggestionChangeMessageVelocityContextMap(
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion, String lastUpdatedByUserId,
+        XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity)
+    {
+        // Create a list of users (User IDs) that need to be notified about this event.
+        // Initialize the list with the user who created this business object definition description suggestion.
+        List<String> notificationList = new ArrayList<>();
+        notificationList.add(businessObjectDefinitionDescriptionSuggestion.getCreatedByUserId());
+
+        // Add to the notification list all users that have WRITE or WRITE_DESCRIPTIVE_CONTENT permission on the namespace.
+        notificationList.addAll(userNamespaceAuthorizationDao.getUserIdsWithWriteOrWriteDescriptiveContentPermissionsByNamespace(namespaceEntity));
+
+        // Create a context map of values that can be used when building the message.
+        Map<String, Object> velocityContextMap = new HashMap<>();
+        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestion", businessObjectDefinitionDescriptionSuggestion);
+        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestionKey",
+            businessObjectDefinitionDescriptionSuggestion.getBusinessObjectDefinitionDescriptionSuggestionKey());
+        velocityContextMap.put("lastUpdatedByUserId", lastUpdatedByUserId);
+        velocityContextMap.put("lastUpdatedOn", lastUpdatedOn);
+        velocityContextMap.put("notificationList", notificationList);
+        velocityContextMap.put("namespace", namespaceEntity.getCode());
+
+        // Return the Velocity context map.
         return velocityContextMap;
     }
 

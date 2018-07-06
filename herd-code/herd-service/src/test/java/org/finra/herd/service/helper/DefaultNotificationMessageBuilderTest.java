@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.exception.MethodInvocationException;
@@ -46,16 +47,21 @@ import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinitions;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.ConfigurationEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
@@ -477,6 +483,247 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
             // Restore the original authentication.
             SecurityContextHolder.getContext().setAuthentication(originalAuthentication);
         }
+    }
+
+    @Test
+    public void testBuildBusinessObjectDefinitionDescriptionSuggestionChangeMessages() throws Exception
+    {
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(BDEF_NAMESPACE);
+
+        // Create user namespace authorisations with user ids in reverse order and with WRITE and WRITE_DESCRIPTIVE_CONTENT namespace permissions.
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(USER_ID_3, namespaceEntity, Lists.newArrayList(NamespacePermissionEnum.WRITE));
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(USER_ID_2, namespaceEntity, Lists.newArrayList(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT));
+
+        // Create a business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
+            new BusinessObjectDefinitionDescriptionSuggestionKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
+
+        // Create a business object definition description suggestion.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(), CREATED_BY,
+                CREATED_ON);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, getMessageHeaderDefinitions())))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result = defaultNotificationMessageBuilder
+            .buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(businessObjectDefinitionDescriptionSuggestion, UPDATED_BY, UPDATED_ON,
+                namespaceEntity);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
+        String uuid = result.get(0).getMessageHeaders().get(4).getValue();
+        assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
+        validateBusinessObjectDefinitionDescriptionSuggestionChangeMessage(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDefinitionDescriptionSuggestion,
+            UPDATED_BY, UPDATED_ON.toString(), Lists.newArrayList(CREATED_BY, USER_ID_2, USER_ID_3),
+            String.format("https://udc.dev.finra.org/data-entities/%s/%s", BDEF_NAMESPACE, BDEF_NAME), getExpectedMessageHeaders(uuid), result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDefinitionDescriptionSuggestionChangeMessagesNoMessageDefinitions() throws Exception
+    {
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(BDEF_NAMESPACE);
+
+        // Create a business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
+            new BusinessObjectDefinitionDescriptionSuggestionKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
+
+        // Create a business object definition description suggestion.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(), CREATED_BY,
+                CREATED_ON);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(null);
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message and validate the results.
+        assertEquals(0, defaultNotificationMessageBuilder
+            .buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(businessObjectDefinitionDescriptionSuggestion, UPDATED_BY, UPDATED_ON,
+                namespaceEntity).size());
+
+        // Override configuration, so there will be an empty list of notification message definitions configured in the system.
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions()));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message and validate the results.
+        assertEquals(0, defaultNotificationMessageBuilder
+            .buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(businessObjectDefinitionDescriptionSuggestion, UPDATED_BY, UPDATED_ON,
+                namespaceEntity).size());
+    }
+
+    @Test
+    public void testBuildBusinessObjectDefinitionDescriptionSuggestionChangeMessagesNoMessageDestination() throws Exception
+    {
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(BDEF_NAMESPACE);
+
+        // Create a business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
+            new BusinessObjectDefinitionDescriptionSuggestionKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
+
+        // Create a business object definition description suggestion.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(), CREATED_BY,
+                CREATED_ON);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            defaultNotificationMessageBuilder
+                .buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(businessObjectDefinitionDescriptionSuggestion, UPDATED_BY, UPDATED_ON,
+                    namespaceEntity);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBuildBusinessObjectDefinitionDescriptionSuggestionChangeMessagesNoMessageHeaders() throws Exception
+    {
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(BDEF_NAMESPACE);
+
+        // Create user namespace authorisations with user ids in reverse order and with WRITE and WRITE_DESCRIPTIVE_CONTENT namespace permissions.
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(USER_ID_3, namespaceEntity, Lists.newArrayList(NamespacePermissionEnum.WRITE));
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(USER_ID_2, namespaceEntity, Lists.newArrayList(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT));
+
+        // Create a business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
+            new BusinessObjectDefinitionDescriptionSuggestionKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
+
+        // Create a business object definition description suggestion.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(), CREATED_BY,
+                CREATED_ON);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result = defaultNotificationMessageBuilder
+            .buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(businessObjectDefinitionDescriptionSuggestion, UPDATED_BY, UPDATED_ON,
+                namespaceEntity);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        validateBusinessObjectDefinitionDescriptionSuggestionChangeMessage(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDefinitionDescriptionSuggestion,
+            UPDATED_BY, UPDATED_ON.toString(), Lists.newArrayList(CREATED_BY, USER_ID_2, USER_ID_3),
+            String.format("https://udc.dev.finra.org/data-entities/%s/%s", BDEF_NAMESPACE, BDEF_NAME), NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDefinitionDescriptionSuggestionChangeMessagesNoMessageType() throws Exception
+    {
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(BDEF_NAMESPACE);
+
+        // Create a business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
+            new BusinessObjectDefinitionDescriptionSuggestionKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
+
+        // Create a business object definition description suggestion.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(), CREATED_BY,
+                CREATED_ON);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(NO_MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            defaultNotificationMessageBuilder
+                .buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(businessObjectDefinitionDescriptionSuggestion, UPDATED_BY, UPDATED_ON,
+                    namespaceEntity);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBuildBusinessObjectDefinitionDescriptionSuggestionChangeMessagesOnlyOneUserIdInNotificationList() throws Exception
+    {
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(BDEF_NAMESPACE);
+
+        // Create a business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
+            new BusinessObjectDefinitionDescriptionSuggestionKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
+
+        // Create a business object definition description suggestion.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(), CREATED_BY,
+                CREATED_ON);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, getMessageHeaderDefinitions())))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result = defaultNotificationMessageBuilder
+            .buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(businessObjectDefinitionDescriptionSuggestion, UPDATED_BY, UPDATED_ON,
+                namespaceEntity);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
+        String uuid = result.get(0).getMessageHeaders().get(4).getValue();
+        assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
+        validateBusinessObjectDefinitionDescriptionSuggestionChangeMessage(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDefinitionDescriptionSuggestion,
+            UPDATED_BY, UPDATED_ON.toString(), Lists.newArrayList(CREATED_BY),
+            String.format("https://udc.dev.finra.org/data-entities/%s/%s", BDEF_NAMESPACE, BDEF_NAME), getExpectedMessageHeaders(uuid), result.get(0));
     }
 
     @Test
@@ -1175,6 +1422,50 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
     }
 
     /**
+     * Validates a business object definition description suggestion change notification message.
+     *
+     * @param expectedMessageType the expected message type
+     * @param expectedMessageDestination the expected message destination
+     * @param expectedBusinessObjectDefinitionDescriptionSuggestion the expected business object definition description suggestion
+     * @param expectedLastUpdatedByUserId the expected User ID of the user who last updated this business object definition description suggestion
+     * @param expectedLastUpdatedOn the expected timestamp when this business object definition description suggestion was last updated on
+     * @param expectedNotificationList the expected notification list
+     * @param expectedBusinessObjectDefinitionUri the expected UDC URI for the business object definition
+     * @param expectedMessageHeaders the list of expected message headers
+     * @param notificationMessage the notification message to be validated
+     */
+    private void validateBusinessObjectDefinitionDescriptionSuggestionChangeMessage(String expectedMessageType, String expectedMessageDestination,
+        BusinessObjectDefinitionDescriptionSuggestion expectedBusinessObjectDefinitionDescriptionSuggestion, String expectedLastUpdatedByUserId,
+        String expectedLastUpdatedOn, List<String> expectedNotificationList, String expectedBusinessObjectDefinitionUri,
+        List<MessageHeader> expectedMessageHeaders, NotificationMessage notificationMessage) throws IOException
+    {
+        assertNotNull(notificationMessage);
+
+        assertEquals(expectedMessageType, notificationMessage.getMessageType());
+        assertEquals(expectedMessageDestination, notificationMessage.getMessageDestination());
+
+        BusinessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload businessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload = jsonHelper
+            .unmarshallJsonToObject(BusinessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload.class, notificationMessage.getMessageText());
+
+        assertEquals(StringUtils.length(businessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload.eventDate),
+            StringUtils.length(HerdDateUtils.now().toString()));
+        assertEquals(expectedBusinessObjectDefinitionDescriptionSuggestion.getBusinessObjectDefinitionDescriptionSuggestionKey(),
+            businessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload.businessObjectDefinitionDescriptionSuggestionKey);
+        assertEquals(expectedBusinessObjectDefinitionDescriptionSuggestion.getStatus(),
+            businessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload.status);
+        assertEquals(expectedBusinessObjectDefinitionDescriptionSuggestion.getCreatedByUserId(),
+            businessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload.createdByUserId);
+        assertEquals(expectedBusinessObjectDefinitionDescriptionSuggestion.getCreatedOn().toString(),
+            businessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload.createdOn);
+        assertEquals(expectedLastUpdatedByUserId, businessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload.lastUpdatedByUserId);
+        assertEquals(expectedLastUpdatedOn, businessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload.lastUpdatedOn);
+        assertEquals(expectedNotificationList, businessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload.notificationList);
+        assertEquals(expectedBusinessObjectDefinitionUri, businessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload.businessObjectDefinitionUri);
+
+        assertEquals(expectedMessageHeaders, notificationMessage.getMessageHeaders());
+    }
+
+    /**
      * Validates a business object data status change notification message with JSON payload.
      *
      * @param expectedMessageType the expected message type
@@ -1271,5 +1562,26 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
         public String newBusinessObjectFormatVersion;
 
         public String oldBusinessObjectFormatVersion;
+    }
+
+    private static class BusinessObjectDefinitionDescriptionSuggestionChangeJsonMessagePayload
+    {
+        public BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey;
+
+        public String businessObjectDefinitionUri;
+
+        public String createdByUserId;
+
+        public String createdOn;
+
+        public String eventDate;
+
+        public String lastUpdatedByUserId;
+
+        public String lastUpdatedOn;
+
+        public List<String> notificationList;
+
+        public String status;
     }
 }

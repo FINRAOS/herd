@@ -1,6 +1,7 @@
 package org.finra.herd.service;
 
 import static junit.framework.TestCase.fail;
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 import static org.finra.herd.service.impl.BusinessObjectDefinitionDescriptionSuggestionServiceImpl.CREATED_BY_USER_ID_FIELD;
 import static org.finra.herd.service.impl.BusinessObjectDefinitionDescriptionSuggestionServiceImpl.CREATED_ON_FIELD;
 import static org.finra.herd.service.impl.BusinessObjectDefinitionDescriptionSuggestionServiceImpl.DESCRIPTION_SUGGESTION_FIELD;
@@ -82,6 +83,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
     @Mock
+    private MessageNotificationEventService messageNotificationEventService;
+
+    @Mock
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
     @InjectMocks
@@ -96,49 +100,55 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
     @Test
     public void testCreateBusinessObjectDefinitionDescriptionSuggestion()
     {
-        // Create objects needed for test
+        // Create a business object definition key.
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
 
+        // Create a business object definition description suggestion key.
         BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
             new BusinessObjectDefinitionDescriptionSuggestionKey(NAMESPACE, BDEF_NAME, USER_ID);
-        BusinessObjectDefinitionDescriptionSuggestionCreateRequest request =
+
+        // Create a business object definition description suggestion create request.
+        BusinessObjectDefinitionDescriptionSuggestionCreateRequest businessObjectDefinitionDescriptionSuggestionCreateRequest =
             new BusinessObjectDefinitionDescriptionSuggestionCreateRequest(businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION);
 
+        // Create a namespace entity.
         NamespaceEntity namespaceEntity = new NamespaceEntity();
-        namespaceEntity.setCode(businessObjectDefinitionDescriptionSuggestionKey.getNamespace());
+        namespaceEntity.setCode(NAMESPACE);
+
+        // Create a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = new BusinessObjectDefinitionEntity();
         businessObjectDefinitionEntity.setNamespace(namespaceEntity);
-        businessObjectDefinitionEntity.setName(businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
+        businessObjectDefinitionEntity.setName(BDEF_NAME);
 
+        // Create a business object definition description suggestion status entity.
         BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
             new BusinessObjectDefinitionDescriptionSuggestionStatusEntity();
         businessObjectDefinitionDescriptionSuggestionStatusEntity
             .setCode(BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name());
 
+        // Create a business object definition description suggestion entity.
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
             new BusinessObjectDefinitionDescriptionSuggestionEntity();
         businessObjectDefinitionDescriptionSuggestionEntity.setId(ID);
         businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        businessObjectDefinitionDescriptionSuggestionEntity.setUserId(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
+        businessObjectDefinitionDescriptionSuggestionEntity.setUserId(USER_ID);
         businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
         businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
         businessObjectDefinitionDescriptionSuggestionEntity.setCreatedBy(CREATED_BY);
-        businessObjectDefinitionDescriptionSuggestionEntity.setCreatedOn(new Timestamp(getRandomDate().getTime()));
+        businessObjectDefinitionDescriptionSuggestionEntity.setCreatedOn(new Timestamp(CREATED_ON.toGregorianCalendar().getTimeInMillis()));
+        businessObjectDefinitionDescriptionSuggestionEntity.setUpdatedBy(UPDATED_BY);
+        businessObjectDefinitionDescriptionSuggestionEntity.setUpdatedOn(new Timestamp(UPDATED_ON.toGregorianCalendar().getTimeInMillis()));
 
+        // Create an expected business object definition description suggestion response object.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(),
-                businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
-                businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(), businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
-                HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(), CREATED_BY,
+                CREATED_ON);
 
-        // Mock the call to external methods
-        when(alternateKeyHelper.validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace()))
-            .thenReturn(businessObjectDefinitionDescriptionSuggestionKey.getNamespace());
-        when(alternateKeyHelper
-            .validateStringParameter("business object definition name", businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName()))
-            .thenReturn(BDEF_NAME);
-        when(alternateKeyHelper.validateStringParameter("user id", businessObjectDefinitionDescriptionSuggestionKey.getUserId()))
-            .thenReturn(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
+        // Mock the external calls.
+        when(alternateKeyHelper.validateStringParameter("namespace", NAMESPACE)).thenReturn(NAMESPACE);
+        when(alternateKeyHelper.validateStringParameter("business object definition name", BDEF_NAME)).thenReturn(BDEF_NAME);
+        when(alternateKeyHelper.validateStringParameter("user id", USER_ID)).thenReturn(USER_ID);
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
         when(businessObjectDefinitionDescriptionSuggestionStatusDaoHelper.getBusinessObjectDefinitionDescriptionSuggestionStatusEntity(
             BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name()))
@@ -149,19 +159,17 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         when(businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(any(BusinessObjectDefinitionDescriptionSuggestionEntity.class)))
             .thenReturn(businessObjectDefinitionDescriptionSuggestionEntity);
 
-        // Call the method under test
-        BusinessObjectDefinitionDescriptionSuggestion result =
-            businessObjectDefinitionDescriptionSuggestionService.createBusinessObjectDefinitionDescriptionSuggestion(request);
+        // Call the method under test.
+        BusinessObjectDefinitionDescriptionSuggestion result = businessObjectDefinitionDescriptionSuggestionService
+            .createBusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionCreateRequest);
 
-        // Validate result
-        assertThat("Result does not equal businessObjectDefinitionDescriptionSuggestionEntity.", result,
-            is(equalTo(businessObjectDefinitionDescriptionSuggestion)));
+        // Validate the results.
+        assertEquals(businessObjectDefinitionDescriptionSuggestion, result);
 
-        // Verify the calls to external methods
-        verify(alternateKeyHelper).validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace());
-        verify(alternateKeyHelper)
-            .validateStringParameter("business object definition name", businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
-        verify(alternateKeyHelper).validateStringParameter("user id", businessObjectDefinitionDescriptionSuggestionKey.getUserId());
+        // Verify the external calls.
+        verify(alternateKeyHelper).validateStringParameter("namespace", NAMESPACE);
+        verify(alternateKeyHelper).validateStringParameter("business object definition name", BDEF_NAME);
+        verify(alternateKeyHelper).validateStringParameter("user id", USER_ID);
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDescriptionSuggestionStatusDaoHelper).getBusinessObjectDefinitionDescriptionSuggestionStatusEntity(
             BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name());
@@ -169,6 +177,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
             .getBusinessObjectDefinitionDescriptionSuggestionByBusinessObjectDefinitionAndUserId(businessObjectDefinitionEntity,
                 businessObjectDefinitionDescriptionSuggestionKey.getUserId());
         verify(businessObjectDefinitionDescriptionSuggestionDao).saveAndRefresh(any(BusinessObjectDefinitionDescriptionSuggestionEntity.class));
+        verify(messageNotificationEventService)
+            .processBusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent(businessObjectDefinitionDescriptionSuggestion, UPDATED_BY, UPDATED_ON,
+                namespaceEntity);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -863,72 +874,79 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
     @Test
     public void testUpdateBusinessObjectDefinitionDescriptionSuggestion()
     {
-        // Create objects needed for test
+        // Create a business object definition key.
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
 
+        // Create a business object definition description suggestion key.
         BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
             new BusinessObjectDefinitionDescriptionSuggestionKey(NAMESPACE, BDEF_NAME, USER_ID);
-        BusinessObjectDefinitionDescriptionSuggestionUpdateRequest request =
-            new BusinessObjectDefinitionDescriptionSuggestionUpdateRequest(DESCRIPTION_SUGGESTION);
 
+        // Create a business object definition description suggestion update request.
+        BusinessObjectDefinitionDescriptionSuggestionUpdateRequest businessObjectDefinitionDescriptionSuggestionUpdateRequest =
+            new BusinessObjectDefinitionDescriptionSuggestionUpdateRequest(DESCRIPTION_SUGGESTION_2);
+
+        // Create a namespace entity.
         NamespaceEntity namespaceEntity = new NamespaceEntity();
-        namespaceEntity.setCode(businessObjectDefinitionDescriptionSuggestionKey.getNamespace());
+        namespaceEntity.setCode(NAMESPACE);
+
+        // Create a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = new BusinessObjectDefinitionEntity();
         businessObjectDefinitionEntity.setNamespace(namespaceEntity);
-        businessObjectDefinitionEntity.setName(businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
+        businessObjectDefinitionEntity.setName(BDEF_NAME);
 
+        // Create a business object definition description suggestion status entity.
         BusinessObjectDefinitionDescriptionSuggestionStatusEntity businessObjectDefinitionDescriptionSuggestionStatusEntity =
             new BusinessObjectDefinitionDescriptionSuggestionStatusEntity();
         businessObjectDefinitionDescriptionSuggestionStatusEntity
             .setCode(BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name());
 
+        // Create a business object definition description suggestion entity.
         BusinessObjectDefinitionDescriptionSuggestionEntity businessObjectDefinitionDescriptionSuggestionEntity =
             new BusinessObjectDefinitionDescriptionSuggestionEntity();
         businessObjectDefinitionDescriptionSuggestionEntity.setId(ID);
         businessObjectDefinitionDescriptionSuggestionEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        businessObjectDefinitionDescriptionSuggestionEntity.setUserId(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
+        businessObjectDefinitionDescriptionSuggestionEntity.setUserId(USER_ID);
         businessObjectDefinitionDescriptionSuggestionEntity.setDescriptionSuggestion(DESCRIPTION_SUGGESTION);
         businessObjectDefinitionDescriptionSuggestionEntity.setStatus(businessObjectDefinitionDescriptionSuggestionStatusEntity);
         businessObjectDefinitionDescriptionSuggestionEntity.setCreatedBy(CREATED_BY);
-        businessObjectDefinitionDescriptionSuggestionEntity.setCreatedOn(new Timestamp(getRandomDate().getTime()));
+        businessObjectDefinitionDescriptionSuggestionEntity.setCreatedOn(new Timestamp(CREATED_ON.toGregorianCalendar().getTimeInMillis()));
+        businessObjectDefinitionDescriptionSuggestionEntity.setUpdatedBy(UPDATED_BY);
+        businessObjectDefinitionDescriptionSuggestionEntity.setUpdatedOn(new Timestamp(UPDATED_ON.toGregorianCalendar().getTimeInMillis()));
 
+        // Create an expected business object definition description suggestion response object.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
-            new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionEntity.getId(),
-                businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
-                businessObjectDefinitionDescriptionSuggestionEntity.getStatus().getCode(), businessObjectDefinitionDescriptionSuggestionEntity.getCreatedBy(),
-                HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionDescriptionSuggestionEntity.getCreatedOn()));
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION_2,
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(), CREATED_BY,
+                CREATED_ON);
 
-        // Mock the call to external methods
-        when(alternateKeyHelper.validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace()))
-            .thenReturn(businessObjectDefinitionDescriptionSuggestionKey.getNamespace());
-        when(alternateKeyHelper
-            .validateStringParameter("business object definition name", businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName()))
-            .thenReturn(BDEF_NAME);
-        when(alternateKeyHelper.validateStringParameter("user id", businessObjectDefinitionDescriptionSuggestionKey.getUserId()))
-            .thenReturn(businessObjectDefinitionDescriptionSuggestionKey.getUserId());
+        // Mock the external calls.
+        when(alternateKeyHelper.validateStringParameter("namespace", NAMESPACE)).thenReturn(NAMESPACE);
+        when(alternateKeyHelper.validateStringParameter("business object definition name", BDEF_NAME)).thenReturn(BDEF_NAME);
+        when(alternateKeyHelper.validateStringParameter("user id", USER_ID)).thenReturn(USER_ID);
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
-        when(businessObjectDefinitionDescriptionSuggestionDaoHelper.getBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity,
-            businessObjectDefinitionDescriptionSuggestionKey.getUserId())).thenReturn(businessObjectDefinitionDescriptionSuggestionEntity);
-        when(businessObjectDefinitionDescriptionSuggestionDao.saveAndRefresh(any(BusinessObjectDefinitionDescriptionSuggestionEntity.class)))
+        when(businessObjectDefinitionDescriptionSuggestionDaoHelper
+            .getBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity, USER_ID))
             .thenReturn(businessObjectDefinitionDescriptionSuggestionEntity);
 
-        // Call the method under test
+        // Call the method under test.
         BusinessObjectDefinitionDescriptionSuggestion result = businessObjectDefinitionDescriptionSuggestionService
-            .updateBusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionKey, request);
+            .updateBusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestionKey,
+                businessObjectDefinitionDescriptionSuggestionUpdateRequest);
 
-        // Validate result
-        assertThat("Result does not equal businessObjectDefinitionDescriptionSuggestionEntity.", result,
-            is(equalTo(businessObjectDefinitionDescriptionSuggestion)));
+        // Validate the results.
+        assertEquals(businessObjectDefinitionDescriptionSuggestion, result);
 
-        // Verify the calls to external methods
-        verify(alternateKeyHelper).validateStringParameter("namespace", businessObjectDefinitionDescriptionSuggestionKey.getNamespace());
-        verify(alternateKeyHelper)
-            .validateStringParameter("business object definition name", businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName());
-        verify(alternateKeyHelper).validateStringParameter("user id", businessObjectDefinitionDescriptionSuggestionKey.getUserId());
+        // Verify the external calls.
+        verify(alternateKeyHelper).validateStringParameter("namespace", NAMESPACE);
+        verify(alternateKeyHelper).validateStringParameter("business object definition name", BDEF_NAME);
+        verify(alternateKeyHelper).validateStringParameter("user id", USER_ID);
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDescriptionSuggestionDaoHelper).getBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity,
             businessObjectDefinitionDescriptionSuggestionKey.getUserId());
-        verify(businessObjectDefinitionDescriptionSuggestionDao).saveAndRefresh(any(BusinessObjectDefinitionDescriptionSuggestionEntity.class));
+        verify(businessObjectDefinitionDescriptionSuggestionDao).saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
+        verify(messageNotificationEventService)
+            .processBusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent(businessObjectDefinitionDescriptionSuggestion, UPDATED_BY, UPDATED_ON,
+                namespaceEntity);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -1090,8 +1108,9 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
         verify(businessObjectDefinitionDescriptionSuggestionDao).saveAndRefresh(businessObjectDefinitionDescriptionSuggestionEntity);
         verify(businessObjectDefinitionDescriptionSuggestionDaoHelper).getBusinessObjectDefinitionDescriptionSuggestionEntity(businessObjectDefinitionEntity,
             businessObjectDefinitionDescriptionSuggestionKey.getUserId());
-        verify(businessObjectDefinitionDao).saveAndRefresh(businessObjectDefinitionEntity);
         verify(businessObjectDefinitionDaoHelper).saveBusinessObjectDefinitionChangeEvents(businessObjectDefinitionEntity);
+        verify(businessObjectDefinitionDao).saveAndRefresh(businessObjectDefinitionEntity);
+        verify(searchIndexUpdateHelper).modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -1188,6 +1207,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceTest extends Ab
     {
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionDaoHelper,
             businessObjectDefinitionDescriptionSuggestionDao, businessObjectDefinitionDescriptionSuggestionDaoHelper,
-            businessObjectDefinitionDescriptionSuggestionStatusDaoHelper, businessObjectDefinitionHelper);
+            businessObjectDefinitionDescriptionSuggestionStatusDaoHelper, businessObjectDefinitionHelper, messageNotificationEventService,
+            searchIndexUpdateHelper);
     }
 }

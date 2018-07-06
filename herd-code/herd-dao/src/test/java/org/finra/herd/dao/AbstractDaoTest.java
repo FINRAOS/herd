@@ -61,7 +61,6 @@ import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
-import org.finra.herd.model.api.xml.SecurityFunction;
 import org.finra.herd.model.api.xml.SecurityRoleKey;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.MessageHeader;
@@ -1097,6 +1096,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String USER_ID_2 = "UT_User_Id_2_" + RANDOM_SUFFIX;
 
     public static final String USER_ID_3 = "UT_User_Id_3_" + RANDOM_SUFFIX;
+
+    public static final String USER_ID_4 = "UT_User_Id_4_" + RANDOM_SUFFIX;
 
     public static final String USER_JOB_TITLE = "UT_User_Job_Title_" + RANDOM_SUFFIX;
 
