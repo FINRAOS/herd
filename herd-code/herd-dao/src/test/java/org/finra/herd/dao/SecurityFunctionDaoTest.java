@@ -88,11 +88,11 @@ public class SecurityFunctionDaoTest extends AbstractDaoTest
     public void testGetSecurityFunctionsByRole() throws Exception
     {
         // Create role and function.
-        SecurityRoleEntity securityRoleEntity = createSecurityRoleEntity(SECURITY_ROLE_1);
+        SecurityRoleEntity securityRoleEntity = securityRoleDaoTestHelper.createSecurityRoleEntity(SECURITY_ROLE);
         SecurityFunctionEntity securityFunctionEntity = securityFunctionDaoTestHelper.createSecurityFunctionEntity(SECURITY_FUNCTION);
 
         // Validate that no security functions are returned for the role.
-        assertTrue(securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE_1).isEmpty());
+        assertTrue(securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE).isEmpty());
 
         // Add new role to functions mapping.
         SecurityRoleFunctionEntity securityRoleFunctionEntity = new SecurityRoleFunctionEntity();
@@ -101,20 +101,20 @@ public class SecurityFunctionDaoTest extends AbstractDaoTest
         herdDao.saveAndRefresh(securityRoleFunctionEntity);
 
         // Since the functions method is cached, the test function still will not be retrieved.
-        assertTrue(securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE_1).isEmpty());
+        assertTrue(securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE).isEmpty());
 
         // Clear the cache and retrieve the functions again.
         cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
 
         // Validate that test security function mapped to the role is now retrieved.
-        assertEquals(Arrays.asList(SECURITY_FUNCTION), securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE_1));
+        assertEquals(Arrays.asList(SECURITY_FUNCTION), securityFunctionDao.getSecurityFunctionsForRole(SECURITY_ROLE));
     }
 
     @Test
     public void testGetUnrestrictedSecurityFunctions() throws Exception
     {
         // Create a role and two functions.
-        SecurityRoleEntity securityRoleEntity = createSecurityRoleEntity(SECURITY_ROLE_1);
+        SecurityRoleEntity securityRoleEntity = securityRoleDaoTestHelper.createSecurityRoleEntity(SECURITY_ROLE);
         List<SecurityFunctionEntity> securityFunctionEntities = Arrays.asList(securityFunctionDaoTestHelper.createSecurityFunctionEntity(SECURITY_FUNCTION_3),
             securityFunctionDaoTestHelper.createSecurityFunctionEntity(SECURITY_FUNCTION_2),
             securityFunctionDaoTestHelper.createSecurityFunctionEntity(SECURITY_FUNCTION));
@@ -155,19 +155,5 @@ public class SecurityFunctionDaoTest extends AbstractDaoTest
         assertTrue(resultSecurityFunctions.contains(SECURITY_FUNCTION));
         assertTrue(resultSecurityFunctions.contains(SECURITY_FUNCTION_2));
         assertFalse(resultSecurityFunctions.contains(SECURITY_FUNCTION_3));
-    }
-
-    /**
-     * Creates and persists a security role entity.
-     *
-     * @param code the name of the security role
-     *
-     * @return the security role entity
-     */
-    private SecurityRoleEntity createSecurityRoleEntity(String code)
-    {
-        SecurityRoleEntity securityRoleEntity = new SecurityRoleEntity();
-        securityRoleEntity.setCode(code);
-        return herdDao.saveAndRefresh(securityRoleEntity);
     }
 }

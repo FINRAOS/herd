@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.finra.herd.model.api.xml.SecurityFunctionKey;
 import org.finra.herd.model.api.xml.SecurityRoleFunction;
 import org.finra.herd.model.api.xml.SecurityRoleFunctionCreateRequest;
+import org.finra.herd.model.api.xml.SecurityRoleFunctionKey;
 import org.finra.herd.model.api.xml.SecurityRoleFunctionKeys;
 import org.finra.herd.model.api.xml.SecurityRoleKey;
 import org.finra.herd.model.dto.SecurityFunctions;
@@ -34,24 +35,26 @@ import org.finra.herd.service.SecurityRoleFunctionService;
 import org.finra.herd.ui.constants.UiConstants;
 
 /**
- * The REST controller that handles security role function mapping REST requests.
+ * The REST controller that handles security role to function mapping REST requests.
  */
 @RestController
 @RequestMapping(value = UiConstants.REST_URL_BASE, produces = {"application/xml", "application/json"})
-@Api(tags = "SecurityRole")
+@Api(tags = "Security Role To Function Mapping")
 public class SecurityRoleFunctionRestController
 {
+    private static final String SECURITY_ROLE_FUNCTIONS_URI_PREFIX = "/securityRoleFunctions";
+
     @Autowired
-    SecurityRoleFunctionService securityRoleFunctionService;
+    private SecurityRoleFunctionService securityRoleFunctionService;
 
     /**
-     * Creates a new security role function mapping
+     * Creates a new security role to function mapping that is identified by security role name and security function name.
      *
-     * @param securityRoleFunctionCreateRequest the information needed to create the security role function mapping
+     * @param securityRoleFunctionCreateRequest the information needed to create a security role to function mapping
      *
-     * @return the created security role function
+     * @return the created security role to function mapping
      */
-    @RequestMapping(value = "/securityRoleFunctions", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = SECURITY_ROLE_FUNCTIONS_URI_PREFIX, method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_SECURITY_ROLE_FUNCTIONS_POST)
     public SecurityRoleFunction createSecurityRoleFunction(@RequestBody SecurityRoleFunctionCreateRequest securityRoleFunctionCreateRequest)
     {
@@ -59,45 +62,46 @@ public class SecurityRoleFunctionRestController
     }
 
     /**
-     * Gets an existing security role function
+     * Deletes an existing security role to function mapping based on the specified parameters.
      *
-     * @param securityRoleName required to get the security role information
-     * @param securityFunctionName required to get the security function information
+     * @param securityRoleName the security role name
+     * @param securityFunctionName the security function name
      *
-     * @return the retrieved security role function
+     * @return the deleted security role to function mapping
      */
-    @RequestMapping(value = "/securityRoleFunctions/securityRoleNames/{securityRoleName}/securityFunctionNames/{securityFunctionName}}",
-        method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_SECURITY_ROLE_FUNCTIONS_GET)
-    public SecurityRoleFunction getSecurityRoleFunction(@PathVariable("securityRoleName") String securityRoleName,
-        @PathVariable("securityFunctionName") String securityFunctionName)
-    {
-        return securityRoleFunctionService.getSecurityRoleFunction(new SecurityRoleKey(securityRoleName), new SecurityFunctionKey(securityFunctionName));
-    }
-
-    /**
-     * Deletes an existing security role function
-     *
-     * @param securityRoleName required to get the security role
-     * @param securityFunctionName required to get the security function information
-     *
-     * @return the deleted security role function
-     */
-    @RequestMapping(value = "/securityRoleFunctions/securityRoleNames/{securityRoleName}/securityFunctionNames/{securityFunctionName}}",
-        method = RequestMethod.DELETE)
+    @RequestMapping(value = SECURITY_ROLE_FUNCTIONS_URI_PREFIX +
+        "/securityRoleNames/{securityRoleName}/securityFunctionNames/{securityFunctionName}}", method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_SECURITY_ROLE_FUNCTIONS_DELETE)
     public SecurityRoleFunction deleteSecurityRoleFunction(@PathVariable("securityRoleName") String securityRoleName,
         @PathVariable("securityFunctionName") String securityFunctionName)
     {
-        return securityRoleFunctionService.deleteSecurityRoleFunction(new SecurityRoleKey(securityRoleName), new SecurityFunctionKey(securityFunctionName));
+        return securityRoleFunctionService.deleteSecurityRoleFunction(new SecurityRoleFunctionKey(securityRoleName, securityFunctionName));
     }
 
     /**
-     * Gets a list of security role function keys for all security role function mappings
+     * Retrieves an existing security role to function mapping based on the specified parameters.
      *
-     * @return the security role function keys
+     * @param securityRoleName the security role name
+     * @param securityFunctionName the security function name
+     *
+     * @return the retrieved security role to function mapping
      */
-    @RequestMapping(value = "/securityRoleFunctions", method = RequestMethod.GET)
+    @RequestMapping(value = SECURITY_ROLE_FUNCTIONS_URI_PREFIX +
+        "/securityRoleNames/{securityRoleName}/securityFunctionNames/{securityFunctionName}}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_SECURITY_ROLE_FUNCTIONS_GET)
+    public SecurityRoleFunction getSecurityRoleFunction(@PathVariable("securityRoleName") String securityRoleName,
+        @PathVariable("securityFunctionName") String securityFunctionName)
+    {
+        return securityRoleFunctionService.getSecurityRoleFunction(new SecurityRoleFunctionKey(securityRoleName, securityFunctionName));
+    }
+
+    /**
+     * Retrieves a list of security role to function mapping keys for all security role to function mappings registered in the system. The result list is sorted
+     * by security role name and security function name in ascending order.
+     *
+     * @return the list of security role to function mapping keys
+     */
+    @RequestMapping(value = SECURITY_ROLE_FUNCTIONS_URI_PREFIX, method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_SECURITY_ROLE_FUNCTIONS_ALL_GET)
     public SecurityRoleFunctionKeys getSecurityRoleFunctions()
     {
@@ -105,26 +109,32 @@ public class SecurityRoleFunctionRestController
     }
 
     /**
-     * Get a list of security role function mapping keys based on the security role provided
+     * Retrieves a list of security role to function mapping keys for the specified security function. The result list is sorted by security role name in
+     * ascending order.
      *
-     * @return the security role function keys
-     */
-    @RequestMapping(value = "/securityRoleFunctions/securityRoleNames/{securityRoleName}", method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_SECURITY_ROLE_FUNCTIONS_BY_SECURITY_ROLE_GET)
-    public SecurityRoleFunctionKeys getSecurityRoleFunctionsBySecurityRole(@PathVariable("securityRoleName")String securityRoleName)
-    {
-        return securityRoleFunctionService.getSecurityRoleFunctionsBySecurityRole(new SecurityRoleKey(securityRoleName));
-    }
-
-    /**
-     * Get a list of security role function mapping keys based on the security function provided
+     * @param securityFunctionName the security function name
      *
-     * @return the security role function keys
+     * @return the list of security role to function mapping keys
      */
-    @RequestMapping(value = "/securityRoleFunctions/securityFunctionNames/{securityFunctionName}", method = RequestMethod.GET)
+    @RequestMapping(value = SECURITY_ROLE_FUNCTIONS_URI_PREFIX + "/securityFunctionNames/{securityFunctionName}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_SECURITY_ROLE_FUNCTIONS_BY_SECURITY_FUNCTION_GET)
     public SecurityRoleFunctionKeys getSecurityRoleFunctionsBySecurityFunction(@PathVariable("securityFunctionName") String securityFunctionName)
     {
         return securityRoleFunctionService.getSecurityRoleFunctionsBySecurityFunction(new SecurityFunctionKey(securityFunctionName));
+    }
+
+    /**
+     * Retrieves a list of security role to function mapping keys for the specified security role. The result list is sorted by security function name in
+     * ascending order.
+     *
+     * @param securityRoleName the security role name
+     *
+     * @return the list of security role to function mapping keys
+     */
+    @RequestMapping(value = SECURITY_ROLE_FUNCTIONS_URI_PREFIX + "/securityRoleNames/{securityRoleName}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_SECURITY_ROLE_FUNCTIONS_BY_SECURITY_ROLE_GET)
+    public SecurityRoleFunctionKeys getSecurityRoleFunctionsBySecurityRole(@PathVariable("securityRoleName") String securityRoleName)
+    {
+        return securityRoleFunctionService.getSecurityRoleFunctionsBySecurityRole(new SecurityRoleKey(securityRoleName));
     }
 }

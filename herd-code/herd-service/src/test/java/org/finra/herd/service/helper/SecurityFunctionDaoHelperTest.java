@@ -1,7 +1,7 @@
 package org.finra.herd.service.helper;
 
+import static org.finra.herd.dao.AbstractDaoTest.SECURITY_FUNCTION;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -17,26 +17,17 @@ import org.mockito.MockitoAnnotations;
 import org.finra.herd.dao.SecurityFunctionDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.jpa.SecurityFunctionEntity;
-import org.finra.herd.service.AbstractServiceTest;
 
-/**
- * unit test for class {@link SecurityFunctionDaoHelper}
- */
-public class SecurityFunctionDaoHelperTest extends AbstractServiceTest
+public class SecurityFunctionDaoHelperTest
 {
-    private static final SecurityFunctionEntity SECURITY_FUNCTION_ENTITY = new SecurityFunctionEntity()
-    {{
-        setCode(SECURITY_FUNCTION);
-    }};
-
-    @InjectMocks
-    private SecurityFunctionDaoHelper securityFunctionDaoHelper = new SecurityFunctionDaoHelper();
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     @Mock
     private SecurityFunctionDao securityFunctionDao;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    @InjectMocks
+    private SecurityFunctionDaoHelper securityFunctionDaoHelper = new SecurityFunctionDaoHelper();
 
     @Before
     public void before()
@@ -47,22 +38,39 @@ public class SecurityFunctionDaoHelperTest extends AbstractServiceTest
     @Test
     public void testGetSecurityFunctionEntity()
     {
-        when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(SECURITY_FUNCTION_ENTITY);
-        SecurityFunctionEntity securityFunctionEntity = securityFunctionDaoHelper.getSecurityFunctionEntityByName(SECURITY_FUNCTION);
-        assertEquals(SECURITY_FUNCTION, securityFunctionEntity.getCode());
-        verify(securityFunctionDao, times(1)).getSecurityFunctionByName(SECURITY_FUNCTION);
+        // Create a security function entity.
+        SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
 
+        // Mock the external calls.
+        when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(securityFunctionEntity);
+
+        // Call the method under test.
+        SecurityFunctionEntity result = securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION);
+
+        // Validate the results.
+        assertEquals(securityFunctionEntity, result);
+
+        // Verify the external calls.
+        verify(securityFunctionDao).getSecurityFunctionByName(SECURITY_FUNCTION);
         verifyNoMoreInteractionsHelper();
     }
 
     @Test
-    public void testGetSecurityFunctionEntityNonExistent()
+    public void testGetSecurityFunctionEntitySecurityFunctionNoExists()
     {
-        expectedException.expect(ObjectNotFoundException.class);
-        expectedException.expectMessage("Security function with name \"" + SECURITY_FUNCTION + "\" doesn't exist.");
-
+        // Mock the external calls.
         when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(null);
-        securityFunctionDaoHelper.getSecurityFunctionEntityByName(SECURITY_FUNCTION);
+
+        // Specify the expected exception.
+        expectedException.expect(ObjectNotFoundException.class);
+        expectedException.expectMessage(String.format("Security function with name \"%s\" doesn't exist.", SECURITY_FUNCTION));
+
+        // Call the method under test.
+        securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION);
+
+        // Verify the external calls.
+        verify(securityFunctionDao).getSecurityFunctionByName(SECURITY_FUNCTION);
+        verifyNoMoreInteractionsHelper();
     }
 
     /**

@@ -17,11 +17,12 @@ package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -93,16 +94,19 @@ public class SecurityRoleDaoTest extends AbstractDaoTest
     @Test
     public void testGetSecurityRoleKeys()
     {
-        // Create and persist security role entities.
-        for (SecurityRoleKey key : SECURITY_ROLE_KEYS)
+        // Create a list of security role keys.
+        final List<SecurityRoleKey> securityRoleKeys = ImmutableList.of(new SecurityRoleKey(SECURITY_ROLE), new SecurityRoleKey(SECURITY_ROLE_2));
+
+        // Create and persist security role entities in reverse order.
+        for (SecurityRoleKey securityRoleKey : Lists.reverse(securityRoleKeys))
         {
-            securityRoleDaoTestHelper.createSecurityRoleEntity(key.getSecurityRoleName());
+            securityRoleDaoTestHelper.createSecurityRoleEntity(securityRoleKey.getSecurityRoleName());
         }
 
-        // Get all security roles
-        List<SecurityRoleKey> securityRoleKeys = securityRoleDao.getSecurityRoleKeys();
+        // Get all security roles registered in the system.
+        List<SecurityRoleKey> result = securityRoleDao.getSecurityRoleKeys();
 
         // Validate the returned object.
-        assertEquals(SECURITY_ROLE_KEYS, securityRoleKeys);
+        assertEquals(securityRoleKeys, result);
     }
 }
