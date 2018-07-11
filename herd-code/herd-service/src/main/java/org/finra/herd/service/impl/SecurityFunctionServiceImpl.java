@@ -82,7 +82,7 @@ public class SecurityFunctionServiceImpl implements SecurityFunctionService
 
         // Retrieve and ensure that a security function already exists with the specified key.
         SecurityFunctionEntity securityFunctionEntity =
-            securityFunctionDaoHelper.getSecurityFunctionEntityByName(securityFunctionKey.getSecurityFunctionName());
+            securityFunctionDaoHelper.getSecurityFunctionEntity(securityFunctionKey.getSecurityFunctionName());
 
         // Create and return the security function object from the persisted entity.
         return createSecurityFunctionFromEntity(securityFunctionEntity);
@@ -96,7 +96,7 @@ public class SecurityFunctionServiceImpl implements SecurityFunctionService
 
         // Retrieve and ensure that a security function already exists with the specified name.
         SecurityFunctionEntity securityFunctionEntity =
-            securityFunctionDaoHelper.getSecurityFunctionEntityByName(securityFunctionKey.getSecurityFunctionName());
+            securityFunctionDaoHelper.getSecurityFunctionEntity(securityFunctionKey.getSecurityFunctionName());
 
         // Delete the security function.
         securityFunctionDao.delete(securityFunctionEntity);

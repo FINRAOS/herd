@@ -18,35 +18,35 @@ package org.finra.herd.service.helper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.dao.SecurityFunctionDao;
+import org.finra.herd.dao.SecurityRoleDao;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.jpa.SecurityFunctionEntity;
+import org.finra.herd.model.jpa.SecurityRoleEntity;
 
 /**
- * Helper for security function related operations which require DAO.
+ * Helper for security role related operations which require DAO.
  */
 @Component
-public class SecurityFunctionDaoHelper
+public class SecurityRoleDaoHelper
 {
     @Autowired
-    private SecurityFunctionDao securityFunctionDao;
+    private SecurityRoleDao securityRoleDao;
 
     /**
-     * Gets a security function entity and ensure it exists.
+     * Gets a security role entity and ensure it exists.
      *
-     * @param securityFunctionName the security function name (case insensitive)
+     * @param securityRoleName the security role name (case insensitive)
      *
-     * @return the security function entity
+     * @return the security role entity
      */
-    public SecurityFunctionEntity getSecurityFunctionEntity(String securityFunctionName)
+    public SecurityRoleEntity getSecurityRoleEntity(String securityRoleName)
     {
-        SecurityFunctionEntity securityFunctionEntity = securityFunctionDao.getSecurityFunctionByName(securityFunctionName);
+        SecurityRoleEntity securityRoleEntity = securityRoleDao.getSecurityRoleByName(securityRoleName);
 
-        if (securityFunctionEntity == null)
+        if (securityRoleEntity == null)
         {
-            throw new ObjectNotFoundException(String.format("Security function with name \"%s\" doesn't exist.", securityFunctionName));
+            throw new ObjectNotFoundException(String.format("Security role with name \"%s\" doesn't exist.", securityRoleName));
         }
 
-        return securityFunctionEntity;
+        return securityRoleEntity;
     }
 }

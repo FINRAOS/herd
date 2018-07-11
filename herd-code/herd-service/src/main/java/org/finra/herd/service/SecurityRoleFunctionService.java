@@ -18,65 +18,64 @@ package org.finra.herd.service;
 import org.finra.herd.model.api.xml.SecurityFunctionKey;
 import org.finra.herd.model.api.xml.SecurityRoleFunction;
 import org.finra.herd.model.api.xml.SecurityRoleFunctionCreateRequest;
+import org.finra.herd.model.api.xml.SecurityRoleFunctionKey;
 import org.finra.herd.model.api.xml.SecurityRoleFunctionKeys;
 import org.finra.herd.model.api.xml.SecurityRoleKey;
 
 /**
- * The security role function service.
+ * The security role to function mapping service.
  */
 public interface SecurityRoleFunctionService
 {
     /**
-     * Creates a new security role function.
+     * Creates a new security role to function mapping.
      *
-     * @param securityRoleFunctionCreateRequest the security role function create request
+     * @param securityRoleFunctionCreateRequest the information needed to create a security role to function mapping
      *
-     * @return the created security role function
+     * @return the created security role to function mapping
      */
     SecurityRoleFunction createSecurityRoleFunction(SecurityRoleFunctionCreateRequest securityRoleFunctionCreateRequest);
 
     /**
-     * Gets an existing security role function for the specified key parameters.
+     * Deletes an existing security role to function mapping by its key.
      *
-     * @param securityRoleKey the security role key
-     * @param securityFunctionKey the security function key
+     * @param securityRoleFunctionKey the security role to function mapping key
      *
-     * @return the security role function
+     * @return the deleted security role to function mapping
      */
-    SecurityRoleFunction getSecurityRoleFunction(SecurityRoleKey securityRoleKey, SecurityFunctionKey securityFunctionKey);
+    SecurityRoleFunction deleteSecurityRoleFunction(SecurityRoleFunctionKey securityRoleFunctionKey);
 
     /**
-     * Deletes a security role function for the specified key parameters.
+     * Retrieves an existing security role to function mapping by its key.
      *
-     * @param securityRoleKey the security role key
-     * @param securityFunctionKey the security function key
+     * @param securityRoleFunctionKey the security role to function mapping key
      *
-     * @return the security role function that was deleted
+     * @return the retrieved security role to function mapping
      */
-    SecurityRoleFunction deleteSecurityRoleFunction(SecurityRoleKey securityRoleKey, SecurityFunctionKey securityFunctionKey);
+    SecurityRoleFunction getSecurityRoleFunction(SecurityRoleFunctionKey securityRoleFunctionKey);
 
     /**
-     * Gets a list of all security role function keys.
+     * Retrieves a list of security role to function mapping keys for all security role to function mappings registered in the system.
      *
-     * @return the security role function keys
+     * @return the list of security role to function mapping keys
      */
     SecurityRoleFunctionKeys getSecurityRoleFunctions();
 
     /**
-     * Gets a list of all security role function keys for the specified security role key.
-     *
-     * @param securityRoleKey the security role key
-     *
-     * @return the security role function keys
-     */
-    SecurityRoleFunctionKeys getSecurityRoleFunctionsBySecurityRole(SecurityRoleKey securityRoleKey);
-
-    /**
-     * Gets a list of all security role function keys for the specified security function key.
+     * Retrieves a list of security role to function mapping keys for the specified security function.
      *
      * @param securityFunctionKey the security function key
      *
-     * @return the security role function keys
+     * @return the list of security role to function mapping keys
      */
     SecurityRoleFunctionKeys getSecurityRoleFunctionsBySecurityFunction(SecurityFunctionKey securityFunctionKey);
+
+    /**
+     * Retrieves a list of security role to function mapping keys for the specified security role.
+     *
+     * @param securityRoleKey the security role key
+     *
+     * @return the list of security role to function mapping keys
+     */
+    SecurityRoleFunctionKeys getSecurityRoleFunctionsBySecurityRole(SecurityRoleKey securityRoleKey);
 }

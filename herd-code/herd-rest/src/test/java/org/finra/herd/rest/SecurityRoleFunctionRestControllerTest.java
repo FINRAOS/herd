@@ -16,7 +16,7 @@
 package org.finra.herd.rest;
 
 import static org.finra.herd.dao.AbstractDaoTest.SECURITY_FUNCTION;
-import static org.finra.herd.dao.AbstractDaoTest.SECURITY_ROLE_1;
+import static org.finra.herd.dao.AbstractDaoTest.SECURITY_ROLE;
 import static org.finra.herd.service.AbstractServiceTest.ID;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.verify;
@@ -58,19 +58,19 @@ public class SecurityRoleFunctionRestControllerTest
     {
         // Create a security role function create request.
         SecurityRoleFunctionCreateRequest securityRoleFunctionCreateRequest =
-            new SecurityRoleFunctionCreateRequest(new SecurityRoleFunctionKey(SECURITY_ROLE_1, SECURITY_FUNCTION));
+            new SecurityRoleFunctionCreateRequest(new SecurityRoleFunctionKey(SECURITY_ROLE, SECURITY_FUNCTION));
 
         // Create a security role function.
-        SecurityRoleFunction securityRoleFunction = new SecurityRoleFunction(ID, new SecurityRoleFunctionKey(SECURITY_ROLE_1, SECURITY_FUNCTION));
+        SecurityRoleFunction securityRoleFunction = new SecurityRoleFunction(ID, new SecurityRoleFunctionKey(SECURITY_ROLE, SECURITY_FUNCTION));
 
         // Mock the external calls.
         when(securityRoleFunctionService.createSecurityRoleFunction(securityRoleFunctionCreateRequest)).thenReturn(securityRoleFunction);
 
         // Call the method under test.
-        SecurityRoleFunction response = securityRoleFunctionRestController.createSecurityRoleFunction(securityRoleFunctionCreateRequest);
+        SecurityRoleFunction result = securityRoleFunctionRestController.createSecurityRoleFunction(securityRoleFunctionCreateRequest);
 
         // Validate the result.
-        assertEquals(securityRoleFunction, response);
+        assertEquals(securityRoleFunction, result);
 
         // Verify the external calls.
         verify(securityRoleFunctionService).createSecurityRoleFunction(securityRoleFunctionCreateRequest);
@@ -80,60 +80,64 @@ public class SecurityRoleFunctionRestControllerTest
     @Test
     public void testDeleteSecurityRoleFunction()
     {
+        // Create a security role to function mapping key.
+        SecurityRoleFunctionKey securityRoleFunctionKey = new SecurityRoleFunctionKey(SECURITY_ROLE, SECURITY_FUNCTION);
+
         // Create a security role function.
-        SecurityRoleFunction securityRoleFunction = new SecurityRoleFunction(ID, new SecurityRoleFunctionKey(SECURITY_ROLE_1, SECURITY_FUNCTION));
+        SecurityRoleFunction securityRoleFunction = new SecurityRoleFunction(ID, securityRoleFunctionKey);
 
         // Mock the external calls.
-        when(securityRoleFunctionService.deleteSecurityRoleFunction(new SecurityRoleKey(SECURITY_ROLE_1), new SecurityFunctionKey(SECURITY_FUNCTION)))
-            .thenReturn(securityRoleFunction);
+        when(securityRoleFunctionService.deleteSecurityRoleFunction(securityRoleFunctionKey)).thenReturn(securityRoleFunction);
 
         // Call the method under test.
-        SecurityRoleFunction response = securityRoleFunctionRestController.deleteSecurityRoleFunction(SECURITY_ROLE_1, SECURITY_FUNCTION);
+        SecurityRoleFunction result = securityRoleFunctionRestController.deleteSecurityRoleFunction(SECURITY_ROLE, SECURITY_FUNCTION);
 
         // Validate the result.
-        assertEquals(securityRoleFunction, response);
+        assertEquals(securityRoleFunction, result);
 
         // Verify the external calls.
-        verify(securityRoleFunctionService).deleteSecurityRoleFunction(new SecurityRoleKey(SECURITY_ROLE_1), new SecurityFunctionKey(SECURITY_FUNCTION));
+        verify(securityRoleFunctionService).deleteSecurityRoleFunction(securityRoleFunctionKey);
         verifyNoMoreInteractions(securityRoleFunctionService);
     }
 
     @Test
     public void testGetSecurityRoleFunction()
     {
+        // Create a security role to function mapping key.
+        SecurityRoleFunctionKey securityRoleFunctionKey = new SecurityRoleFunctionKey(SECURITY_ROLE, SECURITY_FUNCTION);
+
         // Create a security role function.
-        SecurityRoleFunction securityRoleFunction = new SecurityRoleFunction(ID, new SecurityRoleFunctionKey(SECURITY_ROLE_1, SECURITY_FUNCTION));
+        SecurityRoleFunction securityRoleFunction = new SecurityRoleFunction(ID, securityRoleFunctionKey);
 
         // Mock the external calls.
-        when(securityRoleFunctionService.getSecurityRoleFunction(new SecurityRoleKey(SECURITY_ROLE_1), new SecurityFunctionKey(SECURITY_FUNCTION)))
-            .thenReturn(securityRoleFunction);
+        when(securityRoleFunctionService.getSecurityRoleFunction(securityRoleFunctionKey)).thenReturn(securityRoleFunction);
 
         // Call the method under test.
-        SecurityRoleFunction response = securityRoleFunctionRestController.getSecurityRoleFunction(SECURITY_ROLE_1, SECURITY_FUNCTION);
+        SecurityRoleFunction result = securityRoleFunctionRestController.getSecurityRoleFunction(SECURITY_ROLE, SECURITY_FUNCTION);
 
-        // Validate the response.
-        assertEquals(securityRoleFunction, response);
+        // Validate the result.
+        assertEquals(securityRoleFunction, result);
 
         // Verify the external calls.
-        verify(securityRoleFunctionService).getSecurityRoleFunction(new SecurityRoleKey(SECURITY_ROLE_1), new SecurityFunctionKey(SECURITY_FUNCTION));
+        verify(securityRoleFunctionService).getSecurityRoleFunction(securityRoleFunctionKey);
         verifyNoMoreInteractions(securityRoleFunctionService);
     }
 
     @Test
     public void testGetSecurityRoleFunctions()
     {
-        // Create security role function keys.
+        // Create a list of security role to function mapping keys.
         SecurityRoleFunctionKeys securityRoleFunctionKeys =
-            new SecurityRoleFunctionKeys(Collections.singletonList(new SecurityRoleFunctionKey(SECURITY_ROLE_1, SECURITY_FUNCTION)));
+            new SecurityRoleFunctionKeys(Collections.singletonList(new SecurityRoleFunctionKey(SECURITY_ROLE, SECURITY_FUNCTION)));
 
         // Mock the external calls.
         when(securityRoleFunctionService.getSecurityRoleFunctions()).thenReturn(securityRoleFunctionKeys);
 
-        // Retrieve a list of security role function keys.
-        SecurityRoleFunctionKeys response = securityRoleFunctionRestController.getSecurityRoleFunctions();
+        // Call the method under test.
+        SecurityRoleFunctionKeys result = securityRoleFunctionRestController.getSecurityRoleFunctions();
 
         // Validate the response.
-        assertEquals(securityRoleFunctionKeys, response);
+        assertEquals(securityRoleFunctionKeys, result);
 
         // Verify the external calls.
         verify(securityRoleFunctionService).getSecurityRoleFunctions();
@@ -141,45 +145,50 @@ public class SecurityRoleFunctionRestControllerTest
     }
 
     @Test
-    public void testGetSecurityRoleFunctionsBySecurityRole()
+    public void testGetSecurityRoleFunctionsBySecurityFunction()
     {
-        // Create security role function keys.
+        // Create a security function key.
+        SecurityFunctionKey securityFunctionKey = new SecurityFunctionKey(SECURITY_FUNCTION);
+
+        // Create a list of security role to function mapping keys.
         SecurityRoleFunctionKeys securityRoleFunctionKeys =
-            new SecurityRoleFunctionKeys(Collections.singletonList(new SecurityRoleFunctionKey(SECURITY_ROLE_1, SECURITY_FUNCTION)));
+            new SecurityRoleFunctionKeys(Collections.singletonList(new SecurityRoleFunctionKey(SECURITY_ROLE, SECURITY_FUNCTION)));
 
         // Mock the external calls.
-        when(securityRoleFunctionService.getSecurityRoleFunctionsBySecurityRole(new SecurityRoleKey(SECURITY_ROLE_1))).thenReturn(securityRoleFunctionKeys);
+        when(securityRoleFunctionService.getSecurityRoleFunctionsBySecurityFunction(securityFunctionKey)).thenReturn(securityRoleFunctionKeys);
 
-        // Retrieve a list of security role function keys.
-        SecurityRoleFunctionKeys response = securityRoleFunctionRestController.getSecurityRoleFunctionsBySecurityRole(SECURITY_ROLE_1);
+        // Call the method under test.
+        SecurityRoleFunctionKeys result = securityRoleFunctionRestController.getSecurityRoleFunctionsBySecurityFunction(SECURITY_FUNCTION);
 
         // Validate the response.
-        assertEquals(securityRoleFunctionKeys, response);
+        assertEquals(securityRoleFunctionKeys, result);
 
         // Verify the external calls.
-        verify(securityRoleFunctionService).getSecurityRoleFunctionsBySecurityRole(new SecurityRoleKey(SECURITY_ROLE_1));
+        verify(securityRoleFunctionService).getSecurityRoleFunctionsBySecurityFunction(securityFunctionKey);
         verifyNoMoreInteractions(securityRoleFunctionService);
     }
 
     @Test
-    public void testGetSecurityRoleFunctionsBySecurityFunction()
+    public void testGetSecurityRoleFunctionsBySecurityRole()
     {
-        // Create security role function keys.
+        // Create a security role key.
+        SecurityRoleKey securityRoleKey = new SecurityRoleKey(SECURITY_ROLE);
+
+        // Create a list of security role to function mapping keys.
         SecurityRoleFunctionKeys securityRoleFunctionKeys =
-            new SecurityRoleFunctionKeys(Collections.singletonList(new SecurityRoleFunctionKey(SECURITY_ROLE_1, SECURITY_FUNCTION)));
+            new SecurityRoleFunctionKeys(Collections.singletonList(new SecurityRoleFunctionKey(SECURITY_ROLE, SECURITY_FUNCTION)));
 
         // Mock the external calls.
-        when(securityRoleFunctionService.getSecurityRoleFunctionsBySecurityFunction(new SecurityFunctionKey(SECURITY_FUNCTION)))
-            .thenReturn(securityRoleFunctionKeys);
+        when(securityRoleFunctionService.getSecurityRoleFunctionsBySecurityRole(securityRoleKey)).thenReturn(securityRoleFunctionKeys);
 
-        // Retrieve a list of security role function keys.
-        SecurityRoleFunctionKeys response = securityRoleFunctionRestController.getSecurityRoleFunctionsBySecurityFunction(SECURITY_FUNCTION);
+        // Call the method under test.
+        SecurityRoleFunctionKeys result = securityRoleFunctionRestController.getSecurityRoleFunctionsBySecurityRole(SECURITY_ROLE);
 
         // Validate the response.
-        assertEquals(securityRoleFunctionKeys, response);
+        assertEquals(securityRoleFunctionKeys, result);
 
         // Verify the external calls.
-        verify(securityRoleFunctionService).getSecurityRoleFunctionsBySecurityFunction(new SecurityFunctionKey(SECURITY_FUNCTION));
+        verify(securityRoleFunctionService).getSecurityRoleFunctionsBySecurityRole(securityRoleKey);
         verifyNoMoreInteractions(securityRoleFunctionService);
     }
 }

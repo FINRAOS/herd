@@ -50,10 +50,10 @@
       </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='securityRoleKeys']//xs:element[@name='securityRoleKey']">
          <jaxb:property name="securityRoleKeys"/>
-         </jaxb:bindings>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='securityRoleFunctionKeys']//xs:element[@name='securityRoleFunctionKey']">
-         <jaxb:property name="securityRoleFunctionKey"/>
-         </jaxb:bindings>
+         <jaxb:property name="securityRoleFunctionKeys"/>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='tagTypeKeys']//xs:element[@name='tagTypeKey']">
          <jaxb:property name="tagTypeKeys"/>
       </jaxb:bindings>
