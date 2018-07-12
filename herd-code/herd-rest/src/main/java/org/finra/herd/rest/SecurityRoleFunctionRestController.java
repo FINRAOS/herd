@@ -70,7 +70,7 @@ public class SecurityRoleFunctionRestController
      * @return the deleted security role to function mapping
      */
     @RequestMapping(value = SECURITY_ROLE_FUNCTIONS_URI_PREFIX +
-        "/securityRoleNames/{securityRoleName}/securityFunctionNames/{securityFunctionName}}", method = RequestMethod.DELETE)
+        "/securityRoleNames/{securityRoleName}/securityFunctionNames/{securityFunctionName}", method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_SECURITY_ROLE_FUNCTIONS_DELETE)
     public SecurityRoleFunction deleteSecurityRoleFunction(@PathVariable("securityRoleName") String securityRoleName,
         @PathVariable("securityFunctionName") String securityFunctionName)
@@ -87,7 +87,7 @@ public class SecurityRoleFunctionRestController
      * @return the retrieved security role to function mapping
      */
     @RequestMapping(value = SECURITY_ROLE_FUNCTIONS_URI_PREFIX +
-        "/securityRoleNames/{securityRoleName}/securityFunctionNames/{securityFunctionName}}", method = RequestMethod.GET)
+        "/securityRoleNames/{securityRoleName}/securityFunctionNames/{securityFunctionName}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_SECURITY_ROLE_FUNCTIONS_GET)
     public SecurityRoleFunction getSecurityRoleFunction(@PathVariable("securityRoleName") String securityRoleName,
         @PathVariable("securityFunctionName") String securityFunctionName)
