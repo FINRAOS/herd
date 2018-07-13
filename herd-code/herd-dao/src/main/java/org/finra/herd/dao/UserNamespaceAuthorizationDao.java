@@ -18,18 +18,28 @@ package org.finra.herd.dao;
 import java.util.List;
 
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
 
 public interface UserNamespaceAuthorizationDao extends BaseJpaDao
 {
     /**
+     * Gets a list of user ids for all users that have WRITE or WRITE_DESCRIPTIVE_CONTENT namespace permissions for the specified namespace.
+     *
+     * @param namespaceEntity the namespace entity
+     *
+     * @return the list of user ids
+     */
+    List<String> getUserIdsWithWriteOrWriteDescriptiveContentPermissionsByNamespace(NamespaceEntity namespaceEntity);
+
+    /**
      * Gets a user namespace authorization by key.
      *
-     * @param key the user namespace authorization key (case-insensitive)
+     * @param userNamespaceAuthorizationKey the user namespace authorization key (case-insensitive)
      *
-     * @return the user namespace authorization for the specified key
+     * @return the user namespace authorization
      */
-    public UserNamespaceAuthorizationEntity getUserNamespaceAuthorizationByKey(UserNamespaceAuthorizationKey key);
+    UserNamespaceAuthorizationEntity getUserNamespaceAuthorizationByKey(UserNamespaceAuthorizationKey userNamespaceAuthorizationKey);
 
     /**
      * Gets a list of user namespace authorizations for the specified user.
@@ -38,15 +48,16 @@ public interface UserNamespaceAuthorizationDao extends BaseJpaDao
      *
      * @return the list of user namespace authorizations
      */
-    public List<UserNamespaceAuthorizationEntity> getUserNamespaceAuthorizationsByUserId(String userId);
+    List<UserNamespaceAuthorizationEntity> getUserNamespaceAuthorizationsByUserId(String userId);
 
     /**
      * Gets a list of user namespace authorization entities where the user ID starts with the given string
-     * 
-     * @param string String to search
-     * @return List of namespace authorization entities
+     *
+     * @param userIdStartsWith String to search
+     *
+     * @return the list of user namespace authorizations
      */
-    public List<UserNamespaceAuthorizationEntity> getUserNamespaceAuthorizationsByUserIdStartsWith(String string);
+    List<UserNamespaceAuthorizationEntity> getUserNamespaceAuthorizationsByUserIdStartsWith(String userIdStartsWith);
 
     /**
      * Gets a list of user namespace authorizations for the specified namespace.
@@ -55,5 +66,5 @@ public interface UserNamespaceAuthorizationDao extends BaseJpaDao
      *
      * @return the list of user namespace authorizations
      */
-    public List<UserNamespaceAuthorizationEntity> getUserNamespaceAuthorizationsByNamespace(String namespace);
+    List<UserNamespaceAuthorizationEntity> getUserNamespaceAuthorizationsByNamespace(String namespace);
 }

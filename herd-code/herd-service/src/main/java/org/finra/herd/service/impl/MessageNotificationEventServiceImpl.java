@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +32,11 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.NotificationMessage;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.helper.NotificationMessageBuilder;
 import org.finra.herd.service.helper.NotificationMessageInMemoryQueue;
@@ -61,6 +65,16 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
     {
         return processNotificationMessages(notificationMessageBuilder
             .buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus));
+    }
+
+    @Override
+    public List<NotificationMessage> processBusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent(
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion, String lastUpdatedByUserId,
+        XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity)
+    {
+        return processNotificationMessages(notificationMessageBuilder
+            .buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(businessObjectDefinitionDescriptionSuggestion, lastUpdatedByUserId, lastUpdatedOn,
+                namespaceEntity));
     }
 
     @Override

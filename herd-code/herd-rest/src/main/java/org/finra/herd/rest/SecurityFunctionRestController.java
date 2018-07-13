@@ -37,20 +37,22 @@ import org.finra.herd.ui.constants.UiConstants;
  */
 @RestController
 @RequestMapping(value = UiConstants.REST_URL_BASE, produces = {"application/xml", "application/json"})
-@Api(tags = "SecurityFunction")
+@Api(tags = "Security Function")
 public class SecurityFunctionRestController
 {
+    private static final String SECURITY_FUNCTIONS_URI_PREFIX = "/securityFunctions";
+
     @Autowired
     private SecurityFunctionService securityFunctionService;
 
     /**
      * Creates a new security function.
      *
-     * @param request the information needed to create the security function
+     * @param request the information needed to create a security function
      *
      * @return the created security function
      */
-    @RequestMapping(value = "/securityFunctions", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = SECURITY_FUNCTIONS_URI_PREFIX, method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_SECURITY_FUNCTIONS_POST)
     public SecurityFunction createSecurityFunction(@RequestBody SecurityFunctionCreateRequest request)
     {
@@ -58,27 +60,13 @@ public class SecurityFunctionRestController
     }
 
     /**
-     * Gets an existing security function by security function name.
-     *
-     * @param securityFunctionName the security function name
-     *
-     * @return the retrieved security function
-     */
-    @RequestMapping(value = "/securityFunctions/{securityFunctionName}", method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_SECURITY_FUNCTIONS_GET)
-    public SecurityFunction getSecurityFunction(@PathVariable("securityFunctionName") String securityFunctionName)
-    {
-        return securityFunctionService.getSecurityFunction(new SecurityFunctionKey(securityFunctionName));
-    }
-
-    /**
      * Deletes an existing security function by security function name.
      *
      * @param securityFunctionName the security function name
      *
-     * @return the security function that got deleted
+     * @return the deleted security function
      */
-    @RequestMapping(value = "/securityFunctions/{securityFunctionName}", method = RequestMethod.DELETE)
+    @RequestMapping(value = SECURITY_FUNCTIONS_URI_PREFIX + "/{securityFunctionName}", method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_SECURITY_FUNCTIONS_DELETE)
     public SecurityFunction deleteSecurityFunction(@PathVariable("securityFunctionName") String securityFunctionName)
     {
@@ -86,11 +74,26 @@ public class SecurityFunctionRestController
     }
 
     /**
-     * Gets a list of security function keys for all security functions defined in the system.
+     * Retrieves an existing security function by security function name.
+     *
+     * @param securityFunctionName the security function name
+     *
+     * @return the retrieved security function
+     */
+    @RequestMapping(value = SECURITY_FUNCTIONS_URI_PREFIX + "/{securityFunctionName}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_SECURITY_FUNCTIONS_GET)
+    public SecurityFunction getSecurityFunction(@PathVariable("securityFunctionName") String securityFunctionName)
+    {
+        return securityFunctionService.getSecurityFunction(new SecurityFunctionKey(securityFunctionName));
+    }
+
+    /**
+     * Gets a list of security function keys for all security functions defined in the system. The result list is sorted by security function name in ascending
+     * order.
      *
      * @return the list of security function keys
      */
-    @RequestMapping(value = "/securityFunctions", method = RequestMethod.GET)
+    @RequestMapping(value = SECURITY_FUNCTIONS_URI_PREFIX, method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_SECURITY_FUNCTIONS_ALL_GET)
     public SecurityFunctionKeys getSecurityFunctions()
     {

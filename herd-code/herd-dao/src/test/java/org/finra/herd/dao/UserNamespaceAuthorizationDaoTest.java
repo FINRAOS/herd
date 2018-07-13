@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
@@ -31,6 +32,31 @@ import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
 
 public class UserNamespaceAuthorizationDaoTest extends AbstractDaoTest
 {
+    @Test
+    public void testGetUserIdsWithWriteOrWriteDescriptiveContentPermissionsByNamespace()
+    {
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Create user namespace authorisations with user ids in reverse order and with all possible
+        // permutations of WRITE and WRITE_DESCRIPTIVE_CONTENT namespace permissions.
+        userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(USER_ID_4, namespaceEntity,
+            Lists.newArrayList(NamespacePermissionEnum.WRITE, NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT));
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(USER_ID_3, namespaceEntity, Lists.newArrayList(NamespacePermissionEnum.WRITE));
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(USER_ID_2, namespaceEntity, Lists.newArrayList(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT));
+        userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(USER_ID, namespaceEntity, Lists.newArrayList());
+
+        // Gets a list of user ids for all users that have WRITE or WRITE_DESCRIPTIVE_CONTENT namespace permissions for the test namespace.
+        assertEquals(Lists.newArrayList(USER_ID_2, USER_ID_3, USER_ID_4),
+            userNamespaceAuthorizationDao.getUserIdsWithWriteOrWriteDescriptiveContentPermissionsByNamespace(namespaceEntity));
+
+        // Try to retrieve user ids for a namespace that has no user namespace authorisations.
+        assertEquals(0, userNamespaceAuthorizationDao
+            .getUserIdsWithWriteOrWriteDescriptiveContentPermissionsByNamespace(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2)).size());
+    }
+
     @Test
     public void testGetUserNamespaceAuthorizationByKey()
     {

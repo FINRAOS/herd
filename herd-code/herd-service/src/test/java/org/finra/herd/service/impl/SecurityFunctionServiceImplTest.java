@@ -126,13 +126,13 @@ public class SecurityFunctionServiceImplTest
     @Test
     public void testGetSecurityFunction()
     {
-        when(securityFunctionDaoHelper.getSecurityFunctionEntityByName(SECURITY_FUNCTION)).thenReturn(SECURITY_FUNCTION_ENTITY);
+        when(securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION)).thenReturn(SECURITY_FUNCTION_ENTITY);
         when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(SECURITY_FUNCTION);
 
         SecurityFunction securityFunction = securityFunctionService.getSecurityFunction(SECURITY_FUNCTION_KEY);
         assertEquals(SECURITY_FUNCTION, securityFunction.getSecurityFunctionName());
         verify(alternateKeyHelper).validateStringParameter("security function name", SECURITY_FUNCTION_KEY.getSecurityFunctionName());
-        verify(securityFunctionDaoHelper).getSecurityFunctionEntityByName(SECURITY_FUNCTION);
+        verify(securityFunctionDaoHelper).getSecurityFunctionEntity(SECURITY_FUNCTION);
 
         verifyNoMoreInteractionsHelper();
     }
@@ -150,13 +150,13 @@ public class SecurityFunctionServiceImplTest
     @Test
     public void testDeleteSecurityFunction()
     {
-        when(securityFunctionDaoHelper.getSecurityFunctionEntityByName(SECURITY_FUNCTION)).thenReturn(SECURITY_FUNCTION_ENTITY);
+        when(securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION)).thenReturn(SECURITY_FUNCTION_ENTITY);
         when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(SECURITY_FUNCTION);
 
         SecurityFunction securityFunction = securityFunctionService.deleteSecurityFunction(SECURITY_FUNCTION_KEY);
         assertEquals(SECURITY_FUNCTION, securityFunction.getSecurityFunctionName());
         verify(alternateKeyHelper).validateStringParameter("security function name", SECURITY_FUNCTION);
-        verify(securityFunctionDaoHelper).getSecurityFunctionEntityByName(SECURITY_FUNCTION);
+        verify(securityFunctionDaoHelper).getSecurityFunctionEntity(SECURITY_FUNCTION);
         verify(securityFunctionDao).delete(SECURITY_FUNCTION_ENTITY);
 
         verifyNoMoreInteractionsHelper();

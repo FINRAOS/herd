@@ -277,6 +277,28 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final String BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE = "{\n" +
+        "  \"eventDate\" : \"$current_time\",\n" +
+        "  \"businessObjectDefinitionDescriptionSuggestionKey\" : {\n" +
+        "    \"namespace\" : \"$businessObjectDefinitionDescriptionSuggestionKey.namespace\",\n" +
+        "    \"businessObjectDefinitionName\" : \"$businessObjectDefinitionDescriptionSuggestionKey.businessObjectDefinitionName\",\n" +
+        "    \"userId\" : \"$businessObjectDefinitionDescriptionSuggestionKey.userId\"\n" +
+        "  },\n" +
+        "  \"status\" : \"$businessObjectDefinitionDescriptionSuggestion.status\",\n" +
+        "  \"createdByUserId\" : \"$businessObjectDefinitionDescriptionSuggestion.createdByUserId\",\n" +
+        "  \"createdOn\" : \"$businessObjectDefinitionDescriptionSuggestion.createdOn\",\n" +
+        "  \"lastUpdatedByUserId\" : \"$lastUpdatedByUserId\",\n" +
+        "  \"lastUpdatedOn\" : \"$lastUpdatedOn\",\n" +
+        "#if($CollectionUtils.isNotEmpty($notificationList))  \"notificationList\" : [\n" +
+        "    \"$notificationList.get(0)\"" +
+        "#foreach ($userId in $notificationList.subList(1, $notificationList.size())),\n" +
+        "    \"$userId\"" +
+        "#end\n" +
+        "\n  ],\n" +
+        "  \"businessObjectDefinitionUri\" : \"https://udc.dev.finra.org/data-entities/${businessObjectDefinitionDescriptionSuggestionKey.namespace}/${businessObjectDefinitionDescriptionSuggestionKey.businessObjectDefinitionName}\"\n" +
+        "#end\n" +
+        "}\n";
+
     public static final String BUSINESS_OBJECT_FORMAT_KEY_AS_STRING = "UT_BusinessObjectFormatKeyAsString_" + RANDOM_SUFFIX;
 
     public static final String BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +

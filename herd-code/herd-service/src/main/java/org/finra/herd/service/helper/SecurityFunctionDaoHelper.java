@@ -37,9 +37,8 @@ public class SecurityFunctionDaoHelper
      * @param securityFunctionName the security function name (case insensitive)
      *
      * @return the security function entity
-     * @throws ObjectNotFoundException if the security function entity doesn't exist
      */
-    public SecurityFunctionEntity getSecurityFunctionEntityByName(String securityFunctionName) throws ObjectNotFoundException
+    public SecurityFunctionEntity getSecurityFunctionEntity(String securityFunctionName)
     {
         SecurityFunctionEntity securityFunctionEntity = securityFunctionDao.getSecurityFunctionByName(securityFunctionName);
 

@@ -16,7 +16,7 @@
 package org.finra.herd.rest;
 
 import static org.finra.herd.dao.AbstractDaoTest.DESCRIPTION;
-import static org.finra.herd.dao.AbstractDaoTest.SECURITY_ROLE_1;
+import static org.finra.herd.dao.AbstractDaoTest.SECURITY_ROLE;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -54,10 +54,10 @@ public class SecurityRoleRestControllerTest
     public void testCreateSecurityRole()
     {
         // Create a security role create request.
-        SecurityRoleCreateRequest securityRoleCreateRequest = new SecurityRoleCreateRequest(SECURITY_ROLE_1, DESCRIPTION);
+        SecurityRoleCreateRequest securityRoleCreateRequest = new SecurityRoleCreateRequest(SECURITY_ROLE, DESCRIPTION);
 
         // Create a security role.
-        SecurityRole securityRole = new SecurityRole(SECURITY_ROLE_1, DESCRIPTION);
+        SecurityRole securityRole = new SecurityRole(SECURITY_ROLE, DESCRIPTION);
 
         // Mock the external calls.
         when(securityRoleService.createSecurityRole(securityRoleCreateRequest)).thenReturn(securityRole);
@@ -77,19 +77,19 @@ public class SecurityRoleRestControllerTest
     public void testDeleteSecurityRole()
     {
         // Create a security role.
-        SecurityRole securityRole = new SecurityRole(SECURITY_ROLE_1, DESCRIPTION);
+        SecurityRole securityRole = new SecurityRole(SECURITY_ROLE, DESCRIPTION);
 
         // Mock the external calls.
-        when(securityRoleService.deleteSecurityRole(new SecurityRoleKey(SECURITY_ROLE_1))).thenReturn(securityRole);
+        when(securityRoleService.deleteSecurityRole(new SecurityRoleKey(SECURITY_ROLE))).thenReturn(securityRole);
 
         // Call the method under test.
-        SecurityRole result = securityRoleRestController.deleteSecurityRole(SECURITY_ROLE_1);
+        SecurityRole result = securityRoleRestController.deleteSecurityRole(SECURITY_ROLE);
 
         // Validate the result.
         assertEquals(securityRole, result);
 
         // Verify the external calls.
-        verify(securityRoleService).deleteSecurityRole(new SecurityRoleKey(SECURITY_ROLE_1));
+        verify(securityRoleService).deleteSecurityRole(new SecurityRoleKey(SECURITY_ROLE));
         verifyNoMoreInteractions(securityRoleService);
     }
 
@@ -97,22 +97,22 @@ public class SecurityRoleRestControllerTest
     public void testGetSecurityRole()
     {
         // Create a security role key.
-        SecurityRoleKey securityRoleKey = new SecurityRoleKey(SECURITY_ROLE_1);
+        SecurityRoleKey securityRoleKey = new SecurityRoleKey(SECURITY_ROLE);
 
         // Create a security role.
-        SecurityRole securityRole = new SecurityRole(SECURITY_ROLE_1, DESCRIPTION);
+        SecurityRole securityRole = new SecurityRole(SECURITY_ROLE, DESCRIPTION);
 
         // Mock the external calls.
         when(securityRoleService.getSecurityRole(securityRoleKey)).thenReturn(securityRole);
 
         // Call the method under test.
-        SecurityRole result = securityRoleRestController.getSecurityRole(SECURITY_ROLE_1);
+        SecurityRole result = securityRoleRestController.getSecurityRole(SECURITY_ROLE);
 
         // Validate the result.
         assertEquals(securityRole, result);
 
         // Verify the external calls.
-        verify(securityRoleService).getSecurityRole(new SecurityRoleKey(SECURITY_ROLE_1));
+        verify(securityRoleService).getSecurityRole(new SecurityRoleKey(SECURITY_ROLE));
         verifyNoMoreInteractions(securityRoleService);
     }
 
@@ -120,12 +120,12 @@ public class SecurityRoleRestControllerTest
     public void testGetSecurityRoles()
     {
         // Create security role keys.
-        SecurityRoleKeys securityRoleKeys = new SecurityRoleKeys(Lists.newArrayList(new SecurityRoleKey(SECURITY_ROLE_1)));
+        SecurityRoleKeys securityRoleKeys = new SecurityRoleKeys(Lists.newArrayList(new SecurityRoleKey(SECURITY_ROLE)));
 
         // Mock the external calls.
         when(securityRoleService.getSecurityRoles()).thenReturn(securityRoleKeys);
 
-        // Retrieve a list of security role keys.
+        // Call the method under test.
         SecurityRoleKeys result = securityRoleRestController.getSecurityRoles();
 
         // Validate the result.
@@ -143,16 +143,16 @@ public class SecurityRoleRestControllerTest
         SecurityRoleUpdateRequest securityRoleUpdateRequest = new SecurityRoleUpdateRequest(DESCRIPTION);
 
         // Create a security role key.
-        SecurityRoleKey securityRoleKey = new SecurityRoleKey(SECURITY_ROLE_1);
+        SecurityRoleKey securityRoleKey = new SecurityRoleKey(SECURITY_ROLE);
 
         // Create a security role.
-        SecurityRole securityRole = new SecurityRole(SECURITY_ROLE_1, DESCRIPTION);
+        SecurityRole securityRole = new SecurityRole(SECURITY_ROLE, DESCRIPTION);
 
         // Mock the external calls.
         when(securityRoleService.updateSecurityRole(securityRoleKey, securityRoleUpdateRequest)).thenReturn(securityRole);
 
         // Call the method under test.
-        SecurityRole result = securityRoleRestController.updateSecurityRole(SECURITY_ROLE_1, securityRoleUpdateRequest);
+        SecurityRole result = securityRoleRestController.updateSecurityRole(SECURITY_ROLE, securityRoleUpdateRequest);
 
         // Validate the result.
         assertEquals(securityRole, result);

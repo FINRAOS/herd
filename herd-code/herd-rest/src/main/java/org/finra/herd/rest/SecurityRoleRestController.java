@@ -38,20 +38,22 @@ import org.finra.herd.ui.constants.UiConstants;
  */
 @RestController
 @RequestMapping(value = UiConstants.REST_URL_BASE, produces = {"application/xml", "application/json"})
-@Api(tags = "SecurityRole")
+@Api(tags = "Security Role")
 public class SecurityRoleRestController
 {
+    private static final String SECURITY_ROLES_URI_PREFIX = "/securityRoles";
+
     @Autowired
-    SecurityRoleService securityRoleService;
+    private SecurityRoleService securityRoleService;
 
     /**
-     * Creates a new security role
+     * Creates a new security role.
      *
-     * @param securityRoleCreateRequest the information needed to create the security role
+     * @param securityRoleCreateRequest the information needed to create a security role
      *
      * @return the created security role
      */
-    @RequestMapping(value = "/securityRoles", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = SECURITY_ROLES_URI_PREFIX, method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_SECURITY_ROLES_POST)
     public SecurityRole createSecurityRole(@RequestBody SecurityRoleCreateRequest securityRoleCreateRequest)
     {
@@ -59,43 +61,13 @@ public class SecurityRoleRestController
     }
 
     /**
-     * Gets an existing security role
+     * Deletes an existing security role.
      *
-     * @param securityRoleName required to get the security role information
-     *
-     * @return the retrieved security role
-     */
-    @RequestMapping(value = "/securityRoles/{securityRoleName}", method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_SECURITY_ROLES_GET)
-    public SecurityRole getSecurityRole(@PathVariable("securityRoleName") String securityRoleName)
-    {
-        return securityRoleService.getSecurityRole(new SecurityRoleKey(securityRoleName));
-    }
-
-    /**
-     * Updates an existing security role
-     *
-     * @param securityRoleName required to get the security role
-     * @param securityRoleUpdateRequest information required to update the security role
-     *
-     * @return the updated security role
-     */
-    @RequestMapping(value = "/securityRoles/{securityRoleName}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_SECURITY_ROLES_PUT)
-    public SecurityRole updateSecurityRole(@PathVariable("securityRoleName") String securityRoleName,
-        @RequestBody SecurityRoleUpdateRequest securityRoleUpdateRequest)
-    {
-        return securityRoleService.updateSecurityRole(new SecurityRoleKey(securityRoleName), securityRoleUpdateRequest);
-    }
-
-    /**
-     * Deletes an existing security role
-     *
-     * @param securityRoleName required to get the security role
+     * @param securityRoleName the security role name
      *
      * @return the deleted security role
      */
-    @RequestMapping(value = "/securityRoles/{securityRoleName}", method = RequestMethod.DELETE)
+    @RequestMapping(value = SECURITY_ROLES_URI_PREFIX + "/{securityRoleName}", method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_SECURITY_ROLES_DELETE)
     public SecurityRole deleteSecurityRole(@PathVariable("securityRoleName") String securityRoleName)
     {
@@ -103,14 +75,44 @@ public class SecurityRoleRestController
     }
 
     /**
-     * Gets a list of security role keys for all security roles
+     * Retrieves an existing security role.
      *
-     * @return the security role keys
+     * @param securityRoleName the security role name
+     *
+     * @return the retrieved security role
      */
-    @RequestMapping(value = "/securityRoles", method = RequestMethod.GET)
+    @RequestMapping(value = SECURITY_ROLES_URI_PREFIX + "/{securityRoleName}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_SECURITY_ROLES_GET)
+    public SecurityRole getSecurityRole(@PathVariable("securityRoleName") String securityRoleName)
+    {
+        return securityRoleService.getSecurityRole(new SecurityRoleKey(securityRoleName));
+    }
+
+    /**
+     * Gets a list of security role keys for all security roles registered in the system. The result list is sorted by security role name in ascending order.
+     *
+     * @return the list of security role keys
+     */
+    @RequestMapping(value = SECURITY_ROLES_URI_PREFIX, method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_SECURITY_ROLES_ALL_GET)
     public SecurityRoleKeys getSecurityRoles()
     {
         return securityRoleService.getSecurityRoles();
+    }
+
+    /**
+     * Updates an existing security role.
+     *
+     * @param securityRoleName the security role name
+     * @param securityRoleUpdateRequest the information required to update a security role
+     *
+     * @return the updated security role
+     */
+    @RequestMapping(value = SECURITY_ROLES_URI_PREFIX + "/{securityRoleName}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_SECURITY_ROLES_PUT)
+    public SecurityRole updateSecurityRole(@PathVariable("securityRoleName") String securityRoleName,
+        @RequestBody SecurityRoleUpdateRequest securityRoleUpdateRequest)
+    {
+        return securityRoleService.updateSecurityRole(new SecurityRoleKey(securityRoleName), securityRoleUpdateRequest);
     }
 }
