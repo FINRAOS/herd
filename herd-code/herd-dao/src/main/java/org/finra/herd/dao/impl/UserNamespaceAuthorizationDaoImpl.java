@@ -22,6 +22,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -37,6 +38,35 @@ import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity_;
 @Repository
 public class UserNamespaceAuthorizationDaoImpl extends AbstractHerdDao implements UserNamespaceAuthorizationDao
 {
+    @Override
+    public List<String> getUserIdsWithWriteOrWriteDescriptiveContentPermissionsByNamespace(NamespaceEntity namespaceEntity)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> criteria = builder.createQuery(String.class);
+
+        // The criteria root is the user namespace authorization.
+        Root<UserNamespaceAuthorizationEntity> userNamespaceAuthorizationEntityRoot = criteria.from(UserNamespaceAuthorizationEntity.class);
+
+        // Get the user id column.
+        Path<String> userIdColumn = userNamespaceAuthorizationEntityRoot.get(UserNamespaceAuthorizationEntity_.userId);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(userNamespaceAuthorizationEntityRoot.get(UserNamespaceAuthorizationEntity_.namespace), namespaceEntity));
+        predicates.add(builder.or(builder.isTrue(userNamespaceAuthorizationEntityRoot.get(UserNamespaceAuthorizationEntity_.writePermission)),
+            builder.isTrue(userNamespaceAuthorizationEntityRoot.get(UserNamespaceAuthorizationEntity_.writeDescriptiveContentPermission))));
+
+        // Order by user id.
+        Order orderBy = builder.asc(userNamespaceAuthorizationEntityRoot.get(UserNamespaceAuthorizationEntity_.userId));
+
+        // Add all clauses to the query.
+        criteria.select(userIdColumn).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderBy);
+
+        // Execute the query and return the result list.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
     @Override
     public UserNamespaceAuthorizationEntity getUserNamespaceAuthorizationByKey(UserNamespaceAuthorizationKey userNamespaceAuthorizationKey)
     {
@@ -60,8 +90,8 @@ public class UserNamespaceAuthorizationDaoImpl extends AbstractHerdDao implement
         // Add the clauses for the query.
         criteria.select(userNamespaceAuthorizationEntity).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
 
-        return executeSingleResultQuery(criteria,
-            String.format("Found more than one user namespace authorization with parameters {userId=\"%s\", namespace=\"%s\"}.",
+        return executeSingleResultQuery(criteria, String
+            .format("Found more than one user namespace authorization with parameters {userId=\"%s\", namespace=\"%s\"}.",
                 userNamespaceAuthorizationKey.getUserId(), userNamespaceAuthorizationKey.getNamespace()));
     }
 
@@ -94,7 +124,7 @@ public class UserNamespaceAuthorizationDaoImpl extends AbstractHerdDao implement
     }
 
     @Override
-    public List<UserNamespaceAuthorizationEntity> getUserNamespaceAuthorizationsByUserIdStartsWith(String string)
+    public List<UserNamespaceAuthorizationEntity> getUserNamespaceAuthorizationsByUserIdStartsWith(String userIdStartsWith)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -109,12 +139,12 @@ public class UserNamespaceAuthorizationDaoImpl extends AbstractHerdDao implement
 
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate queryRestriction =
-            builder.like(builder.upper(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.userId)), string.toUpperCase() + '%');
+            builder.like(builder.upper(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.userId)), userIdStartsWith.toUpperCase() + '%');
 
         // Add all clauses for the query.
-        criteria.select(userNamespaceAuthorizationEntity).where(queryRestriction).orderBy(
-            builder.asc(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.userId)),
-            builder.asc(namespaceEntity.get(NamespaceEntity_.code)));
+        criteria.select(userNamespaceAuthorizationEntity).where(queryRestriction)
+            .orderBy(builder.asc(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.userId)),
+                builder.asc(namespaceEntity.get(NamespaceEntity_.code)));
 
         // Execute the query and return the result list.
         return entityManager.createQuery(criteria).getResultList();
