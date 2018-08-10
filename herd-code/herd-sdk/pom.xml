@@ -199,7 +199,7 @@
                      <output>${project.build.directory}/angular-client</output>
                      <language>typescript-angular</language>
                      <configOptions>
-                        <ngVersion>4.1.3</ngVersion>
+                        <ngVersion>6.1.2</ngVersion>
                      </configOptions>
                   </configuration>
                </execution>
