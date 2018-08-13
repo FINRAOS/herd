@@ -120,7 +120,7 @@
       <maven.javadoc.plugin.version>2.10.4</maven.javadoc.plugin.version>
       <maven.surefire.plugin.version>2.20.1</maven.surefire.plugin.version>
       <maven.war.plugin.version>3.2.0</maven.war.plugin.version>
-      <swagger-codegen-maven-plugin>2.3.0</swagger-codegen-maven-plugin>
+      <openapi-generator-maven-plugin>3.2.0</openapi-generator-maven-plugin>
       <versions.maven.plugin.version>2.5</versions.maven.plugin.version>
       <mockito.version>2.10.0</mockito.version>
       <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
@@ -1019,9 +1019,9 @@
                <version>${project.version}</version>
             </plugin>
             <plugin>
-               <groupId>io.swagger</groupId>
-               <artifactId>swagger-codegen-maven-plugin</artifactId>
-               <version>${swagger-codegen-maven-plugin}</version>
+               <groupId>org.openapitools</groupId>
+               <artifactId>openapi-generator-maven-plugin</artifactId>
+               <version>${openapi-generator-maven-plugin}</version>
             </plugin>
          </plugins>
       </pluginManagement>

@@ -126,8 +126,8 @@
 
          <!-- Generate the SDK files from the YAML file. -->
          <plugin>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-codegen-maven-plugin</artifactId>
+            <groupId>org.openapitools</groupId>
+            <artifactId>openapi-generator-maven-plugin</artifactId>
             <executions>
                <execution>
                   <goals>
@@ -140,7 +140,7 @@
                      <output>${project.build.directory}/generated-sources/swagger</output>
                      <!-- Don't add the output directory to the project as a source root since we added it as a resource ourselves above. -->
                      <addCompileSourceRoot>false</addCompileSourceRoot>
-                     <language>java</language>
+                     <generatorName>java</generatorName>
                      <apiPackage>org.finra.herd.sdk.api</apiPackage>
                      <modelPackage>org.finra.herd.sdk.model</modelPackage>
                      <invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>
@@ -171,7 +171,7 @@
                   <configuration>
                      <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
                      <output>${project.build.directory}/node-client</output>
-                     <language>typescript-node</language>
+                     <generatorName>typescript-node</generatorName>
                   </configuration>
                </execution>
 
@@ -184,7 +184,7 @@
                   <configuration>
                      <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
                      <output>${project.build.directory}/angularjs-client</output>
-                     <language>typescript-angularjs</language>
+                     <generatorName>typescript-angularjs</generatorName>
                   </configuration>
                </execution>
 
@@ -197,9 +197,10 @@
                   <configuration>
                      <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
                      <output>${project.build.directory}/angular-client</output>
-                     <language>typescript-angular</language>
+                     <generatorName>typescript-angular</generatorName>
                      <configOptions>
                         <ngVersion>6.1.2</ngVersion>
+                        <providedInRoot>true</providedInRoot>
                      </configOptions>
                   </configuration>
                </execution>
