@@ -114,7 +114,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testSearchBusinessObjectDataAttributeValueFiltersAttributeNameInMixedCaseAndRequireTrim()
+    public void testSearchBusinessObjectDataAttributeValueFiltersTrimAttributeName()
     {
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
@@ -130,7 +130,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         key.setBusinessObjectDefinitionName(BDEF_NAME);
 
         List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
-        attributeValueFilters.add(new AttributeValueFilter("  " + ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase() + "  ", ATTRIBUTE_VALUE_1));
+        attributeValueFilters.add(new AttributeValueFilter(addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE), ATTRIBUTE_VALUE_1));
 
         key.setAttributeValueFilters(attributeValueFilters);
         businessObjectDataSearchKeys.add(key);

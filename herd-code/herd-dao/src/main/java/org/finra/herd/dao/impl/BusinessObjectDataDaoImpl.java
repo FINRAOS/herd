@@ -890,7 +890,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         if (attributeValueFilters != null && !attributeValueFilters.isEmpty())
         {
-            predicate = createAttributeValueFilters(businessObjectDataSearchKey, businessObjectDataEntity, builder, predicate);
+            predicate = applyAttributeValueFilters(businessObjectDataSearchKey, businessObjectDataEntity, builder, predicate);
         }
 
         // Apply registration date range filter, if specified.
@@ -1184,44 +1184,40 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     /**
-     * Creates a predicate for attribute value filters.
+     * Apply attribute value filters to the main query predicate.
      *
-     * @param businessDataSearchKey business object search key
-     * @param businessObjectDataEntity business object data entity
-     * @param builder query build
-     * @param predicatePram predicate
+     * @param businessDataSearchKey the business object data search key
+     * @param businessObjectDataEntityRoot the criteria root which is a business object data entity
+     * @param builder the criteria builder
+     * @param mainQueryPredicate the main query predicate to be updated
      *
-     * @return the predicate with added attribute value filters
+     * @return the updated main query predicate
      */
-    private Predicate createAttributeValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
-        CriteriaBuilder builder, Predicate predicatePram)
+    private Predicate applyAttributeValueFilters(final BusinessObjectDataSearchKey businessDataSearchKey,
+        final Root<BusinessObjectDataEntity> businessObjectDataEntityRoot, final CriteriaBuilder builder, Predicate mainQueryPredicate)
     {
-        Predicate predicate = predicatePram;
-
-        if (businessDataSearchKey.getAttributeValueFilters() != null && !businessDataSearchKey.getAttributeValueFilters().isEmpty())
+        if (!CollectionUtils.isEmpty(businessDataSearchKey.getAttributeValueFilters()))
         {
             for (AttributeValueFilter attributeValueFilter : businessDataSearchKey.getAttributeValueFilters())
             {
                 Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity =
-                    businessObjectDataEntity.join(BusinessObjectDataEntity_.attributes);
+                    businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.attributes);
 
-                String attributeName = attributeValueFilter.getAttributeName();
-                String attributeValue = attributeValueFilter.getAttributeValue();
-
-                if (!StringUtils.isEmpty(attributeName))
+                if (!StringUtils.isEmpty(attributeValueFilter.getAttributeName()))
                 {
-                    predicate = builder.and(predicate,
-                        builder.equal(builder.upper(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.name)), attributeName.toUpperCase()));
+                    mainQueryPredicate = builder.and(mainQueryPredicate,
+                        builder.equal(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.name), attributeValueFilter.getAttributeName()));
                 }
-                if (!StringUtils.isEmpty(attributeValue))
+
+                if (!StringUtils.isEmpty(attributeValueFilter.getAttributeValue()))
                 {
-                    predicate =
-                        builder.and(predicate, builder.like(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.value), "%" + attributeValue + "%"));
+                    mainQueryPredicate = builder.and(mainQueryPredicate,
+                        builder.equal(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.value), attributeValueFilter.getAttributeValue()));
                 }
             }
         }
 
-        return predicate;
+        return mainQueryPredicate;
     }
 
     /**
