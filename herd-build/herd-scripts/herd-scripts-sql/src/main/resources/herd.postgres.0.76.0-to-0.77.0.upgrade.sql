@@ -13,3 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+-- bus_objct_data_atrbt
+
+create index bus_objct_data_atrbt_ix2 ON bus_objct_data_atrbt(atrbt_value_tx);
