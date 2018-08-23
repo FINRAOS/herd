@@ -71,9 +71,7 @@ public class UrlHelper
             }
 
             // Open an input stream as per specified URL.
-            InputStream inputStream = urlOperations.openStream(new URL(url), proxy);
-
-            try
+            try (InputStream inputStream = urlOperations.openStream(new URL(url), proxy))
             {
                 // Parse the JSON object from the input stream.
                 JSONParser jsonParser = new JSONParser();
@@ -82,10 +80,6 @@ public class UrlHelper
             catch (ParseException e)
             {
                 throw new IllegalArgumentException(String.format("Failed to parse JSON object from the URL: url=\"%s\"", url), e);
-            }
-            finally
-            {
-                inputStream.close();
             }
         }
         catch (IOException e)
