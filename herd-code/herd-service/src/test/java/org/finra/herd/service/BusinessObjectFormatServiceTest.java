@@ -34,9 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -84,14 +82,6 @@ import org.finra.herd.service.impl.BusinessObjectFormatServiceImpl;
 
 public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    /**
-     * The maximum number of characters allowed for document schema
-     */
-    public static final int MAX_DOCUMENT_SCHEMA_LENGTH = 100 * 1024;
-
     @Autowired
     @Qualifier(value = "businessObjectFormatServiceImpl")
     private BusinessObjectFormatServiceImpl businessObjectFormatServiceImpl;
@@ -1803,58 +1793,6 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 PARTITION_KEY, FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
                 businessObjectFormat);
-    }
-
-    @Test
-    public void testCreateBusinessObjectFormatDocumentSchemaValidLength()
-    {
-        // Create relative database entities.
-        businessObjectFormatServiceTestHelper.createTestDatabaseEntitiesForBusinessObjectFormatTesting();
-        // Create a document schema with maximum allowed length
-        String validDocumentSchema = StringUtils.repeat("t", MAX_DOCUMENT_SCHEMA_LENGTH);
-
-
-        // Create a first version of the format without document schema.
-        BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                validDocumentSchema, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
-        request.getSchema().setPartitionKeyGroup(PARTITION_KEY_GROUP);
-
-        // Create an initial business object format version.
-        BusinessObjectFormat businessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request);
-
-        // Validate the returned object.
-        businessObjectFormatServiceTestHelper
-            .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
-                PARTITION_KEY, FORMAT_DESCRIPTION, validDocumentSchema, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
-                businessObjectFormat);
-    }
-
-    @Test
-    public void testCreateBusinessObjectFormatDocumentSchemaInvalidLength()
-    {
-        // Create relative database entities.
-        businessObjectFormatServiceTestHelper.createTestDatabaseEntitiesForBusinessObjectFormatTesting();
-        // Create a document schema that exceeds the maximum allowed length
-        String validDocumentSchema = StringUtils.repeat("t", MAX_DOCUMENT_SCHEMA_LENGTH + 1);
-
-
-        // Create a first version of the format without document schema.
-        BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                validDocumentSchema, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
-        request.getSchema().setPartitionKeyGroup(PARTITION_KEY_GROUP);
-
-        // Specify the expected exception.
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(String
-            .format("Document Schema length  \"%d\" exceeds the maximum allowed length \"%d\".", MAX_DOCUMENT_SCHEMA_LENGTH + 1, MAX_DOCUMENT_SCHEMA_LENGTH));
-
-        // Create an initial business object format version.
-        BusinessObjectFormat businessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request);
     }
 
     @Test
@@ -3920,9 +3858,9 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateBusinessObjectFormatDocumentSchemaValidLength()
+    public void testUpdateBusinessObjectFormatDocumentSchemaToNull()
     {
-        // Create an initial version of a business object format without document schema.
+        // Create an initial version of a business object format with some document schema
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, null,
                 true, PARTITION_KEY);
@@ -3930,11 +3868,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create a new partition key group for the update request.
         partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
-        // Perform an update by changing the document schema with valid length
-        String validDocumentSchema = StringUtils.repeat("t", MAX_DOCUMENT_SCHEMA_LENGTH);
+        // Perform an update by changing the document schema to null
         BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION, validDocumentSchema, businessObjectDefinitionServiceTestHelper.getNewAttributes2(),
-                businessObjectFormatServiceTestHelper.getTestSchema2());
+            .createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes2(), businessObjectFormatServiceTestHelper.getTestSchema2());
         BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService
             .updateBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
                 request);
@@ -3942,36 +3879,9 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Validate the returned object.
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, validDocumentSchema,
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2(), NO_ATTRIBUTE_DEFINITIONS, businessObjectFormatServiceTestHelper.getTestSchema2(),
                 updatedBusinessObjectFormat);
-    }
-
-    @Test
-    public void testUpdateBusinessObjectFormatDocumentSchemaInvalidLength()
-    {
-        // Create an initial version of a business object format without document schema.
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, null,
-                true, PARTITION_KEY);
-
-        // Create a new partition key group for the update request.
-        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
-
-        // Perform an update by changing the document schema with invalid length
-        String invalidDocumentSchema = StringUtils.repeat("t", MAX_DOCUMENT_SCHEMA_LENGTH + 1);
-        BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION, invalidDocumentSchema, businessObjectDefinitionServiceTestHelper.getNewAttributes2(),
-                businessObjectFormatServiceTestHelper.getTestSchema2());
-
-        // Specify the expected exception.
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(String
-            .format("Document Schema length  \"%d\" exceeds the maximum allowed length \"%d\".", MAX_DOCUMENT_SCHEMA_LENGTH + 1, MAX_DOCUMENT_SCHEMA_LENGTH));
-
-        businessObjectFormatService
-            .updateBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
-                request);
     }
 
     @Test

@@ -83,7 +83,7 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Column(name = "desc_tx")
     private String description;
 
-    @Column(name = "doc_schm_tx", length = 100*1024)
+    @Column(name = "doc_schm_tx")
     private String documentSchema;
 
     @JsonManagedReference(value = "businessObjectFormat-attributes")
