@@ -88,8 +88,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
 
@@ -185,9 +185,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT,
             NO_BDEF_SHORT_DESCRIPTION, EMPTY_STRING, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT)),
             NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
-                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
-                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
-            resultBusinessObjectDefinition);
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+            NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -208,8 +207,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, null,
-            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
 
@@ -242,8 +241,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, NO_BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, NO_BDEF_DISPLAY_NAME, NO_ATTRIBUTES, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, NO_BDEF_DISPLAY_NAME, NO_ATTRIBUTES, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
     }
@@ -271,8 +270,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                 NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1))),
                 NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
                 businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
-                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
-            resultBusinessObjectDefinition);
+                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -295,9 +293,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toUpperCase(),
-            DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toUpperCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toUpperCase(),
-            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase())), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toUpperCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toUpperCase(),
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase())), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
     }
@@ -322,9 +320,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toLowerCase(),
-            DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toLowerCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toLowerCase(),
-            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase())), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toLowerCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toLowerCase(),
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase())), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
     }
@@ -436,7 +434,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         catch (AlreadyExistsException e)
         {
             assertEquals(String
-                .format("Unable to create business object definition with name \"%s\" because it already exists for namespace \"%s\".", BDEF_NAME, NAMESPACE),
+                    .format("Unable to create business object definition with name \"%s\" because it already exists for namespace \"%s\".", BDEF_NAME, NAMESPACE),
                 e.getMessage());
         }
     }
@@ -463,8 +461,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
     }
@@ -487,9 +485,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
             NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2(),
             NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
-                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
-                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
-            updatedBusinessObjectDefinition);
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+            NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS), updatedBusinessObjectDefinition);
 
         // Retrieve the business object definition with include update history flag set to true.
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService
@@ -560,8 +557,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                 NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1))),
                 NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
                 businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
-                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
-            updatedBusinessObjectDefinition);
+                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS), updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -581,9 +577,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
-            DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION_2.toUpperCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2.toUpperCase(),
-            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toUpperCase())), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION_2.toUpperCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2.toUpperCase(),
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toUpperCase())), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
@@ -605,9 +601,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
-            DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION_2.toLowerCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2.toLowerCase(),
-            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toLowerCase())), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION_2.toLowerCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2.toLowerCase(),
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toLowerCase())), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
@@ -665,9 +661,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
             NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2(),
             NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
-                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
-                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
-            updatedBusinessObjectDefinition);
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+            NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS), updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -705,7 +700,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Create a business object format for the business object definition entity.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Perform an update by changing the description and updating the descriptive format.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
@@ -715,9 +710,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES,
-            new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES,
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
 
@@ -811,8 +806,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT,
-            NO_BDEF_SHORT_DESCRIPTION, BLANK_TEXT.trim(), NO_ATTRIBUTES, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BLANK_TEXT.trim(), NO_ATTRIBUTES, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
@@ -832,8 +827,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, NO_BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, NO_BDEF_DISPLAY_NAME, NO_ATTRIBUTES, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, NO_BDEF_DISPLAY_NAME, NO_ATTRIBUTES, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
@@ -848,7 +843,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Create a business object format for the business object definition entity.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Perform an update using input parameters with leading and trailing empty spaces.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
@@ -858,9 +853,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME,
-            addWhitespace(BDEF_DESCRIPTION_2), null, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES,
-            new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                addWhitespace(BDEF_DESCRIPTION_2), null, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES,
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
@@ -875,7 +870,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Create a business object format for the business object definition entity.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Perform an update using upper case input parameters.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
@@ -902,7 +897,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Create a business object format for the business object definition entity.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Perform an update using lower case input parameters.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
@@ -912,9 +907,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES,
-            new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES,
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
@@ -955,7 +950,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION),
                 e.getMessage());
         }
     }
@@ -970,10 +965,10 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Create and persist two versions of the business object format.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
-                NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY);
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Perform an update.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
@@ -983,9 +978,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES,
-            new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION), NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES,
+                new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION), NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
@@ -1006,9 +1001,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
             NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
             businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles(), businessObjectDefinitionEntity.getCreatedBy(),
-                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
-                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
-            resultBusinessObjectDefinition);
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+            NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -1042,8 +1036,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
     }
@@ -1063,9 +1057,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
-            DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toLowerCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toLowerCase(),
-            businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toLowerCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toLowerCase(),
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
     }
@@ -1085,9 +1079,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
-            DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toUpperCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toUpperCase(),
-            businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toUpperCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toUpperCase(),
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
     }
@@ -1145,8 +1139,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             resultBusinessObjectDefinition);
     }
@@ -1158,8 +1152,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), Arrays
-                .asList(new SampleDataFile(DIRECTORY_PATH_2, FILE_NAME_2), new SampleDataFile(DIRECTORY_PATH, FILE_NAME_2),
-                    new SampleDataFile(DIRECTORY_PATH, FILE_NAME)));
+                    .asList(new SampleDataFile(DIRECTORY_PATH_2, FILE_NAME_2), new SampleDataFile(DIRECTORY_PATH, FILE_NAME_2),
+                        new SampleDataFile(DIRECTORY_PATH, FILE_NAME)));
 
         // Retrieve the business object definition.
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService
@@ -1170,9 +1164,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
             Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME), new SampleDataFile(DIRECTORY_PATH, FILE_NAME_2),
                 new SampleDataFile(DIRECTORY_PATH_2, FILE_NAME_2)), businessObjectDefinitionEntity.getCreatedBy(),
-                businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
-                NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
-            resultBusinessObjectDefinition);
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
+            NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS), resultBusinessObjectDefinition);
     }
 
     /**
@@ -1357,8 +1350,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             deletedBusinessObjectDefinition);
 
@@ -1399,8 +1392,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             deletedBusinessObjectDefinition);
 
@@ -1426,9 +1419,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
-            DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toLowerCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toLowerCase(),
-            businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toLowerCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toLowerCase(),
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             deletedBusinessObjectDefinition);
 
@@ -1454,9 +1447,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
-            DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toUpperCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toUpperCase(),
-            businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
-            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toUpperCase(), NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME.toUpperCase(),
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+                businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             deletedBusinessObjectDefinition);
 
@@ -1851,8 +1844,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(updatedBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            sampleDataFiles, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                sampleDataFiles, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
@@ -1886,8 +1879,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(updatedBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            updatedSampleDataFileList, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                updatedSampleDataFileList, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
     }
@@ -1931,8 +1924,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(updatedBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            sampleDataFiles, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+                NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+                sampleDataFiles, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
                 HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()), NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS),
             updatedBusinessObjectDefinition);
 

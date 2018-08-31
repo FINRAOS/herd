@@ -1203,8 +1203,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         // Create a business object format entity with the schema.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
 
         // Create two storage entities if they do not exist.
         List<StorageEntity> storageEntities =
@@ -1769,10 +1769,10 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         // Create two versions of a business object format.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, DESCRIPTION,
-                NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY);
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create business object data keys for two business object format versions of business object data.
         List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
@@ -2075,7 +2075,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
                 BusinessObjectDataStatusEntity.VALID)), NO_NOT_AVAILABLE_STATUSES), result);
     }
 
-    private void runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(boolean useMaxPartitionValueToken, boolean isUpperCase)
+    private void runCheckBusinessObjectDataAvailabilityPartitionValueListPartitionValueTokenCaseSensitivityTest(boolean useMaxPartitionValueToken,
+        boolean isUpperCase)
     {
         // Prepare test data.
         businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
@@ -2085,8 +2086,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailabilityRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(null);
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
         request.setPartitionValueFilters(partitionValueFilters);
-        partitionValueFilters.add(new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(
-            useMaxPartitionValueToken ? BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN : BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
+        partitionValueFilters.add(new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays
+            .asList(useMaxPartitionValueToken ? BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN : BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
             NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE));
         request.setNamespace(isUpperCase ? NAMESPACE.toUpperCase() : NAMESPACE.toLowerCase());
         request.setBusinessObjectDefinitionName(isUpperCase ? BDEF_NAME.toUpperCase() : BDEF_NAME.toLowerCase());
@@ -2097,8 +2098,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                Arrays.asList(useMaxPartitionValueToken ? STORAGE_1_GREATEST_PARTITION_VALUE : STORAGE_1_LEAST_PARTITION_VALUE),
-                NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+                Arrays.asList(useMaxPartitionValueToken ? STORAGE_1_GREATEST_PARTITION_VALUE : STORAGE_1_LEAST_PARTITION_VALUE), NO_SUBPARTITION_VALUES,
+                DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);

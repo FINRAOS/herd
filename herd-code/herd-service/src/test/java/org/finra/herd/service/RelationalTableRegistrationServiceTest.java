@@ -308,7 +308,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         // Create a business object format with the schema that has less columns than the relational table.
         BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE,
-                BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, NO_FORMAT_DESCRIPTION, Arrays.asList(
+                BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, NO_FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, Arrays.asList(
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
                     relationalSchemaName),
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
@@ -398,7 +398,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         // Create a business object format with the schema that matches the relational table schema.
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE,
-                BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, DESCRIPTION, Arrays.asList(
+                BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, Arrays.asList(
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
                     relationalSchemaName),
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),

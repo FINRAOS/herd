@@ -110,9 +110,9 @@ public class BusinessObjectDataAvailabilityTestHelper
             businessObjectFormatDaoTestHelper
                 .createBusinessObjectFormatEntity(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME, AbstractDaoTest.FORMAT_USAGE_CODE,
                     AbstractDaoTest.FORMAT_FILE_TYPE_CODE, AbstractDaoTest.FORMAT_VERSION, AbstractDaoTest.FORMAT_DESCRIPTION,
-                    AbstractDaoTest.LATEST_VERSION_FLAG_SET, partitionKey, partitionKeyGroupName, AbstractDaoTest.NO_ATTRIBUTES,
-                    AbstractDaoTest.SCHEMA_DELIMITER_PIPE, AbstractDaoTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractDaoTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
-                    columns, partitionColumns);
+                    AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA, AbstractDaoTest.LATEST_VERSION_FLAG_SET, partitionKey, partitionKeyGroupName,
+                    AbstractDaoTest.NO_ATTRIBUTES, AbstractDaoTest.SCHEMA_DELIMITER_PIPE, AbstractDaoTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                    AbstractDaoTest.SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
         }
 
         // Create storage entities if they do not exist.

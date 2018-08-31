@@ -185,7 +185,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
 
         // Create a business object format entity.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+            .createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create a list of business object data keys.
         List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
