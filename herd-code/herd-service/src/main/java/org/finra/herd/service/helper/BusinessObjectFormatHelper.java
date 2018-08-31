@@ -121,6 +121,7 @@ public class BusinessObjectFormatHelper
         businessObjectFormat.setLatestVersion(businessObjectFormatEntity.getLatestVersion());
         businessObjectFormat.setPartitionKey(businessObjectFormatEntity.getPartitionKey());
         businessObjectFormat.setDescription(businessObjectFormatEntity.getDescription());
+        businessObjectFormat.setDocumentSchema(businessObjectFormatEntity.getDocumentSchema());
 
         // Add in the attributes.
         List<Attribute> attributes = new ArrayList<>();
@@ -244,7 +245,7 @@ public class BusinessObjectFormatHelper
 
         return businessObjectFormat;
     }
-    
+
     /**
      * Creates the business object format from the persisted entity.
      *

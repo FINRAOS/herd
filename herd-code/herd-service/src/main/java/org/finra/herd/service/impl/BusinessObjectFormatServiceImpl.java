@@ -104,6 +104,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     public static final Set<String> SCHEMA_COLUMN_DATA_TYPES_WITH_ALLOWED_SIZE_INCREASE =
         Collections.unmodifiableSet(new HashSet<>(Arrays.asList("CHAR", "VARCHAR", "VARCHAR2")));
 
+    /**
+     * The maximum number of characters allowed for document schema
+     */
+    public static final long MAX_DOCUMENT_SCHEMA_LENGTH = 100 * 1024L;
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -268,14 +273,17 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Perform validation and trim the alternate key parameters.
         businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
 
-        // Validate optional attributes. This is also going to trim the attribute names.
-        attributeHelper.validateFormatAttributes(request.getAttributes());
+        // Validate update request
+        validateBusinessObjectFormatUpdateRequest(request);
 
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
 
         // Update business object format description.
         businessObjectFormatEntity.setDescription(request.getDescription());
+
+        // Update business object format document schema
+        businessObjectFormatEntity.setDocumentSchema(request.getDocumentSchema());
 
         // Validate optional schema information.  This is also going to trim the relative schema column field values.
         validateBusinessObjectFormatSchema(request.getSchema(), businessObjectFormatEntity.getPartitionKey());
@@ -788,6 +796,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Perform validation of the partition key. This method also trims the partition key value.
         request.setPartitionKey(alternateKeyHelper.validateStringParameter("partition key", request.getPartitionKey()));
 
+        validateDocumentSchema(request.getDocumentSchema());
+
         // Validate attributes.
         attributeHelper.validateFormatAttributes(request.getAttributes());
 
@@ -813,6 +823,40 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Validate optional schema information.
         validateBusinessObjectFormatSchema(request.getSchema(), request.getPartitionKey());
     }
+
+    /**
+     * Validates the business object format update request, except for the alternate key values. This method also trims request parameters.
+     *
+     * @param request the business object format update request
+     *
+     * @throws IllegalArgumentException if any validation errors were found
+     */
+    private void validateBusinessObjectFormatUpdateRequest(BusinessObjectFormatUpdateRequest request)
+    {
+        // Validate optional attributes. This is also going to trim the attribute names.
+        attributeHelper.validateFormatAttributes(request.getAttributes());
+
+        // Validate document schema
+        validateDocumentSchema(request.getDocumentSchema());
+    }
+
+    /**
+     * Validates the document schema
+     *
+     * @param documentSchema the document schema
+     *
+     * @throws IllegalArgumentException if any validation errors were found
+     */
+    private void validateDocumentSchema(String documentSchema)
+    {
+        // Validate the document schema
+        if (StringUtils.isNotBlank(documentSchema) && (documentSchema.length() > MAX_DOCUMENT_SCHEMA_LENGTH))
+        {
+            throw new IllegalArgumentException(String
+                .format("Document Schema length  \"%d\" exceeds the maximum allowed length \"%d\".", documentSchema.length(), MAX_DOCUMENT_SCHEMA_LENGTH));
+        }
+    }
+
 
     /**
      * Validate the business object format parents
@@ -1145,6 +1189,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setLatestVersion(Boolean.TRUE);
         businessObjectFormatEntity.setPartitionKey(request.getPartitionKey());
         businessObjectFormatEntity.setDescription(request.getDescription());
+        businessObjectFormatEntity.setDocumentSchema(request.getDocumentSchema());
 
         // Create the attributes if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributes()))

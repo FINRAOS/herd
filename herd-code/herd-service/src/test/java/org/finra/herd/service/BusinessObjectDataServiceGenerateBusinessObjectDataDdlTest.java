@@ -640,8 +640,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(request.getNamespace(), request.getBusinessObjectDefinitionName(),
-                    request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(request.getNamespace(), request.getBusinessObjectDefinitionName(),
+                        request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()),
                 e.getMessage());
         }
 
@@ -656,8 +656,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("The partition key \"%s\" does not exist in first %d partition columns in the schema for business object format " +
-                "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
-                "businessObjectFormatVersion: %d}.", request.getPartitionValueFilters().get(0).getPartitionKey(),
+                    "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+                    "businessObjectFormatVersion: %d}.", request.getPartitionValueFilters().get(0).getPartitionKey(),
                 BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1, request.getNamespace(), request.getBusinessObjectDefinitionName(),
                 request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -758,7 +758,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String
-                .format("The start partition value \"%s\" cannot be greater than the end partition value \"%s\".", END_PARTITION_VALUE, START_PARTITION_VALUE),
+                    .format("The start partition value \"%s\" cannot be greater than the end partition value \"%s\".", END_PARTITION_VALUE, START_PARTITION_VALUE),
                 e.getMessage());
         }
 
@@ -873,7 +873,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Custom DDL with name \"%s\" does not exist for business object format with namespace \"%s\", " +
-                "business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%d\".", request.getCustomDdlName(),
+                    "business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%d\".", request.getCustomDdlName(),
                 request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
                 request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -954,7 +954,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Business object format with namespace \"%s\", business object definition name \"%s\", format usage \"%s\", " +
-                "format file type \"%s\", and format version \"%s\" doesn't have schema information.", request.getNamespace(),
+                    "format file type \"%s\", and format version \"%s\" doesn't have schema information.", request.getNamespace(),
                 request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
                 request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -1008,8 +1008,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("A partition key group, which is required to use partition value ranges, " +
-                "is not specified for the business object format {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
-                "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", request.getNamespace(),
+                    "is not specified for the business object format {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
+                    "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", request.getNamespace(),
                 request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
                 request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -1363,8 +1363,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %s, partitionValue: \"%s\", " +
-                "subpartitionValues: \",,,\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", request.getNamespace(),
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %s, partitionValue: \"%s\", " +
+                    "subpartitionValues: \",,,\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", request.getNamespace(),
                 request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
                 request.getBusinessObjectFormatVersion(),
                 request.getPartitionValueFilters().get(0).getPartitionValues().get(request.getPartitionValueFilters().get(0).getPartitionValues().size() - 1),
@@ -1405,8 +1405,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %s, partitionValue: \"%s\", " +
-                "subpartitionValues: \",,,\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", request.getNamespace(),
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %s, partitionValue: \"%s\", " +
+                    "subpartitionValues: \",,,\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", request.getNamespace(),
                 request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
                 request.getBusinessObjectFormatVersion(),
                 request.getPartitionValueFilters().get(0).getPartitionValues().get(request.getPartitionValueFilters().get(0).getPartitionValues().size() - 1),
@@ -1531,8 +1531,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Partition column name \"%s\" can not contain a '/' character. Business object format: " +
-                "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}", invalidPartitionColumnName, request.getNamespace(),
+                    "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}", invalidPartitionColumnName, request.getNamespace(),
                 request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
                 request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -1563,8 +1563,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Column \"%s\" has an unsupported data type \"%s\" in the schema for business object format " +
-                "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", schemaColumn.getName(), schemaColumn.getType(),
+                    "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", schemaColumn.getName(), schemaColumn.getType(),
                 request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
                 request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -1594,8 +1594,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             String partitionKey = partitionColumns.get(0).getName();
             BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
                 .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                    LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                    SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
+                    FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                    SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
 
             for (String partitionValue : STORAGE_1_AVAILABLE_PARTITION_VALUES)
             {
@@ -1654,7 +1654,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Unsupported format file type for business object format {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
-                "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", request.getNamespace(),
+                    "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", request.getNamespace(),
                 request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
                 request.getBusinessObjectFormatVersion()), e.getMessage());
         }
@@ -1765,9 +1765,9 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Storage directory path \"%s\" registered with business object data {%s} " +
-                "in \"%s\" storage does not match the expected S3 key prefix \"%s\".", invalidS3KeyPrefix, businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
-                    PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME,
+                    "in \"%s\" storage does not match the expected S3 key prefix \"%s\".", invalidS3KeyPrefix, businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
+                        PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME,
                 getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
                     FIRST_PARTITION_COLUMN_NAME, PARTITION_VALUE, null, null, DATA_VERSION)), e.getMessage());
         }
@@ -1794,9 +1794,9 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Storage directory path \"%s\" registered with business object data {%s} " +
-                "in \"%s\" storage does not match the expected S3 key prefix \"%s\".", null, businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
-                    PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME,
+                    "in \"%s\" storage does not match the expected S3 key prefix \"%s\".", null, businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
+                        PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME,
                 getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
                     FIRST_PARTITION_COLUMN_NAME, PARTITION_VALUE, null, null, DATA_VERSION)), e.getMessage());
         }
@@ -1809,11 +1809,11 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1 + SUBPARTITION_VALUES.size());
         BusinessObjectFormatEntity businessObjectFormatV0Entity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
-                NO_LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
                 SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
         BusinessObjectFormatEntity businessObjectFormatV1Entity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
                 SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
 
         // Create two storage entities.
@@ -1935,8 +1935,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // Create a business object format entity with the schema.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
 
         // Create an S3 storage entity.
         StorageEntity storageEntity = storageDaoTestHelper
@@ -2013,10 +2013,10 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Failed to find partition value which is the latest before partition value = \"%s\" " +
-                "for partition key = \"%s\" due to no available business object data " +
-                "in \"%s\" storage that satisfies the search criteria. Business object data {namespace: \"%s\", " +
-                "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
-                "businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", PARTITION_VALUE, FIRST_PARTITION_COLUMN_NAME, STORAGE_NAME, NAMESPACE,
+                    "for partition key = \"%s\" due to no available business object data " +
+                    "in \"%s\" storage that satisfies the search criteria. Business object data {namespace: \"%s\", " +
+                    "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+                    "businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", PARTITION_VALUE, FIRST_PARTITION_COLUMN_NAME, STORAGE_NAME, NAMESPACE,
                 BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, DATA_VERSION), e.getMessage());
         }
     }
@@ -2042,10 +2042,10 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Failed to find partition value which is the latest after partition value = \"%s\" " +
-                "for partition key = \"%s\" due to no available business object data " +
-                "in \"%s\" storage that satisfies the search criteria. Business object data {namespace: \"%s\", " +
-                "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
-                "businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", PARTITION_VALUE_2, FIRST_PARTITION_COLUMN_NAME, STORAGE_NAME, NAMESPACE,
+                    "for partition key = \"%s\" due to no available business object data " +
+                    "in \"%s\" storage that satisfies the search criteria. Business object data {namespace: \"%s\", " +
+                    "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+                    "businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", PARTITION_VALUE_2, FIRST_PARTITION_COLUMN_NAME, STORAGE_NAME, NAMESPACE,
                 BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, DATA_VERSION), e.getMessage());
         }
     }
@@ -2129,14 +2129,14 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // Create an initial version of business object format with the schema having two partition columns.
         BusinessObjectFormatEntity businessObjectFormatEntity1 = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
-                NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns1);
+                FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns1);
 
         // Create a second version of business object format with the schema having only one partition column.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns2);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns2);
 
         // Provide sub-partition column name and value.
         List<SchemaColumn> subPartitionColumns = partitionColumns1.subList(1, 2);
@@ -2180,11 +2180,11 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Number of subpartition values specified for the business object data is greater than or equal to " +
-                "the number of partition columns defined in the schema of the business object format selected for DDL generation. " +
-                "Business object data: {%s},  business object format: {%s}", businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION,
-                    PARTITION_VALUE, subPartitionValues, DATA_VERSION), businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION)),
+                    "the number of partition columns defined in the schema of the business object format selected for DDL generation. " +
+                    "Business object data: {%s},  business object format: {%s}", businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION,
+                        PARTITION_VALUE, subPartitionValues, DATA_VERSION), businessObjectFormatServiceTestHelper
+                    .getExpectedBusinessObjectFormatKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION)),
                 e.getMessage());
         }
     }
@@ -2241,8 +2241,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         assertEquals(new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
-            .getExpectedBusinessObjectDataDdlTwoPartitionLevels(Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1)))),
+                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataDdlTwoPartitionLevels(Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1)))),
             resultBusinessObjectDataDdl);
     }
 
@@ -2273,8 +2273,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
-                "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
+                    "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, PARTITION_VALUE, SUB_PARTITION_VALUE_2, DATA_VERSION, STORAGE_NAME), e.getMessage());
         }
     }
@@ -2305,8 +2305,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
-                "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
+                    "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, PARTITION_VALUE, SUB_PARTITION_VALUE_2, DATA_VERSION, STORAGE_NAME), e.getMessage());
         }
     }
@@ -2337,8 +2337,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
-                "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
+                    "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, PARTITION_VALUE, SUB_PARTITION_VALUE_2, DATA_VERSION, STORAGE_NAME), e.getMessage());
         }
     }
@@ -2373,8 +2373,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
-                "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
+                    "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, PARTITION_VALUE, SUB_PARTITION_VALUE_2, DATA_VERSION, STORAGE_NAME), e.getMessage());
         }
     }
@@ -2407,8 +2407,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         assertEquals(new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
-            .getExpectedBusinessObjectDataDdlTwoPartitionLevels(Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1)))),
+                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataDdlTwoPartitionLevels(Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1)))),
             resultBusinessObjectDataDdl);
     }
 
@@ -2437,8 +2437,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         assertEquals(new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
-            .getExpectedBusinessObjectDataDdlTwoPartitionLevels(Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1)))),
+                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataDdlTwoPartitionLevels(Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1)))),
             resultBusinessObjectDataDdl);
     }
 
@@ -2462,9 +2462,9 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         assertEquals(new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
-            .getExpectedBusinessObjectDataDdlTwoPartitionLevels(
-                Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2)))),
+                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataDdlTwoPartitionLevels(
+                    Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2)))),
             resultBusinessObjectDataDdl);
     }
 
@@ -2495,9 +2495,9 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         assertEquals(new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
-            .getExpectedBusinessObjectDataDdlTwoPartitionLevels(
-                Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2)))),
+                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataDdlTwoPartitionLevels(
+                    Arrays.asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2)))),
             resultBusinessObjectDataDdl);
     }
 
@@ -2549,14 +2549,14 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // Create an initial version of business object format with the schema having two partition columns.
         BusinessObjectFormatEntity businessObjectFormatEntity1 = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
-                NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns1);
+                FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns1);
 
         // Create a second version of business object format with the schema having only one partition column.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns2);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns2);
 
         // Provide sub-partition column name and value.
         List<SchemaColumn> subPartitionColumns = partitionColumns1.subList(1, 2);
@@ -2599,11 +2599,11 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Number of primary and sub-partition values (2) specified for the business object data is not equal to " +
-                "the number of partition columns (1) defined in the schema of the business object format selected for DDL generation. " +
-                "Business object data: {%s},  business object format: {%s}", businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION,
-                    PARTITION_VALUE, subPartitionValues, DATA_VERSION), businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION)),
+                    "the number of partition columns (1) defined in the schema of the business object format selected for DDL generation. " +
+                    "Business object data: {%s},  business object format: {%s}", businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION,
+                        PARTITION_VALUE, subPartitionValues, DATA_VERSION), businessObjectFormatServiceTestHelper
+                    .getExpectedBusinessObjectFormatKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION)),
                 e.getMessage());
         }
     }

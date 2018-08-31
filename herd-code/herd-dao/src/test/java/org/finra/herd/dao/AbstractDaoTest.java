@@ -387,6 +387,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String FORMAT_DESCRIPTION_3 = "UT_Format_3_" + RANDOM_SUFFIX;
 
+    public static final String FORMAT_DOCUMENT_SCHEMA = "UT_DocumentSchema_1_" + RANDOM_SUFFIX;
+
+    public static final String FORMAT_DOCUMENT_SCHEMA_2 = "UT_DocumentSchema_2_" + RANDOM_SUFFIX;
+
+    public static final String FORMAT_DOCUMENT_SCHEMA_3 = "UT_DocumentSchema_3_" + RANDOM_SUFFIX;
+
     public static final String FORMAT_FILE_TYPE_CODE = "UT_FileType" + RANDOM_SUFFIX;
 
     public static final String FORMAT_FILE_TYPE_CODE_2 = "UT_FileType_2" + RANDOM_SUFFIX;
@@ -617,6 +623,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean NO_FILTER_ON_RETENTION_EXPIRATION = false;
 
     public static final String NO_FORMAT_DESCRIPTION = null;
+
+    public static final String NO_FORMAT_DOCUMENT_SCHEMA = null;
 
     public static final String NO_FORMAT_FILE_TYPE_CODE = null;
 

@@ -1134,8 +1134,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
             schemaColumns.add(schemaColumn);
         }
         BusinessObjectFormatEntity businessObjectFormatEntity = super.businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, true, PARTITION_KEY,
-                null, NO_ATTRIBUTES, null, null, null, schemaColumns, null);
+            .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, null, true,
+                PARTITION_KEY, null, NO_ATTRIBUTES, null, null, null, schemaColumns, null);
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
             businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
