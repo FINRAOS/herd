@@ -708,8 +708,8 @@ public class BusinessObjectFormatServiceTestHelper
         assertEquals(expectedBusinessObjectFormatVersion, Integer.valueOf(actualBusinessObjectFormat.getBusinessObjectFormatVersion()));
         assertEquals(expectedIsLatestVersion, actualBusinessObjectFormat.isLatestVersion());
         assertEquals(expectedPartitionKey, actualBusinessObjectFormat.getPartitionKey());
+        assertEquals(expectedDocumentSchema, actualBusinessObjectFormat.getDocumentSchema());
         AbstractServiceTest.assertEqualsIgnoreNullOrEmpty("description", expectedDescription, actualBusinessObjectFormat.getDescription());
-        AbstractServiceTest.assertEqualsIgnoreNullOrEmpty("documentSchema", expectedDocumentSchema, actualBusinessObjectFormat.getDocumentSchema());
 
         // Ignoring the order, check if the actual list of attributes matches the expected list.
         if (!CollectionUtils.isEmpty(expectedAttributes))

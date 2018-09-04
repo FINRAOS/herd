@@ -1490,6 +1490,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      */
     private String getTrimmedDocumentSchema(String documentSchema)
     {
-        return StringUtils.isNotBlank(documentSchema) ? documentSchema.trim() : documentSchema;
+        return documentSchema != null ? documentSchema.trim() : documentSchema;
     }
 }
