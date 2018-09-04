@@ -1765,7 +1765,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Validate the returned object.
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
-                PARTITION_KEY, addWhitespace(FORMAT_DESCRIPTION), addWhitespace(FORMAT_DOCUMENT_SCHEMA),
+                PARTITION_KEY, addWhitespace(FORMAT_DESCRIPTION), FORMAT_DOCUMENT_SCHEMA,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1))),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
                 businessObjectFormat);
@@ -3986,7 +3986,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Perform an update by changing the description and using input parameters with leading and trailing empty spaces.
         BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatUpdateRequest(addWhitespace(FORMAT_DESCRIPTION_2), FORMAT_DOCUMENT_SCHEMA,
+            .createBusinessObjectFormatUpdateRequest(addWhitespace(FORMAT_DESCRIPTION_2), addWhitespace(FORMAT_DOCUMENT_SCHEMA),
                 Arrays.asList(new Attribute(addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE), addWhitespace(ATTRIBUTE_VALUE_1))),
                 addWhitespace(businessObjectFormatServiceTestHelper.getTestSchema2()));
         BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService.updateBusinessObjectFormat(

@@ -2278,14 +2278,14 @@
                <xs:documentation>The schema for document-style business object data registered with Herd.
                   The schema allows the publisher to perform self-service validation of incoming data when registering business object data. It also allows
                   the consumers to perform self-service downstream actions like hydrating objects when consuming business object data.The documentSchema is
-                  optional. Currently any documentSchema is accepted. Its content is not validated.
+                  optional. Currently any documentSchema is accepted. Its content is not validated
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="attributes" type="attributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Format. "name" is the attribute name (i.e. the key) and
-                  "value" is the attribute value.
+                  "value" is the attribute value
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -2339,14 +2339,14 @@
                <xs:documentation>The schema for document-style business object data registered with Herd. The schema allows the publisher to perform
                   self-service validation of incoming data when registering business object data.It also allows the consumers to perform self-service downstream
                   actions like hydrating objects when consuming business object data. The documentSchema is optional. Currently any documentSchema is accepted.
-                  Its content is not validated.
+                  Its content is not validated
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="attributes" type="attributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Format. "name" is the attribute name (i.e. the key) and
-                  "value" is the attribute value.
+                  "value" is the attribute value
                </xs:documentation>
             </xs:annotation>
          </xs:element>
