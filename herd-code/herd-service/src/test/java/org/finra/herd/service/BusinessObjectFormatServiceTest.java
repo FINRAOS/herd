@@ -1765,14 +1765,38 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Validate the returned object.
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
-                PARTITION_KEY, addWhitespace(FORMAT_DESCRIPTION), addWhitespace(FORMAT_DOCUMENT_SCHEMA),
+                PARTITION_KEY, addWhitespace(FORMAT_DESCRIPTION), FORMAT_DOCUMENT_SCHEMA,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1))),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
                 businessObjectFormat);
     }
 
     @Test
-    public void testCreateBusinessObjectFormatNoDocumentSchema()
+    public void testCreateBusinessObjectFormatAllBlankSpaceDocumentSchema()
+    {
+        businessObjectFormatServiceTestHelper.createTestDatabaseEntitiesForBusinessObjectFormatTesting();
+
+        // Create a first version of the format with blank space document schema.
+        BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
+                StringUtils.repeat(" ", 10), Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
+        request.getSchema().setPartitionKeyGroup(PARTITION_KEY_GROUP);
+
+        // Create an initial business object format version.
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request);
+
+        // Validate the returned object.
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
+                PARTITION_KEY, FORMAT_DESCRIPTION, "", Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
+                businessObjectFormat);
+    }
+
+
+    @Test
+    public void testCreateBusinessObjectFormatNullDocumentSchema()
     {
         // Create relative database entities.
         businessObjectFormatServiceTestHelper.createTestDatabaseEntitiesForBusinessObjectFormatTesting();
@@ -3694,7 +3718,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         for (String blankText : Arrays.asList(BLANK_TEXT, EMPTY_STRING, null))
         {
             BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
-                .createBusinessObjectFormatUpdateRequest(blankText, blankText, Arrays.asList(new Attribute(ATTRIBUTE_NAME_4_MIXED_CASE, blankText)),
+                .createBusinessObjectFormatUpdateRequest(blankText, FORMAT_DOCUMENT_SCHEMA, Arrays.asList(new Attribute(ATTRIBUTE_NAME_4_MIXED_CASE, blankText)),
                     testSchema2);
             BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService
                 .updateBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
@@ -3703,7 +3727,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             // Validate the returned object.
             businessObjectFormatServiceTestHelper
                 .validateBusinessObjectFormat(originalBusinessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                    INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, blankText, blankText,
+                    INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, blankText, FORMAT_DOCUMENT_SCHEMA,
                     Arrays.asList(new Attribute(ATTRIBUTE_NAME_4_MIXED_CASE, blankText)), NO_ATTRIBUTE_DEFINITIONS, testSchema2, resultBusinessObjectFormat);
         }
     }
@@ -3986,7 +4010,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Perform an update by changing the description and using input parameters with leading and trailing empty spaces.
         BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatUpdateRequest(addWhitespace(FORMAT_DESCRIPTION_2), FORMAT_DOCUMENT_SCHEMA,
+            .createBusinessObjectFormatUpdateRequest(addWhitespace(FORMAT_DESCRIPTION_2), addWhitespace(FORMAT_DOCUMENT_SCHEMA),
                 Arrays.asList(new Attribute(addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE), addWhitespace(ATTRIBUTE_VALUE_1))),
                 addWhitespace(businessObjectFormatServiceTestHelper.getTestSchema2()));
         BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService.updateBusinessObjectFormat(
