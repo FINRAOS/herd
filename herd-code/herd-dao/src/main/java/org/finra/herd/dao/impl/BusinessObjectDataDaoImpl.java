@@ -391,38 +391,35 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     @Override
-    public List<BusinessObjectDataEntity> getBusinessObjectDataFromStorageOlderThan(String storageName, int thresholdMinutes,
-        List<String> businessObjectDataStatusesToIgnore)
+    public List<BusinessObjectDataEntity> getBusinessObjectDataFromStorageOlderThan(StorageEntity storageEntity, int thresholdMinutes,
+        List<String> businessObjectDataStatuses)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
 
         // The criteria root is the business object data.
-        Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
+        Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
 
         // Join to the other tables we can filter on.
-        Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntity = businessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
-        Join<StorageUnitEntity, StorageEntity> storageEntity = storageUnitEntity.join(StorageUnitEntity_.storage);
-        Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> businessObjectDataStatusEntity =
-            businessObjectDataEntity.join(BusinessObjectDataEntity_.status);
+        Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntityJoin = businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
 
         // Compute threshold timestamp based on the current database timestamp and threshold minutes.
         Timestamp thresholdTimestamp = HerdDateUtils.addMinutes(getCurrentTimestamp(), -thresholdMinutes);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate queryRestriction = builder.equal(builder.upper(storageEntity.get(StorageEntity_.name)), storageName.toUpperCase());
-        queryRestriction = builder.and(queryRestriction,
-            builder.not(businessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code).in(businessObjectDataStatusesToIgnore)));
-        queryRestriction =
-            builder.and(queryRestriction, builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn), thresholdTimestamp));
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(storageUnitEntityJoin.get(StorageUnitEntity_.storageName), storageEntity.getName()));
+        predicates.add(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.statusCode).in(businessObjectDataStatuses));
+        predicates.add(builder.lessThanOrEqualTo(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.createdOn), thresholdTimestamp));
 
-        // Order the results by file path.
-        Order orderByCreatedOn = builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn));
+        // Order results by "created on" timestamp.
+        Order orderBy = builder.asc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.createdOn));
 
-        // Add the clauses for the query.
-        criteria.select(businessObjectDataEntity).where(queryRestriction).orderBy(orderByCreatedOn);
+        // Add all clauses to the query.
+        criteria.select(businessObjectDataEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderBy);
 
+        // Execute the query and return the results.
         return entityManager.createQuery(criteria).getResultList();
     }
 

@@ -24,6 +24,7 @@ import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusHistoryEntity;
@@ -69,6 +70,28 @@ public class StorageUnitDaoHelper
     }
 
     /**
+     * Retrieves a storage unit entity for the business object data in the specified storage and make sure it exists.
+     *
+     * @param businessObjectDataEntity the business object data entity
+     * @param storageEntity the storage entity
+     *
+     * @return the storage unit entity
+     */
+    public StorageUnitEntity getStorageUnitEntityByBusinessObjectDataAndStorage(BusinessObjectDataEntity businessObjectDataEntity, StorageEntity storageEntity)
+    {
+        StorageUnitEntity storageUnitEntity = storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity);
+
+        if (storageUnitEntity == null)
+        {
+            throw new ObjectNotFoundException(String
+                .format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", storageEntity.getName(),
+                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+        }
+
+        return storageUnitEntity;
+    }
+
+    /**
      * Retrieves a storage unit entity for the specified business object data storage unit key and makes sure it exists.
      *
      * @param businessObjectDataStorageUnitKey the business object data storage unit key
@@ -81,16 +104,16 @@ public class StorageUnitDaoHelper
 
         if (storageUnitEntity == null)
         {
-            throw new ObjectNotFoundException(String
-                .format("Business object data storage unit {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+            throw new ObjectNotFoundException(String.format(
+                "Business object data storage unit {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
                     "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
                     "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d, storageName: \"%s\"} doesn't exist.",
-                    businessObjectDataStorageUnitKey.getNamespace(), businessObjectDataStorageUnitKey.getBusinessObjectDefinitionName(),
-                    businessObjectDataStorageUnitKey.getBusinessObjectFormatUsage(), businessObjectDataStorageUnitKey.getBusinessObjectFormatFileType(),
-                    businessObjectDataStorageUnitKey.getBusinessObjectFormatVersion(), businessObjectDataStorageUnitKey.getPartitionValue(),
-                    CollectionUtils.isEmpty(businessObjectDataStorageUnitKey.getSubPartitionValues()) ? "" :
-                        StringUtils.join(businessObjectDataStorageUnitKey.getSubPartitionValues(), ","),
-                    businessObjectDataStorageUnitKey.getBusinessObjectDataVersion(), businessObjectDataStorageUnitKey.getStorageName()));
+                businessObjectDataStorageUnitKey.getNamespace(), businessObjectDataStorageUnitKey.getBusinessObjectDefinitionName(),
+                businessObjectDataStorageUnitKey.getBusinessObjectFormatUsage(), businessObjectDataStorageUnitKey.getBusinessObjectFormatFileType(),
+                businessObjectDataStorageUnitKey.getBusinessObjectFormatVersion(), businessObjectDataStorageUnitKey.getPartitionValue(),
+                CollectionUtils.isEmpty(businessObjectDataStorageUnitKey.getSubPartitionValues()) ? "" :
+                    StringUtils.join(businessObjectDataStorageUnitKey.getSubPartitionValues(), ","),
+                businessObjectDataStorageUnitKey.getBusinessObjectDataVersion(), businessObjectDataStorageUnitKey.getStorageName()));
         }
 
         return storageUnitEntity;
