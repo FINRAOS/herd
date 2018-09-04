@@ -126,6 +126,9 @@
       <jaxb:bindings node="//xs:complexType[@name='businessObjectFormatUpdateRequest']//xs:element[@name='documentSchema']">
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='businessObjectFormat']//xs:element[@name='documentSchema']">
+         <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDataDdl']//xs:element[@name='ddl']">
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
