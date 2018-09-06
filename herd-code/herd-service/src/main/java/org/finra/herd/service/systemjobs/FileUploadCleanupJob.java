@@ -17,6 +17,7 @@ package org.finra.herd.service.systemjobs;
 
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -26,8 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -66,28 +67,15 @@ public class FileUploadCleanupJob extends AbstractSystemJob
         // Mark as DELETED any dangling business object data records with storage files in S3_MANAGED_LOADING_DOCK storage.
         try
         {
-            fileUploadCleanupService.deleteBusinessObjectData(StorageEntity.MANAGED_LOADING_DOCK_STORAGE, thresholdMinutes);
+            List<BusinessObjectDataKey> businessObjectDataKeys =
+                fileUploadCleanupService.deleteBusinessObjectData(StorageEntity.MANAGED_LOADING_DOCK_STORAGE, thresholdMinutes);
+            LOGGER.info("Deleted {} instances of loading dock business object data. systemJobName=\"{}\" storageName=\"{}\"",
+                CollectionUtils.size(businessObjectDataKeys), JOB_NAME, StorageEntity.MANAGED_LOADING_DOCK_STORAGE);
         }
         catch (Exception e)
         {
             // Log the exception.
             LOGGER.error("Failed to delete loading dock business object data. systemJobName=\"{}\"", JOB_NAME, e);
-        }
-
-        // Delete all orphaned multipart upload parts in all herd "managed" style S3 buckets.
-        for (String storageName : StorageEntity.S3_MANAGED_STORAGES)
-        {
-            try
-            {
-                int abortedMultipartUploadsCount = fileUploadCleanupService.abortMultipartUploads(storageName, thresholdMinutes);
-                LOGGER.info("Aborted expired multipart uploads. systemJobName=\"{}\" storageName=\"{}\" abortedExpiredMultipartUploadCount={}", JOB_NAME,
-                    storageName, abortedMultipartUploadsCount);
-            }
-            catch (Exception e)
-            {
-                // Log the exception.
-                LOGGER.error("Failed to abort expired multipart uploads. systemJobName=\"{}\" storageName=\"{}\"", JOB_NAME, storageName, e);
-            }
         }
 
         // Log that the system job is ended.

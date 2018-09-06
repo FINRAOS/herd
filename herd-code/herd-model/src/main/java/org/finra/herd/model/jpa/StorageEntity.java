@@ -15,10 +15,7 @@
 */
 package org.finra.herd.model.jpa;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -58,17 +55,11 @@ public class StorageEntity extends AuditableEntity
      * Our official S3 managed "loading dock" bucket for herd.
      */
     public static final String MANAGED_LOADING_DOCK_STORAGE = "S3_MANAGED_LOADING_DOCK";
-    
+
     /**
      *  Our official S3 sample file
      */
     public static final String SAMPLE_DATA_FILE_STORAGE = "S3_MANAGED_SAMPLE_DATA";
-
-    /**
-     * List all herd "managed" style S3 buckets.
-     */
-    public static final List<String> S3_MANAGED_STORAGES =
-        Collections.unmodifiableList(Arrays.asList(MANAGED_STORAGE, MANAGED_LOADING_DOCK_STORAGE, MANAGED_EXTERNAL_STORAGE));
 
     @Id
     @Column(name = "strge_cd")

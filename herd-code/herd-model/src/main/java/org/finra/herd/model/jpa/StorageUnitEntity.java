@@ -59,6 +59,9 @@ public class StorageUnitEntity extends AuditableEntity
     @JoinColumn(name = "strge_cd", referencedColumnName = "strge_cd", nullable = false)
     private StorageEntity storage;
 
+    @Column(name = "strge_cd", insertable = false, updatable = false)
+    private String storageName;
+
     @ManyToOne
     @JoinColumn(name = "bus_objct_data_id", referencedColumnName = "bus_objct_data_id", nullable = false)
     private BusinessObjectDataEntity businessObjectData;
@@ -121,6 +124,16 @@ public class StorageUnitEntity extends AuditableEntity
     public void setStorage(StorageEntity storage)
     {
         this.storage = storage;
+    }
+
+    public String getStorageName()
+    {
+        return storageName;
+    }
+
+    public void setStorageName(String storageName)
+    {
+        this.storageName = storageName;
     }
 
     public BusinessObjectDataEntity getBusinessObjectData()

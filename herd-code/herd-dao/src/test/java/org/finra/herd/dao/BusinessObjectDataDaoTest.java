@@ -34,7 +34,6 @@ import java.util.Set;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Test;
@@ -299,8 +298,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Create a business object format entity.
         BusinessObjectFormatKey businessObjectFormatKey =
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, true, PARTITION_KEY);
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
 
         // Create two versions of business object data instances with the latest version not located in the test storage.
         List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(businessObjectDataDaoTestHelper
@@ -530,8 +529,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     {
         // Create a business object format.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY, PARTITION_KEY_GROUP);
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY, PARTITION_KEY_GROUP);
 
         // Create a business object data entity associated with the business object format.
         businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, INITIAL_DATA_VERSION, true, BDATA_STATUS);
@@ -854,51 +853,38 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(SECOND_DATA_VERSION, resultBusinessObjectDataEntities.get(0).getVersion());
     }
 
-    /**
-     * Validates that we correctly select business object data entities per specified storage name, threshold minutes and excluded business object status
-     * values.
-     */
     @Test
     public void testGetBusinessObjectDataFromStorageWithThreshold()
     {
-        // Create the database entities required for testing.
-        List<String> storageNames = Arrays.asList(STORAGE_NAME, STORAGE_NAME_2);
-        List<String> businessObjectDataStatuses = Arrays.asList(BDATA_STATUS, BDATA_STATUS_2);
-        List<Integer> createdOnTimestampMinutesOffsets = Arrays.asList(5, 15, 20);
-        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS);
-        int counter = 0;
-        for (String storageName : storageNames)
-        {
-            StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(storageName);
-            for (String businessObjectDataStatus : businessObjectDataStatuses)
-            {
-                for (Integer offset : createdOnTimestampMinutesOffsets)
-                {
-                    BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-                        .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                            String.format("%s-%d", PARTITION_VALUE, counter++), SUBPARTITION_VALUES, DATA_VERSION, true, businessObjectDataStatus);
-                    // Apply the offset in minutes to createdOn value.
-                    businessObjectDataEntity.setCreatedOn(new Timestamp(businessObjectDataEntity.getCreatedOn().getTime() - offset * 60 * 1000));
-                    storageUnitDaoTestHelper
-                        .createStorageUnitEntity(storageEntity, businessObjectDataEntity, storageUnitStatusEntity, NO_STORAGE_DIRECTORY_PATH);
-                    herdDao.saveAndRefresh(businessObjectDataEntity);
-                }
-            }
-        }
+        // Test offset value in minutes.
+        final int OFFSET_IN_MINUTES = 10;
 
-        // Select a subset of test business object entities.
-        List<BusinessObjectDataEntity> resultBusinessObjectDataEntities =
-            businessObjectDataDao.getBusinessObjectDataFromStorageOlderThan(STORAGE_NAME, 10, Collections.singletonList(BDATA_STATUS_2));
+        // Create two storage entities.
+        List<StorageEntity> storageEntities =
+            Arrays.asList(storageDaoTestHelper.createStorageEntity(STORAGE_NAME), storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2));
 
-        // Validate the results.
-        assertNotNull(resultBusinessObjectDataEntities);
-        assertEquals(2, resultBusinessObjectDataEntities.size());
-        for (BusinessObjectDataEntity businessObjectDataEntity : resultBusinessObjectDataEntities)
-        {
-            assertEquals(1, businessObjectDataEntity.getStorageUnits().size());
-            assertEquals(STORAGE_NAME, IterableUtils.get(businessObjectDataEntity.getStorageUnits(), 0).getStorage().getName());
-            assertEquals(BDATA_STATUS, businessObjectDataEntity.getStatus().getCode());
-        }
+        // Create a business object data entity and apply test offset value to its createdOn timestamp.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        businessObjectDataEntity.setCreatedOn(new Timestamp(businessObjectDataEntity.getCreatedOn().getTime() - OFFSET_IN_MINUTES * 60 * 1000));
+        herdDao.saveAndRefresh(businessObjectDataEntity);
+
+        // Create a storage unit for the business object data in the first storage.
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntities.get(0), businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        // Select business object data by specifying valid input parameters.
+        assertEquals(Collections.singletonList(businessObjectDataEntity), businessObjectDataDao
+            .getBusinessObjectDataFromStorageOlderThan(storageEntities.get(0), OFFSET_IN_MINUTES - 1, Collections.singletonList(BDATA_STATUS)));
+
+        // Try invalid values for all input parameters.
+        assertEquals(0, businessObjectDataDao
+            .getBusinessObjectDataFromStorageOlderThan(storageEntities.get(1), OFFSET_IN_MINUTES - 1, Collections.singletonList(BDATA_STATUS)).size());
+        assertEquals(0, businessObjectDataDao
+            .getBusinessObjectDataFromStorageOlderThan(storageEntities.get(0), OFFSET_IN_MINUTES + 1, Collections.singletonList(BDATA_STATUS)).size());
+        assertEquals(0, businessObjectDataDao
+            .getBusinessObjectDataFromStorageOlderThan(storageEntities.get(0), OFFSET_IN_MINUTES - 1, Collections.singletonList(BDATA_STATUS_2)).size());
     }
 
     @Test
@@ -1674,8 +1660,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         FileTypeEntity fileTypeEntity = super.fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION);
 
         BusinessObjectFormatEntity businessObjectFormatEntity = super.businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, true, PARTITION_KEY,
-                null, NO_ATTRIBUTES, null, null, null, schemaColumns, schemaColumns);
+            .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, null, true,
+                PARTITION_KEY, null, NO_ATTRIBUTES, null, null, null, schemaColumns, schemaColumns);
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
             businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
 
@@ -2217,7 +2203,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Create a business object format entity.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP);
+                FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP);
 
         // Create two business object data entities that belong to the same business object format version.
         businessObjectDataDaoTestHelper

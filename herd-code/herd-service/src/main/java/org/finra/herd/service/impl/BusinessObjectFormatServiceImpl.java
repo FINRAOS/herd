@@ -104,6 +104,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     public static final Set<String> SCHEMA_COLUMN_DATA_TYPES_WITH_ALLOWED_SIZE_INCREASE =
         Collections.unmodifiableSet(new HashSet<>(Arrays.asList("CHAR", "VARCHAR", "VARCHAR2")));
 
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -271,11 +272,15 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Validate optional attributes. This is also going to trim the attribute names.
         attributeHelper.validateFormatAttributes(request.getAttributes());
 
+
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
 
         // Update business object format description.
         businessObjectFormatEntity.setDescription(request.getDescription());
+
+        // Update business object format document schema
+        businessObjectFormatEntity.setDocumentSchema(getTrimmedDocumentSchema(request.getDocumentSchema()));
 
         // Validate optional schema information.  This is also going to trim the relative schema column field values.
         validateBusinessObjectFormatSchema(request.getSchema(), businessObjectFormatEntity.getPartitionKey());
@@ -1145,6 +1150,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setLatestVersion(Boolean.TRUE);
         businessObjectFormatEntity.setPartitionKey(request.getPartitionKey());
         businessObjectFormatEntity.setDescription(request.getDescription());
+        businessObjectFormatEntity.setDocumentSchema(getTrimmedDocumentSchema(request.getDocumentSchema()));
 
         // Create the attributes if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributes()))
@@ -1473,5 +1479,17 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             }
             attributeDefinitionNameValidationMap.put(lowercaseAttributeDefinitionName, attributeDefinition);
         }
+    }
+
+    /**
+     * Removes the leading and trailing white spaces in the document schema
+     *
+     * @param documentSchema - document schema
+     *
+     * @return document schema with leading and trailing white spaces removed.
+     */
+    private String getTrimmedDocumentSchema(String documentSchema)
+    {
+        return documentSchema != null ? documentSchema.trim() : documentSchema;
     }
 }
