@@ -278,7 +278,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
         assertNotNull(resultBusinessObjectDataVersions);
         assertEquals(0, resultBusinessObjectDataVersions.getBusinessObjectDataVersions().size());
 
-        // Try to get business object data versions using invalid format usage.        
+        // Try to get business object data versions using invalid format usage.
         resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION));
@@ -363,7 +363,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
         {
             businessObjectFormatDaoTestHelper
                 .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion,
-                    FORMAT_DESCRIPTION, businessObjectFormatVersion == SECOND_FORMAT_VERSION, PARTITION_KEY);
+                    FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, businessObjectFormatVersion == SECOND_FORMAT_VERSION, PARTITION_KEY);
 
             for (int businessObjectDataVersion = INITIAL_DATA_VERSION; businessObjectDataVersion < NUMBER_OF_DATA_VERSIONS_PER_FORMAT_VERSION;
                 businessObjectDataVersion++)

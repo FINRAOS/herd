@@ -43,8 +43,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
     {
         // Create and persist a business object format entity.
         businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY);
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
 
         // Create a custom DDL.
         CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
@@ -137,8 +137,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
     {
         // Create and persist a business object format entity.
         businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY);
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
 
         // Create a custom DDL using input parameters with leading and trailing empty spaces.
         CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
@@ -156,7 +156,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
     {
         // Create and persist a business object format entity using lower case values.
         businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
-            FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, FORMAT_DESCRIPTION.toLowerCase(), true, PARTITION_KEY.toLowerCase());
+            FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, FORMAT_DESCRIPTION.toLowerCase(), FORMAT_DOCUMENT_SCHEMA.toLowerCase(), true,
+            PARTITION_KEY.toLowerCase());
 
         // Create a custom DDL using upper case input parameters.
         CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
@@ -174,7 +175,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
     {
         // Create and persist a business object format entity using upper case values.
         businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
-            FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, FORMAT_DESCRIPTION.toUpperCase(), true, PARTITION_KEY.toUpperCase());
+            FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, FORMAT_DESCRIPTION.toUpperCase(), FORMAT_DOCUMENT_SCHEMA.toUpperCase(), true,
+            PARTITION_KEY.toUpperCase());
 
         // Create a custom DDL using lower case input parameters.
         CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
@@ -269,7 +271,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 e.getMessage());
         }
     }
@@ -292,8 +294,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         catch (AlreadyExistsException e)
         {
             assertEquals(String.format("Unable to create custom DDL with name \"%s\" because it already exists for the business object format " +
-                "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
-                "businessObjectFormatVersion: %d}.", CUSTOM_DDL_NAME.toLowerCase(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                    "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+                    "businessObjectFormatVersion: %d}.", CUSTOM_DDL_NAME.toLowerCase(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 FORMAT_VERSION), e.getMessage());
         }
     }
@@ -440,7 +442,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Custom DDL with name \"%s\" does not exist for business object format with namespace \"%s\", " +
-                "business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%d\".", CUSTOM_DDL_NAME, NAMESPACE,
+                    "business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%d\".", CUSTOM_DDL_NAME, NAMESPACE,
                 BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), e.getMessage());
         }
     }
@@ -620,7 +622,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(businessObjectFormatServiceTestHelper
-                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                    .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 e.getMessage());
         }
     }
@@ -630,8 +632,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
     {
         // Create and persist a business object format entity.
         businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY);
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
 
         // Retrieve a list of custom DDL keys, when none of the custom DDLs exist.
         CustomDdlKeys resultCustomDdlKeys =
@@ -803,7 +805,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Custom DDL with name \"%s\" does not exist for business object format with namespace \"%s\", " +
-                "business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%d\".", CUSTOM_DDL_NAME, NAMESPACE,
+                    "business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%d\".", CUSTOM_DDL_NAME, NAMESPACE,
                 BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), e.getMessage());
         }
     }
@@ -983,7 +985,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Custom DDL with name \"%s\" does not exist for business object format with namespace \"%s\", " +
-                "business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%d\".", CUSTOM_DDL_NAME, NAMESPACE,
+                    "business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%d\".", CUSTOM_DDL_NAME, NAMESPACE,
                 BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), e.getMessage());
         }
     }

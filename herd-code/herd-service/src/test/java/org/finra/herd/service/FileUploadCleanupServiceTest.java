@@ -18,15 +18,14 @@ package org.finra.herd.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -75,29 +74,44 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
     public void testDeleteBusinessObjectData() throws Exception
     {
         // Prepare database entries required for testing without creating an S3 file.
-        BusinessObjectDataKey testBusinessObjectKey =
+        StorageEntity storageEntity = createTestStorageEntity(STORAGE_NAME, s3BucketName);
+        List<BusinessObjectDataKey> testBusinessObjectKeys = Arrays.asList(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
-        createTestDatabaseEntities(testBusinessObjectKey, STORAGE_NAME, s3BucketName, TARGET_S3_KEY, 15);
+                DATA_VERSION),
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES,
+                DATA_VERSION),
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION_2),
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES,
+                DATA_VERSION_2));
+        createTestDatabaseEntities(testBusinessObjectKeys.get(0), BusinessObjectDataStatusEntity.UPLOADING, storageEntity, TARGET_S3_KEY, 15);
+        createTestDatabaseEntities(testBusinessObjectKeys.get(1), BusinessObjectDataStatusEntity.UPLOADING, storageEntity, TARGET_S3_KEY, 5);
+        createTestDatabaseEntities(testBusinessObjectKeys.get(2), BusinessObjectDataStatusEntity.RE_ENCRYPTING, storageEntity, TARGET_S3_KEY, 20);
+        createTestDatabaseEntities(testBusinessObjectKeys.get(3), BDATA_STATUS, storageEntity, TARGET_S3_KEY, 20);
 
         // Delete the business object data.
         List<BusinessObjectDataKey> resultBusinessObjectDataKeys = fileUploadCleanupService.deleteBusinessObjectData(STORAGE_NAME, 10);
 
-        // Validate the results.
+        // Validate the results - only business object data number 0 and 3 are expected to be deleted.
         assertNotNull(resultBusinessObjectDataKeys);
-        assertEquals(1, resultBusinessObjectDataKeys.size());
-        assertEquals(testBusinessObjectKey, resultBusinessObjectDataKeys.get(0));
-        validateBusinessObjectDataStatus(testBusinessObjectKey, BusinessObjectDataStatusEntity.DELETED);
+        assertEquals(Arrays.asList(testBusinessObjectKeys.get(2), testBusinessObjectKeys.get(0)), resultBusinessObjectDataKeys);
+
+        // Validate business object data statuses.
+        validateBusinessObjectDataStatus(testBusinessObjectKeys.get(0), BusinessObjectDataStatusEntity.DELETED);
+        validateBusinessObjectDataStatus(testBusinessObjectKeys.get(1), BusinessObjectDataStatusEntity.UPLOADING);
+        validateBusinessObjectDataStatus(testBusinessObjectKeys.get(2), BusinessObjectDataStatusEntity.DELETED);
+        validateBusinessObjectDataStatus(testBusinessObjectKeys.get(3), BDATA_STATUS);
     }
 
     @Test
     public void testDeleteBusinessObjectDataS3FileExists() throws Exception
     {
         // Prepare database entries required for testing.
+        StorageEntity storageEntity = createTestStorageEntity(STORAGE_NAME, s3BucketName);
         BusinessObjectDataKey testBusinessObjectKey =
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
-        createTestDatabaseEntities(testBusinessObjectKey, STORAGE_NAME, s3BucketName, TARGET_S3_KEY, 15);
+        createTestDatabaseEntities(testBusinessObjectKey, BusinessObjectDataStatusEntity.UPLOADING, storageEntity, TARGET_S3_KEY, 15);
 
         // Put a file in S3.
         PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), new ObjectMetadata());
@@ -109,17 +123,19 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
         // Validate the results.
         assertNotNull(resultBusinessObjectDataKeys);
         assertTrue(resultBusinessObjectDataKeys.isEmpty());
-        validateBusinessObjectDataStatus(testBusinessObjectKey, BDATA_STATUS);
+        validateBusinessObjectDataStatus(testBusinessObjectKey, BusinessObjectDataStatusEntity.UPLOADING);
     }
 
     @Test
     public void testDeleteBusinessObjectDataAmazonServiceException() throws Exception
     {
         // Prepare database entries required for testing.
+        StorageEntity storageEntity = createTestStorageEntity(STORAGE_NAME, s3BucketName);
         BusinessObjectDataKey testBusinessObjectKey =
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
-        createTestDatabaseEntities(testBusinessObjectKey, STORAGE_NAME, s3BucketName, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, 15);
+        createTestDatabaseEntities(testBusinessObjectKey, BusinessObjectDataStatusEntity.UPLOADING, storageEntity,
+            MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, 15);
 
         executeWithoutLogging(FileUploadCleanupServiceImpl.class, () -> {
             // Delete the business object data.
@@ -128,63 +144,16 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
             // Validate the results.
             assertNotNull(resultBusinessObjectDataKeys);
             assertTrue(resultBusinessObjectDataKeys.isEmpty());
-            validateBusinessObjectDataStatus(testBusinessObjectKey, BDATA_STATUS);
+            validateBusinessObjectDataStatus(testBusinessObjectKey, BusinessObjectDataStatusEntity.UPLOADING);
         });
     }
 
-    @Test
-    public void testAbortMultipartUploads() throws Exception
+    private void createTestDatabaseEntities(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus, StorageEntity storageEntity,
+        String storageFilePath, int createdOnTimestampMinutesOffset) throws Exception
     {
-        // Prepare database entities required for testing.
-        createTestStorageEntity(STORAGE_NAME, s3BucketName);
-
-        // Abort multipart uploads started more that 10 minutes ago.
-        int resultAbortedMultipartUploadsCount = fileUploadCleanupService.abortMultipartUploads(STORAGE_NAME, 10);
-
-        // Validate the result. The mocked multipart listing should list 2 multipart uploads initiated more than 10 minutes ago.
-        assertEquals(2, resultAbortedMultipartUploadsCount);
-    }
-
-    @Test
-    public void testAbortMultipartUploadsTruncatedMultipartListing() throws Exception
-    {
-        // Prepare database entities required for testing.
-        createTestStorageEntity(STORAGE_NAME, MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_TRUNCATED_MULTIPART_LISTING);
-
-        // Abort multipart uploads started more that 10 minutes ago.
-        int resultAbortedMultipartUploadsCount = fileUploadCleanupService.abortMultipartUploads(STORAGE_NAME, 10);
-
-        // Validate the result. The mocked truncated multipart listing should list 4 multipart uploads initiated more than 10 minutes ago.
-        assertEquals(4, resultAbortedMultipartUploadsCount);
-    }
-
-    @Test
-    public void testAbortMultipartUploadsAmazonServiceException() throws Exception
-    {
-        // Prepare database entities required for testing.
-        createTestStorageEntity(STORAGE_NAME, MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_SERVICE_EXCEPTION);
-
-        // Try to abort multipart uploads.
-        try
-        {
-            fileUploadCleanupService.abortMultipartUploads(STORAGE_NAME, 10);
-            fail("Should throw an AmazonServiceException.");
-        }
-        catch (AmazonServiceException e)
-        {
-            assertEquals("null (Service: null; Status Code: 0; Error Code: null; Request ID: null)", e.getMessage());
-        }
-    }
-
-    private void createTestDatabaseEntities(BusinessObjectDataKey businessObjectDataKey, String storageName, String bucketName, String storageFilePath,
-        int createdOnTimestampMinutesOffset) throws Exception
-    {
-        // Create a storage entity.
-        StorageEntity storageEntity = createTestStorageEntity(storageName, bucketName);
-
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, true, BDATA_STATUS);
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, true, businessObjectDataStatus);
         // Apply the offset in minutes to createdOn value.
         businessObjectDataEntity.setCreatedOn(new Timestamp(businessObjectDataEntity.getCreatedOn().getTime() - createdOnTimestampMinutesOffset * 60 * 1000));
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper

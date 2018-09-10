@@ -109,7 +109,8 @@ public class BusinessObjectDataDaoTestHelper
         {
             businessObjectFormatEntity = businessObjectFormatDaoTestHelper
                 .createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                    businessObjectFormatVersion, AbstractDaoTest.FORMAT_DESCRIPTION, true, AbstractDaoTest.PARTITION_KEY);
+                    businessObjectFormatVersion, AbstractDaoTest.FORMAT_DESCRIPTION, AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA, true,
+                    AbstractDaoTest.PARTITION_KEY);
         }
 
         // Create a business object data status entity if it does not exist.
@@ -142,7 +143,8 @@ public class BusinessObjectDataDaoTestHelper
         {
             businessObjectFormatEntity = businessObjectFormatDaoTestHelper
                 .createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                    businessObjectFormatVersion, AbstractDaoTest.FORMAT_DESCRIPTION, true, AbstractDaoTest.PARTITION_KEY);
+                    businessObjectFormatVersion, AbstractDaoTest.FORMAT_DESCRIPTION, AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA, true,
+                    AbstractDaoTest.PARTITION_KEY);
         }
 
         // Create a business object data status entity if it does not exist.

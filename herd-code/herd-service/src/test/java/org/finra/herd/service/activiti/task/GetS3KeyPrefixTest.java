@@ -49,8 +49,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         // Create a business object format entity.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
+                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
 
         // Create an S3 storage.
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
@@ -115,7 +115,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A business object definition name must be specified.");
 
-        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () ->
+        {
             testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
         });
     }
@@ -129,7 +130,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be specified.");
 
-        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () ->
+        {
             // Validate that activiti task fails when we do not pass a business object format version value.
             testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), new ArrayList<FieldExtension>(), new ArrayList<Parameter>(),
                 variableValuesToValidate);
@@ -149,8 +151,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
 
         // Create a business object format entity without a schema.
         businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY);
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -189,8 +191,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
 
         // Create a business object format entity without a schema.
         businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY);
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -238,7 +240,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
 
-        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () ->
+        {
             testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
         });
     }
@@ -260,7 +263,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectDataVersion\" must be a valid integer value.");
 
-        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () ->
+        {
             testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
         });
     }
@@ -285,7 +289,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         variableValuesToValidate
             .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"createNewVersion\" must be a valid boolean value of \"true\" or \"false\".");
 
-        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () ->
+        {
             testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, null);
         });
     }
