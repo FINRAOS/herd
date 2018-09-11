@@ -122,7 +122,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             catch (IllegalArgumentException e)
             {
                 assertEquals(String.format("Registered storage file or directory does not match the expected Hive sub-directory pattern. " +
-                    "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {^%s$}", STORAGE_NAME,
+                        "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {^%s$}", STORAGE_NAME,
                     storageFilePaths.get(0), businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), TEST_S3_KEY_PREFIX,
                     pattern), e.getMessage());
             }
@@ -151,7 +151,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Found two different locations for the same Hive partition. " +
-                "Storage: {%s}, business object data: {%s}, S3 key prefix: {%s}, path[1]: {%s}, path[2]: {%s}", STORAGE_NAME,
+                    "Storage: {%s}, business object data: {%s}, S3 key prefix: {%s}, path[1]: {%s}, path[2]: {%s}", STORAGE_NAME,
                 businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), TEST_S3_KEY_PREFIX, partitionPaths.get(0),
                 partitionPaths.get(1)), e.getMessage());
         }
@@ -230,8 +230,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
         businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY);
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
         {
             SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
             schemaColumnEntity.setPosition(0);
@@ -266,8 +266,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
         businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY);
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
 
         {
             SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();

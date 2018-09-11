@@ -80,7 +80,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
 
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, 1, FORMAT_DESCRIPTION,
-                true, PARTITION_KEY, PARTITION_KEY_GROUP);
+                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY, PARTITION_KEY_GROUP);
 
         // Try to a get relational storage attributes when specified business object definition already exists.
         try
@@ -333,8 +333,8 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
                 new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME), new RelationalStorageAttributesDto(), RELATIONAL_SCHEMA_NAME, RELATIONAL_TABLE_NAME,
                 new BusinessObjectFormat(ID, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
-                    PARTITION_KEY, DESCRIPTION, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_BUSINESS_OBJECT_FORMAT_PARENTS,
-                    NO_BUSINESS_OBJECT_FORMAT_CHILDREN, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
+                    PARTITION_KEY, DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA,
+                    NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
                     NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET)), NO_COLUMNS);
             fail();
         }

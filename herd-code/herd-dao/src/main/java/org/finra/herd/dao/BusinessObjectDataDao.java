@@ -26,6 +26,7 @@ import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 
 public interface BusinessObjectDataDao extends BaseJpaDao
@@ -144,17 +145,17 @@ public interface BusinessObjectDataDao extends BaseJpaDao
         Integer businessObjectDataVersion, String businessObjectDataStatus, String storageName);
 
     /**
-     * Selects business object data having storage files associated with the specified storage and with status not listed as ignored. Only tbe business object
-     * data records that are older than threshold minutes will be selected.
+     * Selects business object data having storage files associated with the specified storage and status. Only tbe business object data records that are older
+     * than threshold minutes will be selected.
      *
-     * @param storageName the storage name
+     * @param storageEntity the storage entity
      * @param thresholdMinutes the expiration time in minutes
-     * @param businessObjectDataStatusesToIgnore the list of business object data statuses to ignore
+     * @param businessObjectDataStatuses the list of business object data statuses
      *
-     * @return the list of business object data entities sorted by created on
+     * @return the list of business object data entities sorted by created on timestamp
      */
-    public List<BusinessObjectDataEntity> getBusinessObjectDataFromStorageOlderThan(String storageName, int thresholdMinutes,
-        List<String> businessObjectDataStatusesToIgnore);
+    public List<BusinessObjectDataEntity> getBusinessObjectDataFromStorageOlderThan(StorageEntity storageEntity, int thresholdMinutes,
+        List<String> businessObjectDataStatuses);
 
     /**
      * Retrieves a map of business object data entities to their corresponding storage policy entities, where the business object data status is supported by

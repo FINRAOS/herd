@@ -17,7 +17,6 @@ package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -27,7 +26,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -105,7 +103,8 @@ public class FileUploadCleanupServiceImpl implements FileUploadCleanupService
 
         // Get dangling business object data records having storage files associated with the specified storage.
         List<BusinessObjectDataEntity> businessObjectDataEntities = businessObjectDataDao
-            .getBusinessObjectDataFromStorageOlderThan(storageName, thresholdMinutes, Arrays.asList(BusinessObjectDataStatusEntity.DELETED));
+            .getBusinessObjectDataFromStorageOlderThan(storageEntity, thresholdMinutes,
+                Arrays.asList(BusinessObjectDataStatusEntity.UPLOADING, BusinessObjectDataStatusEntity.RE_ENCRYPTING));
 
         // Build a list of keys for business object data that got marked as DELETED.
         List<BusinessObjectDataKey> resultBusinessObjectDataKeys = new ArrayList<>();
@@ -116,7 +115,8 @@ public class FileUploadCleanupServiceImpl implements FileUploadCleanupService
             {
                 // Get the storage unit. Please note that the storage unit entity must exist,
                 // since we selected business object data entities associated with the storage.
-                StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(storageName, businessObjectDataEntity);
+                StorageUnitEntity storageUnitEntity =
+                    storageUnitDaoHelper.getStorageUnitEntityByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity);
 
                 // Validate that none of the storage files (if any) exist in the relative S3 bucket.
                 boolean foundExistingS3File = false;
@@ -149,7 +149,7 @@ public class FileUploadCleanupServiceImpl implements FileUploadCleanupService
 
                     // Log the business object data status change.
                     LOGGER.info("Changed business object data status. " +
-                        "oldBusinessObjectDataStatus=\"{}\" newBusinessObjectDataStatus=\"{}\" businessObjectDataKey={}", originalBusinessObjectStatus,
+                            "oldBusinessObjectDataStatus=\"{}\" newBusinessObjectDataStatus=\"{}\" businessObjectDataKey={}", originalBusinessObjectStatus,
                         BusinessObjectDataStatusEntity.DELETED, jsonHelper.objectToJson(businessObjectDataKey));
                 }
             }
@@ -162,25 +162,5 @@ public class FileUploadCleanupServiceImpl implements FileUploadCleanupService
         }
 
         return resultBusinessObjectDataKeys;
-    }
-
-    @Override
-    public int abortMultipartUploads(String storageName, int thresholdMinutes)
-    {
-        LOGGER.info(
-            "Aborting S3 multipart uploads that were initiated in the storage more than specified threshold ago... storageName=\"{}\" thresholdMinutes={}",
-            storageName, thresholdMinutes);
-
-        // Get the storage entity and make sure it exists.
-        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageName);
-
-        // Returns a new instance of S3FileTransferRequestParamsDto populated with all parameters, required to access the S3 bucket.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3BucketAccessParams(storageEntity);
-
-        // Get the threshold date indicating which multipart uploads should be aborted.
-        Date thresholdDate = HerdDateUtils.addMinutes(new Date(), -thresholdMinutes);
-
-        // Call the S3Dao service to perform the cleanup.
-        return s3Dao.abortMultipartUploads(s3FileTransferRequestParamsDto, thresholdDate);
     }
 }
