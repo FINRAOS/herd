@@ -39,6 +39,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.SingularAttribute;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -87,9 +88,7 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity_;
 import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
-import org.finra.herd.model.jpa.StoragePolicyStatusEntity_;
 import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
-import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity_;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity_;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -432,64 +431,56 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
 
-        // The criteria root is the business object data.
+        // The criteria root is the business object data along with the storage policy.
         Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
         Root<StoragePolicyEntity> storagePolicyEntityRoot = criteria.from(StoragePolicyEntity.class);
 
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntityJoin = businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
-        Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntityJoin = storageUnitEntityJoin.join(StorageUnitEntity_.status);
-        Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> businessObjectDataStatusEntityJoin =
-            businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.status);
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
             businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
-        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntityJoin = businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.fileType);
-        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntityJoin =
-            businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.businessObjectDefinition);
-        Join<StoragePolicyEntity, StoragePolicyTransitionTypeEntity> storagePolicyTransitionTypeEntityJoin =
-            storagePolicyEntityRoot.join(StoragePolicyEntity_.storagePolicyTransitionType);
-        Join<StoragePolicyEntity, StoragePolicyStatusEntity> storagePolicyStatusEntityJoin = storagePolicyEntityRoot.join(StoragePolicyEntity_.status);
 
         // Create main query restrictions based on the specified parameters.
-        List<Predicate> mainQueryPredicates = new ArrayList<>();
+        List<Predicate> predicates = new ArrayList<>();
 
-        // Add a restriction on business object definition.
-        mainQueryPredicates.add(storagePolicyPriorityLevel.isBusinessObjectDefinitionIsNull() ?
-            builder.isNull(storagePolicyEntityRoot.get(StoragePolicyEntity_.businessObjectDefinition)) :
-            builder.equal(businessObjectDefinitionEntityJoin, storagePolicyEntityRoot.get(StoragePolicyEntity_.businessObjectDefinition)));
+        // Add restriction on business object definition.
+        predicates.add(storagePolicyPriorityLevel.isBusinessObjectDefinitionIsNull() ?
+            builder.isNull(storagePolicyEntityRoot.get(StoragePolicyEntity_.businessObjectDefinitionId)) : builder
+            .equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectDefinitionId),
+                storagePolicyEntityRoot.get(StoragePolicyEntity_.businessObjectDefinitionId)));
 
-        // Add a restriction on business object format usage.
-        mainQueryPredicates.add(storagePolicyPriorityLevel.isUsageIsNull() ? builder.isNull(storagePolicyEntityRoot.get(StoragePolicyEntity_.usage)) : builder
+        // Add restriction on business object format usage.
+        predicates.add(storagePolicyPriorityLevel.isUsageIsNull() ? builder.isNull(storagePolicyEntityRoot.get(StoragePolicyEntity_.usage)) : builder
             .equal(builder.upper(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage)),
                 builder.upper(storagePolicyEntityRoot.get(StoragePolicyEntity_.usage))));
 
-        // Add a restriction on business object format file type.
-        mainQueryPredicates.add(storagePolicyPriorityLevel.isFileTypeIsNull() ? builder.isNull(storagePolicyEntityRoot.get(StoragePolicyEntity_.fileType)) :
-            builder.equal(fileTypeEntityJoin, storagePolicyEntityRoot.get(StoragePolicyEntity_.fileType)));
+        // Add restriction on business object format file type.
+        predicates.add(storagePolicyPriorityLevel.isFileTypeIsNull() ? builder.isNull(storagePolicyEntityRoot.get(StoragePolicyEntity_.fileType)) : builder
+            .equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.fileTypeCode),
+                storagePolicyEntityRoot.get(StoragePolicyEntity_.fileTypeCode)));
 
-        // Add a restriction on storage policy filter storage.
-        mainQueryPredicates
-            .add(builder.equal(storageUnitEntityJoin.get(StorageUnitEntity_.storage), storagePolicyEntityRoot.get(StoragePolicyEntity_.storage)));
+        // Add restriction on storage policy filter storage.
+        predicates.add(builder.equal(storageUnitEntityJoin.get(StorageUnitEntity_.storageName), storagePolicyEntityRoot.get(StoragePolicyEntity_.storageName)));
 
-        // Add a restriction on storage policy latest version flag.
-        mainQueryPredicates.add(builder.isTrue(storagePolicyEntityRoot.get(StoragePolicyEntity_.latestVersion)));
+        // Add restriction on storage policy latest version flag.
+        predicates.add(builder.isTrue(storagePolicyEntityRoot.get(StoragePolicyEntity_.latestVersion)));
 
-        // Add a restriction on storage policy status.
-        mainQueryPredicates.add(builder.equal(storagePolicyStatusEntityJoin.get(StoragePolicyStatusEntity_.code), StoragePolicyStatusEntity.ENABLED));
+        // Add restriction on storage policy status.
+        predicates.add(builder.equal(storagePolicyEntityRoot.get(StoragePolicyEntity_.statusCode), StoragePolicyStatusEntity.ENABLED));
 
-        // Add a restriction on supported business object data statuses.
-        mainQueryPredicates.add(businessObjectDataStatusEntityJoin.get(BusinessObjectDataStatusEntity_.code).in(supportedBusinessObjectDataStatuses));
+        // Add restriction on supported business object data statuses.
+        predicates.add(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.statusCode).in(supportedBusinessObjectDataStatuses));
 
-        // Add a restriction as per storage policy transition type.
-        mainQueryPredicates.add(builder
-            .and(builder.equal(storagePolicyTransitionTypeEntityJoin.get(StoragePolicyTransitionTypeEntity_.code), StoragePolicyTransitionTypeEntity.GLACIER),
-                builder.or(builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.ENABLED),
-                    builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.ARCHIVING))));
+        // Add restrictions as per storage policy transition type.
+        predicates
+            .add(builder.equal(storagePolicyEntityRoot.get(StoragePolicyEntity_.storagePolicyTransitionTypeCode), StoragePolicyTransitionTypeEntity.GLACIER));
+        predicates.add(storageUnitEntityJoin.get(StorageUnitEntity_.statusCode)
+            .in(Lists.newArrayList(StorageUnitStatusEntity.ENABLED, StorageUnitStatusEntity.ARCHIVING)));
 
         // If specified, add restriction on maximum allowed attempts for a storage policy transition.
         if (storagePolicyTransitionMaxAllowedAttempts > 0)
         {
-            mainQueryPredicates.add(builder.or(builder.isNull(storageUnitEntityJoin.get(StorageUnitEntity_.storagePolicyTransitionFailedAttempts)), builder
+            predicates.add(builder.or(builder.isNull(storageUnitEntityJoin.get(StorageUnitEntity_.storagePolicyTransitionFailedAttempts)), builder
                 .lessThan(storageUnitEntityJoin.get(StorageUnitEntity_.storagePolicyTransitionFailedAttempts), storagePolicyTransitionMaxAllowedAttempts)));
         }
 
@@ -500,7 +491,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         criteria.multiselect(businessObjectDataEntityRoot, storagePolicyEntityRoot);
 
         // Add the where clause to the main query.
-        criteria.where(mainQueryPredicates.toArray(new Predicate[] {}));
+        criteria.where(predicates.toArray(new Predicate[] {}));
 
         // Add the order by clause to the main query.
         criteria.orderBy(orderByCreatedOn);
