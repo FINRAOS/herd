@@ -174,6 +174,15 @@ public class DaoSpringModuleConfig implements CachingConfigurer
         properties.setProperty("hibernate.cache.region.factory_class", "org.hibernate.cache.ehcache.EhCacheRegionFactory");
         properties.setProperty("hibernate.cache.use_query_cache", "true");
         properties.setProperty("hibernate.cache.use_second_level_cache", "true");
+
+        // Set hibernate batch configs
+        String hibernateBatchSize = configurationHelper.getProperty(ConfigurationValue.HIBERNATE_BATCH_SIZE);
+        properties.setProperty("hibernate.jdbc.batch_size", hibernateBatchSize);
+        LOGGER.info("hibernateBatchSize={}", hibernateBatchSize);
+        properties.setProperty("hibernate.jdbc.batch_versioned_data", "true");
+        properties.setProperty("hibernate.order_inserts", "true");
+        properties.setProperty("hibernate.order_updates", "true");
+
         // Set the "show sql" flag.
         properties.setProperty(ConfigurationValue.SHOW_SQL.getKey(), configurationHelper.getProperty(ConfigurationValue.SHOW_SQL));
         LOGGER.info("hibernateShowSql={}", properties.getProperty(ConfigurationValue.SHOW_SQL.getKey()));
