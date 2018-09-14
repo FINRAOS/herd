@@ -73,6 +73,9 @@ public class StorageUnitEntity extends AuditableEntity
     @JoinColumn(name = "strge_unit_stts_cd", referencedColumnName = "strge_unit_stts_cd", nullable = false)
     private StorageUnitStatusEntity status;
 
+    @Column(name = "strge_unit_stts_cd", insertable = false, updatable = false)
+    private String statusCode;
+
     @OneToMany(mappedBy = "storageUnit", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("createdOn")
     private Collection<StorageUnitStatusHistoryEntity> historicalStatuses;
@@ -154,6 +157,16 @@ public class StorageUnitEntity extends AuditableEntity
     public void setStatus(StorageUnitStatusEntity status)
     {
         this.status = status;
+    }
+
+    public String getStatusCode()
+    {
+        return statusCode;
+    }
+
+    public void setStatusCode(String statusCode)
+    {
+        this.statusCode = statusCode;
     }
 
     public Collection<StorageUnitStatusHistoryEntity> getHistoricalStatuses()

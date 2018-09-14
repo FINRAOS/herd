@@ -66,12 +66,18 @@ public class StoragePolicyEntity extends AuditableEntity
     @JoinColumn(name = "strge_cd", referencedColumnName = "strge_cd")
     private StorageEntity storage;
 
+    @Column(name = "strge_cd", insertable = false, updatable = false)
+    private String storageName;
+
     /**
      * The storage policy transition type.
      */
     @ManyToOne
     @JoinColumn(name = "strge_plcy_trnsn_type_cd", referencedColumnName = "strge_plcy_trnsn_type_cd", nullable = false)
     private StoragePolicyTransitionTypeEntity storagePolicyTransitionType;
+
+    @Column(name = "strge_plcy_trnsn_type_cd", insertable = false, updatable = false)
+    private String storagePolicyTransitionTypeCode;
 
     /**
      * The storage policy rule type.
@@ -93,6 +99,9 @@ public class StoragePolicyEntity extends AuditableEntity
     @JoinColumn(name = "bus_objct_dfntn_id", referencedColumnName = "bus_objct_dfntn_id")
     private BusinessObjectDefinitionEntity businessObjectDefinition;
 
+    @Column(name = "bus_objct_dfntn_id", insertable = false, updatable = false)
+    private Integer businessObjectDefinitionId;
+
     /**
      * The usage column.
      */
@@ -103,9 +112,15 @@ public class StoragePolicyEntity extends AuditableEntity
     @JoinColumn(name = "file_type_cd", referencedColumnName = "file_type_cd")
     private FileTypeEntity fileType;
 
+    @Column(name = "file_type_cd", insertable = false, updatable = false)
+    private String fileTypeCode;
+
     @ManyToOne
     @JoinColumn(name = "strge_plcy_stts_cd", referencedColumnName = "strge_plcy_stts_cd", nullable = false)
     private StoragePolicyStatusEntity status;
+
+    @Column(name = "strge_plcy_stts_cd", insertable = false, updatable = false)
+    private String statusCode;
 
     @Column(name = "vrsn_nb", nullable = false)
     private Integer version;
@@ -154,6 +169,16 @@ public class StoragePolicyEntity extends AuditableEntity
         this.storage = storage;
     }
 
+    public String getStorageName()
+    {
+        return storageName;
+    }
+
+    public void setStorageName(String storageName)
+    {
+        this.storageName = storageName;
+    }
+
     public StoragePolicyTransitionTypeEntity getStoragePolicyTransitionType()
     {
         return storagePolicyTransitionType;
@@ -162,6 +187,16 @@ public class StoragePolicyEntity extends AuditableEntity
     public void setStoragePolicyTransitionType(StoragePolicyTransitionTypeEntity storagePolicyTransitionType)
     {
         this.storagePolicyTransitionType = storagePolicyTransitionType;
+    }
+
+    public String getStoragePolicyTransitionTypeCode()
+    {
+        return storagePolicyTransitionTypeCode;
+    }
+
+    public void setStoragePolicyTransitionTypeCode(String storagePolicyTransitionTypeCode)
+    {
+        this.storagePolicyTransitionTypeCode = storagePolicyTransitionTypeCode;
     }
 
     public StoragePolicyRuleTypeEntity getStoragePolicyRuleType()
@@ -194,6 +229,16 @@ public class StoragePolicyEntity extends AuditableEntity
         this.businessObjectDefinition = businessObjectDefinition;
     }
 
+    public Integer getBusinessObjectDefinitionId()
+    {
+        return businessObjectDefinitionId;
+    }
+
+    public void setBusinessObjectDefinitionId(Integer businessObjectDefinitionId)
+    {
+        this.businessObjectDefinitionId = businessObjectDefinitionId;
+    }
+
     public String getUsage()
     {
         return usage;
@@ -214,6 +259,16 @@ public class StoragePolicyEntity extends AuditableEntity
         this.fileType = fileType;
     }
 
+    public String getFileTypeCode()
+    {
+        return fileTypeCode;
+    }
+
+    public void setFileTypeCode(String fileTypeCode)
+    {
+        this.fileTypeCode = fileTypeCode;
+    }
+
     public StoragePolicyStatusEntity getStatus()
     {
         return status;
@@ -222,6 +277,16 @@ public class StoragePolicyEntity extends AuditableEntity
     public void setStatus(StoragePolicyStatusEntity status)
     {
         this.status = status;
+    }
+
+    public String getStatusCode()
+    {
+        return statusCode;
+    }
+
+    public void setStatusCode(String statusCode)
+    {
+        this.statusCode = statusCode;
     }
 
     public Integer getVersion()
