@@ -70,11 +70,7 @@ import org.finra.herd.model.jpa.NamespaceEntity;
 @Component
 public class DefaultNotificationMessageBuilder implements NotificationMessageBuilder
 {
-    private static final String WITH_JSON_CAMEL_CASE = "WithJson";
-
     private static final String WITH_JSON_SNAKE_CASE = "_with_json";
-
-    private static final String WITH_XML_CAMEL_CASE = "WithXml";
 
     private static final String WITH_XML_SNAKE_CASE = "_with_xml";
 
@@ -103,8 +99,6 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
 
     @Autowired
     private JavaPropertiesHelper javaPropertiesHelper;
-
-    private JsonStringEncoder jsonStringEncoder = new JsonStringEncoder();
 
     @Autowired
     private UserNamespaceAuthorizationDao userNamespaceAuthorizationDao;
@@ -418,6 +412,35 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
     }
 
     /**
+     * Adds string property to the specified context along with the relative JSON and XML escaped copies of the property.
+     *
+     * @param context the context map
+     * @param propertyName the name of the property
+     * @param propertyValue the value of the property, maybe null
+     * @param jsonEscapedPropertyValue the JSON escaped value of the property, maybe null
+     * @param xmlEscapedPropertyValue the XML escaped value of the property, maybe null
+     */
+    void addObjectPropertyToContext(final Map<String, Object> context, final String propertyName, final Object propertyValue,
+        final Object jsonEscapedPropertyValue, final Object xmlEscapedPropertyValue)
+    {
+        context.put(propertyName, propertyValue);
+        context.put(propertyName + "WithJson", jsonEscapedPropertyValue);
+        context.put(propertyName + "WithXml", xmlEscapedPropertyValue);
+    }
+
+    /**
+     * Adds string property to the specified context along with the relative JSON and XML escaped copies of the property.
+     *
+     * @param context the context map
+     * @param propertyName the name of the property
+     * @param propertyValue the value of the property, maybe null
+     */
+    void addStringPropertyToContext(final Map<String, Object> context, final String propertyName, final String propertyValue)
+    {
+        addObjectPropertyToContext(context, propertyName, propertyValue, escapeJson(propertyValue), escapeXml(propertyValue));
+    }
+
+    /**
      * Returns Velocity context map of the keys and values common across all notification message types.
      *
      * @return the Velocity context map
@@ -455,9 +478,7 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         context.put(escapeXml(herdNotificationSqsEnvironmentKey) + WITH_XML_SNAKE_CASE, escapeXml(herdNotificationSqsEnvironmentValue));
         context.put("current_time", HerdDateUtils.now().toString());
         context.put("uuid", UUID.randomUUID().toString());
-        context.put("username", username);
-        context.put("username" + WITH_JSON_CAMEL_CASE, escapeJson(username));
-        context.put("username" + WITH_XML_CAMEL_CASE, escapeXml(username));
+        addStringPropertyToContext(context, "username", username);
         context.put("StringUtils", StringUtils.class);
         context.put("CollectionUtils", CollectionUtils.class);
         context.put("Collections", Collections.class);
@@ -480,15 +501,10 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
     {
         // Create a context map of values that can be used when building the message.
         Map<String, Object> velocityContextMap = new HashMap<>();
-        velocityContextMap.put("businessObjectDataKey", businessObjectDataKey);
-        velocityContextMap.put("businessObjectDataKey" + WITH_JSON_CAMEL_CASE, escapeJsonBusinessObjectDataKey(businessObjectDataKey));
-        velocityContextMap.put("businessObjectDataKey" + WITH_XML_CAMEL_CASE, escapeXmlBusinessObjectDataKey(businessObjectDataKey));
-        velocityContextMap.put("newBusinessObjectDataStatus", newBusinessObjectDataStatus);
-        velocityContextMap.put("newBusinessObjectDataStatus" + WITH_JSON_CAMEL_CASE, escapeJson(newBusinessObjectDataStatus));
-        velocityContextMap.put("newBusinessObjectDataStatus" + WITH_XML_CAMEL_CASE, escapeXml(newBusinessObjectDataStatus));
-        velocityContextMap.put("oldBusinessObjectDataStatus", oldBusinessObjectDataStatus);
-        velocityContextMap.put("oldBusinessObjectDataStatus" + WITH_JSON_CAMEL_CASE, escapeJson(oldBusinessObjectDataStatus));
-        velocityContextMap.put("oldBusinessObjectDataStatus" + WITH_XML_CAMEL_CASE, escapeXml(oldBusinessObjectDataStatus));
+        addObjectPropertyToContext(velocityContextMap, "businessObjectDataKey", businessObjectDataKey, escapeJsonBusinessObjectDataKey(businessObjectDataKey),
+            escapeXmlBusinessObjectDataKey(businessObjectDataKey));
+        addStringPropertyToContext(velocityContextMap, "newBusinessObjectDataStatus", newBusinessObjectDataStatus);
+        addStringPropertyToContext(velocityContextMap, "oldBusinessObjectDataStatus", oldBusinessObjectDataStatus);
 
         // Retrieve business object data entity and business object data id to the context.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
@@ -522,14 +538,11 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         }
 
         // Add the map of business object data attributes to the context.
-        velocityContextMap.put("businessObjectDataAttributes", businessObjectDataAttributes);
-        velocityContextMap.put("businessObjectDataAttributes" + WITH_JSON_CAMEL_CASE, businessObjectDataAttributesWithJson);
-        velocityContextMap.put("businessObjectDataAttributes" + WITH_XML_CAMEL_CASE, businessObjectDataAttributesWithXml);
+        addObjectPropertyToContext(velocityContextMap, "businessObjectDataAttributes", businessObjectDataAttributes, businessObjectDataAttributesWithJson,
+            businessObjectDataAttributesWithXml);
 
-        // Add the namespace to the header.
-        velocityContextMap.put("namespace", businessObjectDataKey.getNamespace());
-        velocityContextMap.put("namespace" + WITH_JSON_CAMEL_CASE, escapeJson(businessObjectDataKey.getNamespace()));
-        velocityContextMap.put("namespace" + WITH_XML_CAMEL_CASE, escapeXml(businessObjectDataKey.getNamespace()));
+        // Add the namespace Velocity property for the header.
+        addStringPropertyToContext(velocityContextMap, "namespace", businessObjectDataKey.getNamespace());
 
         return velocityContextMap;
     }
@@ -573,25 +586,16 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
 
         // Create a context map of values that can be used when building the message.
         Map<String, Object> velocityContextMap = new HashMap<>();
-        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestion", businessObjectDefinitionDescriptionSuggestion);
-        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestion" + WITH_JSON_CAMEL_CASE, businessObjectDefinitionDescriptionSuggestionWithJson);
-        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestion" + WITH_XML_CAMEL_CASE, businessObjectDefinitionDescriptionSuggestionWithXml);
-        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestionKey",
-            businessObjectDefinitionDescriptionSuggestion.getBusinessObjectDefinitionDescriptionSuggestionKey());
-        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestionKey" + WITH_JSON_CAMEL_CASE,
-            businessObjectDefinitionDescriptionSuggestionWithJson.getBusinessObjectDefinitionDescriptionSuggestionKey());
-        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestionKey" + WITH_XML_CAMEL_CASE,
+        addObjectPropertyToContext(velocityContextMap, "businessObjectDefinitionDescriptionSuggestion", businessObjectDefinitionDescriptionSuggestion,
+            businessObjectDefinitionDescriptionSuggestionWithJson, businessObjectDefinitionDescriptionSuggestionWithXml);
+        addObjectPropertyToContext(velocityContextMap, "businessObjectDefinitionDescriptionSuggestionKey",
+            businessObjectDefinitionDescriptionSuggestion.getBusinessObjectDefinitionDescriptionSuggestionKey(),
+            businessObjectDefinitionDescriptionSuggestionWithJson.getBusinessObjectDefinitionDescriptionSuggestionKey(),
             businessObjectDefinitionDescriptionSuggestionWithXml.getBusinessObjectDefinitionDescriptionSuggestionKey());
-        velocityContextMap.put("lastUpdatedByUserId", lastUpdatedByUserId);
-        velocityContextMap.put("lastUpdatedByUserId" + WITH_JSON_CAMEL_CASE, escapeJson(lastUpdatedByUserId));
-        velocityContextMap.put("lastUpdatedByUserId" + WITH_XML_CAMEL_CASE, escapeXml(lastUpdatedByUserId));
+        addStringPropertyToContext(velocityContextMap, "lastUpdatedByUserId", lastUpdatedByUserId);
         velocityContextMap.put("lastUpdatedOn", lastUpdatedOn);
-        velocityContextMap.put("notificationList", notificationList);
-        velocityContextMap.put("notificationList" + WITH_JSON_CAMEL_CASE, notificationListWithJson);
-        velocityContextMap.put("notificationList" + WITH_XML_CAMEL_CASE, notificationListWithXml);
-        velocityContextMap.put("namespace", namespaceEntity.getCode());
-        velocityContextMap.put("namespace" + WITH_JSON_CAMEL_CASE, escapeJson(namespaceEntity.getCode()));
-        velocityContextMap.put("namespace" + WITH_XML_CAMEL_CASE, escapeXml(namespaceEntity.getCode()));
+        addObjectPropertyToContext(velocityContextMap, "notificationList", notificationList, notificationListWithJson, notificationListWithXml);
+        addStringPropertyToContext(velocityContextMap, "namespace", namespaceEntity.getCode());
 
         // Return the Velocity context map.
         return velocityContextMap;
@@ -610,14 +614,11 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
     {
         Map<String, Object> velocityContextMap = new HashMap<>();
 
-        velocityContextMap.put("businessObjectFormatKey", businessObjectFormatKey);
-        velocityContextMap.put("businessObjectFormatKey" + WITH_JSON_CAMEL_CASE, escapeJsonBusinessObjectFormatKey(businessObjectFormatKey));
-        velocityContextMap.put("businessObjectFormatKey" + WITH_XML_CAMEL_CASE, escapeXmlBusinessObjectFormatKey(businessObjectFormatKey));
+        addObjectPropertyToContext(velocityContextMap, "businessObjectFormatKey", businessObjectFormatKey,
+            escapeJsonBusinessObjectFormatKey(businessObjectFormatKey), escapeXmlBusinessObjectFormatKey(businessObjectFormatKey));
         velocityContextMap.put("newBusinessObjectFormatVersion", businessObjectFormatKey.getBusinessObjectFormatVersion());
         velocityContextMap.put("oldBusinessObjectFormatVersion", oldBusinessObjectFormatVersion);
-        velocityContextMap.put("namespace", businessObjectFormatKey.getNamespace());
-        velocityContextMap.put("namespace" + WITH_JSON_CAMEL_CASE, escapeJson(businessObjectFormatKey.getNamespace()));
-        velocityContextMap.put("namespace" + WITH_XML_CAMEL_CASE, escapeXml(businessObjectFormatKey.getNamespace()));
+        addStringPropertyToContext(velocityContextMap, "namespace", businessObjectFormatKey.getNamespace());
 
         return velocityContextMap;
     }
@@ -637,21 +638,12 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
     {
         Map<String, Object> velocityContextMap = new HashMap<>();
 
-        velocityContextMap.put("businessObjectDataKey", businessObjectDataKey);
-        velocityContextMap.put("businessObjectDataKey" + WITH_JSON_CAMEL_CASE, escapeJsonBusinessObjectDataKey(businessObjectDataKey));
-        velocityContextMap.put("businessObjectDataKey" + WITH_XML_CAMEL_CASE, escapeXmlBusinessObjectDataKey(businessObjectDataKey));
-        velocityContextMap.put("storageName", storageName);
-        velocityContextMap.put("storageName" + WITH_JSON_CAMEL_CASE, escapeJson(storageName));
-        velocityContextMap.put("storageName" + WITH_XML_CAMEL_CASE, escapeXml(storageName));
-        velocityContextMap.put("newStorageUnitStatus", newStorageUnitStatus);
-        velocityContextMap.put("newStorageUnitStatus" + WITH_JSON_CAMEL_CASE, escapeJson(newStorageUnitStatus));
-        velocityContextMap.put("newStorageUnitStatus" + WITH_XML_CAMEL_CASE, escapeXml(newStorageUnitStatus));
-        velocityContextMap.put("oldStorageUnitStatus", oldStorageUnitStatus);
-        velocityContextMap.put("oldStorageUnitStatus" + WITH_JSON_CAMEL_CASE, escapeJson(oldStorageUnitStatus));
-        velocityContextMap.put("oldStorageUnitStatus" + WITH_XML_CAMEL_CASE, escapeXml(oldStorageUnitStatus));
-        velocityContextMap.put("namespace", businessObjectDataKey.getNamespace());
-        velocityContextMap.put("namespace" + WITH_JSON_CAMEL_CASE, escapeJson(businessObjectDataKey.getNamespace()));
-        velocityContextMap.put("namespace" + WITH_XML_CAMEL_CASE, escapeXml(businessObjectDataKey.getNamespace()));
+        addObjectPropertyToContext(velocityContextMap, "businessObjectDataKey", businessObjectDataKey, escapeJsonBusinessObjectDataKey(businessObjectDataKey),
+            escapeXmlBusinessObjectDataKey(businessObjectDataKey));
+        addStringPropertyToContext(velocityContextMap, "storageName", storageName);
+        addStringPropertyToContext(velocityContextMap, "newStorageUnitStatus", newStorageUnitStatus);
+        addStringPropertyToContext(velocityContextMap, "oldStorageUnitStatus", oldStorageUnitStatus);
+        addStringPropertyToContext(velocityContextMap, "namespace", businessObjectDataKey.getNamespace());
 
         return velocityContextMap;
     }
@@ -671,7 +663,7 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         }
         else
         {
-            return String.valueOf(jsonStringEncoder.quoteAsString(input));
+            return String.valueOf(JsonStringEncoder.getInstance().quoteAsString(input));
         }
     }
 
@@ -761,14 +753,7 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
      */
     private String escapeXml(final String input)
     {
-        if (input == null)
-        {
-            return null;
-        }
-        else
-        {
-            return StringEscapeUtils.escapeXml(input);
-        }
+        return StringEscapeUtils.escapeXml(input);
     }
 
     /**

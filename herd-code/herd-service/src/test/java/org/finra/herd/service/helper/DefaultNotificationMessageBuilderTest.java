@@ -81,6 +81,44 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
     private DefaultNotificationMessageBuilder defaultNotificationMessageBuilder;
 
     @Test
+    public void testAddObjectPropertyToContext()
+    {
+        // Create an empty context map.
+        Map<String, Object> context = new LinkedHashMap<>();
+
+        // Create test property values.
+        Object propertyValue = new Object();
+        Object jsonEscapedPropertyValue = new Object();
+        Object xmlEscapedPropertyValue = new Object();
+
+        // Call the method under test.
+        defaultNotificationMessageBuilder
+            .addObjectPropertyToContext(context, ATTRIBUTE_NAME + SUFFIX_UNESCAPED, propertyValue, jsonEscapedPropertyValue, xmlEscapedPropertyValue);
+
+        // Validate the results.
+        assertEquals(3, CollectionUtils.size(context));
+        assertEquals(propertyValue, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED));
+        assertEquals(jsonEscapedPropertyValue, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED + "WithJson"));
+        assertEquals(xmlEscapedPropertyValue, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED + "WithXml"));
+    }
+
+    @Test
+    public void testAddStringPropertyToContext()
+    {
+        // Create an empty context map.
+        Map<String, Object> context = new LinkedHashMap<>();
+
+        // Call the method under test.
+        defaultNotificationMessageBuilder.addStringPropertyToContext(context, ATTRIBUTE_NAME + SUFFIX_UNESCAPED, ATTRIBUTE_VALUE + SUFFIX_UNESCAPED);
+
+        // Validate the results.
+        assertEquals(3, CollectionUtils.size(context));
+        assertEquals(ATTRIBUTE_VALUE + SUFFIX_UNESCAPED, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED));
+        assertEquals(ATTRIBUTE_VALUE + SUFFIX_ESCAPED_JSON, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED + "WithJson"));
+        assertEquals(ATTRIBUTE_VALUE + SUFFIX_ESCAPED_XML, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED + "WithXml"));
+    }
+
+    @Test
     public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayload() throws Exception
     {
         // Create a business object data entity.
