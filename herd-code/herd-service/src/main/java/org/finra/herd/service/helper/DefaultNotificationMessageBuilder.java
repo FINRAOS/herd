@@ -32,7 +32,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +49,7 @@ import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
@@ -67,6 +70,14 @@ import org.finra.herd.model.jpa.NamespaceEntity;
 @Component
 public class DefaultNotificationMessageBuilder implements NotificationMessageBuilder
 {
+    private static final String WITH_JSON_CAMEL_CASE = "WithJson";
+
+    private static final String WITH_JSON_SNAKE_CASE = "_with_json";
+
+    private static final String WITH_XML_CAMEL_CASE = "WithXml";
+
+    private static final String WITH_XML_SNAKE_CASE = "_with_xml";
+
     @Autowired
     private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
 
@@ -92,6 +103,8 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
 
     @Autowired
     private JavaPropertiesHelper javaPropertiesHelper;
+
+    private JsonStringEncoder jsonStringEncoder = new JsonStringEncoder();
 
     @Autowired
     private UserNamespaceAuthorizationDao userNamespaceAuthorizationDao;
@@ -122,9 +135,12 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         // Continue processing if notification message definitions are configured.
         if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
         {
-            // Create a context map of values that can be used when building the message.
-            Map<String, Object> velocityContextMap =
-                getBusinessObjectDataStatusChangeMessageVelocityContextMap(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus);
+            // Create a Velocity context map and initialize it with common keys and values.
+            Map<String, Object> velocityContextMap = getBaseVelocityContextMap();
+
+            // Add notification message type specific keys and values to the context map.
+            velocityContextMap.putAll(
+                getBusinessObjectDataStatusChangeMessageVelocityContextMap(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus));
 
             // Generate notification message for each notification message definition.
             for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
@@ -187,10 +203,13 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         // Continue processing if notification message definitions are configured.
         if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
         {
-            // Create a context map of values that can be used when building the message.
-            Map<String, Object> velocityContextMap =
+            // Create a Velocity context map and initialize it with common keys and values.
+            Map<String, Object> velocityContextMap = getBaseVelocityContextMap();
+
+            // Add notification message type specific keys and values to the context map.
+            velocityContextMap.putAll(
                 getBusinessObjectDefinitionDescriptionSuggestionChangeMessageVelocityContextMap(businessObjectDefinitionDescriptionSuggestion,
-                    lastUpdatedByUserId, lastUpdatedOn, namespaceEntity);
+                    lastUpdatedByUserId, lastUpdatedOn, namespaceEntity));
 
             // Generate notification message for each notification message definition.
             for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
@@ -252,9 +271,11 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         // Continue processing if notification message definitions are configured.
         if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
         {
-            // Create a context map of values that can be used when building the message.
-            Map<String, Object> velocityContextMap =
-                getBusinessObjectFormatVersionChangeMessageVelocityContextMap(businessObjectFormatKey, oldBusinessObjectFormatVersion);
+            // Create a Velocity context map and initialize it with common keys and values.
+            Map<String, Object> velocityContextMap = getBaseVelocityContextMap();
+
+            // Add notification message type specific keys and values to the context map.
+            velocityContextMap.putAll(getBusinessObjectFormatVersionChangeMessageVelocityContextMap(businessObjectFormatKey, oldBusinessObjectFormatVersion));
 
             // Generate notification message for each notification message definition.
             for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
@@ -316,9 +337,12 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         // Continue processing if notification message definitions are configured.
         if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
         {
-            // Create a context map of values that can be used when building the message.
-            Map<String, Object> velocityContextMap =
-                getStorageUnitStatusChangeMessageVelocityContextMap(businessObjectDataKey, storageName, newStorageUnitStatus, oldStorageUnitStatus);
+            // Create a Velocity context map and initialize it with common keys and values.
+            Map<String, Object> velocityContextMap = getBaseVelocityContextMap();
+
+            // Add notification message type specific keys and values to the context map.
+            velocityContextMap
+                .putAll(getStorageUnitStatusChangeMessageVelocityContextMap(businessObjectDataKey, storageName, newStorageUnitStatus, oldStorageUnitStatus));
 
             // Generate notification message for each notification message definition.
             for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
@@ -374,10 +398,15 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         // Continue processing if velocity template is configured.
         if (StringUtils.isNotBlank(velocityTemplate))
         {
+            // Create a Velocity context map and initialize it with common keys and values.
+            Map<String, Object> velocityContextMap = getBaseVelocityContextMap();
+
+            // Add notification message type specific keys and values to the context map.
+            velocityContextMap
+                .putAll(getIncomingMessageValueMap(systemMonitorRequestPayload, ConfigurationValue.HERD_NOTIFICATION_SQS_SYS_MONITOR_REQUEST_XPATH_PROPERTIES));
+
             // Evaluate the template to generate the message text.
-            String messageText = evaluateVelocityTemplate(velocityTemplate,
-                getIncomingMessageValueMap(systemMonitorRequestPayload, ConfigurationValue.HERD_NOTIFICATION_SQS_SYS_MONITOR_REQUEST_XPATH_PROPERTIES),
-                "systemMonitorResponse");
+            String messageText = evaluateVelocityTemplate(velocityTemplate, velocityContextMap, "systemMonitorResponse");
 
             // Create a new notification message and return it.
             return new NotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), getSqsQueueName(), messageText, null);
@@ -386,6 +415,437 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         {
             return null;
         }
+    }
+
+    /**
+     * Returns Velocity context map of the keys and values common across all notification message types.
+     *
+     * @return the Velocity context map
+     */
+    Map<String, Object> getBaseVelocityContextMap()
+    {
+        // Create and populate the velocity context with dynamic values. Note that we can't use periods within the context keys since they can't
+        // be referenced in the velocity template (i.e. they're used to separate fields with the context object being referenced).
+        return getBaseVelocityContextMapHelper(herdDaoSecurityHelper.getCurrentUsername(), ConfigurationValue.HERD_ENVIRONMENT.getKey().replace('.', '_'),
+            configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT),
+            ConfigurationValue.HERD_NOTIFICATION_SQS_ENVIRONMENT.getKey().replace('.', '_'),
+            configurationHelper.getProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_ENVIRONMENT));
+    }
+
+    /**
+     * Returns Velocity context map of the keys and values common across all notification message types.
+     *
+     * @param username the username or user id of the logged in user that caused this message to be generated
+     * @param herdEnvironmentKey the name of the herd environment property
+     * @param herdEnvironmentValue the value of the herd environment property
+     * @param herdNotificationSqsEnvironmentKey the name of the herd notification sqs environment property
+     * @param herdNotificationSqsEnvironmentValue the value of the herd notification sqs environment property
+     *
+     * @return the Velocity context map
+     */
+    Map<String, Object> getBaseVelocityContextMapHelper(String username, String herdEnvironmentKey, String herdEnvironmentValue,
+        String herdNotificationSqsEnvironmentKey, String herdNotificationSqsEnvironmentValue)
+    {
+        Map<String, Object> context = new HashMap<>();
+        context.put(herdEnvironmentKey, herdEnvironmentValue);
+        context.put(escapeJson(herdEnvironmentKey) + WITH_JSON_SNAKE_CASE, escapeJson(herdEnvironmentValue));
+        context.put(escapeXml(herdEnvironmentKey) + WITH_XML_SNAKE_CASE, escapeXml(herdEnvironmentValue));
+        context.put(herdNotificationSqsEnvironmentKey, herdNotificationSqsEnvironmentValue);
+        context.put(escapeJson(herdNotificationSqsEnvironmentKey) + WITH_JSON_SNAKE_CASE, escapeJson(herdNotificationSqsEnvironmentValue));
+        context.put(escapeXml(herdNotificationSqsEnvironmentKey) + WITH_XML_SNAKE_CASE, escapeXml(herdNotificationSqsEnvironmentValue));
+        context.put("current_time", HerdDateUtils.now().toString());
+        context.put("uuid", UUID.randomUUID().toString());
+        context.put("username", username);
+        context.put("username" + WITH_JSON_CAMEL_CASE, escapeJson(username));
+        context.put("username" + WITH_XML_CAMEL_CASE, escapeXml(username));
+        context.put("StringUtils", StringUtils.class);
+        context.put("CollectionUtils", CollectionUtils.class);
+        context.put("Collections", Collections.class);
+
+        // Return the message text.
+        return context;
+    }
+
+    /**
+     * Returns Velocity context map of additional keys and values to place in the velocity context.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param newBusinessObjectDataStatus the new business object data status
+     * @param oldBusinessObjectDataStatus the old business object data status
+     *
+     * @return the Velocity context map
+     */
+    Map<String, Object> getBusinessObjectDataStatusChangeMessageVelocityContextMap(BusinessObjectDataKey businessObjectDataKey,
+        String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus)
+    {
+        // Create a context map of values that can be used when building the message.
+        Map<String, Object> velocityContextMap = new HashMap<>();
+        velocityContextMap.put("businessObjectDataKey", businessObjectDataKey);
+        velocityContextMap.put("businessObjectDataKey" + WITH_JSON_CAMEL_CASE, escapeJsonBusinessObjectDataKey(businessObjectDataKey));
+        velocityContextMap.put("businessObjectDataKey" + WITH_XML_CAMEL_CASE, escapeXmlBusinessObjectDataKey(businessObjectDataKey));
+        velocityContextMap.put("newBusinessObjectDataStatus", newBusinessObjectDataStatus);
+        velocityContextMap.put("newBusinessObjectDataStatus" + WITH_JSON_CAMEL_CASE, escapeJson(newBusinessObjectDataStatus));
+        velocityContextMap.put("newBusinessObjectDataStatus" + WITH_XML_CAMEL_CASE, escapeXml(newBusinessObjectDataStatus));
+        velocityContextMap.put("oldBusinessObjectDataStatus", oldBusinessObjectDataStatus);
+        velocityContextMap.put("oldBusinessObjectDataStatus" + WITH_JSON_CAMEL_CASE, escapeJson(oldBusinessObjectDataStatus));
+        velocityContextMap.put("oldBusinessObjectDataStatus" + WITH_XML_CAMEL_CASE, escapeXml(oldBusinessObjectDataStatus));
+
+        // Retrieve business object data entity and business object data id to the context.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+        velocityContextMap.put("businessObjectDataId", businessObjectDataEntity.getId());
+
+        // Load all attribute definitions for this business object data in a map for easy access.
+        Map<String, BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntityMap =
+            businessObjectFormatHelper.getAttributeDefinitionEntities(businessObjectDataEntity.getBusinessObjectFormat());
+
+        // Build an ordered map of business object data attributes that are flagged to be published in notification messages.
+        Map<String, String> businessObjectDataAttributes = new LinkedHashMap<>();
+        Map<String, String> businessObjectDataAttributesWithJson = new LinkedHashMap<>();
+        Map<String, String> businessObjectDataAttributesWithXml = new LinkedHashMap<>();
+        if (!attributeDefinitionEntityMap.isEmpty())
+        {
+            for (BusinessObjectDataAttributeEntity attributeEntity : businessObjectDataEntity.getAttributes())
+            {
+                if (attributeDefinitionEntityMap.containsKey(attributeEntity.getName().toUpperCase()))
+                {
+                    BusinessObjectDataAttributeDefinitionEntity attributeDefinitionEntity =
+                        attributeDefinitionEntityMap.get(attributeEntity.getName().toUpperCase());
+
+                    if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublish()))
+                    {
+                        businessObjectDataAttributes.put(attributeEntity.getName(), attributeEntity.getValue());
+                        businessObjectDataAttributesWithJson.put(escapeJson(attributeEntity.getName()), escapeJson(attributeEntity.getValue()));
+                        businessObjectDataAttributesWithXml.put(escapeXml(attributeEntity.getName()), escapeXml(attributeEntity.getValue()));
+                    }
+                }
+            }
+        }
+
+        // Add the map of business object data attributes to the context.
+        velocityContextMap.put("businessObjectDataAttributes", businessObjectDataAttributes);
+        velocityContextMap.put("businessObjectDataAttributes" + WITH_JSON_CAMEL_CASE, businessObjectDataAttributesWithJson);
+        velocityContextMap.put("businessObjectDataAttributes" + WITH_XML_CAMEL_CASE, businessObjectDataAttributesWithXml);
+
+        // Add the namespace to the header.
+        velocityContextMap.put("namespace", businessObjectDataKey.getNamespace());
+        velocityContextMap.put("namespace" + WITH_JSON_CAMEL_CASE, escapeJson(businessObjectDataKey.getNamespace()));
+        velocityContextMap.put("namespace" + WITH_XML_CAMEL_CASE, escapeXml(businessObjectDataKey.getNamespace()));
+
+        return velocityContextMap;
+    }
+
+    /**
+     * Returns Velocity context map of additional keys and values to place in the velocity context.
+     *
+     * @param businessObjectDefinitionDescriptionSuggestion the business object definition description suggestion
+     * @param lastUpdatedByUserId the User ID of the user who last updated this business object definition description suggestion
+     * @param lastUpdatedOn the timestamp when this business object definition description suggestion was last updated on
+     * @param namespaceEntity the namespace entity
+     *
+     * @return the Velocity context map
+     */
+    Map<String, Object> getBusinessObjectDefinitionDescriptionSuggestionChangeMessageVelocityContextMap(
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion, String lastUpdatedByUserId,
+        XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity)
+    {
+        // Create a list of users (User IDs) that need to be notified about this event.
+        // Initialize the list with the user who created this business object definition description suggestion.
+        List<String> notificationList = new ArrayList<>();
+        notificationList.add(businessObjectDefinitionDescriptionSuggestion.getCreatedByUserId());
+
+        // Add to the notification list all users that have WRITE or WRITE_DESCRIPTIVE_CONTENT permission on the namespace.
+        notificationList.addAll(userNamespaceAuthorizationDao.getUserIdsWithWriteOrWriteDescriptiveContentPermissionsByNamespace(namespaceEntity));
+
+        // Create JSON and XML escaped copies of the business object definition description suggestion.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestionWithJson =
+            escapeJsonBusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestion);
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestionWithXml =
+            escapeXmlBusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestion);
+
+        // Create JSON and XML escaped notification lists.
+        List<String> notificationListWithJson = new ArrayList<>();
+        List<String> notificationListWithXml = new ArrayList<>();
+        for (String userId : notificationList)
+        {
+            notificationListWithJson.add(escapeJson(userId));
+            notificationListWithXml.add(escapeXml(userId));
+        }
+
+        // Create a context map of values that can be used when building the message.
+        Map<String, Object> velocityContextMap = new HashMap<>();
+        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestion", businessObjectDefinitionDescriptionSuggestion);
+        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestion" + WITH_JSON_CAMEL_CASE, businessObjectDefinitionDescriptionSuggestionWithJson);
+        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestion" + WITH_XML_CAMEL_CASE, businessObjectDefinitionDescriptionSuggestionWithXml);
+        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestionKey",
+            businessObjectDefinitionDescriptionSuggestion.getBusinessObjectDefinitionDescriptionSuggestionKey());
+        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestionKey" + WITH_JSON_CAMEL_CASE,
+            businessObjectDefinitionDescriptionSuggestionWithJson.getBusinessObjectDefinitionDescriptionSuggestionKey());
+        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestionKey" + WITH_XML_CAMEL_CASE,
+            businessObjectDefinitionDescriptionSuggestionWithXml.getBusinessObjectDefinitionDescriptionSuggestionKey());
+        velocityContextMap.put("lastUpdatedByUserId", lastUpdatedByUserId);
+        velocityContextMap.put("lastUpdatedByUserId" + WITH_JSON_CAMEL_CASE, escapeJson(lastUpdatedByUserId));
+        velocityContextMap.put("lastUpdatedByUserId" + WITH_XML_CAMEL_CASE, escapeXml(lastUpdatedByUserId));
+        velocityContextMap.put("lastUpdatedOn", lastUpdatedOn);
+        velocityContextMap.put("notificationList", notificationList);
+        velocityContextMap.put("notificationList" + WITH_JSON_CAMEL_CASE, notificationListWithJson);
+        velocityContextMap.put("notificationList" + WITH_XML_CAMEL_CASE, notificationListWithXml);
+        velocityContextMap.put("namespace", namespaceEntity.getCode());
+        velocityContextMap.put("namespace" + WITH_JSON_CAMEL_CASE, escapeJson(namespaceEntity.getCode()));
+        velocityContextMap.put("namespace" + WITH_XML_CAMEL_CASE, escapeXml(namespaceEntity.getCode()));
+
+        // Return the Velocity context map.
+        return velocityContextMap;
+    }
+
+    /**
+     * Returns Velocity context map of additional keys and values to place in the velocity context.
+     *
+     * @param businessObjectFormatKey the business object format key
+     * @param oldBusinessObjectFormatVersion the old business object format version
+     *
+     * @return the Velocity context map
+     */
+    Map<String, Object> getBusinessObjectFormatVersionChangeMessageVelocityContextMap(BusinessObjectFormatKey businessObjectFormatKey,
+        String oldBusinessObjectFormatVersion)
+    {
+        Map<String, Object> velocityContextMap = new HashMap<>();
+
+        velocityContextMap.put("businessObjectFormatKey", businessObjectFormatKey);
+        velocityContextMap.put("businessObjectFormatKey" + WITH_JSON_CAMEL_CASE, escapeJsonBusinessObjectFormatKey(businessObjectFormatKey));
+        velocityContextMap.put("businessObjectFormatKey" + WITH_XML_CAMEL_CASE, escapeXmlBusinessObjectFormatKey(businessObjectFormatKey));
+        velocityContextMap.put("newBusinessObjectFormatVersion", businessObjectFormatKey.getBusinessObjectFormatVersion());
+        velocityContextMap.put("oldBusinessObjectFormatVersion", oldBusinessObjectFormatVersion);
+        velocityContextMap.put("namespace", businessObjectFormatKey.getNamespace());
+        velocityContextMap.put("namespace" + WITH_JSON_CAMEL_CASE, escapeJson(businessObjectFormatKey.getNamespace()));
+        velocityContextMap.put("namespace" + WITH_XML_CAMEL_CASE, escapeXml(businessObjectFormatKey.getNamespace()));
+
+        return velocityContextMap;
+    }
+
+    /**
+     * Returns Velocity context map of additional keys and values to place in the velocity context.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param storageName the storage name
+     * @param newStorageUnitStatus the new storage unit status
+     * @param oldStorageUnitStatus the old storage unit status, may be null
+     *
+     * @return the Velocity context map
+     */
+    Map<String, Object> getStorageUnitStatusChangeMessageVelocityContextMap(BusinessObjectDataKey businessObjectDataKey, String storageName,
+        String newStorageUnitStatus, String oldStorageUnitStatus)
+    {
+        Map<String, Object> velocityContextMap = new HashMap<>();
+
+        velocityContextMap.put("businessObjectDataKey", businessObjectDataKey);
+        velocityContextMap.put("businessObjectDataKey" + WITH_JSON_CAMEL_CASE, escapeJsonBusinessObjectDataKey(businessObjectDataKey));
+        velocityContextMap.put("businessObjectDataKey" + WITH_XML_CAMEL_CASE, escapeXmlBusinessObjectDataKey(businessObjectDataKey));
+        velocityContextMap.put("storageName", storageName);
+        velocityContextMap.put("storageName" + WITH_JSON_CAMEL_CASE, escapeJson(storageName));
+        velocityContextMap.put("storageName" + WITH_XML_CAMEL_CASE, escapeXml(storageName));
+        velocityContextMap.put("newStorageUnitStatus", newStorageUnitStatus);
+        velocityContextMap.put("newStorageUnitStatus" + WITH_JSON_CAMEL_CASE, escapeJson(newStorageUnitStatus));
+        velocityContextMap.put("newStorageUnitStatus" + WITH_XML_CAMEL_CASE, escapeXml(newStorageUnitStatus));
+        velocityContextMap.put("oldStorageUnitStatus", oldStorageUnitStatus);
+        velocityContextMap.put("oldStorageUnitStatus" + WITH_JSON_CAMEL_CASE, escapeJson(oldStorageUnitStatus));
+        velocityContextMap.put("oldStorageUnitStatus" + WITH_XML_CAMEL_CASE, escapeXml(oldStorageUnitStatus));
+        velocityContextMap.put("namespace", businessObjectDataKey.getNamespace());
+        velocityContextMap.put("namespace" + WITH_JSON_CAMEL_CASE, escapeJson(businessObjectDataKey.getNamespace()));
+        velocityContextMap.put("namespace" + WITH_XML_CAMEL_CASE, escapeXml(businessObjectDataKey.getNamespace()));
+
+        return velocityContextMap;
+    }
+
+    /**
+     * JSON escapes a specified string. This method is null-safe.
+     *
+     * @param input the input string
+     *
+     * @return the XML escaped string
+     */
+    private String escapeJson(final String input)
+    {
+        if (input == null)
+        {
+            return null;
+        }
+        else
+        {
+            return String.valueOf(jsonStringEncoder.quoteAsString(input));
+        }
+    }
+
+    /**
+     * Creates a JSON escaped copy of the specified business object data key.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the JSON escaped business object data key
+     */
+    private BusinessObjectDataKey escapeJsonBusinessObjectDataKey(final BusinessObjectDataKey businessObjectDataKey)
+    {
+        // Escape sub-partition values, if they are present.
+        List<String> escapedSubPartitionValues = null;
+        if (businessObjectDataKey.getSubPartitionValues() != null)
+        {
+            escapedSubPartitionValues = new ArrayList<>();
+            for (String subPartitionValue : businessObjectDataKey.getSubPartitionValues())
+            {
+                escapedSubPartitionValues.add(escapeJson(subPartitionValue));
+            }
+        }
+
+        // Build and return a JSON escaped business object data key.
+        return new BusinessObjectDataKey(escapeJson(businessObjectDataKey.getNamespace()), escapeJson(businessObjectDataKey.getBusinessObjectDefinitionName()),
+            escapeJson(businessObjectDataKey.getBusinessObjectFormatUsage()), escapeJson(businessObjectDataKey.getBusinessObjectFormatFileType()),
+            businessObjectDataKey.getBusinessObjectFormatVersion(), escapeJson(businessObjectDataKey.getPartitionValue()), escapedSubPartitionValues,
+            businessObjectDataKey.getBusinessObjectDataVersion());
+    }
+
+    /**
+     * Creates a JSON escaped copy of the specified business object definition description suggestion.
+     *
+     * @param businessObjectDefinitionDescriptionSuggestion the business object definition description suggestion
+     *
+     * @return the JSON escaped business object definition description suggestion
+     */
+    private BusinessObjectDefinitionDescriptionSuggestion escapeJsonBusinessObjectDefinitionDescriptionSuggestion(
+        final BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion)
+    {
+        // Build and return a JSON escaped business object definition description suggestion.
+        return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestion.getId(),
+            escapeJsonBusinessObjectDefinitionDescriptionSuggestionKey(
+                businessObjectDefinitionDescriptionSuggestion.getBusinessObjectDefinitionDescriptionSuggestionKey()),
+            escapeJson(businessObjectDefinitionDescriptionSuggestion.getDescriptionSuggestion()),
+            escapeJson(businessObjectDefinitionDescriptionSuggestion.getStatus()),
+            escapeJson(businessObjectDefinitionDescriptionSuggestion.getCreatedByUserId()), businessObjectDefinitionDescriptionSuggestion.getCreatedOn());
+    }
+
+    /**
+     * Creates a JSON escaped copy of the specified business object definition description suggestion key.
+     *
+     * @param businessObjectDefinitionDescriptionSuggestionKey the business object definition description suggestion key
+     *
+     * @return the JSON escaped business object definition description suggestion key
+     */
+    private BusinessObjectDefinitionDescriptionSuggestionKey escapeJsonBusinessObjectDefinitionDescriptionSuggestionKey(
+        final BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey)
+    {
+        // Build and return an JSON escaped business object definition description suggestion key.
+        return new BusinessObjectDefinitionDescriptionSuggestionKey(escapeJson(businessObjectDefinitionDescriptionSuggestionKey.getNamespace()),
+            escapeJson(businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName()),
+            escapeJson(businessObjectDefinitionDescriptionSuggestionKey.getUserId()));
+    }
+
+    /**
+     * Creates a JSON escaped copy of the specified business object format key.
+     *
+     * @param businessObjectFormatKey the business object format key
+     *
+     * @return the JSON escaped business object format key
+     */
+    private BusinessObjectFormatKey escapeJsonBusinessObjectFormatKey(final BusinessObjectFormatKey businessObjectFormatKey)
+    {
+        // Build and return a JSON escaped business object format key.
+        return new BusinessObjectFormatKey(escapeJson(businessObjectFormatKey.getNamespace()),
+            escapeJson(businessObjectFormatKey.getBusinessObjectDefinitionName()), escapeJson(businessObjectFormatKey.getBusinessObjectFormatUsage()),
+            escapeJson(businessObjectFormatKey.getBusinessObjectFormatFileType()), businessObjectFormatKey.getBusinessObjectFormatVersion());
+    }
+
+    /**
+     * XML escapes a specified string. This method is null-safe.
+     *
+     * @param input the input string
+     *
+     * @return the XML escaped string
+     */
+    private String escapeXml(final String input)
+    {
+        if (input == null)
+        {
+            return null;
+        }
+        else
+        {
+            return StringEscapeUtils.escapeXml(input);
+        }
+    }
+
+    /**
+     * Creates an XML escaped copy of the specified business object data key.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the XML escaped business object data key
+     */
+    private BusinessObjectDataKey escapeXmlBusinessObjectDataKey(final BusinessObjectDataKey businessObjectDataKey)
+    {
+        // Escape sub-partition values, if they are present.
+        List<String> escapedSubPartitionValues = null;
+        if (businessObjectDataKey.getSubPartitionValues() != null)
+        {
+            escapedSubPartitionValues = new ArrayList<>();
+            for (String subPartitionValue : businessObjectDataKey.getSubPartitionValues())
+            {
+                escapedSubPartitionValues.add(escapeXml(subPartitionValue));
+            }
+        }
+
+        // Build and return an XML escaped business object data key.
+        return new BusinessObjectDataKey(escapeXml(businessObjectDataKey.getNamespace()), escapeXml(businessObjectDataKey.getBusinessObjectDefinitionName()),
+            escapeXml(businessObjectDataKey.getBusinessObjectFormatUsage()), escapeXml(businessObjectDataKey.getBusinessObjectFormatFileType()),
+            businessObjectDataKey.getBusinessObjectFormatVersion(), escapeXml(businessObjectDataKey.getPartitionValue()), escapedSubPartitionValues,
+            businessObjectDataKey.getBusinessObjectDataVersion());
+    }
+
+    /**
+     * Creates an XML escaped copy of the specified business object definition description suggestion.
+     *
+     * @param businessObjectDefinitionDescriptionSuggestion the business object definition description suggestion
+     *
+     * @return the XML escaped business object definition description suggestion
+     */
+    private BusinessObjectDefinitionDescriptionSuggestion escapeXmlBusinessObjectDefinitionDescriptionSuggestion(
+        final BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion)
+    {
+        // Build and return an XML escaped business object definition description suggestion.
+        return new BusinessObjectDefinitionDescriptionSuggestion(businessObjectDefinitionDescriptionSuggestion.getId(),
+            escapeXmlBusinessObjectDefinitionDescriptionSuggestionKey(
+                businessObjectDefinitionDescriptionSuggestion.getBusinessObjectDefinitionDescriptionSuggestionKey()),
+            escapeXml(businessObjectDefinitionDescriptionSuggestion.getDescriptionSuggestion()),
+            escapeXml(businessObjectDefinitionDescriptionSuggestion.getStatus()), escapeXml(businessObjectDefinitionDescriptionSuggestion.getCreatedByUserId()),
+            businessObjectDefinitionDescriptionSuggestion.getCreatedOn());
+    }
+
+    /**
+     * Creates an XML escaped copy of the specified business object definition description suggestion key.
+     *
+     * @param businessObjectDefinitionDescriptionSuggestionKey the business object definition description suggestion key
+     *
+     * @return the XML escaped business object definition description suggestion key
+     */
+    private BusinessObjectDefinitionDescriptionSuggestionKey escapeXmlBusinessObjectDefinitionDescriptionSuggestionKey(
+        final BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey)
+    {
+        // Build and return an XML escaped business object definition description suggestion key.
+        return new BusinessObjectDefinitionDescriptionSuggestionKey(escapeXml(businessObjectDefinitionDescriptionSuggestionKey.getNamespace()),
+            escapeXml(businessObjectDefinitionDescriptionSuggestionKey.getBusinessObjectDefinitionName()),
+            escapeXml(businessObjectDefinitionDescriptionSuggestionKey.getUserId()));
+    }
+
+    /**
+     * Creates an XML escaped copy of the specified business object format key.
+     *
+     * @param businessObjectFormatKey the business object format key
+     *
+     * @return the XML escaped business object format key
+     */
+    private BusinessObjectFormatKey escapeXmlBusinessObjectFormatKey(final BusinessObjectFormatKey businessObjectFormatKey)
+    {
+        // Build and return an XML escaped business object format key.
+        return new BusinessObjectFormatKey(escapeXml(businessObjectFormatKey.getNamespace()),
+            escapeXml(businessObjectFormatKey.getBusinessObjectDefinitionName()), escapeXml(businessObjectFormatKey.getBusinessObjectFormatUsage()),
+            escapeXml(businessObjectFormatKey.getBusinessObjectFormatFileType()), businessObjectFormatKey.getBusinessObjectFormatVersion());
     }
 
     /**
@@ -406,141 +866,11 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         // Process velocity template if it configured.
         if (StringUtils.isNotBlank(velocityTemplate))
         {
-            // Create and populate the velocity context with dynamic values. Note that we can't use periods within the context keys since they can't
-            // be referenced in the velocity template (i.e. they're used to separate fields with the context object being referenced).
-            Map<String, Object> context = new HashMap<>();
-            context.put(ConfigurationValue.HERD_ENVIRONMENT.getKey().replace('.', '_'), configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT));
-            context.put(ConfigurationValue.HERD_NOTIFICATION_SQS_ENVIRONMENT.getKey().replace('.', '_'),
-                configurationHelper.getProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_ENVIRONMENT));
-            context.put("current_time", HerdDateUtils.now().toString());
-            context.put("uuid", UUID.randomUUID().toString());
-            context.put("username", herdDaoSecurityHelper.getCurrentUsername());
-            context.put("StringUtils", StringUtils.class);
-            context.put("CollectionUtils", CollectionUtils.class);
-            context.put("Collections", Collections.class);
-
-            // Populate the context map entries into the velocity context.
-            for (Map.Entry<String, Object> mapEntry : contextMap.entrySet())
-            {
-                context.put(mapEntry.getKey(), mapEntry.getValue());
-            }
-
-            messageText = velocityHelper.evaluate(velocityTemplate, context, velocityTemplateName);
+            messageText = velocityHelper.evaluate(velocityTemplate, contextMap, velocityTemplateName);
         }
 
         // Return the message text.
         return messageText;
-    }
-
-    /**
-     * Returns Velocity context map of additional keys and values to place in the velocity context.
-     *
-     * @param businessObjectDataKey the business object data key
-     * @param newBusinessObjectDataStatus the new business object data status
-     * @param oldBusinessObjectDataStatus the old business object data status
-     *
-     * @return the Velocity context map
-     */
-    private Map<String, Object> getBusinessObjectDataStatusChangeMessageVelocityContextMap(BusinessObjectDataKey businessObjectDataKey,
-        String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus)
-    {
-        // Create a context map of values that can be used when building the message.
-        Map<String, Object> velocityContextMap = new HashMap<>();
-        velocityContextMap.put("businessObjectDataKey", businessObjectDataKey);
-        velocityContextMap.put("newBusinessObjectDataStatus", newBusinessObjectDataStatus);
-        velocityContextMap.put("oldBusinessObjectDataStatus", oldBusinessObjectDataStatus);
-
-        // Retrieve business object data entity and business object data id to the context.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
-        velocityContextMap.put("businessObjectDataId", businessObjectDataEntity.getId());
-
-        // Load all attribute definitions for this business object data in a map for easy access.
-        Map<String, BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntityMap =
-            businessObjectFormatHelper.getAttributeDefinitionEntities(businessObjectDataEntity.getBusinessObjectFormat());
-
-        // Build an ordered map of business object data attributes that are flagged to be published in notification messages.
-        Map<String, String> businessObjectDataAttributes = new LinkedHashMap<>();
-        if (!attributeDefinitionEntityMap.isEmpty())
-        {
-            for (BusinessObjectDataAttributeEntity attributeEntity : businessObjectDataEntity.getAttributes())
-            {
-                if (attributeDefinitionEntityMap.containsKey(attributeEntity.getName().toUpperCase()))
-                {
-                    BusinessObjectDataAttributeDefinitionEntity attributeDefinitionEntity =
-                        attributeDefinitionEntityMap.get(attributeEntity.getName().toUpperCase());
-
-                    if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublish()))
-                    {
-                        businessObjectDataAttributes.put(attributeEntity.getName(), attributeEntity.getValue());
-                    }
-                }
-            }
-        }
-
-        // Add the map of business object data attributes to the context.
-        velocityContextMap.put("businessObjectDataAttributes", businessObjectDataAttributes);
-
-        // Add the namespace to the header.
-        velocityContextMap.put("namespace", businessObjectDataKey.getNamespace());
-
-        return velocityContextMap;
-    }
-
-    /**
-     * Returns Velocity context map of additional keys and values to place in the velocity context.
-     *
-     * @param businessObjectDefinitionDescriptionSuggestion the business object definition description suggestion
-     * @param lastUpdatedByUserId the User ID of the user who last updated this business object definition description suggestion
-     * @param lastUpdatedOn the timestamp when this business object definition description suggestion was last updated on
-     * @param namespaceEntity the namespace entity
-     *
-     * @return the Velocity context map
-     */
-    private Map<String, Object> getBusinessObjectDefinitionDescriptionSuggestionChangeMessageVelocityContextMap(
-        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion, String lastUpdatedByUserId,
-        XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity)
-    {
-        // Create a list of users (User IDs) that need to be notified about this event.
-        // Initialize the list with the user who created this business object definition description suggestion.
-        List<String> notificationList = new ArrayList<>();
-        notificationList.add(businessObjectDefinitionDescriptionSuggestion.getCreatedByUserId());
-
-        // Add to the notification list all users that have WRITE or WRITE_DESCRIPTIVE_CONTENT permission on the namespace.
-        notificationList.addAll(userNamespaceAuthorizationDao.getUserIdsWithWriteOrWriteDescriptiveContentPermissionsByNamespace(namespaceEntity));
-
-        // Create a context map of values that can be used when building the message.
-        Map<String, Object> velocityContextMap = new HashMap<>();
-        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestion", businessObjectDefinitionDescriptionSuggestion);
-        velocityContextMap.put("businessObjectDefinitionDescriptionSuggestionKey",
-            businessObjectDefinitionDescriptionSuggestion.getBusinessObjectDefinitionDescriptionSuggestionKey());
-        velocityContextMap.put("lastUpdatedByUserId", lastUpdatedByUserId);
-        velocityContextMap.put("lastUpdatedOn", lastUpdatedOn);
-        velocityContextMap.put("notificationList", notificationList);
-        velocityContextMap.put("namespace", namespaceEntity.getCode());
-
-        // Return the Velocity context map.
-        return velocityContextMap;
-    }
-
-    /**
-     * Returns Velocity context map of additional keys and values to place in the velocity context.
-     *
-     * @param businessObjectFormatKey the business object format key
-     * @param oldBusinessObjectFormatVersion the old business object format version
-     *
-     * @return the Velocity context map
-     */
-    private Map<String, Object> getBusinessObjectFormatVersionChangeMessageVelocityContextMap(BusinessObjectFormatKey businessObjectFormatKey,
-        String oldBusinessObjectFormatVersion)
-    {
-        Map<String, Object> velocityContextMap = new HashMap<>();
-
-        velocityContextMap.put("businessObjectFormatKey", businessObjectFormatKey);
-        velocityContextMap.put("newBusinessObjectFormatVersion", businessObjectFormatKey.getBusinessObjectFormatVersion());
-        velocityContextMap.put("oldBusinessObjectFormatVersion", oldBusinessObjectFormatVersion);
-        velocityContextMap.put("namespace", businessObjectFormatKey.getNamespace());
-
-        return velocityContextMap;
     }
 
     /**
@@ -625,29 +955,5 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         }
 
         return sqsQueueName;
-    }
-
-    /**
-     * Returns Velocity context map of additional keys and values to place in the velocity context.
-     *
-     * @param businessObjectDataKey the business object data key
-     * @param storageName the storage name
-     * @param newStorageUnitStatus the new storage unit status
-     * @param oldStorageUnitStatus the old storage unit status, may be null
-     *
-     * @return the Velocity context map
-     */
-    private Map<String, Object> getStorageUnitStatusChangeMessageVelocityContextMap(BusinessObjectDataKey businessObjectDataKey, String storageName,
-        String newStorageUnitStatus, String oldStorageUnitStatus)
-    {
-        Map<String, Object> velocityContextMap = new HashMap<>();
-
-        velocityContextMap.put("businessObjectDataKey", businessObjectDataKey);
-        velocityContextMap.put("storageName", storageName);
-        velocityContextMap.put("newStorageUnitStatus", newStorageUnitStatus);
-        velocityContextMap.put("oldStorageUnitStatus", oldStorageUnitStatus);
-        velocityContextMap.put("namespace", businessObjectDataKey.getNamespace());
-
-        return velocityContextMap;
     }
 }
