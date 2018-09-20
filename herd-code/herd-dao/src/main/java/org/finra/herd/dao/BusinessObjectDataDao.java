@@ -164,7 +164,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * map is ordered by the business object data "created on" timestamp, starting with the oldest business object data entity.
      *
      * @param storagePolicyPriorityLevel the storage policy priority level
-     * @param supportedBusinessObjectDataStatuses the list of business object data statuses that storage policies apply to
+     * @param supportedBusinessObjectDataStatuses the list of business object data statuses that storage policies apply to (case-sensitive)
      * @param storagePolicyTransitionMaxAllowedAttempts the maximum number of failed storage policy transition attempts before the relative storage unit gets
      * excluded from being selected. 0 means the maximum is not set
      * @param startPosition the position of the first result, numbered from 0

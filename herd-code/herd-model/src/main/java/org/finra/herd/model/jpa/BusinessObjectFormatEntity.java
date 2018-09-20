@@ -60,6 +60,9 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @JoinColumn(name = "bus_objct_dfntn_id", referencedColumnName = "bus_objct_dfntn_id", nullable = false)
     private BusinessObjectDefinitionEntity businessObjectDefinition;
 
+    @Column(name = "bus_objct_dfntn_id", insertable = false, updatable = false)
+    private Integer businessObjectDefinitionId;
+
     /**
      * The usage column.
      */
@@ -69,6 +72,9 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @ManyToOne
     @JoinColumn(name = "file_type_cd", referencedColumnName = "file_type_cd", nullable = false)
     private FileTypeEntity fileType;
+
+    @Column(name = "file_type_cd", insertable = false, updatable = false)
+    private String fileTypeCode;
 
     /**
      * The format version column.
@@ -165,6 +171,16 @@ public class BusinessObjectFormatEntity extends AuditableEntity
         this.businessObjectDefinition = businessObjectDefinition;
     }
 
+    public Integer getBusinessObjectDefinitionId()
+    {
+        return businessObjectDefinitionId;
+    }
+
+    public void setBusinessObjectDefinitionId(Integer businessObjectDefinitionId)
+    {
+        this.businessObjectDefinitionId = businessObjectDefinitionId;
+    }
+
     public String getUsage()
     {
         return usage;
@@ -183,6 +199,16 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setFileType(FileTypeEntity fileType)
     {
         this.fileType = fileType;
+    }
+
+    public String getFileTypeCode()
+    {
+        return fileTypeCode;
+    }
+
+    public void setFileTypeCode(String fileTypeCode)
+    {
+        this.fileTypeCode = fileTypeCode;
     }
 
     public Integer getBusinessObjectFormatVersion()
