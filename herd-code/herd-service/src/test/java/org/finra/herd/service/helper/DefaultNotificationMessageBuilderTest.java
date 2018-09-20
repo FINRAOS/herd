@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -58,6 +59,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.ConfigurationEntity;
 import org.finra.herd.model.jpa.MessageTypeEntity;
@@ -69,8 +71,52 @@ import org.finra.herd.service.AbstractServiceTest;
  */
 public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
 {
+    private static final String SUFFIX_ESCAPED_JSON = "\\\"\\\"<test>";
+
+    private static final String SUFFIX_ESCAPED_XML = "&quot;&quot;&lt;test&gt;";
+
+    private static final String SUFFIX_UNESCAPED = "\"\"<test>";
+
     @Autowired
-    private NotificationMessageBuilder defaultNotificationMessageBuilder;
+    private DefaultNotificationMessageBuilder defaultNotificationMessageBuilder;
+
+    @Test
+    public void testAddObjectPropertyToContext()
+    {
+        // Create an empty context map.
+        Map<String, Object> context = new LinkedHashMap<>();
+
+        // Create test property values.
+        Object propertyValue = new Object();
+        Object jsonEscapedPropertyValue = new Object();
+        Object xmlEscapedPropertyValue = new Object();
+
+        // Call the method under test.
+        defaultNotificationMessageBuilder
+            .addObjectPropertyToContext(context, ATTRIBUTE_NAME + SUFFIX_UNESCAPED, propertyValue, jsonEscapedPropertyValue, xmlEscapedPropertyValue);
+
+        // Validate the results.
+        assertEquals(3, CollectionUtils.size(context));
+        assertEquals(propertyValue, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED));
+        assertEquals(jsonEscapedPropertyValue, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED + "WithJson"));
+        assertEquals(xmlEscapedPropertyValue, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED + "WithXml"));
+    }
+
+    @Test
+    public void testAddStringPropertyToContext()
+    {
+        // Create an empty context map.
+        Map<String, Object> context = new LinkedHashMap<>();
+
+        // Call the method under test.
+        defaultNotificationMessageBuilder.addStringPropertyToContext(context, ATTRIBUTE_NAME + SUFFIX_UNESCAPED, ATTRIBUTE_VALUE + SUFFIX_UNESCAPED);
+
+        // Validate the results.
+        assertEquals(3, CollectionUtils.size(context));
+        assertEquals(ATTRIBUTE_VALUE + SUFFIX_UNESCAPED, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED));
+        assertEquals(ATTRIBUTE_VALUE + SUFFIX_ESCAPED_JSON, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED + "WithJson"));
+        assertEquals(ATTRIBUTE_VALUE + SUFFIX_ESCAPED_XML, context.get(ATTRIBUTE_NAME + SUFFIX_UNESCAPED + "WithXml"));
+    }
 
     @Test
     public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayload() throws Exception
@@ -1298,6 +1344,310 @@ public class DefaultNotificationMessageBuilderTest extends AbstractServiceTest
             // Restore the property sources so we don't affect other tests.
             restorePropertySourceInEnvironment();
         }
+    }
+
+    @Test
+    public void testGetBaseVelocityContextMap()
+    {
+        // Call the method under test.
+        Map<String, Object> result = defaultNotificationMessageBuilder.getBaseVelocityContextMap();
+
+        // Validate the results.
+        assertEquals(14, CollectionUtils.size(result));
+    }
+
+    @Test
+    public void testGetBaseVelocityContextMapHelper()
+    {
+        // Create names for properties that identify herd environment.
+        final String herdEnvironmentKey = "herd_environment";
+        final String herdNotificationSqsEnvironmentKey = "herd_notification_sqs_environment";
+
+        // Get configuration values that identify herd environment.
+        final String herdEnvironmentValue = configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT);
+        final String herdNotificationSqsEnvironmentValue = configurationHelper.getProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_ENVIRONMENT);
+
+        // Call the method under test.
+        Map<String, Object> result = defaultNotificationMessageBuilder
+            .getBaseVelocityContextMapHelper(USER_ID + SUFFIX_UNESCAPED, herdEnvironmentKey + SUFFIX_UNESCAPED, herdEnvironmentValue + SUFFIX_UNESCAPED,
+                herdNotificationSqsEnvironmentKey + SUFFIX_UNESCAPED, herdNotificationSqsEnvironmentValue + SUFFIX_UNESCAPED);
+
+        // Validate the results.
+        assertEquals(14, CollectionUtils.size(result));
+
+        assertEquals(herdEnvironmentValue + SUFFIX_UNESCAPED, result.get(herdEnvironmentKey + SUFFIX_UNESCAPED));
+        assertEquals(herdEnvironmentValue + SUFFIX_ESCAPED_JSON, result.get(herdEnvironmentKey + SUFFIX_ESCAPED_JSON + "_with_json"));
+        assertEquals(herdEnvironmentValue + SUFFIX_ESCAPED_XML, result.get(herdEnvironmentKey + SUFFIX_ESCAPED_XML + "_with_xml"));
+
+        assertEquals(herdNotificationSqsEnvironmentValue + SUFFIX_UNESCAPED, result.get(herdNotificationSqsEnvironmentKey + SUFFIX_UNESCAPED));
+        assertEquals(herdNotificationSqsEnvironmentValue + SUFFIX_ESCAPED_JSON,
+            result.get(herdNotificationSqsEnvironmentKey + SUFFIX_ESCAPED_JSON + "_with_json"));
+        assertEquals(herdNotificationSqsEnvironmentValue + SUFFIX_ESCAPED_XML,
+            result.get(herdNotificationSqsEnvironmentKey + SUFFIX_ESCAPED_XML + "_with_xml"));
+
+        assertEquals(USER_ID + SUFFIX_UNESCAPED, result.get("username"));
+        assertEquals(USER_ID + SUFFIX_ESCAPED_JSON, result.get("usernameWithJson"));
+        assertEquals(USER_ID + SUFFIX_ESCAPED_XML, result.get("usernameWithXml"));
+    }
+
+    @Test
+    public void testGetBusinessObjectDataStatusChangeMessageVelocityContextMap()
+    {
+        // Create a business object data key with values that require JSON and XML escaping.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE + SUFFIX_UNESCAPED, BDEF_NAME + SUFFIX_UNESCAPED, FORMAT_USAGE_CODE + SUFFIX_UNESCAPED,
+                FORMAT_FILE_TYPE_CODE + SUFFIX_UNESCAPED, FORMAT_VERSION, PARTITION_VALUE + SUFFIX_UNESCAPED, Lists
+                .newArrayList(SUBPARTITION_VALUES.get(0) + SUFFIX_UNESCAPED, SUBPARTITION_VALUES.get(1) + SUFFIX_UNESCAPED,
+                    SUBPARTITION_VALUES.get(2) + SUFFIX_UNESCAPED, SUBPARTITION_VALUES.get(3) + SUFFIX_UNESCAPED), DATA_VERSION);
+
+        // Create a list of attributes that require JSON and XML escaping.
+        // An attribute with a null value is required for code coverage.
+        List<Attribute> attributes = new ArrayList<>();
+        attributes.add(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE + SUFFIX_UNESCAPED, ATTRIBUTE_VALUE_1 + SUFFIX_UNESCAPED));
+        attributes.add(new Attribute(ATTRIBUTE_NAME_2_MIXED_CASE + SUFFIX_UNESCAPED, ATTRIBUTE_VALUE_2 + SUFFIX_UNESCAPED));
+        attributes.add(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE + SUFFIX_UNESCAPED, null));
+
+        // Create and persist a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+
+        // Create and persist business object data attribute entities.
+        for (Attribute attribute : attributes)
+        {
+            businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(businessObjectDataEntity, attribute.getName(), attribute.getValue());
+        }
+
+        // Add business object data attribute definitions to the business object format.
+        for (Attribute attribute : attributes)
+        {
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectDataAttributeDefinitionEntity(businessObjectDataEntity.getBusinessObjectFormat(), attribute.getName(), PUBLISH_ATTRIBUTE);
+        }
+
+        // Call the method under test.
+        Map<String, Object> result = defaultNotificationMessageBuilder
+            .getBusinessObjectDataStatusChangeMessageVelocityContextMap(businessObjectDataKey, BDATA_STATUS_2 + SUFFIX_UNESCAPED,
+                BDATA_STATUS + SUFFIX_UNESCAPED);
+
+        // Create a map of expected businessObjectDataAttributes.
+        Map<String, String> expectedBusinessObjectDataAttributes = new LinkedHashMap<>();
+        expectedBusinessObjectDataAttributes.put(ATTRIBUTE_NAME_1_MIXED_CASE + SUFFIX_UNESCAPED, ATTRIBUTE_VALUE_1 + SUFFIX_UNESCAPED);
+        expectedBusinessObjectDataAttributes.put(ATTRIBUTE_NAME_2_MIXED_CASE + SUFFIX_UNESCAPED, ATTRIBUTE_VALUE_2 + SUFFIX_UNESCAPED);
+        expectedBusinessObjectDataAttributes.put(ATTRIBUTE_NAME_3_MIXED_CASE + SUFFIX_UNESCAPED, null);
+
+        // Create a map of expected businessObjectDataAttributes.
+        Map<String, String> expectedBusinessObjectDataAttributesWithJson = new LinkedHashMap<>();
+        expectedBusinessObjectDataAttributesWithJson.put(ATTRIBUTE_NAME_1_MIXED_CASE + SUFFIX_ESCAPED_JSON, ATTRIBUTE_VALUE_1 + SUFFIX_ESCAPED_JSON);
+        expectedBusinessObjectDataAttributesWithJson.put(ATTRIBUTE_NAME_2_MIXED_CASE + SUFFIX_ESCAPED_JSON, ATTRIBUTE_VALUE_2 + SUFFIX_ESCAPED_JSON);
+        expectedBusinessObjectDataAttributesWithJson.put(ATTRIBUTE_NAME_3_MIXED_CASE + SUFFIX_ESCAPED_JSON, null);
+
+        // Create a map of expected XML escaped businessObjectDataAttributes.
+        Map<String, String> expectedBusinessObjectDataAttributesWithXml = new LinkedHashMap<>();
+        expectedBusinessObjectDataAttributesWithXml.put(ATTRIBUTE_NAME_1_MIXED_CASE + SUFFIX_ESCAPED_XML, ATTRIBUTE_VALUE_1 + SUFFIX_ESCAPED_XML);
+        expectedBusinessObjectDataAttributesWithXml.put(ATTRIBUTE_NAME_2_MIXED_CASE + SUFFIX_ESCAPED_XML, ATTRIBUTE_VALUE_2 + SUFFIX_ESCAPED_XML);
+        expectedBusinessObjectDataAttributesWithXml.put(ATTRIBUTE_NAME_3_MIXED_CASE + SUFFIX_ESCAPED_XML, null);
+
+        // Create an expected JSON escaped business object data key.
+        BusinessObjectDataKey expectedBusinessObjectDataKeyWithJson =
+            new BusinessObjectDataKey(BDEF_NAMESPACE + SUFFIX_ESCAPED_JSON, BDEF_NAME + SUFFIX_ESCAPED_JSON, FORMAT_USAGE_CODE + SUFFIX_ESCAPED_JSON,
+                FORMAT_FILE_TYPE_CODE + SUFFIX_ESCAPED_JSON, FORMAT_VERSION, PARTITION_VALUE + SUFFIX_ESCAPED_JSON, Lists
+                .newArrayList(SUBPARTITION_VALUES.get(0) + SUFFIX_ESCAPED_JSON, SUBPARTITION_VALUES.get(1) + SUFFIX_ESCAPED_JSON,
+                    SUBPARTITION_VALUES.get(2) + SUFFIX_ESCAPED_JSON, SUBPARTITION_VALUES.get(3) + SUFFIX_ESCAPED_JSON), DATA_VERSION);
+
+        // Create an expected XML escaped business object data key.
+        BusinessObjectDataKey expectedBusinessObjectDataKeyWithXml =
+            new BusinessObjectDataKey(BDEF_NAMESPACE + SUFFIX_ESCAPED_XML, BDEF_NAME + SUFFIX_ESCAPED_XML, FORMAT_USAGE_CODE + SUFFIX_ESCAPED_XML,
+                FORMAT_FILE_TYPE_CODE + SUFFIX_ESCAPED_XML, FORMAT_VERSION, PARTITION_VALUE + SUFFIX_ESCAPED_XML, Lists
+                .newArrayList(SUBPARTITION_VALUES.get(0) + SUFFIX_ESCAPED_XML, SUBPARTITION_VALUES.get(1) + SUFFIX_ESCAPED_XML,
+                    SUBPARTITION_VALUES.get(2) + SUFFIX_ESCAPED_XML, SUBPARTITION_VALUES.get(3) + SUFFIX_ESCAPED_XML), DATA_VERSION);
+
+        // Validate the results.
+        assertEquals(16, CollectionUtils.size(result));
+
+        assertEquals(businessObjectDataKey, result.get("businessObjectDataKey"));
+        assertEquals(expectedBusinessObjectDataKeyWithJson, result.get("businessObjectDataKeyWithJson"));
+        assertEquals(expectedBusinessObjectDataKeyWithXml, result.get("businessObjectDataKeyWithXml"));
+
+        assertEquals(BDATA_STATUS_2 + SUFFIX_UNESCAPED, result.get("newBusinessObjectDataStatus"));
+        assertEquals(BDATA_STATUS_2 + SUFFIX_ESCAPED_JSON, result.get("newBusinessObjectDataStatusWithJson"));
+        assertEquals(BDATA_STATUS_2 + SUFFIX_ESCAPED_XML, result.get("newBusinessObjectDataStatusWithXml"));
+
+        assertEquals(BDATA_STATUS + SUFFIX_UNESCAPED, result.get("oldBusinessObjectDataStatus"));
+        assertEquals(BDATA_STATUS + SUFFIX_ESCAPED_JSON, result.get("oldBusinessObjectDataStatusWithJson"));
+        assertEquals(BDATA_STATUS + SUFFIX_ESCAPED_XML, result.get("oldBusinessObjectDataStatusWithXml"));
+
+        assertEquals(businessObjectDataEntity.getId(), result.get("businessObjectDataId"));
+
+        assertEquals(expectedBusinessObjectDataAttributes, result.get("businessObjectDataAttributes"));
+        assertEquals(expectedBusinessObjectDataAttributesWithJson, result.get("businessObjectDataAttributesWithJson"));
+        assertEquals(expectedBusinessObjectDataAttributesWithXml, result.get("businessObjectDataAttributesWithXml"));
+
+        assertEquals(BDEF_NAMESPACE + SUFFIX_UNESCAPED, result.get("namespace"));
+        assertEquals(BDEF_NAMESPACE + SUFFIX_ESCAPED_JSON, result.get("namespaceWithJson"));
+        assertEquals(BDEF_NAMESPACE + SUFFIX_ESCAPED_XML, result.get("namespaceWithXml"));
+    }
+
+    @Test
+    public void testGetBusinessObjectDefinitionDescriptionSuggestionChangeMessageVelocityContextMap()
+    {
+        // Create a business object definition description suggestion key with values that require JSON and XML escaping.
+        BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
+            new BusinessObjectDefinitionDescriptionSuggestionKey(BDEF_NAMESPACE + SUFFIX_UNESCAPED, BDEF_NAME + SUFFIX_UNESCAPED, USER_ID + SUFFIX_UNESCAPED);
+
+        // Create a business object definition description suggestion with values that require JSON and XML escaping.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION + SUFFIX_UNESCAPED,
+                BDEF_DESCRIPTION_SUGGESTION_STATUS + SUFFIX_UNESCAPED, USER_ID + SUFFIX_UNESCAPED, CREATED_ON);
+
+        // Create and persist a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(businessObjectDefinitionDescriptionSuggestionKey.getNamespace());
+
+        // Call the method under test.
+        Map<String, Object> result = defaultNotificationMessageBuilder
+            .getBusinessObjectDefinitionDescriptionSuggestionChangeMessageVelocityContextMap(businessObjectDefinitionDescriptionSuggestion,
+                USER_ID_2 + SUFFIX_UNESCAPED, UPDATED_ON, namespaceEntity);
+
+        // Create an expected JSON escaped business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey expectedBusinessObjectDefinitionDescriptionSuggestionKeyWithJson =
+            new BusinessObjectDefinitionDescriptionSuggestionKey(BDEF_NAMESPACE + SUFFIX_ESCAPED_JSON, BDEF_NAME + SUFFIX_ESCAPED_JSON,
+                USER_ID + SUFFIX_ESCAPED_JSON);
+
+        // Create an expected JSON escaped business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestion expectedBusinessObjectDefinitionDescriptionSuggestionWithJson =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, expectedBusinessObjectDefinitionDescriptionSuggestionKeyWithJson,
+                DESCRIPTION_SUGGESTION + SUFFIX_ESCAPED_JSON, BDEF_DESCRIPTION_SUGGESTION_STATUS + SUFFIX_ESCAPED_JSON, USER_ID + SUFFIX_ESCAPED_JSON,
+                CREATED_ON);
+
+        // Create an expected XML escaped business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey expectedBusinessObjectDefinitionDescriptionSuggestionKeyWithXml =
+            new BusinessObjectDefinitionDescriptionSuggestionKey(BDEF_NAMESPACE + SUFFIX_ESCAPED_XML, BDEF_NAME + SUFFIX_ESCAPED_XML,
+                USER_ID + SUFFIX_ESCAPED_XML);
+
+        // Create an expected XML escaped business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestion expectedBusinessObjectDefinitionDescriptionSuggestionWithXml =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, expectedBusinessObjectDefinitionDescriptionSuggestionKeyWithXml,
+                DESCRIPTION_SUGGESTION + SUFFIX_ESCAPED_XML, BDEF_DESCRIPTION_SUGGESTION_STATUS + SUFFIX_ESCAPED_XML, USER_ID + SUFFIX_ESCAPED_XML, CREATED_ON);
+
+        // Create expected notification lists.
+        List<String> expectedNotificationList = Lists.newArrayList(USER_ID + SUFFIX_UNESCAPED);
+        List<String> expectedNotificationListWithJson = Lists.newArrayList(USER_ID + SUFFIX_ESCAPED_JSON);
+        List<String> expectedNotificationListWithXml = Lists.newArrayList(USER_ID + SUFFIX_ESCAPED_XML);
+
+        // Validate the results.
+        assertEquals(16, CollectionUtils.size(result));
+
+        assertEquals(businessObjectDefinitionDescriptionSuggestion, result.get("businessObjectDefinitionDescriptionSuggestion"));
+        assertEquals(expectedBusinessObjectDefinitionDescriptionSuggestionWithJson, result.get("businessObjectDefinitionDescriptionSuggestionWithJson"));
+        assertEquals(expectedBusinessObjectDefinitionDescriptionSuggestionWithXml, result.get("businessObjectDefinitionDescriptionSuggestionWithXml"));
+
+        assertEquals(businessObjectDefinitionDescriptionSuggestionKey, result.get("businessObjectDefinitionDescriptionSuggestionKey"));
+        assertEquals(expectedBusinessObjectDefinitionDescriptionSuggestionKeyWithJson, result.get("businessObjectDefinitionDescriptionSuggestionKeyWithJson"));
+        assertEquals(expectedBusinessObjectDefinitionDescriptionSuggestionKeyWithXml, result.get("businessObjectDefinitionDescriptionSuggestionKeyWithXml"));
+
+        assertEquals(USER_ID_2 + SUFFIX_UNESCAPED, result.get("lastUpdatedByUserId"));
+        assertEquals(USER_ID_2 + SUFFIX_ESCAPED_JSON, result.get("lastUpdatedByUserIdWithJson"));
+        assertEquals(USER_ID_2 + SUFFIX_ESCAPED_XML, result.get("lastUpdatedByUserIdWithXml"));
+
+        assertEquals(UPDATED_ON, result.get("lastUpdatedOn"));
+
+        assertEquals(expectedNotificationList, result.get("notificationList"));
+        assertEquals(expectedNotificationListWithJson, result.get("notificationListWithJson"));
+        assertEquals(expectedNotificationListWithXml, result.get("notificationListWithXml"));
+
+        assertEquals(BDEF_NAMESPACE + SUFFIX_UNESCAPED, result.get("namespace"));
+        assertEquals(BDEF_NAMESPACE + SUFFIX_ESCAPED_JSON, result.get("namespaceWithJson"));
+        assertEquals(BDEF_NAMESPACE + SUFFIX_ESCAPED_XML, result.get("namespaceWithXml"));
+    }
+
+    @Test
+    public void testGetBusinessObjectFormatVersionChangeMessageVelocityContextMap()
+    {
+        // Create a business object format key with values that require JSON and XML escaping.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE + SUFFIX_UNESCAPED, BDEF_NAME + SUFFIX_UNESCAPED, FORMAT_USAGE_CODE + SUFFIX_UNESCAPED,
+                FORMAT_FILE_TYPE_CODE + SUFFIX_UNESCAPED, FORMAT_VERSION_2);
+
+        // Call the method under test.
+        Map<String, Object> result = defaultNotificationMessageBuilder
+            .getBusinessObjectFormatVersionChangeMessageVelocityContextMap(businessObjectFormatKey, String.valueOf(FORMAT_VERSION));
+
+        // Create an expected JSON escaped business object format key.
+        BusinessObjectFormatKey expectedBusinessObjectFormatKeyWithJson =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE + SUFFIX_ESCAPED_JSON, BDEF_NAME + SUFFIX_ESCAPED_JSON, FORMAT_USAGE_CODE + SUFFIX_ESCAPED_JSON,
+                FORMAT_FILE_TYPE_CODE + SUFFIX_ESCAPED_JSON, FORMAT_VERSION_2);
+
+        // Create an expected XML escaped business object format key.
+        BusinessObjectFormatKey expectedBusinessObjectFormatKeyWithXml =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE + SUFFIX_ESCAPED_XML, BDEF_NAME + SUFFIX_ESCAPED_XML, FORMAT_USAGE_CODE + SUFFIX_ESCAPED_XML,
+                FORMAT_FILE_TYPE_CODE + SUFFIX_ESCAPED_XML, FORMAT_VERSION_2);
+
+        // Validate the results.
+        assertEquals(8, CollectionUtils.size(result));
+
+        assertEquals(businessObjectFormatKey, result.get("businessObjectFormatKey"));
+        assertEquals(expectedBusinessObjectFormatKeyWithJson, result.get("businessObjectFormatKeyWithJson"));
+        assertEquals(expectedBusinessObjectFormatKeyWithXml, result.get("businessObjectFormatKeyWithXml"));
+
+        assertEquals(FORMAT_VERSION_2, result.get("newBusinessObjectFormatVersion"));
+        assertEquals(FORMAT_VERSION.toString(), result.get("oldBusinessObjectFormatVersion"));
+
+        assertEquals(BDEF_NAMESPACE + SUFFIX_UNESCAPED, result.get("namespace"));
+        assertEquals(BDEF_NAMESPACE + SUFFIX_ESCAPED_JSON, result.get("namespaceWithJson"));
+        assertEquals(BDEF_NAMESPACE + SUFFIX_ESCAPED_XML, result.get("namespaceWithXml"));
+    }
+
+    @Test
+    public void testGetStorageUnitStatusChangeMessageVelocityContextMap()
+    {
+        // Create a business object data key with values that require JSON and XML escaping.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE + SUFFIX_UNESCAPED, BDEF_NAME + SUFFIX_UNESCAPED, FORMAT_USAGE_CODE + SUFFIX_UNESCAPED,
+                FORMAT_FILE_TYPE_CODE + SUFFIX_UNESCAPED, FORMAT_VERSION, PARTITION_VALUE + SUFFIX_UNESCAPED, Lists
+                .newArrayList(SUBPARTITION_VALUES.get(0) + SUFFIX_UNESCAPED, SUBPARTITION_VALUES.get(1) + SUFFIX_UNESCAPED,
+                    SUBPARTITION_VALUES.get(2) + SUFFIX_UNESCAPED, SUBPARTITION_VALUES.get(3) + SUFFIX_UNESCAPED), DATA_VERSION);
+
+        // Call the method under test.
+        Map<String, Object> result = defaultNotificationMessageBuilder
+            .getStorageUnitStatusChangeMessageVelocityContextMap(businessObjectDataKey, STORAGE_NAME + SUFFIX_UNESCAPED,
+                STORAGE_UNIT_STATUS_2 + SUFFIX_UNESCAPED, STORAGE_UNIT_STATUS + SUFFIX_UNESCAPED);
+
+        // Create an expected JSON escaped business object data key.
+        BusinessObjectDataKey expectedBusinessObjectDataKeyWithJson =
+            new BusinessObjectDataKey(BDEF_NAMESPACE + SUFFIX_ESCAPED_JSON, BDEF_NAME + SUFFIX_ESCAPED_JSON, FORMAT_USAGE_CODE + SUFFIX_ESCAPED_JSON,
+                FORMAT_FILE_TYPE_CODE + SUFFIX_ESCAPED_JSON, FORMAT_VERSION, PARTITION_VALUE + SUFFIX_ESCAPED_JSON, Lists
+                .newArrayList(SUBPARTITION_VALUES.get(0) + SUFFIX_ESCAPED_JSON, SUBPARTITION_VALUES.get(1) + SUFFIX_ESCAPED_JSON,
+                    SUBPARTITION_VALUES.get(2) + SUFFIX_ESCAPED_JSON, SUBPARTITION_VALUES.get(3) + SUFFIX_ESCAPED_JSON), DATA_VERSION);
+
+        // Create an expected XML escaped business object data key.
+        BusinessObjectDataKey expectedBusinessObjectDataKeyWithXml =
+            new BusinessObjectDataKey(BDEF_NAMESPACE + SUFFIX_ESCAPED_XML, BDEF_NAME + SUFFIX_ESCAPED_XML, FORMAT_USAGE_CODE + SUFFIX_ESCAPED_XML,
+                FORMAT_FILE_TYPE_CODE + SUFFIX_ESCAPED_XML, FORMAT_VERSION, PARTITION_VALUE + SUFFIX_ESCAPED_XML, Lists
+                .newArrayList(SUBPARTITION_VALUES.get(0) + SUFFIX_ESCAPED_XML, SUBPARTITION_VALUES.get(1) + SUFFIX_ESCAPED_XML,
+                    SUBPARTITION_VALUES.get(2) + SUFFIX_ESCAPED_XML, SUBPARTITION_VALUES.get(3) + SUFFIX_ESCAPED_XML), DATA_VERSION);
+
+        // Validate the results.
+        assertEquals(15, CollectionUtils.size(result));
+
+        assertEquals(businessObjectDataKey, result.get("businessObjectDataKey"));
+        assertEquals(expectedBusinessObjectDataKeyWithJson, result.get("businessObjectDataKeyWithJson"));
+        assertEquals(expectedBusinessObjectDataKeyWithXml, result.get("businessObjectDataKeyWithXml"));
+
+        assertEquals(STORAGE_NAME + SUFFIX_UNESCAPED, result.get("storageName"));
+        assertEquals(STORAGE_NAME + SUFFIX_ESCAPED_JSON, result.get("storageNameWithJson"));
+        assertEquals(STORAGE_NAME + SUFFIX_ESCAPED_XML, result.get("storageNameWithXml"));
+
+        assertEquals(STORAGE_UNIT_STATUS_2 + SUFFIX_UNESCAPED, result.get("newStorageUnitStatus"));
+        assertEquals(STORAGE_UNIT_STATUS_2 + SUFFIX_ESCAPED_JSON, result.get("newStorageUnitStatusWithJson"));
+        assertEquals(STORAGE_UNIT_STATUS_2 + SUFFIX_ESCAPED_XML, result.get("newStorageUnitStatusWithXml"));
+
+        assertEquals(STORAGE_UNIT_STATUS + SUFFIX_UNESCAPED, result.get("oldStorageUnitStatus"));
+        assertEquals(STORAGE_UNIT_STATUS + SUFFIX_ESCAPED_JSON, result.get("oldStorageUnitStatusWithJson"));
+        assertEquals(STORAGE_UNIT_STATUS + SUFFIX_ESCAPED_XML, result.get("oldStorageUnitStatusWithXml"));
+
+        assertEquals(BDEF_NAMESPACE + SUFFIX_UNESCAPED, result.get("namespace"));
+        assertEquals(BDEF_NAMESPACE + SUFFIX_ESCAPED_JSON, result.get("namespaceWithJson"));
+        assertEquals(BDEF_NAMESPACE + SUFFIX_ESCAPED_XML, result.get("namespaceWithXml"));
     }
 
     /**
