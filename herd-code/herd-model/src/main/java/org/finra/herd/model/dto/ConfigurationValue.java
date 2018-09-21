@@ -41,6 +41,12 @@ public enum ConfigurationValue
     SHOW_SQL("hibernate.show_sql", "false"),
 
     /**
+     * Controls the maximum number of statements Hibernate will batch together before asking the driver to execute the batch.
+     * Zero or a negative number disables this feature.
+     */
+    HIBERNATE_BATCH_SIZE("hibernate.batch_size", "30"),
+
+    /**
      * The optional herd data source JNDI name. The default is herdDB.
      */
     HERD_DATA_SOURCE_JNDI_NAME("herd.data.source.jndi.name", "java:comp/env/jdbc/herdDB"),
