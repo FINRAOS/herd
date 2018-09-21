@@ -273,13 +273,15 @@ public class BusinessObjectDataDaoHelper
         {
             if (!Boolean.TRUE.equals(request.isCreateNewVersion()))
             {
-                throw new AlreadyExistsException("Unable to create business object data because it already exists and a new version is not allowed.");
+                throw new AlreadyExistsException(
+                    "Unable to create business object data because it already exists and a new version is not allowed since the \"createNewVersion\" flag is not" +
+                        " set to \"true\" in the request.");
             }
             else if (Boolean.TRUE.equals(existingBusinessObjectDataEntity.getStatus().getPreRegistrationStatus()))
             {
-                throw new AlreadyExistsException(String
-                    .format("Unable to create business object data because it already exists and is still in \"%s\", which is a pre-registration status.",
-                        existingBusinessObjectDataEntity.getStatus().getDescription()));
+                throw new AlreadyExistsException(String.format(
+                    "Unable to create business object data because it already exists and a new version is not allowed since the latest version is" +
+                        " still in \"%s\", which is one of the pre-registration statuses.", existingBusinessObjectDataEntity.getStatus().getDescription()));
 
             }
         }
