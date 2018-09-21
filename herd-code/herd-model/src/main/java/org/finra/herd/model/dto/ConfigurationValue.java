@@ -607,6 +607,14 @@ public enum ConfigurationValue
         "herd.notification.business.object.definition.description.suggestion.change.message.definitions", null),
 
     /**
+     * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
+     * NotificationMessageDefinitions} to use when generating notification messages for a user namespace authorization change event. There
+     * is no default value which will cause no messages to be sent.
+     */
+    HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS("herd.notification.user.namespace.authorization.change.message.definitions",
+        null),
+
+    /**
      * The cache time to live in seconds defined in net.sf.ehcache.config.CacheConfiguration.
      */
     HERD_CACHE_TIME_TO_LIVE_SECONDS("herd.cache.time.to.live.seconds", 300L),
