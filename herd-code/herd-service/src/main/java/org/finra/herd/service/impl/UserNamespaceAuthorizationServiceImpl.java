@@ -31,6 +31,7 @@ import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.UserAuthorizations;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorization;
@@ -41,6 +42,8 @@ import org.finra.herd.model.api.xml.UserNamespaceAuthorizations;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
 import org.finra.herd.service.CurrentUserService;
+import org.finra.herd.service.MessageNotificationEventService;
+import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.UserNamespaceAuthorizationService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
@@ -68,6 +71,10 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
     @Autowired
     private UserNamespaceAuthorizationHelper userNamespaceAuthorizationHelper;
 
+    @Autowired
+    private MessageNotificationEventService messageNotificationEventService;
+
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#request?.userNamespaceAuthorizationKey?.namespace", permissions = NamespacePermissionEnum.GRANT)
     @Override
     public UserNamespaceAuthorization createUserNamespaceAuthorization(UserNamespaceAuthorizationCreateRequest request)
@@ -93,10 +100,14 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
         // Create and persist a new user namespace authorization entity from the request information.
         userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key.getUserId(), namespaceEntity, request.getNamespacePermissions());
 
+        // Create a user namespace authorization change notification to be sent on create user namespace authorization event.
+        messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(key);
+
         // Create and return the user namespace authorization object from the persisted entity.
         return createUserNamespaceAuthorizationFromEntity(userNamespaceAuthorizationEntity);
     }
 
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#key?.namespace", permissions = NamespacePermissionEnum.GRANT)
     @Override
     public UserNamespaceAuthorization updateUserNamespaceAuthorization(UserNamespaceAuthorizationKey key, UserNamespaceAuthorizationUpdateRequest request)
@@ -127,6 +138,9 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
         updateNamespacePermissions(userNamespaceAuthorizationEntity, request.getNamespacePermissions());
         userNamespaceAuthorizationDao.saveAndRefresh(userNamespaceAuthorizationEntity);
 
+        // Create a user namespace authorization change notification to be sent on update user namespace authorization event.
+        messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(key);
+
         // Create and return the user namespace authorization object from the updated entity.
         return createUserNamespaceAuthorizationFromEntity(userNamespaceAuthorizationEntity);
     }
@@ -145,6 +159,7 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
         return createUserNamespaceAuthorizationFromEntity(userNamespaceAuthorizationEntity);
     }
 
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#key?.namespace", permissions = NamespacePermissionEnum.GRANT)
     @Override
     public UserNamespaceAuthorization deleteUserNamespaceAuthorization(UserNamespaceAuthorizationKey key)
@@ -157,6 +172,9 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
 
         // Delete the business object definition.
         userNamespaceAuthorizationDao.delete(userNamespaceAuthorizationEntity);
+
+        // Create a user namespace authorization change notification to be sent on delete user namespace authorization event.
+        messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(key);
 
         // Create and return the user namespace authorization object from the deleted entity.
         return createUserNamespaceAuthorizationFromEntity(userNamespaceAuthorizationEntity);

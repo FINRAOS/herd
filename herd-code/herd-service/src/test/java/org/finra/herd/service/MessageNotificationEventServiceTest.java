@@ -39,6 +39,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinitions;
+import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
@@ -640,6 +641,161 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormatVersionChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
                 HerdDaoSecurityHelper.SYSTEM_USER, businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION,
                 NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testProcessUserNamespaceAuthorizationChangeNotificationEvent() throws Exception
+    {
+        // Create a user namespace authorization key.
+        UserNamespaceAuthorizationKey userNamespaceAuthorizationKey = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
+
+        // Create and persist the relative database entities.
+        namespaceDaoTestHelper.createNamespaceEntity(userNamespaceAuthorizationKey.getNamespace());
+        userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(userNamespaceAuthorizationKey, SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Trigger the notification.
+        List<NotificationMessage> result =
+            messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(userNamespaceAuthorizationKey);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        userNamespaceAuthorizationServiceTestHelper
+            .validateUserNamespaceAuthorizationChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, HerdDaoSecurityHelper.SYSTEM_USER,
+                userNamespaceAuthorizationKey, Collections.singletonList(new MessageHeader(KEY, VALUE)), result.get(0));
+    }
+
+    @Test
+    public void testProcessUserNamespaceAuthorizationChangeNotificationEventHerdSqsNotificationNotEnabled() throws Exception
+    {
+        // Create a user namespace authorization key.
+        UserNamespaceAuthorizationKey userNamespaceAuthorizationKey = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
+
+        // Create and persist the relative database entities.
+        namespaceDaoTestHelper.createNamespaceEntity(userNamespaceAuthorizationKey.getNamespace());
+        userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(userNamespaceAuthorizationKey, SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Override configuration.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_ENABLED.getKey(), false);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            // Trigger the notification.
+            List<NotificationMessage> result =
+                messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(userNamespaceAuthorizationKey);
+
+            // Validate the results.
+            assertTrue(CollectionUtils.isEmpty(result));
+        }
+        finally
+        {
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testProcessUserNamespaceAuthorizationChangeNotificationEventNoMessageDestination() throws Exception
+    {
+        // Create a user namespace authorization key.
+        UserNamespaceAuthorizationKey userNamespaceAuthorizationKey = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
+
+        // Create and persist the relative database entities.
+        namespaceDaoTestHelper.createNamespaceEntity(userNamespaceAuthorizationKey.getNamespace());
+        userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(userNamespaceAuthorizationKey, SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Override configuration, so there will be no message definition specified in the relative notification message definition.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION, MESSAGE_TEXT,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to trigger the notification.
+        try
+        {
+            // Trigger the notification.
+            messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(userNamespaceAuthorizationKey);
+
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testProcessUserNamespaceAuthorizationChangeNotificationEventNoMessageType() throws Exception
+    {
+        // Create a user namespace authorization key.
+        UserNamespaceAuthorizationKey userNamespaceAuthorizationKey = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
+
+        // Create and persist the relative database entities.
+        namespaceDaoTestHelper.createNamespaceEntity(userNamespaceAuthorizationKey.getNamespace());
+        userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(userNamespaceAuthorizationKey, SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Override configuration, so there will be no message type specified in the relative notification message definition.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(NO_MESSAGE_TYPE, MESSAGE_DESTINATION, MESSAGE_TEXT,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to trigger the notification.
+        try
+        {
+            // Trigger the notification.
+            messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(userNamespaceAuthorizationKey);
+
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testProcessUserNamespaceAuthorizationChangeNotificationEventWithNoMessageHeaders() throws Exception
+    {
+        // Create a user namespace authorization key.
+        UserNamespaceAuthorizationKey userNamespaceAuthorizationKey = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
+
+        // Create and persist the relative database entities.
+        namespaceDaoTestHelper.createNamespaceEntity(userNamespaceAuthorizationKey.getNamespace());
+        userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(userNamespaceAuthorizationKey, SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
+                NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Trigger the notification.
+        List<NotificationMessage> result =
+            messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(userNamespaceAuthorizationKey);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        userNamespaceAuthorizationServiceTestHelper
+            .validateUserNamespaceAuthorizationChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, HerdDaoSecurityHelper.SYSTEM_USER,
+                userNamespaceAuthorizationKey, NO_MESSAGE_HEADERS, result.get(0));
     }
 
     @Test
