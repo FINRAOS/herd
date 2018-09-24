@@ -16,7 +16,7 @@ fi
 # Variable pointing to NGC
 NGC="node_modules/.bin/ngc"
 ROLLUP="node_modules/.bin/rollup"
-ROLLUP_EXTERNALS="@angular/core,@angular/http,@angular/common,rxjs/add/observable/throw,rxjs/add/operator/catch,rxjs/add/operator/map,tslib"
+ROLLUP_EXTERNALS="@angular/core,@angular/common,tslib"
 
 echo "Running NGC on tsconfig-build.json"
 $NGC -p tsconfig-build.json
