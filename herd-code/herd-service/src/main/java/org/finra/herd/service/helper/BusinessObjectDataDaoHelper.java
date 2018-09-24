@@ -269,11 +269,21 @@ public class BusinessObjectDataDaoHelper
                 request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion(), request.getPartitionValue(),
                 request.getSubPartitionValues(), null));
 
-        // Throw an error if this business object data already exists and createNewVersion flag is not set.
-        if (existingBusinessObjectDataEntity != null && (!Boolean.TRUE.equals(request.isCreateNewVersion()) ||
-            Boolean.TRUE.equals(existingBusinessObjectDataEntity.getStatus().getPreRegistrationStatus())))
+        if (existingBusinessObjectDataEntity != null)
         {
-            throw new AlreadyExistsException("Unable to create business object data because it already exists.");
+            if (!Boolean.TRUE.equals(request.isCreateNewVersion()))
+            {
+                throw new AlreadyExistsException(
+                    "Unable to create business object data because it already exists and a new version is not allowed since the \"createNewVersion\" flag is not" +
+                        " set to \"true\" in the request.");
+            }
+            else if (Boolean.TRUE.equals(existingBusinessObjectDataEntity.getStatus().getPreRegistrationStatus()))
+            {
+                throw new AlreadyExistsException(String.format(
+                    "Unable to create business object data because it already exists and a new version is not allowed since the latest version is" +
+                        " still in \"%s\", which is one of the pre-registration statuses.", existingBusinessObjectDataEntity.getStatus().getDescription()));
+
+            }
         }
 
         // Create a business object data entity from the request information.
@@ -449,16 +459,16 @@ public class BusinessObjectDataDaoHelper
         // Make sure that business object data exists.
         if (businessObjectDataEntity == null)
         {
-            throw new ObjectNotFoundException(
-                String.format("Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+            throw new ObjectNotFoundException(String.format(
+                "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
                     "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
                     "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d, businessObjectDataStatus: \"%s\"} doesn't exist.",
-                    businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                    businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                    businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
-                    CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" :
-                        StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","), businessObjectDataKey.getBusinessObjectDataVersion(),
-                    businessObjectDataStatus));
+                businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+                businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
+                CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" :
+                    StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","), businessObjectDataKey.getBusinessObjectDataVersion(),
+                businessObjectDataStatus));
         }
 
         // Return the retrieved business object data entity.
