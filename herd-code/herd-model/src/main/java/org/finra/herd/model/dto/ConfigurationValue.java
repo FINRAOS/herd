@@ -41,8 +41,8 @@ public enum ConfigurationValue
     SHOW_SQL("hibernate.show_sql", "false"),
 
     /**
-     * Controls the maximum number of statements Hibernate will batch together before asking the driver to execute the batch.
-     * Zero or a negative number disables this feature.
+     * Controls the maximum number of statements Hibernate will batch together before asking the driver to execute the batch. Zero or a negative number disables
+     * this feature.
      */
     HIBERNATE_BATCH_SIZE("hibernate.batch_size", "30"),
 
@@ -110,6 +110,12 @@ public enum ConfigurationValue
      * The storage attribute name which specifies the S3 key prefix velocity template.
      */
     S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE("s3.attribute.name.key.prefix.velocity.template", "key.prefix.velocity.template"),
+
+    /**
+     * The AWS region name to use when calling EMR, EC2, SNS, and SQS services. This is optional and there is no default. When AWS region is not specified using
+     * this configuration option, the AWS SDK consults the default region provider chain to try and determine the region to use.
+     */
+    AWS_REGION_NAME("aws.region.name", null),
 
     /**
      * The optional S3 endpoint to use when using S3 services. This is optional and there is no default.
@@ -614,8 +620,8 @@ public enum ConfigurationValue
 
     /**
      * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
-     * NotificationMessageDefinitions} to use when generating notification messages for a user namespace authorization change event. There
-     * is no default value which will cause no messages to be sent.
+     * NotificationMessageDefinitions} to use when generating notification messages for a user namespace authorization change event. There is no default value
+     * which will cause no messages to be sent.
      */
     HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS("herd.notification.user.namespace.authorization.change.message.definitions",
         null),

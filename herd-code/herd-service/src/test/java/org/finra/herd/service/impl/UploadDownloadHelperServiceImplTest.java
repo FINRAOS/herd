@@ -176,7 +176,8 @@ public class UploadDownloadHelperServiceImplTest extends AbstractServiceTest
         targetBusinessObjectDataEntity.setStorageUnits(Collections.singletonList(targetStorageUnitEntity));
 
         // Create an AWS parameters DTO.
-        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1);
 
         // Mock the external calls.
         when(storageFileDaoHelper.getStorageFileEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE, objectKey)).thenReturn(sourceStorageFileEntity);
@@ -294,7 +295,8 @@ public class UploadDownloadHelperServiceImplTest extends AbstractServiceTest
         targetBusinessObjectDataEntity.setStorageUnits(Collections.singletonList(targetStorageUnitEntity));
 
         // Create an AWS parameters DTO.
-        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1);
 
         // Mock the external calls.
         when(storageFileDaoHelper.getStorageFileEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE, objectKey)).thenReturn(sourceStorageFileEntity);
@@ -322,7 +324,7 @@ public class UploadDownloadHelperServiceImplTest extends AbstractServiceTest
         catch (OptimisticLockException e)
         {
             assertEquals(String.format("Ignoring S3 notification due to an optimistic lock exception caused by duplicate S3 event notifications. " +
-                "sourceBusinessObjectDataKey=%s targetBusinessObjectDataKey=%s", BUSINESS_OBJECT_DATA_KEY_AS_STRING, BUSINESS_OBJECT_DATA_KEY_AS_STRING_2),
+                    "sourceBusinessObjectDataKey=%s targetBusinessObjectDataKey=%s", BUSINESS_OBJECT_DATA_KEY_AS_STRING, BUSINESS_OBJECT_DATA_KEY_AS_STRING_2),
                 e.getMessage());
         }
 
