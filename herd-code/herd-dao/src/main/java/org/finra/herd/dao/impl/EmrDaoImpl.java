@@ -264,7 +264,7 @@ public class EmrDaoImpl implements EmrDao
     @Override
     public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
     {
-        return awsClientFactory.getEmrClient(awsParamsDto);
+        return (AmazonElasticMapReduceClient) awsClientFactory.getEmrClient(awsParamsDto);
     }
 
     @Override

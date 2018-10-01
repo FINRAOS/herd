@@ -67,7 +67,8 @@ public class CredStashHelperTest extends AbstractDaoTest
     public void testGetCredentialFromCredStash() throws Exception
     {
         // Build AWS parameters.
-        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT, NO_AWS_REGION_NAME);
 
         // Build AWS client configuration.
         ClientConfiguration clientConfiguration = new ClientConfiguration();
@@ -110,7 +111,8 @@ public class CredStashHelperTest extends AbstractDaoTest
     public void testGetCredentialFromCredStashEmptyPasswordValue() throws Exception
     {
         // Build AWS parameters.
-        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT, NO_AWS_REGION_NAME);
 
         // Build AWS client configuration.
         ClientConfiguration clientConfiguration = new ClientConfiguration();
@@ -160,7 +162,8 @@ public class CredStashHelperTest extends AbstractDaoTest
     public void testGetCredentialFromCredStashException() throws Exception
     {
         // Build AWS parameters.
-        AwsParamsDto awsParamsDto = new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT, NO_AWS_REGION_NAME);
 
         // Build AWS client configuration.
         ClientConfiguration clientConfiguration = new ClientConfiguration();
@@ -190,8 +193,8 @@ public class CredStashHelperTest extends AbstractDaoTest
         catch (CredStashGetCredentialFailedException e)
         {
             assertEquals(String.format("Failed to obtain the keystore or truststore credential from credstash. Reason: %s " +
-                    "credStashAwsRegion=%s credStashTableName=%s credStashEncryptionContext=%s credentialName=%s", ERROR_MESSAGE, AWS_REGION_NAME,
-                TABLE_NAME, CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME), e.getMessage());
+                    "credStashAwsRegion=%s credStashTableName=%s credStashEncryptionContext=%s credentialName=%s", ERROR_MESSAGE, AWS_REGION_NAME, TABLE_NAME,
+                CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME), e.getMessage());
         }
 
         // Verify the external calls.

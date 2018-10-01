@@ -177,7 +177,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(stepId, emrDao.addEmrStep(clusterId, emrStepConfig, new AwsParamsDto()));
+        assertEquals(stepId, emrDao.addEmrStep(clusterId, emrStepConfig, getAwsParamsDto()));
     }
 
     @Test
@@ -185,7 +185,7 @@ public class EmrDaoTest extends AbstractDaoTest
     {
         String clusterName = "clusterName";
         List<String> securityGroups = Arrays.asList("securityGroup");
-        AwsParamsDto awsParams = new AwsParamsDto();
+        AwsParamsDto awsParams = getAwsParamsDto();
         String ec2InstanceId = "ec2InstanceId";
 
         ListClustersResult listClustersResult = new ListClustersResult();
@@ -214,7 +214,7 @@ public class EmrDaoTest extends AbstractDaoTest
     {
         String clusterName = "clusterName";
         List<String> securityGroups = Arrays.asList("securityGroup");
-        AwsParamsDto awsParams = new AwsParamsDto();
+        AwsParamsDto awsParams = getAwsParamsDto();
 
         ListClustersResult listClustersResult = new ListClustersResult();
         listClustersResult.setClusters(new ArrayList<>());
@@ -268,7 +268,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        Instance actualInstance = emrDao.getEmrMasterInstance(clusterId, new AwsParamsDto());
+        Instance actualInstance = emrDao.getEmrMasterInstance(clusterId, getAwsParamsDto());
 
         assertEquals(expectedInstance, actualInstance);
     }
@@ -282,7 +282,7 @@ public class EmrDaoTest extends AbstractDaoTest
 
         try
         {
-            emrDao.getEmrMasterInstance(clusterId, new AwsParamsDto());
+            emrDao.getEmrMasterInstance(clusterId, getAwsParamsDto());
             fail();
         }
         catch (Exception e)
@@ -349,7 +349,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getAwsParamsDto()));
     }
 
     @Test
@@ -410,7 +410,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getAwsParamsDto()));
     }
 
     @Test
@@ -637,7 +637,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getAwsParamsDto()));
     }
 
     @Test
@@ -674,7 +674,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getAwsParamsDto()));
     }
 
     @Test
@@ -711,7 +711,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getAwsParamsDto()));
     }
 
     @Test
@@ -729,7 +729,7 @@ public class EmrDaoTest extends AbstractDaoTest
         listClustersResult.getClusters().add(clusterSummary);
         when(mockEmrOperations.listEmrClusters(any(), any())).thenReturn(listClustersResult);
 
-        emrDao.terminateEmrCluster(clusterId, overrideTerminationProtection, new AwsParamsDto());
+        emrDao.terminateEmrCluster(clusterId, overrideTerminationProtection, getAwsParamsDto());
 
         // Assert that terminateEmrCluster was called with these parameters ONCE
         verify(mockEmrOperations).terminateEmrCluster(any(), eq(clusterId), eq(overrideTerminationProtection));
@@ -755,7 +755,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(expectedCluster, emrDao.getEmrClusterById(clusterId, new AwsParamsDto()));
+        assertEquals(expectedCluster, emrDao.getEmrClusterById(clusterId, getAwsParamsDto()));
     }
 
     @Test
@@ -775,7 +775,7 @@ public class EmrDaoTest extends AbstractDaoTest
         String clusterId = "clusterId";
 
         when(mockEmrOperations.describeClusterRequest(any(), any())).thenReturn(null);
-        assertNull(emrDao.getEmrClusterById(clusterId, new AwsParamsDto()));
+        assertNull(emrDao.getEmrClusterById(clusterId, getAwsParamsDto()));
     }
 
     @Test
@@ -784,7 +784,7 @@ public class EmrDaoTest extends AbstractDaoTest
         String clusterId = "clusterId";
 
         when(mockEmrOperations.describeClusterRequest(any(), any())).thenReturn(new DescribeClusterResult());
-        assertNull(emrDao.getEmrClusterById(clusterId, new AwsParamsDto()));
+        assertNull(emrDao.getEmrClusterById(clusterId, getAwsParamsDto()));
     }
 
     @Test
@@ -810,7 +810,7 @@ public class EmrDaoTest extends AbstractDaoTest
                 return describeClusterResult;
             }
         });
-        assertEquals(expectedState.toString(), emrDao.getEmrClusterStatusById(clusterId, new AwsParamsDto()));
+        assertEquals(expectedState.toString(), emrDao.getEmrClusterStatusById(clusterId, getAwsParamsDto()));
     }
 
     @Test
@@ -829,7 +829,7 @@ public class EmrDaoTest extends AbstractDaoTest
                 return new DescribeClusterResult();
             }
         });
-        assertNull(emrDao.getEmrClusterStatusById(clusterId, new AwsParamsDto()));
+        assertNull(emrDao.getEmrClusterStatusById(clusterId, getAwsParamsDto()));
     }
 
     @Test
@@ -860,7 +860,7 @@ public class EmrDaoTest extends AbstractDaoTest
         }
         when(mockEmrOperations.listEmrClusters(any(), any())).thenReturn(listClustersResult);
 
-        ClusterSummary result = emrDao.getActiveEmrClusterByName(clusterName, new AwsParamsDto());
+        ClusterSummary result = emrDao.getActiveEmrClusterByName(clusterName, getAwsParamsDto());
         assertNotNull(result);
         assertEquals(expectedClusterId, result.getId());
     }
@@ -907,7 +907,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        ClusterSummary result = emrDao.getActiveEmrClusterByName(clusterName, new AwsParamsDto());
+        ClusterSummary result = emrDao.getActiveEmrClusterByName(clusterName, getAwsParamsDto());
         assertNotNull(result);
         assertEquals(expectedClusterId, result.getId());
     }
@@ -918,7 +918,7 @@ public class EmrDaoTest extends AbstractDaoTest
         String clusterName = "";
         when(mockEmrOperations.listEmrClusters(any(), any())).thenReturn(new ListClustersResult());
 
-        assertNull(emrDao.getActiveEmrClusterByName(clusterName, new AwsParamsDto()));
+        assertNull(emrDao.getActiveEmrClusterByName(clusterName, getAwsParamsDto()));
     }
 
     @Test
@@ -944,7 +944,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(expectedStepSummary, emrDao.getClusterActiveStep(clusterId, new AwsParamsDto()));
+        assertEquals(expectedStepSummary, emrDao.getClusterActiveStep(clusterId, getAwsParamsDto()));
     }
 
     @Test
@@ -954,7 +954,7 @@ public class EmrDaoTest extends AbstractDaoTest
 
         when(mockEmrOperations.listStepsRequest(any(), any())).thenReturn(new ListStepsResult());
 
-        assertNull(emrDao.getClusterActiveStep(clusterId, new AwsParamsDto()));
+        assertNull(emrDao.getClusterActiveStep(clusterId, getAwsParamsDto()));
     }
 
     @Test
@@ -968,7 +968,7 @@ public class EmrDaoTest extends AbstractDaoTest
         listStepsResult.setSteps(Arrays.asList(expectedStepSummary, new StepSummary()));
         when(mockEmrOperations.listStepsRequest(any(), any())).thenReturn(listStepsResult);
 
-        assertEquals(expectedStepSummary, emrDao.getClusterActiveStep(clusterId, new AwsParamsDto()));
+        assertEquals(expectedStepSummary, emrDao.getClusterActiveStep(clusterId, getAwsParamsDto()));
     }
 
     @Test
@@ -993,7 +993,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(expectedStep, emrDao.getClusterStep(clusterId, stepId, new AwsParamsDto()));
+        assertEquals(expectedStep, emrDao.getClusterStep(clusterId, stepId, getAwsParamsDto()));
     }
 
     @Test
@@ -1002,7 +1002,7 @@ public class EmrDaoTest extends AbstractDaoTest
         String httpProxyHost = "httpProxyHost";
         Integer httpProxyPort = 1234;
 
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        AwsParamsDto awsParamsDto = getAwsParamsDto();
         awsParamsDto.setHttpProxyHost(httpProxyHost);
         awsParamsDto.setHttpProxyPort(httpProxyPort);
         AmazonElasticMapReduceClient amazonElasticMapReduceClient = emrDao.getEmrClient(awsParamsDto);
@@ -1018,7 +1018,7 @@ public class EmrDaoTest extends AbstractDaoTest
         String httpProxyHost = "";
         Integer httpProxyPort = 1234;
 
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        AwsParamsDto awsParamsDto = getAwsParamsDto();
         awsParamsDto.setHttpProxyHost(httpProxyHost);
         awsParamsDto.setHttpProxyPort(httpProxyPort);
         AmazonElasticMapReduceClient amazonElasticMapReduceClient = emrDao.getEmrClient(awsParamsDto);
@@ -1033,12 +1033,22 @@ public class EmrDaoTest extends AbstractDaoTest
         String httpProxyHost = "httpProxyHost";
         Integer httpProxyPort = null;
 
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        AwsParamsDto awsParamsDto = getAwsParamsDto();
         awsParamsDto.setHttpProxyHost(httpProxyHost);
         awsParamsDto.setHttpProxyPort(httpProxyPort);
         AmazonElasticMapReduceClient amazonElasticMapReduceClient = emrDao.getEmrClient(awsParamsDto);
         ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonElasticMapReduceClient, "clientConfiguration");
         assertNotNull(clientConfiguration);
         assertNull(clientConfiguration.getProxyHost());
+    }
+
+    /**
+     * Returns AWS parameters DTO initialized with US East AWS region.
+     *
+     * @return the AWS parameters DTO
+     */
+    private AwsParamsDto getAwsParamsDto()
+    {
+        return new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1);
     }
 }

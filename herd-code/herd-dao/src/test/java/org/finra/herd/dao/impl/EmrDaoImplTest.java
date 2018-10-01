@@ -120,7 +120,8 @@ public class EmrDaoImplTest extends AbstractDaoTest
     {
         // Create an AWS parameters DTO.
         AwsParamsDto awsParamsDto =
-            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                NO_AWS_REGION_NAME);
 
         // Create a mock AmazonElasticMapReduceClient.
         AmazonElasticMapReduceClient amazonElasticMapReduceClient = mock(AmazonElasticMapReduceClient.class);
@@ -167,7 +168,8 @@ public class EmrDaoImplTest extends AbstractDaoTest
     {
         // Create an AWS parameters DTO.
         AwsParamsDto awsParamsDto =
-            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                NO_AWS_REGION_NAME);
 
         // Call the method under test.
         ClusterSummary result = emrDaoImpl.getActiveEmrClusterByName(BLANK_TEXT, awsParamsDto);
@@ -504,7 +506,8 @@ public class EmrDaoImplTest extends AbstractDaoTest
     {
         // Create an AWS parameters DTO.
         AwsParamsDto awsParamsDto =
-            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT);
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                NO_AWS_REGION_NAME);
 
         // Create a mock AmazonElasticMapReduceClient.
         AmazonElasticMapReduceClient amazonElasticMapReduceClient = mock(AmazonElasticMapReduceClient.class);
