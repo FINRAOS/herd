@@ -15,10 +15,7 @@
 */
 package org.finra.herd.dao;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -31,18 +28,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.credstash.CredStash;
-import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
-import org.finra.herd.dao.helper.CredStashHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
 
 public class JestClientFactoryTest extends AbstractDaoTest
 {
     @Mock
     private ConfigurationHelper configurationHelper;
-
-    @Mock
-    private CredStashHelper credStashHelper;
 
     @InjectMocks
     private JestClientFactory jestClientFactory;
@@ -54,51 +45,10 @@ public class JestClientFactoryTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetJestClientCredStashException() throws Exception
-    {
-        // Mock the external calls.
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("https");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(READ_TIMEOUT);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(CONNECTION_TIMEOUT);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME)).thenReturn(USERNAME);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME)).thenReturn(USER_CREDENTIAL_NAME);
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
-        when(credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME))
-            .thenThrow(new CredStashGetCredentialFailedException(ERROR_MESSAGE));
-
-        // Try to call the method under test.
-        try
-        {
-            jestClientFactory.getJestClient();
-            fail();
-        }
-        catch (IllegalStateException e)
-        {
-            assertEquals(String.format("%s: %s", CredStashGetCredentialFailedException.class.getName(), ERROR_MESSAGE), e.getMessage());
-        }
-
-        // Verify the external calls.
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
-        verify(credStashHelper).getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
-        verifyNoMoreInteractionsHelper();
-    }
-
-    @Test
     public void testGetJestClientHttp()
     {
-        // Mock the CredStash.
-        CredStash credStash = mock(CredStash.class);
-
         // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("http");
@@ -109,12 +59,12 @@ public class JestClientFactoryTest extends AbstractDaoTest
         JestClient jestClient = jestClientFactory.getJestClient();
 
         // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_AWS_REGION_NAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
-        verifyNoMoreInteractions(credStash);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -122,32 +72,26 @@ public class JestClientFactoryTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetJestClientHttps() throws Exception
+    public void testGetJestClientHttps()
     {
         // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("https");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(READ_TIMEOUT);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(CONNECTION_TIMEOUT);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME)).thenReturn(USERNAME);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME)).thenReturn(USER_CREDENTIAL_NAME);
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(CREDSTASH_ENCRYPTION_CONTEXT);
-        when(credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME)).thenReturn(PASSWORD);
 
         // Call the method under test.
         JestClient jestClient = jestClientFactory.getJestClient();
 
         // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_AWS_REGION_NAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
-        verify(credStashHelper).getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -159,6 +103,6 @@ public class JestClientFactoryTest extends AbstractDaoTest
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(configurationHelper, credStashHelper);
+        verifyNoMoreInteractions(configurationHelper);
     }
 }

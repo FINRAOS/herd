@@ -745,6 +745,11 @@ public enum ConfigurationValue
     LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER("ldap.attribute.user.telephone.number", "telephoneNumber"),
 
     /**
+     * The elasticsearch aws region name.
+     */
+    ELASTICSEARCH_AWS_REGION_NAME("elasticsearch.aws.region.name", "us-east-1"),
+
+    /**
      * The elasticsearch index name
      */
     ELASTICSEARCH_BDEF_INDEX_NAME("elasticsearch.bdef.index.name", "bdef"),

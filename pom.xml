@@ -90,6 +90,7 @@
       <jcredstash.version>0.0.4</jcredstash.version>
       <jest.version>5.3.3</jest.version>
       <opencsv.version>4.1</opencsv.version>
+      <aws-signing-request-interceptor.version>0.0.21</aws-signing-request-interceptor.version>
 
       <!-- Third Party Plugin Dependencies -->
       <jaxb.xew.plugin.version>1.9</jaxb.xew.plugin.version>
@@ -842,7 +843,13 @@
             <version>${jest.version}</version>
          </dependency>
          <dependency>
-            <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+            <groupId>vc.inreach.aws</groupId>
+            <artifactId>aws-signing-request-interceptor</artifactId>
+            <version>${aws-signing-request-interceptor.version}</version>
+         </dependency>
+
+         <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>${jsoup.version}</version>
