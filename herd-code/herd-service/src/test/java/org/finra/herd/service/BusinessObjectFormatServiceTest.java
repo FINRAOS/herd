@@ -355,7 +355,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         }
         catch (PersistenceException e)
         {
-            assertTrue(e.getMessage().contains("ConstraintViolationException: could not execute statement"));
+            assertTrue(e.getMessage().contains("ConstraintViolationException: could not execute"));
         }
     }
 

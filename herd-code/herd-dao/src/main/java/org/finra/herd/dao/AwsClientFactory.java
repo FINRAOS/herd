@@ -16,13 +16,16 @@
 package org.finra.herd.dao;
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
+import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
+import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
+import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClientBuilder;
 import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClient;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -49,7 +52,8 @@ public class AwsClientFactory
     public AmazonSNS getAmazonSNSClient(AwsParamsDto awsParamsDto)
     {
         // Construct and return a new client to invoke service methods on Amazon SNS using default credentials provider chain.
-        return new AmazonSNSClient(awsHelper.getClientConfiguration(awsParamsDto));
+        return AmazonSNSClientBuilder.standard().withClientConfiguration(awsHelper.getClientConfiguration(awsParamsDto))
+            .withRegion(awsParamsDto.getAwsRegionName()).build();
     }
 
     /**
@@ -63,7 +67,8 @@ public class AwsClientFactory
     public AmazonSQS getAmazonSQSClient(AwsParamsDto awsParamsDto)
     {
         // Construct and return a new client to invoke service methods on Amazon SQS using default credentials provider chain.
-        return new AmazonSQSClient(awsHelper.getClientConfiguration(awsParamsDto));
+        return AmazonSQSClientBuilder.standard().withClientConfiguration(awsHelper.getClientConfiguration(awsParamsDto))
+            .withRegion(awsParamsDto.getAwsRegionName()).build();
     }
 
     /**
@@ -74,7 +79,7 @@ public class AwsClientFactory
      * @return the Amazon EC2 client
      */
     @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
-    public AmazonEC2Client getEc2Client(AwsParamsDto awsParamsDto)
+    public AmazonEC2 getEc2Client(AwsParamsDto awsParamsDto)
     {
         // Get client configuration.
         ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsParamsDto);
@@ -82,14 +87,14 @@ public class AwsClientFactory
         // If specified, use the AWS credentials passed in.
         if (StringUtils.isNotBlank(awsParamsDto.getAwsAccessKeyId()))
         {
-            return new AmazonEC2Client(
-                new BasicSessionCredentials(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken()),
-                clientConfiguration);
+            return AmazonEC2ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(
+                new BasicSessionCredentials(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken())))
+                .withClientConfiguration(clientConfiguration).withRegion(awsParamsDto.getAwsRegionName()).build();
         }
         // Otherwise, use the default AWS credentials provider chain.
         else
         {
-            return new AmazonEC2Client(clientConfiguration);
+            return AmazonEC2ClientBuilder.standard().withClientConfiguration(clientConfiguration).withRegion(awsParamsDto.getAwsRegionName()).build();
         }
     }
 
@@ -101,7 +106,7 @@ public class AwsClientFactory
      * @return the Amazon EMR client
      */
     @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
-    public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
+    public AmazonElasticMapReduce getEmrClient(AwsParamsDto awsParamsDto)
     {
         // Get client configuration.
         ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsParamsDto);
@@ -109,14 +114,15 @@ public class AwsClientFactory
         // If specified, use the AWS credentials passed in.
         if (StringUtils.isNotBlank(awsParamsDto.getAwsAccessKeyId()))
         {
-            return new AmazonElasticMapReduceClient(
-                new BasicSessionCredentials(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken()),
-                clientConfiguration);
+            return AmazonElasticMapReduceClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(
+                new BasicSessionCredentials(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken())))
+                .withClientConfiguration(clientConfiguration).withRegion(awsParamsDto.getAwsRegionName()).build();
         }
         // Otherwise, use the default AWS credentials provider chain.
         else
         {
-            return new AmazonElasticMapReduceClient(clientConfiguration);
+            return AmazonElasticMapReduceClientBuilder.standard().withClientConfiguration(clientConfiguration).withRegion(awsParamsDto.getAwsRegionName())
+                .build();
         }
     }
 }

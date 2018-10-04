@@ -357,6 +357,40 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final String USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
+        "  \"userId\" : \"$userNamespaceAuthorizationKey.userId\",\n" +
+        "  \"namespace\" : \"$userNamespaceAuthorizationKey.namespace\"\n" +
+        "}\n";
+
+    public static final String USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML = "<?xml version=\"1.1\" encoding=\"UTF-8\"?>\n" +
+        "<datamgt:TestApplicationEvent xmlns:datamgt=\"http://testDomain/testApplication/testApplication-event\">\n" +
+        "   <header>\n" +
+        "      <producer>\n" +
+        "         <name>testDomain/testApplication</name>\n" +
+        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "      </producer>\n" +
+        "      <creation>\n" +
+        "         <datetime>$current_time</datetime>\n" +
+        "      </creation>\n" +
+        "      <context-message-type>testDomain/testApplication/UserNamespaceAuthorizationChanged</context-message-type>\n" +
+        "      <system-message-type>NoError</system-message-type>\n" +
+        "      <xsd>http://testDomain/testApplication/testApplication-event.xsd</xsd>\n" +
+        "      <event-id>\n" +
+        "         <system-name>testDomain/testApplication</system-name>\n" +
+        "         <system-unique-id>$uuid</system-unique-id>\n" +
+        "      </event-id>\n" +
+        "   </header>\n" +
+        "   <payload>\n" +
+        "      <userId>$userNamespaceAuthorizationKey.userId</userId>\n" +
+        "      <namespace>$userNamespaceAuthorizationKey.namespace</namespace>\n" +
+        "   </payload>\n" +
+        "   <soa-audit>\n" +
+        "      <triggered-date-time>$current_time</triggered-date-time>\n" +
+        "      <triggered-by-username>$username</triggered-by-username>\n" +
+        "      <transmission-id>$uuid</transmission-id>\n" +
+        "   </soa-audit>\n" +
+        "</datamgt:TestApplicationEvent>";
+
     public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
@@ -1103,6 +1137,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected UserNamespaceAuthorizationService userNamespaceAuthorizationService;
+
+    @Autowired
+    protected UserNamespaceAuthorizationServiceTestHelper userNamespaceAuthorizationServiceTestHelper;
 
     @Autowired
     protected VelocityHelper velocityHelper;
