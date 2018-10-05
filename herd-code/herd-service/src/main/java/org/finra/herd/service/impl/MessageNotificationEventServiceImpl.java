@@ -39,7 +39,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.MessageNotificationEventService;
-import org.finra.herd.service.helper.NotificationMessageBuilder;
+import org.finra.herd.service.helper.NotificationMessageBuilderFactory;
 import org.finra.herd.service.helper.NotificationMessageInMemoryQueue;
 
 /**
@@ -55,7 +55,7 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private NotificationMessageBuilder notificationMessageBuilder;
+    private NotificationMessageBuilderFactory notificationMessageBuilderFactory;
 
     @Autowired
     private NotificationMessageInMemoryQueue notificationMessageInMemoryQueue;
@@ -64,8 +64,8 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
     public List<NotificationMessage> processBusinessObjectDataStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey,
         String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus)
     {
-        return processNotificationMessages(notificationMessageBuilder
-            .buildBusinessObjectDataStatusChangeMessages(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus));
+        return processNotificationMessages(notificationMessageBuilderFactory.getBusinessObjectDataStatusChangeMessageBuilder()
+            .buildMessages(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus));
     }
 
     @Override
@@ -73,31 +73,31 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion, String lastUpdatedByUserId,
         XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity)
     {
-        return processNotificationMessages(notificationMessageBuilder
-            .buildBusinessObjectDefinitionDescriptionSuggestionChangeMessages(businessObjectDefinitionDescriptionSuggestion, lastUpdatedByUserId, lastUpdatedOn,
-                namespaceEntity));
+        return processNotificationMessages(notificationMessageBuilderFactory.getBusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilder()
+            .buildMessages(businessObjectDefinitionDescriptionSuggestion, lastUpdatedByUserId, lastUpdatedOn, namespaceEntity));
     }
 
     @Override
     public List<NotificationMessage> processBusinessObjectFormatVersionChangeNotificationEvent(BusinessObjectFormatKey businessObjectFormatKey,
         String oldBusinessObjectFormatVersion)
     {
-        return processNotificationMessages(
-            notificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, oldBusinessObjectFormatVersion));
+        return processNotificationMessages(notificationMessageBuilderFactory.getBusinessObjectFormatVersionChangeMessageBuilder()
+            .buildMessages(businessObjectFormatKey, oldBusinessObjectFormatVersion));
     }
 
     @Override
     public List<NotificationMessage> processUserNamespaceAuthorizationChangeNotificationEvent(UserNamespaceAuthorizationKey userNamespaceAuthorizationKey)
     {
-        return processNotificationMessages(notificationMessageBuilder.buildUserNamespaceAuthorizationChangeMessages(userNamespaceAuthorizationKey));
+        return processNotificationMessages(
+            notificationMessageBuilderFactory.getUserNamespaceAuthorizationChangeMessageBuilder().buildMessages(userNamespaceAuthorizationKey));
     }
 
     @Override
     public List<NotificationMessage> processStorageUnitStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey, String storageName,
         String newStorageUnitStatus, String oldStorageUnitStatus)
     {
-        return processNotificationMessages(
-            notificationMessageBuilder.buildStorageUnitStatusChangeMessages(businessObjectDataKey, storageName, newStorageUnitStatus, oldStorageUnitStatus));
+        return processNotificationMessages(notificationMessageBuilderFactory.getStorageUnitStatusChangeMessageBuilder()
+            .buildMessages(businessObjectDataKey, storageName, newStorageUnitStatus, oldStorageUnitStatus));
     }
 
     @PublishNotificationMessages
@@ -105,7 +105,8 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
     public List<NotificationMessage> processSystemMonitorNotificationEvent(String systemMonitorRequestPayload)
     {
         // Build a system monitor response message.
-        NotificationMessage notificationMessage = notificationMessageBuilder.buildSystemMonitorResponse(systemMonitorRequestPayload);
+        NotificationMessage notificationMessage =
+            notificationMessageBuilderFactory.getSystemMonitorResponseMessageBuilder().buildMessage(systemMonitorRequestPayload);
 
         // If message is null, send an empty list of notification messages to be processed.
         return processNotificationMessages(notificationMessage == null ? new ArrayList<>() : Collections.singletonList(notificationMessage));
