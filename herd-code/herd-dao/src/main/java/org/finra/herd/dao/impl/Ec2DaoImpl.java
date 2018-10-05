@@ -113,7 +113,7 @@ public class Ec2DaoImpl implements Ec2Dao
     @Override
     public AmazonEC2Client getEc2Client(AwsParamsDto awsParamsDto)
     {
-        return awsClientFactory.getEc2Client(awsParamsDto);
+        return (AmazonEC2Client) awsClientFactory.getEc2Client(awsParamsDto);
     }
 
     /**

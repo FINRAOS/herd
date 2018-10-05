@@ -922,7 +922,8 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
             }
             catch (AlreadyExistsException e)
             {
-                assertEquals("Unable to create business object data because it already exists.", e.getMessage());
+                assertEquals("Unable to create business object data because it already exists and a new version is not allowed since" +
+                    " the \"createNewVersion\" flag is not set to \"true\" in the request.", e.getMessage());
             }
         }
 
@@ -1661,7 +1662,8 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         catch (Exception e)
         {
             assertEquals(AlreadyExistsException.class, e.getClass());
-            assertEquals("Unable to create business object data because it already exists.", e.getMessage());
+            assertEquals("Unable to create business object data because it already exists and a new version is not allowed" +
+                " since the latest version is still in \"UPLOADING\", which is one of the pre-registration statuses.", e.getMessage());
         }
     }
 }

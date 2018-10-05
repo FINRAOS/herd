@@ -590,8 +590,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
-        assertEquals("master instance bid price", ON_DEMAND,
-            emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
+        assertEquals("master instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
         assertEquals("core instance bid price", SPOT_PRICE_VERY_HIGH, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
         assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
@@ -1088,7 +1087,8 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         instanceDefinitions.setTaskInstances(taskInstanceDefinition);
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
 
-        emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(new EmrClusterAlternateKeyDto(), emrClusterDefinition, new AwsParamsDto());
+        emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(new EmrClusterAlternateKeyDto(), emrClusterDefinition,
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1));
 
         return emrClusterDefinition;
     }

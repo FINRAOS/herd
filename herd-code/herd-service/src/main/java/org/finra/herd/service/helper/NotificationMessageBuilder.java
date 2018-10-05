@@ -22,6 +22,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.NamespaceEntity;
 
@@ -83,6 +84,17 @@ public interface NotificationMessageBuilder
      */
     List<NotificationMessage> buildStorageUnitStatusChangeMessages(BusinessObjectDataKey businessObjectDataKey, String storageName, String newStorageUnitStatus,
         String oldStorageUnitStatus);
+
+
+    /**
+     * Builds a list of notification messages for the user namespace authorization change event. The result list might be empty if if no messages should be
+     * sent.
+     *
+     * @param userNamespaceAuthorizationKey the key for the user namespace authorization object
+     *
+     * @return the list of user namespace authorization change notification messages
+     */
+    List<NotificationMessage> buildUserNamespaceAuthorizationChangeMessages(UserNamespaceAuthorizationKey userNamespaceAuthorizationKey);
 
     /**
      * Builds the message for the ESB system monitor response.

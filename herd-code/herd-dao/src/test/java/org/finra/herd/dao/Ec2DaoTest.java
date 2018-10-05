@@ -107,7 +107,8 @@ public class Ec2DaoTest extends AbstractDaoTest
         when(ec2Operations.describeSpotPriceHistory(any(), any())).thenReturn(describeSpotPriceHistoryResult);
 
         // Execute MUT.
-        ec2Dao.getLatestSpotPrices(availabilityZone, instanceTypes, productDescriptions, new AwsParamsDto());
+        ec2Dao.getLatestSpotPrices(availabilityZone, instanceTypes, productDescriptions,
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1));
 
         // Verify that the dependency was called with the correct parameters.
         verify(ec2Operations).describeSpotPriceHistory(any(), equalsDescribeSpotPriceHistoryRequest(availabilityZone, instanceTypes, productDescriptions));
@@ -136,7 +137,8 @@ public class Ec2DaoTest extends AbstractDaoTest
         when(ec2Operations.describeSpotPriceHistory(any(), any())).thenReturn(describeSpotPriceHistoryResult);
 
         // Execute MUT.
-        List<SpotPrice> result = ec2Dao.getLatestSpotPrices(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, instanceTypes, productDescriptions, new AwsParamsDto());
+        List<SpotPrice> result = ec2Dao.getLatestSpotPrices(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, instanceTypes, productDescriptions,
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1));
 
         // Verify that the dependency was called with the correct parameters.
         verify(ec2Operations).describeSpotPriceHistory(any(),
@@ -158,10 +160,8 @@ public class Ec2DaoTest extends AbstractDaoTest
     private DescribeSpotPriceHistoryRequest equalsDescribeSpotPriceHistoryRequest(String availabilityZone, Collection<String> instanceTypes,
         Collection<String> productDescriptions)
     {
-        return argThat(describeSpotPriceHistoryRequest ->
-            Objects.equal(availabilityZone, describeSpotPriceHistoryRequest.getAvailabilityZone()) &&
-                Objects.equal(instanceTypes, describeSpotPriceHistoryRequest.getInstanceTypes()) &&
-                Objects.equal(productDescriptions, describeSpotPriceHistoryRequest.getProductDescriptions())
-        );
+        return argThat(describeSpotPriceHistoryRequest -> Objects.equal(availabilityZone, describeSpotPriceHistoryRequest.getAvailabilityZone()) &&
+            Objects.equal(instanceTypes, describeSpotPriceHistoryRequest.getInstanceTypes()) &&
+            Objects.equal(productDescriptions, describeSpotPriceHistoryRequest.getProductDescriptions()));
     }
 }

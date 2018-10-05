@@ -158,6 +158,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AWS_REGION_NAME_4 = "UT_AwsRegionName_4_" + RANDOM_SUFFIX;
 
+    public static final String AWS_REGION_NAME_US_EAST_1 = "us-east-1";
+
     public static final String AWS_ROLE_ARN = "UT_AwsRoleArn" + RANDOM_SUFFIX;
 
     public static final String AWS_SNS_TOPIC_ARN = "UT_AWS_SNS_Topic_ARN_" + RANDOM_SUFFIX;
@@ -574,6 +576,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_AWS_ACCESS_KEY = null;
 
+    public static final String NO_AWS_REGION_NAME = null;
+
     public static final String NO_AWS_SECRET_KEY = null;
 
     public static final String NO_BDATA_STATUS = null;
@@ -633,6 +637,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer NO_FORMAT_VERSION = null;
 
     public static final BigDecimal NO_HOURLY_PRICE = null;
+
+    public static final String NO_HTTP_PROXY_HOST = null;
+
+    public static final Integer NO_HTTP_PROXY_PORT = null;
 
     public static final List<String> NO_INDEX_SEARCH_FACET_FIELDS = new ArrayList<>();
 

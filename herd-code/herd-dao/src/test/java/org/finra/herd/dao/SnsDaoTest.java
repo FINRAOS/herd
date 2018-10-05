@@ -34,15 +34,18 @@ public class SnsDaoTest extends AbstractDaoTest
     public void testPublish()
     {
         // Publish an SNS message without proxy.
-        assertEquals(new PublishResult().withMessageId(MESSAGE_ID), snsDao.publish(new AwsParamsDto(), AWS_SNS_TOPIC_ARN, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
+        assertEquals(new PublishResult().withMessageId(MESSAGE_ID), snsDao.publish(
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1),
+            AWS_SNS_TOPIC_ARN, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
 
         // Publish an SNS message using proxy settings.
         assertEquals(new PublishResult().withMessageId(MESSAGE_ID), snsDao
-            .publish(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT), AWS_SNS_TOPIC_ARN,
-                MESSAGE_TEXT, NO_MESSAGE_HEADERS));
+            .publish(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1),
+                AWS_SNS_TOPIC_ARN, MESSAGE_TEXT, NO_MESSAGE_HEADERS));
 
         // Publish an SNS message with message headers.
-        assertEquals(new PublishResult().withMessageId(MESSAGE_ID),
-            snsDao.publish(new AwsParamsDto(), AWS_SNS_TOPIC_ARN, MESSAGE_TEXT, Collections.singletonList(new MessageHeader(KEY, VALUE))));
+        assertEquals(new PublishResult().withMessageId(MESSAGE_ID), snsDao
+            .publish(new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1),
+                AWS_SNS_TOPIC_ARN, MESSAGE_TEXT, Collections.singletonList(new MessageHeader(KEY, VALUE))));
     }
 }

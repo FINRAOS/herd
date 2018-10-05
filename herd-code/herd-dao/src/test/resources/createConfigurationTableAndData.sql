@@ -25,6 +25,7 @@ create table CNFGN (
 
 -- Insert configuration values into table.
 
+insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('aws.region.name', 'us-east-1');
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('s3.managed.bucket.name', 'TEST-S3-MANAGED-BUCKET');
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('org.springframework.orm.jpa.vendor.Database', 'H2');
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('hibernate.dialect', 'org.hibernate.dialect.H2Dialect');

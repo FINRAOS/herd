@@ -53,10 +53,14 @@ public class AwsHelper
         String httpProxyHost = configurationHelper.getProperty(ConfigurationValue.HTTP_PROXY_HOST);
         Integer httpProxyPort = configurationHelper.getProperty(ConfigurationValue.HTTP_PROXY_PORT, Integer.class);
 
+        // Get AWS region name.
+        String awsRegionName = configurationHelper.getProperty(ConfigurationValue.AWS_REGION_NAME);
+
         // Create an AWS parameters DTO.
         AwsParamsDto awsParamsDto = new AwsParamsDto();
         awsParamsDto.setHttpProxyHost(httpProxyHost);
         awsParamsDto.setHttpProxyPort(httpProxyPort);
+        awsParamsDto.setAwsRegionName(awsRegionName);
 
         return awsParamsDto;
     }

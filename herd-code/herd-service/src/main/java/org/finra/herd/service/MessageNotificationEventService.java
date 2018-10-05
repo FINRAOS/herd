@@ -22,6 +22,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.NamespaceEntity;
 
@@ -76,6 +77,15 @@ public interface MessageNotificationEventService
      */
     List<NotificationMessage> processStorageUnitStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey, String storageName,
         String newStorageUnitStatus, String oldStorageUnitStatus);
+
+    /**
+     * Handles notifications for the user namespace authorization changes.
+     *
+     * @param userNamespaceAuthorizationKey the user namespace authorization key
+     *
+     * @return the list of notification messages that got queued for publishing
+     */
+    List<NotificationMessage> processUserNamespaceAuthorizationChangeNotificationEvent(UserNamespaceAuthorizationKey userNamespaceAuthorizationKey);
 
     /**
      * Handles the system monitor event notification.
