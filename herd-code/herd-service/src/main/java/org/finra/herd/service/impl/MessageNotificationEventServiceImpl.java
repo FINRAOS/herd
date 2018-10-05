@@ -34,6 +34,7 @@ import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.NamespaceEntity;
@@ -83,6 +84,12 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
     {
         return processNotificationMessages(
             notificationMessageBuilder.buildBusinessObjectFormatVersionChangeMessages(businessObjectFormatKey, oldBusinessObjectFormatVersion));
+    }
+
+    @Override
+    public List<NotificationMessage> processUserNamespaceAuthorizationChangeNotificationEvent(UserNamespaceAuthorizationKey userNamespaceAuthorizationKey)
+    {
+        return processNotificationMessages(notificationMessageBuilder.buildUserNamespaceAuthorizationChangeMessages(userNamespaceAuthorizationKey));
     }
 
     @Override

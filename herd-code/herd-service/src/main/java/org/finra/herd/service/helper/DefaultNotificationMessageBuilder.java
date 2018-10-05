@@ -54,6 +54,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinitions;
+import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
@@ -384,6 +385,71 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
     }
 
     @Override
+    public List<NotificationMessage> buildUserNamespaceAuthorizationChangeMessages(UserNamespaceAuthorizationKey userNamespaceAuthorizationKey)
+    {
+        // Create a result list.
+        List<NotificationMessage> notificationMessages = new ArrayList<>();
+
+        // Get notification message definitions.
+        NotificationMessageDefinitions notificationMessageDefinitions = configurationDaoHelper
+            .getXmlClobPropertyAndUnmarshallToObject(NotificationMessageDefinitions.class,
+                ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+
+        // Continue processing if notification message definitions are configured.
+        if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
+        {
+            // Create a Velocity context map and initialize it with common keys and values.
+            Map<String, Object> velocityContextMap = getBaseVelocityContextMap();
+
+            // Add notification message type specific keys and values to the context map.
+            velocityContextMap.putAll(getUserNamespaceAuthorizationChangeMessageVelocityContextMap(userNamespaceAuthorizationKey));
+
+            // Generate notification message for each notification message definition.
+            for (NotificationMessageDefinition notificationMessageDefinition : notificationMessageDefinitions.getNotificationMessageDefinitions())
+            {
+                // Validate the notification message type.
+                if (StringUtils.isBlank(notificationMessageDefinition.getMessageType()))
+                {
+                    throw new IllegalStateException(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
+                        ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey()));
+                }
+
+                // Validate the notification message destination.
+                if (StringUtils.isBlank(notificationMessageDefinition.getMessageDestination()))
+                {
+                    throw new IllegalStateException(String
+                        .format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
+                            ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey()));
+                }
+
+                // Evaluate the template to generate the message text.
+                String messageText = evaluateVelocityTemplate(notificationMessageDefinition.getMessageVelocityTemplate(), velocityContextMap,
+                    "userNamespaceAuthorizationChangeEvent");
+
+                // Build a list of optional message headers.
+                List<MessageHeader> messageHeaders = new ArrayList<>();
+                if (CollectionUtils.isNotEmpty(notificationMessageDefinition.getMessageHeaderDefinitions()))
+                {
+                    for (MessageHeaderDefinition messageHeaderDefinition : notificationMessageDefinition.getMessageHeaderDefinitions())
+                    {
+                        messageHeaders.add(new MessageHeader(messageHeaderDefinition.getKey(),
+                            evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
+                                String.format("userNamespaceAuthorizationChangeEvent_messageHeader_%s", messageHeaderDefinition.getKey()))));
+                    }
+                }
+
+                // Create a notification message and add it to the result list.
+                notificationMessages.add(
+                    new NotificationMessage(notificationMessageDefinition.getMessageType(), notificationMessageDefinition.getMessageDestination(), messageText,
+                        messageHeaders));
+            }
+        }
+
+        // Return the results.
+        return notificationMessages;
+    }
+
+    @Override
     public NotificationMessage buildSystemMonitorResponse(String systemMonitorRequestPayload)
     {
         // Get velocity template.
@@ -644,6 +710,27 @@ public class DefaultNotificationMessageBuilder implements NotificationMessageBui
         addStringPropertyToContext(velocityContextMap, "newStorageUnitStatus", newStorageUnitStatus);
         addStringPropertyToContext(velocityContextMap, "oldStorageUnitStatus", oldStorageUnitStatus);
         addStringPropertyToContext(velocityContextMap, "namespace", businessObjectDataKey.getNamespace());
+
+        return velocityContextMap;
+    }
+
+    /**
+     * Returns Velocity context map of additional keys and values to place in the velocity context.
+     *
+     * @param userNamespaceAuthorizationKey the user namespace authorization key
+     *
+     * @return the Velocity context map
+     */
+    Map<String, Object> getUserNamespaceAuthorizationChangeMessageVelocityContextMap(final UserNamespaceAuthorizationKey userNamespaceAuthorizationKey)
+    {
+        Map<String, Object> velocityContextMap = new HashMap<>();
+
+        addObjectPropertyToContext(velocityContextMap, "userNamespaceAuthorizationKey", userNamespaceAuthorizationKey,
+            new UserNamespaceAuthorizationKey(escapeJson(userNamespaceAuthorizationKey.getUserId()), escapeJson(userNamespaceAuthorizationKey.getNamespace())),
+            new UserNamespaceAuthorizationKey(escapeXml(userNamespaceAuthorizationKey.getUserId()), escapeXml(userNamespaceAuthorizationKey.getNamespace())));
+
+        // Add the namespace Velocity property for the header.
+        addStringPropertyToContext(velocityContextMap, "namespace", userNamespaceAuthorizationKey.getNamespace());
 
         return velocityContextMap;
     }
