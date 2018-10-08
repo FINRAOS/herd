@@ -56,9 +56,9 @@ public class JestClientFactory
     {
         // Retrieve the configuration values used for setting up an Elasticsearch JEST client.
         final String esRegionName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_AWS_REGION_NAME);
-        final String hostname = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
-        final int port = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
-        final String scheme = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
+        final String hostname = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME);
+        final int port = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_PORT, Integer.class);
+        final String scheme = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_SCHEME);
         final String serverUri = String.format("%s://%s:%d", scheme, hostname, port);
         final int connectionTimeout = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
         final int readTimeout = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);

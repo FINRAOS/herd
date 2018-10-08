@@ -49,9 +49,9 @@ public class JestClientFactoryTest extends AbstractDaoTest
     {
         // Mock the external calls.
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("http");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_SCHEME)).thenReturn("http");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(READ_TIMEOUT);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(CONNECTION_TIMEOUT);
 
@@ -60,9 +60,9 @@ public class JestClientFactoryTest extends AbstractDaoTest
 
         // Verify the external calls.
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_AWS_REGION_NAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_PORT, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_SCHEME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
         verifyNoMoreInteractionsHelper();
@@ -76,9 +76,9 @@ public class JestClientFactoryTest extends AbstractDaoTest
     {
         // Mock the external calls.
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_AWS_REGION_NAME)).thenReturn(AWS_REGION_NAME);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME)).thenReturn("https");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME)).thenReturn(ELASTICSEARCH_HOSTNAME);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_PORT, Integer.class)).thenReturn(ELASTICSEARCH_PORT);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_SCHEME)).thenReturn("https");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class)).thenReturn(READ_TIMEOUT);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class)).thenReturn(CONNECTION_TIMEOUT);
 
@@ -87,9 +87,9 @@ public class JestClientFactoryTest extends AbstractDaoTest
 
         // Verify the external calls.
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_AWS_REGION_NAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_PORT, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_SCHEME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
         verifyNoMoreInteractionsHelper();

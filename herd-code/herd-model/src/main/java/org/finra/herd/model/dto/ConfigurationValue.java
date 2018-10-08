@@ -878,6 +878,21 @@ public enum ConfigurationValue
     ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.tag.spot.check.most.recent.number", 10),
 
     /**
+     * The elasticsearch search domain rest client hostname
+     */
+    ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME("elasticsearch.domain.rest.client.hostname", "localhost"),
+
+    /**
+     * The elasticsearch search domain rest client port number
+     */
+    ELASTICSEARCH_DOMAIN_REST_CLIENT_PORT("elasticsearch.domain.rest.client.port", 443),
+
+    /**
+     * The elasticsearch search domain rest client scheme
+     */
+    ELASTICSEARCH_DOMAIN_REST_CLIENT_SCHEME("elasticsearch.domain.rest.client.scheme", "https"),
+
+    /**
      * The elasticsearch search rest client hostname
      */
     ELASTICSEARCH_REST_CLIENT_HOSTNAME("elasticsearch.rest.client.hostname", "localhost"),
