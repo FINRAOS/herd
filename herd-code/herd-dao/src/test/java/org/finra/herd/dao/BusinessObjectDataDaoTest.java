@@ -34,6 +34,7 @@ import java.util.Set;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Test;
@@ -541,6 +542,34 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         // Validate the results.
         assertEquals(Long.valueOf(1L), result);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataCountByBusinessObjectDefinition()
+    {
+        // Create several business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Arrays
+            .asList(businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION),
+                businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION),
+                businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_3, DATA_PROVIDER_NAME, BDEF_DESCRIPTION));
+
+        // Create two business object data entities that belong to different business object formats under the first business object definition.
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Create a business object data entity that belongs to the second business object definition.
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Retrieve the count of business object data instances that belong to the created above business object definitions.
+        assertEquals(Long.valueOf(2L), businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0)));
+        assertEquals(Long.valueOf(1L), businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1)));
+        assertEquals(Long.valueOf(0L), businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntities.get(2)));
     }
 
     @Test
@@ -2180,21 +2209,26 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
-        // Retrieve the keys for business object data by specifying business object definition and without setting a maximum number of results.
+        // Retrieve business object data keys for the first business object definition without setting a maximum number of results and with sorting enabled.
         assertEquals(Arrays.asList(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION), new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION)),
-            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), NO_MAX_RESULTS));
+            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), NO_MAX_RESULTS, true));
 
-        // Retrieve the keys for business object data by specifying business object definition and with maximum number of results set to 1.
+        // Retrieve business object data keys for the first business object definition without setting a maximum number of results and with sorting disabled.
+        assertEquals(2, CollectionUtils
+            .size(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), NO_MAX_RESULTS, false)));
+
+        // Retrieve business object data keys for the first business object definition with maximum number of results set to 1.
         assertEquals(Collections.singletonList(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION)), businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), MAX_RESULTS_1));
+                DATA_VERSION)),
+            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), MAX_RESULTS_1, false));
 
         // Try to retrieve business object data keys for the second business object definition.
         assertEquals(new ArrayList<>(),
-            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1), NO_MAX_RESULTS));
+            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1), NO_MAX_RESULTS, false));
     }
 
     @Test

@@ -672,6 +672,13 @@ public enum ConfigurationValue
     BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS("business.object.data.search.max.results", 1000),
 
     /**
+     * The maximum number of business object data records to be sorted by business object data get all endpoint before selecting and returning a result set
+     * limited by the relative maximum result count setting configured in the system. Currently, only business object data get all by business object definition
+     * endpoint supports this threshold.
+     */
+    BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD("business.object.data.get.all.sort.threshold", 100_000),
+
+    /**
      * The maximum number of records returned in business object data search result count
      */
     BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 10_000),
