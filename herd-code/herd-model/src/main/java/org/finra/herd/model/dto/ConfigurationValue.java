@@ -745,6 +745,11 @@ public enum ConfigurationValue
     LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER("ldap.attribute.user.telephone.number", "telephoneNumber"),
 
     /**
+     * The elasticsearch aws region name.
+     */
+    ELASTICSEARCH_AWS_REGION_NAME("elasticsearch.aws.region.name", "us-east-1"),
+
+    /**
      * The elasticsearch index name
      */
     ELASTICSEARCH_BDEF_INDEX_NAME("elasticsearch.bdef.index.name", "bdef"),
@@ -871,6 +876,21 @@ public enum ConfigurationValue
      * The elasticsearch spot check most recent number for tags
      */
     ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.tag.spot.check.most.recent.number", 10),
+
+    /**
+     * The elasticsearch search domain rest client hostname
+     */
+    ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME("elasticsearch.domain.rest.client.hostname", "localhost"),
+
+    /**
+     * The elasticsearch search domain rest client port number
+     */
+    ELASTICSEARCH_DOMAIN_REST_CLIENT_PORT("elasticsearch.domain.rest.client.port", 443),
+
+    /**
+     * The elasticsearch search domain rest client scheme
+     */
+    ELASTICSEARCH_DOMAIN_REST_CLIENT_SCHEME("elasticsearch.domain.rest.client.scheme", "https"),
 
     /**
      * The elasticsearch search rest client hostname

@@ -16,22 +16,27 @@
 package org.finra.herd.dao;
 
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import javax.net.ssl.SSLContext;
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import io.searchbox.client.JestClient;
 import io.searchbox.client.config.HttpClientConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import vc.inreach.aws.request.AWSSigner;
+import vc.inreach.aws.request.AWSSigningRequestInterceptor;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
-import org.finra.herd.dao.helper.CredStashHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
 
 @Component
@@ -42,9 +47,6 @@ public class JestClientFactory
     @Autowired
     private ConfigurationHelper configurationHelper;
 
-    @Autowired
-    private CredStashHelper credStashHelper;
-
     /**
      * Builds and returns a JEST client.
      *
@@ -53,33 +55,37 @@ public class JestClientFactory
     public JestClient getJestClient()
     {
         // Retrieve the configuration values used for setting up an Elasticsearch JEST client.
-        final String hostname = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_HOSTNAME);
-        final int port = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_PORT, Integer.class);
-        final String scheme = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_SCHEME);
+        final String esRegionName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_AWS_REGION_NAME);
+        final String hostname = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME);
+        final int port = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_PORT, Integer.class);
+        final String scheme = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DOMAIN_REST_CLIENT_SCHEME);
         final String serverUri = String.format("%s://%s:%d", scheme, hostname, port);
         final int connectionTimeout = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_CONNECTION_TIMEOUT, Integer.class);
         final int readTimeout = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT, Integer.class);
 
         LOGGER.info("Elasticsearch REST Client Settings:  scheme={}, hostname={}, port={}, serverUri={}", scheme, hostname, port, serverUri);
 
-        io.searchbox.client.JestClientFactory jestClientFactory = new io.searchbox.client.JestClientFactory();
+        DefaultAWSCredentialsProviderChain awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
+        final AWSSigner awsSigner = new AWSSigner(awsCredentialsProvider, esRegionName, "es", () -> LocalDateTime.now(ZoneOffset.UTC));
+
+        final AWSSigningRequestInterceptor requestInterceptor = new AWSSigningRequestInterceptor(awsSigner);
+
+        io.searchbox.client.JestClientFactory jestClientFactory = new io.searchbox.client.JestClientFactory()
+        {
+            @Override
+            protected HttpClientBuilder configureHttpClient(HttpClientBuilder builder) {
+                builder.addInterceptorLast(requestInterceptor);
+                return builder;
+            }
+            @Override
+            protected HttpAsyncClientBuilder configureHttpClient(HttpAsyncClientBuilder builder) {
+                builder.addInterceptorLast(requestInterceptor);
+                return builder;
+            }
+        };
 
         if (StringUtils.equalsIgnoreCase(scheme, "https"))
         {
-            final String userName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERNAME);
-            final String credentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME);
-            final String credstashEncryptionContext = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
-
-            String password;
-            try
-            {
-                password = credStashHelper.getCredentialFromCredStash(credstashEncryptionContext, credentialName);
-            }
-            catch (CredStashGetCredentialFailedException e)
-            {
-                throw new IllegalStateException(e);
-            }
-
             SSLConnectionSocketFactory sslSocketFactory;
             try
             {
@@ -91,7 +97,7 @@ public class JestClientFactory
             }
 
             jestClientFactory.setHttpClientConfig(new HttpClientConfig.Builder(serverUri).connTimeout(connectionTimeout).readTimeout(readTimeout).
-                defaultCredentials(userName, password).sslSocketFactory(sslSocketFactory).multiThreaded(true).build());
+                sslSocketFactory(sslSocketFactory).multiThreaded(true).build());
         }
         else
         {
