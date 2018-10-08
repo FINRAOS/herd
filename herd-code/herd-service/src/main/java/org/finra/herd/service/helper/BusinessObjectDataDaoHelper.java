@@ -1000,7 +1000,12 @@ public class BusinessObjectDataDaoHelper
                     "there is no schema defined to check subpartition columns for business object format {%s}.", partitionKey,
                 businessObjectFormatEntity.getPartitionKey(), businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
 
-            for (int i = 0; i < Math.min(BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1, businessObjectFormat.getSchema().getPartitions().size()); i++)
+            // Get an upper boundary for the set of partition columns that we will check while searching for partition key.
+            int upperBoundary =
+                Math.min(BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1, CollectionUtils.size(businessObjectFormat.getSchema().getPartitions()));
+
+            // Search for partition key in schema.
+            for (int i = 0; i < upperBoundary; i++)
             {
                 if (partitionKey.equalsIgnoreCase(businessObjectFormat.getSchema().getPartitions().get(i).getName()))
                 {

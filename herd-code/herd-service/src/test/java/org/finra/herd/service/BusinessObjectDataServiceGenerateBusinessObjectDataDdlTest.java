@@ -1147,6 +1147,40 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     }
 
     @Test
+    public void testGenerateBusinessObjectDataDdlNoPartitioningInvalidPartitionKey()
+    {
+        // Prepare non-partitioned test business object data with custom ddl.
+        List<String> partitionValues = Arrays.asList(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY, null,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, partitionValues, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, false,
+                CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Create a business object data generate ddl request for a non-partitioned table with an invalid partition key value.
+        BusinessObjectDataDdlRequest businessObjectDataDdlRequest =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
+        businessObjectDataDdlRequest.getPartitionValueFilters().get(0).setPartitionKey(INVALID_VALUE);
+        businessObjectDataDdlRequest.getPartitionValueFilters().get(0).setPartitionValues(partitionValues);
+
+        // Try to retrieve business object data ddl.
+        try
+        {
+            businessObjectDataService.generateBusinessObjectDataDdl(businessObjectDataDdlRequest);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("The partition key \"%s\" does not exist in first %d partition columns in the schema for business object format {" +
+                    "namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", INVALID_VALUE, BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1,
+                businessObjectDataDdlRequest.getNamespace(), businessObjectDataDdlRequest.getBusinessObjectDefinitionName(),
+                businessObjectDataDdlRequest.getBusinessObjectFormatUsage(), businessObjectDataDdlRequest.getBusinessObjectFormatFileType(),
+                businessObjectDataDdlRequest.getBusinessObjectFormatVersion()), e.getMessage());
+        }
+    }
+
+    @Test
     public void testGenerateBusinessObjectDataDdlNoCustomDdlNoPartitioning()
     {
         // Prepare test data without custom ddl.
