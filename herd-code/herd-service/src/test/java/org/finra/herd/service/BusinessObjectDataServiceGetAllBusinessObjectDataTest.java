@@ -158,7 +158,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
 
         // Mock the external calls.
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
-        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class)).thenReturn(MAX_RESULTS_1);
+        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class)).thenReturn(MAX_RESULTS_1);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class)).thenReturn(SORT_THRESHOLD);
         when(businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntity))
             .thenReturn(Long.valueOf(SORT_THRESHOLD + 1));
@@ -171,7 +171,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         // Verify the external calls.
         verify(businessObjectDefinitionHelper).validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
-        verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class);
         verify(businessObjectDataDao).getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntity);
         verify(businessObjectDataDao).getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1, false);
@@ -198,7 +198,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
 
         // Mock the external calls.
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
-        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class)).thenReturn(MAX_RESULTS_1);
+        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class)).thenReturn(MAX_RESULTS_1);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class)).thenReturn(SORT_THRESHOLD);
         when(businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntity))
             .thenReturn(Long.valueOf(SORT_THRESHOLD));
@@ -211,7 +211,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         // Verify the external calls.
         verify(businessObjectDefinitionHelper).validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
-        verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class);
         verify(businessObjectDataDao).getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntity);
         verify(businessObjectDataDao).getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1, true);
@@ -239,7 +239,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
 
         // Mock the external calls.
         when(businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey)).thenReturn(businessObjectFormatEntity);
-        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class)).thenReturn(MAX_RESULTS_1);
+        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class)).thenReturn(MAX_RESULTS_1);
         when(businessObjectDataDao.getBusinessObjectDataByBusinessObjectFormat(businessObjectFormatEntity, MAX_RESULTS_1)).thenReturn(businessObjectDataKeys);
 
         // Call the method being tested.
@@ -248,7 +248,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         // Verify the external calls.
         verify(businessObjectFormatHelper).validateBusinessObjectFormatKey(businessObjectFormatKey, true);
         verify(businessObjectFormatDaoHelper).getBusinessObjectFormatEntity(businessObjectFormatKey);
-        verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+        verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
         verify(businessObjectDataDao).getBusinessObjectDataByBusinessObjectFormat(businessObjectFormatEntity, MAX_RESULTS_1);
         verifyNoMoreInteractionsHelper();
 

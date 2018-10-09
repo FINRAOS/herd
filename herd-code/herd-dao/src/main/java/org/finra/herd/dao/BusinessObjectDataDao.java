@@ -220,7 +220,8 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param maxResults the optional maximum number of results to return
-     * @param performOrderBy specifies whether to sort business object data records before selecting and returning a result set
+     * @param performOrderBy specifies whether to perform sorting (order by) on the set of business object data records matching the selection criteria before
+     * selecting and returning the result set
      *
      * @return the list of business object data keys
      */
