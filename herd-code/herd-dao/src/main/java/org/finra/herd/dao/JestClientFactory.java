@@ -70,19 +70,7 @@ public class JestClientFactory
 
         final AWSSigningRequestInterceptor requestInterceptor = new AWSSigningRequestInterceptor(awsSigner);
 
-        io.searchbox.client.JestClientFactory jestClientFactory = new io.searchbox.client.JestClientFactory()
-        {
-            @Override
-            protected HttpClientBuilder configureHttpClient(HttpClientBuilder builder) {
-                builder.addInterceptorLast(requestInterceptor);
-                return builder;
-            }
-            @Override
-            protected HttpAsyncClientBuilder configureHttpClient(HttpAsyncClientBuilder builder) {
-                builder.addInterceptorLast(requestInterceptor);
-                return builder;
-            }
-        };
+        JestClientFactoryStaticInner jestClientFactory = new JestClientFactoryStaticInner(requestInterceptor);
 
         if (StringUtils.equalsIgnoreCase(scheme, "https"))
         {
@@ -106,5 +94,33 @@ public class JestClientFactory
         }
 
         return jestClientFactory.getObject();
+    }
+
+    /**
+     * Static inner class used to extend the JestClientFactory. This class overrides the configure http client methods to add the AWS signing request
+     * interceptor which will add the IAM role APP_DATAMGT to the JestClientFactory https requests.
+     */
+    private static class JestClientFactoryStaticInner extends io.searchbox.client.JestClientFactory
+    {
+        final AWSSigningRequestInterceptor requestInterceptor;
+
+        public JestClientFactoryStaticInner(AWSSigningRequestInterceptor requestInterceptor)
+        {
+            this.requestInterceptor = requestInterceptor;
+        }
+
+        @Override
+        protected HttpClientBuilder configureHttpClient(HttpClientBuilder builder)
+        {
+            builder.addInterceptorLast(requestInterceptor);
+            return builder;
+        }
+
+        @Override
+        protected HttpAsyncClientBuilder configureHttpClient(HttpAsyncClientBuilder builder)
+        {
+            builder.addInterceptorLast(requestInterceptor);
+            return builder;
+        }
     }
 }
