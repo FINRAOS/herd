@@ -115,13 +115,14 @@ public interface BusinessObjectDataDao extends BaseJpaDao
     Long getBusinessObjectDataCount(BusinessObjectFormatKey businessObjectFormatKey);
 
     /**
-     * Returns a number of business object data instances registered with the specified business object definition.
+     * Checks if count of business object data records registered with a business object definition is less than or equal to a constant value.
      *
      * @param businessObjectDefinitionEntity the business object definition entity
+     * @param value the constant value to compare against
      *
-     * @return the number of business object data instances registered the specified business object definition
+     * @return true if count of business object data records is less than or equal to a constant value, false otherwise
      */
-    Long getBusinessObjectDataCountByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
+    boolean isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, int value);
 
     /**
      * Retrieves business object data versions that match the specified business object data key with potentially missing business object format and/or data

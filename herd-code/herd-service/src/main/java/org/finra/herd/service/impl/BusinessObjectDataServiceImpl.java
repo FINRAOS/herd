@@ -431,14 +431,11 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // above which there would be no sorting (order by) performed when selecting and returning the result set.
         Integer sortThreshold = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class);
 
-        // Get a number of business object data instances registered under the business object definition.
-        Long businessObjectDataCount = businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntity);
-
         // Gets the list of keys and return them.
         BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
-        businessObjectDataKeys.getBusinessObjectDataKeys()
-            .addAll(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, maxResults,
-                businessObjectDataCount <= sortThreshold));
+        businessObjectDataKeys.getBusinessObjectDataKeys().addAll(businessObjectDataDao
+            .getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, maxResults,
+                businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntity, sortThreshold)));
         return businessObjectDataKeys;
     }
 

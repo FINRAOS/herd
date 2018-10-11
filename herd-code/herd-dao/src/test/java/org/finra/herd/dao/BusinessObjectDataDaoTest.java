@@ -16,6 +16,7 @@
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -545,7 +546,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetBusinessObjectDataCountByBusinessObjectDefinition()
+    public void testIsBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo()
     {
         // Create several business object definition entities.
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Arrays
@@ -566,10 +567,17 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
-        // Retrieve the count of business object data instances that belong to the created above business object definitions.
-        assertEquals(Long.valueOf(2L), businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0)));
-        assertEquals(Long.valueOf(1L), businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1)));
-        assertEquals(Long.valueOf(0L), businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntities.get(2)));
+        // Test "less than", "equal", and "greater than" scenario for all three business object definitions.
+        assertFalse(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntities.get(0), 1));
+        assertTrue(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntities.get(0), 2));
+        assertTrue(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntities.get(0), 3));
+
+        assertFalse(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntities.get(1), 0));
+        assertTrue(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntities.get(1), 1));
+        assertTrue(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntities.get(1), 2));
+
+        assertTrue(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntities.get(2), 0));
+        assertTrue(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntities.get(2), 1));
     }
 
     @Test
