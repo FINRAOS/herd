@@ -55,8 +55,14 @@
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataRestoreDto"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto\$Builder"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent\$Builder"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent\$Builder"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent\$Builder"/>
          <Class name="~org.finra.herd.model.dto.CompleteUploadSingleParamsDto"/>
          <Class name="~org.finra.herd.model.dto.DataProvider"/>
          <Class name="~org.finra.herd.model.dto.DateRangeDto"/>
@@ -74,6 +80,8 @@
          <Class name="~org.finra.herd.model.dto.JobDefinitionAlternateKeyDto"/>
          <Class name="~org.finra.herd.model.dto.MessageHeader"/>
          <Class name="~org.finra.herd.model.dto.Namespace"/>
+         <Class name="~org.finra.herd.model.dto.NotificationEvent"/>
+         <Class name="~org.finra.herd.model.dto.NotificationEvent\$Builder"/>
          <Class name="~org.finra.herd.model.dto.NotificationEventParamsDto"/>
          <Class name="~org.finra.herd.model.dto.NotificationMessage"/>
          <Class name="~org.finra.herd.model.dto.ObjectFactory"/>
@@ -92,8 +100,14 @@
          <Class name="~org.finra.herd.model.dto.StoragePolicyTransitionParamsDto"/>
          <Class name="~org.finra.herd.model.dto.StorageUnitNotificationEventParamsDto"/>
          <Class name="~org.finra.herd.model.dto.StorageUnitNotificationEventParamsDto\$Builder"/>
+         <Class name="~org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent"/>
+         <Class name="~org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent\$Builder"/>
+         <Class name="~org.finra.herd.model.dto.SystemMonitorResponseNotificationEvent"/>
+         <Class name="~org.finra.herd.model.dto.SystemMonitorResponseNotificationEvent\$Builder"/>
          <Class name="~org.finra.herd.model.dto.TagIndexSearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.TagTypeIndexSearchResponseDto"/>
+         <Class name="~org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEvent"/>
+         <Class name="~org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEvent\$Builder"/>
       </Or>
    </Match>
 

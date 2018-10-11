@@ -1,4 +1,19 @@
-package org.finra.herd.service.helper;
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.service.helper.notification;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,24 +21,26 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.NotificationMessage;
+import org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent;
+import org.finra.herd.model.dto.NotificationEvent;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 
 /**
  * The builder that knows how to build Business Object Data Status Change notification messages
  */
 @Component
-public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotificationMessageBuilder
+public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotificationMessageBuilder implements NotificationMessageBuilder
 {
-
     @Autowired
     private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
 
@@ -31,44 +48,29 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
     private BusinessObjectFormatHelper businessObjectFormatHelper;
 
     /**
-     * Builds a list of notification messages for the business object data status change event. The result list might be empty if if no messages should be
-     * sent.
-     *
-     * @param businessObjectDataKey the business object data key for the object whose status changed
-     * @param newBusinessObjectDataStatus the new business object data status
-     * @param oldBusinessObjectDataStatus the old business object data status, may be null
-     *
-     * @return the list of business object data status change notification messages
-     */
-    public List<NotificationMessage> buildMessages(BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus,
-        String oldBusinessObjectDataStatus)
-    {
-        return buildNotificationMessages(
-            new BusinessObjectDataStatusChangeEvent(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus));
-    }
-
-    /**
      * Returns Velocity context map of additional keys and values to place in the velocity context.
      *
-     * @param event the business object data key
+     * @param notificationEvent the notification event
      *
      * @return the Velocity context map
      */
     @Override
-    public Map<String, Object> getNotificationMessageVelocityContextMap(NotificationEvent event)
+    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST", justification =
+        "The NotificationEvent is cast to a BusinessObjectDataStatusChangeNotificationEvent which is always the case since" +
+            " we manage the event type to a builder in a map defined in NotificationMessageManager")
+    public Map<String, Object> getNotificationMessageVelocityContextMap(NotificationEvent notificationEvent)
     {
-        BusinessObjectDataStatusChangeEvent businessObjectDataStatusChangeEvent = (BusinessObjectDataStatusChangeEvent) event;
+        BusinessObjectDataStatusChangeNotificationEvent event = (BusinessObjectDataStatusChangeNotificationEvent) notificationEvent;
+
         // Create a context map of values that can be used when building the message.
         Map<String, Object> velocityContextMap = new HashMap<>();
-        addObjectPropertyToContext(velocityContextMap, "businessObjectDataKey", businessObjectDataStatusChangeEvent.getBusinessObjectDataKey(),
-            escapeJsonBusinessObjectDataKey(businessObjectDataStatusChangeEvent.getBusinessObjectDataKey()),
-            escapeXmlBusinessObjectDataKey(businessObjectDataStatusChangeEvent.getBusinessObjectDataKey()));
-        addStringPropertyToContext(velocityContextMap, "newBusinessObjectDataStatus", businessObjectDataStatusChangeEvent.getNewBusinessObjectDataStatus());
-        addStringPropertyToContext(velocityContextMap, "oldBusinessObjectDataStatus", businessObjectDataStatusChangeEvent.getOldBusinessObjectDataStatus());
+        addObjectPropertyToContext(velocityContextMap, "businessObjectDataKey", event.getBusinessObjectDataKey(),
+            escapeJsonBusinessObjectDataKey(event.getBusinessObjectDataKey()), escapeXmlBusinessObjectDataKey(event.getBusinessObjectDataKey()));
+        addStringPropertyToContext(velocityContextMap, "newBusinessObjectDataStatus", event.getNewBusinessObjectDataStatus());
+        addStringPropertyToContext(velocityContextMap, "oldBusinessObjectDataStatus", event.getOldBusinessObjectDataStatus());
 
         // Retrieve business object data entity and business object data id to the context.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataStatusChangeEvent.getBusinessObjectDataKey());
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(event.getBusinessObjectDataKey());
         velocityContextMap.put("businessObjectDataId", businessObjectDataEntity.getId());
 
         // Load all attribute definitions for this business object data in a map for easy access.
@@ -103,7 +105,7 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
             businessObjectDataAttributesWithXml);
 
         // Add the namespace Velocity property for the header.
-        addStringPropertyToContext(velocityContextMap, "namespace", businessObjectDataStatusChangeEvent.getBusinessObjectDataKey().getNamespace());
+        addStringPropertyToContext(velocityContextMap, "namespace", event.getBusinessObjectDataKey().getNamespace());
 
         return velocityContextMap;
     }
@@ -162,55 +164,4 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
             businessObjectDataKey.getBusinessObjectDataVersion());
     }
 
-    /**
-     * The Business Object Data Status change event
-     */
-    public static class BusinessObjectDataStatusChangeEvent extends NotificationEvent
-    {
-        private BusinessObjectDataKey businessObjectDataKey;
-
-        private String newBusinessObjectDataStatus;
-
-        private String oldBusinessObjectDataStatus;
-
-        public BusinessObjectDataStatusChangeEvent(BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus,
-            String oldBusinessObjectDataStatus)
-        {
-            setMessageDefinitionKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS);
-            setEventName("businessObjectDataStatusChangeEvent");
-            this.businessObjectDataKey = businessObjectDataKey;
-            this.newBusinessObjectDataStatus = newBusinessObjectDataStatus;
-            this.oldBusinessObjectDataStatus = oldBusinessObjectDataStatus;
-        }
-
-        public BusinessObjectDataKey getBusinessObjectDataKey()
-        {
-            return businessObjectDataKey;
-        }
-
-        public void setBusinessObjectDataKey(BusinessObjectDataKey businessObjectDataKey)
-        {
-            this.businessObjectDataKey = businessObjectDataKey;
-        }
-
-        public String getNewBusinessObjectDataStatus()
-        {
-            return newBusinessObjectDataStatus;
-        }
-
-        public void setNewBusinessObjectDataStatus(String newBusinessObjectDataStatus)
-        {
-            this.newBusinessObjectDataStatus = newBusinessObjectDataStatus;
-        }
-
-        public String getOldBusinessObjectDataStatus()
-        {
-            return oldBusinessObjectDataStatus;
-        }
-
-        public void setOldBusinessObjectDataStatus(String oldBusinessObjectDataStatus)
-        {
-            this.oldBusinessObjectDataStatus = oldBusinessObjectDataStatus;
-        }
-    }
 }

@@ -16,7 +16,6 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -35,12 +34,18 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
+import org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent;
+import org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent;
+import org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.NotificationMessage;
+import org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent;
+import org.finra.herd.model.dto.SystemMonitorResponseNotificationEvent;
+import org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEvent;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.MessageNotificationEventService;
-import org.finra.herd.service.helper.NotificationMessageBuilderFactory;
 import org.finra.herd.service.helper.NotificationMessageInMemoryQueue;
+import org.finra.herd.service.helper.notification.NotificationMessageManager;
 
 /**
  * The message notification event service.
@@ -55,7 +60,7 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private NotificationMessageBuilderFactory notificationMessageBuilderFactory;
+    private NotificationMessageManager notificationMessageManager;
 
     @Autowired
     private NotificationMessageInMemoryQueue notificationMessageInMemoryQueue;
@@ -64,8 +69,8 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
     public List<NotificationMessage> processBusinessObjectDataStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey,
         String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus)
     {
-        return processNotificationMessages(notificationMessageBuilderFactory.getBusinessObjectDataStatusChangeMessageBuilder()
-            .buildMessages(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus));
+        return processNotificationMessages(notificationMessageManager.buildNotificationMessages(
+            new BusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus)));
     }
 
     @Override
@@ -73,43 +78,40 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion, String lastUpdatedByUserId,
         XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity)
     {
-        return processNotificationMessages(notificationMessageBuilderFactory.getBusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilder()
-            .buildMessages(businessObjectDefinitionDescriptionSuggestion, lastUpdatedByUserId, lastUpdatedOn, namespaceEntity));
+        return processNotificationMessages(notificationMessageManager.buildNotificationMessages(
+            new BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent(businessObjectDefinitionDescriptionSuggestion, lastUpdatedByUserId,
+                lastUpdatedOn, namespaceEntity.getCode())));
     }
 
     @Override
     public List<NotificationMessage> processBusinessObjectFormatVersionChangeNotificationEvent(BusinessObjectFormatKey businessObjectFormatKey,
         String oldBusinessObjectFormatVersion)
     {
-        return processNotificationMessages(notificationMessageBuilderFactory.getBusinessObjectFormatVersionChangeMessageBuilder()
-            .buildMessages(businessObjectFormatKey, oldBusinessObjectFormatVersion));
+        return processNotificationMessages(notificationMessageManager
+            .buildNotificationMessages(new BusinessObjectFormatVersionChangeNotificationEvent(businessObjectFormatKey, oldBusinessObjectFormatVersion)));
     }
 
     @Override
     public List<NotificationMessage> processUserNamespaceAuthorizationChangeNotificationEvent(UserNamespaceAuthorizationKey userNamespaceAuthorizationKey)
     {
         return processNotificationMessages(
-            notificationMessageBuilderFactory.getUserNamespaceAuthorizationChangeMessageBuilder().buildMessages(userNamespaceAuthorizationKey));
+            notificationMessageManager.buildNotificationMessages(new UserNamespaceAuthorizationChangeNotificationEvent(userNamespaceAuthorizationKey)));
     }
 
     @Override
     public List<NotificationMessage> processStorageUnitStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey, String storageName,
         String newStorageUnitStatus, String oldStorageUnitStatus)
     {
-        return processNotificationMessages(notificationMessageBuilderFactory.getStorageUnitStatusChangeMessageBuilder()
-            .buildMessages(businessObjectDataKey, storageName, newStorageUnitStatus, oldStorageUnitStatus));
+        return processNotificationMessages(notificationMessageManager.buildNotificationMessages(
+            new StorageUnitStatusChangeNotificationEvent(businessObjectDataKey, storageName, newStorageUnitStatus, oldStorageUnitStatus)));
     }
 
     @PublishNotificationMessages
     @Override
     public List<NotificationMessage> processSystemMonitorNotificationEvent(String systemMonitorRequestPayload)
     {
-        // Build a system monitor response message.
-        NotificationMessage notificationMessage =
-            notificationMessageBuilderFactory.getSystemMonitorResponseMessageBuilder().buildMessage(systemMonitorRequestPayload);
-
-        // If message is null, send an empty list of notification messages to be processed.
-        return processNotificationMessages(notificationMessage == null ? new ArrayList<>() : Collections.singletonList(notificationMessage));
+        return processNotificationMessages(
+            notificationMessageManager.buildNotificationMessages(new SystemMonitorResponseNotificationEvent(systemMonitorRequestPayload)));
     }
 
     /**

@@ -1,7 +1,24 @@
-package org.finra.herd.service.helper;
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.service.helper.notification;
 
 import java.io.StringReader;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -11,6 +28,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,20 +38,44 @@ import org.xml.sax.InputSource;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.NotificationEvent;
 import org.finra.herd.model.dto.NotificationMessage;
+import org.finra.herd.model.dto.SystemMonitorResponseNotificationEvent;
 import org.finra.herd.model.jpa.MessageTypeEntity;
+import org.finra.herd.service.helper.notification.AbstractNotificationMessageBuilder;
+import org.finra.herd.service.helper.notification.NotificationMessageBuilder;
 
 /**
  * The builder that knows how to build a System Monitor Response message
  */
 @Component
-public class SystemMonitorResponseMessageBuilder extends AbstractNotificationMessageBuilder
+public class SystemMonitorResponseMessageBuilder extends AbstractNotificationMessageBuilder implements NotificationMessageBuilder
 {
     @Autowired
     private ConfigurationHelper configurationHelper;
 
     @Autowired
     private JavaPropertiesHelper javaPropertiesHelper;
+
+    /**
+     * Builds the messages for ESB system monitor response. It overrides the method defined in the class {@link AbstractNotificationMessageBuilder}
+     *
+     * @param notificationEvent the notification event
+     *
+     * @return the outgoing system monitor notification messages or empty list if no message should be sent
+     */
+    @Override
+    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST", justification =
+        "The NotificationEvent is cast to a SystemMonitorResponseNotificationEvent which is always the case since" +
+            " we manage the event type to a builder in a map defined in NotificationMessageManager")
+    public List<NotificationMessage> buildNotificationMessages(NotificationEvent notificationEvent)
+    {
+        SystemMonitorResponseNotificationEvent event = (SystemMonitorResponseNotificationEvent) notificationEvent;
+        NotificationMessage notificationMessage = buildMessage(event.getSystemMonitorRequestPayload());
+
+        // If message is null, send an empty list of notification messages to be processed.
+        return notificationMessage == null ? Collections.emptyList() : Collections.singletonList(notificationMessage);
+    }
 
     /**
      * Builds the message for the ESB system monitor response.
@@ -94,7 +136,6 @@ public class SystemMonitorResponseMessageBuilder extends AbstractNotificationMes
         }
         catch (ParserConfigurationException e)
         {
-            //TODO throw runtime exception
             throw new RuntimeException(e);
         }
 

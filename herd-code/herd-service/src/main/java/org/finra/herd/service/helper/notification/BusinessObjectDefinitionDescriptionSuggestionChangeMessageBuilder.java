@@ -1,62 +1,69 @@
-package org.finra.herd.service.helper;
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.service.helper.notification;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.datatype.XMLGregorianCalendar;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
+import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.dao.UserNamespaceAuthorizationDao;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestionKey;
-import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.NotificationMessage;
+import org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent;
+import org.finra.herd.model.dto.NotificationEvent;
 import org.finra.herd.model.jpa.NamespaceEntity;
 
 /**
  * The builder that knows how to build Business Object Definition Description suggestion Change notification messages
  */
 @Component
-public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilder extends AbstractNotificationMessageBuilder
+public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilder extends AbstractNotificationMessageBuilder implements NotificationMessageBuilder
 {
     @Autowired
     private UserNamespaceAuthorizationDao userNamespaceAuthorizationDao;
 
-    /**
-     * Builds a list of notification messages for the business object definition description suggestion change event. The result list might be empty if if no
-     * messages should be sent.
-     *
-     * @param businessObjectDefinitionDescriptionSuggestion the business object definition description suggestion
-     * @param lastUpdatedByUserId the User ID of the user who last updated this business object definition description suggestion
-     * @param lastUpdatedOn the timestamp when this business object definition description suggestion was last updated on
-     * @param namespaceEntity the namespace entity
-     *
-     * @return the list of notification messages
-     */
-    public List<NotificationMessage> buildMessages(BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion,
-        String lastUpdatedByUserId, XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity)
-    {
-        return buildNotificationMessages(
-            new BusinessObjectDefinitionDescriptionSuggestionChangeEvent(businessObjectDefinitionDescriptionSuggestion, lastUpdatedByUserId, lastUpdatedOn,
-                namespaceEntity));
-    }
+    @Autowired
+    private NamespaceDao namespaceDao;
 
     @Override
+    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST", justification =
+        "The NotificationEvent is cast to a BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent which is always the case since" +
+            " we manage the event type to a builder in a map defined in NotificationMessageManager")
     public Map<String, Object> getNotificationMessageVelocityContextMap(NotificationEvent notificationEvent)
     {
-        BusinessObjectDefinitionDescriptionSuggestionChangeEvent event = (BusinessObjectDefinitionDescriptionSuggestionChangeEvent) notificationEvent;
+        BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent event =
+            (BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent) notificationEvent;
 
         // Create a list of users (User IDs) that need to be notified about this event.
         // Initialize the list with the user who created this business object definition description suggestion.
         List<String> notificationList = new ArrayList<>();
         notificationList.add(event.getBusinessObjectDefinitionDescriptionSuggestion().getCreatedByUserId());
 
+        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(event.getNamespace());
+        Assert.notNull(namespaceEntity, String.format("namespaceEntity must not be null for namespace code \"%s\"", event.getNamespace()));
+
         // Add to the notification list all users that have WRITE or WRITE_DESCRIPTIVE_CONTENT permission on the namespace.
-        notificationList.addAll(userNamespaceAuthorizationDao.getUserIdsWithWriteOrWriteDescriptiveContentPermissionsByNamespace(event.getNamespaceEntity()));
+        notificationList.addAll(userNamespaceAuthorizationDao.getUserIdsWithWriteOrWriteDescriptiveContentPermissionsByNamespace(namespaceEntity));
 
         // Create JSON and XML escaped copies of the business object definition description suggestion.
         BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestionWithJson =
@@ -85,7 +92,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilder e
         addStringPropertyToContext(velocityContextMap, "lastUpdatedByUserId", event.getLastUpdatedByUserId());
         velocityContextMap.put("lastUpdatedOn", event.getLastUpdatedOn());
         addObjectPropertyToContext(velocityContextMap, "notificationList", notificationList, notificationListWithJson, notificationListWithXml);
-        addStringPropertyToContext(velocityContextMap, "namespace", event.getNamespaceEntity().getCode());
+        addStringPropertyToContext(velocityContextMap, "namespace", event.getNamespace());
 
         // Return the Velocity context map.
         return velocityContextMap;
@@ -161,70 +168,5 @@ public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilder e
             escapeJson(businessObjectDefinitionDescriptionSuggestionKey.getUserId()));
     }
 
-    /**
-     * The Business Object Definition Description Suggestion change event
-     */
-    public static class BusinessObjectDefinitionDescriptionSuggestionChangeEvent extends NotificationEvent
-    {
-        private BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion;
 
-        private String lastUpdatedByUserId;
-
-        private XMLGregorianCalendar lastUpdatedOn;
-
-        NamespaceEntity namespaceEntity;
-
-        public BusinessObjectDefinitionDescriptionSuggestionChangeEvent(
-            BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion, String lastUpdatedByUserId,
-            XMLGregorianCalendar lastUpdatedOn, NamespaceEntity namespaceEntity)
-        {
-            setMessageDefinitionKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS);
-            setEventName("businessObjectDefinitionDescriptionSuggestionChangeEvent");
-            this.businessObjectDefinitionDescriptionSuggestion = businessObjectDefinitionDescriptionSuggestion;
-            this.lastUpdatedByUserId = lastUpdatedByUserId;
-            this.lastUpdatedOn = lastUpdatedOn;
-            this.namespaceEntity = namespaceEntity;
-        }
-
-        public BusinessObjectDefinitionDescriptionSuggestion getBusinessObjectDefinitionDescriptionSuggestion()
-        {
-            return businessObjectDefinitionDescriptionSuggestion;
-        }
-
-        public void setBusinessObjectDefinitionDescriptionSuggestion(
-            BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion)
-        {
-            this.businessObjectDefinitionDescriptionSuggestion = businessObjectDefinitionDescriptionSuggestion;
-        }
-
-        public String getLastUpdatedByUserId()
-        {
-            return lastUpdatedByUserId;
-        }
-
-        public void setLastUpdatedByUserId(String lastUpdatedByUserId)
-        {
-            this.lastUpdatedByUserId = lastUpdatedByUserId;
-        }
-
-        public XMLGregorianCalendar getLastUpdatedOn()
-        {
-            return lastUpdatedOn;
-        }
-
-        public void setLastUpdatedOn(XMLGregorianCalendar lastUpdatedOn)
-        {
-            this.lastUpdatedOn = lastUpdatedOn;
-        }
-
-        public NamespaceEntity getNamespaceEntity()
-        {
-            return namespaceEntity;
-        }
-
-        public void setNamespaceEntity(NamespaceEntity namespaceEntity)
-        {
-            this.namespaceEntity = namespaceEntity;
-        }
-    }
 }

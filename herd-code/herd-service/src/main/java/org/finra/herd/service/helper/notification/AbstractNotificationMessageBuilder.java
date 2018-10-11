@@ -1,4 +1,19 @@
-package org.finra.herd.service.helper;
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.service.helper.notification;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,12 +34,20 @@ import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinitions;
+import org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent;
+import org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent;
+import org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.MessageHeader;
+import org.finra.herd.model.dto.NotificationEvent;
 import org.finra.herd.model.dto.NotificationMessage;
+import org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent;
+import org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEvent;
+import org.finra.herd.service.helper.ConfigurationDaoHelper;
+import org.finra.herd.service.helper.VelocityHelper;
 
 /**
- * This is an abstract class that helps to build a notification message.
+ * This is an abstract class that helps build a notification message.
  */
 public abstract class AbstractNotificationMessageBuilder
 {
@@ -43,6 +66,33 @@ public abstract class AbstractNotificationMessageBuilder
 
     @Autowired
     private VelocityHelper velocityHelper;
+
+    private static final Map<Class<?>, ConfigurationValue> eventTypeMessageDefinitionKeyMap = new HashMap<>();
+
+    static
+    {
+        // Build the event type to message definition key map
+        eventTypeMessageDefinitionKeyMap.put(BusinessObjectDataStatusChangeNotificationEvent.class,
+            ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS);
+        eventTypeMessageDefinitionKeyMap.put(BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent.class,
+            ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS);
+        eventTypeMessageDefinitionKeyMap.put(BusinessObjectFormatVersionChangeNotificationEvent.class,
+            ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS);
+        eventTypeMessageDefinitionKeyMap
+            .put(StorageUnitStatusChangeNotificationEvent.class, ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS);
+        eventTypeMessageDefinitionKeyMap.put(UserNamespaceAuthorizationChangeNotificationEvent.class,
+            ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS);
+    }
+
+    /**
+     * Get the event type to Message Definition Key map
+     *
+     * @return the event type to Message Definition Key map
+     */
+    public Map<Class<?>, ConfigurationValue> getEventTypeMessageDefinitionKeyMap()
+    {
+        return eventTypeMessageDefinitionKeyMap;
+    }
 
     /**
      * Returns Velocity context map of additional keys and values relating to the notification message body to place in the velocity context.
@@ -67,8 +117,8 @@ public abstract class AbstractNotificationMessageBuilder
         List<NotificationMessage> notificationMessages = new ArrayList<>();
 
         // Get notification message definitions.
-        NotificationMessageDefinitions notificationMessageDefinitions = configurationDaoHelper
-            .getXmlClobPropertyAndUnmarshallToObject(NotificationMessageDefinitions.class, notificationEvent.getMessageDefinitionKey().getKey());
+        NotificationMessageDefinitions notificationMessageDefinitions =
+            configurationDaoHelper.getXmlClobPropertyAndUnmarshallToObject(NotificationMessageDefinitions.class, getMessageDefinitionKey(notificationEvent));
 
         // Continue processing if notification message definitions are configured.
         if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
@@ -86,7 +136,7 @@ public abstract class AbstractNotificationMessageBuilder
                 if (StringUtils.isBlank(notificationMessageDefinition.getMessageType()))
                 {
                     throw new IllegalStateException(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
-                        notificationEvent.getMessageDefinitionKey().getKey()));
+                        getMessageDefinitionKey(notificationEvent)));
                 }
 
                 // Validate the notification message destination.
@@ -94,12 +144,12 @@ public abstract class AbstractNotificationMessageBuilder
                 {
                     throw new IllegalStateException(String
                         .format("Notification message destination must be specified. Please update \"%s\" configuration entry.",
-                            notificationEvent.getMessageDefinitionKey().getKey()));
+                            getMessageDefinitionKey(notificationEvent)));
                 }
 
                 // Evaluate the template to generate the message text.
-                String messageText =
-                    evaluateVelocityTemplate(notificationMessageDefinition.getMessageVelocityTemplate(), velocityContextMap, notificationEvent.getEventName());
+                String messageText = evaluateVelocityTemplate(notificationMessageDefinition.getMessageVelocityTemplate(), velocityContextMap,
+                    notificationEvent.getClass().getCanonicalName());
 
                 // Build a list of optional message headers.
                 List<MessageHeader> messageHeaders = new ArrayList<>();
@@ -109,7 +159,7 @@ public abstract class AbstractNotificationMessageBuilder
                     {
                         messageHeaders.add(new MessageHeader(messageHeaderDefinition.getKey(),
                             evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
-                                String.format("%s_messageHeader_%s", notificationEvent.getEventName(), messageHeaderDefinition.getKey()))));
+                                String.format("%s_messageHeader_%s", notificationEvent.getClass().getCanonicalName(), messageHeaderDefinition.getKey()))));
                     }
                 }
 
@@ -252,6 +302,18 @@ public abstract class AbstractNotificationMessageBuilder
 
         // Return the message text.
         return messageText;
+    }
+
+    /**
+     * Get the message definition key based on the event type
+     *
+     * @param notificationEvent the notification event
+     *
+     * @return the message definition key
+     */
+    private String getMessageDefinitionKey(NotificationEvent notificationEvent)
+    {
+        return eventTypeMessageDefinitionKeyMap.get(notificationEvent.getClass()).getKey();
     }
 
 }

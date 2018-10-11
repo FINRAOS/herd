@@ -1,43 +1,47 @@
-package org.finra.herd.service.helper;
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.service.helper.notification;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.NotificationMessage;
+import org.finra.herd.model.dto.NotificationEvent;
+import org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent;
+import org.finra.herd.service.helper.notification.AbstractNotificationMessageBuilder;
+import org.finra.herd.service.helper.notification.NotificationMessageBuilder;
 
 /**
  * The builder that knows how to build Storage Unit Status Change notification messages
  */
 @Component
-public class StorageUnitStatusChangeMessageBuilder extends AbstractNotificationMessageBuilder
+public class StorageUnitStatusChangeMessageBuilder extends AbstractNotificationMessageBuilder implements NotificationMessageBuilder
 {
-    /**
-     * Builds a list of notification messages for the business object data status change event. The result list might be empty if if no messages should be
-     * sent.
-     *
-     * @param businessObjectDataKey the business object data key for the object whose status changed
-     * @param storageName the storage name
-     * @param newStorageUnitStatus the new storage unit status
-     * @param oldStorageUnitStatus the old storage unit status, may be null
-     *
-     * @return the list of business object data status change notification messages
-     */
-    public List<NotificationMessage> buildMessages(BusinessObjectDataKey businessObjectDataKey, String storageName, String newStorageUnitStatus,
-        String oldStorageUnitStatus)
-    {
-        return buildNotificationMessages(new StorageUnitStatusChangeEvent(businessObjectDataKey, storageName, newStorageUnitStatus, oldStorageUnitStatus));
-    }
-
     @Override
+    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST", justification =
+        "The NotificationEvent is cast to a StorageUnitStatusChangeNotificationEvent which is always the case since" +
+            " we manage the event type to a builder in a map defined in NotificationMessageManager")
     public Map<String, Object> getNotificationMessageVelocityContextMap(NotificationEvent notificationEvent)
     {
-        StorageUnitStatusChangeEvent event = (StorageUnitStatusChangeEvent) notificationEvent;
+        StorageUnitStatusChangeNotificationEvent event = (StorageUnitStatusChangeNotificationEvent) notificationEvent;
         Map<String, Object> velocityContextMap = new HashMap<>();
 
         addObjectPropertyToContext(velocityContextMap, "businessObjectDataKey", event.getBusinessObjectDataKey(),
@@ -104,69 +108,4 @@ public class StorageUnitStatusChangeMessageBuilder extends AbstractNotificationM
             businessObjectDataKey.getBusinessObjectDataVersion());
     }
 
-    /**
-     * The Storage Unit status change event
-     */
-    public static class StorageUnitStatusChangeEvent extends NotificationEvent
-    {
-        private BusinessObjectDataKey businessObjectDataKey;
-
-        private String storageName;
-
-        private String newStorageUnitStatus;
-
-        private String oldStorageUnitStatus;
-
-        public StorageUnitStatusChangeEvent(BusinessObjectDataKey businessObjectDataKey, String storageName, String newStorageUnitStatus,
-            String oldStorageUnitStatus)
-        {
-            setMessageDefinitionKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS);
-            setEventName("storageUnitStatusChangeEvent");
-
-            this.businessObjectDataKey = businessObjectDataKey;
-            this.storageName = storageName;
-            this.newStorageUnitStatus = newStorageUnitStatus;
-            this.oldStorageUnitStatus = oldStorageUnitStatus;
-        }
-
-        public BusinessObjectDataKey getBusinessObjectDataKey()
-        {
-            return businessObjectDataKey;
-        }
-
-        public void setBusinessObjectDataKey(BusinessObjectDataKey businessObjectDataKey)
-        {
-            this.businessObjectDataKey = businessObjectDataKey;
-        }
-
-        public String getStorageName()
-        {
-            return storageName;
-        }
-
-        public void setStorageName(String storageName)
-        {
-            this.storageName = storageName;
-        }
-
-        public String getNewStorageUnitStatus()
-        {
-            return newStorageUnitStatus;
-        }
-
-        public void setNewStorageUnitStatus(String newStorageUnitStatus)
-        {
-            this.newStorageUnitStatus = newStorageUnitStatus;
-        }
-
-        public String getOldStorageUnitStatus()
-        {
-            return oldStorageUnitStatus;
-        }
-
-        public void setOldStorageUnitStatus(String oldStorageUnitStatus)
-        {
-            this.oldStorageUnitStatus = oldStorageUnitStatus;
-        }
-    }
 }
