@@ -20,7 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
@@ -152,7 +152,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
             businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(businessObjectDefinitionKey, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create a list of business object data keys.
-        List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
+        List<BusinessObjectDataKey> businessObjectDataKeys = Collections.singletonList(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION));
 
@@ -160,8 +160,8 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class)).thenReturn(MAX_RESULTS_1);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class)).thenReturn(SORT_THRESHOLD);
-        when(businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntity))
-            .thenReturn(Long.valueOf(SORT_THRESHOLD + 1));
+        when(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntity, SORT_THRESHOLD))
+            .thenReturn(false);
         when(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1, false))
             .thenReturn(businessObjectDataKeys);
 
@@ -173,7 +173,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class);
-        verify(businessObjectDataDao).getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntity);
+        verify(businessObjectDataDao).isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntity, SORT_THRESHOLD);
         verify(businessObjectDataDao).getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1, false);
         verifyNoMoreInteractionsHelper();
 
@@ -192,7 +192,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
             businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(businessObjectDefinitionKey, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create a list of business object data keys.
-        List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
+        List<BusinessObjectDataKey> businessObjectDataKeys = Collections.singletonList(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION));
 
@@ -200,8 +200,8 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class)).thenReturn(MAX_RESULTS_1);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class)).thenReturn(SORT_THRESHOLD);
-        when(businessObjectDataDao.getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntity))
-            .thenReturn(Long.valueOf(SORT_THRESHOLD));
+        when(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntity, SORT_THRESHOLD))
+            .thenReturn(true);
         when(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1, true))
             .thenReturn(businessObjectDataKeys);
 
@@ -213,7 +213,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
         verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class);
-        verify(businessObjectDataDao).getBusinessObjectDataCountByBusinessObjectDefinition(businessObjectDefinitionEntity);
+        verify(businessObjectDataDao).isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntity, SORT_THRESHOLD);
         verify(businessObjectDataDao).getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1, true);
         verifyNoMoreInteractionsHelper();
 
@@ -233,7 +233,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
             .createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create a list of business object data keys.
-        List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
+        List<BusinessObjectDataKey> businessObjectDataKeys = Collections.singletonList(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION));
 

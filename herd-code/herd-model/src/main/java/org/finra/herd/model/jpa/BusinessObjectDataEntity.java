@@ -94,6 +94,9 @@ public class BusinessObjectDataEntity extends AuditableEntity
     @JoinColumn(name = "bus_objct_frmt_id", referencedColumnName = "bus_objct_frmt_id", nullable = false)
     private BusinessObjectFormatEntity businessObjectFormat;
 
+    @Column(name = "bus_objct_frmt_id", insertable = false, updatable = false)
+    private Integer businessObjectFormatId;
+
     @OneToMany(mappedBy = "businessObjectData", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("storage")
     private Collection<StorageUnitEntity> storageUnits;
@@ -215,6 +218,16 @@ public class BusinessObjectDataEntity extends AuditableEntity
     public void setBusinessObjectFormat(BusinessObjectFormatEntity businessObjectFormat)
     {
         this.businessObjectFormat = businessObjectFormat;
+    }
+
+    public Integer getBusinessObjectFormatId()
+    {
+        return businessObjectFormatId;
+    }
+
+    public void setBusinessObjectFormatId(Integer businessObjectFormatId)
+    {
+        this.businessObjectFormatId = businessObjectFormatId;
     }
 
     public Collection<StorageUnitEntity> getStorageUnits()

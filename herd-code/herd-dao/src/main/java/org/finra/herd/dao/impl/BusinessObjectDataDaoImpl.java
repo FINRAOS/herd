@@ -34,6 +34,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -337,11 +338,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     @Override
-    public Long getBusinessObjectDataCountByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    public boolean isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        int value)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
+        CriteriaQuery<Integer> criteria = builder.createQuery(Integer.class);
 
         // The criteria root is the business object data.
         Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
@@ -350,18 +352,21 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
             businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
 
-        // Create path.
-        Expression<Long> businessObjectDataCount = builder.count(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.id));
+        // Create path. We use business object id column here, since it is part of a foreign key index in the business object data table.
+        Path<Integer> businessObjectFormatIdColumn = businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.businessObjectFormatId);
 
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate predicate =
             builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectDefinitionId), businessObjectDefinitionEntity.getId());
 
         // Add all clauses for the query.
-        criteria.select(businessObjectDataCount).where(predicate);
+        criteria.select(businessObjectFormatIdColumn).where(predicate);
 
-        // Execute the query and return the result.
-        return entityManager.createQuery(criteria).getSingleResult();
+        // Try to retrieve a record, which is sitting at position that is equal to the value. Please note that record position is numbered from 0.
+        List<Integer> businessObjectFormatIds = entityManager.createQuery(criteria).setFirstResult(value).setMaxResults(1).getResultList();
+
+        // Return true if we get no records back, which means that number of records is less then or equal to the constant value that we are checking against.
+        return CollectionUtils.isEmpty(businessObjectFormatIds);
     }
 
     @Override
