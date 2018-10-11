@@ -425,12 +425,17 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         // Get the maximum number of records to return.
-        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
+
+        // Get the number of business object data records matching to the “get all” query selection criteria
+        // above which there would be no sorting (order by) performed when selecting and returning the result set.
+        Integer sortThreshold = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class);
 
         // Gets the list of keys and return them.
         BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
-        businessObjectDataKeys.getBusinessObjectDataKeys()
-            .addAll(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, maxResults));
+        businessObjectDataKeys.getBusinessObjectDataKeys().addAll(businessObjectDataDao
+            .getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, maxResults,
+                businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntity, sortThreshold)));
         return businessObjectDataKeys;
     }
 
@@ -445,7 +450,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
 
         // Get the maximum number of records to return.
-        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
 
         // Gets the list of business object data keys and return them.
         BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
