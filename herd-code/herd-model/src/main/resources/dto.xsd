@@ -536,4 +536,111 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="notificationEvent">
+      <xs:sequence>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="xMLGregorianCalendar">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="javax.xml.datatype.XMLGregorianCalendar"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectFormatKey">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.api.xml.BusinessObjectFormatKey"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestion">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="userNamespaceAuthorizationKey">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataStatusChangeNotificationEvent">
+      <xs:complexContent>
+         <xs:extension base="notificationEvent">
+            <xs:sequence>
+               <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
+               <xs:element name="newBusinessObjectDataStatus" type="xs:string" minOccurs="0"/>
+               <xs:element name="oldBusinessObjectDataStatus" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionDescriptionSuggestionChangeNotificationEvent">
+      <xs:complexContent>
+         <xs:extension base="notificationEvent">
+            <xs:sequence>
+               <xs:element name="businessObjectDefinitionDescriptionSuggestion" type="businessObjectDefinitionDescriptionSuggestion" minOccurs="0"/>
+               <xs:element name="lastUpdatedByUserId" type="xs:string" minOccurs="0"/>
+               <xs:element name="lastUpdatedOn" type="xMLGregorianCalendar" minOccurs="0"/>
+               <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectFormatVersionChangeNotificationEvent">
+      <xs:complexContent>
+         <xs:extension base="notificationEvent">
+            <xs:sequence>
+               <xs:element name="businessObjectFormatKey" type="businessObjectFormatKey" minOccurs="0"/>
+               <xs:element name="oldBusinessObjectFormatVersion" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnitStatusChangeNotificationEvent">
+      <xs:complexContent>
+         <xs:extension base="notificationEvent">
+            <xs:sequence>
+               <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
+               <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+               <xs:element name="newStorageUnitStatus" type="xs:string" minOccurs="0"/>
+               <xs:element name="oldStorageUnitStatus" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="userNamespaceAuthorizationChangeNotificationEvent">
+      <xs:complexContent>
+         <xs:extension base="notificationEvent">
+            <xs:sequence>
+               <xs:element name="UserNamespaceAuthorizationKey" type="userNamespaceAuthorizationKey" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="systemMonitorResponseNotificationEvent">
+      <xs:complexContent>
+         <xs:extension base="notificationEvent">
+            <xs:sequence>
+               <xs:element name="systemMonitorRequestPayload" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+
 </xs:schema>
