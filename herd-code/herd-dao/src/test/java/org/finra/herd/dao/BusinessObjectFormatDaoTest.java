@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 
@@ -167,8 +169,8 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
         assertTrue(businessObjectFormatEntity.getBusinessObjectFormatVersion() == 1);
         assertTrue(businessObjectFormatEntity.getLatestVersion());
         assertTrue(businessObjectFormatEntity.getPartitionKey().equals(PARTITION_KEY));
-        assertTrue(businessObjectFormatEntity.getDescription().equals(String.format("Test format 1")));
-        assertTrue(businessObjectFormatEntity.getDocumentSchema().equals(String.format("Document Schema 1")));
+        assertTrue(businessObjectFormatEntity.getDescription().equals("Test format 1"));
+        assertTrue(businessObjectFormatEntity.getDocumentSchema().equals("Document Schema 1"));
 
         // Let add a second LATEST format version.
         businessObjectFormatDaoTestHelper
@@ -223,6 +225,28 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
 
         // Validate the results.
         assertEquals(Long.valueOf(1L), result);
+    }
+
+    @Test
+    public void testGetBusinessObjectFormatIdsByBusinessObjectDefinition()
+    {
+        // Create two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Arrays
+            .asList(businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION),
+                businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION));
+
+        // Create two business object formats under the first business object definition.
+        List<BusinessObjectFormatEntity> businessObjectFormatEntities = Arrays.asList(businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY), businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, FORMAT_DESCRIPTION_2,
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY));
+
+        // Test "less than", "equal", and "greater than" scenario for all three business object definitions.
+        assertEquals(Arrays.asList(businessObjectFormatEntities.get(0).getId(), businessObjectFormatEntities.get(1).getId()),
+            businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0)));
+        assertEquals(Collections.emptyList(),
+            businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1)));
     }
 
     @Test
@@ -315,7 +339,7 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
             .createBusinessObjectFormatEntity(NAMESPACE_2, BDEF_NAME_2.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
                 INITIAL_FORMAT_VERSION, "Test format 0", "Document Schema 0", Boolean.FALSE, PARTITION_KEY);
 
-        BusinessObjectFormatEntity businessObjectFormatEntityV0 = businessObjectFormatDaoTestHelper
+        businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
                 INITIAL_FORMAT_VERSION, "Test format 0", "Document Schema 0", Boolean.FALSE, PARTITION_KEY);
 
