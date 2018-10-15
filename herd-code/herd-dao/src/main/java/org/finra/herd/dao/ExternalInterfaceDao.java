@@ -26,7 +26,7 @@ public interface ExternalInterfaceDao extends BaseJpaDao
      *
      * @param externalInterfaceName the external interface name (case-insensitive)
      *
-     * @return the external interface for the specified key
+     * @return the external interface for the specified name
      */
     ExternalInterfaceEntity getExternalInterfaceByName(String externalInterfaceName);
 
