@@ -24,11 +24,9 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.ExternalInterfaceDao;
-import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.jpa.ExternalInterfaceEntity;
 import org.finra.herd.model.jpa.ExternalInterfaceEntity_;
 
@@ -57,7 +55,6 @@ public class ExternalInterfaceDaoImpl extends AbstractHerdDao implements Externa
     }
 
     @Override
-    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public List<String> getExternalInterfaces()
     {
         // Create the criteria builder and the criteria.
