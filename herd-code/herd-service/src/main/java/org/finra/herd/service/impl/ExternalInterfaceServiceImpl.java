@@ -144,7 +144,7 @@ public class ExternalInterfaceServiceImpl implements ExternalInterfaceService
     {
         ExternalInterfaceKey externalInterfaceKey = request.getExternalInterfaceKey();
         externalInterfaceKey
-            .setExternalInterfaceName(alternateKeyHelper.validateStringParameter("external interface name", externalInterfaceKey.getExternalInterfaceName()));
+            .setExternalInterfaceName(alternateKeyHelper.validateStringParameter("An", "external interface name", externalInterfaceKey.getExternalInterfaceName()));
     }
 
     /**
@@ -175,7 +175,7 @@ public class ExternalInterfaceServiceImpl implements ExternalInterfaceService
     {
         Assert.notNull(externalInterfaceKey, "An external interface key must be specified.");
         externalInterfaceKey
-            .setExternalInterfaceName(alternateKeyHelper.validateStringParameter("external interface name", externalInterfaceKey.getExternalInterfaceName()));
+            .setExternalInterfaceName(alternateKeyHelper.validateStringParameter("An", "external interface name", externalInterfaceKey.getExternalInterfaceName()));
     }
 
     /**
