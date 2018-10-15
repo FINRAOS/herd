@@ -672,13 +672,6 @@ public enum ConfigurationValue
     BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT("business.object.data.get.all.max.result.count", 1_000),
 
     /**
-     * The number of business object data records matching to the “get all” query selection criteria above which there would be no sorting (order by) performed
-     * when business object data “get all” endpoint selects and returns the result set. Currently, only the business object data “get all by business object
-     * definition” endpoint supports this threshold.
-     */
-    BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD("business.object.data.get.all.sort.threshold", 100_000),
-
-    /**
      * The maximum number of records returned in business object data search result count
      */
     BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 10_000),

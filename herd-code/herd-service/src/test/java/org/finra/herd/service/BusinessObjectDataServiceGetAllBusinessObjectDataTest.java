@@ -142,7 +142,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
     }
 
     @Test
-    public void testGetAllBusinessObjectDataByBusinessObjectDefinitionNoOrderBy()
+    public void testGetAllBusinessObjectDataByBusinessObjectDefinition()
     {
         // Create a business object definition key.
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
@@ -159,10 +159,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         // Mock the external calls.
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class)).thenReturn(MAX_RESULTS_1);
-        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class)).thenReturn(SORT_THRESHOLD);
-        when(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntity, SORT_THRESHOLD))
-            .thenReturn(false);
-        when(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1, false))
+        when(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1))
             .thenReturn(businessObjectDataKeys);
 
         // Call the method being tested.
@@ -172,49 +169,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         verify(businessObjectDefinitionHelper).validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class);
-        verify(businessObjectDataDao).isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntity, SORT_THRESHOLD);
-        verify(businessObjectDataDao).getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1, false);
-        verifyNoMoreInteractionsHelper();
-
-        // Validate the returned object.
-        assertEquals(new BusinessObjectDataKeys(businessObjectDataKeys), response);
-    }
-
-    @Test
-    public void testGetAllBusinessObjectDataByBusinessObjectDefinitionWithOrderBy()
-    {
-        // Create a business object definition key.
-        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
-
-        // Create a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(businessObjectDefinitionKey, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
-
-        // Create a list of business object data keys.
-        List<BusinessObjectDataKey> businessObjectDataKeys = Collections.singletonList(
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION));
-
-        // Mock the external calls.
-        when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
-        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class)).thenReturn(MAX_RESULTS_1);
-        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class)).thenReturn(SORT_THRESHOLD);
-        when(businessObjectDataDao.isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntity, SORT_THRESHOLD))
-            .thenReturn(true);
-        when(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1, true))
-            .thenReturn(businessObjectDataKeys);
-
-        // Call the method being tested.
-        BusinessObjectDataKeys response = businessObjectDataService.getAllBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionKey);
-
-        // Verify the external calls.
-        verify(businessObjectDefinitionHelper).validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-        verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
-        verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
-        verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_SORT_THRESHOLD, Integer.class);
-        verify(businessObjectDataDao).isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(businessObjectDefinitionEntity, SORT_THRESHOLD);
-        verify(businessObjectDataDao).getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1, true);
+        verify(businessObjectDataDao).getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1);
         verifyNoMoreInteractionsHelper();
 
         // Validate the returned object.

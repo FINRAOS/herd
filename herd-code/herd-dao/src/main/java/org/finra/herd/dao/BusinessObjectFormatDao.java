@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 
@@ -31,16 +32,7 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
      *
      * @return the business object format
      */
-    public BusinessObjectFormatEntity getBusinessObjectFormatByAltKey(BusinessObjectFormatKey businessObjectFormatKey);
-
-    /**
-     * Gets the maximum available version of the specified business object format.
-     *
-     * @param businessObjectFormatKey the business object format key (case-insensitive)
-     *
-     * @return the maximum available version of the specified business object format
-     */
-    public Integer getBusinessObjectFormatMaxVersion(BusinessObjectFormatKey businessObjectFormatKey);
+    BusinessObjectFormatEntity getBusinessObjectFormatByAltKey(BusinessObjectFormatKey businessObjectFormatKey);
 
     /**
      * Returns a number of business object format instances that reference a specified partition key group.
@@ -49,7 +41,26 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
      *
      * @return the number of business object format instances that reference this partition key group
      */
-    public Long getBusinessObjectFormatCount(PartitionKeyGroupEntity partitionKeyGroupEntity);
+    Long getBusinessObjectFormatCount(PartitionKeyGroupEntity partitionKeyGroupEntity);
+
+    /**
+     * Gets a list of ids for all business object formats registered under the specified business object definition. The list of business object format ids
+     * returned by this method is sorted by business object format usage ascending, file type ascending, and business object format version descending.
+     *
+     * @param businessObjectDefinitionEntity the business object definition
+     *
+     * @return the list of business object format ids
+     */
+    List<Integer> getBusinessObjectFormatIdsByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
+
+    /**
+     * Gets the maximum available version of the specified business object format.
+     *
+     * @param businessObjectFormatKey the business object format key (case-insensitive)
+     *
+     * @return the maximum available version of the specified business object format
+     */
+    Integer getBusinessObjectFormatMaxVersion(BusinessObjectFormatKey businessObjectFormatKey);
 
     /**
      * Gets a list of business object format keys for the specified business object definition key.
@@ -59,8 +70,7 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
      *
      * @return the list of business object format keys
      */
-    public List<BusinessObjectFormatKey> getBusinessObjectFormats(BusinessObjectDefinitionKey businessObjectDefinitionKey,
-        boolean latestBusinessObjectFormatVersion);
+    List<BusinessObjectFormatKey> getBusinessObjectFormats(BusinessObjectDefinitionKey businessObjectDefinitionKey, boolean latestBusinessObjectFormatVersion);
 
     /**
      * Gets a list of business object format keys for the specified business object definition key and business object format usage.
@@ -71,8 +81,8 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
      *
      * @return the list of business object format keys
      */
-    public List<BusinessObjectFormatKey> getBusinessObjectFormatsWithFilters(BusinessObjectDefinitionKey businessObjectDefinitionKey,
-        String businessObjectFormatUsage, boolean latestBusinessObjectFormatVersion);
+    List<BusinessObjectFormatKey> getBusinessObjectFormatsWithFilters(BusinessObjectDefinitionKey businessObjectDefinitionKey, String businessObjectFormatUsage,
+        boolean latestBusinessObjectFormatVersion);
 
     /**
      * Gets a list of latest version business object format entities for the specified business object definition key.
@@ -81,6 +91,5 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
      *
      * @return the list of business object format entities
      */
-    public List<BusinessObjectFormatEntity> getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(
-        BusinessObjectDefinitionKey businessObjectDefinitionKey);
+    List<BusinessObjectFormatEntity> getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
 }

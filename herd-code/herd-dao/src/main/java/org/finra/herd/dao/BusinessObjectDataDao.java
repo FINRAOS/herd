@@ -115,16 +115,6 @@ public interface BusinessObjectDataDao extends BaseJpaDao
     Long getBusinessObjectDataCount(BusinessObjectFormatKey businessObjectFormatKey);
 
     /**
-     * Checks if count of business object data records registered with a business object definition is less than or equal to a constant value.
-     *
-     * @param businessObjectDefinitionEntity the business object definition entity
-     * @param value the constant value to compare against
-     *
-     * @return true if count of business object data records is less than or equal to a constant value, false otherwise
-     */
-    boolean isBusinessObjectDataCountByBusinessObjectDefinitionLessThanOrEqualTo(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, int value);
-
-    /**
      * Retrieves business object data versions that match the specified business object data key with potentially missing business object format and/or data
      * version values.
      *
@@ -217,17 +207,16 @@ public interface BusinessObjectDataDao extends BaseJpaDao
     List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer pageNum, Integer pageSize);
 
     /**
-     * Gets a list of keys for business object data registered under specified business object definition entity.
+     * Gets a list of keys for business object data registered under specified business object definition entity. The results are sorted by primary partition
+     * value descending, sub-partition values (if present) descending, and business object data version descending.
      *
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param maxResults the optional maximum number of results to return
-     * @param performOrderBy specifies whether to perform sorting (order by) on the set of business object data records matching the selection criteria before
-     * selecting and returning the result set
      *
      * @return the list of business object data keys
      */
     List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
-        Integer maxResults, boolean performOrderBy);
+        Integer maxResults);
 
     /**
      * Gets a list of keys for business object data registered under specified business object format entity.
