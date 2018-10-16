@@ -21,18 +21,14 @@ import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
 
-import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.jpa.ExternalInterfaceEntity;
 
 public class ExternalInterfaceDaoTest extends AbstractDaoTest
 {
-    @Autowired
-    private CacheManager cacheManager;
-
     @Test
     public void testGetExternalInterfaceByName()
     {
@@ -61,21 +57,16 @@ public class ExternalInterfaceDaoTest extends AbstractDaoTest
     @Test
     public void testGetExternalInterfaces()
     {
-        List<String> externalInterfaces = externalInterfaceDao.getExternalInterfaces();
+        // Create a list of external interface names.
+        final List<String> externalInterfaceNames = ImmutableList.of(EXTERNAL_INTERFACE, EXTERNAL_INTERFACE_2);
 
-        // Add an external interfaces.
-        externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE);
+        // Create and persist external interfaces in reverse order.
+        for (String externalInterfaceName : Lists.reverse(externalInterfaceNames))
+        {
+            externalInterfaceDaoTestHelper.createExternalInterfaceEntity(externalInterfaceName);
+        }
 
-        List<String> externalInterfaces2 = externalInterfaceDao.getExternalInterfaces();
-
-        // Since the external interfaces method is cached, the test external interface will not be retrieved.
-        assertEquals(externalInterfaces, externalInterfaces2);
-
-        // Clear the cache and retrieve the external interfaces again.
-        cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
-
-        externalInterfaces2 = externalInterfaceDao.getExternalInterfaces();
-
-        assertNotEquals(externalInterfaces, externalInterfaces2);
+        // Get a list of all external interfaces.
+        assertEquals(externalInterfaceNames, externalInterfaceDao.getExternalInterfaces());
     }
 }
