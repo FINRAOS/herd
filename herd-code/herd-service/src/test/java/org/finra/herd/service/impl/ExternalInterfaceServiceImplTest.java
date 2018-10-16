@@ -131,13 +131,13 @@ public class ExternalInterfaceServiceImplTest
     public void testCreateExternalInterface()
     {
         when(externalInterfaceDao.getExternalInterfaceByName(EXTERNAL_INTERFACE)).thenReturn(null);
-        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
         when(externalInterfaceDao.saveAndRefresh(any(ExternalInterfaceEntity.class))).thenReturn(EXTERNAL_INTERFACE_ENTITY);
 
         ExternalInterface externalInterface = externalInterfaceService.createExternalInterface(EXTERNAL_INTERFACE_CREATE_REQUEST);
         assertEquals(EXTERNAL_INTERFACE, externalInterface.getExternalInterfaceKey().getExternalInterfaceName());
 
-        verify(alternateKeyHelper).validateStringParameter("external interface name", EXTERNAL_INTERFACE);
+        verify(alternateKeyHelper).validateStringParameter("An", "external interface name", EXTERNAL_INTERFACE);
         verify(externalInterfaceDao).getExternalInterfaceByName(EXTERNAL_INTERFACE);
         verify(externalInterfaceDao).saveAndRefresh(any(ExternalInterfaceEntity.class));
 
@@ -151,7 +151,7 @@ public class ExternalInterfaceServiceImplTest
         expectedException.expectMessage(String.format("Unable to create external interface \"%s\" because it already exists.", EXTERNAL_INTERFACE));
 
         when(externalInterfaceDao.getExternalInterfaceByName(EXTERNAL_INTERFACE)).thenReturn(EXTERNAL_INTERFACE_ENTITY);
-        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
         externalInterfaceService.createExternalInterface(EXTERNAL_INTERFACE_CREATE_REQUEST);
     }
 
@@ -159,11 +159,11 @@ public class ExternalInterfaceServiceImplTest
     public void testGetExternalInterface()
     {
         when(externalInterfaceDaoHelper.getExternalInterfaceEntity(EXTERNAL_INTERFACE)).thenReturn(EXTERNAL_INTERFACE_ENTITY);
-        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
 
         ExternalInterface externalInterface = externalInterfaceService.getExternalInterface(EXTERNAL_INTERFACE_KEY);
         assertEquals(EXTERNAL_INTERFACE, externalInterface.getExternalInterfaceKey().getExternalInterfaceName());
-        verify(alternateKeyHelper).validateStringParameter("external interface name", EXTERNAL_INTERFACE_KEY.getExternalInterfaceName());
+        verify(alternateKeyHelper).validateStringParameter("An", "external interface name", EXTERNAL_INTERFACE_KEY.getExternalInterfaceName());
         verify(externalInterfaceDaoHelper).getExternalInterfaceEntity(EXTERNAL_INTERFACE);
 
         verifyNoMoreInteractionsHelper();
@@ -183,11 +183,11 @@ public class ExternalInterfaceServiceImplTest
     public void testDeleteExternalInterface()
     {
         when(externalInterfaceDaoHelper.getExternalInterfaceEntity(EXTERNAL_INTERFACE)).thenReturn(EXTERNAL_INTERFACE_ENTITY);
-        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
 
         ExternalInterface externalInterface = externalInterfaceService.deleteExternalInterface(EXTERNAL_INTERFACE_KEY);
         assertEquals(EXTERNAL_INTERFACE, externalInterface.getExternalInterfaceKey().getExternalInterfaceName());
-        verify(alternateKeyHelper).validateStringParameter("external interface name", EXTERNAL_INTERFACE);
+        verify(alternateKeyHelper).validateStringParameter("An", "external interface name", EXTERNAL_INTERFACE);
         verify(externalInterfaceDaoHelper).getExternalInterfaceEntity(EXTERNAL_INTERFACE);
         verify(externalInterfaceDao).delete(EXTERNAL_INTERFACE_ENTITY);
 
@@ -258,7 +258,7 @@ public class ExternalInterfaceServiceImplTest
     @Test
     public void testValidateExternalInterfaceCreateRequestExtraSpaces()
     {
-        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
 
         assertEquals(EXTERNAL_INTERFACE_NAME_WITH_EXTRA_SPACES,
             EXTERNAL_INTERFACE_CREATE_REQUEST_WITH_EXTRA_SPACES_IN_NAME.getExternalInterfaceKey().getExternalInterfaceName());
@@ -272,7 +272,7 @@ public class ExternalInterfaceServiceImplTest
     @Test
     public void testValidateAndTrimExternalInterfaceKeyExtraSpaces()
     {
-        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
 
         ExternalInterfaceKey externalInterfaceKeyWithExtraSpacesInName = new ExternalInterfaceKey(EXTERNAL_INTERFACE_NAME_WITH_EXTRA_SPACES);
 

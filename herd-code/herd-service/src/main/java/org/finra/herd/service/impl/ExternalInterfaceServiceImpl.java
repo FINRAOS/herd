@@ -143,8 +143,8 @@ public class ExternalInterfaceServiceImpl implements ExternalInterfaceService
     void validateExternalInterfaceCreateRequest(ExternalInterfaceCreateRequest request) throws IllegalArgumentException
     {
         ExternalInterfaceKey externalInterfaceKey = request.getExternalInterfaceKey();
-        externalInterfaceKey
-            .setExternalInterfaceName(alternateKeyHelper.validateStringParameter("An", "external interface name", externalInterfaceKey.getExternalInterfaceName()));
+        externalInterfaceKey.setExternalInterfaceName(
+            alternateKeyHelper.validateStringParameter("An", "external interface name", externalInterfaceKey.getExternalInterfaceName()));
     }
 
     /**
@@ -174,8 +174,8 @@ public class ExternalInterfaceServiceImpl implements ExternalInterfaceService
     void validateAndTrimExternalInterfaceKey(ExternalInterfaceKey externalInterfaceKey) throws IllegalArgumentException
     {
         Assert.notNull(externalInterfaceKey, "An external interface key must be specified.");
-        externalInterfaceKey
-            .setExternalInterfaceName(alternateKeyHelper.validateStringParameter("An", "external interface name", externalInterfaceKey.getExternalInterfaceName()));
+        externalInterfaceKey.setExternalInterfaceName(
+            alternateKeyHelper.validateStringParameter("An", "external interface name", externalInterfaceKey.getExternalInterfaceName()));
     }
 
     /**
