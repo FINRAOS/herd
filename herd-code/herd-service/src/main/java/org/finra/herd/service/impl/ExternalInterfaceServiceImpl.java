@@ -119,6 +119,9 @@ public class ExternalInterfaceServiceImpl implements ExternalInterfaceService
     @Override
     public ExternalInterface updateExternalInterface(ExternalInterfaceKey externalInterfaceKey, ExternalInterfaceUpdateRequest request)
     {
+        // Perform validation and trim.
+        validateAndTrimExternalInterfaceKey(externalInterfaceKey);
+
         // Perform the validation.
         validateExternalInterfaceUpdateRequest(request);
 
@@ -142,9 +145,11 @@ public class ExternalInterfaceServiceImpl implements ExternalInterfaceService
      */
     void validateExternalInterfaceCreateRequest(ExternalInterfaceCreateRequest request) throws IllegalArgumentException
     {
+        Assert.notNull(request, "An external interface create request must be specified.");
         ExternalInterfaceKey externalInterfaceKey = request.getExternalInterfaceKey();
         externalInterfaceKey.setExternalInterfaceName(
             alternateKeyHelper.validateStringParameter("An", "external interface name", externalInterfaceKey.getExternalInterfaceName()));
+        request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
     }
 
     /**
