@@ -8582,7 +8582,7 @@
                <xs:documentation>The external interface display name</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="description" type="xs:string">
+         <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The external interface description</xs:documentation>
             </xs:annotation>

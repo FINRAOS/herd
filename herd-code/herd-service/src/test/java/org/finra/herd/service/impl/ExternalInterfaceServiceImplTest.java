@@ -76,11 +76,13 @@ public class ExternalInterfaceServiceImplTest
     private static final ExternalInterfaceCreateRequest EXTERNAL_INTERFACE_CREATE_REQUEST = new ExternalInterfaceCreateRequest()
     {{
         setExternalInterfaceKey(EXTERNAL_INTERFACE_KEY);
+        setDisplayName(DISPLAY_NAME_FIELD);
     }};
 
     private static final ExternalInterfaceCreateRequest EXTERNAL_INTERFACE_CREATE_REQUEST_WITH_EXTRA_SPACES_IN_NAME = new ExternalInterfaceCreateRequest()
     {{
         setExternalInterfaceKey(EXTERNAL_INTERFACE_KEY_WITH_EXTRA_SPACES_IN_NAME);
+        setDisplayName(DISPLAY_NAME_FIELD);
     }};
 
     private static final ExternalInterfaceUpdateRequest EXTERNAL_INTERFACE_UPDATE_REQUEST = new ExternalInterfaceUpdateRequest()
@@ -132,12 +134,18 @@ public class ExternalInterfaceServiceImplTest
     {
         when(externalInterfaceDao.getExternalInterfaceByName(EXTERNAL_INTERFACE)).thenReturn(null);
         when(alternateKeyHelper.validateStringParameter(anyString(), anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(DISPLAY_NAME_FIELD);
         when(externalInterfaceDao.saveAndRefresh(any(ExternalInterfaceEntity.class))).thenReturn(EXTERNAL_INTERFACE_ENTITY);
 
-        ExternalInterface externalInterface = externalInterfaceService.createExternalInterface(EXTERNAL_INTERFACE_CREATE_REQUEST);
+        ExternalInterfaceKey externalInterfaceKey = new ExternalInterfaceKey(EXTERNAL_INTERFACE);
+        ExternalInterfaceCreateRequest externalInterfaceCreateRequest =
+            new ExternalInterfaceCreateRequest(externalInterfaceKey, DISPLAY_NAME_FIELD, DESCRIPTION);
+
+        ExternalInterface externalInterface = externalInterfaceService.createExternalInterface(externalInterfaceCreateRequest);
         assertEquals(EXTERNAL_INTERFACE, externalInterface.getExternalInterfaceKey().getExternalInterfaceName());
 
         verify(alternateKeyHelper).validateStringParameter("An", "external interface name", EXTERNAL_INTERFACE);
+        verify(alternateKeyHelper).validateStringParameter("display name", DISPLAY_NAME_FIELD);
         verify(externalInterfaceDao).getExternalInterfaceByName(EXTERNAL_INTERFACE);
         verify(externalInterfaceDao).saveAndRefresh(any(ExternalInterfaceEntity.class));
 
@@ -241,6 +249,7 @@ public class ExternalInterfaceServiceImplTest
     @Test
     public void testUpdateExternalInterface()
     {
+        when(alternateKeyHelper.validateStringParameter(anyString(), anyString(), anyString())).thenReturn(EXTERNAL_INTERFACE);
         when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(DISPLAY_NAME_FIELD);
         when(externalInterfaceDaoHelper.getExternalInterfaceEntity(EXTERNAL_INTERFACE)).thenReturn(EXTERNAL_INTERFACE_ENTITY);
         when(externalInterfaceDao.saveAndRefresh(any(ExternalInterfaceEntity.class))).thenReturn(EXTERNAL_INTERFACE_ENTITY);
@@ -248,6 +257,7 @@ public class ExternalInterfaceServiceImplTest
         ExternalInterface externalInterface = externalInterfaceService.updateExternalInterface(EXTERNAL_INTERFACE_KEY, EXTERNAL_INTERFACE_UPDATE_REQUEST);
         assertEquals(DISPLAY_NAME_FIELD, externalInterface.getDisplayName());
 
+        verify(alternateKeyHelper).validateStringParameter("An", "external interface name", EXTERNAL_INTERFACE_KEY.getExternalInterfaceName());
         verify(alternateKeyHelper).validateStringParameter("display name", DISPLAY_NAME_FIELD);
         verify(externalInterfaceDaoHelper).getExternalInterfaceEntity(EXTERNAL_INTERFACE);
         verify(externalInterfaceDao).saveAndRefresh(any(ExternalInterfaceEntity.class));
@@ -289,8 +299,7 @@ public class ExternalInterfaceServiceImplTest
     {
         when(alternateKeyHelper.validateStringParameter(anyString(), anyString())).thenReturn(DISPLAY_NAME_FIELD);
 
-        assertEquals(DISPLAY_NAME_FIELD_WITH_EXTRA_SPACES,
-            EXTERNAL_INTERFACE_UPDATE_REQUEST_WITH_EXTRA_SPACES_IN_DISPLAY_NAME.getDisplayName());
+        assertEquals(DISPLAY_NAME_FIELD_WITH_EXTRA_SPACES, EXTERNAL_INTERFACE_UPDATE_REQUEST_WITH_EXTRA_SPACES_IN_DISPLAY_NAME.getDisplayName());
 
         externalInterfaceService.validateExternalInterfaceUpdateRequest(EXTERNAL_INTERFACE_UPDATE_REQUEST_WITH_EXTRA_SPACES_IN_DISPLAY_NAME);
 
