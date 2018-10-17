@@ -164,9 +164,6 @@ public class ExternalInterfaceServiceImpl implements ExternalInterfaceService
         Assert.notNull(request, "An external interface update request must be specified.");
 
         request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
-
-        // Verify the description has text, but do not trim.
-        Assert.hasText(request.getDescription(), "A description must be specified.");
     }
 
     /**
