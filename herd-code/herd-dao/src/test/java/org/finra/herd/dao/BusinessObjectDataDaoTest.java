@@ -2180,20 +2180,20 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
-        // Retrieve the keys for business object data by specifying business object definition and without setting a maximum number of results.
+        // Retrieve business object data keys for the first business object definition without setting a maximum number of results.
         assertEquals(Arrays.asList(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION), new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION)),
             businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), NO_MAX_RESULTS));
 
-        // Retrieve the keys for business object data by specifying business object definition and with maximum number of results set to 1.
+        // Retrieve business object data keys for the first business object definition with maximum number of results set to 1.
         assertEquals(Collections.singletonList(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION)), businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), MAX_RESULTS_1));
 
         // Try to retrieve business object data keys for the second business object definition.
-        assertEquals(new ArrayList<>(),
+        assertEquals(Collections.emptyList(),
             businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1), NO_MAX_RESULTS));
     }
 

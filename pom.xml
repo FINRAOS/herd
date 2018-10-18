@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.80.0-SNAPSHOT</version>
+   <version>0.81.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -32,7 +32,7 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <herd-ui.version>0.50.0</herd-ui.version>
+      <herd-ui.version>0.51.0</herd-ui.version>
 
       <!-- Third Party JAR Dependencies -->
       <!--
@@ -90,6 +90,7 @@
       <jcredstash.version>0.0.4</jcredstash.version>
       <jest.version>5.3.3</jest.version>
       <opencsv.version>4.1</opencsv.version>
+      <aws-signing-request-interceptor.version>0.0.21</aws-signing-request-interceptor.version>
 
       <!-- Third Party Plugin Dependencies -->
       <jaxb.xew.plugin.version>1.9</jaxb.xew.plugin.version>
@@ -842,7 +843,13 @@
             <version>${jest.version}</version>
          </dependency>
          <dependency>
-            <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+            <groupId>vc.inreach.aws</groupId>
+            <artifactId>aws-signing-request-interceptor</artifactId>
+            <version>${aws-signing-request-interceptor.version}</version>
+         </dependency>
+
+         <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>${jsoup.version}</version>

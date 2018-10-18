@@ -425,7 +425,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         // Get the maximum number of records to return.
-        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
 
         // Gets the list of keys and return them.
         BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
@@ -445,7 +445,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
 
         // Get the maximum number of records to return.
-        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
 
         // Gets the list of business object data keys and return them.
         BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
