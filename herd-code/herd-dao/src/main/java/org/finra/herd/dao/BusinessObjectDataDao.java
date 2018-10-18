@@ -39,7 +39,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the business object data
      */
-    public BusinessObjectDataEntity getBusinessObjectDataByAltKey(BusinessObjectDataKey businessObjectDataKey);
+    BusinessObjectDataEntity getBusinessObjectDataByAltKey(BusinessObjectDataKey businessObjectDataKey);
 
     /**
      * Retrieves business object data by it's key. If a format version isn't specified, the latest available format version (for this partition value) will be
@@ -52,7 +52,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the business object data
      */
-    public BusinessObjectDataEntity getBusinessObjectDataByAltKeyAndStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus);
+    BusinessObjectDataEntity getBusinessObjectDataByAltKeyAndStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus);
 
     /**
      * Gets a maximum available version of the specified business object data.
@@ -61,7 +61,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the maximum available version of the specified business object data
      */
-    public Integer getBusinessObjectDataMaxVersion(BusinessObjectDataKey businessObjectDataKey);
+    Integer getBusinessObjectDataMaxVersion(BusinessObjectDataKey businessObjectDataKey);
 
     /**
      * Retrieves a maximum available partition value per specified parameters.
@@ -81,7 +81,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the maximum available partition value
      */
-    public String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
+    String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
         Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
         String excludedStoragePlatformType, String upperBoundPartitionValue, String lowerBoundPartitionValue);
 
@@ -101,7 +101,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the maximum available partition value
      */
-    public String getBusinessObjectDataMinPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
+    String getBusinessObjectDataMinPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
         Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
         String excludedStoragePlatformType);
 
@@ -112,7 +112,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the number of business object data instances registered with this business object format
      */
-    public Long getBusinessObjectDataCount(BusinessObjectFormatKey businessObjectFormatKey);
+    Long getBusinessObjectDataCount(BusinessObjectFormatKey businessObjectFormatKey);
 
     /**
      * Retrieves business object data versions that match the specified business object data key with potentially missing business object format and/or data
@@ -122,7 +122,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the business object data
      */
-    public List<BusinessObjectDataEntity> getBusinessObjectDataEntities(BusinessObjectDataKey businessObjectDataKey);
+    List<BusinessObjectDataEntity> getBusinessObjectDataEntities(BusinessObjectDataKey businessObjectDataKey);
 
     /**
      * Retrieves a list of business object data entities per specified parameters.
@@ -141,7 +141,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the list of business object data entities sorted by partition values
      */
-    public List<BusinessObjectDataEntity> getBusinessObjectDataEntities(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
+    List<BusinessObjectDataEntity> getBusinessObjectDataEntities(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
         Integer businessObjectDataVersion, String businessObjectDataStatus, String storageName);
 
     /**
@@ -154,7 +154,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the list of business object data entities sorted by created on timestamp
      */
-    public List<BusinessObjectDataEntity> getBusinessObjectDataFromStorageOlderThan(StorageEntity storageEntity, int thresholdMinutes,
+    List<BusinessObjectDataEntity> getBusinessObjectDataFromStorageOlderThan(StorageEntity storageEntity, int thresholdMinutes,
         List<String> businessObjectDataStatuses);
 
     /**
@@ -172,7 +172,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the map of business object data entities to their corresponding storage policy entities
      */
-    public Map<BusinessObjectDataEntity, StoragePolicyEntity> getBusinessObjectDataEntitiesMatchingStoragePolicies(
+    Map<BusinessObjectDataEntity, StoragePolicyEntity> getBusinessObjectDataEntitiesMatchingStoragePolicies(
         StoragePolicyPriorityLevel storagePolicyPriorityLevel, List<String> supportedBusinessObjectDataStatuses, int storagePolicyTransitionMaxAllowedAttempts,
         int startPosition, int maxResult);
 
@@ -183,7 +183,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return A list of business object data entity
      */
-    public List<BusinessObjectDataEntity> getBusinessObjectDataEntitiesByPartitionValue(String partitionValue);
+    List<BusinessObjectDataEntity> getBusinessObjectDataEntitiesByPartitionValue(String partitionValue);
 
     /**
      * Retrieves business object data record count per specified business object data search key.
@@ -192,7 +192,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the record count of business object data
      */
-    public Long getBusinessObjectDataCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey);
+    Long getBusinessObjectDataCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey);
 
     /**
      * Retrieves a list of business object data per specified business object data search key.
@@ -204,17 +204,18 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the list of business object data
      */
-    public List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer pageNum, Integer pageSize);
+    List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer pageNum, Integer pageSize);
 
     /**
-     * Gets a list of keys for business object data registered under specified business object definition entity.
+     * Gets a list of keys for business object data registered under specified business object definition entity. The results are sorted by primary partition
+     * value descending, sub-partition values (if present) descending, and business object data version descending.
      *
      * @param businessObjectDefinitionEntity the business object definition entity
-     * @param maxResults optional maximum number of results to return
+     * @param maxResults the optional maximum number of results to return
      *
      * @return the list of business object data keys
      */
-    public List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+    List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         Integer maxResults);
 
     /**
@@ -225,5 +226,5 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      *
      * @return the list of business object data keys
      */
-    public List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatEntity businessObjectFormatEntity, Integer maxResults);
+    List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatEntity businessObjectFormatEntity, Integer maxResults);
 }

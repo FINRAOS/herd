@@ -83,6 +83,55 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
     }
 
     @Override
+    public Long getBusinessObjectFormatCount(PartitionKeyGroupEntity partitionKeyGroupEntity)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
+
+        // The criteria root is the business object format.
+        Root<BusinessObjectFormatEntity> businessObjectFormatEntity = criteria.from(BusinessObjectFormatEntity.class);
+
+        // Create path.
+        Expression<Long> businessObjectFormatCount = builder.count(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.id));
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate partitionKeyGroupRestriction =
+            builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.partitionKeyGroup), partitionKeyGroupEntity);
+
+        criteria.select(businessObjectFormatCount).where(partitionKeyGroupRestriction);
+
+        return entityManager.createQuery(criteria).getSingleResult();
+    }
+
+    @Override
+    public List<Integer> getBusinessObjectFormatIdsByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteria = builder.createQuery(Integer.class);
+
+        // The criteria root is the business object format.
+        Root<BusinessObjectFormatEntity> businessObjectFormatEntityRoot = criteria.from(BusinessObjectFormatEntity.class);
+
+        // Create path.
+        Expression<Integer> businessObjectFormatIdColumn = businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.id);
+
+        // Create standard restrictions.
+        Predicate predicate =
+            builder.equal(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.businessObjectDefinitionId), businessObjectDefinitionEntity.getId());
+
+        // Build an order by clause.
+        Order orderBy = builder.asc(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.id));
+
+        // Add all clauses to the query.
+        criteria.select(businessObjectFormatIdColumn).where(predicate).orderBy(orderBy);
+
+        // Execute the query and return the results.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
     public Integer getBusinessObjectFormatMaxVersion(BusinessObjectFormatKey businessObjectFormatKey)
     {
         // Create the criteria builder and the criteria.
@@ -107,28 +156,6 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
             builder.max(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion));
 
         criteria.select(maxBusinessObjectFormatVersion).where(queryRestriction);
-
-        return entityManager.createQuery(criteria).getSingleResult();
-    }
-
-    @Override
-    public Long getBusinessObjectFormatCount(PartitionKeyGroupEntity partitionKeyGroupEntity)
-    {
-        // Create the criteria builder and the criteria.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
-
-        // The criteria root is the business object format.
-        Root<BusinessObjectFormatEntity> businessObjectFormatEntity = criteria.from(BusinessObjectFormatEntity.class);
-
-        // Create path.
-        Expression<Long> businessObjectFormatCount = builder.count(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.id));
-
-        // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate partitionKeyGroupRestriction =
-            builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.partitionKeyGroup), partitionKeyGroupEntity);
-
-        criteria.select(businessObjectFormatCount).where(partitionKeyGroupRestriction);
 
         return entityManager.createQuery(criteria).getSingleResult();
     }

@@ -8509,4 +8509,85 @@
       </xs:all>
    </xs:complexType>
 
+   <!-- ***** External Interface ***** -->
+
+   <xs:element name="externalInterfaceCreateRequest" type="externalInterfaceCreateRequest"/>
+   <xs:complexType name="externalInterfaceCreateRequest">
+      <xs:all>
+         <xs:element name="externalInterfaceKey" type="externalInterfaceKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an external interface</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="displayName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The external interface display name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The external interface description</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="externalInterface" type="externalInterface"/>
+   <xs:complexType name="externalInterface">
+      <xs:all>
+         <xs:element name="externalInterfaceKey" type="externalInterfaceKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an external interface</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="displayName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The external interface display name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The external interface description</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="externalInterfaceKeys" type="externalInterfaceKeys">
+      <xs:annotation>
+         <xs:documentation>The list of external interface keys</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="externalInterfaceKeys">
+      <xs:sequence>
+         <xs:element name="externalInterfaceKey" type="externalInterfaceKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an external interface</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="externalInterfaceKey">
+      <xs:all>
+         <xs:element name="externalInterfaceName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="externalInterfaceUpdateRequest" type="externalInterfaceUpdateRequest"/>
+   <xs:complexType name="externalInterfaceUpdateRequest">
+      <xs:all>
+         <xs:element name="displayName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The external interface display name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The external interface description</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
 </xs:schema>

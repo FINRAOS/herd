@@ -369,6 +369,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer EXPIRATION_IN_DAYS = (int) (Math.random() * Integer.MAX_VALUE);
 
+    public static final String EXTERNAL_INTERFACE = "UT_ExternalInterface_1_" + RANDOM_SUFFIX;
+
+    public static final String EXTERNAL_INTERFACE_2 = "UT_ExternalInterface_2_" + RANDOM_SUFFIX;
+
+    public static final String EXTERNAL_INTERFACE_3 = "UT_ExternalInterface_3_" + RANDOM_SUFFIX;
+
     public static final String FIELD_DISPLAY_NAME = "displayName";
 
     public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
@@ -1246,6 +1252,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected ExpectedPartitionValueDaoTestHelper expectedPartitionValueDaoTestHelper;
+
+    @Autowired
+    protected ExternalInterfaceDao externalInterfaceDao;
+
+    @Autowired
+    protected ExternalInterfaceDaoTestHelper externalInterfaceDaoTestHelper;
 
     @Autowired
     protected FileTypeDao fileTypeDao;

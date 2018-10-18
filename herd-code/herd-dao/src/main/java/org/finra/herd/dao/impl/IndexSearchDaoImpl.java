@@ -441,10 +441,10 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private FunctionScoreQueryBuilder getFunctionScoreQueryBuilder(QueryBuilder queryBuilder, String bdefActiveIndex)
     {
         // Script for tag search score multiplier. If bdef set to tag search score multiplier else set to a default value.
-        String inlineScript = "_score * (doc['_index'].value == '" + bdefActiveIndex + "' ? doc['" + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER + "']: 1)";
+        String inlineScript = "_score * (doc['_index'].value == '" + bdefActiveIndex + "' ? doc['" + BDEF_TAGS_SEARCH_SCORE_MULTIPLIER + "'].value : 1)";
 
-        // Set the lang to groovy
-        Script script = new Script(ScriptType.INLINE, "groovy", inlineScript, Collections.emptyMap());
+        // Set the lang to painless
+        Script script = new Script(ScriptType.INLINE, "painless", inlineScript, Collections.emptyMap());
 
         // Set the script
         ScriptScoreFunctionBuilder scoreFunction = ScoreFunctionBuilders.scriptFunction(script);

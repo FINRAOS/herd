@@ -256,6 +256,16 @@ public class SecurityFunctions
 
     public static final String FN_EXPECTED_PARTITION_VALUES_POST = "FN_EXPECTED_PARTITION_VALUES_POST";
 
+    public static final String FN_EXTERNAL_INTERFACES_ALL_GET = "FN_EXTERNAL_INTERFACES_ALL_GET";
+
+    public static final String FN_EXTERNAL_INTERFACES_DELETE = "FN_EXTERNAL_INTERFACES_DELETE";
+
+    public static final String FN_EXTERNAL_INTERFACES_GET = "FN_EXTERNAL_INTERFACES_GET";
+
+    public static final String FN_EXTERNAL_INTERFACES_POST = "FN_EXTERNAL_INTERFACES_POST";
+
+    public static final String FN_EXTERNAL_INTERFACES_PUT = "FN_EXTERNAL_INTERFACES_PUT";
+
     public static final String FN_FILE_TYPES_DELETE = "FN_FILE_TYPES_DELETE";
 
     public static final String FN_FILE_TYPES_GET = "FN_FILE_TYPES_GET";

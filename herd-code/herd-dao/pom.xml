@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.80.0-SNAPSHOT</version>
+      <version>0.81.0-SNAPSHOT</version>
    </parent>
 
    <name>herd dao</name>
@@ -206,6 +206,10 @@
       <dependency>
          <groupId>co.wrisk.jcredstash</groupId>
          <artifactId>jcredstash</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>vc.inreach.aws</groupId>
+         <artifactId>aws-signing-request-interceptor</artifactId>
       </dependency>
 
       <!-- A simple Java toolkit for JSON -->
