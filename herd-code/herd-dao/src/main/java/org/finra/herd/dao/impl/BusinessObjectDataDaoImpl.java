@@ -40,6 +40,7 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.SingularAttribute;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -47,7 +48,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.BusinessObjectDataDao;
@@ -1418,6 +1418,15 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     public List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         Integer maxResults)
     {
+        // Get ids for all business object formats registered with the specified business object definition.
+        List<Integer> businessObjectFormatIds = businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntity);
+
+        // Return no results if the business object definition has no business object formats registered with it.
+        if (CollectionUtils.isEmpty(businessObjectFormatIds))
+        {
+            return new ArrayList<>();
+        }
+
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
@@ -1425,20 +1434,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // The criteria root is the business object data.
         Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
 
-        // Join to other tables that we can order by on.
-        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
-            businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
-        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntityJoin = businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.fileType);
-
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate predicate =
-            builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectDefinition), businessObjectDefinitionEntity);
+            getPredicateForInClause(builder, businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.businessObjectFormatId), businessObjectFormatIds);
 
-        // Build the order by clause. The sort order is consistent with the search business object data implementation.
+        // Build an order by clause.
         List<Order> orderBy = new ArrayList<>();
-        orderBy.add(builder.asc(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage)));
-        orderBy.add(builder.asc(fileTypeEntityJoin.get(FileTypeEntity_.code)));
-        orderBy.add(builder.desc(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
         for (SingularAttribute<BusinessObjectDataEntity, String> businessObjectDataPartition : BUSINESS_OBJECT_DATA_PARTITIONS)
         {
             orderBy.add(builder.desc(businessObjectDataEntityRoot.get(businessObjectDataPartition)));

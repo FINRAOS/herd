@@ -1,4 +1,4 @@
-## Overview [![Build Status](https://travis-ci.org/FINRAOS/herd.svg?branch=master)](https://travis-ci.org/FINRAOS/herd)
+## Overview [![Build Status](https://travis-ci.org/FINRAOS/herd.svg?branch=master)](https://travis-ci.org/FINRAOS/herd) [![Maven Central](https://img.shields.io/maven-central/v/org.finra.herd/herd.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.finra.herd%22%20AND%20a:%22herd%22)
 
 Herd is big data governance for the cloud. The herd unified data catalog helps separate compute from storage in the cloud. Herd job orchestration manages your ETL and analytics processes while tracking all data in the catalog. Here is a quick summary of features:
 

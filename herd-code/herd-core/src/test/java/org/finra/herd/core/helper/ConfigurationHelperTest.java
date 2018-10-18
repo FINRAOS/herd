@@ -66,7 +66,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     @Test
     public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
     {
-        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS;
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
         Integer expectedValue = (Integer) configurationValue.getDefaultValue();
 
         MockEnvironment environment = new MockEnvironment();
