@@ -8590,4 +8590,63 @@
       </xs:all>
    </xs:complexType>
 
+   <!-- ***** Business Object Format To External Interface Mapping ***** -->
+
+   <xs:element name="businessObjectFormatExternalInterfaceCreateRequest" type="businessObjectFormatExternalInterfaceCreateRequest"/>
+   <xs:complexType name="businessObjectFormatExternalInterfaceCreateRequest">
+      <xs:all>
+         <xs:element name="businessObjectFormatExternalInterfaceKey" type="businessObjectFormatExternalInterfaceKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a business object format to external interface mapping</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectFormatExternalInterface" type="businessObjectFormatExternalInterface"/>
+   <xs:complexType name="businessObjectFormatExternalInterface">
+      <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>The internal Id that uniquely references a business object format to external interface mapping</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatExternalInterfaceKey" type="businessObjectFormatExternalInterfaceKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a business object format to external interface mapping</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectFormatExternalInterfaceKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The business object definition name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatUsage" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The business object format usage</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatFileType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The business object format file type</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="externalInterfaceName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The external interface name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
 </xs:schema>
