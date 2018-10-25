@@ -1209,6 +1209,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected BusinessObjectFormatDaoTestHelper businessObjectFormatDaoTestHelper;
 
     @Autowired
+    protected BusinessObjectFormatExternalInterfaceDao businessObjectFormatExternalInterfaceDao;
+
+    @Autowired
+    protected BusinessObjectFormatExternalInterfaceDaoTestHelper businessObjectFormatExternalInterfaceDaoTestHelper;
+
+    @Autowired
     protected ConfigurationDao configurationDao;
 
     @Autowired

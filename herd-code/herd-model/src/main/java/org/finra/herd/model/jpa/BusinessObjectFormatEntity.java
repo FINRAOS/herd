@@ -136,6 +136,11 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @ManyToMany(mappedBy = "businessObjectFormatParents")
     private List<BusinessObjectFormatEntity> businessObjectFormatChildren;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "businessObjectFormat", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("xtrnl_intrfc_cd")
+    private Collection<BusinessObjectFormatExternalInterfaceEntity> businessObjectFormatExternalInterfaces;
+
     @Column(name = "rec_fl", nullable = true)
     @Type(type = "yes_no")
     private Boolean recordFlag;
@@ -339,6 +344,16 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setBusinessObjectFormatChildren(List<BusinessObjectFormatEntity> businessObjectFormatChildren)
     {
         this.businessObjectFormatChildren = businessObjectFormatChildren;
+    }
+
+    public Collection<BusinessObjectFormatExternalInterfaceEntity> getBusinessObjectFormatExternalInterfaces()
+    {
+        return businessObjectFormatExternalInterfaces;
+    }
+
+    public void setBusinessObjectFormatExternalInterfaces(Collection<BusinessObjectFormatExternalInterfaceEntity> businessObjectFormatExternalInterfaces)
+    {
+        this.businessObjectFormatExternalInterfaces = businessObjectFormatExternalInterfaces;
     }
 
     public Boolean isRecordFlag()
