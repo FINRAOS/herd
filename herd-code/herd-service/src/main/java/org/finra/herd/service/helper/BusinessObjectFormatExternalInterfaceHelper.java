@@ -43,12 +43,26 @@ public class BusinessObjectFormatExternalInterfaceHelper
     public BusinessObjectFormatExternalInterface createBusinessObjectFormatExternalInterfaceFromEntity(
         BusinessObjectFormatExternalInterfaceEntity businessObjectFormatExternalInterfaceEntity)
     {
-        return new BusinessObjectFormatExternalInterface(businessObjectFormatExternalInterfaceEntity.getId(), new BusinessObjectFormatExternalInterfaceKey(
+        return new BusinessObjectFormatExternalInterface(businessObjectFormatExternalInterfaceEntity.getId(),
+            createBusinessObjectFormatExternalInterfaceKeyFromEntity(businessObjectFormatExternalInterfaceEntity));
+    }
+
+    /**
+     * Creates a business object format to external interface mapping key from the specified entity.
+     *
+     * @param businessObjectFormatExternalInterfaceEntity the business object format to external interface entity
+     *
+     * @return the business object format to external interface mapping key
+     */
+    public BusinessObjectFormatExternalInterfaceKey createBusinessObjectFormatExternalInterfaceKeyFromEntity(
+        BusinessObjectFormatExternalInterfaceEntity businessObjectFormatExternalInterfaceEntity)
+    {
+        return new BusinessObjectFormatExternalInterfaceKey(
             businessObjectFormatExternalInterfaceEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode(),
             businessObjectFormatExternalInterfaceEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName(),
             businessObjectFormatExternalInterfaceEntity.getBusinessObjectFormat().getUsage(),
             businessObjectFormatExternalInterfaceEntity.getBusinessObjectFormat().getFileType().getCode(),
-            businessObjectFormatExternalInterfaceEntity.getExternalInterface().getCode()));
+            businessObjectFormatExternalInterfaceEntity.getExternalInterface().getCode());
     }
 
     /**

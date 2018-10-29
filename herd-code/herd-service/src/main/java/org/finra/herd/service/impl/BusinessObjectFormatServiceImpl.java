@@ -42,6 +42,7 @@ import org.springframework.util.CollectionUtils;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
+import org.finra.herd.dao.BusinessObjectFormatExternalInterfaceDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.NamespacePermissions;
@@ -71,7 +72,9 @@ import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatExternalInterfaceEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
+import org.finra.herd.model.jpa.ExternalInterfaceEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.model.jpa.RetentionTypeEntity;
@@ -104,7 +107,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     public static final Set<String> SCHEMA_COLUMN_DATA_TYPES_WITH_ALLOWED_SIZE_INCREASE =
         Collections.unmodifiableSet(new HashSet<>(Arrays.asList("CHAR", "VARCHAR", "VARCHAR2")));
 
-
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -125,6 +127,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
     @Autowired
     private BusinessObjectFormatDao businessObjectFormatDao;
+
+    @Autowired
+    private BusinessObjectFormatExternalInterfaceDao businessObjectFormatExternalInterfaceDao;
 
     @Autowired
     private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
@@ -196,18 +201,20 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             latestVersionBusinessObjectFormatEntity == null ? 0 : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatVersion() + 1;
         BusinessObjectFormatEntity newBusinessObjectFormatEntity =
             createBusinessObjectFormatEntity(request, businessObjectDefinitionEntity, fileTypeEntity, businessObjectFormatVersion, null);
-        //latest version format is the descriptive format for the bdef, update the bdef descriptive format to the newly created one
+
+        // Latest version format is the descriptive format for the bdef, update the bdef descriptive format to the newly created one
         if (latestVersionBusinessObjectFormatEntity != null &&
             latestVersionBusinessObjectFormatEntity.equals(businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat()))
         {
             businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(newBusinessObjectFormatEntity);
             businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
         }
-        // latest version business object exists, update its parents and children
-        // latest version business object exists, carry the retention information to the new entity
+
+        // Latest version business object exists, update its parents and children.
+        // Latest version business object exists, carry the retention information to the new entity.
         if (latestVersionBusinessObjectFormatEntity != null)
         {
-            //for each of the previous version's  child, remove the parent link to the previous version and set the parent to the new version
+            // For each of the previous version's  child, remove the parent link to the previous version and set the parent to the new version
             for (BusinessObjectFormatEntity childFormatEntity : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatChildren())
             {
                 childFormatEntity.getBusinessObjectFormatParents().remove(latestVersionBusinessObjectFormatEntity);
@@ -215,7 +222,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 newBusinessObjectFormatEntity.getBusinessObjectFormatChildren().add(childFormatEntity);
                 businessObjectFormatDao.saveAndRefresh(childFormatEntity);
             }
-            //for each of the previous version's parent, remove the child link to the previous version and set the child link to the new version
+
+            // For each of the previous version's parent, remove the child link to the previous version and set the child link to the new version.
             for (BusinessObjectFormatEntity parentFormatEntity : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatParents())
             {
                 parentFormatEntity.getBusinessObjectFormatChildren().remove(latestVersionBusinessObjectFormatEntity);
@@ -224,11 +232,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 businessObjectFormatDao.saveAndRefresh(parentFormatEntity);
             }
 
-            //mark the latest version business object format
+            // Mark the latest version business object format.
             latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatParents(null);
             latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatChildren(null);
 
-            //carry the retention information from the latest entity to the new entity
+            // Carry the retention information from the latest entity to the new entity.
             newBusinessObjectFormatEntity.setRetentionPeriodInDays(latestVersionBusinessObjectFormatEntity.getRetentionPeriodInDays());
             newBusinessObjectFormatEntity.setRecordFlag(latestVersionBusinessObjectFormatEntity.isRecordFlag());
             newBusinessObjectFormatEntity.setRetentionType(latestVersionBusinessObjectFormatEntity.getRetentionType());
@@ -236,15 +244,30 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             // Carry the schema backwards compatibility changes from the latest entity to the new entity.
             newBusinessObjectFormatEntity.setAllowNonBackwardsCompatibleChanges(latestVersionBusinessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges());
 
+            // Carry external interface references from the latest entity to the new entity.
+            for (BusinessObjectFormatExternalInterfaceEntity latestVersionBusinessObjectFormatExternalInterfaceEntity : latestVersionBusinessObjectFormatEntity
+                .getBusinessObjectFormatExternalInterfaces())
+            {
+                // Creates a business object format to external interface mapping entity.
+                BusinessObjectFormatExternalInterfaceEntity businessObjectFormatExternalInterfaceEntity = new BusinessObjectFormatExternalInterfaceEntity();
+                newBusinessObjectFormatEntity.getBusinessObjectFormatExternalInterfaces().add(businessObjectFormatExternalInterfaceEntity);
+                businessObjectFormatExternalInterfaceEntity.setBusinessObjectFormat(newBusinessObjectFormatEntity);
+                businessObjectFormatExternalInterfaceEntity
+                    .setExternalInterface(latestVersionBusinessObjectFormatExternalInterfaceEntity.getExternalInterface());
+            }
+
             businessObjectFormatDao.saveAndRefresh(newBusinessObjectFormatEntity);
 
-            //reset the retention information of the latest version business object format.
+            // Reset the retention information of the latest version business object format.
             latestVersionBusinessObjectFormatEntity.setRetentionType(null);
             latestVersionBusinessObjectFormatEntity.setRecordFlag(null);
             latestVersionBusinessObjectFormatEntity.setRetentionPeriodInDays(null);
 
             // Reset the schema backwards compatibility changes of the latest version business object format.
             latestVersionBusinessObjectFormatEntity.setAllowNonBackwardsCompatibleChanges(null);
+
+            // Reset the external interface mappings of the latest version business object format.
+            latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatExternalInterfaces().clear();
 
             businessObjectFormatDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
         }
@@ -408,8 +431,17 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             businessObjectDefinitionDao.saveAndRefresh(businessObjectFormatEntity.getBusinessObjectDefinition());
         }
 
+        // Get the external interface references for this business object format.
+        List<ExternalInterfaceEntity> externalInterfaceEntities = new ArrayList<>();
+        for (BusinessObjectFormatExternalInterfaceEntity businessObjectFormatExternalInterfaceEntity : businessObjectFormatEntity
+            .getBusinessObjectFormatExternalInterfaces())
+        {
+            externalInterfaceEntities.add(businessObjectFormatExternalInterfaceEntity.getExternalInterface());
+        }
+
         // Delete this business object format.
         businessObjectFormatDao.delete(businessObjectFormatEntity);
+
         // If this business object format version is the latest, set the latest flag on the previous version of this object format, if it exists.
         if (businessObjectFormatEntity.getLatestVersion())
         {
@@ -436,6 +468,16 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 // Update the previous version schema compatibility changes information.
                 previousVersionBusinessObjectFormatEntity
                     .setAllowNonBackwardsCompatibleChanges(businessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges());
+
+                // Create external interface references for the previous version of the business object format.
+                for (ExternalInterfaceEntity externalInterfaceEntity : externalInterfaceEntities)
+                {
+                    // Creates a business object format to external interface mapping entity.
+                    BusinessObjectFormatExternalInterfaceEntity businessObjectFormatExternalInterfaceEntity = new BusinessObjectFormatExternalInterfaceEntity();
+                    previousVersionBusinessObjectFormatEntity.getBusinessObjectFormatExternalInterfaces().add(businessObjectFormatExternalInterfaceEntity);
+                    businessObjectFormatExternalInterfaceEntity.setBusinessObjectFormat(previousVersionBusinessObjectFormatEntity);
+                    businessObjectFormatExternalInterfaceEntity.setExternalInterface(externalInterfaceEntity);
+                }
 
                 // Save the updated entity.
                 businessObjectFormatDao.saveAndRefresh(previousVersionBusinessObjectFormatEntity);

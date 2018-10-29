@@ -96,6 +96,49 @@ public class BusinessObjectFormatExternalInterfaceHelperTest
     }
 
     @Test
+    public void testCreateBusinessObjectFormatExternalInterfaceKeyFromEntity()
+    {
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = new NamespaceEntity();
+        namespaceEntity.setCode(NAMESPACE);
+
+        // Create a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = new BusinessObjectDefinitionEntity();
+        businessObjectDefinitionEntity.setNamespace(namespaceEntity);
+        businessObjectDefinitionEntity.setName(BDEF_NAME);
+
+        // Create a file type entity.
+        FileTypeEntity fileTypeEntity = new FileTypeEntity();
+        fileTypeEntity.setCode(FORMAT_FILE_TYPE_CODE);
+
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
+        businessObjectFormatEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
+        businessObjectFormatEntity.setUsage(FORMAT_USAGE_CODE);
+        businessObjectFormatEntity.setFileType(fileTypeEntity);
+
+        // Create a external interface entity.
+        ExternalInterfaceEntity externalInterfaceEntity = new ExternalInterfaceEntity();
+        externalInterfaceEntity.setCode(EXTERNAL_INTERFACE);
+
+        // Create a business object format to external interface mapping entity.
+        BusinessObjectFormatExternalInterfaceEntity businessObjectFormatExternalInterfaceEntity = new BusinessObjectFormatExternalInterfaceEntity();
+        businessObjectFormatExternalInterfaceEntity.setId(ID);
+        businessObjectFormatExternalInterfaceEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+        businessObjectFormatExternalInterfaceEntity.setExternalInterface(externalInterfaceEntity);
+
+        // Call the method under test.
+        BusinessObjectFormatExternalInterfaceKey result =
+            businessObjectFormatExternalInterfaceHelper.createBusinessObjectFormatExternalInterfaceKeyFromEntity(businessObjectFormatExternalInterfaceEntity);
+
+        // Validate the results.
+        assertEquals(new BusinessObjectFormatExternalInterfaceKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, EXTERNAL_INTERFACE), result);
+
+        // Verify the external calls.
+        verifyNoMoreInteractions(alternateKeyHelper);
+    }
+
+    @Test
     public void testValidateAndTrimBusinessObjectFormatExternalInterfaceCreateRequest()
     {
         // Create a business object format to external interface mapping key.
