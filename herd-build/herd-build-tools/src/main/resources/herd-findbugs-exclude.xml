@@ -102,8 +102,6 @@
          <Class name="~org.finra.herd.model.dto.StorageUnitNotificationEventParamsDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent"/>
          <Class name="~org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent\$Builder"/>
-         <Class name="~org.finra.herd.model.dto.SystemMonitorResponseNotificationEvent"/>
-         <Class name="~org.finra.herd.model.dto.SystemMonitorResponseNotificationEvent\$Builder"/>
          <Class name="~org.finra.herd.model.dto.TagIndexSearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.TagTypeIndexSearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEvent"/>
