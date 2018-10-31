@@ -31,7 +31,6 @@ import org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEve
 import org.finra.herd.model.dto.NotificationEvent;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent;
-import org.finra.herd.model.dto.SystemMonitorResponseNotificationEvent;
 import org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEvent;
 
 /**
@@ -55,9 +54,6 @@ public class NotificationMessageManager
     @Autowired
     private UserNamespaceAuthorizationChangeMessageBuilder userNamespaceAuthorizationChangeMessageBuilder;
 
-    @Autowired
-    private SystemMonitorResponseMessageBuilder systemMonitorResponseMessageBuilder;
-
     private Map<Class<?>, NotificationMessageBuilder> eventTypeNotificationMessageBuilderMap = new HashMap<>();
 
     /**
@@ -73,7 +69,6 @@ public class NotificationMessageManager
         eventTypeNotificationMessageBuilderMap.put(BusinessObjectFormatVersionChangeNotificationEvent.class, businessObjectFormatVersionChangeMessageBuilder);
         eventTypeNotificationMessageBuilderMap.put(StorageUnitStatusChangeNotificationEvent.class, storageUnitStatusChangeMessageBuilder);
         eventTypeNotificationMessageBuilderMap.put(UserNamespaceAuthorizationChangeNotificationEvent.class, userNamespaceAuthorizationChangeMessageBuilder);
-        eventTypeNotificationMessageBuilderMap.put(SystemMonitorResponseNotificationEvent.class, systemMonitorResponseMessageBuilder);
     }
 
     /**
@@ -99,5 +94,4 @@ public class NotificationMessageManager
 
         return eventTypeNotificationMessageBuilderMap.get(notificationEvent.getClass()).buildNotificationMessages(notificationEvent);
     }
-
 }

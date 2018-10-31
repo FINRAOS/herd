@@ -48,6 +48,9 @@ public class HerdJmsMessageListener
     private static final Logger LOGGER = LoggerFactory.getLogger(HerdJmsMessageListener.class);
 
     @Autowired
+    private ConfigurationHelper configurationHelper;
+
+    @Autowired
     private JsonHelper jsonHelper;
 
     @Autowired
@@ -55,10 +58,6 @@ public class HerdJmsMessageListener
 
     @Autowired
     private UploadDownloadService uploadDownloadService;
-
-    @Autowired
-    private ConfigurationHelper configurationHelper;
-
 
     /**
      * Periodically check the configuration and apply the action to the herd JMS message listener service, if needed.
@@ -118,44 +117,12 @@ public class HerdJmsMessageListener
         // Process the message as S3 notification.
         boolean messageProcessed = processS3Notification(payload);
 
-        // If message is not processed as S3 notification, then process it as ESB system monitor message.
-        if (!messageProcessed)
-        {
-            messageProcessed = processEsbSystemMonitorMessage(payload);
-        }
-
         if (!messageProcessed)
         {
             // The message was not processed, log the error.
             LOGGER.error("Failed to process message from the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}",
                 HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING, payload);
         }
-    }
-
-    /**
-     * Process the message as system monitor.
-     *
-     * @param payload the JMS message payload.
-     *
-     * @return boolean whether message was processed.
-     */
-    private boolean processEsbSystemMonitorMessage(String payload)
-    {
-        boolean messageProcessed = false;
-
-        try
-        {
-            sqsNotificationEventService.processSystemMonitorNotificationEvent(payload);
-            messageProcessed = true;
-        }
-        catch (Exception e)
-        {
-            // The logging is set to DEBUG level, since the method is expected to fail when message is not of the expected type.
-            LOGGER.debug("Failed to process message from the JMS queue for a system monitor request. jmsQueueName=\"{}\" jmsMessagePayload={}",
-                HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING, payload, e);
-        }
-
-        return messageProcessed;
     }
 
     /**
