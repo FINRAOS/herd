@@ -59,6 +59,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatDdl;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdlCollectionResponse;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
 import org.finra.herd.model.api.xml.BusinessObjectFormatParentsUpdateRequest;
@@ -72,6 +73,7 @@ import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.ExternalInterfaceEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -400,6 +402,50 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES, descriptiveBusinessObjectFormat, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
             businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()),
             NO_BUSINESS_OBJECT_DEFINITION_CHANGE_EVENTS), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatInitialVersionExistsWithExternalInterfaces()
+    {
+        // Create and persist business object formats.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Create and persist two external interfaces in reverse order of their names.
+        List<ExternalInterfaceEntity> externalInterfaceEntities = Arrays
+            .asList(externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE_2),
+                externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE));
+
+        // Create business object format to external interface mappings. Please note that reference to business object format in version-less.
+        for (ExternalInterfaceEntity externalInterfaceEntity : externalInterfaceEntities)
+        {
+            businessObjectFormatExternalInterfaceDaoTestHelper
+                .createBusinessObjectFormatExternalInterfaceEntity(businessObjectFormatEntity, externalInterfaceEntity);
+        }
+
+        // Create list of expected business object format to external interface mappings.
+        List<BusinessObjectFormatExternalInterfaceKey> expectedBusinessObjectFormatExternalInterfaceKeys = Arrays
+            .asList(new BusinessObjectFormatExternalInterfaceKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, EXTERNAL_INTERFACE),
+                new BusinessObjectFormatExternalInterfaceKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, EXTERNAL_INTERFACE_2));
+
+        // Create a new version of the business object format and validate that response contains external interface mappings.
+        BusinessObjectFormat createdBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
+            new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION, PARTITION_KEY,
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA));
+        assertEquals(SECOND_FORMAT_VERSION, Integer.valueOf(createdBusinessObjectFormat.getBusinessObjectFormatVersion()));
+        assertTrue(createdBusinessObjectFormat.isLatestVersion());
+        assertEquals(expectedBusinessObjectFormatExternalInterfaceKeys, createdBusinessObjectFormat.getBusinessObjectFormatExternalInterfaces());
+
+        // Validate that business object format get returns external interface mappings for both business object format versions.
+        for (Integer businessObjectFormatVersion : Arrays.asList(INITIAL_FORMAT_VERSION, SECOND_FORMAT_VERSION))
+        {
+            BusinessObjectFormat result = businessObjectFormatService.getBusinessObjectFormat(
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion));
+            assertEquals(businessObjectFormatVersion, Integer.valueOf(result.getBusinessObjectFormatVersion()));
+            assertEquals(businessObjectFormatVersion.equals(SECOND_FORMAT_VERSION), result.isLatestVersion());
+            assertEquals(expectedBusinessObjectFormatExternalInterfaceKeys, result.getBusinessObjectFormatExternalInterfaces());
+        }
     }
 
     @Test
@@ -2053,6 +2099,66 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testDeleteBusinessObjectFormatLatestVersionWithExternalInterfaces()
+    {
+        // Create two business object format keys - one for initial and one for second business object format versions.
+        List<BusinessObjectFormatKey> businessObjectFormatKeys = Arrays
+            .asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION));
+
+        // Create and persist business object formats.
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(businessObjectFormatKeys.get(0), FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET,
+                PARTITION_KEY);
+        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(businessObjectFormatKeys.get(1), FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET,
+                PARTITION_KEY);
+
+        // Create and persist two external interfaces in reverse order of their names.
+        List<ExternalInterfaceEntity> externalInterfaceEntities = Arrays
+            .asList(externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE_2),
+                externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE));
+
+        // Create several business object format to external interface mappings. Please note that reference to business
+        // object format in version-less, thus we use the latest business object format version to create mappings.
+        for (ExternalInterfaceEntity externalInterfaceEntity : externalInterfaceEntities)
+        {
+            businessObjectFormatExternalInterfaceDaoTestHelper
+                .createBusinessObjectFormatExternalInterfaceEntity(latestVersionBusinessObjectFormatEntity, externalInterfaceEntity);
+        }
+
+        // Create list of expected business object format to external interface mappings.
+        List<BusinessObjectFormatExternalInterfaceKey> expectedBusinessObjectFormatExternalInterfaceKeys = Arrays
+            .asList(new BusinessObjectFormatExternalInterfaceKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, EXTERNAL_INTERFACE),
+                new BusinessObjectFormatExternalInterfaceKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, EXTERNAL_INTERFACE_2));
+
+        // Validate that business object format get returns external interface mappings for both business object format versions.
+        for (BusinessObjectFormatKey businessObjectFormatKey : businessObjectFormatKeys)
+        {
+            BusinessObjectFormat result = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKey);
+            assertEquals(businessObjectFormatKey.getBusinessObjectFormatVersion(), Integer.valueOf(result.getBusinessObjectFormatVersion()));
+            assertEquals(expectedBusinessObjectFormatExternalInterfaceKeys, result.getBusinessObjectFormatExternalInterfaces());
+        }
+
+        // Delete the latest (second) version of the business object format.
+        BusinessObjectFormat deletedBusinessObjectFormat = businessObjectFormatService.deleteBusinessObjectFormat(businessObjectFormatKeys.get(1));
+
+        // Validate that returned business object format contains business object format to external interface mappings.
+        assertEquals(SECOND_FORMAT_VERSION, Integer.valueOf(deletedBusinessObjectFormat.getBusinessObjectFormatVersion()));
+        assertTrue(deletedBusinessObjectFormat.isLatestVersion());
+        assertEquals(expectedBusinessObjectFormatExternalInterfaceKeys, deletedBusinessObjectFormat.getBusinessObjectFormatExternalInterfaces());
+
+        // Ensure that this business object format is no longer there.
+        assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKeys.get(1)));
+
+        // Validate that when we retrieve the initial business object format version, we still get the external interface mappings.
+        BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKeys.get(0));
+        assertEquals(INITIAL_FORMAT_VERSION, Integer.valueOf(initialBusinessObjectFormat.getBusinessObjectFormatVersion()));
+        assertTrue(initialBusinessObjectFormat.isLatestVersion());
+        assertEquals(expectedBusinessObjectFormatExternalInterfaceKeys, initialBusinessObjectFormat.getBusinessObjectFormatExternalInterfaces());
+    }
+
+    @Test
     public void testDeleteBusinessObjectFormatLowerCaseParameters()
     {
         // Create and persist a business object format.
@@ -3216,6 +3322,49 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testGetBusinessObjectFormatWithExternalInterfaces()
+    {
+        // Create two business object format keys - one for initial and one for second business object format versions.
+        List<BusinessObjectFormatKey> businessObjectFormatKeys = Arrays
+            .asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION));
+
+        // Create and persist business object formats.
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(businessObjectFormatKeys.get(0), FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET,
+                PARTITION_KEY);
+        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(businessObjectFormatKeys.get(1), FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET,
+                PARTITION_KEY);
+
+        // Create and persist two external interfaces in reverse order of their names.
+        List<ExternalInterfaceEntity> externalInterfaceEntities = Arrays
+            .asList(externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE_2),
+                externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE));
+
+        // Create business object format to external interface mappings. Please note that reference to business
+        // object format in version-less, thus we use the latest business object format version to create mappings.
+        for (ExternalInterfaceEntity externalInterfaceEntity : externalInterfaceEntities)
+        {
+            businessObjectFormatExternalInterfaceDaoTestHelper
+                .createBusinessObjectFormatExternalInterfaceEntity(latestVersionBusinessObjectFormatEntity, externalInterfaceEntity);
+        }
+
+        // Create list of expected business object format to external interface mappings.
+        List<BusinessObjectFormatExternalInterfaceKey> expectedBusinessObjectFormatExternalInterfaceKeys = Arrays
+            .asList(new BusinessObjectFormatExternalInterfaceKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, EXTERNAL_INTERFACE),
+                new BusinessObjectFormatExternalInterfaceKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, EXTERNAL_INTERFACE_2));
+
+        // Validate that business object format get returns external interface mappings for both business object format versions.
+        for (BusinessObjectFormatKey businessObjectFormatKey : businessObjectFormatKeys)
+        {
+            BusinessObjectFormat result = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKey);
+            assertEquals(businessObjectFormatKey.getBusinessObjectFormatVersion(), Integer.valueOf(result.getBusinessObjectFormatVersion()));
+            assertEquals(expectedBusinessObjectFormatExternalInterfaceKeys, result.getBusinessObjectFormatExternalInterfaces());
+        }
+    }
+
+    @Test
     public void testGetBusinessObjectFormats()
     {
         // Create and persist the relative business object definitions.
@@ -3718,8 +3867,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         for (String blankText : Arrays.asList(BLANK_TEXT, EMPTY_STRING, null))
         {
             BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
-                .createBusinessObjectFormatUpdateRequest(blankText, FORMAT_DOCUMENT_SCHEMA, Arrays.asList(new Attribute(ATTRIBUTE_NAME_4_MIXED_CASE, blankText)),
-                    testSchema2);
+                .createBusinessObjectFormatUpdateRequest(blankText, FORMAT_DOCUMENT_SCHEMA,
+                    Arrays.asList(new Attribute(ATTRIBUTE_NAME_4_MIXED_CASE, blankText)), testSchema2);
             BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService
                 .updateBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION),
                     request);

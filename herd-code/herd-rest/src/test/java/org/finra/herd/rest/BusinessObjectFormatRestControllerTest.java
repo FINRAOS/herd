@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
@@ -82,8 +83,9 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         BusinessObjectFormat businessObjectFormat =
             new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, true, PARTITION_KEY, FORMAT_DESCRIPTION,
                 NO_FORMAT_DOCUMENT_SCHEMA, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(), null, null,
-                NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE, NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET);
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
+                NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN, NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET,
+                NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE, NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET);
 
         when(businessObjectFormatService.createBusinessObjectFormat(request)).thenReturn(businessObjectFormat);
         BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatRestController.createBusinessObjectFormat(request);
@@ -101,7 +103,8 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         BusinessObjectFormat businessObjectFormat =
             new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, true, PARTITION_KEY,
                 FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), null, null, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
+                businessObjectFormatServiceTestHelper.getTestSchema(), NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN,
+                NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
                 NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET);
 
         BusinessObjectFormatKey businessObjectFormatKey =
@@ -174,7 +177,8 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         BusinessObjectFormat businessObjectFormat =
             new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, true, PARTITION_KEY,
                 FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), null, null, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
+                businessObjectFormatServiceTestHelper.getTestSchema(), NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN,
+                NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
                 NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET);
 
         BusinessObjectFormatKey businessObjectFormatKey =
@@ -239,7 +243,8 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         BusinessObjectFormat businessObjectFormat =
             new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 1, true, PARTITION_KEY, FORMAT_DESCRIPTION_2,
                 NO_FORMAT_DOCUMENT_SCHEMA, NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema2(), null, null, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
+                businessObjectFormatServiceTestHelper.getTestSchema2(), NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN,
+                NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
                 NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET);
 
         BusinessObjectFormatKey businessObjectFormatKey =
@@ -247,7 +252,8 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
 
         // Perform an update by changing the description and schema.
         BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, FORMAT_DOCUMENT_SCHEMA_2, NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestSchema2());
+            .createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, FORMAT_DOCUMENT_SCHEMA_2, NO_ATTRIBUTES,
+                businessObjectFormatServiceTestHelper.getTestSchema2());
 
         when(businessObjectFormatService.updateBusinessObjectFormat(businessObjectFormatKey, request)).thenReturn(businessObjectFormat);
 
@@ -314,10 +320,10 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         BusinessObjectFormatKey parentBusinessObjectFormatKey =
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, null);
         BusinessObjectFormatParentsUpdateRequest updateRequest = new BusinessObjectFormatParentsUpdateRequest();
-        updateRequest.setBusinessObjectFormatParents(Arrays.asList(parentBusinessObjectFormatKey));
+        updateRequest.setBusinessObjectFormatParents(Collections.singletonList(parentBusinessObjectFormatKey));
 
         BusinessObjectFormat businessObjectFormat = new BusinessObjectFormat();
-        businessObjectFormat.setBusinessObjectFormatParents(Arrays.asList(parentBusinessObjectFormatKey));
+        businessObjectFormat.setBusinessObjectFormatParents(Collections.singletonList(parentBusinessObjectFormatKey));
 
         when(businessObjectFormatService.updateBusinessObjectFormatParents(businessObjectFormatKey, updateRequest)).thenReturn(businessObjectFormat);
 

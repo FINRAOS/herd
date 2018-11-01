@@ -130,6 +130,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectFormat.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
         expectedBusinessObjectFormat.setBusinessObjectFormatParents(new ArrayList<>());
         expectedBusinessObjectFormat.setBusinessObjectFormatChildren(new ArrayList<>());
+        expectedBusinessObjectFormat.setBusinessObjectFormatExternalInterfaces(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributeDefinitions(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributes(Arrays.asList(
             new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
@@ -242,6 +243,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectFormat.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
         expectedBusinessObjectFormat.setBusinessObjectFormatParents(new ArrayList<>());
         expectedBusinessObjectFormat.setBusinessObjectFormatChildren(new ArrayList<>());
+        expectedBusinessObjectFormat.setBusinessObjectFormatExternalInterfaces(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributeDefinitions(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributes(Arrays.asList(
             new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),

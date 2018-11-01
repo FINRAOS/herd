@@ -27,7 +27,7 @@ import org.finra.herd.service.AbstractServiceTest;
 /**
  * Test helper for various message builder tests
  */
-public class AbstractNotificationMessageBuilderTestHelper extends AbstractServiceTest
+public abstract class AbstractNotificationMessageBuilderTestHelper extends AbstractServiceTest
 {
     protected static final String SUFFIX_ESCAPED_JSON = "\\\"\\\"<test>";
 

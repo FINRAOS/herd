@@ -86,13 +86,4 @@ public interface MessageNotificationEventService
      * @return the list of notification messages that got queued for publishing
      */
     List<NotificationMessage> processUserNamespaceAuthorizationChangeNotificationEvent(UserNamespaceAuthorizationKey userNamespaceAuthorizationKey);
-
-    /**
-     * Handles the system monitor event notification.
-     *
-     * @param systemMonitorRequestPayload the system monitor incoming payload
-     *
-     * @return the list of notification messages that got queued for publishing
-     */
-    List<NotificationMessage> processSystemMonitorNotificationEvent(String systemMonitorRequestPayload);
 }
