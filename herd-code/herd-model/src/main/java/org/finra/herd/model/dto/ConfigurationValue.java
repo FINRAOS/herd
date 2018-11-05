@@ -562,31 +562,9 @@ public enum ConfigurationValue
     HERD_NOTIFICATION_SQS_INCOMING_QUEUE_NAME("herd.notification.sqs.incoming.queue.name", null),
 
     /**
-     * The application name used to post message to SQS.
-     */
-    HERD_NOTIFICATION_SQS_APPLICATION_NAME("herd.notification.sqs.application.name", null),
-
-    /**
      * The environment used to post message to SQS.
      */
     HERD_NOTIFICATION_SQS_ENVIRONMENT("herd.notification.sqs.environment", null),
-
-    /**
-     * The xsd used to post message to SQS.
-     */
-    HERD_NOTIFICATION_SQS_XSD_NAME("herd.notification.sqs.xsd.name", null),
-
-    /**
-     * A list of properties where each key is used as a key for building the system monitor response and each value is an XPath expression that will be applied
-     * to the system monitor request to store values which can be used when building the response. The default value is an empty string which will produce no
-     * properties.
-     */
-    HERD_NOTIFICATION_SQS_SYS_MONITOR_REQUEST_XPATH_PROPERTIES("herd.notification.sqs.sys.monitor.request.xpath.properties", ""),
-
-    /**
-     * The velocity template to use when generate the system monitor response. There is no default value which will cause no message to be sent.
-     */
-    HERD_NOTIFICATION_SQS_SYS_MONITOR_RESPONSE_VELOCITY_TEMPLATE("herd.notification.sqs.sys.monitor.response.velocity.template", null),
 
     /**
      * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions

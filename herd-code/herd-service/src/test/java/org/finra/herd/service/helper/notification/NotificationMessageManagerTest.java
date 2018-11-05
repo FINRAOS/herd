@@ -39,7 +39,6 @@ import org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEve
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent;
-import org.finra.herd.model.dto.SystemMonitorResponseNotificationEvent;
 import org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEvent;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -72,22 +71,18 @@ public class NotificationMessageManagerTest extends AbstractServiceTest
     @Autowired
     private UserNamespaceAuthorizationChangeMessageBuilder userNamespaceAuthorizationChangeMessageBuilder;
 
-    @Autowired
-    private SystemMonitorResponseMessageBuilder systemMonitorResponseMessageBuilder;
-
     @Test
     public void testGetEventTypeNotificationMessageBuilderMap()
     {
         Map<Class<?>, NotificationMessageBuilder> map = notificationMessageManager.getEventTypeNotificationMessageBuilderMap();
         assertNotNull(map);
-        assertEquals(6, map.size());
+        assertEquals(5, map.size());
         assertEquals(businessObjectDataStatusChangeMessageBuilder, map.get(BusinessObjectDataStatusChangeNotificationEvent.class));
         assertEquals(businessObjectDefinitionDescriptionSuggestionChangeMessageBuilder,
             map.get(BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent.class));
         assertEquals(businessObjectFormatVersionChangeMessageBuilder, map.get(BusinessObjectFormatVersionChangeNotificationEvent.class));
         assertEquals(storageUnitStatusChangeMessageBuilder, map.get(StorageUnitStatusChangeNotificationEvent.class));
         assertEquals(userNamespaceAuthorizationChangeMessageBuilder, map.get(UserNamespaceAuthorizationChangeNotificationEvent.class));
-        assertEquals(systemMonitorResponseMessageBuilder, map.get(SystemMonitorResponseNotificationEvent.class));
     }
 
     @Test
@@ -95,7 +90,7 @@ public class NotificationMessageManagerTest extends AbstractServiceTest
     {
         // Specify the expected exception.
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(String.format("Parameter \"notificationEvent\" must not be null"));
+        expectedException.expectMessage("Parameter \"notificationEvent\" must not be null");
 
         notificationMessageManager.buildNotificationMessages(null);
     }
