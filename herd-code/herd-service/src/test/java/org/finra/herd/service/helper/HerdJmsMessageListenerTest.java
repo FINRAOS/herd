@@ -58,9 +58,10 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
 
     @Autowired
     UploadDownloadService uploadDownloadService;
-    
+
     @Configuration
-    static class ContextConfiguration {        
+    static class ContextConfiguration
+    {
         @Bean(name = "org.springframework.jms.config.internalJmsListenerEndpointRegistry")
         JmsListenerEndpointRegistry registry()
         {
@@ -75,15 +76,7 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
             }
 
             return Mockito.mock(JmsListenerEndpointRegistry.class);
-        } 
-    }
-
-    @Test
-    public void testSystemMonitorMessage() throws Exception
-    {
-        executeWithoutLogging(HerdJmsMessageListener.class, () -> {
-            herdJmsMessageListener.processMessage(getTestSystemMonitorIncomingMessage(), null);
-        });
+        }
     }
 
     @Test
@@ -161,10 +154,10 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
 
         herdJmsMessageListener.processMessage("WRONG_MESSAGE", null);
     }
-    
+
     @Test
     public void testControlListener()
-   {
+    {
         configurationHelper = Mockito.mock(ConfigurationHelper.class);
 
         ReflectionTestUtils.setField(herdJmsMessageListener, "configurationHelper", configurationHelper);
@@ -173,7 +166,7 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
         //The listener is not enabled
         when(configurationHelper.getProperty(ConfigurationValue.JMS_LISTENER_ENABLED)).thenReturn("false");
         JmsListenerEndpointRegistry registry = ApplicationContextHolder.getApplicationContext()
-                .getBean("org.springframework.jms.config.internalJmsListenerEndpointRegistry", JmsListenerEndpointRegistry.class);
+            .getBean("org.springframework.jms.config.internalJmsListenerEndpointRegistry", JmsListenerEndpointRegistry.class);
         when(registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING)).thenReturn(mockMessageListenerContainer);
         //the listener is not running, nothing happened
         when(mockMessageListenerContainer.isRunning()).thenReturn(false);
@@ -184,14 +177,14 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
         when(mockMessageListenerContainer.isRunning()).thenReturn(true);
         herdJmsMessageListener.controlHerdJmsMessageListener();
         verify(mockMessageListenerContainer).stop();
-        
+
         //The listener is enabled
         when(configurationHelper.getProperty(ConfigurationValue.JMS_LISTENER_ENABLED)).thenReturn("true");
         //the listener is running, should not call the start method
         when(mockMessageListenerContainer.isRunning()).thenReturn(true);
         herdJmsMessageListener.controlHerdJmsMessageListener();
-        verify(mockMessageListenerContainer, Mockito.times(0)).start();     
-        // the listener is not running, but it is enabled, should start        
+        verify(mockMessageListenerContainer, Mockito.times(0)).start();
+        // the listener is not running, but it is enabled, should start
         when(mockMessageListenerContainer.isRunning()).thenReturn(false);
         herdJmsMessageListener.controlHerdJmsMessageListener();
         verify(mockMessageListenerContainer).start();

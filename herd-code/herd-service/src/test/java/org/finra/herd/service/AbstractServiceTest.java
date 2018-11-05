@@ -15,10 +15,6 @@
  */
 package org.finra.herd.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -59,6 +55,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnChangeEvent;
+import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
@@ -76,7 +73,6 @@ import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitStatusChangeEvent;
 import org.finra.herd.model.api.xml.TagKey;
-import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.service.activiti.ActivitiHelper;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 import org.finra.herd.service.activiti.HerdCommandInvoker;
@@ -510,6 +506,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<BusinessObjectDefinitionColumnChangeEvent> NO_BUSINESS_OBJECT_DEFINITION_COLUMN_CHANGE_EVENTS = new ArrayList<>();
 
     public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_CHILDREN = null;
+
+    public static final List<BusinessObjectFormatExternalInterfaceKey> NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES = null;
 
     public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
 
@@ -1379,38 +1377,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     }
 
     /**
-     * Gets a test system monitor incoming message paylog.
-     *
-     * @return the system monitor incoming message.
-     */
-    protected String getTestSystemMonitorIncomingMessage()
-    {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<datamgt:monitor xmlns:datamgt=\"http://testDomain/system-monitor\" " + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
-            "xsi:schemaLocation=\"http://testDomain/system-monitor.xsd\">\n");
-        builder.append("   <header>\n");
-        builder.append("      <producer>\n");
-        builder.append("         <name>testName</name>\n");
-        builder.append("         <environment>" + TEST_SQS_ENVIRONMENT + "</environment>\n");
-        builder.append("         <origin>testOrigin</origin>\n");
-        builder.append("      </producer>\n");
-        builder.append("      <creation>\n");
-        builder.append("         <datetime>2015-05-13T11:23:36.217-04:00</datetime>\n");
-        builder.append("      </creation>\n");
-        builder.append("      <correlation-id>" + TEST_SQS_MESSAGE_CORRELATION_ID + "</correlation-id>\n");
-        builder.append("      <context-message-type>testDomain/testApplication/SysmonTest</context-message-type>\n");
-        builder.append("      <system-message-type>testSystemMessageType</system-message-type>\n");
-        builder.append("      <xsd>testXsd</xsd>\n");
-        builder.append("   </header>\n");
-        builder.append("   <payload>\n");
-        builder.append("      <contextMessageTypeToPublish>" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "</contextMessageTypeToPublish>\n");
-        builder.append("   </payload>\n");
-        builder.append("</datamgt:monitor>");
-
-        return builder.toString();
-    }
-
-    /**
      * Converts a list of Parameters to a list of String values.
      *
      * @return the list of string values representing parameter elements.
@@ -1425,33 +1391,5 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         }
 
         return list;
-    }
-
-    /**
-     * Validates that the specified system monitor response message is valid. If not, an exception will be thrown.
-     *
-     * @param expectedMessageType the expected message type
-     * @param expectedMessageDestination the expected message destination
-     * @param notificationMessage the system monitor response message
-     */
-    protected void validateSystemMonitorResponseNotificationMessage(String expectedMessageType, String expectedMessageDestination,
-        NotificationMessage notificationMessage)
-    {
-        assertNotNull(notificationMessage);
-
-        assertEquals(expectedMessageType, notificationMessage.getMessageType());
-        assertEquals(expectedMessageDestination, notificationMessage.getMessageDestination());
-
-        String messageText = notificationMessage.getMessageText();
-
-        // Validate the message text.
-        assertTrue("Correlation Id \"" + TEST_SQS_MESSAGE_CORRELATION_ID + "\" expected, but not found.",
-            messageText.contains("<correlation-id>" + TEST_SQS_MESSAGE_CORRELATION_ID + "</correlation-id>"));
-        assertTrue("Context Message Type \"" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "\" expected, but not found.",
-            messageText.contains("<context-message-type>" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "</context-message-type>"));
-
-        // Note that we don't response with the environment that was specified in the request message. Instead, we respond with the environment configured
-        // in our configuration table.
-        assertTrue("Environment \"Development\" expected, but not found.", messageText.contains("<environment>Development</environment>"));
     }
 }

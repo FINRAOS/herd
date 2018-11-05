@@ -353,8 +353,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
         value = "/businessObjectData/destroy/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
             "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
             "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}" +
-            "/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+            "/businessObjectDataVersions/{businessObjectDataVersion}", method = RequestMethod.POST)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_DESTROY_POST)
     public BusinessObjectData destroyBusinessObjectData(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,

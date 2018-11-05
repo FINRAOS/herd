@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
@@ -40,7 +39,6 @@ import org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEve
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent;
-import org.finra.herd.model.dto.SystemMonitorResponseNotificationEvent;
 import org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEvent;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.MessageNotificationEventService;
@@ -104,14 +102,6 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
     {
         return processNotificationMessages(notificationMessageManager.buildNotificationMessages(
             new StorageUnitStatusChangeNotificationEvent(businessObjectDataKey, storageName, newStorageUnitStatus, oldStorageUnitStatus)));
-    }
-
-    @PublishNotificationMessages
-    @Override
-    public List<NotificationMessage> processSystemMonitorNotificationEvent(String systemMonitorRequestPayload)
-    {
-        return processNotificationMessages(
-            notificationMessageManager.buildNotificationMessages(new SystemMonitorResponseNotificationEvent(systemMonitorRequestPayload)));
     }
 
     /**

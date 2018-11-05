@@ -17,7 +17,6 @@ package org.finra.herd.service.helper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -31,12 +30,14 @@ import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatExternalInterfaceEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 
 /**
@@ -51,6 +52,9 @@ public class BusinessObjectFormatHelper
     @Autowired
     private BusinessObjectFormatDao businessObjectFormatDao;
 
+    @Autowired
+    private BusinessObjectFormatExternalInterfaceHelper businessObjectFormatExternalInterfaceHelper;
+
     /**
      * Returns a string representation of the alternate key values for the business object format.
      *
@@ -61,7 +65,7 @@ public class BusinessObjectFormatHelper
     public String businessObjectFormatEntityAltKeyToString(BusinessObjectFormatEntity businessObjectFormatEntity)
     {
         return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d",
+                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d",
             businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode(),
             businessObjectFormatEntity.getBusinessObjectDefinition().getName(), businessObjectFormatEntity.getUsage(),
             businessObjectFormatEntity.getFileType().getCode(), businessObjectFormatEntity.getBusinessObjectFormatVersion());
@@ -82,34 +86,14 @@ public class BusinessObjectFormatHelper
     }
 
     /**
-     * Returns a string representation of the business object format key.
-     *
-     * @param namespace the namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object format usage
-     * @param businessObjectFormatFileType the business object format file type
-     * @param businessObjectFormatVersion the business object formation version
-     *
-     * @return the string representation of the business object format key
-     */
-    public String businessObjectFormatKeyToString(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
-        String businessObjectFormatFileType, Integer businessObjectFormatVersion)
-    {
-        return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d", namespace, businessObjectDefinitionName, businessObjectFormatUsage,
-            businessObjectFormatFileType, businessObjectFormatVersion);
-    }
-
-    /**
      * Creates the business object format from the persisted entity.
      *
      * @param businessObjectFormatEntity the newly persisted business object format entity.
-     *
      * @param checkLatestVersion need to check latest version
      *
      * @return the business object format.
      */
-    public  BusinessObjectFormat createBusinessObjectFormatFromEntity(BusinessObjectFormatEntity businessObjectFormatEntity, Boolean checkLatestVersion)
+    public BusinessObjectFormat createBusinessObjectFormatFromEntity(BusinessObjectFormatEntity businessObjectFormatEntity, Boolean checkLatestVersion)
     {
         BusinessObjectFormat businessObjectFormat = new BusinessObjectFormat();
         businessObjectFormat.setId(businessObjectFormatEntity.getId());
@@ -175,10 +159,10 @@ public class BusinessObjectFormatHelper
             }
 
             // Sort the data schema columns on the position.
-            Collections.sort(dataSchemaColumns, new SchemaColumnPositionComparator());
+            dataSchemaColumns.sort(new SchemaColumnPositionComparator());
 
             // Sort the partition schema columns on the partition level.
-            Collections.sort(partitionSchemaColumns, new SchemaColumnPartitionLevelComparator());
+            partitionSchemaColumns.sort(new SchemaColumnPartitionLevelComparator());
 
             // Add in the data schema columns.
             List<SchemaColumn> schemaColumns = new ArrayList<>();
@@ -207,13 +191,13 @@ public class BusinessObjectFormatHelper
         //use the latest version if it is not
         if (checkLatestVersion)
         {
-            BusinessObjectFormatKey  businessObjectFormatKey = getBusinessObjectFormatKey(businessObjectFormatEntity);
+            BusinessObjectFormatKey businessObjectFormatKey = getBusinessObjectFormatKey(businessObjectFormatEntity);
             businessObjectFormatKey.setBusinessObjectFormatVersion(null);
             latestVersionBusinessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
         }
 
-        //add business object format parent
-        List<BusinessObjectFormatKey> businessObjectFormatParents = new ArrayList();
+        // Add in the parents.
+        List<BusinessObjectFormatKey> businessObjectFormatParents = new ArrayList<>();
         businessObjectFormat.setBusinessObjectFormatParents(businessObjectFormatParents);
         for (BusinessObjectFormatEntity businessObjectFormatEntityParent : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatParents())
         {
@@ -222,8 +206,8 @@ public class BusinessObjectFormatHelper
             businessObjectFormatParents.add(businessObjectFormatParent);
         }
 
-        //add business object format children
-        List<BusinessObjectFormatKey> businessObjectFormatChildren = new ArrayList();
+        // Add in the children.
+        List<BusinessObjectFormatKey> businessObjectFormatChildren = new ArrayList<>();
         businessObjectFormat.setBusinessObjectFormatChildren(businessObjectFormatChildren);
         for (BusinessObjectFormatEntity businessObjectFormatEntityChild : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatChildren())
         {
@@ -232,7 +216,17 @@ public class BusinessObjectFormatHelper
             businessObjectFormatChildren.add(businessObjectFormatChild);
         }
 
-        //add retention information
+        // Add in the external interface mappings.
+        List<BusinessObjectFormatExternalInterfaceKey> businessObjectFormatExternalInterfaceKeys = new ArrayList<>();
+        businessObjectFormat.setBusinessObjectFormatExternalInterfaces(businessObjectFormatExternalInterfaceKeys);
+        for (BusinessObjectFormatExternalInterfaceEntity businessObjectFormatExternalInterfaceEntity : latestVersionBusinessObjectFormatEntity
+            .getBusinessObjectFormatExternalInterfaces())
+        {
+            businessObjectFormatExternalInterfaceKeys.add(businessObjectFormatExternalInterfaceHelper
+                .createBusinessObjectFormatExternalInterfaceKeyFromEntity(businessObjectFormatExternalInterfaceEntity));
+        }
+
+        // Add in the retention information.
         businessObjectFormat.setRecordFlag(latestVersionBusinessObjectFormatEntity.isRecordFlag());
         businessObjectFormat.setRetentionPeriodInDays(latestVersionBusinessObjectFormatEntity.getRetentionPeriodInDays());
         if (latestVersionBusinessObjectFormatEntity.getRetentionType() != null)
@@ -240,7 +234,7 @@ public class BusinessObjectFormatHelper
             businessObjectFormat.setRetentionType(latestVersionBusinessObjectFormatEntity.getRetentionType().getCode());
         }
 
-        // Add business object format schema backwards compatibility changes flag.
+        // Add in the business object format schema backwards compatibility changes flag.
         businessObjectFormat.setAllowNonBackwardsCompatibleChanges(latestVersionBusinessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges());
 
         return businessObjectFormat;
@@ -250,7 +244,6 @@ public class BusinessObjectFormatHelper
      * Creates the business object format from the persisted entity.
      *
      * @param businessObjectFormatEntity the newly persisted business object format entity.
-     *
      *
      * @return the business object format.
      */
@@ -345,6 +338,25 @@ public class BusinessObjectFormatHelper
         {
             Assert.notNull(key.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
         }
+    }
+
+    /**
+     * Returns a string representation of the business object format key.
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object formation version
+     *
+     * @return the string representation of the business object format key
+     */
+    private String businessObjectFormatKeyToString(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
+        String businessObjectFormatFileType, Integer businessObjectFormatVersion)
+    {
+        return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d", namespace, businessObjectDefinitionName, businessObjectFormatUsage,
+            businessObjectFormatFileType, businessObjectFormatVersion);
     }
 
     /**

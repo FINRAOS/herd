@@ -48,7 +48,6 @@ import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionDescriptionSuggestionStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.ConfigurationEntity;
-import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 
@@ -823,104 +822,5 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
 
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
-    }
-
-    @Test
-    public void testProcessSystemMonitorNotificationEvent() throws Exception
-    {
-        // Override configuration.
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_SYS_MONITOR_RESPONSE_VELOCITY_TEMPLATE.getKey(),
-            SYSTEM_MONITOR_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML);
-        modifyPropertySourceInEnvironment(overrideMap);
-
-        try
-        {
-            // Trigger the notification.
-            List<NotificationMessage> result = messageNotificationEventService.processSystemMonitorNotificationEvent(getTestSystemMonitorIncomingMessage());
-
-            // Validate the results.
-            assertEquals(1, CollectionUtils.size(result));
-            validateSystemMonitorResponseNotificationMessage(MessageTypeEntity.MessageEventTypes.SQS.name(), HERD_OUTGOING_QUEUE, result.get(0));
-        }
-        finally
-        {
-            // Restore the property sources so we don't affect other tests.
-            restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
-    public void testProcessSystemMonitorNotificationEventHerdSqsNotificationNotEnabled() throws Exception
-    {
-        // Override configuration.
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_ENABLED.getKey(), false);
-        modifyPropertySourceInEnvironment(overrideMap);
-
-        try
-        {
-            // Trigger the notification.
-            List<NotificationMessage> result = messageNotificationEventService.processSystemMonitorNotificationEvent(getTestSystemMonitorIncomingMessage());
-
-            // Validate the results.
-            assertEquals(0, result.size());
-        }
-        finally
-        {
-            // Restore the property sources so we don't affect other tests.
-            restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
-    public void testProcessSystemMonitorNotificationEventNoMessageVelocityTemplate() throws Exception
-    {
-        // Override configuration to remove the velocity template used for building the system monitor response.
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_SYS_MONITOR_RESPONSE_VELOCITY_TEMPLATE.getKey(), null);
-        modifyPropertySourceInEnvironment(overrideMap);
-
-        try
-        {
-            // Trigger the notification.
-            List<NotificationMessage> result = messageNotificationEventService.processSystemMonitorNotificationEvent(getTestSystemMonitorIncomingMessage());
-
-            // Validate the results. Result list should contain no notification messages since no velocity template is configured.
-            assertEquals(0, result.size());
-        }
-        finally
-        {
-            // Restore the property sources so we don't affect other tests.
-            restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
-    public void testProcessSystemMonitorNotificationEventSqsOutgoingQueueNotDefined() throws Exception
-    {
-        // Override configuration.
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_SYS_MONITOR_RESPONSE_VELOCITY_TEMPLATE.getKey(),
-            SYSTEM_MONITOR_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML);
-        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_OUTGOING_QUEUE_NAME.getKey(), null);
-        modifyPropertySourceInEnvironment(overrideMap);
-
-        try
-        {
-            // Trigger the notification.
-            messageNotificationEventService.processSystemMonitorNotificationEvent(getTestSystemMonitorIncomingMessage());
-            fail("Suppose to throw IllegalStateException.");
-        }
-        catch (IllegalStateException ex)
-        {
-            assertEquals(String.format("SQS queue name not found. Ensure the \"%s\" configuration entry is configured.",
-                ConfigurationValue.HERD_NOTIFICATION_SQS_OUTGOING_QUEUE_NAME.getKey()), ex.getMessage());
-        }
-        finally
-        {
-            // Restore the property sources so we don't affect other tests.
-            restorePropertySourceInEnvironment();
-        }
     }
 }
