@@ -503,6 +503,22 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean LATEST_VERSION_FLAG_SET = true;
 
+    public static final String LDAP_ATTRIBUTE_USER_EMAIL_ADDRESS = "UT_LdapAttributeUserEmailAddress_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_ATTRIBUTE_USER_FULL_NAME = "UT_LdapAttributeUserFullName_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_ATTRIBUTE_USER_ID = "UT_LdapAttributeUserId_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_ATTRIBUTE_USER_JOB_TITLE = "UT_LdapAttributeUserJobTitle_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER = "UT_LdapAttributeUserTelephoneNumber_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_BASE = "ou=locations,dc=corp,dc=root,dc=test,dc=com";
+
+    public static final String LDAP_URL = "UT_LdapUrl_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_USER_DN = "UT_LdapUserDn_" + RANDOM_SUFFIX;
+
     public static final String LOCAL_FILE = "foo.dat";
 
     public static final List<String> LOCAL_FILES = Arrays.asList("foo1.dat", "Foo2.dat", "FOO3.DAT", "folder/foo3.dat", "folder/foo2.dat", "folder/foo1.dat");

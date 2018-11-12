@@ -686,16 +686,9 @@ public enum ConfigurationValue
     LDAP_USER_DN("ldap.user.dn", ""),
 
     /**
-     * The LDAP password (credentials) in base64 encoded format to use for getting authenticated contexts. If this value is not configured, the application
-     * falls back to "ldap.password" configuration option.
+     * The credential name to retrieve LDAP user password from the Credstash.
      */
-    LDAP_PASSWORD_BASE64("ldap.password.base64", ""),
-
-    /**
-     * The LDAP password (credentials) to use for getting authenticated contexts. This configuration option is ignored when "ldap.password.base64" is
-     * configured.
-     */
-    LDAP_PASSWORD("ldap.password", ""),
+    LDAP_USER_CREDENTIAL_NAME("ldap.user.credential.name", ""),
 
     /**
      * The LDAP attribute id for user's fully qualified username.
@@ -924,6 +917,12 @@ public enum ConfigurationValue
      * The Credstash encryption context key value map.
      */
     CREDSTASH_ENCRYPTION_CONTEXT("credstash.encryption.context", "{\"AGS\":\"AGS_VALUE\",\"SDLC\":\"SDLC_VALUE\",\"Component\":\"COMPONENT_VALUE\"}"),
+
+    /**
+     * The Credstash encryption context key value map for HERD component.
+     */
+    CREDSTASH_HERD_ENCRYPTION_CONTEXT("credstash.herd.encryption.context",
+        "{\"AGS\":\"AGS_VALUE\",\"SDLC\":\"SDLC_VALUE\",\"Component\":\"HERD_COMPONENT_VALUE\"}"),
 
     /**
      * The Credstash encryption context key value map for RELATIONAL storage.
