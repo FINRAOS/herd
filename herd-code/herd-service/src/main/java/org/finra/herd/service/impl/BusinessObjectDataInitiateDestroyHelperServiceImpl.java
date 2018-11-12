@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
@@ -426,19 +427,34 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         Integer retentionPeriodInDays = latestVersionBusinessObjectFormatEntity.getRetentionPeriodInDays();
 
         // Validate that retention information is specified for this business object format.
-        if (StringUtils.isBlank(retentionType) || retentionPeriodInDays == null)
+        if (retentionType != null)
         {
-            throw new IllegalArgumentException(String
-                .format("Retention information is not configured for the business object format. Business object format: {%s}",
-                    businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
-        }
+            // Validate the retention type to be either PARTITION_VALUE or BDATA_RETENTION_DATE.
+            if (!(retentionType.equals(RetentionTypeEntity.PARTITION_VALUE) || retentionType.equals(RetentionTypeEntity.BDATA_RETENTION_DATE)))
+            {
+                throw new IllegalArgumentException(String
+                    .format("Retention type \"%s\" is not supported by the business object data destroy feature. Business object format: {%s}", retentionType,
+                        businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
+            }
 
-        // Validate the retention type.
-        if (!RetentionTypeEntity.PARTITION_VALUE.equals(retentionType))
+            // Validate retention information for individual retention type.
+            if (retentionType.equals(RetentionTypeEntity.PARTITION_VALUE))
+            {
+                Assert.notNull(retentionPeriodInDays,
+                    String.format("Retention period in days must be specified for %s retention type.", RetentionTypeEntity.PARTITION_VALUE));
+                Assert.isTrue(retentionPeriodInDays > 0,
+                    String.format("A positive retention period in days must be specified for %s retention type.", RetentionTypeEntity.PARTITION_VALUE));
+            }
+            else
+            {
+                // Retention period in days value must only be specified for PARTITION_VALUE retention type.
+                Assert.isNull(retentionPeriodInDays, String.format("A retention period in days cannot be specified for %s retention type.", retentionType));
+            }
+        }
+        else
         {
-            throw new IllegalArgumentException(String
-                .format("Retention type \"%s\" is not supported by the business object data destroy feature. Business object format: {%s}", retentionType,
-                    businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
+            Assert.notNull(retentionType, String.format("Retention information is not configured for the business object format. Business object format: {%s}",
+                businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
         }
 
         // Try to convert business object data primary partition value to a timestamp. If conversion is not successful, the method returns a null value.

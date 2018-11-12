@@ -742,7 +742,8 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
                 BUSINESS_OBJECT_FORMAT_KEY_AS_STRING), e.getMessage());
         }
 
-        // Update the latest business object format version to have retention type specified but without a retention period.
+        // Update the latest business object format version to have retention type - PARTITION_VALUE specified but without a retention period.
+        retentionTypeEntity.setCode(RetentionTypeEntity.PARTITION_VALUE);
         latestVersionBusinessObjectFormatEntity.setRetentionType(retentionTypeEntity);
         latestVersionBusinessObjectFormatEntity.setRetentionPeriodInDays(null);
 
@@ -754,13 +755,31 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Retention information is not configured for the business object format. Business object format: {%s}",
-                BUSINESS_OBJECT_FORMAT_KEY_AS_STRING), e.getMessage());
+            assertEquals(String.format("Retention period in days must be specified for %s retention type.", RetentionTypeEntity.PARTITION_VALUE),
+                e.getMessage());
+        }
+
+        // Update the latest business object format version to have retention type - BDATA_RETENTION_DATE specified but with a retention period.
+        // Retention period in days value must only be specified for PARTITION_VALUE retention type.
+        retentionTypeEntity.setCode(RetentionTypeEntity.BDATA_RETENTION_DATE);
+        latestVersionBusinessObjectFormatEntity.setRetentionType(retentionTypeEntity);
+        latestVersionBusinessObjectFormatEntity.setRetentionPeriodInDays(RETENTION_PERIOD_DAYS);
+
+        // Try to call the method under test.
+        try
+        {
+            businessObjectDataInitiateDestroyHelperServiceImpl.validateBusinessObjectData(businessObjectDataEntity, businessObjectDataKey);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("A retention period in days cannot be specified for %s retention type.", RetentionTypeEntity.BDATA_RETENTION_DATE),
+                e.getMessage());
         }
 
         // Verify the external calls.
-        verify(businessObjectFormatDao, times(2)).getBusinessObjectFormatByAltKey(businessObjectFormatKey);
-        verify(businessObjectFormatHelper, times(2)).businessObjectFormatKeyToString(businessObjectFormatKey);
+        verify(businessObjectFormatDao, times(3)).getBusinessObjectFormatByAltKey(businessObjectFormatKey);
+        verify(businessObjectFormatHelper, times(1)).businessObjectFormatKeyToString(businessObjectFormatKey);
         verifyNoMoreInteractionsHelper();
     }
 
