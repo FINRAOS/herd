@@ -1322,6 +1322,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected KmsDao kmsDao;
 
     @Autowired
+    protected LdapOperations ldapOperations;
+
+    @Autowired
     protected MessageTypeDao messageTypeDao;
 
     @Autowired
