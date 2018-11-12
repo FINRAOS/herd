@@ -89,6 +89,7 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
         contextSource.setBase(ldapBase);
         contextSource.setUserDn(ldapUserDn);
         contextSource.setPassword(ldapUserPassword);
+        contextSource.afterPropertiesSet();
 
         // Create an LDAP template.
         LdapTemplate ldapTemplate = new LdapTemplate(contextSource);
@@ -111,7 +112,7 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
         return CollectionUtils.isNotEmpty(subjectMatterExpertContactDetailsList) ? subjectMatterExpertContactDetailsList.get(0) : null;
     }
 
-    static class SubjectMatterExpertContactDetailsMapper implements AttributesMapper<SubjectMatterExpertContactDetails>
+    public static class SubjectMatterExpertContactDetailsMapper implements AttributesMapper<SubjectMatterExpertContactDetails>
     {
         /**
          * The LDAP attribute id for user's e-mail address
@@ -141,7 +142,7 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
          * @param userEmailAddressAttribute the LDAP attribute id for user's e-mail address
          * @param userTelephoneNumberAttribute the LDAP attribute id for user's telephone number
          */
-        SubjectMatterExpertContactDetailsMapper(String userFullNameAttribute, String userJobTitleAttribute, String userEmailAddressAttribute,
+        public SubjectMatterExpertContactDetailsMapper(String userFullNameAttribute, String userJobTitleAttribute, String userEmailAddressAttribute,
             String userTelephoneNumberAttribute)
         {
             this.userFullNameAttribute = userFullNameAttribute;
