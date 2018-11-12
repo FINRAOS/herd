@@ -24,14 +24,20 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.ldap.query.LdapQuery;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.LdapOperations;
 import org.finra.herd.dao.SubjectMatterExpertDao;
+import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
+import org.finra.herd.dao.helper.CredStashHelper;
 import org.finra.herd.model.api.xml.SubjectMatterExpertContactDetails;
 import org.finra.herd.model.api.xml.SubjectMatterExpertKey;
 import org.finra.herd.model.dto.ConfigurationValue;
@@ -39,29 +45,73 @@ import org.finra.herd.model.dto.ConfigurationValue;
 @Repository
 public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubjectMatterExpertDaoImpl.class);
+
     @Autowired
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private LdapOperations ldapOperations;
+    private CredStashHelper credStashHelper;
 
     @Autowired
-    private LdapTemplate ldapTemplate;
+    private LdapOperations ldapOperations;
 
     @Override
     public SubjectMatterExpertContactDetails getSubjectMatterExpertByKey(SubjectMatterExpertKey subjectMatterExpertKey)
     {
-        List<SubjectMatterExpertContactDetails> subjectMatterExpertContactDetailsList = ldapOperations.search(ldapTemplate,
-            query().where(configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_ID)).is(subjectMatterExpertKey.getUserId()),
+        // Get LDAP specific configuration settings.
+        final String ldapUrl = configurationHelper.getProperty(ConfigurationValue.LDAP_URL);
+        final String ldapBase = configurationHelper.getProperty(ConfigurationValue.LDAP_BASE);
+        final String ldapUserDn = configurationHelper.getProperty(ConfigurationValue.LDAP_USER_DN);
+        final String credStashEncryptionContext = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_HERD_ENCRYPTION_CONTEXT);
+        final String ldapUserCredentialName = configurationHelper.getProperty(ConfigurationValue.LDAP_USER_CREDENTIAL_NAME);
+
+        // Log configuration values being used to create LDAP context source.
+        LOGGER.info("Creating LDAP context source using the following parameters: {}=\"{}\" {}=\"{}\" {}=\"{}\" {}=\"{}\" {}=\"{}\"...",
+            ConfigurationValue.LDAP_URL.getKey(), ldapUrl, ConfigurationValue.LDAP_BASE.getKey(), ldapBase, ConfigurationValue.LDAP_USER_DN.getKey(),
+            ldapUserDn, ConfigurationValue.CREDSTASH_HERD_ENCRYPTION_CONTEXT.getKey(), credStashEncryptionContext,
+            ConfigurationValue.LDAP_USER_CREDENTIAL_NAME.getKey(), ldapUserCredentialName);
+
+        // Retrieve LDAP user password from the credstash.
+        String ldapUserPassword;
+        try
+        {
+            ldapUserPassword = credStashHelper.getCredentialFromCredStash(credStashEncryptionContext, ldapUserCredentialName);
+        }
+        catch (CredStashGetCredentialFailedException e)
+        {
+            throw new IllegalStateException(e);
+        }
+
+        // Create and initialize an LDAP context source.
+        LdapContextSource contextSource = new LdapContextSource();
+        contextSource.setUrl(ldapUrl);
+        contextSource.setBase(ldapBase);
+        contextSource.setUserDn(ldapUserDn);
+        contextSource.setPassword(ldapUserPassword);
+
+        // Create an LDAP template.
+        LdapTemplate ldapTemplate = new LdapTemplate(contextSource);
+
+        // Create an LDAP query.
+        LdapQuery ldapQuery = query().where(configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_ID)).is(subjectMatterExpertKey.getUserId());
+
+        // Create a subject matter expert contact details mapper.
+        SubjectMatterExpertContactDetailsMapper subjectMatterExpertContactDetailsMapper =
             new SubjectMatterExpertContactDetailsMapper(configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_FULL_NAME),
                 configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_JOB_TITLE),
                 configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_EMAIL_ADDRESS),
-                configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER)));
+                configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER));
 
+        // Gets information for the specified subject matter expert.
+        List<SubjectMatterExpertContactDetails> subjectMatterExpertContactDetailsList =
+            ldapOperations.search(ldapTemplate, ldapQuery, subjectMatterExpertContactDetailsMapper);
+
+        // Return the results.
         return CollectionUtils.isNotEmpty(subjectMatterExpertContactDetailsList) ? subjectMatterExpertContactDetailsList.get(0) : null;
     }
 
-    private static class SubjectMatterExpertContactDetailsMapper implements AttributesMapper<SubjectMatterExpertContactDetails>
+    static class SubjectMatterExpertContactDetailsMapper implements AttributesMapper<SubjectMatterExpertContactDetails>
     {
         /**
          * The LDAP attribute id for user's e-mail address
@@ -91,7 +141,7 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
          * @param userEmailAddressAttribute the LDAP attribute id for user's e-mail address
          * @param userTelephoneNumberAttribute the LDAP attribute id for user's telephone number
          */
-        public SubjectMatterExpertContactDetailsMapper(String userFullNameAttribute, String userJobTitleAttribute, String userEmailAddressAttribute,
+        SubjectMatterExpertContactDetailsMapper(String userFullNameAttribute, String userJobTitleAttribute, String userEmailAddressAttribute,
             String userTelephoneNumberAttribute)
         {
             this.userFullNameAttribute = userFullNameAttribute;
@@ -101,9 +151,12 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
         }
 
         /**
-         * Map Attributes to a subject matter expert details object. The supplied attributes are the attributes from a single search result.
+         * Map attributes to a subject matter expert details object. The supplied attributes are the attributes from a single search result.
          *
          * @param attributes the attributes from a search result
+         *
+         * @return the subject matter expert contact details
+         * @throws NamingException if a naming exception was encountered while retrieving attribute value
          */
         public SubjectMatterExpertContactDetails mapFromAttributes(Attributes attributes) throws NamingException
         {
