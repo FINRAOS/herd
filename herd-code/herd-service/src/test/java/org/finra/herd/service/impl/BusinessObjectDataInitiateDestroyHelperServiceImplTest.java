@@ -623,9 +623,13 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataEntity.setPartitionValue(PARTITION_VALUE);
 
+        // Create a current timestamp.
+        Timestamp currentTimestamp = new Timestamp(new Date().getTime());
+
         // Mock the external calls.
         when(businessObjectDataHelper.getDateFromString(PARTITION_VALUE)).thenReturn(null);
         when(businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING);
+        when(herdDao.getCurrentTimestamp()).thenReturn(currentTimestamp);
 
         // Try to call the method under test.
         try
@@ -642,6 +646,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         // Verify the external calls.
         verify(businessObjectDataHelper).getDateFromString(PARTITION_VALUE);
         verify(businessObjectDataHelper).businessObjectDataKeyToString(businessObjectDataKey);
+        verify(herdDao).getCurrentTimestamp();
         verifyNoMoreInteractionsHelper();
     }
 
@@ -672,8 +677,12 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataEntity.setPartitionValue(PARTITION_VALUE);
 
+        // Create a current timestamp.
+        Timestamp currentTimestamp = new Timestamp(new Date().getTime());
+
         // Mock the external calls.
         when(businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)).thenReturn(BUSINESS_OBJECT_FORMAT_KEY_AS_STRING);
+        when(herdDao.getCurrentTimestamp()).thenReturn(currentTimestamp);
 
         // Try to call the method under test.
         try
@@ -690,6 +699,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
 
         // Verify the external calls.
         verify(businessObjectFormatHelper).businessObjectFormatKeyToString(businessObjectFormatKey);
+        verify(herdDao).getCurrentTimestamp();
         verifyNoMoreInteractionsHelper();
     }
 
@@ -707,7 +717,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
 
         // Create a retention type entity.
         RetentionTypeEntity retentionTypeEntity = new RetentionTypeEntity();
-        retentionTypeEntity.setCode(PARTITION_VALUE);
 
         // Create a business object format entity which is not the latest format version.
         BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
@@ -726,9 +735,13 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataEntity.setPartitionValue(PARTITION_VALUE);
 
+        // Create a current timestamp.
+        Timestamp currentTimestamp = new Timestamp(new Date().getTime());
+
         // Mock the external calls.
         when(businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey)).thenReturn(latestVersionBusinessObjectFormatEntity);
         when(businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)).thenReturn(BUSINESS_OBJECT_FORMAT_KEY_AS_STRING);
+        when(herdDao.getCurrentTimestamp()).thenReturn(currentTimestamp);
 
         // Try to call the method under test.
         try
@@ -780,7 +793,120 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         // Verify the external calls.
         verify(businessObjectFormatDao, times(3)).getBusinessObjectFormatByAltKey(businessObjectFormatKey);
         verify(businessObjectFormatHelper, times(1)).businessObjectFormatKeyToString(businessObjectFormatKey);
+        verify(herdDao, times(3)).getCurrentTimestamp();
         verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testValidateBusinessObjectDataRetentionInformationCheckFails()
+    {
+        // Create a version-less business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION);
+
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create a retention type entity.
+        RetentionTypeEntity retentionTypeEntity = new RetentionTypeEntity();
+        retentionTypeEntity.setCode(RetentionTypeEntity.BDATA_RETENTION_DATE);
+
+        // Create a business object format entity which is not the latest format version.
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
+        businessObjectFormatEntity.setBusinessObjectFormatVersion(INITIAL_FORMAT_VERSION);
+        businessObjectFormatEntity.setLatestVersion(false);
+
+        // Create a latest version business object format entity with missing retention type.
+        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = new BusinessObjectFormatEntity();
+        latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatVersion(INITIAL_FORMAT_VERSION);
+        latestVersionBusinessObjectFormatEntity.setLatestVersion(true);
+        latestVersionBusinessObjectFormatEntity.setRetentionType(retentionTypeEntity);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+        businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+        businessObjectDataEntity.setPartitionValue(PARTITION_VALUE);
+        //DatatypeFactory.newInstance().newXMLGregorianCalendar(LocalDate.now().toString())
+        businessObjectDataEntity.setRetentionExpiration(new Timestamp(RETENTION_EXPIRATION_DATE_IN_FUTURE.toGregorianCalendar().getTimeInMillis()));
+
+        // Create a current timestamp.
+        Timestamp currentTimestamp = new Timestamp(new Date().getTime());
+
+        // Mock the external calls.
+        when(businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey)).thenReturn(latestVersionBusinessObjectFormatEntity);
+        when(businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)).thenReturn(BUSINESS_OBJECT_FORMAT_KEY_AS_STRING);
+        when(herdDao.getCurrentTimestamp()).thenReturn(currentTimestamp);
+        when(businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING);
+
+        // Try to call the method under test.
+        try
+        {
+            businessObjectDataInitiateDestroyHelperServiceImpl.validateBusinessObjectData(businessObjectDataEntity, businessObjectDataKey);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Business object data fails retention threshold check for retention type \"%s\" with retention expiration date %s. " +
+                    "Business object data: {%s}", retentionTypeEntity.getCode(), businessObjectDataEntity.getRetentionExpiration(),
+                BUSINESS_OBJECT_DATA_KEY_AS_STRING), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testValidateBusinessObjectDataWithNoRetentionInformationCheckFails()
+    {
+        // Create a version-less business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION);
+
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create a retention type entity.
+        RetentionTypeEntity retentionTypeEntity = new RetentionTypeEntity();
+        retentionTypeEntity.setCode(RetentionTypeEntity.BDATA_RETENTION_DATE);
+
+        // Create a business object format entity which is not the latest format version.
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
+        businessObjectFormatEntity.setBusinessObjectFormatVersion(INITIAL_FORMAT_VERSION);
+        businessObjectFormatEntity.setLatestVersion(false);
+
+        // Create a latest version business object format entity with missing retention type.
+        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = new BusinessObjectFormatEntity();
+        latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatVersion(INITIAL_FORMAT_VERSION);
+        latestVersionBusinessObjectFormatEntity.setLatestVersion(true);
+        latestVersionBusinessObjectFormatEntity.setRetentionType(retentionTypeEntity);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+        businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+        businessObjectDataEntity.setPartitionValue(PARTITION_VALUE);
+
+        // Create a current timestamp.
+        Timestamp currentTimestamp = new Timestamp(new Date().getTime());
+
+        // Mock the external calls.
+        when(businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey)).thenReturn(latestVersionBusinessObjectFormatEntity);
+        when(businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)).thenReturn(BUSINESS_OBJECT_FORMAT_KEY_AS_STRING);
+        when(herdDao.getCurrentTimestamp()).thenReturn(currentTimestamp);
+        when(businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING);
+
+        // Try to call the method under test.
+        try
+        {
+            businessObjectDataInitiateDestroyHelperServiceImpl.validateBusinessObjectData(businessObjectDataEntity, businessObjectDataKey);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Retention information with retention type %s must be specified for the Business Object Data: {%s}", retentionTypeEntity.getCode(),
+                    BUSINESS_OBJECT_DATA_KEY_AS_STRING), e.getMessage());
+        }
     }
 
     @Test
