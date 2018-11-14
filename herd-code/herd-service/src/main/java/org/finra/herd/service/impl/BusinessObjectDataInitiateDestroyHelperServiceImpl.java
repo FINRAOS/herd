@@ -490,8 +490,9 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         }
         else
         {
-            Assert.notNull(retentionType, String.format("Retention information is not configured for the business object format. Business object format: {%s}",
-                businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
+            throw new IllegalArgumentException(String
+                .format("Retention information is not configured for the business object format. Business object format: {%s}",
+                    businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
         }
     }
 

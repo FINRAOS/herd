@@ -828,7 +828,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
         businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataEntity.setPartitionValue(PARTITION_VALUE);
-        //DatatypeFactory.newInstance().newXMLGregorianCalendar(LocalDate.now().toString())
         businessObjectDataEntity.setRetentionExpiration(new Timestamp(RETENTION_EXPIRATION_DATE_IN_FUTURE.toGregorianCalendar().getTimeInMillis()));
 
         // Create a current timestamp.
