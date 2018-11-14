@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
@@ -425,44 +426,73 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
             latestVersionBusinessObjectFormatEntity.getRetentionType() != null ? latestVersionBusinessObjectFormatEntity.getRetentionType().getCode() : null;
         Integer retentionPeriodInDays = latestVersionBusinessObjectFormatEntity.getRetentionPeriodInDays();
 
+        // Get the current timestamp from the database.
+        Timestamp currentTimestamp = herdDao.getCurrentTimestamp();
+
         // Validate that retention information is specified for this business object format.
-        if (StringUtils.isBlank(retentionType) || retentionPeriodInDays == null)
+        if (retentionType != null)
+        {
+            if (retentionType.equals(RetentionTypeEntity.PARTITION_VALUE))
+            {
+                Assert.notNull(retentionPeriodInDays,
+                    String.format("Retention period in days must be specified for %s retention type.", RetentionTypeEntity.PARTITION_VALUE));
+                Assert.isTrue(retentionPeriodInDays > 0,
+                    String.format("A positive retention period in days must be specified for %s retention type.", RetentionTypeEntity.PARTITION_VALUE));
+
+                // Try to convert business object data primary partition value to a timestamp. If conversion is not successful, the method returns a null value.
+                Date primaryPartitionValue = businessObjectDataHelper.getDateFromString(businessObjectDataEntity.getPartitionValue());
+
+                // If primary partition values is not a date, this business object data is not supported by the business object data destroy feature.
+                if (primaryPartitionValue == null)
+                {
+                    throw new IllegalArgumentException(String
+                        .format("Primary partition value \"%s\" cannot get converted to a valid date. Business object data: {%s}",
+                            businessObjectDataEntity.getPartitionValue(), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                }
+
+                // Compute the relative primary partition value threshold date based on the current timestamp and retention period value.
+                Date primaryPartitionValueThreshold = new Date(HerdDateUtils.addDays(currentTimestamp, -retentionPeriodInDays).getTime());
+
+                // Validate that this business object data has it's primary partition value before or equal to the threshold date.
+                if (primaryPartitionValue.compareTo(primaryPartitionValueThreshold) > 0)
+                {
+                    throw new IllegalArgumentException(String.format(
+                        "Business object data fails retention threshold check for retention type \"%s\" with retention period of %d days. " +
+                            "Business object data: {%s}", retentionType, retentionPeriodInDays,
+                        businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                }
+            }
+            else if (retentionType.equals(RetentionTypeEntity.BDATA_RETENTION_DATE))
+            {
+                // Retention period in days value must only be specified for PARTITION_VALUE retention type.
+                Assert.isNull(retentionPeriodInDays, String.format("A retention period in days cannot be specified for %s retention type.", retentionType));
+
+                // Validate that the retention information is specified for business object data with retention type as BDATA_RETENTION_DATE.
+                Assert.notNull(businessObjectDataEntity.getRetentionExpiration(), String
+                    .format("Retention information with retention type %s must be specified for the Business Object Data: {%s}", retentionType,
+                        businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+
+                // Validate that the business object data retention expiration date is in the past.
+                if (!(businessObjectDataEntity.getRetentionExpiration().before(currentTimestamp)))
+                {
+                    throw new IllegalArgumentException(String.format(
+                        "Business object data fails retention threshold check for retention type \"%s\" with retention expiration date %s. " +
+                            "Business object data: {%s}", retentionType, businessObjectDataEntity.getRetentionExpiration(),
+                        businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                }
+            }
+            else
+            {
+                throw new IllegalArgumentException(String
+                    .format("Retention type \"%s\" is not supported by the business object data destroy feature. Business object format: {%s}", retentionType,
+                        businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
+            }
+        }
+        else
         {
             throw new IllegalArgumentException(String
                 .format("Retention information is not configured for the business object format. Business object format: {%s}",
                     businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
-        }
-
-        // Validate the retention type.
-        if (!RetentionTypeEntity.PARTITION_VALUE.equals(retentionType))
-        {
-            throw new IllegalArgumentException(String
-                .format("Retention type \"%s\" is not supported by the business object data destroy feature. Business object format: {%s}", retentionType,
-                    businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
-        }
-
-        // Try to convert business object data primary partition value to a timestamp. If conversion is not successful, the method returns a null value.
-        Date primaryPartitionValue = businessObjectDataHelper.getDateFromString(businessObjectDataEntity.getPartitionValue());
-
-        // If primary partition values is not a date, this business object data is not supported by the business object data destroy feature.
-        if (primaryPartitionValue == null)
-        {
-            throw new IllegalArgumentException(String.format("Primary partition value \"%s\" cannot get converted to a valid date. Business object data: {%s}",
-                businessObjectDataEntity.getPartitionValue(), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-        }
-
-        // Get the current timestamp from the database.
-        Timestamp currentTimestamp = herdDao.getCurrentTimestamp();
-
-        // Compute the relative primary partition value threshold date based on the current timestamp and retention period value.
-        Date primaryPartitionValueThreshold = new Date(HerdDateUtils.addDays(currentTimestamp, -retentionPeriodInDays).getTime());
-
-        // Validate that this business object data has it's primary partition value before or equal to the threshold date.
-        if (primaryPartitionValue.compareTo(primaryPartitionValueThreshold) > 0)
-        {
-            throw new IllegalArgumentException(String.format(
-                "Business object data fails retention threshold check for retention type \"%s\" with retention period of %d days. Business object data: {%s}",
-                retentionType, retentionPeriodInDays, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
     }
 
