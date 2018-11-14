@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -705,23 +706,56 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         key.setBusinessObjectDefinitionName(BDEF_NAME);
 
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
+        key.setPartitionValueFilters(partitionValueFilters);
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
         partitionValueFilters.add(partitionValueFilter);
         partitionValueFilter.setPartitionKey(PARTITION_KEY);
-        List<String> values = new ArrayList<>();
-        values.add(PARTITION_VALUE);
-        partitionValueFilter.setPartitionValues(values);
-        key.setPartitionValueFilters(partitionValueFilters);
+        partitionValueFilter.setPartitionValues(Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2));
 
         businessObjectDataSearchKeys.add(key);
-
-        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        filters.add(filter);
+        filters.add(new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys));
         request.setBusinessObjectDataSearchFilters(filters);
 
         BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
 
-        // The result list should be empty, as no schema column is registered.
+        // The search results expect to contain two business object data instances.
+        assertEquals(2, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(DEFAULT_PAGE_NUMBER), result.getPageNum());
+        assertEquals(Long.valueOf(PAGE_SIZE), result.getPageSize());
+        assertEquals(Long.valueOf(1), result.getPageCount());
+        assertEquals(Long.valueOf(2), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(2), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataPartitionValueFiltersBusinessObjectDefinitionNoExists()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(I_DO_NOT_EXIST);
+
+        List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
+        key.setPartitionValueFilters(partitionValueFilters);
+        PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
+        partitionValueFilters.add(partitionValueFilter);
+        partitionValueFilter.setPartitionKey(PARTITION_KEY);
+        partitionValueFilter.setPartitionValues(Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2));
+
+        businessObjectDataSearchKeys.add(key);
+        filters.add(new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys));
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
+
+        // The result list should be empty.
         assertEquals(0, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
 
         // Validate the paging information.
@@ -731,6 +765,90 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         assertEquals(Long.valueOf(0), result.getTotalRecordsOnPage());
         assertEquals(Long.valueOf(0), result.getTotalRecordCount());
         assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataPartitionValueFiltersInvalidPartitionKey()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        key.setBusinessObjectFormatVersion(FORMAT_VERSION);
+
+        List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
+        key.setPartitionValueFilters(partitionValueFilters);
+        PartitionValueFilter partitionValueFilterA = new PartitionValueFilter();
+        partitionValueFilters.add(partitionValueFilterA);
+        partitionValueFilterA.setPartitionKey(INVALID_VALUE);
+        partitionValueFilterA.setPartitionValues(Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2));
+        PartitionValueFilter partitionValueFilterB = new PartitionValueFilter();
+        partitionValueFilters.add(partitionValueFilterB);
+        partitionValueFilterB.setPartitionKey(INVALID_VALUE_2);
+        partitionValueFilterB.setPartitionValues(Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2));
+
+        businessObjectDataSearchKeys.add(key);
+        filters.add(new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys));
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("There are no registered business object formats with \"%s\" namespace, \"%s\" business object definition name, " +
+                    "\"%s\" business object format usage, \"%s\" business object format file type, \"%s\" business object format version " +
+                    "that have schema with partition columns matching \"%s, %s\" partition key(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, INVALID_VALUE, INVALID_VALUE_2), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataPartitionValueFiltersInvalidPartitionKeyMissingOptionalParameters()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+
+        List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
+        key.setPartitionValueFilters(partitionValueFilters);
+        PartitionValueFilter partitionValueFilterA = new PartitionValueFilter();
+        partitionValueFilters.add(partitionValueFilterA);
+        partitionValueFilterA.setPartitionKey(INVALID_VALUE);
+        partitionValueFilterA.setPartitionValues(Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2));
+        PartitionValueFilter partitionValueFilterB = new PartitionValueFilter();
+        partitionValueFilters.add(partitionValueFilterB);
+        partitionValueFilterB.setPartitionKey(INVALID_VALUE_2);
+        partitionValueFilterB.setPartitionValues(Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2));
+
+        businessObjectDataSearchKeys.add(key);
+        filters.add(new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys));
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, request);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("There are no registered business object formats with \"%s\" namespace, \"%s\" business object definition name " +
+                    "that have schema with partition columns matching \"%s, %s\" partition key(s).", NAMESPACE, BDEF_NAME, INVALID_VALUE, INVALID_VALUE_2),
+                e.getMessage());
+        }
     }
 
     @Test
