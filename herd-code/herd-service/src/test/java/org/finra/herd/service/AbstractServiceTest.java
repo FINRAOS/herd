@@ -643,6 +643,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final XMLGregorianCalendar RETENTION_EXPIRATION_DATE = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
+    public static final XMLGregorianCalendar RETENTION_EXPIRATION_DATE_IN_FUTURE = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDateInFuture());
+
     public static final Boolean RETRIEVE_INSTANCE_FLEETS = true;
 
     public static final Long ROW_COUNT = (long) (Math.random() * Long.MAX_VALUE);

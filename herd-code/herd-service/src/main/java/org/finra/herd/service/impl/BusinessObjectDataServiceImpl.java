@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,10 +33,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
+import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.JsonHelper;
@@ -69,6 +70,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto;
@@ -117,11 +119,6 @@ import org.finra.herd.service.helper.StorageUnitHelper;
 public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 {
     /**
-     * A status reason of "not registered".
-     */
-    public static final String REASON_NOT_REGISTERED = "NOT_REGISTERED";
-
-    /**
      * The partition key value for business object data without partitioning.
      */
     public static final String NO_PARTITIONING_PARTITION_KEY = "partition";
@@ -130,6 +127,11 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * The partition value for business object data without partitioning.
      */
     public static final String NO_PARTITIONING_PARTITION_VALUE = "none";
+
+    /**
+     * A status reason of "not registered".
+     */
+    public static final String REASON_NOT_REGISTERED = "NOT_REGISTERED";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataServiceImpl.class);
 
@@ -171,6 +173,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
     @Autowired
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
+
+    @Autowired
+    private BusinessObjectFormatDao businessObjectFormatDao;
 
     @Autowired
     private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
@@ -346,7 +351,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 else
                 {
                     LOGGER.info("Skipping business object data file removal for a storage unit from the storage since it is not an S3 storage platform. " +
-                        " storageName=\"{}\" businessObjectDataKey={}", storageEntity.getName(),
+                            " storageName=\"{}\" businessObjectDataKey={}", storageEntity.getName(),
                         jsonHelper.objectToJson(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)));
                 }
             }
@@ -554,6 +559,48 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // We assume that the input list contains only one filter with a single search key, since validation should be passed by now.
         BusinessObjectDataSearchKey businessObjectDataSearchKey =
             businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0);
+
+        // Validate partition keys in partition value filters.
+        if (CollectionUtils.isNotEmpty(businessObjectDataSearchKey.getPartitionValueFilters()))
+        {
+            // Get a count of business object formats that match the business object data search key parameters without the list of partition keys.
+            Long businessObjectFormatRecordCount = businessObjectFormatDao
+                .getBusinessObjectFormatCountByPartitionKeys(businessObjectDataSearchKey.getNamespace(),
+                    businessObjectDataSearchKey.getBusinessObjectDefinitionName(), businessObjectDataSearchKey.getBusinessObjectFormatUsage(),
+                    businessObjectDataSearchKey.getBusinessObjectFormatFileType(), businessObjectDataSearchKey.getBusinessObjectFormatVersion(), null);
+
+            // If business object format record count is zero, we return an empty result list.
+            if (businessObjectFormatRecordCount == 0)
+            {
+                return new BusinessObjectDataSearchResultPagingInfoDto(pageNum.longValue(), pageSize.longValue(), 0L, 0L, 0L, (long) maxResultsPerPage,
+                    new BusinessObjectDataSearchResult(new ArrayList<>()));
+            }
+
+            // Get partition keys from the list of partition value filters.
+            List<String> partitionKeys = new ArrayList<>();
+            for (PartitionValueFilter partitionValueFilter : businessObjectDataSearchKey.getPartitionValueFilters())
+            {
+                // Get partition key from the partition value filter. Partition key should not be empty, since validation is passed by now.
+                partitionKeys.add(partitionValueFilter.getPartitionKey());
+            }
+
+            // Get a count of business object formats that match the business object data search key parameters and the list of partition keys.
+            businessObjectFormatRecordCount = businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDataSearchKey.getNamespace(),
+                businessObjectDataSearchKey.getBusinessObjectDefinitionName(), businessObjectDataSearchKey.getBusinessObjectFormatUsage(),
+                businessObjectDataSearchKey.getBusinessObjectFormatFileType(), businessObjectDataSearchKey.getBusinessObjectFormatVersion(), partitionKeys);
+
+            // Fail if business object formats found that contain specified partition keys in their schema.
+            Assert.isTrue(businessObjectFormatRecordCount > 0, String
+                .format("There are no registered business object formats with \"%s\" namespace, \"%s\" business object definition name",
+                    businessObjectDataSearchKey.getNamespace(), businessObjectDataSearchKey.getBusinessObjectDefinitionName()) +
+                (StringUtils.isNotBlank(businessObjectDataSearchKey.getBusinessObjectFormatUsage()) ?
+                    String.format(", \"%s\" business object format usage", businessObjectDataSearchKey.getBusinessObjectFormatUsage()) : "") +
+                (StringUtils.isNotBlank(businessObjectDataSearchKey.getBusinessObjectFormatFileType()) ?
+                    String.format(", \"%s\" business object format file type", businessObjectDataSearchKey.getBusinessObjectFormatFileType()) : "") +
+                (businessObjectDataSearchKey.getBusinessObjectFormatVersion() != null ?
+                    String.format(", \"%d\" business object format version", businessObjectDataSearchKey.getBusinessObjectFormatVersion()) : "") +
+                String.format(" that have schema with partition columns matching \"%s\" partition key(s).", String.join(", ", partitionKeys)));
+        }
 
         // Get the total record count.
         Long totalRecordCount = businessObjectDataDao.getBusinessObjectDataCountBySearchKey(businessObjectDataSearchKey);
@@ -803,7 +850,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 if (CollectionUtils.isEmpty(storageNames))
                 {
                     throw new IllegalArgumentException(String.format("Found business object data registered in more than one storage. " +
-                        "Please specify storage(s) in the request to resolve this. Business object data {%s}",
+                            "Please specify storage(s) in the request to resolve this. Business object data {%s}",
                         businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
                 }
             }

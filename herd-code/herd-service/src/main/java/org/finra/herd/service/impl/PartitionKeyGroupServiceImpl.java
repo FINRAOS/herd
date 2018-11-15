@@ -119,7 +119,7 @@ public class PartitionKeyGroupServiceImpl implements PartitionKeyGroupService
         PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoHelper.getPartitionKeyGroupEntity(partitionKeyGroupKey);
 
         // Check if we are allowed to delete this business object format.
-        if (businessObjectFormatDao.getBusinessObjectFormatCount(partitionKeyGroupEntity) > 0L)
+        if (businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeyGroup(partitionKeyGroupEntity) > 0L)
         {
             throw new IllegalArgumentException(String.format("Can not delete \"%s\" partition key group since it is being used by a business object format.",
                 partitionKeyGroupKey.getPartitionKeyGroupName()));

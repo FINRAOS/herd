@@ -469,7 +469,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INVALID_FORMAT_VERSION = -1 * FORMAT_VERSION;
 
-    public static final String INVALID_VALUE = "UT_InvalidValue_" + RANDOM_SUFFIX;
+    public static final String INVALID_VALUE = "UT_InvalidValue_1_" + RANDOM_SUFFIX;
+
+    public static final String INVALID_VALUE_2 = "UT_InvalidValue_2_" + RANDOM_SUFFIX;
 
     public static final Integer IOPS = getRandomInteger();
 
@@ -502,6 +504,22 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String KEY = "UT_Key_" + RANDOM_SUFFIX;
 
     public static final Boolean LATEST_VERSION_FLAG_SET = true;
+
+    public static final String LDAP_ATTRIBUTE_USER_EMAIL_ADDRESS = "UT_LdapAttributeUserEmailAddress_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_ATTRIBUTE_USER_FULL_NAME = "UT_LdapAttributeUserFullName_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_ATTRIBUTE_USER_ID = "UT_LdapAttributeUserId_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_ATTRIBUTE_USER_JOB_TITLE = "UT_LdapAttributeUserJobTitle_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER = "UT_LdapAttributeUserTelephoneNumber_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_BASE = "ou=locations,dc=corp,dc=root,dc=test,dc=com";
+
+    public static final String LDAP_URL = "UT_LdapUrl_" + RANDOM_SUFFIX;
+
+    public static final String LDAP_USER_DN = "UT_LdapUserDn_" + RANDOM_SUFFIX;
 
     public static final String LOCAL_FILE = "foo.dat";
 
@@ -1304,6 +1322,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected KmsDao kmsDao;
+
+    @Autowired
+    protected LdapOperations ldapOperations;
 
     @Autowired
     protected MessageTypeDao messageTypeDao;

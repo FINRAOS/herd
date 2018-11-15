@@ -116,6 +116,15 @@ public abstract class AbstractCoreTest
     }
 
     /**
+     * Returns a random date in future.
+     */
+    public static Date getRandomDateInFuture()
+    {
+        Random rnd = new Random();
+        return new Date(Math.abs(System.currentTimeMillis() + rnd.nextLong()));
+    }
+
+    /**
      * Returns a random integer.
      */
     public static Integer getRandomInteger()
@@ -137,13 +146,6 @@ public abstract class AbstractCoreTest
     public static String getRandomSuffix()
     {
         return String.format("%.5f", Math.random()).substring(2, 7);
-    }
-
-    @Before
-    public void setup() throws Exception
-    {
-        // Remove the system environment property source so system environment variables don't affect unit tests.
-        getMutablePropertySources().remove(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME);
     }
 
     /**
@@ -206,6 +208,13 @@ public abstract class AbstractCoreTest
         randomAccessFile.setLength(size);
         randomAccessFile.close();
         return filePath.toFile();
+    }
+
+    @Before
+    public void setup() throws Exception
+    {
+        // Remove the system environment property source so system environment variables don't affect unit tests.
+        getMutablePropertySources().remove(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME);
     }
 
     /**
