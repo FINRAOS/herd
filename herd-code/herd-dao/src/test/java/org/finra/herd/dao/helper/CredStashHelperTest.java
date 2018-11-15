@@ -15,8 +15,22 @@
 */
 package org.finra.herd.dao.helper;
 
+import static org.finra.herd.dao.AbstractDaoTest.AWS_REGION_NAME;
+import static org.finra.herd.dao.AbstractDaoTest.CREDSTASH_ENCRYPTION_CONTEXT;
+import static org.finra.herd.dao.AbstractDaoTest.EMPTY_STRING;
+import static org.finra.herd.dao.AbstractDaoTest.ERROR_MESSAGE;
+import static org.finra.herd.dao.AbstractDaoTest.HTTP_PROXY_HOST;
+import static org.finra.herd.dao.AbstractDaoTest.HTTP_PROXY_PORT;
+import static org.finra.herd.dao.AbstractDaoTest.KEY;
+import static org.finra.herd.dao.AbstractDaoTest.NO_AWS_ACCESS_KEY;
+import static org.finra.herd.dao.AbstractDaoTest.NO_AWS_REGION_NAME;
+import static org.finra.herd.dao.AbstractDaoTest.NO_AWS_SECRET_KEY;
+import static org.finra.herd.dao.AbstractDaoTest.NO_SESSION_TOKEN;
+import static org.finra.herd.dao.AbstractDaoTest.PASSWORD;
+import static org.finra.herd.dao.AbstractDaoTest.TABLE_NAME;
+import static org.finra.herd.dao.AbstractDaoTest.USER_CREDENTIAL_NAME;
+import static org.finra.herd.dao.AbstractDaoTest.VALUE;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -27,21 +41,25 @@ import java.util.Map;
 
 import com.amazonaws.ClientConfiguration;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.CredStashFactory;
 import org.finra.herd.dao.credstash.CredStash;
 import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 
-public class CredStashHelperTest extends AbstractDaoTest
+public class CredStashHelperTest
 {
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
     @Mock
     private AwsHelper awsHelper;
 
@@ -133,18 +151,14 @@ public class CredStashHelperTest extends AbstractDaoTest
         when(credStashFactory.getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration)).thenReturn(credStash);
         when(jsonHelper.unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(credStashEncryptionContextMap);
 
+        // Specify the expected exception.
+        expectedException.expect(CredStashGetCredentialFailedException.class);
+        expectedException.expectMessage(String
+            .format("Failed to obtain credential from credstash. credStashAwsRegion=%s credStashTableName=%s credStashEncryptionContext=%s credentialName=%s",
+                AWS_REGION_NAME, TABLE_NAME, CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME));
+
         // Try to call the method under test.
-        try
-        {
-            credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
-            fail();
-        }
-        catch (CredStashGetCredentialFailedException e)
-        {
-            assertEquals(String.format("Failed to obtain the keystore or truststore credential from credstash. " +
-                    "credStashAwsRegion=%s credStashTableName=%s credStashEncryptionContext=%s credentialName=%s", AWS_REGION_NAME, TABLE_NAME,
-                CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME), e.getMessage());
-        }
+        credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
 
         // Verify the external calls.
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
@@ -184,18 +198,14 @@ public class CredStashHelperTest extends AbstractDaoTest
         when(credStashFactory.getCredStash(AWS_REGION_NAME, TABLE_NAME, clientConfiguration)).thenReturn(credStash);
         when(jsonHelper.unmarshallJsonToObject(Map.class, CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn(credStashEncryptionContextMap);
 
+        // Specify the expected exception.
+        expectedException.expect(CredStashGetCredentialFailedException.class);
+        expectedException.expectMessage(String.format("Failed to obtain credential from credstash. Reason: %s " +
+                "credStashAwsRegion=%s credStashTableName=%s credStashEncryptionContext=%s credentialName=%s", ERROR_MESSAGE, AWS_REGION_NAME, TABLE_NAME,
+            CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME));
+
         // Try to call the method under test.
-        try
-        {
-            credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
-            fail();
-        }
-        catch (CredStashGetCredentialFailedException e)
-        {
-            assertEquals(String.format("Failed to obtain the keystore or truststore credential from credstash. Reason: %s " +
-                    "credStashAwsRegion=%s credStashTableName=%s credStashEncryptionContext=%s credentialName=%s", ERROR_MESSAGE, AWS_REGION_NAME, TABLE_NAME,
-                CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME), e.getMessage());
-        }
+        credStashHelper.getCredentialFromCredStash(CREDSTASH_ENCRYPTION_CONTEXT, USER_CREDENTIAL_NAME);
 
         // Verify the external calls.
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);

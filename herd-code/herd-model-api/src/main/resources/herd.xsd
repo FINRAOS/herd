@@ -3658,11 +3658,6 @@
                <xs:documentation>A File Type known to the system that describes the file type of data stored under a Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <!--
-           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
-           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
-           the field as null. The validation that this field is required is handled via the service layer validation.
-           -->
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The numeric version of a Business Object Format. Each time a format is registered, the new version will be the previous version

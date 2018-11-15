@@ -28,12 +28,17 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.BusinessObjectFormatDao;
+import org.finra.herd.dao.FileTypeDao;
+import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity_;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -43,10 +48,18 @@ import org.finra.herd.model.jpa.FileTypeEntity_;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.NamespaceEntity_;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
+import org.finra.herd.model.jpa.SchemaColumnEntity;
+import org.finra.herd.model.jpa.SchemaColumnEntity_;
 
 @Repository
 public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements BusinessObjectFormatDao
 {
+    @Autowired
+    private FileTypeDao fileTypeDao;
+
+    @Autowired
+    private NamespaceDao namespaceDao;
+
     @Override
     public BusinessObjectFormatEntity getBusinessObjectFormatByAltKey(BusinessObjectFormatKey businessObjectFormatKey)
     {
@@ -76,14 +89,14 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
         criteria.select(businessObjectFormatEntity).where(queryRestriction);
 
         return executeSingleResultQuery(criteria, String.format("Found more than one business object format instance with parameters " +
-            "{namespace=\"%s\", businessObjectDefinitionName=\"%s\", businessObjectFormatUsage=\"%s\", businessObjectFormatFileType=\"%s\", " +
-            "businessObjectFormatVersion=\"%d\"}.", businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
+                "{namespace=\"%s\", businessObjectDefinitionName=\"%s\", businessObjectFormatUsage=\"%s\", businessObjectFormatFileType=\"%s\", " +
+                "businessObjectFormatVersion=\"%d\"}.", businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
             businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
             businessObjectFormatKey.getBusinessObjectFormatVersion()));
     }
 
     @Override
-    public Long getBusinessObjectFormatCount(PartitionKeyGroupEntity partitionKeyGroupEntity)
+    public Long getBusinessObjectFormatCountByPartitionKeyGroup(PartitionKeyGroupEntity partitionKeyGroupEntity)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -101,6 +114,98 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
 
         criteria.select(businessObjectFormatCount).where(partitionKeyGroupRestriction);
 
+        return entityManager.createQuery(criteria).getSingleResult();
+    }
+
+    @Override
+    public Long getBusinessObjectFormatCountByPartitionKeys(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
+        String businessObjectFormatFileType, Integer businessObjectFormatVersion, List<String> partitionKeys)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
+
+        // The criteria root is the business object format.
+        Root<BusinessObjectFormatEntity> businessObjectFormatEntityRoot = criteria.from(BusinessObjectFormatEntity.class);
+
+        // Create path.
+        Expression<Long> businessObjectFormatRecordCount = builder.count(businessObjectFormatEntityRoot);
+
+        // Namespace is a required parameter, so fetch the relative entity to optimize the main query.
+        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(namespace);
+
+        // If specified namespace does not exist, then return a zero record count.
+        if (namespaceEntity == null)
+        {
+            return 0L;
+        }
+
+        // If file type is specified, fetch the relative entity to optimize the main query.
+        FileTypeEntity fileTypeEntity = null;
+        if (StringUtils.isNotBlank(businessObjectFormatFileType))
+        {
+            fileTypeEntity = fileTypeDao.getFileTypeByCode(businessObjectFormatFileType);
+
+            // If specified file type does not exist, then return a zero record count.
+            if (fileTypeEntity == null)
+            {
+                return 0L;
+            }
+        }
+
+        // Join to the other tables we can filter on.
+        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
+            businessObjectFormatEntityRoot.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+
+        // Create main query restrictions based on the specified parameters.
+        List<Predicate> predicates = new ArrayList<>();
+
+        // Create restriction on namespace code and business object definition name.
+        predicates.add(builder.equal(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace), namespaceEntity));
+        predicates.add(
+            builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)), businessObjectDefinitionName.toUpperCase()));
+
+        // If specified, create restriction on business object format usage.
+        if (!StringUtils.isEmpty(businessObjectFormatUsage))
+        {
+            predicates.add(
+                builder.equal(builder.upper(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.usage)), businessObjectFormatUsage.toUpperCase()));
+        }
+
+        // If specified, create restriction on business object format file type.
+        if (fileTypeEntity != null)
+        {
+            predicates.add(builder.equal(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.fileTypeCode), fileTypeEntity.getCode()));
+        }
+
+        // If specified, create restriction on business object format version.
+        if (businessObjectFormatVersion != null)
+        {
+            predicates
+                .add(builder.equal(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.businessObjectFormatVersion), businessObjectFormatVersion));
+        }
+
+        // If specified, create restriction on partition keys.
+        if (CollectionUtils.isNotEmpty(partitionKeys))
+        {
+            for (String partitionKey : partitionKeys)
+            {
+                // Add restriction on partition key (partition column).
+                // Partition key must identify a partition column that is at partition level that could be explicitly registered.
+                // Partition level uses one-based numbering.
+                Join<BusinessObjectFormatEntity, SchemaColumnEntity> schemaColumnEntityJoin =
+                    businessObjectFormatEntityRoot.join(BusinessObjectFormatEntity_.schemaColumns);
+                predicates.add(builder.equal(builder.upper(schemaColumnEntityJoin.get(SchemaColumnEntity_.name)), partitionKey.toUpperCase()));
+                predicates.add(builder.isNotNull(schemaColumnEntityJoin.get(SchemaColumnEntity_.partitionLevel)));
+                predicates
+                    .add(builder.lessThan(schemaColumnEntityJoin.get(SchemaColumnEntity_.partitionLevel), BusinessObjectDataEntity.MAX_SUBPARTITIONS + 2));
+            }
+        }
+
+        // Add all clauses for the query.
+        criteria.select(businessObjectFormatRecordCount).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).distinct(true);
+
+        // Execute the query and return the result.
         return entityManager.createQuery(criteria).getSingleResult();
     }
 
@@ -168,8 +273,8 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
     }
 
     @Override
-    public List<BusinessObjectFormatKey> getBusinessObjectFormatsWithFilters(
-        BusinessObjectDefinitionKey businessObjectDefinitionKey, String businessObjectFormatUsage, boolean latestBusinessObjectFormatVersion)
+    public List<BusinessObjectFormatKey> getBusinessObjectFormatsWithFilters(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        String businessObjectFormatUsage, boolean latestBusinessObjectFormatVersion)
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();

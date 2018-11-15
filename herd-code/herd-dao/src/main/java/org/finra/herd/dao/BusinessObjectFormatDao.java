@@ -41,7 +41,22 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
      *
      * @return the number of business object format instances that reference this partition key group
      */
-    Long getBusinessObjectFormatCount(PartitionKeyGroupEntity partitionKeyGroupEntity);
+    Long getBusinessObjectFormatCountByPartitionKeyGroup(PartitionKeyGroupEntity partitionKeyGroupEntity);
+
+    /**
+     * Retrieves business object format record count per specified parameters including an optional list of partition keys.
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the usage of the business object format, maybe null
+     * @param businessObjectFormatFileType the file type of the business object format, maybe null
+     * @param businessObjectFormatVersion the version of the business object format, maybe null
+     * @param partitionKeys the list of partition keys, maybe null or empty
+     *
+     * @return the record count of business object formats
+     */
+    Long getBusinessObjectFormatCountByPartitionKeys(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
+        String businessObjectFormatFileType, Integer businessObjectFormatVersion, List<String> partitionKeys);
 
     /**
      * Gets a list of ids for all business object formats registered under the specified business object definition. The list of business object format ids
