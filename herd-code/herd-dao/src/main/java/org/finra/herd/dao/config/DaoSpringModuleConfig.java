@@ -42,8 +42,6 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
-import org.springframework.ldap.core.LdapTemplate;
-import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -52,7 +50,6 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import org.finra.herd.core.ApplicationContextHolder;
-import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.CacheKeyGenerator;
 import org.finra.herd.dao.ReloadablePropertySource;
@@ -325,44 +322,5 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     public BackoffStrategy backoffStrategy()
     {
         return new SimpleExponentialBackoffStrategy();
-    }
-
-    /**
-     * Gets an LDAP context source.
-     *
-     * @return the LDAP context source
-     */
-    @Bean
-    public LdapContextSource contextSource()
-    {
-        String ldapUrl = configurationHelper.getProperty(ConfigurationValue.LDAP_URL);
-        String ldapBase = configurationHelper.getProperty(ConfigurationValue.LDAP_BASE);
-        String ldapUserDn = configurationHelper.getProperty(ConfigurationValue.LDAP_USER_DN);
-
-        LOGGER.info("Creating LDAP context source using the following parameters: {}=\"{}\" {}=\"{}\" {}=\"{}\" ...", ConfigurationValue.LDAP_URL.getKey(),
-            ldapUrl, ConfigurationValue.LDAP_BASE.getKey(), ldapBase, ConfigurationValue.LDAP_USER_DN.getKey(), ldapUserDn);
-
-        // Retrieve LDAP password configured in the system. If base64 encoded password is not configured, we fall back to a non-encoded configuration value.
-        String ldapPasswordBase64 = configurationHelper.getProperty(ConfigurationValue.LDAP_PASSWORD_BASE64);
-        String ldapPassword = StringUtils.isNotBlank(ldapPasswordBase64) ? HerdStringUtils.decodeBase64(ldapPasswordBase64) :
-            configurationHelper.getProperty(ConfigurationValue.LDAP_PASSWORD);
-
-        LdapContextSource contextSource = new LdapContextSource();
-        contextSource.setUrl(ldapUrl);
-        contextSource.setBase(ldapBase);
-        contextSource.setUserDn(ldapUserDn);
-        contextSource.setPassword(ldapPassword);
-        return contextSource;
-    }
-
-    /**
-     * Gets an LDAP template.
-     *
-     * @return the LDAP template
-     */
-    @Bean
-    public LdapTemplate ldapTemplate()
-    {
-        return new LdapTemplate(contextSource());
     }
 }
