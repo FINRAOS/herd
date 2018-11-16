@@ -202,7 +202,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     {
         LOGGER.info("Creating Elasticsearch index, indexName={}, documentType={}.", indexName, documentType);
 
-        CreateIndex createIndex = new CreateIndex.Builder(indexName).settings(Settings.builder().loadFromSource(settings).build()).build();
+        CreateIndex createIndex = new CreateIndex.Builder(indexName).settings(settings).build();
         PutMapping putMapping = new PutMapping.Builder(indexName, documentType, mapping).build();
         ModifyAliases modifyAliases = new ModifyAliases.Builder(new AddAliasMapping.Builder(indexName, alias).build()).build();
 
