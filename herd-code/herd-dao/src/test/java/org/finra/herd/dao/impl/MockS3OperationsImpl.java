@@ -79,6 +79,7 @@ import com.amazonaws.services.s3.transfer.internal.MultipleFileUploadImpl;
 import com.amazonaws.services.s3.transfer.internal.TransferMonitor;
 import com.amazonaws.services.s3.transfer.internal.UploadImpl;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.concurrent.BasicFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -417,7 +418,8 @@ public class MockS3OperationsImpl implements S3Operations
     @Override
     public GetObjectTaggingResult getObjectTagging(GetObjectTaggingRequest getObjectTaggingRequest, AmazonS3 s3Client)
     {
-        return new GetObjectTaggingResult(getMockS3Object(getObjectTaggingRequest.getBucketName(), getObjectTaggingRequest.getKey()).getTags());
+        return new GetObjectTaggingResult(
+            getMockS3Object(getObjectTaggingRequest.getBucketName(), getObjectTaggingRequest.getKey(), getObjectTaggingRequest.getVersionId()).getTags());
     }
 
     @Override
@@ -715,7 +717,8 @@ public class MockS3OperationsImpl implements S3Operations
     @Override
     public SetObjectTaggingResult setObjectTagging(SetObjectTaggingRequest setObjectTaggingRequest, AmazonS3 s3Client)
     {
-        MockS3Object mockS3Object = getMockS3Object(setObjectTaggingRequest.getBucketName(), setObjectTaggingRequest.getKey());
+        MockS3Object mockS3Object =
+            getMockS3Object(setObjectTaggingRequest.getBucketName(), setObjectTaggingRequest.getKey(), setObjectTaggingRequest.getVersionId());
 
         if (setObjectTaggingRequest.getTagging() != null)
         {
@@ -732,8 +735,8 @@ public class MockS3OperationsImpl implements S3Operations
     @Override
     public Upload upload(PutObjectRequest putObjectRequest, TransferManager transferManager)
     {
-        LOGGER.debug("upload(): putObjectRequest.getBucketName() = " + putObjectRequest.getBucketName() + ", putObjectRequest.getKey() = " +
-            putObjectRequest.getKey());
+        LOGGER.debug(
+            "upload(): putObjectRequest.getBucketName() = " + putObjectRequest.getBucketName() + ", putObjectRequest.getKey() = " + putObjectRequest.getKey());
 
         putObject(putObjectRequest, transferManager.getAmazonS3Client());
 
@@ -823,6 +826,20 @@ public class MockS3OperationsImpl implements S3Operations
      */
     private MockS3Object getMockS3Object(String s3BucketName, String s3Key)
     {
+        return getMockS3Object(s3BucketName, s3Key, null);
+    }
+
+    /**
+     * Gets a mock S3 object if one exists.
+     *
+     * @param s3BucketName the S3 bucket name
+     * @param s3Key the S3 key
+     * @param s3VersionId the S3 version identifier
+     *
+     * @return the mock S3 object
+     */
+    private MockS3Object getMockS3Object(String s3BucketName, String s3Key, String s3VersionId)
+    {
         if (s3Key.endsWith(MockAwsOperationsHelper.AMAZON_THROTTLING_EXCEPTION))
         {
             AmazonServiceException throttlingException = new AmazonServiceException("test throttling exception");
@@ -852,7 +869,8 @@ public class MockS3OperationsImpl implements S3Operations
         else
         {
             MockS3Bucket mockS3Bucket = getOrCreateBucket(s3BucketName);
-            MockS3Object mockS3Object = mockS3Bucket.getObjects().get(s3Key);
+            MockS3Object mockS3Object =
+                StringUtils.isBlank(s3VersionId) ? mockS3Bucket.getObjects().get(s3Key) : mockS3Bucket.getVersions().get(s3Key + s3VersionId);
 
             if (mockS3Object == null)
             {

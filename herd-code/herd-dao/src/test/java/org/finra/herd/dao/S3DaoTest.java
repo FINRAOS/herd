@@ -16,6 +16,7 @@
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -38,6 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -54,7 +56,6 @@ import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
 import com.amazonaws.services.s3.model.DeleteObjectsResult.DeletedObject;
 import com.amazonaws.services.s3.model.GetObjectTaggingRequest;
 import com.amazonaws.services.s3.model.GetObjectTaggingResult;
@@ -82,6 +83,7 @@ import com.amazonaws.services.s3.transfer.Transfer.TransferState;
 import com.amazonaws.services.s3.transfer.TransferProgress;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.google.common.base.Objects;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -1377,8 +1379,7 @@ public class S3DaoTest extends AbstractDaoTest
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
 
-            when(mockS3Operations.putObject(any(), any())).then(invocation ->
-            {
+            when(mockS3Operations.putObject(any(), any())).then(invocation -> {
                 AmazonS3Client amazonS3Client = invocation.getArgument(1);
                 ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
                 assertEquals(S3Dao.SIGNER_OVERRIDE_V4, clientConfiguration.getSignerOverride());
@@ -1949,7 +1950,7 @@ public class S3DaoTest extends AbstractDaoTest
             catch (Exception e)
             {
                 assertEquals(IllegalStateException.class, e.getClass());
-                assertEquals("Failed to list keys/key versions with prefix \"s3KeyPrefix\" from bucket \"s3BucketName\". Reason: message", e.getMessage());
+                assertEquals("Failed to list S3 versions with prefix \"s3KeyPrefix\" from bucket \"s3BucketName\". Reason: message", e.getMessage());
             }
         }
         finally
@@ -2041,10 +2042,10 @@ public class S3DaoTest extends AbstractDaoTest
                 }
             });
 
-            List<KeyVersion> listVersions = s3Dao.listVersions(s3FileTransferRequestParamsDto);
-            assertEquals(1, listVersions.size());
-            assertEquals(expectedKey, listVersions.get(0).getKey());
-            assertEquals(expectedVersionId, listVersions.get(0).getVersion());
+            List<S3VersionSummary> result = s3Dao.listVersions(s3FileTransferRequestParamsDto);
+            assertEquals(1, result.size());
+            assertEquals(expectedKey, result.get(0).getKey());
+            assertEquals(expectedVersionId, result.get(0).getVersionId());
         }
         finally
         {
@@ -2093,7 +2094,7 @@ public class S3DaoTest extends AbstractDaoTest
             }
             catch (IllegalArgumentException e)
             {
-                assertEquals("Listing of S3 key versions from root directory is not allowed.", e.getMessage());
+                assertEquals("Listing of S3 versions from root directory is not allowed.", e.getMessage());
             }
         }
     }
@@ -2520,12 +2521,12 @@ public class S3DaoTest extends AbstractDaoTest
     @Test
     public void testTagObjectsAmazonServiceException()
     {
-        // Try to retrieve S3 object metadata when AmazonServiceException is expected tpo be thrown..
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
+        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+
         try
         {
-            S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
-            params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
-            params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
             s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
             fail();
         }
@@ -2588,6 +2589,183 @@ public class S3DaoTest extends AbstractDaoTest
         // Validate that the S3 object is tagged with the second tag now.
         getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
         assertEquals(Arrays.asList(tags.get(1)), getObjectTaggingResult.getTagSet());
+    }
+
+    @Test
+    public void testTagVersionsAmazonServiceException()
+    {
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
+
+        S3VersionSummary s3VersionSummary = new S3VersionSummary();
+        s3VersionSummary.setKey(S3_KEY);
+        s3VersionSummary.setVersionId(S3_VERSION_ID);
+
+        try
+        {
+            s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3VersionSummary),
+                new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Failed to tag S3 version with \"%s\" key and \"%s\" version id in \"%s\" bucket. " +
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", S3_KEY, S3_VERSION_ID,
+                MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testTagVersionsOtherTagKeyAlreadyExists()
+    {
+        // Create two S3 object tags having different tag keys.
+        List<Tag> tags = Arrays.asList(new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE), new Tag(S3_OBJECT_TAG_KEY_2, S3_OBJECT_TAG_VALUE_2));
+
+        // Put an S3 file that is already tagged with the first S3 object tag in an S3 bucket that has versioning enabled.
+        PutObjectRequest putObjectRequest =
+            new PutObjectRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]),
+                new ObjectMetadata());
+        putObjectRequest.setTagging(new ObjectTagging(Arrays.asList(tags.get(0))));
+        s3Operations.putObject(putObjectRequest, null);
+
+        // List S3 versions that match the test S3 key.
+        ListVersionsRequest listVersionsRequest =
+            new ListVersionsRequest().withBucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED).withPrefix(TARGET_S3_KEY);
+        VersionListing versionListing = s3Operations.listVersions(listVersionsRequest, null);
+        assertEquals(1, CollectionUtils.size(versionListing.getVersionSummaries()));
+        assertEquals(TARGET_S3_KEY, versionListing.getVersionSummaries().get(0).getKey());
+        assertNotNull(versionListing.getVersionSummaries().get(0).getVersionId());
+
+        // Validate that the S3 object is tagged with the first tag only.
+        GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(
+            new GetObjectTaggingRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED, TARGET_S3_KEY,
+                versionListing.getVersionSummaries().get(0).getVersionId()), null);
+        assertEquals(Collections.singletonList(tags.get(0)), getObjectTaggingResult.getTagSet());
+
+        // Tag the S3 version with the second S3 object tag.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED);
+        s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tags.get(1));
+
+        // Validate that the S3 object is now tagged with both tags.
+        getObjectTaggingResult = s3Operations.getObjectTagging(
+            new GetObjectTaggingRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED, TARGET_S3_KEY,
+                versionListing.getVersionSummaries().get(0).getVersionId()), null);
+        assertEquals(tags.size(), getObjectTaggingResult.getTagSet().size());
+        assertTrue(getObjectTaggingResult.getTagSet().containsAll(tags));
+    }
+
+    @Test
+    public void testTagVersionsS3BucketWithVersioningDisabled()
+    {
+        // Create an S3 object tag.
+        Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
+        // Put S3 objects in S3 bucket that has versioning disabled.
+        for (int i = 0; i < 2; i++)
+        {
+            s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, TARGET_S3_KEY + i, new ByteArrayInputStream(new byte[1]), new ObjectMetadata()), null);
+        }
+
+        // List S3 versions that match the test prefix.
+        ListVersionsRequest listVersionsRequest = new ListVersionsRequest().withBucketName(S3_BUCKET_NAME).withPrefix(TARGET_S3_KEY);
+        VersionListing versionListing = s3Operations.listVersions(listVersionsRequest, null);
+        assertEquals(2, CollectionUtils.size(versionListing.getVersionSummaries()));
+        for (int i = 0; i < 2; i++)
+        {
+            assertNull(versionListing.getVersionSummaries().get(i).getVersionId());
+        }
+
+        // Tag listed S3 versions with an S3 object tag.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(S3_BUCKET_NAME);
+        s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tag);
+
+        // Validate that both S3 objects got tagged.
+        for (int i = 0; i < 2; i++)
+        {
+            GetObjectTaggingResult getObjectTaggingResult =
+                s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY + i, null), null);
+            assertEquals(Collections.singletonList(tag), getObjectTaggingResult.getTagSet());
+        }
+    }
+
+    @Test
+    public void testTagVersionsS3BucketWithVersioningEnabled()
+    {
+        // Create an S3 object tag.
+        Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
+        // Put two S3 versions in S3 bucket that has versioning enabled.
+        for (int i = 0; i < 2; i++)
+        {
+            s3Operations.putObject(
+                new PutObjectRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]),
+                    new ObjectMetadata()), null);
+        }
+
+        // List S3 versions that match the test key.
+        ListVersionsRequest listVersionsRequest =
+            new ListVersionsRequest().withBucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED).withPrefix(TARGET_S3_KEY);
+        VersionListing versionListing = s3Operations.listVersions(listVersionsRequest, null);
+        assertEquals(2, CollectionUtils.size(versionListing.getVersionSummaries()));
+        for (int i = 0; i < 2; i++)
+        {
+            assertNotNull(versionListing.getVersionSummaries().get(i).getVersionId());
+        }
+
+        // Tag listed S3 version with an S3 object tag.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED);
+        s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tag);
+
+        // Validate that both versions got tagged.
+        for (int i = 0; i < 2; i++)
+        {
+            GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(
+                new GetObjectTaggingRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED, TARGET_S3_KEY,
+                    versionListing.getVersionSummaries().get(i).getVersionId()), null);
+            assertEquals(Collections.singletonList(tag), getObjectTaggingResult.getTagSet());
+        }
+    }
+
+    @Test
+    public void testTagVersionsTargetTagKeyAlreadyExists()
+    {
+        // Create two S3 object tags having the same tag key.
+        List<Tag> tags = Arrays.asList(new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE), new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE_2));
+
+        // Put an S3 file that is already tagged with the first S3 object tag in an S3 bucket that has versioning enabled.
+        PutObjectRequest putObjectRequest =
+            new PutObjectRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]),
+                new ObjectMetadata());
+        putObjectRequest.setTagging(new ObjectTagging(Arrays.asList(tags.get(0))));
+        s3Operations.putObject(putObjectRequest, null);
+
+        // List S3 versions that match the test S3 key.
+        ListVersionsRequest listVersionsRequest =
+            new ListVersionsRequest().withBucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED).withPrefix(TARGET_S3_KEY);
+        VersionListing versionListing = s3Operations.listVersions(listVersionsRequest, null);
+        assertEquals(1, CollectionUtils.size(versionListing.getVersionSummaries()));
+        assertEquals(TARGET_S3_KEY, versionListing.getVersionSummaries().get(0).getKey());
+        assertNotNull(versionListing.getVersionSummaries().get(0).getVersionId());
+
+        // Validate that the S3 object is tagged with the first tag only.
+        GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(
+            new GetObjectTaggingRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED, TARGET_S3_KEY,
+                versionListing.getVersionSummaries().get(0).getVersionId()), null);
+        assertEquals(Collections.singletonList(tags.get(0)), getObjectTaggingResult.getTagSet());
+
+        // Tag the S3 version with the second S3 object tag.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED);
+        s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tags.get(1));
+
+        // Validate that the S3 object is now tagged with the second tag only.
+        getObjectTaggingResult = s3Operations.getObjectTagging(
+            new GetObjectTaggingRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED, TARGET_S3_KEY,
+                versionListing.getVersionSummaries().get(0).getVersionId()), null);
+        assertEquals(Collections.singletonList(tags.get(1)), getObjectTaggingResult.getTagSet());
     }
 
     /**
