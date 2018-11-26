@@ -305,7 +305,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
         // Retrieve the indexSearch response
         final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString()).addIndices(Arrays.asList(bdefActiveIndex, tagActiveIndex));
-        final SearchResult searchResult = jestClientHelper.searchExecute(searchBuilder.build());
+        final SearchResult searchResult = jestClientHelper.execute(searchBuilder.build());
         final List<IndexSearchResult> indexSearchResults =
             buildIndexSearchResults(fields, tagActiveIndex, bdefActiveIndex, searchResult, indexSearchRequest.isEnableHitHighlighting());
 
