@@ -46,7 +46,7 @@ public class JestClientHelper
      * @param <T> The expected class of the action
      * @param action action
      *
-     * @return a jest search result
+     * @return a jest action result
      */
     @Retryable(maxAttempts = 3, value = RestClientException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
     public <T extends JestResult> T execute(Action<T> action)
