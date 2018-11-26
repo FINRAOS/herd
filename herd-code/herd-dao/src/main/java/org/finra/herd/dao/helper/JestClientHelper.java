@@ -43,6 +43,7 @@ public class JestClientHelper
     /**
      * Method to use the JEST client to execute an elastic action
      *
+     * @param <T> The expected class of the action
      * @param action action
      *
      * @return a jest search result
