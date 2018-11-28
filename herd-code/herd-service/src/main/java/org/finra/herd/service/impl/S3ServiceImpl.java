@@ -123,9 +123,9 @@ public class S3ServiceImpl implements S3Service
 
     @Override
     public void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
-        final Tag tag)
+        final List<S3ObjectSummary> s3ObjectSummaries, final Tag tag)
     {
-        s3Dao.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, tag);
+        s3Dao.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3ObjectSummaries, tag);
     }
 
     @Override

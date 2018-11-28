@@ -647,83 +647,26 @@ public class S3DaoImpl implements S3Dao
 
     @Override
     public void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
-        final Tag tag)
+        final List<S3ObjectSummary> s3ObjectSummaries, final Tag tag)
     {
-        LOGGER.info("Tagging objects in S3... s3BucketName=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
-            s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getFiles().size(), tag.getKey(), tag.getValue());
+        LOGGER.info("Tagging objects in S3... s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
+            s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(), CollectionUtils.size(s3ObjectSummaries),
+            tag.getKey(), tag.getValue());
 
-        if (!CollectionUtils.isEmpty(s3FileTransferRequestParamsDto.getFiles()))
+        if (!CollectionUtils.isEmpty(s3ObjectSummaries))
         {
-            // Initialize a key value pair for the error message in the catch block.
-            String s3Key = s3FileTransferRequestParamsDto.getFiles().get(0).getPath().replaceAll("\\\\", "/");
-
-            // Amazon S3 client to access S3 objects.
-            AmazonS3Client s3Client = null;
-
-            // Amazon S3 client for S3 object tagging.
-            AmazonS3Client s3ObjectTaggerClient = null;
-
-            try
+            // Convert a list of S3 object summaries to S3 version summaries without version identifiers.
+            List<S3VersionSummary> s3VersionSummaries = new ArrayList<>();
+            for (S3ObjectSummary s3ObjectSummary : s3ObjectSummaries)
             {
-                // Create an S3 client to access S3 objects.
-                s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
-
-                // Create an S3 client for S3 object tagging.
-                s3ObjectTaggerClient = getAmazonS3(s3ObjectTaggerParamsDto);
-
-                // Create a get object tagging request.
-                GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null);
-
-                // Create a restore object request.
-                SetObjectTaggingRequest setObjectTaggingRequest = new SetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);
-
-                for (File file : s3FileTransferRequestParamsDto.getFiles())
-                {
-                    // Prepare an S3 key.
-                    s3Key = file.getPath().replaceAll("\\\\", "/");
-
-                    // Retrieve the current tagging information for the S3 key.
-                    getObjectTaggingRequest.setKey(s3Key);
-                    GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(getObjectTaggingRequest, s3Client);
-
-                    // Update the list of tags to include the specified S3 object tag.
-                    List<Tag> updatedTags = new ArrayList<>();
-                    updatedTags.add(tag);
-                    if (CollectionUtils.isNotEmpty(getObjectTaggingResult.getTagSet()))
-                    {
-                        for (Tag currentTag : getObjectTaggingResult.getTagSet())
-                        {
-                            if (!StringUtils.equals(tag.getKey(), currentTag.getKey()))
-                            {
-                                updatedTags.add(currentTag);
-                            }
-                        }
-                    }
-
-                    // Update the tagging information.
-                    setObjectTaggingRequest.setKey(s3Key);
-                    setObjectTaggingRequest.setTagging(new ObjectTagging(updatedTags));
-                    s3Operations.setObjectTagging(setObjectTaggingRequest, s3ObjectTaggerClient);
-                }
+                S3VersionSummary s3VersionSummary = new S3VersionSummary();
+                s3VersionSummary.setBucketName(s3ObjectSummary.getBucketName());
+                s3VersionSummary.setKey(s3ObjectSummary.getKey());
+                s3VersionSummaries.add(s3VersionSummary);
             }
-            catch (Exception e)
-            {
-                throw new IllegalStateException(String
-                    .format("Failed to tag S3 object with \"%s\" key in \"%s\" bucket. Reason: %s", s3Key, s3FileTransferRequestParamsDto.getS3BucketName(),
-                        e.getMessage()), e);
-            }
-            finally
-            {
-                if (s3Client != null)
-                {
-                    s3Client.shutdown();
-                }
 
-                if (s3ObjectTaggerClient != null)
-                {
-                    s3ObjectTaggerClient.shutdown();
-                }
-            }
+            // Tag S3 objects.
+            tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries, tag);
         }
     }
 
@@ -732,84 +675,12 @@ public class S3DaoImpl implements S3Dao
         final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
     {
         LOGGER.info("Tagging versions in S3... s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3VersionCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
-            s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(), s3FileTransferRequestParamsDto.getFiles().size(),
+            s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(), CollectionUtils.size(s3VersionSummaries),
             tag.getKey(), tag.getValue());
 
         if (CollectionUtils.isNotEmpty(s3VersionSummaries))
         {
-            // Initialize an S3 version for the error message in the catch block.
-            S3VersionSummary currentS3VersionSummary = s3VersionSummaries.get(0);
-
-            // Amazon S3 client to access S3 objects.
-            AmazonS3Client s3Client = null;
-
-            // Amazon S3 client for S3 object tagging.
-            AmazonS3Client s3ObjectTaggerClient = null;
-
-            try
-            {
-                // Create an S3 client to access S3 objects.
-                s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
-
-                // Create an S3 client for S3 object tagging.
-                s3ObjectTaggerClient = getAmazonS3(s3ObjectTaggerParamsDto);
-
-                // Create a get object tagging request.
-                GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);
-
-                // Create a set object tagging request.
-                SetObjectTaggingRequest setObjectTaggingRequest =
-                    new SetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null, null);
-
-                for (S3VersionSummary s3VersionSummary : s3VersionSummaries)
-                {
-                    // Set the current S3 version summary.
-                    currentS3VersionSummary = s3VersionSummary;
-
-                    // Retrieve the current tagging information for the S3 version.
-                    getObjectTaggingRequest.setKey(s3VersionSummary.getKey());
-                    getObjectTaggingRequest.setVersionId(s3VersionSummary.getVersionId());
-                    GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(getObjectTaggingRequest, s3Client);
-
-                    // Update the list of tags to include the specified S3 object tag.
-                    List<Tag> updatedTags = new ArrayList<>();
-                    updatedTags.add(tag);
-                    if (CollectionUtils.isNotEmpty(getObjectTaggingResult.getTagSet()))
-                    {
-                        for (Tag currentTag : getObjectTaggingResult.getTagSet())
-                        {
-                            if (!StringUtils.equals(tag.getKey(), currentTag.getKey()))
-                            {
-                                updatedTags.add(currentTag);
-                            }
-                        }
-                    }
-
-                    // Update tagging information for the S3 version.
-                    setObjectTaggingRequest.setKey(s3VersionSummary.getKey());
-                    setObjectTaggingRequest.setVersionId(s3VersionSummary.getVersionId());
-                    setObjectTaggingRequest.setTagging(new ObjectTagging(updatedTags));
-                    s3Operations.setObjectTagging(setObjectTaggingRequest, s3ObjectTaggerClient);
-                }
-            }
-            catch (Exception e)
-            {
-                throw new IllegalStateException(String
-                    .format("Failed to tag S3 version with \"%s\" key and \"%s\" version id in \"%s\" bucket. Reason: %s", currentS3VersionSummary.getKey(),
-                        currentS3VersionSummary.getVersionId(), s3FileTransferRequestParamsDto.getS3BucketName(), e.getMessage()), e);
-            }
-            finally
-            {
-                if (s3Client != null)
-                {
-                    s3Client.shutdown();
-                }
-
-                if (s3ObjectTaggerClient != null)
-                {
-                    s3ObjectTaggerClient.shutdown();
-                }
-            }
+            tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries, tag);
         }
     }
 
@@ -1390,6 +1261,83 @@ public class S3DaoImpl implements S3Dao
             // TODO: For upload File, we can set RRS on the putObjectRequest. For uploadDirectory, this is the only
             // way to do it. However, setHeader() is flagged as For Internal Use Only
             metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.ReducedRedundancy.toString());
+        }
+    }
+
+    private void tagVersionsHelper(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto,
+        final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto, final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
+    {
+        // Initialize an S3 version for the error message in the catch block.
+        S3VersionSummary currentS3VersionSummary = s3VersionSummaries.get(0);
+
+        // Amazon S3 client to access S3 objects.
+        AmazonS3Client s3Client = null;
+
+        // Amazon S3 client for S3 object tagging.
+        AmazonS3Client s3ObjectTaggerClient = null;
+
+        try
+        {
+            // Create an S3 client to access S3 objects.
+            s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
+
+            // Create an S3 client for S3 object tagging.
+            s3ObjectTaggerClient = getAmazonS3(s3ObjectTaggerParamsDto);
+
+            // Create a get object tagging request.
+            GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);
+
+            // Create a set object tagging request.
+            SetObjectTaggingRequest setObjectTaggingRequest = new SetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null, null);
+
+            for (S3VersionSummary s3VersionSummary : s3VersionSummaries)
+            {
+                // Set the current S3 version summary.
+                currentS3VersionSummary = s3VersionSummary;
+
+                // Retrieve the current tagging information for the S3 version.
+                getObjectTaggingRequest.setKey(s3VersionSummary.getKey());
+                getObjectTaggingRequest.setVersionId(s3VersionSummary.getVersionId());
+                GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(getObjectTaggingRequest, s3Client);
+
+                // Update the list of tags to include the specified S3 object tag.
+                List<Tag> updatedTags = new ArrayList<>();
+                updatedTags.add(tag);
+                if (CollectionUtils.isNotEmpty(getObjectTaggingResult.getTagSet()))
+                {
+                    for (Tag currentTag : getObjectTaggingResult.getTagSet())
+                    {
+                        if (!StringUtils.equals(tag.getKey(), currentTag.getKey()))
+                        {
+                            updatedTags.add(currentTag);
+                        }
+                    }
+                }
+
+                // Update tagging information for the S3 version.
+                setObjectTaggingRequest.setKey(s3VersionSummary.getKey());
+                setObjectTaggingRequest.setVersionId(s3VersionSummary.getVersionId());
+                setObjectTaggingRequest.setTagging(new ObjectTagging(updatedTags));
+                s3Operations.setObjectTagging(setObjectTaggingRequest, s3ObjectTaggerClient);
+            }
+        }
+        catch (Exception e)
+        {
+            throw new IllegalStateException(String
+                .format("Failed to tag S3 object with \"%s\" key and \"%s\" version id in \"%s\" bucket. Reason: %s", currentS3VersionSummary.getKey(),
+                    currentS3VersionSummary.getVersionId(), s3FileTransferRequestParamsDto.getS3BucketName(), e.getMessage()), e);
+        }
+        finally
+        {
+            if (s3Client != null)
+            {
+                s3Client.shutdown();
+            }
+
+            if (s3ObjectTaggerClient != null)
+            {
+                s3ObjectTaggerClient.shutdown();
+            }
         }
     }
 
