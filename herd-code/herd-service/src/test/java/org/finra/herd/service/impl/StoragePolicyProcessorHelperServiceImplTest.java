@@ -22,8 +22,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -206,7 +206,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         String storageFilePath = TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE;
 
         // Create a list of storage files to be passed as an input.
-        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000));
+        List<StorageFile> storageFiles = Collections.singletonList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000));
 
         // Create a storage policy transition parameters DTO.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
@@ -224,23 +224,16 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
 
         // Create a list of S3 object summaries selected without zero byte directory markers.
-        List<S3ObjectSummary> actualS3FilesWithoutZeroByteDirectoryMarkers = Arrays.asList(new S3ObjectSummary());
+        List<S3ObjectSummary> actualS3FilesWithoutZeroByteDirectoryMarkers = Collections.singletonList(new S3ObjectSummary());
 
         // Create a list of all S3 files matching the S3 key prefix form the S3 bucket.
-        List<S3ObjectSummary> actualS3Files = Arrays.asList(new S3ObjectSummary());
-
-        // Create a list of storage files selected for S3 object tagging.
-        List<StorageFile> storageFilesSelectedForTagging = Arrays.asList(new StorageFile());
-
-        // Create a list of storage files selected for S3 object tagging.
-        List<File> filesSelectedForTagging = Arrays.asList(new File(storageFilePath));
+        List<S3ObjectSummary> actualS3Files = Collections.singletonList(new S3ObjectSummary());
 
         // Create an updated S3 file transfer parameters DTO to access the S3 bucket.
         S3FileTransferRequestParamsDto updatedS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         updatedS3FileTransferRequestParamsDto.setS3Endpoint(S3_ENDPOINT);
         updatedS3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
         updatedS3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
-        updatedS3FileTransferRequestParamsDto.setFiles(filesSelectedForTagging);
 
         // Create an updated S3 file transfer parameters DTO to be used for S3 object tagging operation.
         S3FileTransferRequestParamsDto updatedS3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
@@ -255,8 +248,6 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
             .thenReturn(s3ObjectTaggerParamsDto);
         when(s3Service.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(actualS3FilesWithoutZeroByteDirectoryMarkers);
         when(s3Service.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(actualS3Files);
-        when(storageFileHelper.createStorageFilesFromS3ObjectSummaries(actualS3Files)).thenReturn(storageFilesSelectedForTagging);
-        when(storageFileHelper.getFiles(storageFilesSelectedForTagging)).thenReturn(filesSelectedForTagging);
 
         // Call the method under test.
         storagePolicyProcessorHelperServiceImpl.executeStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto);
@@ -268,9 +259,8 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(storageFileHelper).validateRegisteredS3Files(storageFiles, actualS3FilesWithoutZeroByteDirectoryMarkers, STORAGE_NAME, businessObjectDataKey);
         verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, true);
         verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, false);
-        verify(storageFileHelper).createStorageFilesFromS3ObjectSummaries(actualS3Files);
-        verify(storageFileHelper).getFiles(storageFilesSelectedForTagging);
-        verify(s3Service).tagObjects(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
+        verify(s3Service)
+            .tagObjects(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, actualS3Files, new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.

@@ -112,11 +112,11 @@ public class S3DaoImpl implements S3Dao
 {
     private static final long DEFAULT_SLEEP_INTERVAL_MILLIS = 100;
 
+    private static final String GLACIER_RETRIEVAL_OPTION = "Bulk";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(S3DaoImpl.class);
 
     private static final int MAX_KEYS_PER_DELETE_REQUEST = 1000;
-
-    private static final String GLACIER_RETRIEVAL_OPTION = "Bulk";
 
     @Autowired
     private AwsHelper awsHelper;
@@ -162,7 +162,7 @@ public class S3DaoImpl implements S3Dao
                     {
                         // Abort the upload.
                         s3Operations.abortMultipartUpload(TransferManager
-                            .appendSingleObjectUserAgent(new AbortMultipartUploadRequest(params.getS3BucketName(), upload.getKey(), upload.getUploadId())),
+                                .appendSingleObjectUserAgent(new AbortMultipartUploadRequest(params.getS3BucketName(), upload.getKey(), upload.getUploadId())),
                             s3Client);
 
                         // Log the information about the aborted multipart upload.
@@ -229,7 +229,7 @@ public class S3DaoImpl implements S3Dao
         });
 
         LOGGER.info("Copied S3 object. sourceS3Key=\"{}\" sourceS3BucketName=\"{}\" targetS3Key=\"{}\" targetS3BucketName=\"{}\" " +
-            "totalBytesTransferred={} transferDuration=\"{}\"", params.getSourceObjectKey(), params.getSourceBucketName(), params.getTargetObjectKey(),
+                "totalBytesTransferred={} transferDuration=\"{}\"", params.getSourceObjectKey(), params.getSourceBucketName(), params.getTargetObjectKey(),
             params.getTargetBucketName(), results.getTotalBytesTransferred(), HerdDateUtils.formatDuration(results.getDurationMillis()));
 
         logOverallTransferRate(results);
@@ -282,15 +282,22 @@ public class S3DaoImpl implements S3Dao
         try
         {
             // List S3 versions.
-            List<DeleteObjectsRequest.KeyVersion> keyVersions = listVersions(params);
-            LOGGER.info("Found keys/key versions in S3 for deletion. s3KeyCount={} s3KeyPrefix=\"{}\" s3BucketName=\"{}\"", keyVersions.size(),
+            List<S3VersionSummary> s3VersionSummaries = listVersions(params);
+            LOGGER.info("Found keys/key versions in S3 for deletion. s3KeyCount={} s3KeyPrefix=\"{}\" s3BucketName=\"{}\"", s3VersionSummaries.size(),
                 params.getS3KeyPrefix(), params.getS3BucketName());
 
             // In order to avoid a MalformedXML AWS exception, we send delete request only when we have any key versions to delete.
-            if (!keyVersions.isEmpty())
+            if (CollectionUtils.isNotEmpty(s3VersionSummaries))
             {
                 // Create an S3 client.
                 AmazonS3Client s3Client = getAmazonS3(params);
+
+                // Build a list of objects to be deleted.
+                List<DeleteObjectsRequest.KeyVersion> keyVersions = new ArrayList<>();
+                for (S3VersionSummary s3VersionSummary : s3VersionSummaries)
+                {
+                    keyVersions.add(new DeleteObjectsRequest.KeyVersion(s3VersionSummary.getKey(), s3VersionSummary.getVersionId()));
+                }
 
                 try
                 {
@@ -369,7 +376,7 @@ public class S3DaoImpl implements S3Dao
         });
 
         LOGGER.info("Downloaded S3 directory to the local system. " +
-            "s3KeyPrefix=\"{}\" s3BucketName=\"{}\" localDirectory=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
+                "s3KeyPrefix=\"{}\" s3BucketName=\"{}\" localDirectory=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
             params.getS3KeyPrefix(), params.getS3BucketName(), params.getLocalPath(), results.getTotalFilesTransferred(), results.getTotalBytesTransferred(),
             HerdDateUtils.formatDuration(results.getDurationMillis()));
 
@@ -528,12 +535,12 @@ public class S3DaoImpl implements S3Dao
     }
 
     @Override
-    public List<DeleteObjectsRequest.KeyVersion> listVersions(final S3FileTransferRequestParamsDto params)
+    public List<S3VersionSummary> listVersions(final S3FileTransferRequestParamsDto params)
     {
-        Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 key versions from root directory is not allowed.");
+        Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 versions from root directory is not allowed.");
 
         AmazonS3Client s3Client = getAmazonS3(params);
-        List<DeleteObjectsRequest.KeyVersion> keyVersions = new ArrayList<>();
+        List<S3VersionSummary> s3VersionSummaries = new ArrayList<>();
 
         try
         {
@@ -543,12 +550,7 @@ public class S3DaoImpl implements S3Dao
             do
             {
                 versionListing = s3Operations.listVersions(listVersionsRequest, s3Client);
-
-                for (S3VersionSummary versionSummary : versionListing.getVersionSummaries())
-                {
-                    keyVersions.add(new DeleteObjectsRequest.KeyVersion(versionSummary.getKey(), versionSummary.getVersionId()));
-                }
-
+                s3VersionSummaries.addAll(versionListing.getVersionSummaries());
                 listVersionsRequest.setKeyMarker(versionListing.getNextKeyMarker());
                 listVersionsRequest.setVersionIdMarker(versionListing.getNextVersionIdMarker());
             }
@@ -565,7 +567,7 @@ public class S3DaoImpl implements S3Dao
         catch (AmazonClientException e)
         {
             throw new IllegalStateException(String
-                .format("Failed to list keys/key versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
+                .format("Failed to list S3 versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
                     e.getMessage()), e);
         }
         finally
@@ -574,7 +576,7 @@ public class S3DaoImpl implements S3Dao
             s3Client.shutdown();
         }
 
-        return keyVersions;
+        return s3VersionSummaries;
     }
 
     @Override
@@ -645,83 +647,40 @@ public class S3DaoImpl implements S3Dao
 
     @Override
     public void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
-        final Tag tag)
+        final List<S3ObjectSummary> s3ObjectSummaries, final Tag tag)
     {
-        LOGGER.info("Tagging objects in S3... s3BucketName=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
-            s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getFiles().size(), tag.getKey(), tag.getValue());
+        LOGGER.info("Tagging objects in S3... s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
+            s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(), CollectionUtils.size(s3ObjectSummaries),
+            tag.getKey(), tag.getValue());
 
-        if (!CollectionUtils.isEmpty(s3FileTransferRequestParamsDto.getFiles()))
+        if (!CollectionUtils.isEmpty(s3ObjectSummaries))
         {
-            // Initialize a key value pair for the error message in the catch block.
-            String s3Key = s3FileTransferRequestParamsDto.getFiles().get(0).getPath().replaceAll("\\\\", "/");
-
-            // Amazon S3 client to access S3 objects.
-            AmazonS3Client s3Client = null;
-
-            // Amazon S3 client for S3 object tagging.
-            AmazonS3Client s3ObjectTaggerClient = null;
-
-            try
+            // Convert a list of S3 object summaries to S3 version summaries without version identifiers.
+            List<S3VersionSummary> s3VersionSummaries = new ArrayList<>();
+            for (S3ObjectSummary s3ObjectSummary : s3ObjectSummaries)
             {
-                // Create an S3 client to access S3 objects.
-                s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
-
-                // Create an S3 client for S3 object tagging.
-                s3ObjectTaggerClient = getAmazonS3(s3ObjectTaggerParamsDto);
-
-                // Create a get object tagging request.
-                GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null);
-
-                // Create a restore object request.
-                SetObjectTaggingRequest setObjectTaggingRequest = new SetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);
-
-                for (File file : s3FileTransferRequestParamsDto.getFiles())
-                {
-                    // Prepare an S3 key.
-                    s3Key = file.getPath().replaceAll("\\\\", "/");
-
-                    // Retrieve the current tagging information for the S3 key.
-                    getObjectTaggingRequest.setKey(s3Key);
-                    GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(getObjectTaggingRequest, s3Client);
-
-                    // Update the list of tags to include the specified S3 object tag.
-                    List<Tag> updatedTags = new ArrayList<>();
-                    updatedTags.add(tag);
-                    if (CollectionUtils.isNotEmpty(getObjectTaggingResult.getTagSet()))
-                    {
-                        for (Tag currentTag : getObjectTaggingResult.getTagSet())
-                        {
-                            if (!StringUtils.equals(tag.getKey(), currentTag.getKey()))
-                            {
-                                updatedTags.add(currentTag);
-                            }
-                        }
-                    }
-
-                    // Update the tagging information.
-                    setObjectTaggingRequest.setKey(s3Key);
-                    setObjectTaggingRequest.setTagging(new ObjectTagging(updatedTags));
-                    s3Operations.setObjectTagging(setObjectTaggingRequest, s3ObjectTaggerClient);
-                }
+                S3VersionSummary s3VersionSummary = new S3VersionSummary();
+                s3VersionSummary.setBucketName(s3ObjectSummary.getBucketName());
+                s3VersionSummary.setKey(s3ObjectSummary.getKey());
+                s3VersionSummaries.add(s3VersionSummary);
             }
-            catch (Exception e)
-            {
-                throw new IllegalStateException(String
-                    .format("Failed to tag S3 object with \"%s\" key in \"%s\" bucket. Reason: %s", s3Key, s3FileTransferRequestParamsDto.getS3BucketName(),
-                        e.getMessage()), e);
-            }
-            finally
-            {
-                if (s3Client != null)
-                {
-                    s3Client.shutdown();
-                }
 
-                if (s3ObjectTaggerClient != null)
-                {
-                    s3ObjectTaggerClient.shutdown();
-                }
-            }
+            // Tag S3 objects.
+            tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries, tag);
+        }
+    }
+
+    @Override
+    public void tagVersions(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
+        final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
+    {
+        LOGGER.info("Tagging versions in S3... s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3VersionCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
+            s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(), CollectionUtils.size(s3VersionSummaries),
+            tag.getKey(), tag.getValue());
+
+        if (CollectionUtils.isNotEmpty(s3VersionSummaries))
+        {
+            tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries, tag);
         }
     }
 
@@ -750,7 +709,7 @@ public class S3DaoImpl implements S3Dao
         });
 
         LOGGER.info("Uploaded local directory to S3. " +
-            "localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
+                "localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
             params.getLocalPath(), params.getS3KeyPrefix(), params.getS3BucketName(), results.getTotalFilesTransferred(), results.getTotalBytesTransferred(),
             HerdDateUtils.formatDuration(results.getDurationMillis()));
 
@@ -828,7 +787,7 @@ public class S3DaoImpl implements S3Dao
         });
 
         LOGGER.info("Uploaded list of files from the local directory to S3. " +
-            "localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
+                "localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
             params.getLocalPath(), params.getS3KeyPrefix(), params.getS3BucketName(), results.getTotalFilesTransferred(), results.getTotalBytesTransferred(),
             HerdDateUtils.formatDuration(results.getDurationMillis()));
 
@@ -1054,8 +1013,9 @@ public class S3DaoImpl implements S3Dao
 
             if (S3Operations.ERROR_CODE_ACCESS_DENIED.equals(errorCode))
             {
-                throw new ObjectNotFoundException("Application does not have access to the specified S3 object at bucket '" + bucketName + "' and key '" +
-                    key + "'.", amazonServiceException);
+                throw new ObjectNotFoundException(
+                    "Application does not have access to the specified S3 object at bucket '" + bucketName + "' and key '" + key + "'.",
+                    amazonServiceException);
             }
             else if (S3Operations.ERROR_CODE_NO_SUCH_BUCKET.equals(errorCode))
             {
@@ -1139,7 +1099,7 @@ public class S3DaoImpl implements S3Dao
             NumberFormat formatter = new DecimalFormat("#0.00");
 
             LOGGER.info("overallTransferRateKiloBytesPerSecond={} overallTransferRateMegaBitsPerSecond={}", formatter.format(awsHelper
-                .getTransferRateInKilobytesPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())),
+                    .getTransferRateInKilobytesPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())),
                 formatter.format(awsHelper
                     .getTransferRateInMegabitsPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())));
         }
@@ -1229,8 +1189,7 @@ public class S3DaoImpl implements S3Dao
             else if (transferState != TransferState.Completed)
             {
                 throw new IllegalStateException(
-                    "The transfer operation \"" + transfer.getDescription() + "\" did not complete successfully. Current state: \"" + transferState +
-                        "\".");
+                    "The transfer operation \"" + transfer.getDescription() + "\" did not complete successfully. Current state: \"" + transferState + "\".");
             }
 
             // TransferProgress.getBytesTransferred() are not populated for S3 Copy objects.
@@ -1302,6 +1261,83 @@ public class S3DaoImpl implements S3Dao
             // TODO: For upload File, we can set RRS on the putObjectRequest. For uploadDirectory, this is the only
             // way to do it. However, setHeader() is flagged as For Internal Use Only
             metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.ReducedRedundancy.toString());
+        }
+    }
+
+    private void tagVersionsHelper(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto,
+        final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto, final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
+    {
+        // Initialize an S3 version for the error message in the catch block.
+        S3VersionSummary currentS3VersionSummary = s3VersionSummaries.get(0);
+
+        // Amazon S3 client to access S3 objects.
+        AmazonS3Client s3Client = null;
+
+        // Amazon S3 client for S3 object tagging.
+        AmazonS3Client s3ObjectTaggerClient = null;
+
+        try
+        {
+            // Create an S3 client to access S3 objects.
+            s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
+
+            // Create an S3 client for S3 object tagging.
+            s3ObjectTaggerClient = getAmazonS3(s3ObjectTaggerParamsDto);
+
+            // Create a get object tagging request.
+            GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);
+
+            // Create a set object tagging request.
+            SetObjectTaggingRequest setObjectTaggingRequest = new SetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null, null);
+
+            for (S3VersionSummary s3VersionSummary : s3VersionSummaries)
+            {
+                // Set the current S3 version summary.
+                currentS3VersionSummary = s3VersionSummary;
+
+                // Retrieve the current tagging information for the S3 version.
+                getObjectTaggingRequest.setKey(s3VersionSummary.getKey());
+                getObjectTaggingRequest.setVersionId(s3VersionSummary.getVersionId());
+                GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(getObjectTaggingRequest, s3Client);
+
+                // Update the list of tags to include the specified S3 object tag.
+                List<Tag> updatedTags = new ArrayList<>();
+                updatedTags.add(tag);
+                if (CollectionUtils.isNotEmpty(getObjectTaggingResult.getTagSet()))
+                {
+                    for (Tag currentTag : getObjectTaggingResult.getTagSet())
+                    {
+                        if (!StringUtils.equals(tag.getKey(), currentTag.getKey()))
+                        {
+                            updatedTags.add(currentTag);
+                        }
+                    }
+                }
+
+                // Update tagging information for the S3 version.
+                setObjectTaggingRequest.setKey(s3VersionSummary.getKey());
+                setObjectTaggingRequest.setVersionId(s3VersionSummary.getVersionId());
+                setObjectTaggingRequest.setTagging(new ObjectTagging(updatedTags));
+                s3Operations.setObjectTagging(setObjectTaggingRequest, s3ObjectTaggerClient);
+            }
+        }
+        catch (Exception e)
+        {
+            throw new IllegalStateException(String
+                .format("Failed to tag S3 object with \"%s\" key and \"%s\" version id in \"%s\" bucket. Reason: %s", currentS3VersionSummary.getKey(),
+                    currentS3VersionSummary.getVersionId(), s3FileTransferRequestParamsDto.getS3BucketName(), e.getMessage()), e);
+        }
+        finally
+        {
+            if (s3Client != null)
+            {
+                s3Client.shutdown();
+            }
+
+            if (s3ObjectTaggerClient != null)
+            {
+                s3ObjectTaggerClient.shutdown();
+            }
         }
     }
 

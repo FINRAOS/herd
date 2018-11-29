@@ -21,8 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -205,7 +204,7 @@ public class S3ServiceTest extends AbstractServiceTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
 
         // Create a list of S3 object summaries.
-        List<S3ObjectSummary> s3ObjectSummaries = Arrays.asList(new S3ObjectSummary());
+        List<S3ObjectSummary> s3ObjectSummaries = Collections.singletonList(new S3ObjectSummary());
 
         // Mock the external calls.
         when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(s3ObjectSummaries);
@@ -228,7 +227,7 @@ public class S3ServiceTest extends AbstractServiceTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
 
         // Create a list of S3 object summaries.
-        List<S3ObjectSummary> s3ObjectSummaries = Arrays.asList(new S3ObjectSummary());
+        List<S3ObjectSummary> s3ObjectSummaries = Collections.singletonList(new S3ObjectSummary());
 
         // Mock the external calls.
         when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(s3ObjectSummaries);
@@ -263,7 +262,6 @@ public class S3ServiceTest extends AbstractServiceTest
     {
         // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setFiles(Arrays.asList(new File(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE)));
 
         // Create an S3 file transfer request parameters DTO to tag S3 objects.
         S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
@@ -271,14 +269,18 @@ public class S3ServiceTest extends AbstractServiceTest
         s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
         s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
 
+        // Create an S3 object summary.
+        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setKey(S3_KEY);
+
         // Create an S3 object tag.
         Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
         // Call the method under test.
-        s3Service.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, tag);
+        s3Service.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3ObjectSummary), tag);
 
         // Verify the external calls.
-        verify(s3Dao).tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, tag);
+        verify(s3Dao).tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3ObjectSummary), tag);
         verifyNoMoreInteractions(s3Dao);
     }
 

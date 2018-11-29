@@ -23,15 +23,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.Tag;
 import org.junit.Before;
 import org.junit.Test;
@@ -1003,9 +1003,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
-        // Create a storage file path.
-        String storageFilePath = TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE;
-
         // Create a business object data destroy parameters DTO.
         BusinessObjectDataDestroyDto businessObjectDataDestroyDto =
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
@@ -1021,21 +1018,17 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
         s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
 
-        // Create a list of all S3 files matching the S3 key prefix form the S3 bucket.
-        List<S3ObjectSummary> actualS3Files = Arrays.asList(new S3ObjectSummary());
-
-        // Create a list of storage files selected for S3 object tagging.
-        List<StorageFile> storageFilesSelectedForTagging = Arrays.asList(new StorageFile());
-
-        // Create a list of storage files selected for S3 object tagging.
-        List<File> filesSelectedForTagging = Arrays.asList(new File(storageFilePath));
+        // Create a list of all S3 versions matching the S3 key prefix form the S3 bucket.
+        S3VersionSummary s3VersionSummary = new S3VersionSummary();
+        s3VersionSummary.setKey(S3_KEY);
+        s3VersionSummary.setVersionId(S3_VERSION_ID);
+        List<S3VersionSummary> s3VersionSummaries = Collections.singletonList(s3VersionSummary);
 
         // Create an updated S3 file transfer parameters DTO to access the S3 bucket.
         S3FileTransferRequestParamsDto updatedS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         updatedS3FileTransferRequestParamsDto.setS3Endpoint(S3_ENDPOINT);
         updatedS3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
         updatedS3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
-        updatedS3FileTransferRequestParamsDto.setFiles(filesSelectedForTagging);
 
         // Create an updated S3 file transfer parameters DTO to be used for S3 object tagging operation.
         S3FileTransferRequestParamsDto updatedS3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
@@ -1048,21 +1041,10 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(s3FileTransferRequestParamsDto);
         when(storageHelper.getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME))
             .thenReturn(s3ObjectTaggerParamsDto);
-        when(s3Service.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(actualS3Files);
-        when(storageFileHelper.createStorageFilesFromS3ObjectSummaries(actualS3Files)).thenReturn(storageFilesSelectedForTagging);
-        when(storageFileHelper.getFiles(storageFilesSelectedForTagging)).thenReturn(filesSelectedForTagging);
+        when(s3Service.listVersions(s3FileTransferRequestParamsDto)).thenReturn(s3VersionSummaries);
 
         // Call the method under test.
         businessObjectDataInitiateDestroyHelperServiceImpl.executeS3SpecificSteps(businessObjectDataDestroyDto);
-
-        // Verify the external calls.
-        verify(storageHelper).getS3FileTransferRequestParamsDto();
-        verify(storageHelper).getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
-        verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, false);
-        verify(storageFileHelper).createStorageFilesFromS3ObjectSummaries(actualS3Files);
-        verify(storageFileHelper).getFiles(storageFilesSelectedForTagging);
-        verify(s3Service).tagObjects(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
-        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(
@@ -1070,6 +1052,14 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
                 StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
                 S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
             businessObjectDataDestroyDto);
+
+        // Verify the external calls.
+        verify(storageHelper).getS3FileTransferRequestParamsDto();
+        verify(storageHelper).getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        verify(s3Service).listVersions(s3FileTransferRequestParamsDto);
+        verify(s3Service).tagVersions(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, s3VersionSummaries,
+            new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
+        verifyNoMoreInteractionsHelper();
     }
 
     /**

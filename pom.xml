@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.83.0-SNAPSHOT</version>
+   <version>0.84.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -32,7 +32,7 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <herd-ui.version>0.53.0</herd-ui.version>
+      <herd-ui.version>0.54.0</herd-ui.version>
 
       <!-- Third Party JAR Dependencies -->
       <!--
@@ -88,7 +88,7 @@
       <elasticsearch.version>5.1.1</elasticsearch.version>
       <search-guard-ssl.version>5.6.2-23</search-guard-ssl.version>
       <jcredstash.version>0.0.4</jcredstash.version>
-      <jest.version>5.3.3</jest.version>
+      <jest.version>6.3.1</jest.version>
       <opencsv.version>4.1</opencsv.version>
       <aws-signing-request-interceptor.version>0.0.21</aws-signing-request-interceptor.version>
 

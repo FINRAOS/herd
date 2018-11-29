@@ -19,9 +19,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.Tag;
 
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
@@ -37,7 +37,7 @@ public interface S3Dao
      * The AWS signer type value to use when signing with Signature Version 4. This constant needs to be the same as what is defined in
      * AmazonS3Client.S3_V4_SIGNER. Unfortunately, that one is private so we have to create our own duplicate constant here.
      */
-    public static final String SIGNER_OVERRIDE_V4 = "AWSS3V4SignerType";
+    String SIGNER_OVERRIDE_V4 = "AWSS3V4SignerType";
 
     /**
      * Aborts any multipart uploads that were initiated in the specified S3 storage older than threshold date.
@@ -48,7 +48,7 @@ public interface S3Dao
      *
      * @return the total number of aborted multipart uploads
      */
-    public int abortMultipartUploads(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, Date thresholdDate);
+    int abortMultipartUploads(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, Date thresholdDate);
 
     /**
      * Copies an S3 object from the source S3 bucket to the same path in target bucket.  This method does not delete the source S3 object.
@@ -58,7 +58,7 @@ public interface S3Dao
      * @return the results.
      * @throws InterruptedException if any problems were encountered.
      */
-    public S3FileTransferResultsDto copyFile(S3FileCopyRequestParamsDto s3FileCopyRequestParamsDto) throws InterruptedException;
+    S3FileTransferResultsDto copyFile(S3FileCopyRequestParamsDto s3FileCopyRequestParamsDto) throws InterruptedException;
 
     /**
      * Creates an S3 object of 0 byte size that represents a directory.
@@ -66,7 +66,7 @@ public interface S3Dao
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 object to be
      * created.
      */
-    public void createDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    void createDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
      * Deletes keys/key versions from specified bucket with matching prefix.
@@ -74,7 +74,7 @@ public interface S3Dao
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 objects to be
      * deleted.
      */
-    public void deleteDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    void deleteDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
      * Deletes a list of keys from specified bucket.
@@ -82,7 +82,7 @@ public interface S3Dao
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
      * deleted.
      */
-    public void deleteFileList(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    void deleteFileList(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
      * Downloads a directory from S3 to the local file system.
@@ -93,7 +93,7 @@ public interface S3Dao
      * @return the results.
      * @throws InterruptedException if any problems were encountered.
      */
-    public S3FileTransferResultsDto downloadDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
+    S3FileTransferResultsDto downloadDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
 
     /**
      * Downloads a file from S3 to the local file system.
@@ -104,7 +104,7 @@ public interface S3Dao
      * @return the results.
      * @throws InterruptedException if any problems were encountered.
      */
-    public S3FileTransferResultsDto downloadFile(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
+    S3FileTransferResultsDto downloadFile(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
 
     /**
      * Generates a GET pre-signed URL for the given object in S3 identified by its bucket name and key. Uses the proxy information and signer override specified
@@ -117,7 +117,7 @@ public interface S3Dao
      *
      * @return a pre-signed URL
      */
-    public String generateGetObjectPresignedUrl(String bucketName, String key, Date expiration, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    String generateGetObjectPresignedUrl(String bucketName, String key, Date expiration, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
      * Gets the metadata for the specified Amazon S3 object without actually fetching the object itself.
@@ -127,7 +127,7 @@ public interface S3Dao
      *
      * @return null if object key is not found, otherwise all Amazon S3 object metadata for the specified object
      */
-    public ObjectMetadata getObjectMetadata(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    ObjectMetadata getObjectMetadata(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
      * Gets an object from S3 and parses it as a {@link Properties}.
@@ -138,7 +138,7 @@ public interface S3Dao
      *
      * @return {@link Properties}
      */
-    public Properties getProperties(String bucketName, String key, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    Properties getProperties(String bucketName, String key, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
      * Lists all S3 objects matching the S3 key prefix in the given bucket (S3 bucket name).
@@ -148,7 +148,7 @@ public interface S3Dao
      *
      * @return the list of all S3 objects represented by S3 object summaries that match the prefix in the given bucket.
      */
-    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
      * Lists all S3 objects matching the S3 key prefix in the given bucket (S3 bucket name).
@@ -159,7 +159,7 @@ public interface S3Dao
      *
      * @return the list of all S3 objects represented by S3 object summaries that match the prefix in the given bucket.
      */
-    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, boolean ignoreZeroByteDirectoryMarkers);
+    List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, boolean ignoreZeroByteDirectoryMarkers);
 
     /**
      * Lists all S3 versions matching the S3 key prefix in the given bucket (S3 bucket name). The S3 bucket name and S3 key prefix that identify the S3 versions
@@ -169,7 +169,7 @@ public interface S3Dao
      *
      * @return the list of all S3 versions that match the prefix in the given bucket
      */
-    public List<DeleteObjectsRequest.KeyVersion> listVersions(final S3FileTransferRequestParamsDto params);
+    List<S3VersionSummary> listVersions(final S3FileTransferRequestParamsDto params);
 
     /**
      * Requests to restore a list of keys in the specified bucket.
@@ -178,7 +178,7 @@ public interface S3Dao
      * restored
      * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
      */
-    public void restoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays);
+    void restoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays);
 
     /**
      * Validates that file exists in S3 using S3Client.getObject() method.
@@ -188,17 +188,29 @@ public interface S3Dao
      * @return true if the S3 file exists, false otherwise
      * @throws RuntimeException if file existence check fails
      */
-    public boolean s3FileExists(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws RuntimeException;
+    boolean s3FileExists(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws RuntimeException;
 
     /**
-     * Tags all objects with the specified S3 object tag.
+     * Tags S3 objects with the specified S3 object tag.
      *
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be tagged
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. This set of parameters contains the S3 bucket name
      * @param s3ObjectTaggerParamsDto the S3 file transfer request parameters to be used for tagging S3 objects
+     * @param s3ObjectSummaries the list of S3 objects to be tagged
      * @param tag the S3 object tag
      */
-    public void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
-        final Tag tag);
+    void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
+        final List<S3ObjectSummary> s3ObjectSummaries, final Tag tag);
+
+    /**
+     * Tags S3 versions with the specified S3 object tag.
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. This set of parameters contains the S3 bucket name
+     * @param s3ObjectTaggerParamsDto the S3 file transfer request parameters to be used for tagging S3 objects
+     * @param s3VersionSummaries the list of S3 versions to be tagged
+     * @param tag the S3 object tag
+     */
+    void tagVersions(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
+        final List<S3VersionSummary> s3VersionSummaries, final Tag tag);
 
     /**
      * Uploads a local directory of files into S3.
@@ -209,7 +221,7 @@ public interface S3Dao
      * @return the results.
      * @throws InterruptedException if any problems were encountered.
      */
-    public S3FileTransferResultsDto uploadDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
+    S3FileTransferResultsDto uploadDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
 
     /**
      * Uploads a local file into S3.
@@ -220,7 +232,7 @@ public interface S3Dao
      * @return the file transfer results.
      * @throws InterruptedException if any problems were encountered.
      */
-    public S3FileTransferResultsDto uploadFile(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
+    S3FileTransferResultsDto uploadFile(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
 
     /**
      * Uploads a list of local files into S3.
@@ -232,7 +244,7 @@ public interface S3Dao
      * @return the file transfer results.
      * @throws InterruptedException if any problems were encountered.
      */
-    public S3FileTransferResultsDto uploadFileList(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
+    S3FileTransferResultsDto uploadFileList(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
 
     /**
      * Validates that all specified Glacier storage class files are restored.
@@ -242,7 +254,7 @@ public interface S3Dao
      *
      * @throws RuntimeException if file validation fails
      */
-    public void validateGlacierS3FilesRestored(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws RuntimeException;
+    void validateGlacierS3FilesRestored(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws RuntimeException;
 
     /**
      * Validates that file exists in S3 and has size that equals to a specified value.
@@ -252,5 +264,5 @@ public interface S3Dao
      *
      * @throws RuntimeException if file validation fails
      */
-    public void validateS3File(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, Long fileSizeInBytes) throws RuntimeException;
+    void validateS3File(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, Long fileSizeInBytes) throws RuntimeException;
 }
