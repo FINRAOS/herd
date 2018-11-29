@@ -2501,6 +2501,14 @@ public class S3DaoTest extends AbstractDaoTest
     @Test
     public void testTagObjects()
     {
+        // Create an S3 file transfer request parameters DTO to access S3 objects.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(S3_BUCKET_NAME);
+
+        // Create an S3 object summary.
+        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setKey(TARGET_S3_KEY);
+
         // Create an S3 object tag.
         Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
@@ -2508,31 +2516,35 @@ public class S3DaoTest extends AbstractDaoTest
         s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), new ObjectMetadata()), null);
 
         // Tag the file with an S3 object tag.
-        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
-        params.setS3BucketName(S3_BUCKET_NAME);
-        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
-        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), tag);
+        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3ObjectSummary), tag);
 
         // Validate that the object got tagged.
         GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
-        assertEquals(Arrays.asList(tag), getObjectTaggingResult.getTagSet());
+        assertEquals(Collections.singletonList(tag), getObjectTaggingResult.getTagSet());
     }
 
     @Test
     public void testTagObjectsAmazonServiceException()
     {
+        // Create an S3 file transfer request parameters DTO to access S3 objects with a mocked S3 bucket name that would trigger an AWS exception.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
-        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+
+        // Create an S3 object summary.
+        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setKey(TARGET_S3_KEY);
+
+        // Create an S3 object tag.
+        Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
         try
         {
-            s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
+            s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3ObjectSummary), tag);
             fail();
         }
         catch (IllegalStateException e)
         {
-            assertEquals(String.format("Failed to tag S3 object with \"%s\" key in \"%s\" bucket. " +
+            assertEquals(String.format("Failed to tag S3 object with \"%s\" key and \"null\" version id in \"%s\" bucket. " +
                     "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", TARGET_S3_KEY,
                 MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR), e.getMessage());
         }
@@ -2546,18 +2558,23 @@ public class S3DaoTest extends AbstractDaoTest
 
         // Put a file in S3 that is already tagged with the first S3 object tag.
         PutObjectRequest putObjectRequest = new PutObjectRequest(S3_BUCKET_NAME, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), new ObjectMetadata());
-        putObjectRequest.setTagging(new ObjectTagging(Arrays.asList(tags.get(0))));
+        putObjectRequest.setTagging(new ObjectTagging(Collections.singletonList(tags.get(0))));
         s3Operations.putObject(putObjectRequest, null);
 
         // Validate that the S3 object is tagged with the first tag only.
         GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
-        assertEquals(Arrays.asList(tags.get(0)), getObjectTaggingResult.getTagSet());
+        assertEquals(Collections.singletonList(tags.get(0)), getObjectTaggingResult.getTagSet());
 
-        // Tag the S3 file with the second S3 object tag.
+        // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(S3_BUCKET_NAME);
-        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
-        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), tags.get(1));
+
+        // Create an S3 object summary.
+        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setKey(TARGET_S3_KEY);
+
+        // Tag the S3 file with the second S3 object tag.
+        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3ObjectSummary), tags.get(1));
 
         // Validate that the S3 object is now tagged with both tags.
         getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
@@ -2573,43 +2590,52 @@ public class S3DaoTest extends AbstractDaoTest
 
         // Put a file in S3 that is already tagged with the first S3 object tag.
         PutObjectRequest putObjectRequest = new PutObjectRequest(S3_BUCKET_NAME, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), new ObjectMetadata());
-        putObjectRequest.setTagging(new ObjectTagging(Arrays.asList(tags.get(0))));
+        putObjectRequest.setTagging(new ObjectTagging(Collections.singletonList(tags.get(0))));
         s3Operations.putObject(putObjectRequest, null);
 
         // Validate that the S3 object is tagged with the first tag.
         GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
-        assertEquals(Arrays.asList(tags.get(0)), getObjectTaggingResult.getTagSet());
+        assertEquals(Collections.singletonList(tags.get(0)), getObjectTaggingResult.getTagSet());
 
-        // Tag the S3 file with the second S3 object tag.
+        // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(S3_BUCKET_NAME);
-        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
-        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), tags.get(1));
+
+        // Create an S3 object summary.
+        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setKey(TARGET_S3_KEY);
+
+        // Tag the S3 file with the second S3 object tag.
+        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3ObjectSummary), tags.get(1));
 
         // Validate that the S3 object is tagged with the second tag now.
         getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
-        assertEquals(Arrays.asList(tags.get(1)), getObjectTaggingResult.getTagSet());
+        assertEquals(Collections.singletonList(tags.get(1)), getObjectTaggingResult.getTagSet());
     }
 
     @Test
     public void testTagVersionsAmazonServiceException()
     {
+        // Create an S3 file transfer request parameters DTO to access S3 objects with a mocked S3 bucket name that would trigger an AWS exception.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
 
+        // Create an S3 version summary.
         S3VersionSummary s3VersionSummary = new S3VersionSummary();
         s3VersionSummary.setKey(S3_KEY);
         s3VersionSummary.setVersionId(S3_VERSION_ID);
 
+        // Create an S3 object tag.
+        Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
         try
         {
-            s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3VersionSummary),
-                new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
+            s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3VersionSummary), tag);
             fail();
         }
         catch (IllegalStateException e)
         {
-            assertEquals(String.format("Failed to tag S3 version with \"%s\" key and \"%s\" version id in \"%s\" bucket. " +
+            assertEquals(String.format("Failed to tag S3 object with \"%s\" key and \"%s\" version id in \"%s\" bucket. " +
                     "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", S3_KEY, S3_VERSION_ID,
                 MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR), e.getMessage());
         }
@@ -2625,7 +2651,7 @@ public class S3DaoTest extends AbstractDaoTest
         PutObjectRequest putObjectRequest =
             new PutObjectRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]),
                 new ObjectMetadata());
-        putObjectRequest.setTagging(new ObjectTagging(Arrays.asList(tags.get(0))));
+        putObjectRequest.setTagging(new ObjectTagging(Collections.singletonList(tags.get(0))));
         s3Operations.putObject(putObjectRequest, null);
 
         // List S3 versions that match the test S3 key.
@@ -2676,9 +2702,11 @@ public class S3DaoTest extends AbstractDaoTest
             assertNull(versionListing.getVersionSummaries().get(i).getVersionId());
         }
 
-        // Tag listed S3 versions with an S3 object tag.
+        // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(S3_BUCKET_NAME);
+
+        // Tag listed S3 versions with an S3 object tag.
         s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tag);
 
         // Validate that both S3 objects got tagged.
@@ -2714,9 +2742,11 @@ public class S3DaoTest extends AbstractDaoTest
             assertNotNull(versionListing.getVersionSummaries().get(i).getVersionId());
         }
 
-        // Tag listed S3 version with an S3 object tag.
+        // Create an S3 file transfer request parameters DTO to access S3 objects with a mocked S3 bucket name that enables S3 bucket versioning.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED);
+
+        // Tag listed S3 version with an S3 object tag.
         s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tag);
 
         // Validate that both versions got tagged.
@@ -2739,7 +2769,7 @@ public class S3DaoTest extends AbstractDaoTest
         PutObjectRequest putObjectRequest =
             new PutObjectRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]),
                 new ObjectMetadata());
-        putObjectRequest.setTagging(new ObjectTagging(Arrays.asList(tags.get(0))));
+        putObjectRequest.setTagging(new ObjectTagging(Collections.singletonList(tags.get(0))));
         s3Operations.putObject(putObjectRequest, null);
 
         // List S3 versions that match the test S3 key.
@@ -2756,9 +2786,11 @@ public class S3DaoTest extends AbstractDaoTest
                 versionListing.getVersionSummaries().get(0).getVersionId()), null);
         assertEquals(Collections.singletonList(tags.get(0)), getObjectTaggingResult.getTagSet());
 
-        // Tag the S3 version with the second S3 object tag.
+        // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED);
+
+        // Tag the S3 version with the second S3 object tag.
         s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tags.get(1));
 
         // Validate that the S3 object is now tagged with the second tag only.

@@ -193,17 +193,18 @@ public interface S3Dao
     /**
      * Tags S3 objects with the specified S3 object tag.
      *
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be tagged
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. This set of parameters contains the S3 bucket name
      * @param s3ObjectTaggerParamsDto the S3 file transfer request parameters to be used for tagging S3 objects
+     * @param s3ObjectSummaries the list of S3 objects to be tagged
      * @param tag the S3 object tag
      */
     void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
-        final Tag tag);
+        final List<S3ObjectSummary> s3ObjectSummaries, final Tag tag);
 
     /**
      * Tags S3 versions with the specified S3 object tag.
      *
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. Also contains the S3 bucket name.
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. This set of parameters contains the S3 bucket name
      * @param s3ObjectTaggerParamsDto the S3 file transfer request parameters to be used for tagging S3 objects
      * @param s3VersionSummaries the list of S3 versions to be tagged
      * @param tag the S3 object tag
