@@ -227,20 +227,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         // Tag the S3 objects to initiate the deletion.
         s3Service.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries,
             new Tag(businessObjectDataDestroyDto.getS3ObjectTagKey(), businessObjectDataDestroyDto.getS3ObjectTagValue()));
-
-        // Log a list of S3 versions that got tagged.
-        if (LOGGER.isInfoEnabled())
-        {
-            LOGGER.info("Successfully tagged versions in S3 bucket. " +
-                    "s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3VersionCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
-                s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(), s3VersionSummaries.size(),
-                businessObjectDataDestroyDto.getS3ObjectTagKey(), businessObjectDataDestroyDto.getS3ObjectTagValue());
-
-            for (S3VersionSummary s3VersionSummary : s3VersionSummaries)
-            {
-                LOGGER.info("s3Key=\"{}\" s3VersionId=\"{}\"", s3VersionSummary.getKey(), s3VersionSummary.getVersionId());
-            }
-        }
     }
 
     /**
