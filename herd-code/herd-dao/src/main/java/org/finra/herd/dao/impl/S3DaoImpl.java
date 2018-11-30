@@ -672,8 +672,8 @@ public class S3DaoImpl implements S3Dao
             // Log a list of files tagged in the S3 bucket.
             if (LOGGER.isInfoEnabled())
             {
-                LOGGER.info(
-                    "Successfully tagged files in S3 bucket. s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
+                LOGGER.info("Successfully tagged files in S3 bucket. " +
+                        "s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
                     s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(), CollectionUtils.size(s3ObjectSummaries),
                     tag.getKey(), tag.getValue());
 
