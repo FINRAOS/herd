@@ -597,7 +597,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(herdSearchQueryHelper.extractSearchPhrase(any(IndexSearchRequest.class))).thenCallRealMethod();
 
         SearchResult searchResult = mock(SearchResult.class);
-        when(jestClientHelper.searchExecute(any())).thenReturn(searchResult);
+        when(jestClientHelper.execute(any())).thenReturn(searchResult);
 
         List<SearchResult.Hit<Map, Void>> searchHitList = new ArrayList<>();
         Gson gson = new Gson();
@@ -693,7 +693,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
                 .getFacetsResponse(any(ElasticsearchResponseDto.class), eq(BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME), eq(TAG_SEARCH_INDEX_NAME));
         }
 
-        verify(jestClientHelper).searchExecute(any());
+        verify(jestClientHelper).execute(any());
         verify(searchResult).getTotal();
         verify(searchResult).getHits(Map.class);
         verifyNoMoreInteractions(searchRequestBuilder, searchRequestBuilderWithSource, searchRequestBuilderWithSize, searchRequestBuilderWithSorting,

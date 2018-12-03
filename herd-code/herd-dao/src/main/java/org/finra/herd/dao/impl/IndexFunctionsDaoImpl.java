@@ -92,7 +92,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     public final void createIndexDocument(String indexName, String documentType, String id, String json)
     {
         Index index = new Index.Builder(json).index(indexName).type(documentType).id(id).build();
-        JestResult jestResult = jestClientHelper.executeAction(index);
+        JestResult jestResult = jestClientHelper.execute(index);
         LOGGER.info("Creating Index Document, indexName={}. successful is {}", indexName, jestResult.isSucceeded());
     }
 
@@ -100,7 +100,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     public boolean isValidDocumentIndex(String indexName, String documentType, String id, String json)
     {
         Get get =  new Get.Builder(indexName,  id).type(documentType).build();
-        JestResult jestResult = jestClientHelper.executeAction(get);
+        JestResult jestResult = jestClientHelper.execute(get);
 
         // Retrieve the JSON string from the get response
         final String jsonStringFromIndex = jestResult.getSourceAsString();
@@ -113,7 +113,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     public final boolean isIndexExists(String indexName)
     {
         Action action = new IndicesExists.Builder(indexName).build();
-        JestResult result = jestClientHelper.executeAction(action);
+        JestResult result = jestClientHelper.execute(action);
 
         return result.isSucceeded();
     }
@@ -127,7 +127,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         Action action = new DeleteIndex.Builder(indexName).build();
 
         LOGGER.info("Deleting Elasticsearch index, indexName={}.", indexName);
-        JestResult result = jestClientHelper.executeAction(action);
+        JestResult result = jestClientHelper.execute(action);
 
         LOGGER.info("Deleting Elasticsearch index, indexName={}. result successful is {} ", indexName, result.isSucceeded());
     }
@@ -142,7 +142,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
 
         Get get =  new Get.Builder(indexName,  id).type(documentType).build();
 
-        JestResult jestResult = jestClientHelper.executeAction(get);
+        JestResult jestResult = jestClientHelper.execute(get);
 
         // Retrieve the JSON string from the get response
         final String jsonStringFromIndex = jestResult.getSourceAsString();
@@ -152,7 +152,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.warn("Document does not exist in the index, adding the document to the index.");
             Index index = new Index.Builder(json).index(indexName).type(documentType).id(id).build();
-            jestResult = jestClientHelper.executeAction(index);
+            jestResult = jestClientHelper.execute(index);
             LOGGER.info("adding the document to the index is {}", jestResult.isSucceeded());
         }
         // Else if the JSON does not match the JSON from the index update the index
@@ -160,7 +160,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.warn("Document does not match the document in the index, updating the document in the index.");
             Index index = new Index.Builder(json).index(indexName).type(documentType).id(id).build();
-            jestResult = jestClientHelper.executeAction(index);
+            jestResult = jestClientHelper.execute(index);
             LOGGER.info("updating the document to the index is {}", jestResult.isSucceeded());
         }
     }
@@ -184,7 +184,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
 
         });
 
-        JestResult jestResult = jestClientHelper.executeAction(bulkBuilder.build());
+        JestResult jestResult = jestClientHelper.execute(bulkBuilder.build());
 
         // If there are failures log them
         if (!jestResult.isSucceeded())
@@ -202,16 +202,16 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     {
         LOGGER.info("Creating Elasticsearch index, indexName={}, documentType={}.", indexName, documentType);
 
-        CreateIndex createIndex = new CreateIndex.Builder(indexName).settings(Settings.builder().loadFromSource(settings).build()).build();
+        CreateIndex createIndex = new CreateIndex.Builder(indexName).settings(settings).build();
         PutMapping putMapping = new PutMapping.Builder(indexName, documentType, mapping).build();
         ModifyAliases modifyAliases = new ModifyAliases.Builder(new AddAliasMapping.Builder(indexName, alias).build()).build();
 
-        JestResult jestResult = jestClientHelper.executeAction(createIndex);
+        JestResult jestResult = jestClientHelper.execute(createIndex);
         LOGGER.info("Creating Elasticsearch index, indexName={}, documentType={} successful={}", indexName, documentType, jestResult.isSucceeded());
-        jestResult = jestClientHelper.executeAction(putMapping);
+        jestResult = jestClientHelper.execute(putMapping);
         LOGGER
             .info("Creating Elasticsearch index put mappings, indexName={}, documentType={} successful={}", indexName, documentType, jestResult.isSucceeded());
-        jestResult = jestClientHelper.executeAction(modifyAliases);
+        jestResult = jestClientHelper.execute(modifyAliases);
         LOGGER.info("Creating Elasticsearch index alias, indexName={}, alias={}", indexName, alias, jestResult.isSucceeded());
         // If there are failures log them
         if (!jestResult.isSucceeded())
@@ -230,7 +230,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
 
         Action action = new Delete.Builder(id).index(indexName).type(documentType).build();
 
-        JestResult result = jestClientHelper.executeAction(action);
+        JestResult result = jestClientHelper.execute(action);
 
         LOGGER.info("Deleting Elasticsearch document from index, indexName={}, documentType={}, id={} is successfully {}. ", indexName, documentType, id,
             result.isSucceeded());
@@ -259,7 +259,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
             bulkBuilder.addAction(action);
         });
 
-        JestResult jestResult = jestClientHelper.executeAction(bulkBuilder.build());
+        JestResult jestResult = jestClientHelper.execute(bulkBuilder.build());
         // If there are failures log them
         if (!jestResult.isSucceeded())
         {
@@ -274,7 +274,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     {
         Count count = new Count.Builder().addIndex(indexName).addType(documentType).build();
 
-        JestResult jestResult  = jestClientHelper.executeAction(count);
+        JestResult jestResult  = jestClientHelper.execute(count);
         return Long.parseLong(jestResult.getSourceAsString());
     }
 
@@ -300,7 +300,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         searchBuilder.setParameter(Parameters.SIZE, ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
         searchBuilder.setParameter(Parameters.SCROLL, new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME).toString());
 
-        JestResult jestResult = jestClientHelper.searchExecute(searchBuilder.build());
+        JestResult jestResult = jestClientHelper.execute(searchBuilder.build());
 
         // While there are hits available, page through the results and add them to the id list
         while (jestResult.getSourceAsStringList().size() != 0)
@@ -312,7 +312,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
             }
             String scrollId = jestResult.getJsonObject().get("_scroll_id").getAsString();
             SearchScroll scroll = new SearchScroll.Builder(scrollId, new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME).toString()).build();
-            jestResult = jestClientHelper.searchScrollExecute(scroll);
+            jestResult = jestClientHelper.execute(scroll);
 
         }
         return idList;
@@ -339,7 +339,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
             });
 
             // Execute the bulk update request
-            JestResult jestResult = jestClientHelper.executeAction(bulkBuilder.build());
+            JestResult jestResult = jestClientHelper.execute(bulkBuilder.build());
 
             // If there are failures log them
             if (!jestResult.isSucceeded())
@@ -353,7 +353,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     public Settings getIndexSettings(String indexName)
     {
         GetSettings getSettings = new GetSettings.Builder().addIndex(indexName).build();
-        JestResult result = jestClientHelper.executeAction(getSettings);
+        JestResult result = jestClientHelper.execute(getSettings);
         Assert.isTrue(result.isSucceeded(), result.getErrorMessage());
         JsonObject json = result.getJsonObject().getAsJsonObject(indexName).getAsJsonObject("settings");
         return Settings.builder().loadFromSource(json.toString()).build();
@@ -363,7 +363,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     public DocsStats getIndexStats(String indexName)
     {
         Action getStats = new Stats.Builder().addIndex(indexName).build();
-        JestResult jestResult = jestClientHelper.executeAction(getStats);
+        JestResult jestResult = jestClientHelper.execute(getStats);
         Assert.isTrue(jestResult.isSucceeded(), jestResult.getErrorMessage());
         JsonObject statsJson = jestResult.getJsonObject().getAsJsonObject("indices").getAsJsonObject(indexName).getAsJsonObject("primaries");
         JsonObject docsJson = statsJson.getAsJsonObject("docs");
@@ -373,7 +373,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
     private List<String> getAliases(String aliasName)
     {
         GetAliases getAliases = new GetAliases.Builder().build();
-        JestResult jestResult = jestClientHelper.executeAction(getAliases);
+        JestResult jestResult = jestClientHelper.execute(getAliases);
         Assert.isTrue(jestResult.isSucceeded(), jestResult.getErrorMessage());
         List<String> indexNameList =
             jestResult.getJsonObject().entrySet().stream().filter(e -> e.getKey().startsWith(aliasName)).map(Map.Entry::getKey).collect(Collectors.toList());
