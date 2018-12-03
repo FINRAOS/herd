@@ -17,12 +17,8 @@ package org.finra.herd.dao.helper;
 
 import java.io.IOException;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.searchbox.action.Action;
 import io.searchbox.client.JestResult;
-import io.searchbox.core.Search;
-import io.searchbox.core.SearchResult;
-import io.searchbox.core.SearchScroll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,70 +41,26 @@ public class JestClientHelper
     private JestClientFactory jestClientFactory;
 
     /**
-     * Method to use the JEST client to search against Elasticsearch.
+     * Method to use the JEST client to execute an elastic action
      *
-     * @param search JEST Search object
-     *
-     * @return a search result
-     */
-    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", justification="cast is safe in this situation")
-    @Retryable(maxAttempts = 3, value = RestClientException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
-    public SearchResult searchExecute(final Search search)
-    {
-        SearchResult searchResult = null;
-        try
-        {
-            searchResult = jestClientFactory.getJestClient().execute(search);
-        }
-        catch (final IOException ioException)
-        {
-            LOGGER.error("Failed to execute JEST client search.", ioException);
-            //throw a runtime exception so that the client needs not catch
-            throw new RestClientException(ioException.getMessage()); //NOPMD
-        }
-
-        return searchResult;
-    }
-
-    /**
-     * Method to use the JEST client to search against Elasticsearch.
-     *
-     * @param searchScroll search scroll request
-     *
-     * @return a jest search result
-     */
-    @Retryable(maxAttempts = 3, value = RestClientException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
-    public JestResult searchScrollExecute(final SearchScroll searchScroll)
-    {
-        JestResult searchResult = null;
-        try
-        {
-            searchResult =
-                jestClientFactory.getJestClient().execute(searchScroll);
-        }
-        catch (final IOException ioException)
-        {
-            LOGGER.error("Failed to execute JEST client search.", ioException);
-            //throw a runtime exception so that the client needs not catch
-            throw new RestClientException(ioException.getMessage()); //NOPMD
-        }
-
-        return searchResult;
-    }
-
-    /**
-     * execute action
+     * @param <T> The expected class of the action
      * @param action action
-     * @return JestResult
+     *
+     * @return a jest action result
      */
     @Retryable(maxAttempts = 3, value = RestClientException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
-    public JestResult executeAction(Action action)
+    public <T extends JestResult> T execute(Action<T> action)
     {
-        JestResult searchResult = null;
+        T actionResult = null;
         try
         {
-            searchResult =
-                jestClientFactory.getJestClient().execute(action);
+            actionResult = jestClientFactory.getJestClient().execute(action);
+
+            // log the error if the action failed but no exception is thrown
+            if (actionResult == null || !actionResult.isSucceeded())
+            {
+                LOGGER.error("Failed to execute JEST client action. action={}, actionResult={}", action, actionResult);
+            }
         }
         catch (final IOException ioException)
         {
@@ -117,6 +69,7 @@ public class JestClientHelper
             throw new RestClientException(ioException.getMessage()); //NOPMD
         }
 
-        return searchResult;
+        return actionResult;
     }
+
 }

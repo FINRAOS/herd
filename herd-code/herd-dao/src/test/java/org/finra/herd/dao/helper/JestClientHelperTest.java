@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -18,7 +19,6 @@ import io.searchbox.client.JestClient;
 import io.searchbox.client.JestResult;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
-import io.searchbox.core.SearchScroll;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -59,7 +59,7 @@ public class JestClientHelperTest
         when(jestClient.execute(search)).thenReturn(searchResult);
 
         // Test
-        SearchResult result = jestClientHelper.searchExecute(search);
+        SearchResult result = jestClientHelper.execute(search);
 
         // Validate
         assertThat(result, is(not(nullValue())));
@@ -82,7 +82,7 @@ public class JestClientHelperTest
         try
         {
             // Test
-            jestClientHelper.searchExecute(search);
+            jestClientHelper.execute(search);
         }
         catch (RuntimeException runtimeException)
         {
@@ -96,25 +96,4 @@ public class JestClientHelperTest
         verifyNoMoreInteractions(createdMocks.toArray());
     }
 
-    @Test
-    public void testSearchExecuteScroll() throws Exception
-    {
-        // Mock
-        SearchScroll search = mock(SearchScroll.class);
-        JestResult searchResult = mock(JestResult.class);
-        JestClient jestClient = mock(JestClient.class);
-        when(jestClientFactory.getJestClient()).thenReturn(jestClient);
-        when(jestClient.execute(search)).thenReturn(searchResult);
-
-        // Test
-        JestResult result = jestClientHelper.searchScrollExecute(search);
-
-        // Validate
-        assertThat(result, is(not(nullValue())));
-
-        // Verify
-        verify(jestClientFactory).getJestClient();
-        verify(jestClient).execute(search);
-        verifyNoMoreInteractions(createdMocks.toArray());
-    }
 }

@@ -43,9 +43,28 @@ import org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto;
  */
 public interface BusinessObjectDataService
 {
-    public final String MAX_PARTITION_VALUE_TOKEN = "${maximum.partition.value}";
+    String MAX_PARTITION_VALUE_TOKEN = "${maximum.partition.value}";
 
-    public final String MIN_PARTITION_VALUE_TOKEN = "${minimum.partition.value}";
+    String MIN_PARTITION_VALUE_TOKEN = "${minimum.partition.value}";
+
+    /**
+     * Performs a search and returns a list of business object data key values and relative statuses for a range of requested business object data. Creates its
+     * own transaction.
+     *
+     * @param businessObjectDataAvailabilityRequest the business object data availability request
+     *
+     * @return the business object data availability information
+     */
+    BusinessObjectDataAvailability checkBusinessObjectDataAvailability(BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest);
+
+    /**
+     * Performs an availability check for a collection of business object data.
+     *
+     * @param request the business object data availability collection request
+     *
+     * @return the business object data availability information
+     */
+    BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollection(BusinessObjectDataAvailabilityCollectionRequest request);
 
     /**
      * Creates a new business object data from the request information. Creates its own transaction.
@@ -54,7 +73,66 @@ public interface BusinessObjectDataService
      *
      * @return the newly created and persisted business object data.
      */
-    public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest businessObjectDataCreateRequest);
+    BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest businessObjectDataCreateRequest);
+
+    /**
+     * Deletes an existing business object data.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param deleteFiles specifies if data files should be deleted or not
+     *
+     * @return the deleted business object data information
+     */
+    BusinessObjectData deleteBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean deleteFiles);
+
+    /**
+     * Initiates destruction process for an existing business object data by using S3 tagging to mark the relative S3 files for deletion and updating statuses
+     * of the business object data and its storage unit. The S3 data then gets deleted by S3 bucket lifecycle policy that is based on S3 tagging.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the business object data information
+     */
+    BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey);
+
+    /**
+     * Retrieves the DDL to initialize the specified type of the database system to perform queries for a range of requested business object data in the
+     * specified storage. This method starts a new transaction.
+     *
+     * @param businessObjectDataDdlRequest the business object data DDL request
+     *
+     * @return the business object data DDL information
+     */
+    BusinessObjectDataDdl generateBusinessObjectDataDdl(BusinessObjectDataDdlRequest businessObjectDataDdlRequest);
+
+    /**
+     * Retrieves the DDL to initialize the specified type of the database system to perform queries for a collection of business object data in the specified
+     * storages. This method starts a new transaction.
+     *
+     * @param businessObjectDataDdlCollectionRequest the business object data DDL collection request
+     *
+     * @return the business object data DDL information
+     */
+    BusinessObjectDataDdlCollectionResponse generateBusinessObjectDataDdlCollection(
+        BusinessObjectDataDdlCollectionRequest businessObjectDataDdlCollectionRequest);
+
+    /**
+     * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object definition.
+     *
+     * @param businessObjectDefinitionKey the business object definition key (case-insensitive)
+     *
+     * @return the list of business object data keys
+     */
+    BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
+
+    /**
+     * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object format.
+     *
+     * @param businessObjectFormatKey the business object format key (case-insensitive)
+     *
+     * @return the list of business object data keys
+     */
+    BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey);
 
     /**
      * Retrieves existing business object data entry information. This method starts a new transaction.
@@ -67,7 +145,7 @@ public interface BusinessObjectDataService
      *
      * @return the retrieved business object data information
      */
-    public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
+    BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
         String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory);
 
     /**
@@ -77,90 +155,7 @@ public interface BusinessObjectDataService
      *
      * @return the retrieved business object data versions
      */
-    public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey);
-
-    /**
-     * Updates attributes for business object data.
-     *
-     * @param businessObjectDataKey the business object data key
-     * @param businessObjectDataAttributesUpdateRequest the information needed to update the business object data attributes
-     *
-     * @return the updated business object data information
-     */
-    public BusinessObjectData updateBusinessObjectDataAttributes(BusinessObjectDataKey businessObjectDataKey,
-        BusinessObjectDataAttributesUpdateRequest businessObjectDataAttributesUpdateRequest);
-
-    /**
-     * Updates retention information for an existing business object data.
-     *
-     * @param businessObjectDataKey the business object data key
-     * @param businessObjectDataRetentionInformationUpdateRequest the business object data retention information update request
-     *
-     * @return the business object data information
-     */
-    public BusinessObjectData updateBusinessObjectDataRetentionInformation(BusinessObjectDataKey businessObjectDataKey,
-        BusinessObjectDataRetentionInformationUpdateRequest businessObjectDataRetentionInformationUpdateRequest);
-
-    /**
-     * Deletes an existing business object data.
-     *
-     * @param businessObjectDataKey the business object data key
-     * @param deleteFiles specifies if data files should be deleted or not
-     *
-     * @return the deleted business object data information
-     */
-    public BusinessObjectData deleteBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean deleteFiles);
-
-    /**
-     * Initiates destruction process for an existing business object data by using S3 tagging to mark the relative S3 files for deletion and updating statuses
-     * of the business object data and its storage unit. The S3 data then gets deleted by S3 bucket lifecycle policy that is based on S3 tagging.
-     *
-     * @param businessObjectDataKey the business object data key
-     *
-     * @return the business object data information
-     */
-    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey);
-
-    /**
-     * Performs a search and returns a list of business object data key values and relative statuses for a range of requested business object data. Creates its
-     * own transaction.
-     *
-     * @param businessObjectDataAvailabilityRequest the business object data availability request
-     *
-     * @return the business object data availability information
-     */
-    public BusinessObjectDataAvailability checkBusinessObjectDataAvailability(BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest);
-
-    /**
-     * Performs an availability check for a collection of business object data.
-     *
-     * @param request the business object data availability collection request
-     *
-     * @return the business object data availability information
-     */
-    public BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollection(
-        BusinessObjectDataAvailabilityCollectionRequest request);
-
-    /**
-     * Retrieves the DDL to initialize the specified type of the database system to perform queries for a range of requested business object data in the
-     * specified storage. This method starts a new transaction.
-     *
-     * @param businessObjectDataDdlRequest the business object data DDL request
-     *
-     * @return the business object data DDL information
-     */
-    public BusinessObjectDataDdl generateBusinessObjectDataDdl(BusinessObjectDataDdlRequest businessObjectDataDdlRequest);
-
-    /**
-     * Retrieves the DDL to initialize the specified type of the database system to perform queries for a collection of business object data in the specified
-     * storages. This method starts a new transaction.
-     *
-     * @param businessObjectDataDdlCollectionRequest the business object data DDL collection request
-     *
-     * @return the business object data DDL information
-     */
-    public BusinessObjectDataDdlCollectionResponse generateBusinessObjectDataDdlCollection(
-        BusinessObjectDataDdlCollectionRequest businessObjectDataDdlCollectionRequest);
+    BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey);
 
     /**
      * Creates business object data registrations in INVALID status if the S3 object exists, but no registration exists.
@@ -169,8 +164,18 @@ public interface BusinessObjectDataService
      *
      * @return {@link BusinessObjectDataInvalidateUnregisteredResponse}
      */
-    public BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectData(
+    BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectData(
         BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest);
+
+    /**
+     * Initiates a restore request for a currently archived business object data.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
+     *
+     * @return the business object data information
+     */
+    BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays);
 
     /**
      * Retries a storage policy transition by forcing re-initiation of the archiving process for the specified business object data that is still in progress of
@@ -181,18 +186,7 @@ public interface BusinessObjectDataService
      *
      * @return the business object data information
      */
-    public BusinessObjectData retryStoragePolicyTransition(BusinessObjectDataKey businessObjectDataKey,
-        BusinessObjectDataRetryStoragePolicyTransitionRequest request);
-
-    /**
-     * Initiates a restore request for a currently archived business object data.
-     *
-     * @param businessObjectDataKey the business object data key
-     * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
-     *
-     * @return the business object data information
-     */
-    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays);
+    BusinessObjectData retryStoragePolicyTransition(BusinessObjectDataKey businessObjectDataKey, BusinessObjectDataRetryStoragePolicyTransitionRequest request);
 
     /**
      * Search business object data based on the request
@@ -204,23 +198,27 @@ public interface BusinessObjectDataService
      *
      * @return business data search result with the paging information
      */
-    public BusinessObjectDataSearchResultPagingInfoDto searchBusinessObjectData(Integer pageNum, Integer pageSize, BusinessObjectDataSearchRequest request);
+    BusinessObjectDataSearchResultPagingInfoDto searchBusinessObjectData(Integer pageNum, Integer pageSize, BusinessObjectDataSearchRequest request);
 
     /**
-     * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object definition.
+     * Updates attributes for business object data.
      *
-     * @param businessObjectDefinitionKey the business object definition key (case-insensitive)
+     * @param businessObjectDataKey the business object data key
+     * @param businessObjectDataAttributesUpdateRequest the information needed to update the business object data attributes
      *
-     * @return the list of business object data keys
+     * @return the updated business object data information
      */
-    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
+    BusinessObjectData updateBusinessObjectDataAttributes(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataAttributesUpdateRequest businessObjectDataAttributesUpdateRequest);
 
     /**
-     * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object format.
+     * Updates retention information for an existing business object data.
      *
-     * @param businessObjectFormatKey the business object format key (case-insensitive)
+     * @param businessObjectDataKey the business object data key
+     * @param businessObjectDataRetentionInformationUpdateRequest the business object data retention information update request
      *
-     * @return the list of business object data keys
+     * @return the business object data information
      */
-    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey);
+    BusinessObjectData updateBusinessObjectDataRetentionInformation(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataRetentionInformationUpdateRequest businessObjectDataRetentionInformationUpdateRequest);
 }
