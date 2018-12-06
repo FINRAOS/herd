@@ -15,19 +15,21 @@
 */
 package org.finra.herd.service.helper;
 
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformation;
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformationKey;
 import org.finra.herd.model.jpa.BusinessObjectFormatAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.ExternalInterfaceEntity;
+import org.finra.herd.model.jpa.SchemaColumnEntity;
 
 /**
  * A helper class for business object format external interface descriptive information related code.
@@ -37,9 +39,6 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
-
-    @Autowired
-    private JsonHelper jsonHelper;
 
     @Autowired
     private VelocityHelper velocityHelper;
@@ -91,16 +90,16 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
                 businessObjectFormatEntity.getFileType().getCode(), externalInterfaceEntity.getCode());
 
         // Velocity Template Resource Names:
-        // $namespace            The namespace associated with this business object format
-        // $bdefName             The name of the business object definition associated with this business object format
-        // $usage                The usage associated with the business object format
-        // $fileType             The file type associated with the business object format
-        // $attributeName        The business object format attributes (provide attribute name in reference, evaluates to attribute value)
-        // $schemaColumns        The schema columns associated with the business object format
-        // $partitions           The partitions (name and data type) associated with the business object format
-        // $partitionKeyGroup    The partition key group associated with the business object format
-        // $delimiter            The delimiter associated with the business object format
-        // $nullValue            The null value associated with the business object format
+        // ${namespace}            The namespace associated with this business object format
+        // ${bdefName}             The name of the business object definition associated with this business object format
+        // ${usage}                The usage associated with the business object format
+        // ${fileType}             The file type associated with the business object format
+        // ${attributes}           The business object format attributes map of key value pairs
+        // ${schemaColumns}        The schema columns associated with the business object format
+        // ${partitions}           The partitions (name and data type) associated with the business object format
+        // ${partitionKeyGroup}    The partition key group associated with the business object format
+        // ${delimiter}            The delimiter associated with the business object format
+        // ${nullValue}            The null value associated with the business object format
 
         // Build velocity context variable map
         Map<String, Object> velocityContext = Maps.newHashMap();
@@ -110,14 +109,41 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
         velocityContext.put("fileType", businessObjectFormatEntity.getFileType().getCode());
 
         // Loop through attribute names
+        Map<String, String> attributes = Maps.newHashMap();
         for (BusinessObjectFormatAttributeEntity businessObjectFormatAttributeEntity : businessObjectFormatEntity.getAttributes())
         {
-            velocityContext.put(businessObjectFormatAttributeEntity.getName(), businessObjectFormatAttributeEntity.getValue());
+            attributes.put(businessObjectFormatAttributeEntity.getName(), businessObjectFormatAttributeEntity.getValue());
         }
 
-        velocityContext.put("schemaColumns", jsonHelper.objectToJson(businessObjectFormatEntity.getSchemaColumns()));
-        velocityContext.put("partitions", jsonHelper.objectToJson(businessObjectFormatEntity.getPartitionKeyGroup().getExpectedPartitionValues()));
-        velocityContext.put("partitionKeyGroup", businessObjectFormatEntity.getPartitionKeyGroup().getPartitionKeyGroupName());
+        velocityContext.put("attributes", attributes.toString());
+
+        // Loop through schema columns
+        List<String> columnNames = Lists.newArrayList();
+        List<String> partitionColumnNames = Lists.newArrayList();
+        for (SchemaColumnEntity schemaColumn : businessObjectFormatEntity.getSchemaColumns())
+        {
+            if (schemaColumn.getPartitionLevel() == null)
+            {
+                columnNames.add(schemaColumn.getName());
+            }
+            else
+            {
+                partitionColumnNames.add(schemaColumn.getName());
+            }
+        }
+
+        velocityContext.put("schemaColumns", String.join(",", columnNames));
+        velocityContext.put("partitions", String.join(",", partitionColumnNames));
+
+        if (businessObjectFormatEntity.getPartitionKeyGroup() != null)
+        {
+            velocityContext.put("partitionKeyGroup", businessObjectFormatEntity.getPartitionKeyGroup().getPartitionKeyGroupName());
+        }
+        else
+        {
+            velocityContext.put("partitionKeyGroup", "");
+        }
+
         velocityContext.put("delimiter", businessObjectFormatEntity.getDelimiter());
         velocityContext.put("nullValue", businessObjectFormatEntity.getNullValue());
 
