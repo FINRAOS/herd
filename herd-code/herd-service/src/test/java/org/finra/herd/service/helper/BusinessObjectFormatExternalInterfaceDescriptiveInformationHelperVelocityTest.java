@@ -41,8 +41,8 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelperVe
     public void testValidateAndTrimBusinessObjectFormatExternalInterfaceDescriptiveInformationKey()
     {
         // Create a velocity template for the external interface entity.
-        String velocityTemplateDescription =
-            "${namespace}#${bdefName}#${usage}#${fileType}#${attributes}#${schemaColumns}#${partitions}#${partitionKeyGroup}#${delimiter}#${nullValue}";
+        String velocityTemplateDescription = "${namespace}#${businessObjectDefinitionName}#${businessObjectFormatUsage}#${businessObjectFormatFileType}#" +
+            "${businessObjectFormatAttributes}#${partitionColumnNames}#${partitionKeyGroup}#$StringUtils.isNotEmpty($namespace)";
 
         // Get a list of partition columns that is larger than number of partitions supported by business object data registration.
         List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
@@ -86,49 +86,66 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelperVe
         // ${namespace}
         assertEquals("Namespace not equal to replacement.", descriptionTemplateReplacementValues[0], NAMESPACE);
 
-        // ${bdefName}
+        // ${businessObjectDefinitionName}
         assertEquals("Business object definition name not equal to replacement.", descriptionTemplateReplacementValues[1], BDEF_NAME);
 
-        // ${usage}
+        // ${businessObjectFormatUsage}
         assertEquals("Usage not equal to replacement.", descriptionTemplateReplacementValues[2], FORMAT_USAGE_CODE);
 
-        // ${fileType}
+        // ${businessObjectFormatFileType}
         assertEquals("File type not equal to replacement.", descriptionTemplateReplacementValues[3], FORMAT_FILE_TYPE_CODE);
 
-        // ${attributes}
-        Map<String, String> attributesMap = Maps.newHashMap();
+        // ${businessObjectFormatAttributes}
+        Map<String, String> attributesMap = Maps.newLinkedHashMap();
         for (Attribute attribute : attributes)
         {
             attributesMap.put(attribute.getName(), attribute.getValue());
         }
         assertEquals("Attributes not equal to replacement.", descriptionTemplateReplacementValues[4], attributesMap.toString());
 
-        // ${schemaColumns}
-        List<String> columnNames = Lists.newArrayList();
+        // ${partitionColumnNames}
         List<String> partitionColumnNames = Lists.newArrayList();
         for (SchemaColumnEntity schemaColumn : businessObjectFormatEntity.getSchemaColumns())
         {
-            if (schemaColumn.getPartitionLevel() == null)
-            {
-                columnNames.add(schemaColumn.getName());
-            }
-            else
+            if (schemaColumn.getPartitionLevel() != null)
             {
                 partitionColumnNames.add(schemaColumn.getName());
             }
         }
-        assertEquals("Schema columns not equal to replacement.", descriptionTemplateReplacementValues[5], String.join(",", columnNames));
-
-        // ${partitions}
-        assertEquals("Partitions not equal to replacement.", descriptionTemplateReplacementValues[6], String.join(",", partitionColumnNames));
+        assertEquals("Partitions not equal to replacement.", descriptionTemplateReplacementValues[5], partitionColumnNames.toString());
 
         // ${partitionKeyGroup}
-        assertEquals("Partition key group not equal to replacement.", descriptionTemplateReplacementValues[7], PARTITION_KEY_GROUP);
+        assertEquals("Partition key group not equal to replacement.", descriptionTemplateReplacementValues[6], PARTITION_KEY_GROUP);
 
-        // ${delimiter}
-        assertEquals("Delimiter not equal to replacement.", descriptionTemplateReplacementValues[8], SCHEMA_DELIMITER_PIPE);
+        // $StringUtils
+        assertEquals("StringUtils not equal to replacement.", descriptionTemplateReplacementValues[7], "true");
+    }
 
-        // ${nullValue}
-        assertEquals("Null value not equal to replacement.", descriptionTemplateReplacementValues[9], SCHEMA_NULL_VALUE_BACKSLASH_N);
+    @Test
+    public void testValidateAndTrimBusinessObjectFormatExternalInterfaceDescriptiveInformationKeyWithNullPartitionKeyGroup()
+    {
+        // Create a velocity template for the external interface entity.
+        String velocityTemplateDescription = "${partitionKeyGroup}";
+
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, NO_PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, NO_COLUMNS, NO_PARTITION_COLUMNS);
+
+        // Create an external interface entity.
+        ExternalInterfaceEntity externalInterfaceEntity = externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE);
+        externalInterfaceEntity.setDescription(velocityTemplateDescription);
+
+        // Create a business object format to external interface mapping entity.
+        businessObjectFormatExternalInterfaceDaoTestHelper
+            .createBusinessObjectFormatExternalInterfaceEntity(businessObjectFormatEntity, externalInterfaceEntity);
+
+        // Call the method under test.
+        BusinessObjectFormatExternalInterfaceDescriptiveInformation result = businessObjectFormatExternalInterfaceDescriptiveInformationHelper
+            .createBusinessObjectFormatExternalInterfaceDescriptiveInformationFromEntities(businessObjectFormatEntity, externalInterfaceEntity);
+
+        // Validate no partition key group
+        assertEquals("Partition key group not equal to replacement.", result.getExternalInterfaceDescription(), "");
     }
 }
