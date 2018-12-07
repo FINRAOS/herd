@@ -132,6 +132,9 @@
       <jaxb:bindings node="//xs:complexType[@name='businessObjectFormat']//xs:element[@name='documentSchema']">
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='businessObjectFormatExternalInterfaceDescriptiveInformation']//xs:element[@name='externalInterfaceDescription']">
+         <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDataDdl']//xs:element[@name='ddl']">
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
@@ -145,6 +148,12 @@
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='customDdl']//xs:element[@name='ddl']">
+         <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
+      </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='externalInterface']//xs:element[@name='description']">
+         <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
+      </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='externalInterfaceCreateRequest']//xs:element[@name='description']">
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='jobAction']//xs:element[@name='correlationData']">
