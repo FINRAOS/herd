@@ -34,7 +34,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformation;
-import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformationKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
 import org.finra.herd.service.BusinessObjectFormatExternalInterfaceDescriptiveInformationService;
 
 public class BusinessObjectFormatExternalInterfaceDescriptiveInformationRestControllerTest
@@ -54,19 +54,17 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationRestCont
     @Test
     public void testGetBusinessObjectFormatExternalInterfaceDescriptiveInformation()
     {
-        // Create a business object format external interface descriptive information key.
-        BusinessObjectFormatExternalInterfaceDescriptiveInformationKey businessObjectFormatExternalInterfaceDescriptiveInformationKey =
-            new BusinessObjectFormatExternalInterfaceDescriptiveInformationKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                EXTERNAL_INTERFACE);
+        // Create a business object format external interface key.
+        BusinessObjectFormatExternalInterfaceKey businessObjectFormatExternalInterfaceKey =
+            new BusinessObjectFormatExternalInterfaceKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, EXTERNAL_INTERFACE);
 
         // Create business object format external interface descriptive information.
         BusinessObjectFormatExternalInterfaceDescriptiveInformation businessObjectFormatExternalInterfaceDescriptiveInformation =
-            new BusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceDescriptiveInformationKey, DISPLAY_NAME_FIELD,
-                DESCRIPTION);
+            new BusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceKey, DISPLAY_NAME_FIELD, DESCRIPTION);
 
         // Mock the external calls.
         when(businessObjectFormatExternalInterfaceDescriptiveInformationService
-            .getBusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceDescriptiveInformationKey))
+            .getBusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceKey))
             .thenReturn(businessObjectFormatExternalInterfaceDescriptiveInformation);
 
         // Call the method under test.
@@ -78,7 +76,7 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationRestCont
 
         // Verify the external calls.
         verify(businessObjectFormatExternalInterfaceDescriptiveInformationService)
-            .getBusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceDescriptiveInformationKey);
+            .getBusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceKey);
         verifyNoMoreInteractions(businessObjectFormatExternalInterfaceDescriptiveInformationService);
     }
 }

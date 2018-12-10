@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformation;
-import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformationKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.BusinessObjectFormatExternalInterfaceDescriptiveInformationService;
 import org.finra.herd.ui.constants.UiConstants;
@@ -65,7 +65,7 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationRestCont
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType, @PathVariable("externalInterfaceName") String externalInterfaceName)
     {
         return businessObjectFormatExternalInterfaceDescriptiveInformationService.getBusinessObjectFormatExternalInterfaceDescriptiveInformation(
-            new BusinessObjectFormatExternalInterfaceDescriptiveInformationKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage,
-                businessObjectFormatFileType, externalInterfaceName));
+            new BusinessObjectFormatExternalInterfaceKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                externalInterfaceName));
     }
 }

@@ -25,10 +25,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformation;
-import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformationKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
 import org.finra.herd.model.jpa.BusinessObjectFormatAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.ExternalInterfaceEntity;
@@ -41,36 +40,7 @@ import org.finra.herd.model.jpa.SchemaColumnEntity;
 public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
 {
     @Autowired
-    private AlternateKeyHelper alternateKeyHelper;
-
-    @Autowired
     private VelocityHelper velocityHelper;
-
-    /**
-     * Validates a business object format external interface descriptive information key. This method also trims the key parameters.
-     *
-     * @param businessObjectFormatExternalInterfaceDescriptiveInformationKey the business object format to external interface mapping key
-     */
-    public void validateAndTrimBusinessObjectFormatExternalInterfaceDescriptiveInformationKey(
-        BusinessObjectFormatExternalInterfaceDescriptiveInformationKey businessObjectFormatExternalInterfaceDescriptiveInformationKey)
-    {
-        Assert.notNull(businessObjectFormatExternalInterfaceDescriptiveInformationKey,
-            "A business object format external interface descriptive information key must be specified.");
-        businessObjectFormatExternalInterfaceDescriptiveInformationKey.setNamespace(
-            alternateKeyHelper.validateStringParameter("namespace", businessObjectFormatExternalInterfaceDescriptiveInformationKey.getNamespace()));
-        businessObjectFormatExternalInterfaceDescriptiveInformationKey.setBusinessObjectDefinitionName(alternateKeyHelper
-            .validateStringParameter("business object definition name",
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getBusinessObjectDefinitionName()));
-        businessObjectFormatExternalInterfaceDescriptiveInformationKey.setBusinessObjectFormatUsage(alternateKeyHelper
-            .validateStringParameter("business object format usage",
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getBusinessObjectFormatUsage()));
-        businessObjectFormatExternalInterfaceDescriptiveInformationKey.setBusinessObjectFormatFileType(alternateKeyHelper
-            .validateStringParameter("business object format file type",
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getBusinessObjectFormatFileType()));
-        businessObjectFormatExternalInterfaceDescriptiveInformationKey.setExternalInterfaceName(alternateKeyHelper
-            .validateStringParameter("An", "external interface name",
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getExternalInterfaceName()));
-    }
 
     /**
      * Creates the business object format external interface descriptive information from the business object format entity and external interface entity.
@@ -84,11 +54,9 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
     public BusinessObjectFormatExternalInterfaceDescriptiveInformation createBusinessObjectFormatExternalInterfaceDescriptiveInformationFromEntities(
         BusinessObjectFormatEntity businessObjectFormatEntity, ExternalInterfaceEntity externalInterfaceEntity)
     {
-        // Build the BusinessObjectFormatExternalInterfaceDescriptiveInformationKey with information from the business object format entity and the external
-        // interface entity
-        BusinessObjectFormatExternalInterfaceDescriptiveInformationKey businessObjectFormatExternalInterfaceDescriptiveInformationKey =
-            new BusinessObjectFormatExternalInterfaceDescriptiveInformationKey(
-                businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode(),
+        // Build the BusinessObjectFormatExternalInterfaceKey with information from the business object format entity and the external interface entity
+        BusinessObjectFormatExternalInterfaceKey businessObjectFormatExternalInterfaceKey =
+            new BusinessObjectFormatExternalInterfaceKey(businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode(),
                 businessObjectFormatEntity.getBusinessObjectDefinition().getName(), businessObjectFormatEntity.getUsage(),
                 businessObjectFormatEntity.getFileType().getCode(), externalInterfaceEntity.getCode());
 
@@ -144,7 +112,7 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
             velocityContext.put("partitionKeyGroup", "");
         }
 
-        return new BusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceDescriptiveInformationKey,
+        return new BusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceKey,
             externalInterfaceEntity.getDisplayName(),
             velocityHelper.evaluate(externalInterfaceEntity.getDescription(), velocityContext, "External Interface Description", false));
     }

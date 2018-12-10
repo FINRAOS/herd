@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformation;
-import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformationKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -30,6 +29,7 @@ import org.finra.herd.service.BusinessObjectFormatExternalInterfaceDescriptiveIn
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatExternalInterfaceDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatExternalInterfaceHelper;
 import org.finra.herd.service.helper.ExternalInterfaceDaoHelper;
 
 /**
@@ -50,35 +50,30 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationServiceI
     private BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper businessObjectFormatExternalInterfaceDescriptiveInformationHelper;
 
     @Autowired
+    private BusinessObjectFormatExternalInterfaceHelper businessObjectFormatExternalInterfaceHelper;
+
+    @Autowired
     private ExternalInterfaceDaoHelper externalInterfaceDaoHelper;
 
 
     @Override
     public BusinessObjectFormatExternalInterfaceDescriptiveInformation getBusinessObjectFormatExternalInterfaceDescriptiveInformation(
-        BusinessObjectFormatExternalInterfaceDescriptiveInformationKey businessObjectFormatExternalInterfaceDescriptiveInformationKey)
+        BusinessObjectFormatExternalInterfaceKey businessObjectFormatExternalInterfaceKey)
     {
-        // Validate and trim the business object format external interface descriptive information key.
-        businessObjectFormatExternalInterfaceDescriptiveInformationHelper
-            .validateAndTrimBusinessObjectFormatExternalInterfaceDescriptiveInformationKey(businessObjectFormatExternalInterfaceDescriptiveInformationKey);
+        // Validate and trim the business object format external interface key.
+        businessObjectFormatExternalInterfaceHelper.validateAndTrimBusinessObjectFormatExternalInterfaceKey(businessObjectFormatExternalInterfaceKey);
 
         // Ensure that a business object format to external interface mapping with the specified key exists.
-        businessObjectFormatExternalInterfaceDaoHelper.getBusinessObjectFormatExternalInterfaceEntity(
-            new BusinessObjectFormatExternalInterfaceKey(businessObjectFormatExternalInterfaceDescriptiveInformationKey.getNamespace(),
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getBusinessObjectDefinitionName(),
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getBusinessObjectFormatUsage(),
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getBusinessObjectFormatFileType(),
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getExternalInterfaceName()));
+        businessObjectFormatExternalInterfaceDaoHelper.getBusinessObjectFormatExternalInterfaceEntity(businessObjectFormatExternalInterfaceKey);
 
         // Retrieve and ensure that an external interface with the specified name exists.
         ExternalInterfaceEntity externalInterfaceEntity =
-            externalInterfaceDaoHelper.getExternalInterfaceEntity(businessObjectFormatExternalInterfaceDescriptiveInformationKey.getExternalInterfaceName());
+            externalInterfaceDaoHelper.getExternalInterfaceEntity(businessObjectFormatExternalInterfaceKey.getExternalInterfaceName());
 
         // Get a business object format key from the request. Please note that the key is version-less.
-        BusinessObjectFormatKey businessObjectFormatKey =
-            new BusinessObjectFormatKey(businessObjectFormatExternalInterfaceDescriptiveInformationKey.getNamespace(),
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getBusinessObjectDefinitionName(),
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getBusinessObjectFormatUsage(),
-                businessObjectFormatExternalInterfaceDescriptiveInformationKey.getBusinessObjectFormatFileType(), null);
+        BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey(businessObjectFormatExternalInterfaceKey.getNamespace(),
+            businessObjectFormatExternalInterfaceKey.getBusinessObjectDefinitionName(), businessObjectFormatExternalInterfaceKey.getBusinessObjectFormatUsage(),
+            businessObjectFormatExternalInterfaceKey.getBusinessObjectFormatFileType(), null);
 
         // Retrieve and ensure that a business object format with the specified alternate key values exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);

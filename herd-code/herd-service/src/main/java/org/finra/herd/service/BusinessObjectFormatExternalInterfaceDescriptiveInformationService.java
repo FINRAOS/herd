@@ -16,7 +16,7 @@
 package org.finra.herd.service;
 
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformation;
-import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformationKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
 
 /**
  * The business object format external interface descriptive information service.
@@ -26,10 +26,10 @@ public interface BusinessObjectFormatExternalInterfaceDescriptiveInformationServ
     /**
      * Retrieves existing business object format external interface descriptive information by its key.
      *
-     * @param businessObjectFormatExternalInterfaceDescriptiveInformationKey the business object format external interface descriptive information key
+     * @param businessObjectFormatExternalInterfaceKey the business object format external interface key
      *
      * @return the retrieved business object format external interface descriptive information
      */
     BusinessObjectFormatExternalInterfaceDescriptiveInformation getBusinessObjectFormatExternalInterfaceDescriptiveInformation(
-        BusinessObjectFormatExternalInterfaceDescriptiveInformationKey businessObjectFormatExternalInterfaceDescriptiveInformationKey);
+        BusinessObjectFormatExternalInterfaceKey businessObjectFormatExternalInterfaceKey);
 }
