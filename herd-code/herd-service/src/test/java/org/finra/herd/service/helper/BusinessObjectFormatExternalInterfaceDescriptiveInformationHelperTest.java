@@ -15,92 +15,137 @@
 */
 package org.finra.herd.service.helper;
 
-import static org.finra.herd.dao.AbstractDaoTest.BDEF_NAME;
-import static org.finra.herd.dao.AbstractDaoTest.BDEF_NAME_2;
-import static org.finra.herd.dao.AbstractDaoTest.EXTERNAL_INTERFACE;
-import static org.finra.herd.dao.AbstractDaoTest.EXTERNAL_INTERFACE_2;
-import static org.finra.herd.dao.AbstractDaoTest.FORMAT_FILE_TYPE_CODE;
-import static org.finra.herd.dao.AbstractDaoTest.FORMAT_FILE_TYPE_CODE_2;
-import static org.finra.herd.dao.AbstractDaoTest.FORMAT_USAGE_CODE;
-import static org.finra.herd.dao.AbstractDaoTest.FORMAT_USAGE_CODE_2;
-import static org.finra.herd.dao.AbstractDaoTest.NAMESPACE;
-import static org.finra.herd.dao.AbstractDaoTest.NAMESPACE_2;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Before;
-import org.junit.Rule;
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformationKey;
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformation;
+import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.ExternalInterfaceEntity;
+import org.finra.herd.model.jpa.SchemaColumnEntity;
+import org.finra.herd.service.AbstractServiceTest;
 
-public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelperTest
+public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelperTest extends AbstractServiceTest
 {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @Mock
-    private AlternateKeyHelper alternateKeyHelper;
-
-    @InjectMocks
-    private BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper businessObjectFormatExternalInterfaceDescriptiveInformationHelper;
-
-    @Before
-    public void before()
-    {
-        MockitoAnnotations.initMocks(this);
-    }
-
-
     @Test
-    public void testValidateAndTrimBusinessObjectFormatExternalInterfaceDescriptiveInformationKey()
+    public void testCreateBusinessObjectFormatExternalInterfaceDescriptiveInformationFromEntities()
     {
-        // Create a business object format to external interface mapping key.
-        BusinessObjectFormatExternalInterfaceDescriptiveInformationKey businessObjectFormatExternalInterfaceDescriptiveInformationKey =
-            new BusinessObjectFormatExternalInterfaceDescriptiveInformationKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                EXTERNAL_INTERFACE);
+        // Create a velocity template for the external interface entity.
+        String velocityTemplateDescription = "${namespace}#${businessObjectDefinitionName}#${businessObjectFormatUsage}#${businessObjectFormatFileType}#" +
+            "${businessObjectFormatAttributes}#${partitionColumnNames}#${partitionKeyGroup}#$StringUtils.isNotEmpty($namespace)";
 
-        // Mock the external calls.
-        when(alternateKeyHelper.validateStringParameter("namespace", NAMESPACE)).thenReturn(NAMESPACE_2);
-        when(alternateKeyHelper.validateStringParameter("business object definition name", BDEF_NAME)).thenReturn(BDEF_NAME_2);
-        when(alternateKeyHelper.validateStringParameter("business object format usage", FORMAT_USAGE_CODE)).thenReturn(FORMAT_USAGE_CODE_2);
-        when(alternateKeyHelper.validateStringParameter("business object format file type", FORMAT_FILE_TYPE_CODE)).thenReturn(FORMAT_FILE_TYPE_CODE_2);
-        when(alternateKeyHelper.validateStringParameter("An", "external interface name", EXTERNAL_INTERFACE)).thenReturn(EXTERNAL_INTERFACE_2);
+        // Get a list of partition columns that is larger than number of partitions supported by business object data registration.
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
+        assertTrue(CollectionUtils.size(partitionColumns) > BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1);
+
+        // Get a list of regular columns.
+        List<SchemaColumn> regularColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
+
+        // Create a list of attributes
+        List<Attribute> attributes = Lists.newArrayList(new Attribute(ATTRIBUTE_NAME, ATTRIBUTE_VALUE), new Attribute(ATTRIBUTE_NAME_2, ATTRIBUTE_VALUE_2));
+
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(), PARTITION_KEY_GROUP, attributes, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+
+        // Create an external interface entity.
+        ExternalInterfaceEntity externalInterfaceEntity = externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE);
+        externalInterfaceEntity.setDisplayName(DISPLAY_NAME_FIELD);
+        externalInterfaceEntity.setDescription(velocityTemplateDescription);
+
+        // Create a business object format to external interface mapping entity.
+        businessObjectFormatExternalInterfaceDaoTestHelper
+            .createBusinessObjectFormatExternalInterfaceEntity(businessObjectFormatEntity, externalInterfaceEntity);
 
         // Call the method under test.
-        businessObjectFormatExternalInterfaceDescriptiveInformationHelper
-            .validateAndTrimBusinessObjectFormatExternalInterfaceDescriptiveInformationKey(businessObjectFormatExternalInterfaceDescriptiveInformationKey);
+        BusinessObjectFormatExternalInterfaceDescriptiveInformation result = businessObjectFormatExternalInterfaceDescriptiveInformationHelper
+            .createBusinessObjectFormatExternalInterfaceDescriptiveInformationFromEntities(businessObjectFormatEntity, externalInterfaceEntity);
 
         // Validate the results.
-        assertEquals(new BusinessObjectFormatExternalInterfaceDescriptiveInformationKey(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2,
-            EXTERNAL_INTERFACE_2), businessObjectFormatExternalInterfaceDescriptiveInformationKey);
+        assertEquals(result.getBusinessObjectFormatExternalInterfaceKey().getNamespace(), NAMESPACE);
+        assertEquals(result.getBusinessObjectFormatExternalInterfaceKey().getBusinessObjectDefinitionName(), BDEF_NAME);
+        assertEquals(result.getBusinessObjectFormatExternalInterfaceKey().getBusinessObjectFormatUsage(), FORMAT_USAGE_CODE);
+        assertEquals(result.getBusinessObjectFormatExternalInterfaceKey().getBusinessObjectFormatFileType(), FORMAT_FILE_TYPE_CODE);
+        assertEquals(result.getBusinessObjectFormatExternalInterfaceKey().getExternalInterfaceName(), EXTERNAL_INTERFACE);
+        assertEquals(result.getExternalInterfaceDisplayName(), DISPLAY_NAME_FIELD);
 
-        // Verify the external calls.
-        verify(alternateKeyHelper).validateStringParameter("namespace", NAMESPACE);
-        verify(alternateKeyHelper).validateStringParameter("business object definition name", BDEF_NAME);
-        verify(alternateKeyHelper).validateStringParameter("business object format usage", FORMAT_USAGE_CODE);
-        verify(alternateKeyHelper).validateStringParameter("business object format file type", FORMAT_FILE_TYPE_CODE);
-        verify(alternateKeyHelper).validateStringParameter("An", "external interface name", EXTERNAL_INTERFACE);
-        verifyNoMoreInteractions(alternateKeyHelper);
+        String[] descriptionTemplateReplacementValues = result.getExternalInterfaceDescription().split("#");
+
+        // ${namespace}
+        assertEquals("Namespace not equal to replacement.", descriptionTemplateReplacementValues[0], NAMESPACE);
+
+        // ${businessObjectDefinitionName}
+        assertEquals("Business object definition name not equal to replacement.", descriptionTemplateReplacementValues[1], BDEF_NAME);
+
+        // ${businessObjectFormatUsage}
+        assertEquals("Usage not equal to replacement.", descriptionTemplateReplacementValues[2], FORMAT_USAGE_CODE);
+
+        // ${businessObjectFormatFileType}
+        assertEquals("File type not equal to replacement.", descriptionTemplateReplacementValues[3], FORMAT_FILE_TYPE_CODE);
+
+        // ${businessObjectFormatAttributes}
+        Map<String, String> attributesMap = Maps.newLinkedHashMap();
+        for (Attribute attribute : attributes)
+        {
+            attributesMap.put(attribute.getName(), attribute.getValue());
+        }
+        assertEquals("Attributes not equal to replacement.", descriptionTemplateReplacementValues[4], attributesMap.toString());
+
+        // ${partitionColumnNames}
+        List<String> partitionColumnNames = Lists.newArrayList();
+        for (SchemaColumnEntity schemaColumn : businessObjectFormatEntity.getSchemaColumns())
+        {
+            if (schemaColumn.getPartitionLevel() != null)
+            {
+                partitionColumnNames.add(schemaColumn.getName());
+            }
+        }
+        assertEquals("Partitions not equal to replacement.", descriptionTemplateReplacementValues[5], partitionColumnNames.toString());
+
+        // ${partitionKeyGroup}
+        assertEquals("Partition key group not equal to replacement.", descriptionTemplateReplacementValues[6], PARTITION_KEY_GROUP);
+
+        // $StringUtils
+        assertEquals("StringUtils not equal to replacement.", descriptionTemplateReplacementValues[7], "true");
     }
 
     @Test
-    public void testValidateAndTrimBusinessObjectFormatExternalInterfaceKeyBusinessObjectFormatExternalInterfaceDescriptiveInformationKeyIsNull()
+    public void testCreateBusinessObjectFormatExternalInterfaceDescriptiveInformationFromEntitiesWithNullPartitionKeyGroup()
     {
-        // Specify the expected exception.
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("A business object format external interface descriptive information key must be specified.");
+        // Create a velocity template for the external interface entity.
+        String velocityTemplateDescription = "${partitionKeyGroup}";
+
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, NO_PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, NO_COLUMNS, NO_PARTITION_COLUMNS);
+
+        // Create an external interface entity.
+        ExternalInterfaceEntity externalInterfaceEntity = externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE);
+        externalInterfaceEntity.setDescription(velocityTemplateDescription);
+
+        // Create a business object format to external interface mapping entity.
+        businessObjectFormatExternalInterfaceDaoTestHelper
+            .createBusinessObjectFormatExternalInterfaceEntity(businessObjectFormatEntity, externalInterfaceEntity);
 
         // Call the method under test.
-        businessObjectFormatExternalInterfaceDescriptiveInformationHelper.validateAndTrimBusinessObjectFormatExternalInterfaceDescriptiveInformationKey(null);
+        BusinessObjectFormatExternalInterfaceDescriptiveInformation result = businessObjectFormatExternalInterfaceDescriptiveInformationHelper
+            .createBusinessObjectFormatExternalInterfaceDescriptiveInformationFromEntities(businessObjectFormatEntity, externalInterfaceEntity);
 
-        // Verify the external calls.
-        verifyNoMoreInteractions(alternateKeyHelper);
+        // Validate no partition key group
+        assertEquals("Partition key group not equal to replacement.", result.getExternalInterfaceDescription(), "");
     }
 }

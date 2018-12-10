@@ -34,7 +34,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformation;
-import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformationKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -42,6 +41,7 @@ import org.finra.herd.model.jpa.ExternalInterfaceEntity;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatExternalInterfaceDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatExternalInterfaceHelper;
 import org.finra.herd.service.helper.ExternalInterfaceDaoHelper;
 
 public class BusinessObjectFormatExternalInterfaceDescriptiveInformationServiceImplTest
@@ -54,6 +54,9 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationServiceI
 
     @Mock
     private BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper businessObjectFormatExternalInterfaceDescriptiveInformationHelper;
+
+    @Mock
+    private BusinessObjectFormatExternalInterfaceHelper businessObjectFormatExternalInterfaceHelper;
 
     @InjectMocks
     private BusinessObjectFormatExternalInterfaceDescriptiveInformationServiceImpl businessObjectFormatExternalInterfaceDescriptiveInformationService;
@@ -70,12 +73,7 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationServiceI
     @Test
     public void testGetBusinessObjectFormatExternalInterfaceDescriptiveInformation()
     {
-        // Create a business object format external interface descriptive information key.
-        BusinessObjectFormatExternalInterfaceDescriptiveInformationKey businessObjectFormatExternalInterfaceDescriptiveInformationKey =
-            new BusinessObjectFormatExternalInterfaceDescriptiveInformationKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                EXTERNAL_INTERFACE);
-
-        // Create a business object format to external interface mapping key.
+        // Create a business object format external interface key.
         BusinessObjectFormatExternalInterfaceKey businessObjectFormatExternalInterfaceKey =
             new BusinessObjectFormatExternalInterfaceKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, EXTERNAL_INTERFACE);
 
@@ -90,8 +88,7 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationServiceI
 
         // Create a business object external interface descriptive information object
         BusinessObjectFormatExternalInterfaceDescriptiveInformation businessObjectFormatExternalInterfaceDescriptiveInformation =
-            new BusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceDescriptiveInformationKey, DISPLAY_NAME_FIELD,
-                DESCRIPTION);
+            new BusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceKey, DISPLAY_NAME_FIELD, DESCRIPTION);
 
         // Mock the external calls.
         when(externalInterfaceDaoHelper.getExternalInterfaceEntity(EXTERNAL_INTERFACE)).thenReturn(externalInterfaceEntity);
@@ -102,14 +99,13 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationServiceI
 
         // Call the method under test.
         BusinessObjectFormatExternalInterfaceDescriptiveInformation result = businessObjectFormatExternalInterfaceDescriptiveInformationService
-            .getBusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceDescriptiveInformationKey);
+            .getBusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceKey);
 
         // Validate the results.
         assertEquals(businessObjectFormatExternalInterfaceDescriptiveInformation, result);
 
         // Verify the external calls.
-        verify(businessObjectFormatExternalInterfaceDescriptiveInformationHelper)
-            .validateAndTrimBusinessObjectFormatExternalInterfaceDescriptiveInformationKey(businessObjectFormatExternalInterfaceDescriptiveInformationKey);
+        verify(businessObjectFormatExternalInterfaceHelper).validateAndTrimBusinessObjectFormatExternalInterfaceKey(businessObjectFormatExternalInterfaceKey);
         verify(businessObjectFormatExternalInterfaceDaoHelper).getBusinessObjectFormatExternalInterfaceEntity(businessObjectFormatExternalInterfaceKey);
         verify(externalInterfaceDaoHelper).getExternalInterfaceEntity(EXTERNAL_INTERFACE);
         verify(businessObjectFormatDaoHelper).getBusinessObjectFormatEntity(businessObjectFormatKey);
