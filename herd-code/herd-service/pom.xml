@@ -87,6 +87,12 @@
          <artifactId>commons-compress</artifactId>
       </dependency>
 
+      <!-- This dependency is included here to upgrade the velocity dependency use of commons-collections dependency to 3.2.2 for BlackDuck compliance. -->
+      <dependency>
+         <groupId>commons-collections</groupId>
+         <artifactId>commons-collections</artifactId>
+      </dependency>
+
       <dependency>
          <groupId>org.apache.velocity</groupId>
          <artifactId>velocity</artifactId>

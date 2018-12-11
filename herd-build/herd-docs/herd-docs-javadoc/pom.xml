@@ -128,6 +128,11 @@
          <groupId>org.apache.commons</groupId>
          <artifactId>commons-collections4</artifactId>
       </dependency>
+      <!-- This dependency is included here to upgrade the velocity dependency use of commons-collections dependency to 3.2.2 for BlackDuck compliance. -->
+      <dependency>
+         <groupId>commons-collections</groupId>
+         <artifactId>commons-collections</artifactId>
+      </dependency>
       <dependency>
          <groupId>org.apache.commons</groupId>
          <artifactId>commons-compress</artifactId>
