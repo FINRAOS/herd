@@ -17,6 +17,7 @@ package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 import java.util.Map;
@@ -147,5 +148,53 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelperTe
 
         // Validate no partition key group
         assertEquals("Partition key group not equal to replacement.", result.getExternalInterfaceDescription(), "");
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatExternalInterfaceDescriptiveInformationFromEntitiesWithException()
+    {
+        // Create a velocity template for the external interface entity.
+        String velocityTemplateDescription = "#elseif";
+
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, NO_PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, NO_COLUMNS, NO_PARTITION_COLUMNS);
+
+        // Create an external interface entity.
+        ExternalInterfaceEntity externalInterfaceEntity = externalInterfaceDaoTestHelper.createExternalInterfaceEntity(EXTERNAL_INTERFACE);
+        externalInterfaceEntity.setDescription(velocityTemplateDescription);
+
+        // Create a business object format to external interface mapping entity.
+        businessObjectFormatExternalInterfaceDaoTestHelper
+            .createBusinessObjectFormatExternalInterfaceEntity(businessObjectFormatEntity, externalInterfaceEntity);
+
+        // Build the illegal argument exception message.
+        String parseErrorExceptionMessage =
+            "Encountered \"#elseif\" at External Interface Description[line 1, column 1]\n" + "Was expecting one of:\n" + "    <EOF> \n" + "    \"(\" ...\n" +
+                "    <RPAREN> ...\n" + "    <ESCAPE_DIRECTIVE> ...\n" + "    <SET_DIRECTIVE> ...\n" + "    \"##\" ...\n" + "    \"\\\\\\\\\" ...\n" +
+                "    \"\\\\\" ...\n" + "    <TEXT> ...\n" + "    \"*#\" ...\n" + "    \"*#\" ...\n" + "    \"]]#\" ...\n" + "    <STRING_LITERAL> ...\n" +
+                "    <IF_DIRECTIVE> ...\n" + "    <INTEGER_LITERAL> ...\n" + "    <FLOATING_POINT_LITERAL> ...\n" + "    <WORD> ...\n" +
+                "    <BRACKETED_WORD> ...\n" + "    <IDENTIFIER> ...\n" + "    <DOT> ...\n" + "    \"{\" ...\n" + "    \"}\" ...\n" +
+                "    <EMPTY_INDEX> ...\n" + "    ";
+
+        String illegalArgumentExceptionMessage = String
+            .format("Failed to evaluate velocity template in the external interface with name \"%s\". Reason: %s", externalInterfaceEntity.getCode(),
+                parseErrorExceptionMessage);
+
+        try
+        {
+            // Call the method under test.
+            businessObjectFormatExternalInterfaceDescriptiveInformationHelper
+                .createBusinessObjectFormatExternalInterfaceDescriptiveInformationFromEntities(businessObjectFormatEntity, externalInterfaceEntity);
+            fail();
+        }
+        catch (IllegalArgumentException illegalArgumentException)
+        {
+            // Validate the exception message
+            assertEquals("Actual illegal argument exception message not equal to expected illegal argument exception message.", illegalArgumentExceptionMessage,
+                illegalArgumentException.getMessage());
+        }
     }
 }
