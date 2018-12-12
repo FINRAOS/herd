@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.helper;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.velocity.exception.ParseErrorException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +43,8 @@ import org.finra.herd.model.jpa.SchemaColumnEntity;
 @Component
 public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     @Autowired
     private VelocityHelper velocityHelper;
 
@@ -112,8 +118,32 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
             velocityContext.put("partitionKeyGroup", "");
         }
 
+        // Create a string to hold the velocity template evaluated external interface description.
+        String velocityEvaluatedExternalInterfaceDescription;
+
+        // Catch any parse error exceptions, and throw an illegal argument exception instead.
+        try
+        {
+            // Use the velocity helper to evaluate the external interface description velocity template.
+            // During the evaluation of the velocity template by the velocity engine a parse error exception may occur.
+            velocityEvaluatedExternalInterfaceDescription =
+                velocityHelper.evaluate(externalInterfaceEntity.getDescription(), velocityContext, "External Interface Description", false);
+        }
+        catch (ParseErrorException parseErrorException)
+        {
+            // Build an exception message that contains the external interface information as well as the parse error.
+            String exceptionMessage = String
+                .format("Failed to evaluate velocity template in the external interface with name \"%s\". Reason: %s", externalInterfaceEntity.getCode(),
+                    parseErrorException.getMessage());
+
+            // Log the parsing error.
+            LOGGER.error(exceptionMessage, parseErrorException);
+
+            // Throw a new illegal argument exception with the exception message.
+            throw new IllegalArgumentException(exceptionMessage);
+        }
+
         return new BusinessObjectFormatExternalInterfaceDescriptiveInformation(businessObjectFormatExternalInterfaceKey,
-            externalInterfaceEntity.getDisplayName(),
-            velocityHelper.evaluate(externalInterfaceEntity.getDescription(), velocityContext, "External Interface Description", false));
+            externalInterfaceEntity.getDisplayName(), velocityEvaluatedExternalInterfaceDescription);
     }
 }
