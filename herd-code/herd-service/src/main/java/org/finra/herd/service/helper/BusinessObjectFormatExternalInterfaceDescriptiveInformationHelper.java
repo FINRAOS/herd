@@ -30,12 +30,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceDescriptiveInformation;
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
-import org.finra.herd.model.jpa.BusinessObjectFormatAttributeEntity;
+import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.ExternalInterfaceEntity;
-import org.finra.herd.model.jpa.SchemaColumnEntity;
 
 /**
  * A helper class for business object format external interface descriptive information related code.
@@ -44,6 +45,9 @@ import org.finra.herd.model.jpa.SchemaColumnEntity;
 public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    @Autowired
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
 
     @Autowired
     private VelocityHelper velocityHelper;
@@ -60,11 +64,13 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
     public BusinessObjectFormatExternalInterfaceDescriptiveInformation createBusinessObjectFormatExternalInterfaceDescriptiveInformationFromEntities(
         BusinessObjectFormatEntity businessObjectFormatEntity, ExternalInterfaceEntity externalInterfaceEntity)
     {
+        // Convert the business object format entity to the business object format model object
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
+
         // Build the BusinessObjectFormatExternalInterfaceKey with information from the business object format entity and the external interface entity
         BusinessObjectFormatExternalInterfaceKey businessObjectFormatExternalInterfaceKey =
-            new BusinessObjectFormatExternalInterfaceKey(businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode(),
-                businessObjectFormatEntity.getBusinessObjectDefinition().getName(), businessObjectFormatEntity.getUsage(),
-                businessObjectFormatEntity.getFileType().getCode(), externalInterfaceEntity.getCode());
+            new BusinessObjectFormatExternalInterfaceKey(businessObjectFormat.getNamespace(), businessObjectFormat.getBusinessObjectDefinitionName(),
+                businessObjectFormat.getBusinessObjectFormatUsage(), businessObjectFormat.getBusinessObjectFormatFileType(), externalInterfaceEntity.getCode());
 
         // Velocity Template Resource Names:
         // ${StringUtils}                       The string utilities class
@@ -83,25 +89,25 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
         velocityContext.put("StringUtils", StringUtils.class);
         velocityContext.put("CollectionUtils", CollectionUtils.class);
         velocityContext.put("Collections", Collections.class);
-        velocityContext.put("namespace", businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode());
-        velocityContext.put("businessObjectDefinitionName", businessObjectFormatEntity.getBusinessObjectDefinition().getName());
-        velocityContext.put("businessObjectFormatUsage", businessObjectFormatEntity.getUsage());
-        velocityContext.put("businessObjectFormatFileType", businessObjectFormatEntity.getFileType().getCode());
+        velocityContext.put("namespace", businessObjectFormat.getNamespace());
+        velocityContext.put("businessObjectDefinitionName", businessObjectFormat.getBusinessObjectDefinitionName());
+        velocityContext.put("businessObjectFormatUsage", businessObjectFormat.getBusinessObjectFormatUsage());
+        velocityContext.put("businessObjectFormatFileType", businessObjectFormat.getBusinessObjectFormatFileType());
 
         // Build an insertion ordered map of business object format attributes.
         Map<String, String> businessObjectFormatAttributes = Maps.newLinkedHashMap();
-        for (BusinessObjectFormatAttributeEntity businessObjectFormatAttributeEntity : businessObjectFormatEntity.getAttributes())
+        for (Attribute attribute : businessObjectFormat.getAttributes())
         {
-            businessObjectFormatAttributes.put(businessObjectFormatAttributeEntity.getName(), businessObjectFormatAttributeEntity.getValue());
+            businessObjectFormatAttributes.put(attribute.getName(), attribute.getValue());
         }
 
         velocityContext.put("businessObjectFormatAttributes", businessObjectFormatAttributes);
 
         // Build an insertion ordered list of partition column names.
         List<String> partitionColumnNames = Lists.newLinkedList();
-        for (SchemaColumnEntity schemaColumn : businessObjectFormatEntity.getSchemaColumns())
+        if (businessObjectFormat.getSchema() != null)
         {
-            if (schemaColumn.getPartitionLevel() != null)
+            for (SchemaColumn schemaColumn : businessObjectFormat.getSchema().getPartitions())
             {
                 partitionColumnNames.add(schemaColumn.getName());
             }
