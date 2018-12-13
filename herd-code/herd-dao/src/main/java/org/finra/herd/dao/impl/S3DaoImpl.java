@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -667,6 +668,20 @@ public class S3DaoImpl implements S3Dao
 
             // Tag S3 objects.
             tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries, tag);
+
+            // Log a list of files tagged in the S3 bucket.
+            if (LOGGER.isInfoEnabled())
+            {
+                LOGGER.info("Successfully tagged files in S3 bucket. " +
+                        "s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
+                    s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(), CollectionUtils.size(s3ObjectSummaries),
+                    tag.getKey(), tag.getValue());
+
+                for (S3ObjectSummary s3ObjectSummary : s3ObjectSummaries)
+                {
+                    LOGGER.info("s3Key=\"{}\"", s3ObjectSummary.getKey());
+                }
+            }
         }
     }
 
@@ -674,13 +689,37 @@ public class S3DaoImpl implements S3Dao
     public void tagVersions(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
         final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
     {
-        LOGGER.info("Tagging versions in S3... s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3VersionCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
-            s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(), CollectionUtils.size(s3VersionSummaries),
-            tag.getKey(), tag.getValue());
-
+        // Eliminate delete markers from the list of version summaries to be tagged.
+        List<S3VersionSummary> s3VersionSummariesWithoutDeleteMarkers = null;
         if (CollectionUtils.isNotEmpty(s3VersionSummaries))
         {
-            tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries, tag);
+            s3VersionSummariesWithoutDeleteMarkers = s3VersionSummaries.stream().
+                filter(s3VersionSummary -> !s3VersionSummary.isDeleteMarker()).collect(Collectors.toList());
+        }
+
+        LOGGER.info("Tagging versions in S3... s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3VersionCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\" " +
+                "Excluding from tagging S3 delete markers... s3DeleteMarkerCount={}", s3FileTransferRequestParamsDto.getS3BucketName(),
+            s3FileTransferRequestParamsDto.getS3KeyPrefix(), CollectionUtils.size(s3VersionSummariesWithoutDeleteMarkers), tag.getKey(), tag.getValue(),
+            CollectionUtils.size(s3VersionSummaries) - CollectionUtils.size(s3VersionSummariesWithoutDeleteMarkers));
+
+        if (CollectionUtils.isNotEmpty(s3VersionSummariesWithoutDeleteMarkers))
+        {
+            // Tag S3 versions.
+            tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummariesWithoutDeleteMarkers, tag);
+
+            // Log a list of S3 versions that got tagged.
+            if (LOGGER.isInfoEnabled())
+            {
+                LOGGER.info("Successfully tagged versions in S3 bucket. " +
+                        "s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3VersionCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
+                    s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(),
+                    s3VersionSummariesWithoutDeleteMarkers.size(), tag.getKey(), tag.getValue());
+
+                for (S3VersionSummary s3VersionSummary : s3VersionSummariesWithoutDeleteMarkers)
+                {
+                    LOGGER.info("s3Key=\"{}\" s3VersionId=\"{}\"", s3VersionSummary.getKey(), s3VersionSummary.getVersionId());
+                }
+            }
         }
     }
 

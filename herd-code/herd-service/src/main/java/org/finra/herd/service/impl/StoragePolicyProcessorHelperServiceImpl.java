@@ -19,7 +19,6 @@ import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.Tag;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -337,20 +336,6 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         // Tag the S3 objects to initiate the archiving.
         s3Service.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, actualS3Files,
             new Tag(storagePolicyTransitionParamsDto.getS3ObjectTagKey(), storagePolicyTransitionParamsDto.getS3ObjectTagValue()));
-
-        // Log a list of files tagged in the S3 bucket.
-        if (LOGGER.isInfoEnabled())
-        {
-            LOGGER.info(
-                "Successfully tagged files in S3 bucket. s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
-                s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getS3KeyPrefix(), CollectionUtils.size(actualS3Files),
-                storagePolicyTransitionParamsDto.getS3ObjectTagKey(), storagePolicyTransitionParamsDto.getS3ObjectTagValue());
-
-            for (S3ObjectSummary s3ObjectSummary : actualS3FilesWithoutZeroByteDirectoryMarkers)
-            {
-                LOGGER.info("s3Key=\"{}\"", s3ObjectSummary.getKey());
-            }
-        }
     }
 
     @PublishNotificationMessages
