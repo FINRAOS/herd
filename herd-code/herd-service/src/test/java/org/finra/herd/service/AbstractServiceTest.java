@@ -86,6 +86,7 @@ import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHel
 import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
 import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionColumnDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
@@ -907,6 +908,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected BusinessObjectDefinitionTagService businessObjectDefinitionTagService;
+
+    @Autowired
+    protected BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper businessObjectFormatExternalInterfaceDescriptiveInformationHelper;
 
     @Autowired
     protected BusinessObjectFormatHelper businessObjectFormatHelper;

@@ -15,13 +15,16 @@
 */
 package org.finra.herd.service.helper;
 
+import static org.junit.Assert.fail;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import org.finra.herd.service.AbstractServiceTest;
-
+import org.apache.velocity.exception.MethodInvocationException;
 import org.junit.Assert;
 import org.junit.Test;
+
+import org.finra.herd.service.AbstractServiceTest;
 
 public class VelocityHelperTest extends AbstractServiceTest
 {
@@ -33,6 +36,37 @@ public class VelocityHelperTest extends AbstractServiceTest
         variables.put("foo", "bar");
         String logTag = "test";
         String result = velocityHelper.evaluate(template, variables, logTag);
-        Assert.assertEquals("result", "bar", result);
+        Assert.assertEquals("Result not equal.", "bar", result);
+    }
+
+    @Test
+    public void testEvaluateStrict()
+    {
+        String template = "${baz}";
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("foo", "bar");
+        String logTag = "test";
+
+        try
+        {
+            velocityHelper.evaluate(template, variables, logTag);
+            fail();
+        }
+        catch (MethodInvocationException methodInvocationException)
+        {
+            Assert.assertEquals("Exception message not equal.", "Variable $baz has not been set at test[line 1, column 1]",
+                methodInvocationException.getMessage());
+        }
+    }
+
+    @Test
+    public void testEvaluateNonStrict()
+    {
+        String template = "${baz}";
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("foo", "bar");
+        String logTag = "test";
+        String result = velocityHelper.evaluate(template, variables, logTag, false);
+        Assert.assertEquals("Result not equal.", "${baz}", result);
     }
 }
