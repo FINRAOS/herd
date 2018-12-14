@@ -763,12 +763,6 @@ public enum ConfigurationValue
         "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
 
     /**
-     * The elasticsearch settings JSON
-     */
-    ELASTICSEARCH_SETTINGS_JSON("elasticsearch.settings.json",
-        "{ \"clientTransportAddresses\": [\"localhost\"], \"clientTransportSniff\": true, \"elasticSearchCluster\": \"elasticsearch\" }"),
-
-    /**
      * Searchable 'stemmed' fields, defaults to all stemmed fields with no boost
      */
     ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED("elasticsearch.searchable.fields.stemmed", "{\"*.stemmed\": \"1.0\"}"),
@@ -824,11 +818,6 @@ public enum ConfigurationValue
     ELASTICSEARCH_COLUMN_MATCH_HIGHLIGHT_FIELDS("elasticsearch.column.match.highlight.fields", "{\"fields\": [\"*\"]}"),
 
     /**
-     * The elasticsearch default port
-     */
-    ELASTICSEARCH_DEFAULT_PORT("elasticsearch.default.port", 9300),
-
-    /**
      * The elasticsearch spot check percentage for bdefs
      */
     ELASTICSEARCH_BDEF_SPOT_CHECK_PERCENTAGE("elasticsearch.bdef.spot.check.percentage", 0.05),
@@ -862,31 +851,6 @@ public enum ConfigurationValue
      * The elasticsearch search domain rest client scheme
      */
     ELASTICSEARCH_DOMAIN_REST_CLIENT_SCHEME("elasticsearch.domain.rest.client.scheme", "https"),
-
-    /**
-     * The elasticsearch search rest client hostname
-     */
-    ELASTICSEARCH_REST_CLIENT_HOSTNAME("elasticsearch.rest.client.hostname", "localhost"),
-
-    /**
-     * The elasticsearch search rest client port number
-     */
-    ELASTICSEARCH_REST_CLIENT_PORT("elasticsearch.rest.client.port", 9200),
-
-    /**
-     * The elasticsearch search rest client scheme
-     */
-    ELASTICSEARCH_REST_CLIENT_SCHEME("elasticsearch.rest.client.scheme", "http"),
-
-    /*
-     * The elasticsearch search rest client user name
-     */
-    ELASTICSEARCH_REST_CLIENT_USERNAME("elasticsearch.rest.client.username", null),
-
-    /*
-     * The elasticsearch search rest client user credential name
-     */
-    ELASTICSEARCH_REST_CLIENT_USERCREDENTIALNAME("elasticsearch.rest.client.usercredentialname", null),
 
     /*
      * The elasticsearch search rest client timeout

@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.84.0-SNAPSHOT</version>
+   <version>0.85.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -32,7 +32,7 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <herd-ui.version>0.54.0</herd-ui.version>
+      <herd-ui.version>0.55.0</herd-ui.version>
 
       <!-- Third Party JAR Dependencies -->
       <!--
@@ -48,6 +48,7 @@
       <commons.cli.version>1.4</commons.cli.version>
       <commons.codec.version>1.10</commons.codec.version>
       <commons.collections4.version>4.1</commons.collections4.version>
+      <commons.collections.version>3.2.2</commons.collections.version>
       <commons.compress.version>1.14</commons.compress.version>
       <commons.configuration.version>1.10</commons.configuration.version>
       <commons-dbcp2.version>2.1.1</commons-dbcp2.version>
@@ -339,6 +340,12 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>${commons.collections4.version}</version>
+         </dependency>
+         <!-- This dependency is included here to upgrade the velocity dependency use of commons-collections dependency to 3.2.2 for BlackDuck compliance. -->
+         <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons.collections.version}</version>
          </dependency>
          <dependency>
             <groupId>org.apache.commons</groupId>
@@ -667,6 +674,11 @@
                <exclusion>
                   <groupId>commons-lang</groupId>
                   <artifactId>commons-lang</artifactId>
+               </exclusion>
+               <!-- Excluding commons-collections 3.2.1 from the velocity dependency for BlackDuck compliance. -->
+               <exclusion>
+                  <groupId>commons-collections</groupId>
+                  <artifactId>commons-collections</artifactId>
                </exclusion>
             </exclusions>
          </dependency>
