@@ -42,6 +42,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.dao.StorageDao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -59,6 +60,9 @@ public class StorageUnitDaoHelperTest
 
     @Mock
     private MessageNotificationEventService messageNotificationEventService;
+
+    @Mock
+    private StorageDao storageDao;
 
     @Mock
     private StorageUnitDao storageUnitDao;
@@ -110,8 +114,12 @@ public class StorageUnitDaoHelperTest
         // Create a storage unit entity.
         StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
 
+        // Create a storage entity
+        StorageEntity storageEntity = new StorageEntity();
+
         // Mock the external calls.
-        when(storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntity, STORAGE_NAME)).thenReturn(storageUnitEntity);
+        when(storageDao.getStorageByName(STORAGE_NAME)).thenReturn(storageEntity);
+        when(storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity)).thenReturn(storageUnitEntity);
 
         // Call the method under test.
         StorageUnitEntity result = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
@@ -120,7 +128,8 @@ public class StorageUnitDaoHelperTest
         assertEquals(storageUnitEntity, result);
 
         // Verify the external calls.
-        verify(storageUnitDao).getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntity, STORAGE_NAME);
+        verify(storageDao).getStorageByName(STORAGE_NAME);
+        verify(storageUnitDao).getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -130,8 +139,12 @@ public class StorageUnitDaoHelperTest
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
 
+        // Create a storage entity
+        StorageEntity storageEntity = new StorageEntity();
+
         // Mock the external calls.
-        when(storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntity, STORAGE_NAME)).thenReturn(null);
+        when(storageDao.getStorageByName(STORAGE_NAME)).thenReturn(storageEntity);
+        when(storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity)).thenReturn(null);
         when(businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING);
 
         // Try to call the method under test.
@@ -148,7 +161,8 @@ public class StorageUnitDaoHelperTest
         }
 
         // Verify the external calls.
-        verify(storageUnitDao).getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntity, STORAGE_NAME);
+        verify(storageDao).getStorageByName(STORAGE_NAME);
+        verify(storageUnitDao).getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity);
         verify(businessObjectDataHelper).businessObjectDataEntityAltKeyToString(businessObjectDataEntity);
         verifyNoMoreInteractionsHelper();
     }

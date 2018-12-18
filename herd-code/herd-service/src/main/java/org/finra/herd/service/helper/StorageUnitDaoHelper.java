@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.dao.StorageDao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
@@ -43,6 +44,9 @@ public class StorageUnitDaoHelper
     private MessageNotificationEventService messageNotificationEventService;
 
     @Autowired
+    private StorageDao storageDao;
+
+    @Autowired
     private StorageUnitDao storageUnitDao;
 
     @Autowired
@@ -58,8 +62,17 @@ public class StorageUnitDaoHelper
      */
     public StorageUnitEntity getStorageUnitEntity(String storageName, BusinessObjectDataEntity businessObjectDataEntity)
     {
-        StorageUnitEntity storageUnitEntity = storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntity, storageName);
+        StorageUnitEntity storageUnitEntity = null;
 
+        StorageEntity storageEntity = storageDao.getStorageByName(storageName);
+
+        // If the storage entity does exist get the storage unit entity.
+        if (storageEntity != null)
+        {
+            storageUnitEntity = storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity);
+        }
+
+        // If the storage unit entity was not found return object not found exception.
         if (storageUnitEntity == null)
         {
             throw new ObjectNotFoundException(String.format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", storageName,

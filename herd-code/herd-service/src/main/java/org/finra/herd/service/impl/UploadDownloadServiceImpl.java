@@ -44,8 +44,11 @@ import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageFileKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
@@ -80,8 +83,10 @@ import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.KmsActions;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
+import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitDaoHelper;
+import org.finra.herd.service.helper.UploadDownloadHelper;
 
 /**
  * The upload download service implementation.
@@ -135,6 +140,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     private StorageDaoHelper storageDaoHelper;
 
     @Autowired
+    private StorageFileDaoHelper storageFileDaoHelper;
+
+    @Autowired
     private StorageHelper storageHelper;
 
     @Autowired
@@ -142,6 +150,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
     @Autowired
     private StsDao stsDao;
+
+    @Autowired
+    private UploadDownloadHelper uploadDownloadHelper;
 
     @Autowired
     private UploadDownloadHelperService uploadDownloadHelperService;
@@ -832,7 +843,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Perform validation and trim.
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
     }
-    
+
     @NamespacePermission(fields = "#request.businessObjectDefinitionKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
         NamespacePermissionEnum.WRITE})
     @Override
@@ -876,5 +887,81 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         response.setS3Endpoint(s3EndPoint);
         response.setS3KeyPrefix(s3KeyPrefix);
         return response;
+    }
+
+    @NamespacePermission(fields = "#downloadBusinessObjectDataStorageFileSingleInitiationRequest.businessObjectDataStorageFileKey.namespace",
+        permissions = NamespacePermissionEnum.READ)
+    @Override
+    public DownloadBusinessObjectDataStorageFileSingleInitiationResponse initiateDownloadSingleBusinessObjectDataStorageFile(
+        DownloadBusinessObjectDataStorageFileSingleInitiationRequest downloadBusinessObjectDataStorageFileSingleInitiationRequest)
+    {
+        // Validate and trim the request.
+        uploadDownloadHelper
+            .validateAndTrimDownloadBusinessObjectDataStorageFileSingleInitiationRequest(downloadBusinessObjectDataStorageFileSingleInitiationRequest);
+
+        // Get the business object data storage file key.
+        BusinessObjectDataStorageFileKey businessObjectDataStorageFileKey =
+            downloadBusinessObjectDataStorageFileSingleInitiationRequest.getBusinessObjectDataStorageFileKey();
+
+        // Retrieve and validate that the business object data exists.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper
+            .getBusinessObjectDataEntity(getBusinessObjectDataKeyFromBusinessObjectDataStorageFileKey(businessObjectDataStorageFileKey));
+
+        // Retrieve and validate that the storage unit exists
+        StorageUnitEntity storageUnitEntity =
+            storageUnitDaoHelper.getStorageUnitEntity(businessObjectDataStorageFileKey.getStorageName(), businessObjectDataEntity);
+
+        // Get the storage file entity and ensure it exists.
+        StorageFileEntity storageFileEntity = storageFileDaoHelper.getStorageFileEntity(storageUnitEntity, businessObjectDataStorageFileKey.getFilePath());
+
+        // Get S3 bucket access parameters.
+        StorageEntity storageEntity = storageFileEntity.getStorageUnit().getStorage();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3BucketAccessParams(storageEntity);
+
+        // Retrieve the storage related information.
+        String s3BucketName = s3FileTransferRequestParamsDto.getS3BucketName();
+        String s3ObjectKey = businessObjectDataStorageFileKey.getFilePath();
+
+        // Create a sessionID.
+        String sessionID = UUID.randomUUID().toString();
+
+        // Get the temporary credentials.
+        Credentials downloaderCredentials = getDownloaderCredentialsNoKmsKey(storageEntity, sessionID, s3ObjectKey);
+
+        // Generate a pre-signed URL.
+        Date expiration = downloaderCredentials.getExpiration();
+        S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
+        String preSignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
+
+        // Create the download business object data storage file single initiation response.
+        DownloadBusinessObjectDataStorageFileSingleInitiationResponse downloadBusinessObjectDataStorageFileSingleInitiationResponse =
+            new DownloadBusinessObjectDataStorageFileSingleInitiationResponse();
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse
+            .setBusinessObjectDataStorageFileKey(downloadBusinessObjectDataStorageFileSingleInitiationRequest.getBusinessObjectDataStorageFileKey());
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsS3BucketName(s3BucketName);
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsAccessKey(downloaderCredentials.getAccessKeyId());
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsSessionToken(downloaderCredentials.getSessionToken());
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(expiration));
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setPreSignedUrl(preSignedUrl);
+
+        // Return the download business object data storage file single initiation response.
+        return downloadBusinessObjectDataStorageFileSingleInitiationResponse;
+    }
+
+    /**
+     * Gets a business object data key from a specified business object data storage file key.
+     *
+     * @param businessObjectDataStorageFileKey the business object data storage file key
+     *
+     * @return the business object data key
+     */
+    private BusinessObjectDataKey getBusinessObjectDataKeyFromBusinessObjectDataStorageFileKey(
+        BusinessObjectDataStorageFileKey businessObjectDataStorageFileKey)
+    {
+        return new BusinessObjectDataKey(businessObjectDataStorageFileKey.getNamespace(), businessObjectDataStorageFileKey.getBusinessObjectDefinitionName(),
+            businessObjectDataStorageFileKey.getBusinessObjectFormatUsage(), businessObjectDataStorageFileKey.getBusinessObjectFormatFileType(),
+            businessObjectDataStorageFileKey.getBusinessObjectFormatVersion(), businessObjectDataStorageFileKey.getPartitionValue(),
+            businessObjectDataStorageFileKey.getSubPartitionValues(), businessObjectDataStorageFileKey.getBusinessObjectDataVersion());
     }
 }
