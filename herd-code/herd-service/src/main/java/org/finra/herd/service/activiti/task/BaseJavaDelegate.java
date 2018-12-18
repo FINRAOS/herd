@@ -140,7 +140,6 @@ public abstract class BaseJavaDelegate implements JavaDelegate
     public final void execute(DelegateExecution execution) throws Exception
     {
         long taskBeginTimeMillis = 0;
-        ApplicationUser applicationUser;
         boolean taskSuccessFlag = false;
         try
         {
@@ -154,7 +153,7 @@ public abstract class BaseJavaDelegate implements JavaDelegate
             configurationDaoHelper.checkNotAllowedMethod(this.getClass().getCanonicalName());
 
             // Set the security context per last updater of the current process instance's job definition.
-            applicationUser = getApplicationUser(execution);
+            ApplicationUser applicationUser = getApplicationUser(execution);
             setSecurityContext(applicationUser);
 
             // Set the MDC property for the Activiti process instance ID and user ID.

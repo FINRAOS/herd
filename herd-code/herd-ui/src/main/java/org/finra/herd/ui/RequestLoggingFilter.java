@@ -167,6 +167,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter
         }
         finally
         {
+            // Log the request after it is processed. We only log the first request.
             if (!isAsyncStarted(requestLocal) && requestLocal instanceof RequestLoggingFilterWrapper)
             {
                 ((RequestLoggingFilterWrapper) requestLocal).logAfterRequest(request);
