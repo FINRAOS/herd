@@ -26,7 +26,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
-import org.finra.herd.dao.JobDefinitionDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
@@ -36,7 +35,6 @@ import org.finra.herd.service.ActivitiService;
 import org.finra.herd.service.activiti.ActivitiHelper;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
-import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
 import org.finra.herd.service.helper.JobDefinitionDaoHelper;
 import org.finra.herd.service.helper.UserNamespaceAuthorizationHelper;
 
@@ -67,12 +65,6 @@ public class BaseJavaDelegateTest extends AbstractServiceTest
 
     @Mock
     private DelegateExecution delegateExecution;
-
-    @Mock
-    private HerdErrorInformationExceptionHandler errorInformationExceptionHandler;
-
-    @Mock
-    private JobDefinitionDao jobDefinitionDao;
 
     @Mock
     private JobDefinitionDaoHelper jobDefinitionDaoHelper;
@@ -151,7 +143,7 @@ public class BaseJavaDelegateTest extends AbstractServiceTest
         SecurityContextHolder.clearContext();
 
         // Execute test method.
-        baseJavaDelegate.setSecurityContext(delegateExecution);
+        baseJavaDelegate.setSecurityContext(baseJavaDelegate.getApplicationUser(delegateExecution));
 
         // Verify dependencies were invoked correctly.
         InOrder inOrder = inOrder(activitiService, jobDefinitionDaoHelper, userNamespaceAuthorizationHelper);
@@ -182,7 +174,7 @@ public class BaseJavaDelegateTest extends AbstractServiceTest
         // Try to execute the test method when process definition does not exist.
         try
         {
-            baseJavaDelegate.setSecurityContext(delegateExecution);
+            baseJavaDelegate.setSecurityContext(baseJavaDelegate.getApplicationUser(delegateExecution));
             fail();
         }
         catch (ObjectNotFoundException e)
