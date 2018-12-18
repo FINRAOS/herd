@@ -120,6 +120,17 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
                     new ByteArrayInputStream(new byte[storageFileEntity.getFileSizeBytes().intValue()]), metadata), NO_S3_CLIENT);
             }
 
+            // Add one more S3 file, which is an unregistered zero byte file.
+            // The validation is expected not to fail when detecting an unregistered zero byte S3 file.
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
+            metadata.setOngoingRestore(false);
+            s3Operations
+                .putObject(new PutObjectRequest(S3_BUCKET_NAME, s3KeyPrefix + "/unregistered.dat", new ByteArrayInputStream(new byte[0]), metadata), null);
+
+            // Assert that we got all files listed under the test S3 prefix.
+            assertEquals(storageUnitEntity.getStorageFiles().size() + 1, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+
             // Finalize a restore of the storage unit.
             businessObjectDataFinalizeRestoreService.finalizeRestore(storageUnitKey);
 
@@ -127,7 +138,7 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
             assertEquals(StorageUnitStatusEntity.RESTORED, storageUnitEntity.getStatus().getCode());
 
             // Validate that we have the S3 files at the expected S3 location.
-            assertEquals(storageUnitEntity.getStorageFiles().size(), s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+            assertEquals(storageUnitEntity.getStorageFiles().size() + 1, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
         }
         finally
         {
@@ -194,7 +205,7 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
             catch (IllegalStateException e)
             {
                 assertEquals(String.format("Fail to check restore status for \"%s/%s\" key in \"%s\" bucket. " +
-                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", s3KeyPrefix,
+                        "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", s3KeyPrefix,
                     MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, S3_BUCKET_NAME), e.getMessage());
             }
 
@@ -222,7 +233,7 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
         List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION), new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
-            SUBPARTITION_VALUES, DATA_VERSION));
+                SUBPARTITION_VALUES, DATA_VERSION));
 
         // Create database entities required for testing.
         for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
