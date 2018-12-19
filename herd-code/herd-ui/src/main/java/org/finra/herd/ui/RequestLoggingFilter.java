@@ -170,7 +170,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter
             // Log the request after it is processed. We only log the first request.
             if (!isAsyncStarted(requestLocal) && requestLocal instanceof RequestLoggingFilterWrapper)
             {
-                ((RequestLoggingFilterWrapper) requestLocal).logAfterRequest(request);
+                ((RequestLoggingFilterWrapper) requestLocal).logAfterRequest(request, response);
             }
         }
     }
@@ -411,9 +411,10 @@ public class RequestLoggingFilter extends OncePerRequestFilter
         /**
          * Log the request message after the request is processed.
          *
-         * @param request the request
+         * @param request the http request
+         * @param response the http response
          */
-        public void logAfterRequest(HttpServletRequest request)
+        public void logAfterRequest(HttpServletRequest request, HttpServletResponse response)
         {
             StringBuilder message = new StringBuilder();
 
@@ -431,6 +432,10 @@ public class RequestLoggingFilter extends OncePerRequestFilter
 
             // Append the HTTP method.
             message.append(" method=").append(request.getMethod());
+
+            // Append the HTTP response status code
+            message.append(" status=").append(response.getStatus());
+
             // Append response time
             message.append(" responseTimeMillis=").append(System.currentTimeMillis() - requestBeginTimeMillis);
 
