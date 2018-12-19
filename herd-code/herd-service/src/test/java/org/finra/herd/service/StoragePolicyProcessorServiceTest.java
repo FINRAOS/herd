@@ -19,12 +19,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.amazonaws.services.s3.model.GetObjectTaggingRequest;
+import com.amazonaws.services.s3.model.GetObjectTaggingResult;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.Tag;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -69,8 +72,9 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
 
         // Create and persist the relative database entities.
         storagePolicyServiceTestHelper
-            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(StoragePolicyTransitionTypeEntity.GLACIER));
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Collections.singletonList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE,
+                BDEF_NAME, Collections.singletonList(FORMAT_FILE_TYPE_CODE), Collections.singletonList(STORAGE_NAME),
+                Collections.singletonList(StoragePolicyTransitionTypeEntity.GLACIER));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -115,9 +119,34 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
                     new ByteArrayInputStream(new byte[storageFile.getFileSizeBytes().intValue()]), null), null);
             }
 
+            // Add one more S3 file, which is an unregistered zero byte file.
+            // The validation is expected not to fail when detecting an unregistered zero byte S3 file.
+            String unregisteredS3FilePath = s3KeyPrefix + "/unregistered.txt";
+            s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, unregisteredS3FilePath, new ByteArrayInputStream(new byte[0]), null), null);
+
+            // Assert that we got all files listed under the test S3 prefix.
+            assertEquals(storageFiles.size() + 1, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+
             // Perform a storage policy transition.
             storagePolicyProcessorService
                 .processStoragePolicySelectionMessage(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+
+            // Create an expected S3 tag.
+            Tag expectedTag = new Tag((String) ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_KEY.getDefaultValue(),
+                (String) ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_VALUE.getDefaultValue());
+
+            // Validate that all registered S3 files are now tagged.
+            for (StorageFile storageFile : storageFiles)
+            {
+                GetObjectTaggingResult getObjectTaggingResult =
+                    s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, storageFile.getFilePath()), null);
+                assertEquals(Collections.singletonList(expectedTag), getObjectTaggingResult.getTagSet());
+            }
+
+            // Validate that unregistered S3 file is now tagged.
+            GetObjectTaggingResult getObjectTaggingResult =
+                s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, unregisteredS3FilePath), null);
+            assertEquals(Collections.singletonList(expectedTag), getObjectTaggingResult.getTagSet());
 
             // Validate the status of the storage unit.
             assertEquals(StorageUnitStatusEntity.ARCHIVED, storageUnitEntity.getStatus().getCode());
@@ -151,8 +180,9 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
 
         // Create and persist the relative database entities.
         storagePolicyServiceTestHelper
-            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(StoragePolicyTransitionTypeEntity.GLACIER));
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Collections.singletonList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE,
+                BDEF_NAME, Collections.singletonList(FORMAT_FILE_TYPE_CODE), Collections.singletonList(STORAGE_NAME),
+                Collections.singletonList(StoragePolicyTransitionTypeEntity.GLACIER));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -206,7 +236,7 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
         {
             // Validate the exception error message.
             assertEquals(String
-                .format("Registered file \"%s\" does not exist in \"%s\" storage.", storageFiles.get(storageFiles.size() - 1).getFilePath(), STORAGE_NAME),
+                    .format("Registered file \"%s\" does not exist in \"%s\" storage.", storageFiles.get(storageFiles.size() - 1).getFilePath(), STORAGE_NAME),
                 e.getMessage());
 
             // Validate the StoragePolicyTransitionFailedAttempts value.

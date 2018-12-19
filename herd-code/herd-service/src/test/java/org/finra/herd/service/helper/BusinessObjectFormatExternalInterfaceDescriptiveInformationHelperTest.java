@@ -171,13 +171,13 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelperTe
             .createBusinessObjectFormatExternalInterfaceEntity(businessObjectFormatEntity, externalInterfaceEntity);
 
         // Build the illegal argument exception message.
-        String parseErrorExceptionMessage =
-            "Encountered \"#elseif\" at External Interface Description[line 1, column 1]\n" + "Was expecting one of:\n" + "    <EOF> \n" + "    \"(\" ...\n" +
-                "    <RPAREN> ...\n" + "    <ESCAPE_DIRECTIVE> ...\n" + "    <SET_DIRECTIVE> ...\n" + "    \"##\" ...\n" + "    \"\\\\\\\\\" ...\n" +
-                "    \"\\\\\" ...\n" + "    <TEXT> ...\n" + "    \"*#\" ...\n" + "    \"*#\" ...\n" + "    \"]]#\" ...\n" + "    <STRING_LITERAL> ...\n" +
-                "    <IF_DIRECTIVE> ...\n" + "    <INTEGER_LITERAL> ...\n" + "    <FLOATING_POINT_LITERAL> ...\n" + "    <WORD> ...\n" +
-                "    <BRACKETED_WORD> ...\n" + "    <IDENTIFIER> ...\n" + "    <DOT> ...\n" + "    \"{\" ...\n" + "    \"}\" ...\n" +
-                "    <EMPTY_INDEX> ...\n" + "    ";
+        String parseErrorExceptionMessage = String.format(
+            "Encountered \"#elseif\" at External Interface Description[line 1, column 1]%n" + "Was expecting one of:%n" + "    <EOF> %n" + "    \"(\" ...%n" +
+                "    <RPAREN> ...%n" + "    <ESCAPE_DIRECTIVE> ...%n" + "    <SET_DIRECTIVE> ...%n" + "    \"##\" ...%n" + "    \"\\\\\\\\\" ...%n" +
+                "    \"\\\\\" ...%n" + "    <TEXT> ...%n" + "    \"*#\" ...%n" + "    \"*#\" ...%n" + "    \"]]#\" ...%n" + "    <STRING_LITERAL> ...%n" +
+                "    <IF_DIRECTIVE> ...%n" + "    <INTEGER_LITERAL> ...%n" + "    <FLOATING_POINT_LITERAL> ...%n" + "    <WORD> ...%n" +
+                "    <BRACKETED_WORD> ...%n" + "    <IDENTIFIER> ...%n" + "    <DOT> ...%n" + "    \"{\" ...%n" + "    \"}\" ...%n" +
+                "    <EMPTY_INDEX> ...%n" + "    ");
 
         String illegalArgumentExceptionMessage = String
             .format("Failed to evaluate velocity template in the external interface with name \"%s\". Reason: %s", externalInterfaceEntity.getCode(),

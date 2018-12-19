@@ -165,7 +165,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
             .validateRegisteredS3Files(businessObjectDataRestoreDto.getStorageFiles(), actualS3Files, businessObjectDataRestoreDto.getStorageName(),
                 businessObjectDataRestoreDto.getBusinessObjectDataKey());
 
-        // Build a list of files to restore by selection only objects that have Glacier storage class.
+        // Build a list of files to expire by selection only objects that have Glacier storage class.
         List<S3ObjectSummary> glacierS3Files = new ArrayList<>();
         for (S3ObjectSummary s3ObjectSummary : actualS3Files)
         {

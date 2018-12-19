@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -118,6 +119,14 @@ public class BusinessObjectDataServiceDestroyBusinessObjectDataTest extends Abst
                     new ByteArrayInputStream(new byte[storageFile.getFileSizeBytes().intValue()]), null), null);
             }
 
+            // Add one more S3 file, which is an unregistered non-empty file.
+            // The business object data destroy logic expected not to fail when detecting an unregistered S3 file.
+            String unregisteredS3FilePath = s3KeyPrefix + "/unregistered.txt";
+            s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, unregisteredS3FilePath, new ByteArrayInputStream(new byte[1]), null), null);
+
+            // Assert that we got all files listed under the test S3 prefix.
+            assertEquals(storageFiles.size() + 1, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+
             // Request to destroy business object data.
             BusinessObjectData result = businessObjectDataService.destroyBusinessObjectData(businessObjectDataKey);
 
@@ -131,13 +140,18 @@ public class BusinessObjectDataServiceDestroyBusinessObjectDataTest extends Abst
             // Validate the status of the business object data entity.
             assertEquals(BusinessObjectDataStatusEntity.DELETED, storageUnitEntity.getBusinessObjectData().getStatus().getCode());
 
-            // Validate that all S3 files are now tagged.
+            // Validate that all registered S3 files are now tagged.
             for (StorageFile storageFile : storageFiles)
             {
                 GetObjectTaggingResult getObjectTaggingResult =
                     s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, storageFile.getFilePath()), null);
-                assertEquals(Arrays.asList(new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE)), getObjectTaggingResult.getTagSet());
+                assertEquals(Collections.singletonList(new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE)), getObjectTaggingResult.getTagSet());
             }
+
+            // Validate that unregistered S3 file is now tagged.
+            GetObjectTaggingResult getObjectTaggingResult =
+                s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, unregisteredS3FilePath), null);
+            assertEquals(Collections.singletonList(new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE)), getObjectTaggingResult.getTagSet());
         }
         finally
         {
