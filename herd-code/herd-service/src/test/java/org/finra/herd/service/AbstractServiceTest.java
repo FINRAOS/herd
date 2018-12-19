@@ -399,6 +399,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean EXCLUSION_SEARCH_FILTER = true;
 
+    public static final int EXPECTED_STORAGE_FILES_COUNT = 3;
+
     public static final int EXPECTED_UUID_SIZE = 36;
 
     /**

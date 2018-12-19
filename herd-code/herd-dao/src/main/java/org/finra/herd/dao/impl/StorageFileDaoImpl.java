@@ -69,6 +69,26 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
     }
 
     @Override
+    public StorageFileEntity getStorageFileByStorageUnitEntityAndFilePath(StorageUnitEntity storageUnitEntity, String filePath)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<StorageFileEntity> criteria = builder.createQuery(StorageFileEntity.class);
+
+        // The criteria root is the storage files.
+        Root<StorageFileEntity> storageFileEntity = criteria.from(StorageFileEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate filePathRestriction = builder.equal(storageFileEntity.get(StorageFileEntity_.path), filePath);
+        Predicate storageUnitRestriction = builder.equal(storageFileEntity.get(StorageFileEntity_.storageUnitId), storageUnitEntity.getId());
+
+        criteria.select(storageFileEntity).where(builder.and(filePathRestriction, storageUnitRestriction));
+
+        return executeSingleResultQuery(criteria, String
+            .format("Found more than one storage file with parameters {storageUnitId=\"%s\"," + " filePath=\"%s\"}.", storageUnitEntity.getId(), filePath));
+    }
+
+    @Override
     public Long getStorageFileCount(String storageName, String filePathPrefix)
     {
         // Create the criteria builder and the criteria.

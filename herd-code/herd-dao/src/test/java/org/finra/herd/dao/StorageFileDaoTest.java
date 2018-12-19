@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.junit.Test;
 
@@ -65,7 +66,7 @@ public class StorageFileDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetStorageFileByStorageNameAndFilePathDuplicateFiles() throws Exception
+    public void testGetStorageFileByStorageNameAndFilePathDuplicateFiles()
     {
         // Create relative database entities.
         BusinessObjectDataEntity businessObjectDataEntity1 = businessObjectDataDaoTestHelper
@@ -95,6 +96,33 @@ public class StorageFileDaoTest extends AbstractDaoTest
         {
             assertTrue(e.getMessage().startsWith("Found more than one storage file with parameters"));
         }
+    }
+
+    @Test
+    public void testGetStorageFileByStorageUnitEntityAndFilePath()
+    {
+        // Create relative database entities.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+                PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        for (String file : LOCAL_FILES)
+        {
+            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
+        }
+
+        // Retrieve the relative storage file entities and validate the results.
+        for (String file : LOCAL_FILES)
+        {
+            StorageFileEntity storageFileEntity = storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, file);
+            assertTrue(storageFileEntity.getPath().compareTo(file) == 0);
+            assertTrue(storageFileEntity.getFileSizeBytes().compareTo(FILE_SIZE_1_KB) == 0);
+            assertTrue(storageFileEntity.getRowCount().compareTo(ROW_COUNT_1000) == 0);
+        }
+
+        // Confirm negative results when using wrong input parameters.
+        assertNull(storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, "I_DO_NOT_EXIST"));
+        assertNull(storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(new StorageUnitEntity(), LOCAL_FILES.get(0)));
     }
 
     @Test
@@ -181,7 +209,7 @@ public class StorageFileDaoTest extends AbstractDaoTest
             }
 
             // Retrieve storage file paths by storage unit ids.
-            MultiValuedMap<Integer, String> result = storageFileDao.getStorageFilePathsByStorageUnitIds(Arrays.asList(storageUnitEntity.getId()));
+            MultiValuedMap<Integer, String> result = storageFileDao.getStorageFilePathsByStorageUnitIds(Lists.newArrayList(storageUnitEntity.getId()));
 
             // Validate the results.
             assertEquals(LOCAL_FILES.size(), result.get(storageUnitEntity.getId()).size());
