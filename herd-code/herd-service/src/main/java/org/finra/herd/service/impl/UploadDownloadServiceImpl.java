@@ -654,10 +654,34 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey, storageHelper.getStorageKmsKeyId(storageEntity)));
     }
 
+    /**
+     * Gets a temporary session token that is only good for downloading the specified object key from the given bucket for a limited amount of time.
+     *
+     * @param storageEntity The storage entity of the external storage.
+     * @param sessionName The session name to use for the temporary credentials.
+     * @param s3ObjectKey The S3 object key of the path to the data in the bucket.
+     *
+     * @return {@link Credentials} temporary session token
+     */
     private Credentials getDownloaderCredentialsNoKmsKey(StorageEntity storageEntity, String sessionName, String s3ObjectKey)
     {
         return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
             getStorageDownloadSessionDuration(storageEntity), createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey));
+    }
+
+    /**
+     * Gets a temporary session token that is only good for downloading the specified object key from the given bucket for a limited amount of time.
+     *
+     * @param storageEntity The storage entity of the external storage.
+     * @param sessionName The session name to use for the temporary credentials.
+     * @param awsPolicyBuilder The AWS policy builder.
+     *
+     * @return {@link Credentials} temporary session token
+     */
+    private Credentials getDownloaderCredentials(StorageEntity storageEntity, String sessionName, AwsPolicyBuilder awsPolicyBuilder)
+    {
+        return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
+            getStorageDownloadSessionDuration(storageEntity), awsPolicyBuilder.build());
     }
 
     /**
@@ -904,29 +928,44 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             downloadBusinessObjectDataStorageFileSingleInitiationRequest.getBusinessObjectDataStorageFileKey();
 
         // Retrieve and validate that the business object data exists.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper
-            .getBusinessObjectDataEntity(getBusinessObjectDataKeyFromBusinessObjectDataStorageFileKey(businessObjectDataStorageFileKey));
+        BusinessObjectDataKey businessObjectDataKey = getBusinessObjectDataKeyFromBusinessObjectDataStorageFileKey(businessObjectDataStorageFileKey);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
 
         // Retrieve and validate that the storage unit exists
         StorageUnitEntity storageUnitEntity =
             storageUnitDaoHelper.getStorageUnitEntity(businessObjectDataStorageFileKey.getStorageName(), businessObjectDataEntity);
 
         // Get the storage file entity and ensure it exists.
-        StorageFileEntity storageFileEntity = storageFileDaoHelper.getStorageFileEntity(storageUnitEntity, businessObjectDataStorageFileKey.getFilePath());
+        StorageFileEntity storageFileEntity =
+            storageFileDaoHelper.getStorageFileEntity(storageUnitEntity, businessObjectDataStorageFileKey.getFilePath(), businessObjectDataKey);
 
         // Get S3 bucket access parameters.
         StorageEntity storageEntity = storageFileEntity.getStorageUnit().getStorage();
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3BucketAccessParams(storageEntity);
 
         // Retrieve the storage related information.
-        String s3BucketName = s3FileTransferRequestParamsDto.getS3BucketName();
+        String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
         String s3ObjectKey = businessObjectDataStorageFileKey.getFilePath();
 
-        // Create a sessionID.
-        String sessionID = UUID.randomUUID().toString();
+        // Create an AWS policy builder.
+        AwsPolicyBuilder awsPolicyBuilder = new AwsPolicyBuilder().withS3(s3BucketName, s3ObjectKey, S3Actions.GetObject);
+
+        // Get the storage kms key id.
+        String storageKmsKeyId = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storageEntity, false, true);
+
+        /*
+         * Only add KMS policies if the storage specifies a KMS ID
+         */
+        if (storageKmsKeyId != null)
+        {
+            awsPolicyBuilder.withKms(storageKmsKeyId.trim(), KmsActions.DECRYPT);
+        }
+
+        // Create a sessionId.
+        String sessionId = UUID.randomUUID().toString();
 
         // Get the temporary credentials.
-        Credentials downloaderCredentials = getDownloaderCredentialsNoKmsKey(storageEntity, sessionID, s3ObjectKey);
+        Credentials downloaderCredentials = getDownloaderCredentials(storageEntity, sessionId, awsPolicyBuilder);
 
         // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();

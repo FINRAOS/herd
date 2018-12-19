@@ -5061,6 +5061,11 @@
                <xs:documentation>The format file type of the business object data</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <!--
+           The businessObjectFormatVersion is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The format version of the business object data</xs:documentation>
@@ -5076,6 +5081,11 @@
                <xs:documentation>The subpartition values of the business object data</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <!--
+           The businessObjectDataVersion is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The version of the business object data</xs:documentation>

@@ -94,18 +94,22 @@ public class StorageFileDaoHelper
      *
      * @param storageUnitEntity the storage unit entity
      * @param filePath the file path
+     * @param businessObjectDataKey the business object data key
      *
      * @return the storage file entity
      * @throws org.finra.herd.model.ObjectNotFoundException if the storage file doesn't exist
      * @throws IllegalArgumentException if more than one storage file matching the file path exist in the storage
      */
-    public StorageFileEntity getStorageFileEntity(StorageUnitEntity storageUnitEntity, String filePath) throws ObjectNotFoundException, IllegalArgumentException
+    public StorageFileEntity getStorageFileEntity(StorageUnitEntity storageUnitEntity, String filePath, BusinessObjectDataKey businessObjectDataKey)
+        throws ObjectNotFoundException, IllegalArgumentException
     {
         StorageFileEntity storageFileEntity = storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePath);
 
         if (storageFileEntity == null)
         {
-            throw new ObjectNotFoundException(String.format("Storage file \"%s\" doesn't exist in storageUnitId=\"%s\".", filePath, storageUnitEntity.getId()));
+            throw new ObjectNotFoundException(String
+                .format("Storage file \"%s\" doesn't exist in \"%s\" storage. Business object data: {%s}", filePath, storageUnitEntity.getStorage().getName(),
+                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
 
         return storageFileEntity;
