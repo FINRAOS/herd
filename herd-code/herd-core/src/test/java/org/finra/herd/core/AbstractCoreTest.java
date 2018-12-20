@@ -327,4 +327,36 @@ public abstract class AbstractCoreTest
     {
         loggingHelper.setLogLevel(loggerName, logLevel);
     }
+
+    /**
+     * Method to convert an input string to mixed case.  This method will make every other character a capitalized character followed by a lower case character.
+     *
+     * @param input String input that will be converted to a mixed case string.
+     *
+     * @return mixed case version of the input string
+     */
+    protected static String convertStringToMixedCase(final String input)
+    {
+        // Create a string builder to hold the new mixed case string.
+        StringBuilder output = new StringBuilder();
+
+        // For each character in the input string.
+        for (int i = 0; i < input.length(); i++)
+        {
+            char ch = input.charAt(i);
+
+            // Use modulo 2 to upper case every other letter and lower case the following letter
+            if (i % 2 == 0)
+            {
+                output.append(Character.toUpperCase(ch));
+            }
+            else
+            {
+                output.append(Character.toLowerCase(ch));
+            }
+        }
+
+        // Return the new mixed case string
+        return output.toString();
+    }
 }
