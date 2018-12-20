@@ -15,8 +15,10 @@
 */
 package org.finra.herd.dao;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -106,23 +108,17 @@ public class StorageFileDaoTest extends AbstractDaoTest
             .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
-        for (String file : LOCAL_FILES)
-        {
-            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
-        }
+        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000);
 
-        // Retrieve the relative storage file entities and validate the results.
-        for (String file : LOCAL_FILES)
-        {
-            StorageFileEntity storageFileEntity = storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, file);
-            assertTrue(storageFileEntity.getPath().compareTo(file) == 0);
-            assertTrue(storageFileEntity.getFileSizeBytes().compareTo(FILE_SIZE_1_KB) == 0);
-            assertTrue(storageFileEntity.getRowCount().compareTo(ROW_COUNT_1000) == 0);
-        }
+        StorageFileEntity storageFileEntity = storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, LOCAL_FILE);
+        assertThat("Actual path does not equal expected path.", storageFileEntity.getPath(), is(LOCAL_FILE));
+        assertThat("Actual file size does not equal expected file size.", storageFileEntity.getFileSizeBytes(), is(FILE_SIZE_1_KB));
+        assertThat("Actual row count does not equal expected row count.", storageFileEntity.getRowCount(), is(ROW_COUNT_1000));
 
         // Confirm negative results when using wrong input parameters.
-        assertNull(storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, "I_DO_NOT_EXIST"));
-        assertNull(storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(new StorageUnitEntity(), LOCAL_FILES.get(0)));
+        assertNull("Expected null value.", storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, LOCAL_FILE.toUpperCase()));
+        assertNull("Expected null value.", storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, "I_DO_NOT_EXIST"));
+        assertNull("Expected null value.", storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(new StorageUnitEntity(), LOCAL_FILES.get(0)));
     }
 
     @Test
