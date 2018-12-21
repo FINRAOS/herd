@@ -47,6 +47,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFileKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationRequest;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
@@ -972,11 +973,22 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
         String preSignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
+        // Convert the business object format entity to the business object format model object
+        BusinessObjectFormat businessObjectFormat =
+            businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectDataEntity.getBusinessObjectFormat());
+
+        // Create a business object data storage file key for the download business object data storage file single initiation response.
+        BusinessObjectDataStorageFileKey businessObjectDataStorageFileKeyForResponse =
+            new BusinessObjectDataStorageFileKey(businessObjectFormat.getNamespace(), businessObjectFormat.getBusinessObjectDefinitionName(),
+                businessObjectFormat.getBusinessObjectFormatUsage(), businessObjectFormat.getBusinessObjectFormatFileType(),
+                businessObjectFormat.getBusinessObjectFormatVersion(), businessObjectDataEntity.getPartitionValue(),
+                businessObjectDataHelper.getSubPartitionValues(businessObjectDataEntity), businessObjectDataEntity.getVersion(),
+                storageUnitEntity.getStorageName(), storageFileEntity.getPath());
+
         // Create the download business object data storage file single initiation response.
         DownloadBusinessObjectDataStorageFileSingleInitiationResponse downloadBusinessObjectDataStorageFileSingleInitiationResponse =
             new DownloadBusinessObjectDataStorageFileSingleInitiationResponse();
-        downloadBusinessObjectDataStorageFileSingleInitiationResponse
-            .setBusinessObjectDataStorageFileKey(downloadBusinessObjectDataStorageFileSingleInitiationRequest.getBusinessObjectDataStorageFileKey());
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setBusinessObjectDataStorageFileKey(businessObjectDataStorageFileKeyForResponse);
         downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsS3BucketName(s3BucketName);
         downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsAccessKey(downloaderCredentials.getAccessKeyId());
         downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
