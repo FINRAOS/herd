@@ -18,6 +18,7 @@ package org.finra.herd.service.helper;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -72,9 +73,12 @@ public class UploadDownloadHelper
             .validateStringParameter("partition value", businessObjectDataStorageFileKey.getPartitionValue()));
 
         List<String> subPartitionValues = Lists.newArrayList();
-        for (String subPartitionValue : businessObjectDataStorageFileKey.getSubPartitionValues())
+        if (CollectionUtils.isNotEmpty(businessObjectDataStorageFileKey.getSubPartitionValues()))
         {
-            subPartitionValues.add(alternateKeyHelper.validateStringParameter("sub partition value", subPartitionValue));
+            for (String subPartitionValue : businessObjectDataStorageFileKey.getSubPartitionValues())
+            {
+                subPartitionValues.add(alternateKeyHelper.validateStringParameter("sub partition value", subPartitionValue));
+            }
         }
         businessObjectDataStorageFileKey.setSubPartitionValues(subPartitionValues);
 

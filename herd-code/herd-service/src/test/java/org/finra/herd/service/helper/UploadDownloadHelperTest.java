@@ -38,6 +38,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -181,6 +182,40 @@ public class UploadDownloadHelperTest
         uploadDownloadHelper.validateAndTrimBusinessObjectDataStorageFileKey(null);
 
         // Verify the external calls.
+        verifyNoMoreInteractions(alternateKeyHelper);
+    }
+
+    @Test
+    public void testValidateAndTrimBusinessObjectStorageFileKeyWithNullSubPartitionValues()
+    {
+        // Create a business object data storage file key.
+        BusinessObjectDataStorageFileKey businessObjectDataStorageFileKey =
+            new BusinessObjectDataStorageFileKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, STORAGE_NAME, TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE + "    ");
+
+        // Mock the external calls.
+        when(alternateKeyHelper.validateStringParameter("namespace", NAMESPACE)).thenReturn(NAMESPACE_2);
+        when(alternateKeyHelper.validateStringParameter("business object definition name", BDEF_NAME)).thenReturn(BDEF_NAME_2);
+        when(alternateKeyHelper.validateStringParameter("business object format usage", FORMAT_USAGE_CODE)).thenReturn(FORMAT_USAGE_CODE_2);
+        when(alternateKeyHelper.validateStringParameter("business object format file type", FORMAT_FILE_TYPE_CODE)).thenReturn(FORMAT_FILE_TYPE_CODE_2);
+        when(alternateKeyHelper.validateStringParameter("partition value", PARTITION_VALUE)).thenReturn(PARTITION_VALUE_2);
+        when(alternateKeyHelper.validateStringParameter("storage name", STORAGE_NAME)).thenReturn(STORAGE_NAME_2);
+
+        // Call the method under test.
+        uploadDownloadHelper.validateAndTrimBusinessObjectDataStorageFileKey(businessObjectDataStorageFileKey);
+
+        // Validate the results.
+        assertEquals(
+            new BusinessObjectDataStorageFileKey(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION, PARTITION_VALUE_2,
+                Lists.newArrayList(), DATA_VERSION, STORAGE_NAME_2, TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE), businessObjectDataStorageFileKey);
+
+        // Verify the external calls.
+        verify(alternateKeyHelper).validateStringParameter("namespace", NAMESPACE);
+        verify(alternateKeyHelper).validateStringParameter("business object definition name", BDEF_NAME);
+        verify(alternateKeyHelper).validateStringParameter("business object format usage", FORMAT_USAGE_CODE);
+        verify(alternateKeyHelper).validateStringParameter("business object format file type", FORMAT_FILE_TYPE_CODE);
+        verify(alternateKeyHelper).validateStringParameter("partition value", PARTITION_VALUE);
+        verify(alternateKeyHelper).validateStringParameter("storage name", STORAGE_NAME);
         verifyNoMoreInteractions(alternateKeyHelper);
     }
 }
