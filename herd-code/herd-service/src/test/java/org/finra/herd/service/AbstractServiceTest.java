@@ -108,6 +108,7 @@ import org.finra.herd.service.helper.StorageUnitDaoHelper;
 import org.finra.herd.service.helper.StorageUnitHelper;
 import org.finra.herd.service.helper.StorageUnitStatusDaoHelper;
 import org.finra.herd.service.helper.VelocityHelper;
+import org.finra.herd.service.helper.VelocityNonStrictHelper;
 
 /**
  * This is an abstract base class that provides useful methods for service test drivers.
@@ -1145,6 +1146,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected VelocityHelper velocityHelper;
+
+    @Autowired
+    protected VelocityNonStrictHelper velocityNonStrictHelper;
 
     @Autowired
     protected XmlHelper xmlHelper;

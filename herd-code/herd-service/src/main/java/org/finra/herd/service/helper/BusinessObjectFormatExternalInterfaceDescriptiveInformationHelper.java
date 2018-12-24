@@ -50,7 +50,7 @@ public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
     private BusinessObjectFormatHelper businessObjectFormatHelper;
 
     @Autowired
-    private VelocityHelper velocityHelper;
+    private VelocityNonStrictHelper velocityHelper;
 
     /**
      * Creates the business object format external interface descriptive information from the business object format entity and external interface entity.
