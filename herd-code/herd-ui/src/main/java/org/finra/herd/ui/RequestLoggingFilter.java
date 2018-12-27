@@ -48,14 +48,23 @@ public class RequestLoggingFilter extends OncePerRequestFilter
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
     public static final String DEFAULT_LOG_MESSAGE_PREFIX = "HTTP Request [";
+
     public static final String DEFAULT_LOG_MESSAGE_SUFFIX = "]";
+
+    public static final String AFTER_REQUEST_LOG_MESSAGE_PREFIX = "HerdTimingLog timingSource=HTTP ";
+
     private static final Integer DEFAULT_MAX_PAYLOAD_LENGTH = null; // Default to unlimited.
 
     private boolean includeQueryString = true;
+
     private boolean includeClientInfo = true;
+
     private boolean includePayload = true;
+
     private Integer maxPayloadLength = DEFAULT_MAX_PAYLOAD_LENGTH;
+
     private String logMessagePrefix = DEFAULT_LOG_MESSAGE_PREFIX;
+
     private String logMessageSuffix = DEFAULT_LOG_MESSAGE_SUFFIX;
 
     /**
@@ -152,7 +161,18 @@ public class RequestLoggingFilter extends OncePerRequestFilter
         }
 
         // Move onto the next filter while wrapping the request with our own custom logging class.
-        filterChain.doFilter(requestLocal, response);
+        try
+        {
+            filterChain.doFilter(requestLocal, response);
+        }
+        finally
+        {
+            // Log the request after it is processed. We only log the first request.
+            if (!isAsyncStarted(requestLocal) && requestLocal instanceof RequestLoggingFilterWrapper)
+            {
+                ((RequestLoggingFilterWrapper) requestLocal).logAfterRequest(request, response);
+            }
+        }
     }
 
     /**
@@ -161,7 +181,10 @@ public class RequestLoggingFilter extends OncePerRequestFilter
     public class RequestLoggingFilterWrapper extends HttpServletRequestWrapper
     {
         private byte[] payload = null;
+
         private BufferedReader reader;
+
+        private long requestBeginTimeMillis;
 
         /**
          * Constructs a request logging filter wrapper.
@@ -174,6 +197,9 @@ public class RequestLoggingFilter extends OncePerRequestFilter
         {
             // Perform super class processing.
             super(request);
+
+            //Set the request begin time
+            requestBeginTimeMillis = System.currentTimeMillis();
 
             // Only grab the payload if debugging is enabled. Otherwise, we'd always be pre-reading the entire payload for no reason which cause a slight
             // performance degradation for no reason.
@@ -380,6 +406,41 @@ public class RequestLoggingFilter extends OncePerRequestFilter
                 }
                 return reader;
             }
+        }
+
+        /**
+         * Log the request message after the request is processed.
+         *
+         * @param request the http request
+         * @param response the http response
+         */
+        public void logAfterRequest(HttpServletRequest request, HttpServletResponse response)
+        {
+            StringBuilder message = new StringBuilder();
+
+            // Append the log message prefix.
+            message.append(AFTER_REQUEST_LOG_MESSAGE_PREFIX);
+
+            // Append the URI.
+            message.append("uri=").append(request.getRequestURI());
+
+            // Append the query string if present.
+            if (isIncludeQueryString() && StringUtils.hasText(request.getQueryString()))
+            {
+                message.append('?').append(request.getQueryString());
+            }
+
+            // Append the HTTP method.
+            message.append(" method=").append(request.getMethod());
+
+            // Append the HTTP response status code
+            message.append(" status=").append(response.getStatus());
+
+            // Append response time
+            message.append(" responseTimeMillis=").append(System.currentTimeMillis() - requestBeginTimeMillis);
+
+            // Log the actual message.
+            LOGGER.debug(message.toString());
         }
     }
 }

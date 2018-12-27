@@ -5022,7 +5022,97 @@
       </xs:sequence>
    </xs:complexType>
 
-   <!-- ***** Business Object Definition Sampe File Upload ***** -->
+   <!-- ***** Download Sample Business Data File ***** -->
+   <xs:element name="downloadBusinessObjectDataStorageFileSingleInitiationResponse"
+               type="downloadBusinessObjectDataStorageFileSingleInitiationResponse"/>
+   <xs:complexType name="downloadBusinessObjectDataStorageFileSingleInitiationResponse">
+      <xs:sequence>
+         <xs:element name="businessObjectDataStorageFileKey" type="businessObjectDataStorageFileKey"/>
+         <xs:element name="awsS3BucketName" type="xs:string"/>
+         <xs:element name="awsAccessKey" type="xs:string"/>
+         <xs:element name="awsSecretKey" type="xs:string"/>
+         <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
+         <xs:element name="preSignedUrl" type="xs:string"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStorageFileKey"
+               type="businessObjectDataStorageFileKey"/>
+   <xs:complexType name="businessObjectDataStorageFileKey">
+      <xs:sequence>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace of the business object definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The business object definition name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatUsage" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The format usage of the business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatFileType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The format file type of the business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <!--
+           The businessObjectFormatVersion is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The format version of the business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="partitionValue" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The the primary partition value of the business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The subpartition values of the business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <!--
+           The businessObjectDataVersion is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The version of the business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the storage</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="filePath" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The fully qualified file path to the data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="downloadBusinessObjectDataStorageFileSingleInitiationRequest"
+               type="downloadBusinessObjectDataStorageFileSingleInitiationRequest"/>
+   <xs:complexType name="downloadBusinessObjectDataStorageFileSingleInitiationRequest">
+      <xs:sequence>
+         <xs:element name="businessObjectDataStorageFileKey" type="businessObjectDataStorageFileKey"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Business Object Definition Sample File Upload ***** -->
    <xs:element
       name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"
       type="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"/>

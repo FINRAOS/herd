@@ -46,15 +46,20 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
     @Test
     public void testRestoreBusinessObjectData() throws Exception
     {
-        // Create S3FileTransferRequestParamsDto to access the S3 bucket.
-        // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(S3_BUCKET_NAME + "/" + TEST_S3_KEY_PREFIX + "/").build();
-
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Get the expected S3 key prefix for the business object data key.
+        String s3KeyPrefix = AbstractServiceTest
+            .getExpectedS3KeyPrefix(businessObjectDataKey, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.PARTITION_KEY,
+                AbstractServiceTest.NO_SUB_PARTITION_KEYS);
+
+        // Create S3FileTransferRequestParamsDto to access the S3 bucket.
+        // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(s3KeyPrefix + "/").build();
 
         // Create database entities required for testing.
         BusinessObjectDataEntity businessObjectDataEntity =
@@ -75,6 +80,17 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
                     new ByteArrayInputStream(new byte[storageFileEntity.getFileSizeBytes().intValue()]), metadata), NO_S3_CLIENT);
             }
 
+            // Add one more S3 file, which is an unregistered zero byte file.
+            // The validation is expected not to fail when detecting an unregistered zero byte S3 file.
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
+            metadata.setOngoingRestore(false);
+            String unregisteredS3FilePath = s3KeyPrefix + "/unregistered.txt";
+            s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, unregisteredS3FilePath, new ByteArrayInputStream(new byte[0]), metadata), NO_S3_CLIENT);
+
+            // Assert that we got all files listed under the test S3 prefix.
+            assertEquals(storageUnitEntity.getStorageFiles().size() + 1, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+
             // Initiate a restore request for the business object data.
             BusinessObjectData businessObjectData = businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS);
 
@@ -85,12 +101,16 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
             // Validate that the storage unit status is RESTORING.
             assertEquals(StorageUnitStatusEntity.RESTORING, storageUnitEntity.getStatus().getCode());
 
-            // Validate that there is now ongoing restore request for all Glacier objects.
+            // Validate that there is now ongoing restore request for all registered S3 files.
             for (StorageFileEntity storageFileEntity : storageUnitEntity.getStorageFiles())
             {
                 ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(S3_BUCKET_NAME, storageFileEntity.getPath(), NO_S3_CLIENT);
                 assertTrue(objectMetadata.getOngoingRestore());
             }
+
+            // Validate that there is now ongoing restore request for the unregistered S3 file.
+            ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(S3_BUCKET_NAME, unregisteredS3FilePath, NO_S3_CLIENT);
+            assertTrue(objectMetadata.getOngoingRestore());
         }
         finally
         {

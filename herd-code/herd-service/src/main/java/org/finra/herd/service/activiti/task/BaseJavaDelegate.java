@@ -66,6 +66,10 @@ public abstract class BaseJavaDelegate implements JavaDelegate
     // MDC property key.  It can be referenced in a log4j.xml configuration.
     private static final String ACTIVITI_PROCESS_INSTANCE_ID_KEY = "activitiProcessInstanceId";
 
+    private static final String USER_ID_KEY = "uid";
+
+    private static final String ACTIVITI_LOG_MESSAGE_PREFIX = "HerdTimingLog timingSource=Activiti";
+
     @Autowired
     protected ActivitiService activitiService;
 
@@ -135,6 +139,8 @@ public abstract class BaseJavaDelegate implements JavaDelegate
     @Override
     public final void execute(DelegateExecution execution) throws Exception
     {
+        long taskBeginTimeMillis = 0;
+        boolean taskSuccessFlag = false;
         try
         {
             // Need to clear the security context here since the current thread may have been reused,
@@ -147,19 +153,27 @@ public abstract class BaseJavaDelegate implements JavaDelegate
             configurationDaoHelper.checkNotAllowedMethod(this.getClass().getCanonicalName());
 
             // Set the security context per last updater of the current process instance's job definition.
-            setSecurityContext(execution);
+            ApplicationUser applicationUser = getApplicationUser(execution);
+            setSecurityContext(applicationUser);
 
-            // Set the MDC property for the Activiti process instance ID.
+            // Set the MDC property for the Activiti process instance ID and user ID.
             MDC.put(ACTIVITI_PROCESS_INSTANCE_ID_KEY, "activitiProcessInstanceId=" + execution.getProcessInstanceId());
+            MDC.put(USER_ID_KEY, "userId=" + (applicationUser.getUserId() == null ? "" : applicationUser.getUserId()));
 
             // Log all input variables from the execution (before the execution starts).
             logInputParameters(execution);
+
+            // Set the task begin time
+            taskBeginTimeMillis = System.currentTimeMillis();
 
             // Perform the execution implementation handled in the sub-class.
             executeImpl(execution);
 
             // Set a success status as a workflow variable.
             activitiRuntimeHelper.setTaskSuccessInWorkflow(execution);
+
+            // Set the flag to true since there is no exception thrown
+            taskSuccessFlag = true;
         }
         catch (Exception ex)
         {
@@ -167,8 +181,12 @@ public abstract class BaseJavaDelegate implements JavaDelegate
         }
         finally
         {
+            // Log the task execution time
+            logTaskExecutionTime(taskBeginTimeMillis, taskSuccessFlag);
+
             // Remove the MDC property to ensure they don't accidentally get used by anybody else.
             MDC.remove(ACTIVITI_PROCESS_INSTANCE_ID_KEY);
+            MDC.remove(USER_ID_KEY);
 
             // Clear up the security context.
             SecurityContextHolder.clearContext();
@@ -176,11 +194,50 @@ public abstract class BaseJavaDelegate implements JavaDelegate
     }
 
     /**
+     * Logs the Activiti task execution time
+     *
+     * @param taskBeginTimeMillis the task begin time in millisecond
+     * @param taskSuccessFlag the success flag for the task
+     */
+    protected void logTaskExecutionTime(long taskBeginTimeMillis, boolean taskSuccessFlag)
+    {
+        StringBuilder message = new StringBuilder();
+
+        // Append the log message prefix.
+        message.append(ACTIVITI_LOG_MESSAGE_PREFIX);
+
+        // Append the Activiti task name
+        message.append(" task=" + this.getClass().getName());
+
+        // Append the task success flag
+        message.append(" success=").append(taskSuccessFlag);
+
+        // Append response time
+        message.append(" responseTimeMillis=").append(System.currentTimeMillis() - taskBeginTimeMillis);
+
+        LOGGER.info(message.toString());
+    }
+
+    /**
      * Sets the security context per last updater of the current process instance's job definition.
      *
-     * @param execution the current execution context
+     * @param applicationUser the application user
      */
-    protected void setSecurityContext(DelegateExecution execution)
+    protected void setSecurityContext(ApplicationUser applicationUser)
+    {
+        userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
+        SecurityContextHolder.getContext().setAuthentication(new PreAuthenticatedAuthenticationToken(
+            new SecurityUserWrapper(applicationUser.getUserId(), "", true, true, true, true, Collections.emptyList(), applicationUser), null));
+    }
+
+    /**
+     * Retrieves application user per last updater of the current process instance's job definition.
+     *
+     * @param execution the delegate execution
+     *
+     * @return the application user
+     */
+    protected ApplicationUser getApplicationUser(DelegateExecution execution)
     {
         String processDefinitionId = execution.getProcessDefinitionId();
 
@@ -206,9 +263,8 @@ public abstract class BaseJavaDelegate implements JavaDelegate
         String updatedByUserId = jobDefinitionEntity.getUpdatedBy();
         ApplicationUser applicationUser = new ApplicationUser(getClass());
         applicationUser.setUserId(updatedByUserId);
-        userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
-        SecurityContextHolder.getContext().setAuthentication(new PreAuthenticatedAuthenticationToken(
-            new SecurityUserWrapper(updatedByUserId, "", true, true, true, true, Collections.emptyList(), applicationUser), null));
+
+        return applicationUser;
     }
 
     /**

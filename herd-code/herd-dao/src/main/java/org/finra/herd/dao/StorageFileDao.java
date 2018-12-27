@@ -20,6 +20,7 @@ import java.util.List;
 import org.apache.commons.collections4.MultiValuedMap;
 
 import org.finra.herd.model.jpa.StorageFileEntity;
+import org.finra.herd.model.jpa.StorageUnitEntity;
 
 public interface StorageFileDao extends BaseJpaDao
 {
@@ -31,7 +32,17 @@ public interface StorageFileDao extends BaseJpaDao
      *
      * @return the storage file
      */
-    public StorageFileEntity getStorageFileByStorageNameAndFilePath(String storageName, String filePath);
+    StorageFileEntity getStorageFileByStorageNameAndFilePath(String storageName, String filePath);
+
+    /**
+     * Retrieves storage file by storage unit entity and file path.
+     *
+     * @param storageUnitEntity the storage unit entity
+     * @param filePath the file path
+     *
+     * @return the storage file
+     */
+    StorageFileEntity getStorageFileByStorageUnitEntityAndFilePath(StorageUnitEntity storageUnitEntity, String filePath);
 
     /**
      * Counts all storage files matching the file path prefix in the specified storage.
@@ -41,7 +52,7 @@ public interface StorageFileDao extends BaseJpaDao
      *
      * @return the storage file count
      */
-    public Long getStorageFileCount(String storageName, String filePathPrefix);
+    Long getStorageFileCount(String storageName, String filePathPrefix);
 
     /**
      * Retrieves a map of storage unit ids to their corresponding storage file paths.
@@ -50,7 +61,7 @@ public interface StorageFileDao extends BaseJpaDao
      *
      * @return the map of storage unit ids to their corresponding storage file paths.
      */
-    public MultiValuedMap<Integer, String> getStorageFilePathsByStorageUnitIds(List<Integer> storageUnitIds);
+    MultiValuedMap<Integer, String> getStorageFilePathsByStorageUnitIds(List<Integer> storageUnitIds);
 
     /**
      * Retrieves a sorted list of storage file paths matching S3 key prefix in the specified storage.
@@ -60,5 +71,5 @@ public interface StorageFileDao extends BaseJpaDao
      *
      * @return the list of storage file paths
      */
-    public List<String> getStorageFilesByStorageAndFilePathPrefix(String storageName, String filePathPrefix);
+    List<String> getStorageFilesByStorageAndFilePathPrefix(String storageName, String filePathPrefix);
 }

@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service;
 
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
@@ -38,7 +40,7 @@ public interface UploadDownloadService
      *
      * @return the upload single initiation response
      */
-    public UploadSingleInitiationResponse initiateUploadSingle(UploadSingleInitiationRequest uploadSingleInitiationRequest);
+    UploadSingleInitiationResponse initiateUploadSingle(UploadSingleInitiationRequest uploadSingleInitiationRequest);
 
     /**
      * Performs the completion of upload single file. Runs in new transaction and logs the error if an error occurs.
@@ -47,7 +49,7 @@ public interface UploadDownloadService
      * 
      * @return CompleteUploadSingleMessageResult 
      */
-    public CompleteUploadSingleMessageResult performCompleteUploadSingleMessage(String objectKey);
+    CompleteUploadSingleMessageResult performCompleteUploadSingleMessage(String objectKey);
 
     /**
      * Returns information required to download object from S3 for the object registered against the given parameters.
@@ -62,7 +64,7 @@ public interface UploadDownloadService
      *
      * @return {@link DownloadSingleInitiationResponse}
      */
-    public DownloadSingleInitiationResponse initiateDownloadSingle(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
+    DownloadSingleInitiationResponse initiateDownloadSingle(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
         String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue, Integer businessObjectDataVersion);
 
     /**
@@ -79,7 +81,7 @@ public interface UploadDownloadService
      *
      * @return {@link UploadSingleCredentialExtensionResponse}
      */
-    public UploadSingleCredentialExtensionResponse extendUploadSingleCredentials(String namespace, String businessObjectDefinitionName,
+    UploadSingleCredentialExtensionResponse extendUploadSingleCredentials(String namespace, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue,
         Integer businessObjectDataVersion);
     
@@ -88,7 +90,7 @@ public interface UploadDownloadService
      * @param downloadRequest download request for single sample file
      * @return download response
      */
-    public DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse initiateDownloadSingleSampleFile(
+    DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse initiateDownloadSingleSampleFile(
         DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest);
 
     /**
@@ -96,6 +98,14 @@ public interface UploadDownloadService
      * @param uploadBusinessObjectDefinitionSampleDataFileInitiationRequest upload request
      * @return information required to upload
      */
-    public UploadBusinessObjectDefinitionSampleDataFileInitiationResponse initiateUploadSampleFile(
+    UploadBusinessObjectDefinitionSampleDataFileInitiationResponse initiateUploadSampleFile(
        UploadBusinessObjectDefinitionSampleDataFileInitiationRequest uploadBusinessObjectDefinitionSampleDataFileInitiationRequest);
+
+    /**
+     * Returns information required to download object from S3 for business object data storage file
+     * @param downloadBusinessObjectDataStorageFileSingleInitiationRequest download request for single business object data storage file
+     * @return download business object data storage file single initiation response
+     */
+    DownloadBusinessObjectDataStorageFileSingleInitiationResponse initiateDownloadSingleBusinessObjectDataStorageFile(
+        DownloadBusinessObjectDataStorageFileSingleInitiationRequest downloadBusinessObjectDataStorageFileSingleInitiationRequest);
 }

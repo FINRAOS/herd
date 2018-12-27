@@ -44,8 +44,12 @@ import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageFileKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
@@ -80,8 +84,10 @@ import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.KmsActions;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
+import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitDaoHelper;
+import org.finra.herd.service.helper.UploadDownloadHelper;
 
 /**
  * The upload download service implementation.
@@ -135,6 +141,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     private StorageDaoHelper storageDaoHelper;
 
     @Autowired
+    private StorageFileDaoHelper storageFileDaoHelper;
+
+    @Autowired
     private StorageHelper storageHelper;
 
     @Autowired
@@ -142,6 +151,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
     @Autowired
     private StsDao stsDao;
+
+    @Autowired
+    private UploadDownloadHelper uploadDownloadHelper;
 
     @Autowired
     private UploadDownloadHelperService uploadDownloadHelperService;
@@ -643,10 +655,34 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey, storageHelper.getStorageKmsKeyId(storageEntity)));
     }
 
+    /**
+     * Gets a temporary session token that is only good for downloading the specified object key from the given bucket for a limited amount of time.
+     *
+     * @param storageEntity The storage entity of the external storage.
+     * @param sessionName The session name to use for the temporary credentials.
+     * @param s3ObjectKey The S3 object key of the path to the data in the bucket.
+     *
+     * @return {@link Credentials} temporary session token
+     */
     private Credentials getDownloaderCredentialsNoKmsKey(StorageEntity storageEntity, String sessionName, String s3ObjectKey)
     {
         return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
             getStorageDownloadSessionDuration(storageEntity), createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey));
+    }
+
+    /**
+     * Gets a temporary session token that is only good for downloading the specified object key from the given bucket for a limited amount of time.
+     *
+     * @param storageEntity The storage entity of the external storage.
+     * @param sessionName The session name to use for the temporary credentials.
+     * @param awsPolicyBuilder The AWS policy builder.
+     *
+     * @return {@link Credentials} temporary session token
+     */
+    private Credentials getDownloaderCredentials(StorageEntity storageEntity, String sessionName, AwsPolicyBuilder awsPolicyBuilder)
+    {
+        return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
+            getStorageDownloadSessionDuration(storageEntity), awsPolicyBuilder.build());
     }
 
     /**
@@ -832,7 +868,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Perform validation and trim.
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
     }
-    
+
     @NamespacePermission(fields = "#request.businessObjectDefinitionKey.namespace", permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT,
         NamespacePermissionEnum.WRITE})
     @Override
@@ -876,5 +912,107 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         response.setS3Endpoint(s3EndPoint);
         response.setS3KeyPrefix(s3KeyPrefix);
         return response;
+    }
+
+    @NamespacePermission(fields = "#downloadBusinessObjectDataStorageFileSingleInitiationRequest.businessObjectDataStorageFileKey.namespace",
+        permissions = NamespacePermissionEnum.READ)
+    @Override
+    public DownloadBusinessObjectDataStorageFileSingleInitiationResponse initiateDownloadSingleBusinessObjectDataStorageFile(
+        DownloadBusinessObjectDataStorageFileSingleInitiationRequest downloadBusinessObjectDataStorageFileSingleInitiationRequest)
+    {
+        // Validate and trim the request.
+        uploadDownloadHelper
+            .validateAndTrimDownloadBusinessObjectDataStorageFileSingleInitiationRequest(downloadBusinessObjectDataStorageFileSingleInitiationRequest);
+
+        // Get the business object data storage file key.
+        BusinessObjectDataStorageFileKey businessObjectDataStorageFileKey =
+            downloadBusinessObjectDataStorageFileSingleInitiationRequest.getBusinessObjectDataStorageFileKey();
+
+        // Retrieve and validate that the business object data exists.
+        BusinessObjectDataKey businessObjectDataKey = getBusinessObjectDataKeyFromBusinessObjectDataStorageFileKey(businessObjectDataStorageFileKey);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+
+        // Retrieve and validate that the storage unit exists
+        StorageUnitEntity storageUnitEntity =
+            storageUnitDaoHelper.getStorageUnitEntity(businessObjectDataStorageFileKey.getStorageName(), businessObjectDataEntity);
+
+        // Get the storage file entity and ensure it exists.
+        StorageFileEntity storageFileEntity =
+            storageFileDaoHelper.getStorageFileEntity(storageUnitEntity, businessObjectDataStorageFileKey.getFilePath(), businessObjectDataKey);
+
+        // Get S3 bucket access parameters.
+        StorageEntity storageEntity = storageFileEntity.getStorageUnit().getStorage();
+
+        // Retrieve the storage related information.
+        String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
+        String s3ObjectKey = businessObjectDataStorageFileKey.getFilePath();
+
+        // Create an AWS policy builder.
+        AwsPolicyBuilder awsPolicyBuilder = new AwsPolicyBuilder().withS3(s3BucketName, s3ObjectKey, S3Actions.GetObject);
+
+        // Get the storage kms key id.
+        String storageKmsKeyId = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storageEntity, false, true);
+
+        /*
+         * Only add KMS policies if the storage specifies a KMS ID
+         */
+        if (storageKmsKeyId != null)
+        {
+            awsPolicyBuilder.withKms(storageKmsKeyId.trim(), KmsActions.DECRYPT);
+        }
+
+        // Create a sessionId.
+        String sessionId = UUID.randomUUID().toString();
+
+        // Get the temporary credentials.
+        Credentials downloaderCredentials = getDownloaderCredentials(storageEntity, sessionId, awsPolicyBuilder);
+
+        // Generate a pre-signed URL.
+        Date expiration = downloaderCredentials.getExpiration();
+        S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
+        String preSignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
+
+        // Convert the business object format entity to the business object format model object
+        BusinessObjectFormat businessObjectFormat =
+            businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectDataEntity.getBusinessObjectFormat());
+
+        // Create a business object data storage file key for the download business object data storage file single initiation response.
+        BusinessObjectDataStorageFileKey businessObjectDataStorageFileKeyForResponse =
+            new BusinessObjectDataStorageFileKey(businessObjectFormat.getNamespace(), businessObjectFormat.getBusinessObjectDefinitionName(),
+                businessObjectFormat.getBusinessObjectFormatUsage(), businessObjectFormat.getBusinessObjectFormatFileType(),
+                businessObjectFormat.getBusinessObjectFormatVersion(), businessObjectDataEntity.getPartitionValue(),
+                businessObjectDataHelper.getSubPartitionValues(businessObjectDataEntity), businessObjectDataEntity.getVersion(),
+                storageUnitEntity.getStorageName(), storageFileEntity.getPath());
+
+        // Create the download business object data storage file single initiation response.
+        DownloadBusinessObjectDataStorageFileSingleInitiationResponse downloadBusinessObjectDataStorageFileSingleInitiationResponse =
+            new DownloadBusinessObjectDataStorageFileSingleInitiationResponse();
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setBusinessObjectDataStorageFileKey(businessObjectDataStorageFileKeyForResponse);
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsS3BucketName(s3BucketName);
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsAccessKey(downloaderCredentials.getAccessKeyId());
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsSessionToken(downloaderCredentials.getSessionToken());
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(expiration));
+        downloadBusinessObjectDataStorageFileSingleInitiationResponse.setPreSignedUrl(preSignedUrl);
+
+        // Return the download business object data storage file single initiation response.
+        return downloadBusinessObjectDataStorageFileSingleInitiationResponse;
+    }
+
+    /**
+     * Gets a business object data key from a specified business object data storage file key.
+     *
+     * @param businessObjectDataStorageFileKey the business object data storage file key
+     *
+     * @return the business object data key
+     */
+    private BusinessObjectDataKey getBusinessObjectDataKeyFromBusinessObjectDataStorageFileKey(
+        BusinessObjectDataStorageFileKey businessObjectDataStorageFileKey)
+    {
+        return new BusinessObjectDataKey(businessObjectDataStorageFileKey.getNamespace(), businessObjectDataStorageFileKey.getBusinessObjectDefinitionName(),
+            businessObjectDataStorageFileKey.getBusinessObjectFormatUsage(), businessObjectDataStorageFileKey.getBusinessObjectFormatFileType(),
+            businessObjectDataStorageFileKey.getBusinessObjectFormatVersion(), businessObjectDataStorageFileKey.getPartitionValue(),
+            businessObjectDataStorageFileKey.getSubPartitionValues(), businessObjectDataStorageFileKey.getBusinessObjectDataVersion());
     }
 }
