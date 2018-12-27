@@ -15,8 +15,10 @@
 */
 package org.finra.herd.dao;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -25,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.junit.Test;
 
@@ -65,7 +68,7 @@ public class StorageFileDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetStorageFileByStorageNameAndFilePathDuplicateFiles() throws Exception
+    public void testGetStorageFileByStorageNameAndFilePathDuplicateFiles()
     {
         // Create relative database entities.
         BusinessObjectDataEntity businessObjectDataEntity1 = businessObjectDataDaoTestHelper
@@ -95,6 +98,27 @@ public class StorageFileDaoTest extends AbstractDaoTest
         {
             assertTrue(e.getMessage().startsWith("Found more than one storage file with parameters"));
         }
+    }
+
+    @Test
+    public void testGetStorageFileByStorageUnitEntityAndFilePath()
+    {
+        // Create relative database entities.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+                PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000);
+
+        StorageFileEntity storageFileEntity = storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, LOCAL_FILE);
+        assertThat("Actual path does not equal expected path.", storageFileEntity.getPath(), is(LOCAL_FILE));
+        assertThat("Actual file size does not equal expected file size.", storageFileEntity.getFileSizeBytes(), is(FILE_SIZE_1_KB));
+        assertThat("Actual row count does not equal expected row count.", storageFileEntity.getRowCount(), is(ROW_COUNT_1000));
+
+        // Confirm negative results when using wrong input parameters.
+        assertNull("Expected null value.", storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, LOCAL_FILE.toUpperCase()));
+        assertNull("Expected null value.", storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, "I_DO_NOT_EXIST"));
+        assertNull("Expected null value.", storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(new StorageUnitEntity(), LOCAL_FILES.get(0)));
     }
 
     @Test
@@ -181,7 +205,7 @@ public class StorageFileDaoTest extends AbstractDaoTest
             }
 
             // Retrieve storage file paths by storage unit ids.
-            MultiValuedMap<Integer, String> result = storageFileDao.getStorageFilePathsByStorageUnitIds(Arrays.asList(storageUnitEntity.getId()));
+            MultiValuedMap<Integer, String> result = storageFileDao.getStorageFilePathsByStorageUnitIds(Lists.newArrayList(storageUnitEntity.getId()));
 
             // Validate the results.
             assertEquals(LOCAL_FILES.size(), result.get(storageUnitEntity.getId()).size());

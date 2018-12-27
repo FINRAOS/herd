@@ -217,7 +217,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(builder.equal(storageUnitEntityRoot.get(StorageUnitEntity_.businessObjectData), businessObjectDataEntity));
-        predicates.add(builder.equal(storageUnitEntityRoot.get(StorageUnitEntity_.storage), storageEntity));
+        predicates.add(builder.equal(storageUnitEntityRoot.get(StorageUnitEntity_.storageName), storageEntity.getName()));
 
         // Add the clauses for the query.
         criteria.select(storageUnitEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));

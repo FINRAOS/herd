@@ -20,8 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
-
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -31,9 +30,12 @@ import org.mockito.MockitoAnnotations;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageFileKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
@@ -203,7 +205,7 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
 
         // Create a request.
         UploadSingleInitiationRequest request = new UploadSingleInitiationRequest(sourceBusinessObjectFormatKey, targetBusinessObjectFormatKey,
-            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)), file, STORAGE_NAME);
+            Lists.newArrayList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)), file, STORAGE_NAME);
 
         // Create business object data keys.
         BusinessObjectDataKey sourceBusinessObjectDataKey =
@@ -217,13 +219,13 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
         BusinessObjectData sourceBusinessObjectData = new BusinessObjectData();
         sourceBusinessObjectData.setId(ID);
         sourceBusinessObjectData.setStatus(BDATA_STATUS);
-        sourceBusinessObjectData.setStorageUnits(Arrays.asList(
+        sourceBusinessObjectData.setStorageUnits(Lists.newArrayList(
             new StorageUnit(new Storage(STORAGE_NAME, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES), NO_STORAGE_DIRECTORY, NO_STORAGE_FILES, STORAGE_UNIT_STATUS,
                 NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)));
         BusinessObjectData targetBusinessObjectData = new BusinessObjectData();
         targetBusinessObjectData.setId(ID_2);
         targetBusinessObjectData.setStatus(BDATA_STATUS_2);
-        targetBusinessObjectData.setStorageUnits(Arrays.asList(
+        targetBusinessObjectData.setStorageUnits(Lists.newArrayList(
             new StorageUnit(new Storage(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, NO_ATTRIBUTES), NO_STORAGE_DIRECTORY, NO_STORAGE_FILES, STORAGE_UNIT_STATUS_2,
                 NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)));
 
@@ -266,6 +268,40 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
 
         // Validate the results.
         assertEquals(response, result);
+    }
+
+    @Test
+    public void testInitiateDownloadSingleBusinessObjectDataStorageFile()
+    {
+        // Create a business object data storage file key.
+        BusinessObjectDataStorageFileKey businessObjectDataStorageFileKey =
+            new BusinessObjectDataStorageFileKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, DIRECTORY_PATH + FILE_NAME);
+
+        // Create a request.
+        DownloadBusinessObjectDataStorageFileSingleInitiationRequest downloadBusinessObjectDataStorageFileSingleInitiationRequest =
+            new DownloadBusinessObjectDataStorageFileSingleInitiationRequest(businessObjectDataStorageFileKey);
+
+        // Create a response.
+        DownloadBusinessObjectDataStorageFileSingleInitiationResponse downloadBusinessObjectDataStorageFileSingleInitiationResponse =
+            new DownloadBusinessObjectDataStorageFileSingleInitiationResponse(businessObjectDataStorageFileKey, S3_BUCKET_NAME, AWS_ASSUMED_ROLE_ACCESS_KEY,
+                AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME, AWS_PRE_SIGNED_URL);
+
+        // Mock the external calls.
+        when(uploadDownloadService.initiateDownloadSingleBusinessObjectDataStorageFile(downloadBusinessObjectDataStorageFileSingleInitiationRequest))
+            .thenReturn(downloadBusinessObjectDataStorageFileSingleInitiationResponse);
+
+        // Call the method under test.
+        DownloadBusinessObjectDataStorageFileSingleInitiationResponse result =
+            uploadDownloadRestController.initiateDownloadSingleBusinessObjectDataStorageFile(downloadBusinessObjectDataStorageFileSingleInitiationRequest);
+
+        // Verify the external calls.
+        verify(uploadDownloadService).initiateDownloadSingleBusinessObjectDataStorageFile(downloadBusinessObjectDataStorageFileSingleInitiationRequest);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals("Download business object data storage file single initiation response does not equal result",
+            downloadBusinessObjectDataStorageFileSingleInitiationResponse, result);
     }
 
     /**

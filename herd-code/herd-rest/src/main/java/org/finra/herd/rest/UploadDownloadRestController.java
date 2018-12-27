@@ -28,6 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDataStorageFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
@@ -159,10 +161,12 @@ public class UploadDownloadRestController extends HerdBaseController
             .extendUploadSingleCredentials(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, businessObjectDataVersion);
     }
-    
+
     /**
      * Download a single business object definition sample file
+     *
      * @param downloadBusinesObjectDefinitionSingleInitiationRequest
+     *
      * @return the download business object definition response
      */
     @RequestMapping(value = "/download/businessObjectDefinitionSampleDataFile/single/initiation", method = RequestMethod.POST, consumes = {"application/xml",
@@ -173,10 +177,12 @@ public class UploadDownloadRestController extends HerdBaseController
     {
         return uploadDownloadService.initiateDownloadSingleSampleFile(downloadBusinesObjectDefinitionSingleInitiationRequest);
     }
-    
+
     /**
      * Provide the location and credentials prior to upload a Sample Data file <p>Requires WRITE or WRITE_DESCRIPTIVE_CONTENT permission on namespace</p>
+     *
      * @param uploadBusinessObjectDefinitionSampleDataFileInitiationRequest request to upload
+     *
      * @return information necessary to upload sample data file
      */
     @RequestMapping(value = "/upload/businessObjectDefinitionSampleDataFile/initiation", method = RequestMethod.POST, consumes = {"application/xml",
@@ -186,5 +192,21 @@ public class UploadDownloadRestController extends HerdBaseController
         @RequestBody UploadBusinessObjectDefinitionSampleDataFileInitiationRequest uploadBusinessObjectDefinitionSampleDataFileInitiationRequest)
     {
         return uploadDownloadService.initiateUploadSampleFile(uploadBusinessObjectDefinitionSampleDataFileInitiationRequest);
+    }
+
+    /**
+     * Download a single business object data storage file
+     *
+     * @param downloadBusinessObjectDataStorageFileSingleInitiationRequest
+     *
+     * @return the download business object data storage file single initiation response
+     */
+    @RequestMapping(value = "/download/businessObjectDataStorageFile/single/initiation", method = RequestMethod.POST, consumes = {"application/xml",
+        "application/json"})
+    @Secured(SecurityFunctions.FN_DOWNLOAD_BUSINESS_OBJECT_DATA_STORAGE_FILE_POST)
+    public DownloadBusinessObjectDataStorageFileSingleInitiationResponse initiateDownloadSingleBusinessObjectDataStorageFile(
+        @RequestBody DownloadBusinessObjectDataStorageFileSingleInitiationRequest downloadBusinessObjectDataStorageFileSingleInitiationRequest)
+    {
+        return uploadDownloadService.initiateDownloadSingleBusinessObjectDataStorageFile(downloadBusinessObjectDataStorageFileSingleInitiationRequest);
     }
 }

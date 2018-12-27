@@ -24,18 +24,19 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
@@ -50,8 +51,13 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 @Component
 public class StorageFileHelper
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StorageFileHelper.class);
+
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     /**
      * Creates a storage file from the storage file entity.
@@ -255,20 +261,6 @@ public class StorageFileHelper
     }
 
     /**
-     * Validates copied S3 files per list of expected storage files.
-     *
-     * @param expectedStorageFiles the list of expected S3 files represented by storage files
-     * @param actualS3Files the list of actual S3 files represented by S3 object summaries
-     * @param storageName the storage name
-     * @param businessObjectDataKey the business object data key
-     */
-    public void validateCopiedS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
-        BusinessObjectDataKey businessObjectDataKey)
-    {
-        validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "copied");
-    }
-
-    /**
      * Validates a list of storage files. This will validate and trim appropriate fields.
      *
      * @param storageFiles the list of storage files
@@ -366,17 +358,55 @@ public class StorageFileHelper
     }
 
     /**
-     * Validates registered S3 files per list of expected storage files.
+     * Validates registered S3 files per list of expected storage files. The validation ignores (does not fail) when detecting unregistered zero byte S3 files.
      *
      * @param expectedStorageFiles the list of expected S3 files represented by storage files
-     * @param actualS3Files the list of actual S3 files represented by S3 object summaries
+     * @param s3ObjectSummaries the list of actual S3 files represented by S3 object summaries
      * @param storageName the storage name
      * @param businessObjectDataKey the business object data key
      */
-    public void validateRegisteredS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
+    public void validateRegisteredS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> s3ObjectSummaries, String storageName,
         BusinessObjectDataKey businessObjectDataKey)
     {
-        validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "registered");
+        // Get a set of actual S3 file paths.
+        Set<String> actualS3FilePaths = new HashSet<>(getFilePathsFromS3ObjectSummaries(s3ObjectSummaries));
+
+        // Validate existence and file size for all expected files.
+        for (StorageFile expectedStorageFile : expectedStorageFiles)
+        {
+            if (!actualS3FilePaths.contains(expectedStorageFile.getFilePath()))
+            {
+                throw new ObjectNotFoundException(
+                    String.format("Registered file \"%s\" does not exist in \"%s\" storage.", expectedStorageFile.getFilePath(), storageName));
+            }
+        }
+
+        // Get a set of expected file paths.
+        Set<String> expectedFilePaths = new HashSet<>(getFilePathsFromStorageFiles(expectedStorageFiles));
+
+        // Create a JSON representation of the business object data key.
+        String businessObjectDataKeyAsJson = jsonHelper.objectToJson(businessObjectDataKey);
+
+        // Validate that no other files in S3 bucket except for expected storage files have the same S3 key prefix.
+        // Please note that this validation ignores (does not fail on) any unregistered zero byte S3 files.
+        for (S3ObjectSummary s3ObjectSummary : s3ObjectSummaries)
+        {
+            if (!expectedFilePaths.contains(s3ObjectSummary.getKey()))
+            {
+                // Ignore unregistered zero byte S3 files.
+                if (s3ObjectSummary.getSize() == 0)
+                {
+                    LOGGER.info("Ignoring unregistered zero byte S3 file. s3Key=\"{}\" storageName=\"{}\" businessObjectDataKey={}", s3ObjectSummary.getKey(),
+                        storageName, businessObjectDataKeyAsJson);
+                }
+                else
+                {
+                    throw new IllegalStateException(String
+                        .format("Found unregistered non-empty S3 file \"%s\" in \"%s\" storage. Business object data {%s}", s3ObjectSummary.getKey(),
+                            storageName, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                }
+            }
+        }
     }
 
     /**
@@ -486,59 +516,6 @@ public class StorageFileHelper
             throw new IllegalStateException(String
                 .format("Found S3 file \"%s\" in \"%s\" storage not registered with this business object data.", actualS3Files.get(0),
                     storageUnit.getStorage().getName()));
-        }
-    }
-
-    /**
-     * Validates S3 files per list of expected storage files.
-     *
-     * @param expectedStorageFiles the list of expected S3 files represented by storage files
-     * @param actualS3Files the list of actual S3 files represented by S3 object summaries
-     * @param storageName the storage name
-     * @param businessObjectDataKey the business object data key
-     * @param fileDescription the file description (i.e. "registered" or "copied") to be used in the relative error messages
-     */
-    private void validateS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
-        BusinessObjectDataKey businessObjectDataKey, String fileDescription)
-    {
-        // Load all actual S3 files into a map for easy access.
-        Map<String, StorageFile> actualFilesMap = getStorageFilesMapFromS3ObjectSummaries(actualS3Files);
-
-        // Validate existence and file size for all expected files.
-        for (StorageFile expectedFile : expectedStorageFiles)
-        {
-            if (!actualFilesMap.containsKey(expectedFile.getFilePath()))
-            {
-                throw new ObjectNotFoundException(String
-                    .format("%s file \"%s\" does not exist in \"%s\" storage.", StringUtils.capitalize(fileDescription), expectedFile.getFilePath(),
-                        storageName));
-            }
-            else
-            {
-                // Validate the file size.
-                StorageFile actualFile = actualFilesMap.get(expectedFile.getFilePath());
-                if (!Objects.equals(actualFile.getFileSizeBytes(), expectedFile.getFileSizeBytes()))
-                {
-                    throw new IllegalStateException(String
-                        .format("Specified file size of %d bytes for %s \"%s\" S3 file in \"%s\" storage does not match file size of %d bytes reported by S3.",
-                            expectedFile.getFileSizeBytes(), fileDescription, expectedFile.getFilePath(), storageName, actualFile.getFileSizeBytes()));
-                }
-            }
-        }
-
-        // Get a list of actual S3 file paths.
-        List<String> actualFilePaths = new ArrayList<>(actualFilesMap.keySet());
-
-        // Get a list of expected file paths.
-        List<String> expectedFilePaths = getFilePathsFromStorageFiles(expectedStorageFiles);
-
-        // Validate that no other files in S3 bucket except for expected files have the same S3 key prefix.
-        if (!expectedFilePaths.containsAll(actualFilePaths))
-        {
-            actualFilePaths.removeAll(expectedFilePaths);
-            throw new IllegalStateException(String
-                .format("Found unexpected S3 file \"%s\" in \"%s\" storage while validating %s S3 files. Business object data {%s}", actualFilePaths.get(0),
-                    storageName, fileDescription, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
     }
 }

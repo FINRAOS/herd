@@ -108,6 +108,7 @@ import org.finra.herd.service.helper.StorageUnitDaoHelper;
 import org.finra.herd.service.helper.StorageUnitHelper;
 import org.finra.herd.service.helper.StorageUnitStatusDaoHelper;
 import org.finra.herd.service.helper.VelocityHelper;
+import org.finra.herd.service.helper.VelocityNonStrictHelper;
 
 /**
  * This is an abstract base class that provides useful methods for service test drivers.
@@ -398,6 +399,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String ERROR_MESSAGE = "UT_ErrorMessage_" + RANDOM_SUFFIX;
 
     public static final Boolean EXCLUSION_SEARCH_FILTER = true;
+
+    public static final int EXPECTED_STORAGE_FILES_COUNT = 3;
 
     public static final int EXPECTED_UUID_SIZE = 36;
 
@@ -1145,6 +1148,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected VelocityHelper velocityHelper;
+
+    @Autowired
+    protected VelocityNonStrictHelper velocityNonStrictHelper;
 
     @Autowired
     protected XmlHelper xmlHelper;
