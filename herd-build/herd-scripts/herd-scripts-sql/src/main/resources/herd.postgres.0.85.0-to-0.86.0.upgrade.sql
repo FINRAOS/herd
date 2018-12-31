@@ -13,3 +13,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+--scrty_fn_lk
+
+insert into scrty_fn_lk (scrty_fn_cd, creat_ts, creat_user_id, updt_ts, updt_user_id)
+values ('FN_DOWNLOAD_BUSINESS_OBJECT_DATA_STORAGE_FILE_POST', current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
