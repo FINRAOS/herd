@@ -34,6 +34,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -956,6 +957,63 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Execute the query and return the result.
         return entityManager.createQuery(criteria).getSingleResult();
+    }
+
+    @Override
+    public boolean isBusinessObjectDataCountBySearchKeyGreaterThan(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer value)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteria = builder.createQuery(Integer.class);
+
+        // The criteria root is the business object data.
+        Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
+
+        // Create path. We use business object data id column here, since this is enough to check the record count.
+        Path<Integer> businessObjectDataIdColumn = businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.id);
+
+        // Namespace is a required parameter, so fetch the relative entity to optimize the main query.
+        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(businessObjectDataSearchKey.getNamespace());
+
+        // If specified namespace does not exist and since the value cannot be negative, return false.
+        if (namespaceEntity == null)
+        {
+            return false;
+        }
+
+        // If file type is specified, fetch the relative entity to optimize the main query.
+        FileTypeEntity fileTypeEntity = null;
+        if (StringUtils.isNotBlank(businessObjectDataSearchKey.getBusinessObjectFormatFileType()))
+        {
+            fileTypeEntity = fileTypeDao.getFileTypeByCode(businessObjectDataSearchKey.getBusinessObjectFormatFileType());
+
+            // If specified file type does not exist and since the value cannot be negative, return false.
+            if (fileTypeEntity == null)
+            {
+                return false;
+            }
+        }
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate predicate;
+        try
+        {
+            predicate = getPredict(builder, criteria, businessObjectDataEntityRoot, businessObjectDataSearchKey, namespaceEntity, fileTypeEntity, true);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            // This exception means that there are no records found for the query. Since the value cannot be negative, return false.
+            return false;
+        }
+
+        // Add all clauses for the query.
+        criteria.select(businessObjectDataIdColumn).where(predicate).distinct(true);
+
+        // Try to retrieve a record, which is sitting at position that is equal to the value. Please note that record position is numbered from 0.
+        List<Integer> businessObjectDataIds = entityManager.createQuery(criteria).setFirstResult(value).setMaxResults(1).getResultList();
+
+        // Return true if we get a record back, which means that number of records is greater than the constant value that we are checking against.
+        return CollectionUtils.isNotEmpty(businessObjectDataIds);
     }
 
     @Override

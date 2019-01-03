@@ -587,9 +587,8 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("Result limit of %d exceeded. Total result size %d. Modify filters to further limit results.", maxBusinessObjectDataSearchResultCount,
-                    3), e.getMessage());
+            assertEquals(String.format("Result limit of %d exceeded. Modify filters to further limit results.", maxBusinessObjectDataSearchResultCount),
+                e.getMessage());
         }
         finally
         {
