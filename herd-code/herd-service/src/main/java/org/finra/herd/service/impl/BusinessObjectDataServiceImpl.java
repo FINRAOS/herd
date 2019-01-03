@@ -602,16 +602,15 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 String.format(" that have schema with partition columns matching \"%s\" partition key(s).", String.join(", ", partitionKeys)));
         }
 
-        // Get the total record count.
-        Long totalRecordCount = businessObjectDataDao.getBusinessObjectDataCountBySearchKey(businessObjectDataSearchKey);
-
-        // Validate the total record count.
-        if (totalRecordCount > businessObjectDataSearchMaxResultCount)
+        // Check if total record count is not greater than the maximum allowed record count that is configured in the system.
+        if (businessObjectDataDao.isBusinessObjectDataCountBySearchKeyGreaterThan(businessObjectDataSearchKey, businessObjectDataSearchMaxResultCount))
         {
             throw new IllegalArgumentException(String
-                .format("Result limit of %d exceeded. Total result size %d. Modify filters to further limit results.", businessObjectDataSearchMaxResultCount,
-                    totalRecordCount));
+                .format("Result limit of %d exceeded. Modify filters to further limit results.", businessObjectDataSearchMaxResultCount));
         }
+
+        // Get the total record count.
+        Long totalRecordCount = businessObjectDataDao.getBusinessObjectDataCountBySearchKey(businessObjectDataSearchKey);
 
         // If total record count is zero, we return an empty result list. Otherwise, execute the search.
         List<BusinessObjectData> businessObjectDataList =
