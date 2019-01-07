@@ -1,0 +1,15 @@
+{
+  "id": 225882,
+  "namespace": "FOO",
+  "businessObjectDefinitionName": "TEST",
+  "dataProviderName": "FINRA",
+  "description": "Simple test object",
+  "shortDescription": null,
+  "displayName": "Test",
+  "attributes": [],
+  "descriptiveBusinessObjectFormat": null,
+  "sampleDataFiles": [],
+  "createdByUserId": "K26989@corp.root.nasd.com",
+  "lastUpdatedByUserId": "K26989@corp.root.nasd.com",
+  "lastUpdatedOn": 1502118543017
+}

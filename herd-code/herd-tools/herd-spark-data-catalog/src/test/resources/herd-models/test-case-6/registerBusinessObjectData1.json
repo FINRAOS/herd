@@ -1,0 +1,37 @@
+{
+  "id": 1,
+  "namespace": "FOO",
+  "businessObjectDefinitionName": "TEST",
+  "businessObjectFormatUsage": "PRC",
+  "businessObjectFormatFileType": "CSV",
+  "businessObjectFormatVersion": 0,
+  "partitionKey": "tdate",
+  "partitionValue": "2017-01-01",
+  "subPartitionValues": [],
+  "version": 0,
+  "latestVersion": true,
+  "status": "VALID",
+  "storageUnits": [
+    {
+      "storage": {
+        "name": "S3_MANAGED",
+        "storagePlatformName": "S3",
+        "attributes": [
+          {
+            "name": "bucket.name",
+            "value": "mybucket"
+          }
+        ]
+      },
+      "storageDirectory": {
+        "directoryPath": "test-output/test-case-6/prc/csv/foo/schm-v0/data-v0/tdate=2017-01-01"
+      },
+      "storageFiles": null,
+      "storageUnitStatus": "ENABLED"
+    }
+  ],
+  "attributes": [],
+  "businessObjectDataParents": [],
+  "businessObjectDataChildren": [],
+  "businessObjectDataStatusHistory": null
+}
