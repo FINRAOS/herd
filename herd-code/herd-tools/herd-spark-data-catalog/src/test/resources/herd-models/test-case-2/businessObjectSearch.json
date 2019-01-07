@@ -1,0 +1,23 @@
+{
+  "businessObjectDataElements": [
+    {
+      "id": 1,
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "TEST",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "BZ",
+      "businessObjectFormatVersion": 0,
+      "partitionKey": "partition",
+      "partitionValue": "none",
+      "subPartitionValues": null,
+      "version": 0,
+      "latestVersion": true,
+      "status": "VALID",
+      "storageUnits": null,
+      "attributes": null,
+      "businessObjectDataParents": null,
+      "businessObjectDataChildren": null,
+      "businessObjectDataStatusHistory": null
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "businessObjectFormatKeys": [
+    {
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "TEST",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "ORC",
+      "businessObjectFormatVersion": 0
+    }
+  ]
+}

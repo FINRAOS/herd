@@ -1,0 +1,44 @@
+{
+  "businessObjectDataKeys": [
+    {
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "TEST",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "CSV",
+      "businessObjectFormatVersion": 0,
+      "partitionValue": "2017-01-01",
+      "subPartitionValues": ["A"],
+      "businessObjectDataVersion": 0
+    },
+    {
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "TEST",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "CSV",
+      "businessObjectFormatVersion": 0,
+      "partitionValue": "2017-01-01",
+      "subPartitionValues": ["B"],
+      "businessObjectDataVersion": 0
+    },
+    {
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "TEST",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "CSV",
+      "businessObjectFormatVersion": 0,
+      "partitionValue": "2017-01-02",
+      "subPartitionValues": ["A"],
+      "businessObjectDataVersion": 1
+    },
+    {
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "TEST",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "CSV",
+      "businessObjectFormatVersion": 0,
+      "partitionValue": "2017-01-02",
+      "subPartitionValues": ["B"],
+      "businessObjectDataVersion": 1
+    }
+  ]
+}

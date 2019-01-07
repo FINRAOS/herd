@@ -1,0 +1,18 @@
+{
+  "namespace": "FOO",
+  "businessObjectDefinitionName": "TEST",
+  "businessObjectFormatUsage": "PRC",
+  "businessObjectFormatFileType": "CSV",
+  "businessObjectFormatVersion": 0,
+  "partitionValue": "2017-01-01",
+  "subPartitionValues": [],
+  "businessObjectDataVersion": 0,
+  "storageName": "S3_MANAGED",
+  "storageFiles": [
+    {
+      "filePath": "",
+      "fileSizeBytes": null,
+      "rowCount": null
+    }
+  ]
+}
