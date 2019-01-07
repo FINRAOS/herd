@@ -28,6 +28,7 @@ VALUES ('elasticsearch.searchable.fields.stemmed', '{
   "columns.description.stemmed": "15.0",
   "columns.name.stemmed": "30.0",
   "description.stemmed": "10.0",
+  "descriptiveBusinessObjectFormat.documentSchema": "10.0",
   "descriptiveBusinessObjectFormat.schemaColumns.name.stemmed": "30.0",
   "displayName.stemmed": "50.0",
   "name.stemmed": "50.0",
@@ -73,6 +74,16 @@ VALUES ('elasticsearch.highlight.fields', '{
         "businessObjectDefinitionTags.tag.displayName",
         "businessObjectDefinitionTags.tag.displayName.stemmed",
         "businessObjectDefinitionTags.tag.displayName.ngrams"
+      ],
+      "numOfFragments": 5
+    },
+    {
+      "fieldName": "descriptiveBusinessObjectFormat.documentSchema",
+      "fragmentSize": 100,
+      "matchedFields": [
+        "descriptiveBusinessObjectFormat.documentSchema",
+        "descriptiveBusinessObjectFormat.documentSchema.stemmed",
+        "descriptiveBusinessObjectFormat.documentSchema.ngrams"
       ],
       "numOfFragments": 5
     },
@@ -1616,6 +1627,30 @@ VALUES ('elasticsearch.bdef.mappings.json', NULL, '{
           "type": "text"
         },
         "description": {
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            },
+            "ngrams": {
+              "analyzer": "field_ngram_analyzer",
+              "term_vector": "with_positions_offsets",
+              "type": "text"
+            },
+            "shingles": {
+              "analyzer": "field_shingle_analyzer",
+              "term_vector": "with_positions_offsets",
+              "type": "text"
+            },
+            "stemmed": {
+              "analyzer": "field_snowball_analyzer",
+              "term_vector": "with_positions_offsets",
+              "type": "text"
+            }
+          },
+          "term_vector": "with_positions_offsets",
+          "type": "text"
+        },
+        "documentSchema": {
           "fields": {
             "keyword": {
               "type": "keyword"
