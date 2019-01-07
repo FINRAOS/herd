@@ -208,23 +208,14 @@ public interface BusinessObjectDataDao extends BaseJpaDao
     List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatEntity businessObjectFormatEntity, Integer maxResults);
 
     /**
-     * Retrieves business object data record count per specified business object data search key.
+     * Retrieves business object data record count up to to the specified record limit as per business object data search key.
      *
      * @param businessObjectDataSearchKey the business object data search key
+     * @param recordCountLimit the business object data record count limit
      *
-     * @return the record count of business object data
+     * @return the record count of business object data up to to the specified limit
      */
-    Long getBusinessObjectDataCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey);
-
-    /**
-     * Checks if business object data record count per business object data search key is greater than a constant value.
-     *
-     * @param businessObjectDataSearchKey the business object data search key
-     * @param value the constant value to compare against, cannot be negative
-     *
-     * @return true if total record count is greater than the constant value, false otherwise
-     */
-    boolean isBusinessObjectDataCountBySearchKeyGreaterThan(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer value);
+    Integer getBusinessObjectDataLimitedCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer recordCountLimit);
 
     /**
      * Retrieves a list of business object data per specified business object data search key.
