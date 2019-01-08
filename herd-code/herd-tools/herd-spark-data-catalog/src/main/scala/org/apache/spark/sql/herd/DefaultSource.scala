@@ -71,7 +71,7 @@ import org.finra.pet.JCredStashFX
     *   .option("namespace", "mynamespace")
     *   .option("businessObjectName", "myobject")
     *   .load()
-    * }}} OATS
+    * }}} OATS OATS
     *
   */
 class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) => HerdApi)
