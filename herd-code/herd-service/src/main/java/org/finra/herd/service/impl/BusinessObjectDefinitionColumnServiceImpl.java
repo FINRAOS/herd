@@ -17,7 +17,6 @@ package org.finra.herd.service.impl;
 
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -73,7 +72,7 @@ import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObjectDefinitionColumnService, SearchableService
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionColumnServiceImpl.class);
 
     // Constant to hold the schema column name field option for the business object definition column search
     public static final String SCHEMA_COLUMN_NAME_FIELD = "schemaColumnName".toLowerCase();

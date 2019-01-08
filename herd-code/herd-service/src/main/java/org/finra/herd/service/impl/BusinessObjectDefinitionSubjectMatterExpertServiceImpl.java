@@ -17,8 +17,6 @@ package org.finra.herd.service.impl;
 
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 
-import java.lang.invoke.MethodHandles;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +51,7 @@ import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionSubjectMatterExpertServiceImpl implements BusinessObjectDefinitionSubjectMatterExpertService
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionSubjectMatterExpertServiceImpl.class);
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;

@@ -139,12 +139,14 @@ public class SearchIndexUpdateJmsMessageListener
             // Unmarshall the SearchIndexUpdateDto from a JSON string to a SearchIndexUpdateDto object
             SearchIndexUpdateDto searchIndexUpdateDto = jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, payload);
 
-            LOGGER.info("Unmarshall the json payload into the searchIndexUpdateDto=\"{}\"", searchIndexUpdateDto.toString());
+            LOGGER.info("Unmarshall the json payload into the searchIndexUpdateDto=\"{}\", jms_messageId=\"{}\"", searchIndexUpdateDto.toString(),
+                allHeaders.get("jms_messageId"));
 
             // If the message type is null, this message is in the original message format.
             if (searchIndexUpdateDto.getMessageType() == null)
             {
-                LOGGER.info("Updating the search index document(s) for the business object definition(s) that have changed.");
+                LOGGER.info("Updating the search index document(s) for the business object definition(s) that have changed. jms_messageId=\"{}\"",
+                    allHeaders.get("jms_messageId"));
                 businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
             }
             else
@@ -152,11 +154,13 @@ public class SearchIndexUpdateJmsMessageListener
                 switch (searchIndexUpdateDto.getMessageType())
                 {
                     case MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE:
-                        LOGGER.info("Updating the search index document(s) for the business object definition(s) that have changed.");
+                        LOGGER.info("Updating the search index document(s) for the business object definition(s) that have changed. jms_messageId=\"{}\"",
+                            allHeaders.get("jms_messageId"));
                         businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
                         break;
                     case MESSAGE_TYPE_TAG_UPDATE:
-                        LOGGER.info("Updating the search index document(s) for the tag(s) that have changed.");
+                        LOGGER.info("Updating the search index document(s) for the tag(s) that have changed. jms_messageId=\"{}\"",
+                            allHeaders.get("jms_messageId"));
                         tagService.updateSearchIndexDocumentTag(searchIndexUpdateDto);
                         break;
                     default:

@@ -17,7 +17,6 @@ package org.finra.herd.service.impl;
 
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Set;
 
@@ -71,7 +70,7 @@ import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements BusinessObjectDefinitionDescriptionSuggestionService, SearchableService
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionDescriptionSuggestionServiceImpl.class);
 
     // Constant to hold the created by user ID field option for the search response.
     public final static String CREATED_BY_USER_ID_FIELD = "createdByUserId".toLowerCase();

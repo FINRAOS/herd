@@ -15,7 +15,6 @@
 */
 package org.finra.herd.service.helper;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,7 @@ import org.finra.herd.model.jpa.ExternalInterfaceEntity;
 @Component
 public class BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper.class);
 
     @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
