@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
@@ -48,6 +49,7 @@ import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.IndexFunctionsDao;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.TagDaoHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagChild;
@@ -70,7 +72,6 @@ import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.SearchIndexUpdateHelper;
-import org.finra.herd.dao.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.helper.TagTypeDaoHelper;
 
@@ -161,6 +162,10 @@ public class TagServiceImpl implements TagService, SearchableService
 
         // Notify the tag search index that a tag must be created.
         tagEntities.add(tagEntity);
+        LOGGER.info("Modify the tags in the search index associated with the tag being created." +
+                " tagTypeCode=\"{}\", tagCode=\"{}\", tagIds=[{}], searchIndexUpdateType=\"{}\"", tagEntity.getTagType().getCode(), tagEntity.getTagCode(),
+            tagEntities.stream().map(tag -> String.format("{tagTypeCode=\"%s\", tagCode=\"%s\"}", tag.getTagType().getCode(), tag.getTagCode()))
+                .collect(Collectors.joining(", ")), SEARCH_INDEX_UPDATE_TYPE_CREATE);
         searchIndexUpdateHelper.modifyTagsInSearchIndex(tagEntities, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Create and return the tag object from the persisted entity.
@@ -192,15 +197,26 @@ public class TagServiceImpl implements TagService, SearchableService
         tagDao.delete(tagEntity);
 
         // Notify the tag search index that a tag must be deleted.
+        LOGGER.info(
+            "Delete the tag in the search index associated with the tag being deleted." + " tagTypeCode=\"{}\", tagCode=\"{}\", searchIndexUpdateType=\"{}\"",
+            tagKey.getTagTypeCode(), tagKey.getTagCode(), SEARCH_INDEX_UPDATE_TYPE_DELETE);
         searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_DELETE);
 
         // If there is a parent tag entity, notify the tag search index that the parent tag must be updated
         if (tagEntity.getParentTagEntity() != null)
         {
+            LOGGER.info("Modify the parent tag in the search index associated with the tag being deleted." +
+                " tagTypeCode=\"{}\", tagCode=\"{}\", parentTagTypeCode=\"{}\", parentTagCode=\"{}\", searchIndexUpdateType=\"{}\"", tagKey.getTagTypeCode(),
+                tagKey.getTagCode(), tagEntity.getParentTagEntity().getTagType().getCode(), tagEntity.getParentTagEntity().getTagCode(),
+                SEARCH_INDEX_UPDATE_TYPE_UPDATE);
             searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity.getParentTagEntity(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         }
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definitions in the search index associated with the tag being deleted." +
+            " tagTypeCode=\"{}\", tagCode=\"{}\", businessObjectDefinitionIds=[{}], searchIndexUpdateType=\"{}\"", tagKey.getTagTypeCode(), tagKey.getTagCode(),
+            businessObjectDefinitionEntities.stream().map(businessObjectDefinitionEntity -> String.valueOf(businessObjectDefinitionEntity.getId()))
+                .collect(Collectors.joining(", ")), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the tag object from the deleted entity.
@@ -310,16 +326,19 @@ public class TagServiceImpl implements TagService, SearchableService
         String modificationType = searchIndexUpdateDto.getModificationType();
         List<Integer> ids = searchIndexUpdateDto.getTagIds();
 
+        LOGGER.info("Updating the search index document representation(s) of the tag(s)." + " tagIds=[{}], searchIndexUpdateType=\"{}\"",
+            ids.stream().map(String::valueOf).collect(Collectors.joining(", ")), modificationType);
+
         // Switch on the type of CRUD modification to be done
         switch (modificationType)
         {
             case SEARCH_INDEX_UPDATE_TYPE_CREATE:
                 // Create a search index document
-            indexFunctionsDao.createIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+                indexFunctionsDao.createIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
                 // Update a search index document
-               indexFunctionsDao.updateIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+                indexFunctionsDao.updateIndexDocuments(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_DELETE:
                 // Delete a search index document
@@ -378,10 +397,18 @@ public class TagServiceImpl implements TagService, SearchableService
         updateTagEntity(tagEntity, tagUpdateRequest, parentTagEntity);
 
         // Notify the search index that a business object definition must be updated.
-        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities),
-            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities);
+        LOGGER.info("Modify the business object definitions in the search index associated with the tag being updated." +
+            " tagTypeCode=\"{}\", tagCode=\"{}\", businessObjectDefinitionIds=[{}], searchIndexUpdateType=\"{}\"", tagKey.getTagTypeCode(), tagKey.getTagCode(),
+            businessObjectDefinitionEntities.stream().map(businessObjectDefinitionEntity -> String.valueOf(businessObjectDefinitionEntity.getId()))
+                .collect(Collectors.joining(", ")), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Notify the tag search index that tags must be updated.
+        LOGGER.info("Modify the tags in the search index associated with the tag being updated." +
+                " tagTypeCode=\"{}\", tagCode=\"{}\", tagIds=[{}], searchIndexUpdateType=\"{}\"", tagKey.getTagTypeCode(), tagKey.getTagCode(),
+            tagEntities.stream().map(tag -> String.format("{tagTypeCode=\"%s\", tagCode=\"%s\"}", tag.getTagType().getCode(), tag.getTagCode()))
+                .collect(Collectors.joining(", ")), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyTagsInSearchIndex(tagEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the tag object from the tag entity.
@@ -566,7 +593,7 @@ public class TagServiceImpl implements TagService, SearchableService
      */
     private void validateTagSearchScoreMultiplier(BigDecimal searchScoreMultiplier)
     {
-        if (searchScoreMultiplier != null && searchScoreMultiplier.compareTo(BigDecimal.ZERO) == -1)
+        if (searchScoreMultiplier != null && searchScoreMultiplier.compareTo(BigDecimal.ZERO) < 0)
         {
             throw new IllegalArgumentException(
                 String.format("The searchScoreMultiplier can not have a negative value. searchScoreMultiplier=%s", searchScoreMultiplier.toPlainString()));
@@ -639,8 +666,8 @@ public class TagServiceImpl implements TagService, SearchableService
 
         // Simple count validation, index size should equal entity list size
         final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName, documentType);
-            //searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
         final long tagDatabaseTableSize = tagDao.getCountOfAllTags();
+
         if (tagDatabaseTableSize != indexSize)
         {
             LOGGER.error("Index validation failed, tag database table size {}, does not equal index size {}.", tagDatabaseTableSize, indexSize);
@@ -707,14 +734,12 @@ public class TagServiceImpl implements TagService, SearchableService
 
         // Get a list of tag ids in the search index
         List<String> indexDocumentTagIdList = indexFunctionsDao.getIdsInIndex(indexName, documentType);
-            //searchFunctions.getIdsInIndexFunction().apply(indexName, documentType);
 
         // Remove the database ids from the index ids
         indexDocumentTagIdList.removeAll(databaseTagIdList);
 
         // If there are any ids left in the index list they need to be removed
         indexDocumentTagIdList.forEach(id -> indexFunctionsDao.deleteDocumentById(indexName, documentType, id));
-            //searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
     }
 
     /**
@@ -737,7 +762,6 @@ public class TagServiceImpl implements TagService, SearchableService
             final String jsonString = tagHelper.safeObjectMapperWriteValueAsString(tagEntity);
 
             return this.indexFunctionsDao.isValidDocumentIndex(indexName, documentType, tagEntity.getId().toString(), jsonString);
-                //searchFunctions.getIsValidFunction().test(indexName, documentType, tagEntity.getId().toString(), jsonString);
         };
 
         boolean isValid = true;

@@ -20,9 +20,12 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,7 @@ import org.finra.herd.model.api.xml.TagTypeKeys;
 import org.finra.herd.model.api.xml.TagTypeSearchRequest;
 import org.finra.herd.model.api.xml.TagTypeSearchResponse;
 import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.SearchableService;
@@ -56,6 +60,8 @@ import org.finra.herd.service.helper.TagTypeHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class TagTypeServiceImpl implements TagTypeService, SearchableService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TagTypeServiceImpl.class);
+
     // Constant to hold the description field option for the search response.
     public final static String DESCRIPTION_FIELD = "description".toLowerCase();
 
@@ -198,10 +204,19 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
 
         // Notify the search index that a business object definition must be updated.
         List<TagEntity> tagEntities = tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, null, null);
-        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities),
-            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities);
+        LOGGER.info("Modify the business object definitions in the search index associated with the tag type being updated." +
+                " tagTypeCode=\"{}\", businessObjectDefinitionIds=[{}], searchIndexUpdateType=\"{}\"", tagTypeEntity.getCode(),
+            businessObjectDefinitionEntities.stream().map(businessObjectDefinitionEntity -> String.valueOf(businessObjectDefinitionEntity.getId()))
+                .collect(Collectors.joining(", ")), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Notify the tag search index that tags must be updated.
+        LOGGER.info(
+            "Modify the tags in the search index associated with the tag type being updated. tagTypeCode=\"{}\", tagIds=[{}], searchIndexUpdateType=\"{}\"",
+            tagTypeEntity.getCode(),
+            tagEntities.stream().map(tag -> String.format("{tagTypeCode=\"%s\", tagCode=\"%s\"}", tag.getTagType().getCode(), tag.getTagCode()))
+                .collect(Collectors.joining(", ")), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyTagsInSearchIndex(tagEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the tag type from the persisted entity.
