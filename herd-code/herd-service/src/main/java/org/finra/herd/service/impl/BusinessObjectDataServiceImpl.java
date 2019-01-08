@@ -602,26 +602,28 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 String.format(" that have schema with partition columns matching \"%s\" partition key(s).", String.join(", ", partitionKeys)));
         }
 
-        // Check if total record count is not greater than the maximum allowed record count that is configured in the system.
-        if (businessObjectDataDao.isBusinessObjectDataCountBySearchKeyGreaterThan(businessObjectDataSearchKey, businessObjectDataSearchMaxResultCount))
+        // Get the total record count up to to the maximum allowed record count that is configured in the system plus one more record.
+        Integer totalRecordCount =
+            businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, businessObjectDataSearchMaxResultCount + 1);
+
+        // Validate the total record count.
+        if (totalRecordCount > businessObjectDataSearchMaxResultCount)
         {
             throw new IllegalArgumentException(String
                 .format("Result limit of %d exceeded. Modify filters to further limit results.", businessObjectDataSearchMaxResultCount));
         }
-
-        // Get the total record count.
-        Long totalRecordCount = businessObjectDataDao.getBusinessObjectDataCountBySearchKey(businessObjectDataSearchKey);
 
         // If total record count is zero, we return an empty result list. Otherwise, execute the search.
         List<BusinessObjectData> businessObjectDataList =
             totalRecordCount == 0 ? new ArrayList<>() : businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, pageNum, pageSize);
 
         // Get the page count.
-        Long pageCount = totalRecordCount / pageSize + (totalRecordCount % pageSize > 0 ? 1 : 0);
+        Integer pageCount = totalRecordCount / pageSize + (totalRecordCount % pageSize > 0 ? 1 : 0);
 
         // Build and return the business object data search result with the paging information.
-        return new BusinessObjectDataSearchResultPagingInfoDto(pageNum.longValue(), pageSize.longValue(), pageCount, (long) businessObjectDataList.size(),
-            totalRecordCount, (long) maxResultsPerPage, new BusinessObjectDataSearchResult(businessObjectDataList));
+        return new BusinessObjectDataSearchResultPagingInfoDto(pageNum.longValue(), pageSize.longValue(), pageCount.longValue(),
+            (long) businessObjectDataList.size(), totalRecordCount.longValue(), (long) maxResultsPerPage,
+            new BusinessObjectDataSearchResult(businessObjectDataList));
     }
 
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
