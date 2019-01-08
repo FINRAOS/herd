@@ -139,9 +139,12 @@ public class SearchIndexUpdateJmsMessageListener
             // Unmarshall the SearchIndexUpdateDto from a JSON string to a SearchIndexUpdateDto object
             SearchIndexUpdateDto searchIndexUpdateDto = jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, payload);
 
+            LOGGER.info("Unmarshall the json payload into the searchIndexUpdateDto=\"{}\"", searchIndexUpdateDto.toString());
+
             // If the message type is null, this message is in the original message format.
             if (searchIndexUpdateDto.getMessageType() == null)
             {
+                LOGGER.info("Updating the search index document(s) for the business object definition(s) that have changed.");
                 businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
             }
             else
@@ -149,9 +152,11 @@ public class SearchIndexUpdateJmsMessageListener
                 switch (searchIndexUpdateDto.getMessageType())
                 {
                     case MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE:
+                        LOGGER.info("Updating the search index document(s) for the business object definition(s) that have changed.");
                         businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
                         break;
                     case MESSAGE_TYPE_TAG_UPDATE:
+                        LOGGER.info("Updating the search index document(s) for the tag(s) that have changed.");
                         tagService.updateSearchIndexDocumentTag(searchIndexUpdateDto);
                         break;
                     default:

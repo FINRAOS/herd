@@ -17,6 +17,7 @@ package org.finra.herd.service.impl;
 
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +28,8 @@ import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.BooleanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +73,8 @@ import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObjectDefinitionColumnService, SearchableService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     // Constant to hold the schema column name field option for the business object definition column search
     public static final String SCHEMA_COLUMN_NAME_FIELD = "schemaColumnName".toLowerCase();
 
@@ -175,6 +180,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDao.saveAndRefresh(businessObjectDefinitionColumnEntity);
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition column being created." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition column object from the persisted entity.
@@ -205,6 +212,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition column being deleted." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition column object from the deleted entity.
@@ -311,6 +320,9 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDao.saveAndRefresh(businessObjectDefinitionColumnEntity);
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition column being updated." +
+                " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionColumnEntity.getBusinessObjectDefinition().getId(),
+            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper
             .modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionColumnEntity.getBusinessObjectDefinition(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 

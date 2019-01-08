@@ -17,6 +17,7 @@ package org.finra.herd.service.impl;
 
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,6 +33,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -101,6 +104,8 @@ import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     /**
      * List all schema column data types for which size increase is considered to be an additive schema change.
      */
@@ -273,6 +278,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         }
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition format being created." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create a version change notification to be sent on create business object format event.
@@ -348,6 +355,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition format being updated." +
+                " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectFormatEntity.getBusinessObjectDefinition().getId(),
+            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper
             .modifyBusinessObjectDefinitionInSearchIndex(businessObjectFormatEntity.getBusinessObjectDefinition(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
@@ -485,6 +495,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         }
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition format being deleted." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         return deletedBusinessObjectFormat;
@@ -577,6 +589,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition format being updated." +
+                " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectFormatEntity.getBusinessObjectDefinition().getId(),
+            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper
             .modifyBusinessObjectDefinitionInSearchIndex(businessObjectFormatEntity.getBusinessObjectDefinition(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 

@@ -369,6 +369,8 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         }
 
         // Notify the search index that a business object definition is created.
+        LOGGER.info("Create the business object definition in the search index associated with the business object definition being created." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_CREATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Build a business object format create request.
