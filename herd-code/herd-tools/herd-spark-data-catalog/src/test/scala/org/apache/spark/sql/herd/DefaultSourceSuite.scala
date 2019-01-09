@@ -207,7 +207,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
   private val ORC_EXPECTED_ROWS = EXPECTED_ROWS.map(f => Row.fromSeq(f.toSeq :+ f(0)))
 
   private val EXPECTED_SCHEMA = new StructType()
-    .add("TDATE", DateType)
+    .add("SDATE", DateType)
     .add("SYMBOL", StringType)
     .add("COL1", StringType)
     .add("COL2", IntegerType)
@@ -249,12 +249,12 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
     val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
 
-    val result = df.filter('tdate === "2017-01-01").collect()
+    val result = df.filter('sdate === "2017-01-01").collect()
 
     val fmt = new SimpleDateFormat("yyyy-MM-dd")
-    val tdate = fmt.parse("2017-01-01")
+    val sdate = fmt.parse("2017-01-01")
 
-    val expected = EXPECTED_ROWS.filter(_.getDate(0) == tdate)
+    val expected = EXPECTED_ROWS.filter(_.getDate(0) == sdate)
 
     result should contain theSameElementsAs(expected)
   }
@@ -276,7 +276,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
     val df = getDataFrame(new BaseHerdApi("test-case-3", parts), defaultParams)
 
-    val result = df.select("tdate", "symbol").collect()
+    val result = df.select("sdate", "symbol").collect()
 
     val expected = EXPECTED_ROWS.map(p => Row(p(0), p(1)))
 
@@ -345,12 +345,12 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
     val df = getDataFrame(new BaseHerdApi("test-case-5", parts), defaultParams)
 
-    val rows = df.select("tdate", "symbol").filter($"tdate" === "2017-01-01").collect()
+    val rows = df.select("sdate", "symbol").filter($"sdate" === "2017-01-01").collect()
 
     val fmt = new SimpleDateFormat("yyyy-MM-dd")
-    val tdate = fmt.parse("2017-01-01")
+    val sdate = fmt.parse("2017-01-01")
 
-    val expected = ORC_EXPECTED_ROWS.filter(_.getDate(4) == tdate).map(r => Row(r(4), r(1)))
+    val expected = ORC_EXPECTED_ROWS.filter(_.getDate(4) == sdate).map(r => Row(r(4), r(1)))
 
     rows should contain theSameElementsAs(expected)
   }
@@ -358,7 +358,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
   test("save partitioned data") {
     FileUtils.deleteDirectory(new java.io.File("./test-output"))
 
-    val df = spark.createDataFrame(EXPECTED_ROWS.asJava, EXPECTED_SCHEMA).filter($"tdate" === "2017-01-01")
+    val df = spark.createDataFrame(EXPECTED_ROWS.asJava, EXPECTED_SCHEMA).filter($"sdate" === "2017-01-01")
 
     val params = defaultParams + ("partitionValue" -> "2017-01-01")
 
@@ -375,6 +375,6 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
     val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
 
-    val result = df.selectExpr("min(tdate)", "max(tdate)").collect()
+    val result = df.selectExpr("min(sdate)", "max(sdate)").collect()
   }
 }

@@ -5,7 +5,7 @@
   "businessObjectFormatUsage": "PRC",
   "businessObjectFormatFileType": "CSV",
   "businessObjectFormatVersion": 0,
-  "partitionKey": "tdate",
+  "partitionKey": "sdate",
   "partitionValue": "2017-01-02",
   "subPartitionValues": [],
   "version": 1,
@@ -19,11 +19,11 @@
         "attributes": []
       },
       "storageDirectory": {
-        "directoryPath": "src/test/resources/test/prc/csv/foo/schm-v0/data-v1/tdate=2017-01-02"
+        "directoryPath": "src/test/resources/test/prc/csv/foo/schm-v0/data-v1/sdate=2017-01-02"
       },
       "storageFiles": [
         {
-          "filePath": "src/test/resources/test/prc/csv/foo/schm-v0/data-v1/tdate=2017-01-02/file0.csv",
+          "filePath": "src/test/resources/test/prc/csv/foo/schm-v0/data-v1/sdate=2017-01-02/file0.csv",
           "fileSizeBytes": 136,
           "rowCount": null
         }
