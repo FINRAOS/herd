@@ -5,7 +5,7 @@
   "businessObjectFormatUsage": "PRC",
   "businessObjectFormatFileType": "ORC",
   "businessObjectFormatVersion": 0,
-  "partitionKey": "tdate",
+  "partitionKey": "sdate",
   "partitionValue": "2017-01-01",
   "subPartitionValues": [],
   "version": 0,
@@ -19,11 +19,11 @@
         "attributes": []
       },
       "storageDirectory": {
-        "directoryPath": "src/test/resources/test/prc/orc/foo/schm-v0/data-v0/tdate=2017-01-01"
+        "directoryPath": "src/test/resources/test/prc/orc/foo/schm-v0/data-v0/sdate=2017-01-01"
       },
       "storageFiles": [
         {
-          "filePath": "src/test/resources/test/prc/orc/foo/schm-v0/data-v0/tdate=2017-01-01/file0.snappy.orc",
+          "filePath": "src/test/resources/test/prc/orc/foo/schm-v0/data-v0/sdate=2017-01-01/file0.snappy.orc",
           "fileSizeBytes": 545,
           "rowCount": null
         }

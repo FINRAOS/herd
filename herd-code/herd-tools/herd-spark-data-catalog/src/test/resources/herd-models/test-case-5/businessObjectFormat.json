@@ -6,14 +6,14 @@
   "businessObjectFormatFileType": "ORC",
   "businessObjectFormatVersion": 0,
   "latestVersion": true,
-  "partitionKey": "tdate",
+  "partitionKey": "sdate",
   "description": "FOO",
   "attributes": [],
   "attributeDefinitions": [],
   "schema": {
     "columns": [
       {
-        "name": "ORGNL_TDATE",
+        "name": "ORGNL_SDATE",
         "type": "DATE",
         "size": null,
         "required": null,
@@ -47,7 +47,7 @@
     ],
     "partitions": [
       {
-        "name": "TDATE",
+        "name": "SDATE",
         "type": "DATE",
         "size": null,
         "required": null,

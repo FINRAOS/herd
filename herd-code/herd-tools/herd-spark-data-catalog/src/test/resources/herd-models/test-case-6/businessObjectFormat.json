@@ -6,7 +6,7 @@
   "businessObjectFormatFileType": "CSV",
   "businessObjectFormatVersion": 0,
   "latestVersion": true,
-  "partitionKey": "tdate",
+  "partitionKey": "sdate",
   "description": "FOO",
   "attributes": [],
   "attributeDefinitions": [],
@@ -39,7 +39,7 @@
     ],
     "partitions": [
       {
-        "name": "TDATE",
+        "name": "SDATE",
         "type": "DATE",
         "size": null,
         "required": null,

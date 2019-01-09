@@ -13,7 +13,7 @@
   "schema": {
     "columns": [
       {
-        "name": "TDATE",
+        "name": "SDATE",
         "type": "DATE",
         "size": null,
         "required": null,
