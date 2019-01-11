@@ -229,7 +229,12 @@ public class ServiceSpringModuleConfig
         // Initialize the scripting engines.
         initScriptingEngines(configuration);
 
+        // Set the default "from" field for Activiti mail
         configuration.setMailServerDefaultFrom(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
+        // Set the mail server hostname for Activiti mail
+        configuration.setMailServerHost(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_MAIL_SERVER_HOST));
+        // Set the mail server port number for Activiti mail
+        configuration.setMailServerPort(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_MAIL_SERVER_PORT, Integer.class));
 
         // Attach a custom herd process engine configurator that will allow us to modify the configuration before the engine is built.
         List<ProcessEngineConfigurator> herdConfigurators = new ArrayList<>();
