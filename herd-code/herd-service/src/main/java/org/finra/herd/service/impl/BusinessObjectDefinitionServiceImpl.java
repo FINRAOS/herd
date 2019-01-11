@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
@@ -177,6 +178,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.createBusinessObjectDefinitionEntity(request);
 
         // Notify the search index that a business object definition must be created.
+        LOGGER.info("Create the business object definition in the search index associated with the business object definition being created." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_CREATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Create and return the business object definition object from the persisted entity.
@@ -283,8 +286,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
-        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity ->
-        {
+        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -347,6 +349,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         updateBusinessObjectDefinitionEntity(businessObjectDefinitionEntity, request);
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition being updated." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition object from the persisted entity.
@@ -404,6 +408,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         updateBusinessObjectDefinitionEntityDescriptiveInformation(businessObjectDefinitionEntity, request);
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition being updated." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition object from the persisted entity.
@@ -478,6 +484,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         businessObjectDefinitionDao.delete(businessObjectDefinitionEntity);
 
         // Notify the search index that a business object definition must be deleted.
+        LOGGER.info("Delete the business object definition in the search index associated with the business object definition being deleted." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_DELETE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_DELETE);
 
         // Create and return the business object definition object from the deleted entity.
@@ -597,7 +605,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
 
-
     /**
      * Update and persist the business object definition per specified update request.
      *
@@ -702,7 +709,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private void saveBusinessObjectDefinitionChangeEvents(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
-       businessObjectDefinitionDaoHelper.saveBusinessObjectDefinitionChangeEvents(businessObjectDefinitionEntity);
+        businessObjectDefinitionDaoHelper.saveBusinessObjectDefinitionChangeEvents(businessObjectDefinitionEntity);
     }
 
     /**
@@ -759,8 +766,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final List<BusinessObjectDefinitionChangeEvent> businessObjectDefinitionChangeEvents = new ArrayList<>();
         if (BooleanUtils.isTrue(includeBusinessObjectDefinitionUpdateHistory))
         {
-            businessObjectDefinitionEntity.getChangeEvents().forEach(businessObjectDefinitionChangeEventEntity ->
-            {
+            businessObjectDefinitionEntity.getChangeEvents().forEach(businessObjectDefinitionChangeEventEntity -> {
                 DescriptiveBusinessObjectFormatUpdateRequest descriptiveBusinessObjectFormatUpdateRequest = null;
                 if (businessObjectDefinitionChangeEventEntity.getFileType() != null)
                 {
@@ -896,6 +902,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition being updated." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
     }
 
@@ -923,6 +931,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         String modificationType = searchIndexUpdateDto.getModificationType();
         List<Integer> ids = searchIndexUpdateDto.getBusinessObjectDefinitionIds();
+
+        LOGGER.info("Updating the search index document representation(s) of the business object definition(s)." +
+                " businessObjectDefinitionIds=[{}], searchIndexUpdateType=\"{}\"", ids.stream().map(String::valueOf).collect(Collectors.joining(", ")),
+            modificationType);
 
         // Start at index 0
         int fromIndex = 0;
@@ -975,8 +987,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         Map<String, String> businessObjectDefinitionJSONMap = new HashMap<>();
 
-        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity ->
-        {
+        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();

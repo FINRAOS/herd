@@ -124,4 +124,13 @@
       <Class name="~org.finra.herd.swaggergen.HelpMojo"/>
    </Match>
 
+   <!-- Exclude the spark herd scala classes -->
+   <Match>
+      <Or>
+         <Package name="~org.apache.spark.sql.herd"/>
+         <Package name="~org.apache.spark.sql.execution.datasources"/>
+         <Package name="~org.apache.spark.sql.hive.orc"/>
+      </Or>
+   </Match>
+
 </FindBugsFilter>

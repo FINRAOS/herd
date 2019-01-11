@@ -1,0 +1,42 @@
+{
+  "businessObjectDataElements": [
+    {
+      "id": 2,
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "TEST",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "CSV",
+      "businessObjectFormatVersion": 0,
+      "partitionKey": "sdate",
+      "partitionValue": "2017-01-02",
+      "subPartitionValues": null,
+      "version": 1,
+      "latestVersion": true,
+      "status": "VALID",
+      "storageUnits": null,
+      "attributes": null,
+      "businessObjectDataParents": null,
+      "businessObjectDataChildren": null,
+      "businessObjectDataStatusHistory": null
+    },
+    {
+      "id": 1,
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "TEST",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "BZ",
+      "businessObjectFormatVersion": 0,
+      "partitionKey": "sdate",
+      "partitionValue": "2017-01-01",
+      "subPartitionValues": null,
+      "version": 0,
+      "latestVersion": true,
+      "status": "VALID",
+      "storageUnits": null,
+      "attributes": null,
+      "businessObjectDataParents": null,
+      "businessObjectDataChildren": null,
+      "businessObjectDataStatusHistory": null
+    }
+  ]
+}

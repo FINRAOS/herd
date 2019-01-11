@@ -1,0 +1,65 @@
+{
+  "id": 1,
+  "namespace": "FOO",
+  "businessObjectDefinitionName": "TEST",
+  "businessObjectFormatUsage": "PRC",
+  "businessObjectFormatFileType": "CSV",
+  "businessObjectFormatVersion": 0,
+  "latestVersion": true,
+  "partitionKey": "sdate",
+  "description": "FOO",
+  "attributes": [],
+  "attributeDefinitions": [],
+  "schema": {
+    "columns": [
+      {
+        "name": "SDATE",
+        "type": "DATE",
+        "size": null,
+        "required": null,
+        "defaultValue": null,
+        "description": null
+      },
+      {
+        "name": "SYMBOL",
+        "type": "STRING",
+        "size": null,
+        "required": null,
+        "defaultValue": null,
+        "description": null
+      },
+      {
+        "name": "COL1",
+        "type": "STRING",
+        "size": null,
+        "required": null,
+        "defaultValue": null,
+        "description": null
+      },
+      {
+        "name": "COL2",
+        "type": "INT",
+        "size": null,
+        "required": null,
+        "defaultValue": null,
+        "description": null
+      }
+    ],
+    "partitions": [
+      {
+        "name": "SDATE",
+        "type": "DATE",
+        "size": null,
+        "required": null,
+        "defaultValue": null,
+        "description": null
+      }
+    ],
+    "nullValue": "",
+    "delimiter": ",",
+    "escapeCharacter": "\\\\",
+    "partitionKeyGroup": "TRADE_DT"
+  },
+  "businessObjectFormatParents": [],
+  "businessObjectFormatChildren": []
+}

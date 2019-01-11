@@ -20,6 +20,8 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,7 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.dao.BusinessObjectDefinitionTagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.TagDaoHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
@@ -44,7 +47,6 @@ import org.finra.herd.service.BusinessObjectDefinitionTagService;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.SearchIndexUpdateHelper;
-import org.finra.herd.dao.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
 /**
@@ -54,6 +56,8 @@ import org.finra.herd.service.helper.TagHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDefinitionTagService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionTagServiceImpl.class);
+
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
@@ -101,14 +105,17 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
             createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntity, tagEntity);
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition tag being created." +
+                " tagTypeCode=\"{}\", tagCode=\"{}\", businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", tagEntity.getTagType().getCode(),
+            tagEntity.getTagCode(), businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition tag object from the persisted entity.
         return createBusinessObjectDefinitionTagFromEntity(businessObjectDefinitionTagEntity);
     }
 
-    @NamespacePermission(fields = "#businessObjectDefinitionTagKey.businessObjectDefinitionKey.namespace",
-        permissions = {NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE})
+    @NamespacePermission(fields = "#businessObjectDefinitionTagKey.businessObjectDefinitionKey.namespace", permissions = {
+        NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE})
     @Override
     public BusinessObjectDefinitionTag deleteBusinessObjectDefinitionTag(BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey)
     {
@@ -122,9 +129,13 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
         businessObjectDefinitionTagDao.delete(businessObjectDefinitionTagEntity);
 
         // Notify the search index that a business object definition must be updated.
-        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(
-            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionTagKey.getBusinessObjectDefinitionKey()),
-            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionTagKey.getBusinessObjectDefinitionKey());
+        LOGGER.info("Modify the business object definition in the search index associated with the business object definition tag being deleted." +
+                " tagTypeCode=\"{}\", tagCode=\"{}\", businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"",
+            businessObjectDefinitionTagEntity.getTag().getTagType().getCode(), businessObjectDefinitionTagEntity.getTag().getTagCode(),
+            businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition tag object from the deleted entity.
         return createBusinessObjectDefinitionTagFromEntity(businessObjectDefinitionTagEntity);

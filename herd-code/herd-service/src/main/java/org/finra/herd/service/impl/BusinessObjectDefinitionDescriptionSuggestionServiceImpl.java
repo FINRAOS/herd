@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +70,8 @@ import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements BusinessObjectDefinitionDescriptionSuggestionService, SearchableService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionDescriptionSuggestionServiceImpl.class);
+
     // Constant to hold the created by user ID field option for the search response.
     public final static String CREATED_BY_USER_ID_FIELD = "createdByUserId".toLowerCase();
 
@@ -347,6 +351,8 @@ public class BusinessObjectDefinitionDescriptionSuggestionServiceImpl implements
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
 
         // Notify the search index that a business object definition must be updated.
+        LOGGER.info("Modify the business object definition in the search index associated with the accepted business object definition suggestion." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return a business object definition description suggestion.

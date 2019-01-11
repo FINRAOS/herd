@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.86.0-SNAPSHOT</version>
+      <version>0.87.0-SNAPSHOT</version>
    </parent>
 
    <name>herd tools</name>
@@ -39,6 +39,9 @@
       <module>herd-downloader</module>
       <module>herd-retention-expiration-exporter</module>
       <module>herd-retention-expiration-destroyer</module>
+      <module>herd-spark-data-catalog</module>
+      <module>herd-spark-2.1-data-catalog</module>
+      <module>herd-spark-2.2-data-catalog</module>
    </modules>
 
 </project>

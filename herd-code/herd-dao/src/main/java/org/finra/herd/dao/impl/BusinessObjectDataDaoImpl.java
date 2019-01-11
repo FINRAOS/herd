@@ -34,6 +34,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -905,17 +906,17 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     @Override
-    public Long getBusinessObjectDataCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey)
+    public Integer getBusinessObjectDataLimitedCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer recordCountLimit)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
+        CriteriaQuery<Integer> criteria = builder.createQuery(Integer.class);
 
         // The criteria root is the business object data.
         Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
 
-        // Create path.
-        Expression<Long> businessObjectDataCount = builder.count(businessObjectDataEntityRoot);
+        // Create path. We use business object data id column here, since this is enough to check the record count.
+        Path<Integer> businessObjectDataIdColumn = businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.id);
 
         // Namespace is a required parameter, so fetch the relative entity to optimize the main query.
         NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(businessObjectDataSearchKey.getNamespace());
@@ -923,7 +924,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // If specified namespace does not exist, then return a zero record count.
         if (namespaceEntity == null)
         {
-            return 0L;
+            return 0;
         }
 
         // If file type is specified, fetch the relative entity to optimize the main query.
@@ -935,7 +936,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             // If specified file type does not exist, then return a zero record count.
             if (fileTypeEntity == null)
             {
-                return 0L;
+                return 0;
             }
         }
 
@@ -948,14 +949,17 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         catch (IllegalArgumentException ex)
         {
             // This exception means that there are no records found for the query, thus return 0 record count.
-            return 0L;
+            return 0;
         }
 
         // Add all clauses for the query.
-        criteria.select(businessObjectDataCount).where(predicate).distinct(true);
+        criteria.select(businessObjectDataIdColumn).where(predicate);
 
-        // Execute the query and return the result.
-        return entityManager.createQuery(criteria).getSingleResult();
+        // Execute the query.
+        List<Integer> businessObjectDataIds = entityManager.createQuery(criteria).setMaxResults(recordCountLimit).getResultList();
+
+        // Return the size of the result list.
+        return CollectionUtils.size(businessObjectDataIds);
     }
 
     @Override

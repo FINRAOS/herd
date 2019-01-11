@@ -9,7 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -85,8 +87,11 @@ public class SearchIndexUpdateJmsMessageListenerTest extends AbstractServiceTest
 
         when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "PAYLOAD")).thenReturn(searchIndexUpdateDto);
 
+        Map<Object, Object> allHeaders = new HashMap<>();
+        allHeaders.put("jms_messageId", MESSAGE_ID);
+
         // Call the method under test
-        searchIndexUpdateJmsMessageListener.processMessage("PAYLOAD", null);
+        searchIndexUpdateJmsMessageListener.processMessage("PAYLOAD", allHeaders);
 
         // Verify the calls to external methods
         verify(businessObjectDefinitionService, times(1))
@@ -101,8 +106,11 @@ public class SearchIndexUpdateJmsMessageListenerTest extends AbstractServiceTest
 
         when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "PAYLOAD")).thenReturn(searchIndexUpdateDto);
 
+        Map<Object, Object> allHeaders = new HashMap<>();
+        allHeaders.put("jms_messageId", MESSAGE_ID);
+
         // Call the method under test
-        searchIndexUpdateJmsMessageListener.processMessage("PAYLOAD", null);
+        searchIndexUpdateJmsMessageListener.processMessage("PAYLOAD", allHeaders);
 
         // Verify the calls to external methods
         verify(tagService, times(1))
@@ -119,8 +127,11 @@ public class SearchIndexUpdateJmsMessageListenerTest extends AbstractServiceTest
 
         when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "PAYLOAD")).thenReturn(searchIndexUpdateDto);
 
+        Map<Object, Object> allHeaders = new HashMap<>();
+        allHeaders.put("jms_messageId", MESSAGE_ID);
+
         // Call the method under test
-        searchIndexUpdateJmsMessageListener.processMessage("PAYLOAD", null);
+        searchIndexUpdateJmsMessageListener.processMessage("PAYLOAD", allHeaders);
 
         // Verify the calls to external methods
         verify(businessObjectDefinitionService, times(1))
