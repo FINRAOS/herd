@@ -17,6 +17,9 @@ package org.apache.spark.sql.herd
 
 import java.net.URI
 
+import scala.collection.JavaConverters._
+import scala.util.{Failure, Success, Try}
+
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
@@ -34,8 +37,9 @@ import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.util.QueryExecutionListener
 
-import scala.collection.JavaConverters._
-import scala.util.{Failure, Success, Try}
+import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
+import org.finra.herd.sdk.model._
+
 
 
 /** A custom data source that integrates with Herd for metadata management
