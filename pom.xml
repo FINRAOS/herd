@@ -271,6 +271,11 @@
             <artifactId>herd-docs-swagger</artifactId>
             <version>${project.version}</version>
          </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-sdk</artifactId>
+            <version>${project.version}</version>
+         </dependency>
 
          <!-- Third Party Dependencies -->
          <dependency>

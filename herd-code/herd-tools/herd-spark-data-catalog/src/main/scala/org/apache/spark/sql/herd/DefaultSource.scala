@@ -20,6 +20,12 @@ import java.net.URI
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
+import com.amazonaws.services.kms.AWSKMSClient
+import com.jessecoyle.JCredStash
 import org.apache.hadoop.fs.Path
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.internal.Logging
@@ -33,7 +39,7 @@ import org.apache.spark.sql.util.QueryExecutionListener
 
 import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
 import org.finra.herd.sdk.model._
-import org.finra.pet.JCredStashFX
+
 
 
 /** A custom data source that integrates with Herd for metadata management
@@ -103,10 +109,17 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       val credSDLC = parameters.get("credSDLC")
         .orElse(sparkSession.conf.getOption("spark.herd.credential.sdlc"))
         .getOrElse("prody")
-
       val credPwd = credName.map(c => {
-        val jCredStashFX = new JCredStashFX()
-        jCredStashFX.getCredential(c, credAGS, credSDLC, null, null)
+        var clientConf = new ClientConfiguration
+        // TODO: Add proxy configuration from environment: "CRED_PROXY" and "CRED_PORT"
+        val provider = new DefaultAWSCredentialsProviderChain
+        val ddb = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+        val kms = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+        val credstash = new JCredStash(ddb, kms)
+        val table = "credential-store"
+        // TODO: The below map needs to be created and populated with the values as done by org.finra.herd.dao.helper.CredStashHelper or similar
+        val credstashEncryptionContextMap = null
+        credstash.getSecret(c, credstashEncryptionContextMap)
       })
 
       (url, credName, credPwd)
