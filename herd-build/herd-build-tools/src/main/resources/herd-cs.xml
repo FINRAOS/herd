@@ -22,6 +22,9 @@
    <!-- Handle files with UTF-8 character set. -->
    <property name="charset" value="UTF-8"/>
 
+   <!-- checkstyle is only meant for java files and config files. Files developed using other languages such as scala will be skipped -->
+   <property name="fileExtensions" value="java, properties, xml"/>
+
    <!-- Severity level of error will generate error output when issues are encountered. -->
    <property name="severity" value="error"/>
 

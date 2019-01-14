@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd</artifactId>
-      <version>0.86.0-SNAPSHOT</version>
+      <version>0.87.0-SNAPSHOT</version>
    </parent>
 
    <name>herd code</name>
@@ -153,6 +153,11 @@
                </rulesets>
                <!-- Display the PMD errors on the build output. -->
                <verbose>true</verbose>
+               <excludes>
+                  <exclude>**/herd-spark-data-catalog/**/*</exclude>
+                  <exclude>**/herd-spark-2.1-data-catalog/**/*</exclude>
+                  <exclude>**/herd-spark-2.1-data-catalog/**/*</exclude>
+               </excludes>
             </configuration>
             <!-- We need to specify a dependency on the tools project to get access to the herd-pmd.xml file. -->
             <dependencies>

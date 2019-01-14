@@ -564,8 +564,10 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
 
-        Long result = businessObjectDataDao.getBusinessObjectDataCountBySearchKey(businessObjectDataSearchKey);
-        assertEquals(Long.valueOf(2), result);
+        // The expected record count is 2.
+        assertEquals(1L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 1));
+        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 2));
+        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 3));
     }
 
     @Test
@@ -594,15 +596,25 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE,
                 SUBPARTITION_VALUES, SECOND_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
 
-        // Execute the count query by passing business object data search key parameters, except for filters.
-        assertEquals(Long.valueOf(2), businessObjectDataDao.getBusinessObjectDataCountBySearchKey(
+        // Create a business object data search key with all fields specified, except for filters.
+        BusinessObjectDataSearchKey businessObjectDataSearchKey =
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION)));
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION);
 
-        // Execute the count query without optional parameters.
-        assertEquals(Long.valueOf(5), businessObjectDataDao.getBusinessObjectDataCountBySearchKey(
-            new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION)));
+        // Execute the count query by passing business object data search key parameters, except for filters. The expected record count is 2.
+        assertEquals(1L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 1));
+        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 2));
+        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 3));
+
+        // Set all optional fields in the search key to null.
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(null);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(null);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(null);
+
+        // Execute the count query without optional parameters. The expected record count now is 5.
+        assertEquals(4L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 4));
+        assertEquals(5L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 5));
+        assertEquals(5L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 6));
     }
 
     @Test
@@ -616,27 +628,32 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, SECOND_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
 
-        // Execute the count query by passing business object data search key parameters, except for filters.
-        assertEquals(Long.valueOf(2), businessObjectDataDao.getBusinessObjectDataCountBySearchKey(
+        // Create a business object data search key with all fields specified, except for filters.
+        BusinessObjectDataSearchKey businessObjectDataSearchKey =
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION)));
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION);
+
+        // Execute the count query by passing business object data search key parameters, except for filters. The expected record count is 2.
+        assertEquals(1L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 1));
+        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 2));
+        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 3));
 
         // Execute the count query using non-existing/invalid parameter values.
-        assertEquals(Long.valueOf(0), businessObjectDataDao.getBusinessObjectDataCountBySearchKey(
+        assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(
             new BusinessObjectDataSearchKey(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION)));
-        assertEquals(Long.valueOf(0), businessObjectDataDao.getBusinessObjectDataCountBySearchKey(
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION), 2));
+        assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(
             new BusinessObjectDataSearchKey(NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION)));
-        assertEquals(Long.valueOf(0), businessObjectDataDao.getBusinessObjectDataCountBySearchKey(
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION), 2));
+        assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION)));
-        assertEquals(Long.valueOf(0), businessObjectDataDao.getBusinessObjectDataCountBySearchKey(
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION), 2));
+        assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION)));
-        assertEquals(Long.valueOf(0), businessObjectDataDao.getBusinessObjectDataCountBySearchKey(
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION), 2));
+        assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION)));
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION), 2));
     }
 
     @Test
@@ -650,16 +667,20 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, SECOND_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
 
-        // Execute the count query by passing business object data search key parameters, except for filters.
-        assertEquals(Long.valueOf(2), businessObjectDataDao.getBusinessObjectDataCountBySearchKey(
+        // Create a business object data search key with all fields specified, except for filters.
+        BusinessObjectDataSearchKey businessObjectDataSearchKey =
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION)));
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION);
 
-        // Execute the same count query, but with retention expiration filter.
-        // We expect 0 count, since no retention information is configured for the business object format.
-        assertEquals(Long.valueOf(0), businessObjectDataDao.getBusinessObjectDataCountBySearchKey(
-            new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, FILTER_ON_RETENTION_EXPIRATION)));
+        // Execute the count query by passing business object data search key parameters, except for filters. The expected record count is 2.
+        assertEquals(1L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 1));
+        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 2));
+        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 3));
+
+        // Execute the same query, but with retention expiration filter.
+        // We expect 0 record count, since no retention information is configured for the business object format.
+        businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
+        assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 2));
     }
 
     @Test

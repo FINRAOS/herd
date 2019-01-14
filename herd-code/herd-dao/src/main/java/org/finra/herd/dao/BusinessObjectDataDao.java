@@ -186,27 +186,6 @@ public interface BusinessObjectDataDao extends BaseJpaDao
     List<BusinessObjectDataEntity> getBusinessObjectDataEntitiesByPartitionValue(String partitionValue);
 
     /**
-     * Retrieves business object data record count per specified business object data search key.
-     *
-     * @param businessObjectDataSearchKey the business object data search key
-     *
-     * @return the record count of business object data
-     */
-    Long getBusinessObjectDataCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey);
-
-    /**
-     * Retrieves a list of business object data per specified business object data search key.
-     *
-     * @param businessObjectDataSearchKey the business object data search key
-     * @param pageNum if pageNum parameter is specified, results contain the appropriate page specified. Page numbers are one-based - that is the first page
-     * number is one
-     * @param pageSize if pageSize parameter is specified, results contain that number of business object data (unless it is the end of the result set)
-     *
-     * @return the list of business object data
-     */
-    List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer pageNum, Integer pageSize);
-
-    /**
      * Gets a list of keys for business object data registered under specified business object definition entity. The results are sorted by primary partition
      * value descending, sub-partition values (if present) descending, and business object data version descending.
      *
@@ -227,4 +206,26 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * @return the list of business object data keys
      */
     List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatEntity businessObjectFormatEntity, Integer maxResults);
+
+    /**
+     * Retrieves business object data record count up to to the specified record limit as per business object data search key.
+     *
+     * @param businessObjectDataSearchKey the business object data search key
+     * @param recordCountLimit the business object data record count limit
+     *
+     * @return the record count of business object data up to to the specified limit
+     */
+    Integer getBusinessObjectDataLimitedCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer recordCountLimit);
+
+    /**
+     * Retrieves a list of business object data per specified business object data search key.
+     *
+     * @param businessObjectDataSearchKey the business object data search key
+     * @param pageNum if pageNum parameter is specified, results contain the appropriate page specified. Page numbers are one-based - that is the first page
+     * number is one
+     * @param pageSize if pageSize parameter is specified, results contain that number of business object data (unless it is the end of the result set)
+     *
+     * @return the list of business object data
+     */
+    List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer pageNum, Integer pageSize);
 }

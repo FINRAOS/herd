@@ -1,0 +1,38 @@
+{
+  "id": 1,
+  "namespace": "FOO",
+  "businessObjectDefinitionName": "TEST",
+  "businessObjectFormatUsage": "PRC",
+  "businessObjectFormatFileType": "ORC",
+  "businessObjectFormatVersion": 0,
+  "partitionKey": "sdate",
+  "partitionValue": "2017-01-01",
+  "subPartitionValues": [],
+  "version": 0,
+  "latestVersion": true,
+  "status": "VALID",
+  "storageUnits": [
+    {
+      "storage": {
+        "name": "TEST",
+        "storagePlatformName": "FILE",
+        "attributes": []
+      },
+      "storageDirectory": {
+        "directoryPath": "src/test/resources/test/prc/orc/foo/schm-v0/data-v0/sdate=2017-01-01"
+      },
+      "storageFiles": [
+        {
+          "filePath": "src/test/resources/test/prc/orc/foo/schm-v0/data-v0/sdate=2017-01-01/file0.snappy.orc",
+          "fileSizeBytes": 545,
+          "rowCount": null
+        }
+      ],
+      "storageUnitStatus": "ENABLED"
+    }
+  ],
+  "attributes": [],
+  "businessObjectDataParents": [],
+  "businessObjectDataChildren": [],
+  "businessObjectDataStatusHistory": null
+}

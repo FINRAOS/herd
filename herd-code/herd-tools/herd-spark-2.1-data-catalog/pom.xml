@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.finra.herd</groupId>
+      <artifactId>herd-tools</artifactId>
+      <version>0.87.0-SNAPSHOT</version>
+   </parent>
+
+   <name>herd spark 2.1 data catalog</name>
+
+   <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
+   <artifactId>herd-spark-2.1-data-catalog</artifactId>
+
+   <!-- build the data catalog for spark version 2.1.1 -->
+   <properties>
+      <spark.version>2.1.1</spark.version>
+   </properties>
+
+   <dependencies>
+      <dependency>
+         <groupId>org.scala-lang</groupId>
+         <artifactId>scala-library</artifactId>
+         <version>${scala.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.finra.herd</groupId>
+         <artifactId>herd-sdk</artifactId>
+         <version>${project.version}</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.apache.logging.log4j</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>com.fasterxml.jackson.core</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-sql_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-hive_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>co.wrisk.jcredstash</groupId>
+         <artifactId>jcredstash</artifactId>
+      </dependency>
+
+      <!-- Test -->
+      <dependency>
+         <groupId>org.scalatest</groupId>
+         <artifactId>scalatest_${scala.tools.version}</artifactId>
+         <version>${scalatest.version}</version>
+         <scope>test</scope>
+      </dependency>
+
+   </dependencies>
+
+   <build>
+      <plugins>
+         <!-- Provide customized clean plugin so the source directory can be removed. This module copies all the source files from the module
+         herd-spark-data-catalog during build phase -->
+         <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <configuration>
+               <filesets>
+                  <fileset>
+                     <directory>./src</directory>
+                  </fileset>
+               </filesets>
+            </configuration>
+         </plugin>
+         <!-- Copy all the source code from the module herd-spark-data-catalog -->
+         <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>copy-source-code</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                     <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                     <outputDirectory>./src</outputDirectory>
+                     <overwrite>true</overwrite>
+                     <resources>
+                        <resource>
+                           <directory>../herd-spark-data-catalog/src/</directory>
+                        </resource>
+                     </resources>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <!-- see http://davidb.github.com/scala-maven-plugin -->
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <version>${scala.maven.plugin.version}</version>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>compile</goal>
+                     <goal>testCompile</goal>
+                  </goals>
+                  <configuration>
+                     <scalaVersion>${scala.version}</scalaVersion>
+                     <recompileMode>incremental</recompileMode>
+                     <args>
+                        <arg>-unchecked</arg>
+                        <arg>-deprecation</arg>
+                        <arg>-feature</arg>
+                     </args>
+                     <javacArgs>
+                        <javacArg>-source</javacArg>
+                        <javacArg>${java.version}</javacArg>
+                        <javacArg>-target</javacArg>
+                        <javacArg>${java.version}</javacArg>
+                        <javacArg>-Xlint:all,-serial,-path</javacArg>
+                     </javacArgs>
+                     <excludes>
+                        <exclude>**/PruneHerdPartitions_Spark_2_2.scala</exclude>
+                        <exclude>**/PruneHerdPartitions_Spark_2_3.scala</exclude>
+                        <exclude>**/HerdFileIndex_Spark_2_2.scala</exclude>
+                     </excludes>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>attach-javadocs</id>
+                  <goals>
+                     <goal>doc-jar</goal>
+                  </goals>
+                  <configuration>
+                     <excludes>
+                        <exclude>**/PruneHerdPartitions_Spark_2_2.scala</exclude>
+                        <exclude>**/PruneHerdPartitions_Spark_2_3.scala</exclude>
+                        <exclude>**/HerdFileIndex_Spark_2_2.scala</exclude>
+                     </excludes>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven.surefire.plugin.version}</version>
+            <configuration>
+               <skipTests>true</skipTests>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.scalastyle</groupId>
+            <artifactId>scalastyle-maven-plugin</artifactId>
+            <version>${scalastyle.version}</version>
+            <configuration>
+               <verbose>false</verbose>
+               <failOnViolation>true</failOnViolation>
+               <includeTestSourceDirectory>true</includeTestSourceDirectory>
+               <failOnWarning>false</failOnWarning>
+               <sourceDirectory>${project.basedir}/src/main/scala</sourceDirectory>
+               <testSourceDirectory>${project.basedir}/src/test/scala</testSourceDirectory>
+               <configLocation>scalastyle-config.xml</configLocation>
+            </configuration>
+            <executions>
+               <execution>
+                  <id>check-style-scala</id>
+                  <!-- bind to the packaging phase -->
+                  <phase>package</phase>
+                  <goals>
+                     <goal>check</goal>
+                  </goals>
+               </execution>
+               <execution>
+                  <goals>
+                     <goal>check</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>${maven.shade.plugin.version}</version>
+            <configuration>
+               <finalName>${project.artifactId}-${project.version}_${scala.tools.version}-assembly</finalName>
+               <filters>
+                  <filter>
+                     <artifact>*</artifact>
+                     <excludes>
+                        <exclude>META-INF/*.SF</exclude>
+                        <exclude>META-INF/*.DSA</exclude>
+                        <exclude>META-INF/*.RSA</exclude>
+                     </excludes>
+                  </filter>
+               </filters>
+               <relocations>
+                  <relocation>
+                     <pattern>com.fasterxml.jackson</pattern>
+                     <shadedPattern>org.finra.herd.spark.com.fasterxml.jackson</shadedPattern>
+                     <includes>
+                        <include>com.fasterxml.jackson.**</include>
+                     </includes>
+                  </relocation>
+               </relocations>
+            </configuration>
+            <executions>
+               <execution>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>shade</goal>
+                  </goals>
+                  <configuration>
+                     <shadedArtifactAttached>true</shadedArtifactAttached>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
+</project>

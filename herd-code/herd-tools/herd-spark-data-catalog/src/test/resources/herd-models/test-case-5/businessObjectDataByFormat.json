@@ -1,0 +1,24 @@
+{
+  "businessObjectDataKeys": [
+    {
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "TEST",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "ORC",
+      "businessObjectFormatVersion": 0,
+      "partitionValue": "2017-01-01",
+      "subPartitionValues": [],
+      "businessObjectDataVersion": 0
+    },
+    {
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "TEST",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "ORC",
+      "businessObjectFormatVersion": 0,
+      "partitionValue": "2017-01-02",
+      "subPartitionValues": [],
+      "businessObjectDataVersion": 1
+    }
+  ]
+}
