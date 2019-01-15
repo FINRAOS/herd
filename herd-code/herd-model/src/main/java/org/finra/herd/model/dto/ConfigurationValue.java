@@ -294,6 +294,16 @@ public enum ConfigurationValue
     ACTIVITI_DEFAULT_MAIL_FROM("activiti.default.mail.from", null),
 
     /**
+     * The hostname of the mail server for Actitivi mail task. The default is localhost.
+     */
+    ACTIVITI_MAIL_SERVER_HOST("activiti.mail.server.host", "localhost"),
+
+    /**
+     * The port number of the mail server for Actitivi mail task. The default is 25.
+     */
+    ACTIVITI_MAIL_SERVER_PORT("activiti.mail.server.port", 25),
+
+    /**
      * Asserts when the first task in the activiti workflow is asynchronous when the value is true.
      */
     ACTIVITI_JOB_DEFINITION_ASSERT_ASYNC("activiti.job.definition.assert.async", true),

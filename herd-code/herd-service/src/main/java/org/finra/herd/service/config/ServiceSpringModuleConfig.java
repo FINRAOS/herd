@@ -55,6 +55,8 @@ import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -95,6 +97,8 @@ import org.finra.herd.service.systemjobs.AbstractSystemJob;
     excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.finra\\.herd\\.service\\.config\\..*"))
 public class ServiceSpringModuleConfig
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServiceSpringModuleConfig.class);
+
     /**
      * The Activiti DB schema update param bean name.
      */
@@ -229,7 +233,17 @@ public class ServiceSpringModuleConfig
         // Initialize the scripting engines.
         initScriptingEngines(configuration);
 
-        configuration.setMailServerDefaultFrom(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
+        // Set the default "from" field for Activiti mail
+        String mailServerDefaultFrom = configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM);
+        configuration.setMailServerDefaultFrom(mailServerDefaultFrom);
+        // Set the mail server hostname for Activiti mail
+        String mailServerHost = configurationHelper.getProperty(ConfigurationValue.ACTIVITI_MAIL_SERVER_HOST);
+        configuration.setMailServerHost(mailServerHost);
+        // Set the mail server port number for Activiti mail
+        int mailServerPort = configurationHelper.getProperty(ConfigurationValue.ACTIVITI_MAIL_SERVER_PORT, Integer.class);
+        configuration.setMailServerPort(mailServerPort);
+        LOGGER.info("Activiti mail server configurations: activitiMailServerDefaultFrom=\"{}\" activitiMailServerHost=\"{}\" activitiMailServerPort={}",
+            mailServerDefaultFrom, mailServerHost, mailServerPort);
 
         // Attach a custom herd process engine configurator that will allow us to modify the configuration before the engine is built.
         List<ProcessEngineConfigurator> herdConfigurators = new ArrayList<>();
