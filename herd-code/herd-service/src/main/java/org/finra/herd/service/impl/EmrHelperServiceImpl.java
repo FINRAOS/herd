@@ -37,11 +37,11 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.dto.EmrClusterCreateDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
-import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.EmrHelperService;
 import org.finra.herd.service.helper.AwsServiceHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
 
 /**
@@ -73,6 +73,9 @@ public class EmrHelperServiceImpl implements EmrHelperService
 
     @Autowired
     private HerdDao herdDao;
+
+    @Autowired
+    private NamespaceDaoHelper namespaceDaoHelper;
 
     @Autowired
     private NamespaceIamRoleAuthorizationHelper namespaceIamRoleAuthorizationHelper;
@@ -132,6 +135,9 @@ public class EmrHelperServiceImpl implements EmrHelperService
         // The cluster ID record.
         String clusterId = null;
 
+        // Is EMR cluster already existing.
+        Boolean emrClusterAlreadyExists = null;
+
         // Is EMR cluster created.
         Boolean emrClusterCreated = null;
 
@@ -166,6 +172,7 @@ public class EmrHelperServiceImpl implements EmrHelperService
                 {
                     clusterId = clusterSummary.getId();
                     emrClusterCreated = false;
+                    emrClusterAlreadyExists = true;
                 }
 
                 emrClusterStatus = emrDao.getEmrClusterStatusById(clusterId, awsParamsDto);
@@ -181,7 +188,7 @@ public class EmrHelperServiceImpl implements EmrHelperService
             emrClusterCreated = false;
         }
 
-        return new EmrClusterCreateDto(clusterId, emrClusterCreated, emrClusterStatus);
+        return new EmrClusterCreateDto(clusterId, emrClusterAlreadyExists, emrClusterCreated, emrClusterStatus);
     }
 
     EmrClusterDefinition emrPreCreateClusterStepsImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterCreateRequest request) throws Exception
@@ -213,10 +220,8 @@ public class EmrHelperServiceImpl implements EmrHelperService
     void logEmrClusterCreationImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterDefinition emrClusterDefinition, String clusterId)
         throws Exception
     {
-        NamespaceEntity namespaceEntity = new NamespaceEntity();
-        namespaceEntity.setCode(emrClusterAlternateKeyDto.getNamespace());
         EmrClusterCreationLogEntity emrClusterCreationLogEntity = new EmrClusterCreationLogEntity();
-        emrClusterCreationLogEntity.setNamespace(namespaceEntity);
+        emrClusterCreationLogEntity.setNamespace(namespaceDaoHelper.getNamespaceEntity(emrClusterAlternateKeyDto.getNamespace()));
         emrClusterCreationLogEntity.setEmrClusterDefinitionName(emrClusterAlternateKeyDto.getEmrClusterDefinitionName());
         emrClusterCreationLogEntity.setEmrClusterName(emrClusterAlternateKeyDto.getEmrClusterName());
         emrClusterCreationLogEntity.setEmrClusterId(clusterId);

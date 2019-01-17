@@ -64,6 +64,7 @@ import org.finra.herd.service.helper.AwsServiceHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrStepHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
 
 /**
  * The EMR service implementation.
@@ -100,6 +101,9 @@ public class EmrServiceImpl implements EmrService
 
     @Autowired
     private JsonHelper jsonHelper;
+
+    @Autowired
+    private NamespaceDaoHelper namespaceDaoHelper;
 
     /**
      * {@inheritDoc}
@@ -328,7 +332,8 @@ public class EmrServiceImpl implements EmrService
         {
             emrHelperServiceImpl.logEmrClusterCreation(emrClusterAlternateKeyDto, emrClusterDefinition, emrClusterCreateDto.getClusterId());
         }
-        else
+
+        if (BooleanUtils.isTrue(emrClusterCreateDto.isEmrClusterAlreadyExists()))
         {
             // Do not include cluster definition in response
             emrClusterDefinition = null;

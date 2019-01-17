@@ -249,6 +249,7 @@
    <xs:complexType name="emrClusterCreateDto">
       <xs:sequence>
          <xs:element name="clusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="emrClusterAlreadyExists" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterCreated" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterStatus" type="xs:string" minOccurs="0"/>
       </xs:sequence>
