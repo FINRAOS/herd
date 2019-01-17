@@ -25,7 +25,7 @@ import org.finra.herd.model.ObjectNotFoundException;
  * A helper class for AWS related code.
  */
 @Component
-public class AwsHelper
+public class AwsServiceHelper
 {
     /**
      * Handles the AmazonServiceException, throws corresponding exception based on status code in amazon exception.

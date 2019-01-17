@@ -39,7 +39,7 @@ import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.EmrHelperService;
-import org.finra.herd.service.helper.AwsHelper;
+import org.finra.herd.service.helper.AwsServiceHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
@@ -51,7 +51,7 @@ import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
 public class EmrHelperServiceImpl implements EmrHelperService
 {
     @Autowired
-    private AwsHelper awsHelper;
+    private AwsServiceHelper awsServiceHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -172,7 +172,7 @@ public class EmrHelperServiceImpl implements EmrHelperService
             }
             catch (AmazonServiceException ex)
             {
-                awsHelper.handleAmazonException(ex, "An Amazon exception occurred while creating EMR cluster with name \"" + clusterName + "\".");
+                awsServiceHelper.handleAmazonException(ex, "An Amazon exception occurred while creating EMR cluster with name \"" + clusterName + "\".");
             }
         }
         // If the dryRun flag is true and not null

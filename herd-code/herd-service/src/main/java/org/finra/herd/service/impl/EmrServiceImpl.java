@@ -60,7 +60,7 @@ import org.finra.herd.model.dto.EmrClusterCreateDto;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.service.EmrService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
-import org.finra.herd.service.helper.AwsHelper;
+import org.finra.herd.service.helper.AwsServiceHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrStepHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
@@ -78,7 +78,7 @@ public class EmrServiceImpl implements EmrService
     private AlternateKeyHelper alternateKeyHelper;
 
     @Autowired
-    private AwsHelper awsHelper;
+    private AwsServiceHelper awsServiceHelper;
 
     @Autowired
     private EmrClusterDefinitionDaoHelper emrClusterDefinitionDaoHelper;
@@ -126,10 +126,9 @@ public class EmrServiceImpl implements EmrService
      * @param retrieveInstanceFleets parameter for whether to retrieve instance fleets
      *
      * @return the EMR Cluster object with details.
-     * @throws Exception if an error occurred while getting the cluster
      */
     protected EmrCluster getClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose,
-        String accountId, Boolean retrieveInstanceFleets) throws Exception
+        String accountId, Boolean retrieveInstanceFleets)
     {
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
 
@@ -209,7 +208,7 @@ public class EmrServiceImpl implements EmrService
         }
         catch (AmazonServiceException ex)
         {
-            awsHelper.handleAmazonException(ex, "An Amazon exception occurred while getting EMR cluster details with name \"" + clusterName + "\".");
+            awsServiceHelper.handleAmazonException(ex, "An Amazon exception occurred while getting EMR cluster details with name \"" + clusterName + "\".");
         }
 
         return emrCluster;
@@ -387,7 +386,7 @@ public class EmrServiceImpl implements EmrService
         }
         catch (AmazonServiceException ex)
         {
-            awsHelper.handleAmazonException(ex, "An Amazon exception occurred while terminating EMR cluster with name \"" + clusterName + "\".");
+            awsServiceHelper.handleAmazonException(ex, "An Amazon exception occurred while terminating EMR cluster with name \"" + clusterName + "\".");
         }
 
         return createEmrClusterFromRequest(clusterId, emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
@@ -497,7 +496,7 @@ public class EmrServiceImpl implements EmrService
         }
         catch (AmazonServiceException ex)
         {
-            awsHelper.handleAmazonException(ex,
+            awsServiceHelper.handleAmazonException(ex,
                 "An Amazon exception occurred while adding EMR step \"" + stepHelper.getRequestStepName(request) + "\" to cluster with name \"" + clusterName +
                     "\".");
         }
@@ -573,7 +572,7 @@ public class EmrServiceImpl implements EmrService
         }
         catch (AmazonServiceException ex)
         {
-            awsHelper.handleAmazonException(ex, "An Amazon exception occurred while adding EMR security groups: " +
+            awsServiceHelper.handleAmazonException(ex, "An Amazon exception occurred while adding EMR security groups: " +
                 herdStringHelper.buildStringWithDefaultDelimiter(request.getSecurityGroupIds()) + " to cluster: " + clusterName);
         }
 
