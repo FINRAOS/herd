@@ -210,7 +210,7 @@
                       be listed in the report. We are excluding the implementation of AWSOperations
                       and S3Operations, since unit tests use a mock implementation. We are also excluding
                       system jobs, since they would not be called directly from the unit tests. We are excluding
-                      deprecated activiti tasks.
+                      deprecated activiti tasks. We are excluding all spark scala projects.
                      -->
                   <excludes>
                      <exclude>com/kscs/util/jaxb/**</exclude>
@@ -221,6 +221,9 @@
                      <exclude>org/finra/herd/sdk/**</exclude>
                      <exclude>org/finra/herd/dao/credstash/**</exclude>
                      <exclude>org/finra/dm/service/activiti/**</exclude>
+                     <exclude>org/apache/spark/sql/execution/datasources/**</exclude>
+                     <exclude>org/apache/spark/sql/herd/**</exclude>
+                     <exclude>org/apache/spark/sql/hive/orc/**</exclude>
                   </excludes>
                </instrumentation>
             </configuration>
