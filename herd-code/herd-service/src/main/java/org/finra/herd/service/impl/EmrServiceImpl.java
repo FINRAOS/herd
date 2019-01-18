@@ -134,7 +134,7 @@ public class EmrServiceImpl implements EmrService
     protected EmrCluster getClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose,
         String accountId, Boolean retrieveInstanceFleets)
     {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
 
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
@@ -372,7 +372,7 @@ public class EmrServiceImpl implements EmrService
     protected EmrCluster terminateClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId,
         String accountId)
     {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
 
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
@@ -477,7 +477,7 @@ public class EmrServiceImpl implements EmrService
 
         //get accountId and awsParamDto
         String accountId = stepHelper.getRequestAccountId(request);
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
 
         // Get the EMR cluster definition and ensure it exists.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(
@@ -561,7 +561,7 @@ public class EmrServiceImpl implements EmrService
 
         // Get account and AwsParamDto
         String accountId = request.getAccountId();
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
 
         // Get the EMR cluster definition and ensure it exists.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper

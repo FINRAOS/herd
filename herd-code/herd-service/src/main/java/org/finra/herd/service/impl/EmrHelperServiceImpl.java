@@ -124,7 +124,7 @@ public class EmrHelperServiceImpl implements EmrHelperService
     EmrClusterCreateDto emrCreateClusterAwsSpecificStepsImpl(EmrClusterCreateRequest request, EmrClusterDefinition emrClusterDefinition,
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto)
     {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(emrClusterDefinition.getAccountId());
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(emrClusterDefinition.getAccountId());
 
         // If instance group definitions are specified, find best price and update definition.
         if (!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()))
@@ -245,7 +245,7 @@ public class EmrHelperServiceImpl implements EmrHelperService
      * @param emrClusterDefinitionOverride - the override value or {@code null}
      */
     @SuppressWarnings("PMD.CyclomaticComplexity") // Method is not complex. It's just very repetitive.
-    private void overrideEmrClusterDefinition(EmrClusterDefinition emrClusterDefinition, EmrClusterDefinition emrClusterDefinitionOverride)
+    protected void overrideEmrClusterDefinition(EmrClusterDefinition emrClusterDefinition, EmrClusterDefinition emrClusterDefinitionOverride)
     {
         if (emrClusterDefinitionOverride != null)
         {
