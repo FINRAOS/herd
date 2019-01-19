@@ -121,6 +121,15 @@ public class EmrHelperServiceImpl implements EmrHelperService
         logEmrClusterCreationImpl(emrClusterAlternateKeyDto, emrClusterDefinition, clusterId);
     }
 
+    /**
+     * The implementation of the create cluster AWS specific steps.  These steps are run outside of any transaction.
+     *
+     * @param request the EMR cluster create request
+     * @param emrClusterDefinition the EMR cluster definition object
+     * @param emrClusterAlternateKeyDto the EMR cluster alternate key data transfer object
+     *
+     * @return the EMR cluster create data transfer object
+     */
     EmrClusterCreateDto emrCreateClusterAwsSpecificStepsImpl(EmrClusterCreateRequest request, EmrClusterDefinition emrClusterDefinition,
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto)
     {
@@ -191,6 +200,15 @@ public class EmrHelperServiceImpl implements EmrHelperService
         return new EmrClusterCreateDto(clusterId, emrClusterAlreadyExists, emrClusterCreated, emrClusterStatus);
     }
 
+    /**
+     * The implementation of the EMR pre cluster steps.
+     *
+     * @param emrClusterAlternateKeyDto the EMR cluster alternate key data transfer object
+     * @param request the EMR cluster create request
+     *
+     * @return the EMR cluster definition
+     * @throws Exception Exception when the original EMR cluster definition XML is malformed
+     */
     EmrClusterDefinition emrPreCreateClusterStepsImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterCreateRequest request) throws Exception
     {
         // Get the EMR cluster definition and ensure it exists.
@@ -217,6 +235,15 @@ public class EmrHelperServiceImpl implements EmrHelperService
         return emrClusterDefinition;
     }
 
+    /**
+     * The implementation of the log message for the EMR cluster creation.
+     *
+     * @param emrClusterAlternateKeyDto the EMR cluster alternate key data transfer object
+     * @param emrClusterDefinition the EMR cluster definition object
+     * @param clusterId the cluster Id for the newly created EMR cluster
+     *
+     * @throws Exception Exception can occur when converting the EMR cluster definition to XML
+     */
     void logEmrClusterCreationImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterDefinition emrClusterDefinition, String clusterId)
         throws Exception
     {

@@ -72,6 +72,7 @@
          <Class name="~org.finra.herd.model.dto.ElasticsearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.ElasticsearchSettingsDto"/>
          <Class name="~org.finra.herd.model.dto.EmrClusterAlternateKeyDto"/>
+         <Class name="~org.finra.herd.model.dto.EmrClusterCreateDto"/>
          <Class name="~org.finra.herd.model.dto.EmrClusterPriceDto"/>
          <Class name="~org.finra.herd.model.dto.FacetTypeEnum"/>
          <Class name="~org.finra.herd.model.dto.HivePartitionDto"/>

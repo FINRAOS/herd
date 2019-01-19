@@ -367,7 +367,6 @@ public class EmrServiceImpl implements EmrService
      * @param accountId The account Id
      *
      * @return the terminated EMR cluster object
-     * @throws Exception if there were any errors while terminating the cluster
      */
     protected EmrCluster terminateClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId,
         String accountId)

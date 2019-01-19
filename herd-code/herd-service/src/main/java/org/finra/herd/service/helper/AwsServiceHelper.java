@@ -29,17 +29,24 @@ public class AwsServiceHelper
 {
     /**
      * Handles the AmazonServiceException, throws corresponding exception based on status code in amazon exception.
+     *
+     * @param amazonServiceException the AWS exception that will be handled by this method.
+     * @param message the message to include with this exception.
+     *
+     * @throws IllegalArgumentException the exception to be thrown with a HttpStatus.SC_BAD_REQUEST
+     * @throws ObjectNotFoundException the exception to be thrown with a HttpStatus.SC_NOT_FOUND
      */
-    public void handleAmazonException(AmazonServiceException ex, String message) throws IllegalArgumentException, ObjectNotFoundException
+    public void handleAmazonException(AmazonServiceException amazonServiceException, String message) throws IllegalArgumentException, ObjectNotFoundException
     {
-        if (ex.getStatusCode() == HttpStatus.SC_BAD_REQUEST)
+        if (amazonServiceException.getStatusCode() == HttpStatus.SC_BAD_REQUEST)
         {
-            throw new IllegalArgumentException(message + " Reason: " + ex.getMessage(), ex);
+            throw new IllegalArgumentException(message + " Reason: " + amazonServiceException.getMessage(), amazonServiceException);
         }
-        else if (ex.getStatusCode() == HttpStatus.SC_NOT_FOUND)
+        else if (amazonServiceException.getStatusCode() == HttpStatus.SC_NOT_FOUND)
         {
-            throw new ObjectNotFoundException(message + " Reason: " + ex.getMessage(), ex);
+            throw new ObjectNotFoundException(message + " Reason: " + amazonServiceException.getMessage(), amazonServiceException);
         }
-        throw ex;
+
+        throw amazonServiceException;
     }
 }
