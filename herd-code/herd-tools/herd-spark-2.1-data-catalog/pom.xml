@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-tools</artifactId>
-      <version>0.87.0-SNAPSHOT</version>
+      <version>0.88.0-SNAPSHOT</version>
    </parent>
 
    <name>herd spark 2.1 data catalog</name>
@@ -78,31 +78,8 @@
       </dependency>
 
       <dependency>
-         <groupId>org.finra.pet</groupId>
-         <artifactId>jcredstash-fx</artifactId>
-         <version>${jcredstash-fx.version}</version>
-         <exclusions>
-            <exclusion>
-               <groupId>com.amazonaws</groupId>
-               <artifactId>*</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>junit</groupId>
-               <artifactId>junit</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.apache.commons</groupId>
-               <artifactId>commons-lang3</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.powermock</groupId>
-               <artifactId>*</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>*</artifactId>
-            </exclusion>
-         </exclusions>
+         <groupId>co.wrisk.jcredstash</groupId>
+         <artifactId>jcredstash</artifactId>
       </dependency>
 
       <!-- Test -->

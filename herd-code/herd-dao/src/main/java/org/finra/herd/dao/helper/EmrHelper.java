@@ -142,7 +142,7 @@ public class EmrHelper extends AwsHelper
         boolean emrClusterNameSpecified = StringUtils.isNotBlank(emrClusterName);
 
         Assert.isTrue(emrClusterIdSpecified || emrClusterNameSpecified, "One of EMR cluster ID or EMR cluster name must be specified.");
-        AwsParamsDto awsParamsDto = getAwsParamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = getAwsParamsDtoByAccountId(accountId);
 
         // Get cluster by ID first
         if (emrClusterIdSpecified)
@@ -186,7 +186,7 @@ public class EmrHelper extends AwsHelper
      *
      * @return AwsParamsDto
      */
-    public AwsParamsDto getAwsParamsDtoByAcccountId(String accountId)
+    public AwsParamsDto getAwsParamsDtoByAccountId(String accountId)
     {
         AwsParamsDto awsParamsDto = getAwsParamsDto();
         if (StringUtils.isNotBlank(accountId))
@@ -323,7 +323,7 @@ public class EmrHelper extends AwsHelper
 
         if (awsInstanceFleetsResult != null && !CollectionUtils.isEmpty(awsInstanceFleetsResult.getInstanceFleets()))
         {
-            emrInstanceFleets = new ArrayList();
+            emrInstanceFleets = new ArrayList<>();
 
             for (InstanceFleet awsInstanceFleet : awsInstanceFleetsResult.getInstanceFleets())
             {
