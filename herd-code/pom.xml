@@ -221,6 +221,7 @@
                      <exclude>org/finra/herd/sdk/**</exclude>
                      <exclude>org/finra/herd/dao/credstash/**</exclude>
                      <exclude>org/finra/dm/service/activiti/**</exclude>
+                     <exclude>org/finra/herd/catalog/**</exclude>
                      <exclude>org/apache/spark/sql/execution/datasources/**</exclude>
                      <exclude>org/apache/spark/sql/herd/**</exclude>
                      <exclude>org/apache/spark/sql/hive/orc/**</exclude>

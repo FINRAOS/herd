@@ -5,3 +5,12 @@ target/
 *.tar
 /.idea/
 *.iml
+**/derby.log
+**/herd-spark-2.1-data-catalog/src/
+**/herd-spark-2.1-data-catalog/test-output/
+**/herd-spark-2.1-data-catalog/metastore_db/
+**/herd-spark-2.2-data-catalog/src/
+**/herd-spark-2.2-data-catalog/test-output/
+**/herd-spark-2.2-data-catalog/metastore_db/
+**/herd-spark-data-catalog/test-output/
+**/herd-spark-data-catalog/metastore_db/

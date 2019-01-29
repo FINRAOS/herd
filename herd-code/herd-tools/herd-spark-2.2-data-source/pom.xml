@@ -25,12 +25,12 @@
       <version>0.88.0-SNAPSHOT</version>
    </parent>
 
-   <name>herd spark 2.2 data catalog</name>
+   <name>herd spark 2.2 data source</name>
 
    <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
-   <artifactId>herd-spark-2.2-data-catalog</artifactId>
+   <artifactId>herd-spark-2.2-data-source</artifactId>
 
-   <!-- build the data catalog for spark version 2.2.0 -->
+   <!-- build the data source for spark version 2.2.0 -->
    <properties>
       <spark.version>2.2.0</spark.version>
    </properties>
@@ -106,7 +106,7 @@
                </filesets>
             </configuration>
          </plugin>
-         <!-- Copy all the source code from the module herd-spark-data-catalog -->
+         <!-- Copy all the source code from the module herd-spark-data-source -->
          <plugin>
             <artifactId>maven-resources-plugin</artifactId>
             <executions>
@@ -121,7 +121,7 @@
                      <overwrite>true</overwrite>
                      <resources>
                         <resource>
-                           <directory>../herd-spark-data-catalog/src/</directory>
+                           <directory>../herd-spark-data-source/src/</directory>
                         </resource>
                      </resources>
                   </configuration>

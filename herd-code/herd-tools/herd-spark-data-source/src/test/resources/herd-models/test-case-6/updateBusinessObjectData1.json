@@ -1,0 +1,14 @@
+{
+  "businessObjectDataKey": {
+    "namespace": "FOO",
+    "businessObjectDefinitionName": "TEST",
+    "businessObjectFormatUsage": "PRC",
+    "businessObjectFormatFileType": "CSV",
+    "businessObjectFormatVersion": 0,
+    "partitionValue": "2017-01-01",
+    "subPartitionValues": [],
+    "businessObjectDataVersion": 1
+  },
+  "status": "VALID",
+  "previousStatus": "UPLOADING"
+}
