@@ -78,6 +78,7 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 import org.finra.herd.service.activiti.HerdCommandInvoker;
 import org.finra.herd.service.activiti.task.ExecuteJdbcTestHelper;
 import org.finra.herd.service.config.ServiceTestSpringModuleConfig;
+import org.finra.herd.service.helper.AwsServiceHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
@@ -370,15 +371,21 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean DRY_RUN = true;
 
+    public static final String EC2_NODE_IAM_PROFILE_NAME = "UT_Ec2NodeIamProfileName_" + RANDOM_SUFFIX;
+
     public static final String EC2_PRICING_LIST_URL = "UT_Ec2PricingListUrl_" + RANDOM_SUFFIX;
 
     public static final String EC2_PRODUCT_KEY = "UT_EC2_ProductKey_1_" + RANDOM_SUFFIX;
 
     public static final String EC2_PRODUCT_KEY_2 = "UT_EC2_ProductKey_2_" + RANDOM_SUFFIX;
 
+    public static final String EMR_CLUSTER_CONFIGURATION = "UT_EMR_Cluster_Configuration_" + RANDOM_SUFFIX;
+
     public static final String EMR_CLUSTER_ID = "UT_EMR_Cluster_ID_" + RANDOM_SUFFIX;
 
     public static final String EMR_CLUSTER_NAME = "UT_EMR_Cluster_Name_" + RANDOM_SUFFIX;
+
+    public static final String EMR_CLUSTER_STATUS = "UT_EMR_Cluster_Status_" + RANDOM_SUFFIX;
 
     public static final Boolean EMR_CLUSTER_VERBOSE_FLAG = true;
 
@@ -669,6 +676,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             "#end" +
             "#end";
 
+    public static final String S3_STAGING_LOCATION = "UT_S3_Staging_Location_" + RANDOM_SUFFIX;
+
     public static final XMLGregorianCalendar SEARCH_INDEX_STATISTICS_CREATION_DATE = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String SEARCH_INDEX_STATISTICS_INDEX_UUID = "UT_SearchIndexSetting_Uuid_" + RANDOM_SUFFIX;
@@ -678,6 +687,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Long SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS = (long) (Math.random() * Integer.MAX_VALUE);
 
     public static final String SECOND_PARTITION_COLUMN_NAME = "PRTN_CLMN002";
+
+    public static final String SERVICE_IAM_ROLE = "UT_ServiceIamRole_" + RANDOM_SUFFIX;
 
     /**
      * The length of a business object definition short description
@@ -839,6 +850,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected AwsHelper awsHelper;
+
+    @Autowired
+    protected AwsServiceHelper awsServiceHelper;
 
     @Autowired
     protected BusinessObjectDataAttributeDaoHelper businessObjectDataAttributeDaoHelper;

@@ -2082,7 +2082,7 @@ public class EmrServiceTest extends AbstractServiceTest
         emrClusterAlternateKeyDto.setEmrClusterName(emrClusterName);
 
         AwsParamsDto awsParamsDto = new AwsParamsDto();
-        when(mockEmrHelper.getAwsParamsDtoByAcccountId(any())).thenReturn(awsParamsDto);
+        when(mockEmrHelper.getAwsParamsDtoByAccountId(any())).thenReturn(awsParamsDto);
 
         NamespaceEntity namespaceEntity = new NamespaceEntity();
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = new EmrClusterDefinitionEntity();
