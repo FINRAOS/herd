@@ -204,6 +204,24 @@
                      </configOptions>
                   </configuration>
                </execution>
+
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>Python-Generation</id>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <output>${project.build.directory}/python-client</output>
+                     <generatorName>python</generatorName>
+                     <configOptions>
+                        <packageName>herd_sdk</packageName>
+                        <projectName>herd-sdk</projectName>
+                        <packageVersion>${project.version}.${maven.build.timestamp}</packageVersion>
+                     </configOptions>
+                  </configuration>
+               </execution>
             </executions>
          </plugin>
 
