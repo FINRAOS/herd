@@ -218,7 +218,6 @@
                      <configOptions>
                         <packageName>herd_sdk</packageName>
                         <projectName>herd-sdk</projectName>
-                        <packageUrl>https://artifactory.finra.org/artifactory/python-local/herd-sdk</packageUrl>
                         <packageVersion>${project.version}.${maven.build.timestamp}</packageVersion>
                      </configOptions>
                   </configuration>
