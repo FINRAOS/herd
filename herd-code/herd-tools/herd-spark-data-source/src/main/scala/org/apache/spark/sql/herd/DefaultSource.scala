@@ -16,6 +16,7 @@
 package org.apache.spark.sql.herd
 
 import java.net.URI
+import java.util
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
@@ -25,7 +26,7 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
-import com.jessecoyle.JCredStash
+import com.jessecoyle.{CredStashBouncyCastleCrypto, JCredStash}
 import org.apache.hadoop.fs.Path
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.internal.Logging
@@ -109,17 +110,20 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       val credSDLC = parameters.get("credSDLC")
         .orElse(sparkSession.conf.getOption("spark.herd.credential.sdlc"))
         .getOrElse("prody")
+
       val credPwd = credName.map(c => {
+        var context = new util.HashMap[String, String] {
+          put("AGS", credAGS.toUpperCase())
+          put("SDLC", credSDLC.toUpperCase())
+        }
+
         var clientConf = new ClientConfiguration
         // TODO: Add proxy configuration from environment: "CRED_PROXY" and "CRED_PORT"
         val provider = new DefaultAWSCredentialsProviderChain
-        val ddb = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-        val kms = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-        val credstash = new JCredStash(ddb, kms)
-        val table = "credential-store"
+        val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+        val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
         // TODO: The below map needs to be created and populated with the values as done by org.finra.herd.dao.helper.CredStashHelper or similar
-        val credstashEncryptionContextMap = null
-        credstash.getSecret(c, credstashEncryptionContextMap)
+        new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(c, context)
       })
 
       (url, credName, credPwd)

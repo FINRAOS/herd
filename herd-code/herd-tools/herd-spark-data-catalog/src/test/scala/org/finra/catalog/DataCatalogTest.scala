@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.catalog
+package org.finra.catalog
 
 import org.apache.spark.sql.SparkSession
 import org.junit.runner.RunWith
