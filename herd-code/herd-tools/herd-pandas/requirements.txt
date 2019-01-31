@@ -1,0 +1,3 @@
+herd_sdk
+numpy >= 1.16.0
+pandas >= 0.24.0
