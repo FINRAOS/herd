@@ -13,6 +13,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 """
+
 import herd_sdk
 import pandas as pd
 
@@ -21,6 +22,7 @@ class Entity(object):
     """
      The Entity (Business Object) class.
     """
+
     def __init__(self, configuration, namespace, name):
         """
         The init method for the entity class.
@@ -127,15 +129,8 @@ class Entity(object):
 
         registered_data = self.list_registered_data(*partition_values).copy()\
             .set_index('partitionValue')
-        data_versions = registered_data.dataVersion
 
-        if len(data_versions) == 1:
-            data_version = data_versions[0].item()
-        else:
-            data_version = 0
-            print('Expected 1 data_version record but was {}'.format(len(data_versions)))
-
-        return data_version
+        return registered_data.dataVersion[0].item()
 
     def get_prefix(self, format_usage, file_type, partition):
         """
@@ -197,6 +192,7 @@ class Entity(object):
                                                               self.name,
                                                               format_usage,
                                                               file_type)
+
         return pd.read_csv(url, delimiter=fmt.schema.delimiter, names=cols, low_memory=False)
 
     def __repr__(self):
