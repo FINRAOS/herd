@@ -41,8 +41,6 @@ import org.apache.spark.sql.util.QueryExecutionListener
 import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
 import org.finra.herd.sdk.model._
 
-
-
 /** A custom data source that integrates with Herd for metadata management
     *
     * It delegates to the built-in Spark file formats (PARQUET, CSV, ORC) for the actual reading and writing of data.
@@ -110,11 +108,17 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       val credSDLC = parameters.get("credSDLC")
         .orElse(sparkSession.conf.getOption("spark.herd.credential.sdlc"))
         .getOrElse("prody")
+      val credComponent = parameters.get("credComponent")
+        .orElse(sparkSession.conf.getOption("spark.herd.credential.component"))
+        .getOrElse(null)
 
       val credPwd = credName.map(c => {
         var context = new util.HashMap[String, String] {
-          put("AGS", credAGS.toUpperCase())
-          put("SDLC", credSDLC.toUpperCase())
+          put("AGS", credAGS)
+          put("SDLC", credSDLC)
+          if (credComponent != null) {
+            put("Component", credComponent)
+          }
         }
 
         var clientConf = new ClientConfiguration

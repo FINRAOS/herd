@@ -41,11 +41,9 @@
          <scope>provided</scope>
       </dependency>
 
-      <!-- cred-stash class -->
       <dependency>
-         <groupId>org.finra.pet</groupId>
-         <artifactId>jcredstash-fx</artifactId>
-         <version>1.3</version>
+         <groupId>co.wrisk.jcredstash</groupId>
+         <artifactId>jcredstash</artifactId>
       </dependency>
 
       <!-- Spark bits, scoped for uber jar creation (provided) -->

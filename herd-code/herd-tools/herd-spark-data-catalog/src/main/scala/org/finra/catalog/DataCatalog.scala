@@ -18,7 +18,21 @@ package org.finra.catalog
 import java.io.File
 import java.net.{HttpURLConnection, URL}
 import java.net.URLEncoder.encode
+import java.util
 
+import scala.collection.JavaConverters._
+import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
+import scala.util.{Failure, Success, Try}
+import scala.util.matching.Regex
+import scala.xml._
+
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
+import com.amazonaws.services.kms.AWSKMSClient
+import com.jessecoyle.{CredStashBouncyCastleCrypto, JCredStash}
 import org.apache.commons.codec.binary.Base64
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -27,18 +41,10 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.herd._
 import org.apache.spark.sql.types._
 import org.slf4j.LoggerFactory
-import scala.collection.JavaConverters._
-import scala.collection.mutable.ArrayBuffer
-import scala.io.Source
-import scala.util.{Failure, Success, Try}
-import scala.util.matching.Regex
-import scala.xml._
 
 import org.finra.herd.sdk.api._
 import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
 import org.finra.herd.sdk.model._
-import org.finra.pet._
-
 
 /** Used to contain a partition's name and value pair
  *
@@ -130,20 +136,34 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
            host: String,
            credName: String,
            credAGS: String,
-           credSDLC: String
+           credSDLC: String,
+           credComponent: String
           ) {
     // core constructor
     this(spark, host)
 
-    // initialize credStash
-    val jCredStashFX = new JCredStashFX()
+    logger.info("credName=" + credName)
+    logger.info("credAGS=" + credAGS)
+    logger.info("credSDLC=" + credSDLC)
+    logger.info("credComponent=" + credComponent)
 
-    // get the password
-    val pwd = jCredStashFX.getCredential(credName, credAGS, credSDLC, null, null)
 
-    // these are the credentials
+    var context = new util.HashMap[String, String] {
+      put("AGS", credAGS)
+      put("SDLC", credSDLC)
+      if (credComponent != null) {
+        put("Component", credComponent)
+      }
+    }
+
     this.username = credName
-    this.password = pwd
+
+    val clientConf = new ClientConfiguration
+    // TODO: Add proxy configuration from environment: "CRED_PROXY" and "CRED_PORT"
+    val provider = new DefaultAWSCredentialsProviderChain
+    val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+    val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+    this.password = new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(credName, context)
   }
 
   /**
@@ -158,7 +178,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
            username: String
           ) {
     // core constructor
-    this(spark, host, username, "DATABRICKS", "prody")
+    this(spark, host, username, "DATABRICKS", "PRODY", null)
   }
 
 
@@ -1849,8 +1869,7 @@ class TheCatalog(val urlDM: String,
 
   val fullUrlDM = urlDM + "/herd-app/rest"
 
-  val jCredStashFX = new JCredStashFX()
-  val password = jCredStashFX.getCredential(username, ags, sdlc, null, null)
+  // TODO fix credStash issue
 
   val spark = SparkSession.builder
     .master("local")
