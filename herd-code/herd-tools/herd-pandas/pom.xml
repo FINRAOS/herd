@@ -28,7 +28,7 @@
    <name>herd pandas python library</name>
 
    <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
-   <artifactId>herd-pandas-python-library</artifactId>
+   <artifactId>herd-pandas</artifactId>
 
    <build>
       <plugins>
