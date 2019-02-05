@@ -147,23 +147,32 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     logger.info("credSDLC=" + credSDLC)
     logger.info("credComponent=" + credComponent)
 
-
-    var context = new util.HashMap[String, String] {
-      put("AGS", credAGS)
-      put("SDLC", credSDLC)
-      if (credComponent != null) {
-        put("Component", credComponent)
-      }
+    val user = spark.conf.getOption("spark.herd.username").orNull
+    if (user != null) {
+      this.username = user
+    } else {
+      this.username = credName
     }
 
-    this.username = credName
+    val pwd = spark.conf.getOption("spark.herd.password").orNull
+    if (pwd != null) {
+      this.password = pwd
+    } else {
+      var context = new util.HashMap[String, String] {
+        put("AGS", credAGS)
+        put("SDLC", credSDLC)
+        if (credComponent != null) {
+          put("Component", credComponent)
+        }
+      }
 
-    val clientConf = new ClientConfiguration
-    // TODO: Add proxy configuration from environment: "CRED_PROXY" and "CRED_PORT"
-    val provider = new DefaultAWSCredentialsProviderChain
-    val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-    val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-    this.password = new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(credName, context)
+      val clientConf = new ClientConfiguration
+      // TODO: Add proxy configuration from environment: "CRED_PROXY" and "CRED_PORT"
+      val provider = new DefaultAWSCredentialsProviderChain
+      val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+      val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+      this.password = new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(credName, context)
+    }
   }
 
   /**
