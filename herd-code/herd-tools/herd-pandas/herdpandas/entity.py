@@ -33,20 +33,20 @@ class Entity(object):
         """
 
         # Create an instance of the Herd API Client
-        herd_client = herd_sdk.ApiClient(configuration)
+        herd_client = herdsdk.ApiClient(configuration)
 
         # Business Object Definition API
-        self.business_object_definition_api = herd_sdk.BusinessObjectDefinitionApi(herd_client)
+        self.business_object_definition_api = herdsdk.BusinessObjectDefinitionApi(herd_client)
 
         # Business Object Data API
-        self.business_object_data_api = herd_sdk.BusinessObjectDataApi(herd_client)
+        self.business_object_data_api = herdsdk.BusinessObjectDataApi(herd_client)
 
         # Business Object Format API
-        self.business_object_format_api = herd_sdk.BusinessObjectFormatApi(herd_client)
+        self.business_object_format_api = herdsdk.BusinessObjectFormatApi(herd_client)
 
         # Business Object Definition Column API
         self.column_api =\
-            herd_sdk.BusinessObjectDefinitionColumnApi(herd_client)
+            herdsdk.BusinessObjectDefinitionColumnApi(herd_client)
 
         self.namespace = namespace
         self.name = name
@@ -59,13 +59,13 @@ class Entity(object):
         """
 
         column_search_key =\
-            herd_sdk.BusinessObjectDefinitionColumnSearchKey(
+            herdsdk.BusinessObjectDefinitionColumnSearchKey(
                 self.namespace, self.name)
         column_search_filter =\
-            herd_sdk.BusinessObjectDefinitionColumnSearchFilter(
+            herdsdk.BusinessObjectDefinitionColumnSearchFilter(
                 [column_search_key])
         column_search_request =\
-            herd_sdk.BusinessObjectDefinitionColumnSearchRequest(
+            herdsdk.BusinessObjectDefinitionColumnSearchRequest(
                 [column_search_filter])
         column_search_response = self.\
             column_api.business_object_definition_column_search_business_object_definition_columns(
