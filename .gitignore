@@ -14,3 +14,6 @@ target/
 **/herd-spark-2.2-data-source/metastore_db/
 **/herd-spark-data-source/test-output/
 **/herd-spark-data-source/metastore_db/
+**/htmlcov/
+**/.coverage
+**/__pycache__/
