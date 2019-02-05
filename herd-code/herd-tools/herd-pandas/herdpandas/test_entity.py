@@ -17,7 +17,7 @@
 import unittest
 from unittest.mock import patch
 from entity import Entity
-import herd_sdk
+import herdsdk
 import pandas as pd
 
 

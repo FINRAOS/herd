@@ -33,7 +33,7 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <herd-pandas.version>0.89.0</herd-pandas.version>
+      <herdpandas.version>0.89.0</herdpandas.version>
 
    </properties>
 
@@ -76,7 +76,7 @@
             <configuration>
                <file>${project.build.directory}/resources/setup.py</file>
                <token>@@Version@@</token>
-               <value>"${herd-pandas.version}"</value>
+               <value>"${herdpandas.version}"</value>
             </configuration>
          </plugin>
          <plugin>

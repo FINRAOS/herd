@@ -15,7 +15,7 @@
 """
 
 """
-    herd-pandas
+    herdpandas
 
     The herd data management module for use with python pandas and jupyter notebooks.
 """
@@ -29,7 +29,7 @@ from setuptools import setup, find_packages
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
 setup(
-    name="herd-pandas",
+    name="herdpandas",
     version=@@Version@@,
     description="herd data management",
     maintainer="FINRA",
@@ -37,7 +37,7 @@ setup(
     license="http://www.apache.org/licenses/LICENSE-2.0",
     url="https://github.com/FINRAOS/herd",
     keywords=["herd", "dm", "pandas"],
-    install_requires=["herd_sdk", "numpy >= 1.16.0", "pandas >= 0.24.0"],
+    install_requires=["herdsdk", "numpy >= 1.16.0", "pandas >= 0.24.0"],
     packages=find_packages(),
     include_package_data=True,
     long_description="""\

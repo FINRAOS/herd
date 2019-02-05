@@ -14,7 +14,7 @@
   limitations under the License.
 """
 
-import herd_sdk
+import herdsdk
 import pandas as pd
 
 
