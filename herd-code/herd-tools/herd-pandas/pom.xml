@@ -30,6 +30,13 @@
    <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
    <artifactId>herd-pandas</artifactId>
 
+   <properties>
+
+      <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
+      <herd-pandas.version>0.89.0</herd-pandas.version>
+
+   </properties>
+
    <build>
       <plugins>
          <plugin>
@@ -69,7 +76,7 @@
             <configuration>
                <file>${project.build.directory}/resources/setup.py</file>
                <token>@@Version@@</token>
-               <value>"${project.version}.${maven.build.timestamp}"</value>
+               <value>"${herd-pandas.version}"</value>
             </configuration>
          </plugin>
          <plugin>
