@@ -43,6 +43,7 @@
       <module>herd-spark-2.1-data-source</module>
       <module>herd-spark-2.2-data-source</module>
       <module>herd-spark-data-catalog</module>
+      <module>herd-pandas</module>
    </modules>
 
 </project>

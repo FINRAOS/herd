@@ -25,7 +25,12 @@
    </parent>
 
    <properties>
+
       <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+
+      <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
+      <herdsdk.version>0.89.0</herdsdk.version>
+
    </properties>
 
    <name>herd sdk</name>
@@ -216,9 +221,9 @@
                      <output>${project.build.directory}/python-client</output>
                      <generatorName>python</generatorName>
                      <configOptions>
-                        <packageName>herd_sdk</packageName>
-                        <projectName>herd-sdk</projectName>
-                        <packageVersion>${project.version}.${maven.build.timestamp}</packageVersion>
+                        <packageName>herdsdk</packageName>
+                        <projectName>herdsdk</projectName>
+                        <packageVersion>${herdsdk.version}</packageVersion>
                      </configOptions>
                   </configuration>
                </execution>
