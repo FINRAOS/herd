@@ -5,3 +5,15 @@ target/
 *.tar
 /.idea/
 *.iml
+**/derby.log
+**/herd-spark-2.1-data-source/src/
+**/herd-spark-2.1-data-source/test-output/
+**/herd-spark-2.1-data-source/metastore_db/
+**/herd-spark-2.2-data-source/src/
+**/herd-spark-2.2-data-source/test-output/
+**/herd-spark-2.2-data-source/metastore_db/
+**/herd-spark-data-source/test-output/
+**/herd-spark-data-source/metastore_db/
+**/htmlcov/
+**/.coverage
+**/__pycache__/

@@ -131,6 +131,7 @@
          <Package name="~org.apache.spark.sql.herd"/>
          <Package name="~org.apache.spark.sql.execution.datasources"/>
          <Package name="~org.apache.spark.sql.hive.orc"/>
+         <Package name="~org.finra.catalog"/>
       </Or>
    </Match>
 
