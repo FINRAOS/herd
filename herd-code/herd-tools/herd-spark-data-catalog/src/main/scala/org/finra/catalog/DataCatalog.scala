@@ -147,16 +147,16 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     logger.info("credSDLC=" + credSDLC)
     logger.info("credComponent=" + credComponent)
 
-    val user = spark.conf.getOption("spark.herd.username").orNull
-    if (user != null) {
-      this.username = user
+    val user = spark.conf.getOption("spark.herd.username")
+    if (user.isDefined) {
+      this.username = user.get
     } else {
       this.username = credName
     }
 
-    val pwd = spark.conf.getOption("spark.herd.password").orNull
-    if (pwd != null) {
-      this.password = pwd
+    val pwd = spark.conf.getOption("spark.herd.password")
+    if (pwd.isDefined) {
+      this.password = pwd.get
     } else {
       var context = new util.HashMap[String, String] {
         put("AGS", credAGS)
@@ -166,12 +166,26 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
         }
       }
 
+      val proxyHost = spark.conf.getOption("spark.herd.proxy.host")
+      val proxyPort = spark.conf.getOption("spark.herd.proxy.port")
+
       val clientConf = new ClientConfiguration
-      // TODO: Add proxy configuration from environment: "CRED_PROXY" and "CRED_PORT"
+      if (proxyHost.isDefined && proxyPort.isDefined) {
+        clientConf.setProxyHost(proxyHost.get)
+        clientConf.setProxyPort(Integer.parseInt(proxyPort.get))
+      }
+
+      var prefixedCredName : String = null
+      if (context.containsKey("Component")) {
+        prefixedCredName = context.get("AGS") + "." + context.get("Component") + "." + context.get("SDLC") + "." + this.username
+      } else {
+        prefixedCredName = context.get("AGS") + "." + context.get("SDLC") + "." + this.username
+      }
+
       val provider = new DefaultAWSCredentialsProviderChain
       val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
       val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-      this.password = new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(credName, context)
+      this.password = new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(prefixedCredName, context)
     }
   }
 
@@ -1817,6 +1831,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     spark.read.format("herd")
       .option("url", restPostURL)
+      .option("username", username)
+      .option("password", password)
       .option("namespace", namespace)
       .option("businessObjectName", objName)
       .option("businessObjectFormatUsage", usage)
@@ -1846,6 +1862,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     df.write.format("herd")
       .option("url", restPostURL)
+      .option("username", username)
+      .option("password", password)
       .option("namespace", namespace)
       .option("businessObjectName", objName)
       .option("partitionKey", partitionKey)
