@@ -139,7 +139,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
            credName: String,
            credAGS: String,
            credSDLC: String,
-           credComponent: String = null
+           credComponent: String
           ) {
     // core constructor
     this(spark, host)
@@ -149,46 +149,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     logger.info("credSDLC=" + credSDLC)
     logger.info("credComponent=" + credComponent)
 
-    val user = spark.conf.getOption("spark.herd.username")
-    if (user.isDefined) {
-      this.username = user.get
-    } else {
-      this.username = credName
-    }
-
-    val pwd = spark.conf.getOption("spark.herd.password")
-    if (pwd.isDefined) {
-      this.password = pwd.get
-    } else {
-      var context = new util.HashMap[String, String] {
-        put("AGS", credAGS)
-        put("SDLC", credSDLC)
-        if (credComponent != null) {
-          put("Component", credComponent)
-        }
-      }
-
-      val proxyHost = spark.conf.getOption("spark.herd.proxy.host")
-      val proxyPort = spark.conf.getOption("spark.herd.proxy.port")
-
-      val clientConf = new ClientConfiguration
-      if (proxyHost.isDefined && proxyPort.isDefined) {
-        clientConf.setProxyHost(proxyHost.get)
-        clientConf.setProxyPort(Integer.parseInt(proxyPort.get))
-      }
-
-      var prefixedCredName : String = null
-      if (context.containsKey("Component")) {
-        prefixedCredName = context.get("AGS") + "." + context.get("Component") + "." + context.get("SDLC") + "." + this.username
-      } else {
-        prefixedCredName = context.get("AGS") + "." + context.get("SDLC") + "." + this.username
-      }
-
-      val provider = new DefaultAWSCredentialsProviderChain
-      val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-      val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-      this.password = new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(prefixedCredName, context)
-    }
+    this.username = credName
+    this.password = getPassword(spark, credName, credAGS, credSDLC, credComponent)
   }
 
   /**
@@ -246,6 +208,51 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     }
 
     fullDF union fullDFOther
+  }
+
+  /**
+   *  Retrieve the password using credstash
+    * @param spark    spark context
+    * @param credName credential name (e.g. username for DM)
+    * @param credAGS  AGS for credential lookup
+    * @param credSDLC SDLC for credential lookup
+    * @param credComponent Component for credential lookup
+   * @return the password
+    */
+  def getPassword(spark: SparkSession,
+                  credName: String,
+                  credAGS: String,
+                  credSDLC: String,
+                  credComponent: String = null
+                 ) : String = {
+    var context = new util.HashMap[String, String] {
+      put("AGS", credAGS)
+      put("SDLC", credSDLC)
+      if (credComponent != null) {
+        put("Component", credComponent)
+      }
+    }
+
+    val proxyHost = spark.conf.getOption("spark.herd.proxy.host")
+    val proxyPort = spark.conf.getOption("spark.herd.proxy.port")
+
+    val clientConf = new ClientConfiguration
+    if (proxyHost.isDefined && proxyPort.isDefined) {
+      clientConf.setProxyHost(proxyHost.get)
+      clientConf.setProxyPort(Integer.parseInt(proxyPort.get))
+    }
+
+    var prefixedCredName: String = null
+    if (context.containsKey("Component")) {
+      prefixedCredName = context.get("AGS") + "." + context.get("Component") + "." + context.get("SDLC") + "." + credName
+    } else {
+      prefixedCredName = context.get("AGS") + "." + context.get("SDLC") + "." + credName
+    }
+
+    val provider = new DefaultAWSCredentialsProviderChain
+    val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+    val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+    return new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(prefixedCredName, context)
   }
 
   /**
