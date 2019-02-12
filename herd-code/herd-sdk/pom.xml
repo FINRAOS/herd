@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.89.0-SNAPSHOT</version>
+      <version>0.90.0-SNAPSHOT</version>
    </parent>
 
    <properties>
@@ -29,7 +29,7 @@
       <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <herdsdk.version>0.89.0</herdsdk.version>
+      <herdsdk.version>0.90.0</herdsdk.version>
 
    </properties>
 
