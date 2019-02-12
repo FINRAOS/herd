@@ -124,20 +124,22 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-   * Auxiliary constuctor using credstash
+   * Auxiliary constructor using credstash
    *
    * @param spark    spark context
    * @param host     DM host https://host.name.com:port
    * @param credName credential name (e.g. username for DM)
    * @param credAGS  AGS for credential lookup
    * @param credSDLC SDLC for credential lookup
+   * @param credComponent Component for credential lookup
+    *
    */
   def this(spark: SparkSession,
            host: String,
            credName: String,
            credAGS: String,
            credSDLC: String,
-           credComponent: String
+           credComponent: String = null
           ) {
     // core constructor
     this(spark, host)
