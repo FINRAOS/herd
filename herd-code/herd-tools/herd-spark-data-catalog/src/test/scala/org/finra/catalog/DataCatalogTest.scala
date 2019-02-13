@@ -46,17 +46,17 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     var mapCaptor = ArgumentCaptor.forClass(classOf[util.HashMap[String, String]])
 
     when(mockCredStash.getSecret(stringCaptor.capture, mapCaptor.capture)).thenReturn("testPassword")
-    val secret = dataCatalog.getPassword(spark, "testUser", "finra", "dev", "catalog")
+    val secret = dataCatalog.getPassword(spark, "testUser", "ags", "dev", "catalog")
     // Verify the secret
     assertEquals("testPassword", secret)
 
     // Verify prefixed credential name
-    assertEquals("finra.catalog.dev.testUser", stringCaptor.getValue)
+    assertEquals("ags.catalog.dev.testUser", stringCaptor.getValue)
 
     // Verify context
     val context : util.HashMap[String, String] = mapCaptor.getValue
     assertEquals(3, context.size)
-    assertEquals("finra", context.get("AGS"))
+    assertEquals("ags", context.get("AGS"))
     assertEquals("dev", context.get("SDLC"))
     assertEquals("catalog", context.get("Component"))
   }
@@ -72,17 +72,17 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     var mapCaptor = ArgumentCaptor.forClass(classOf[util.HashMap[String, String]])
 
     when(mockCredStash.getSecret(stringCaptor.capture, mapCaptor.capture)).thenReturn("testPassword")
-    val secret = dataCatalog.getPassword(spark, "testUser", "finra", "dev", null)
+    val secret = dataCatalog.getPassword(spark, "testUser", "ags", "dev", null)
     // Verify the secret
     assertEquals("testPassword", secret)
 
     // Verify prefixed credential name(component should not appear)
-    assertEquals("finra.dev.testUser", stringCaptor.getValue)
+    assertEquals("ags.dev.testUser", stringCaptor.getValue)
 
     // Verify context
     val context : util.HashMap[String, String] = mapCaptor.getValue
     assertEquals(2, context.size)
-    assertEquals("finra", context.get("AGS"))
+    assertEquals("ags", context.get("AGS"))
     assertEquals("dev", context.get("SDLC"))
   }
 }
