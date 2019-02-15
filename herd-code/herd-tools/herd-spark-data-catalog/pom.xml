@@ -145,9 +145,6 @@
                         <excludes>
                            <exclude>junit:junit</exclude>
                            <exclude>com.amazonaws:*</exclude>
-                           <exclude>commons-logging:commons-logging</exclude>
-                           <exclude>org.apache.httpcomponents:*</exclude>
-                           <exclude>com.fasterxml.jackson.*:*</exclude>
                         </excludes>
                      </artifactSet>
                   </configuration>
