@@ -165,27 +165,6 @@
                <skipTests>true</skipTests>
             </configuration>
          </plugin>
-         <!-- enable scalatest -->
-         <plugin>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest-maven-plugin</artifactId>
-            <version>1.0</version>
-            <configuration>
-               <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-               <junitxml>.</junitxml>
-               <filereports>WDF TestSuite.txt</filereports>
-               <htmlreporters>${project.build.directory}/html/scalatest</htmlreporters>
-               <testFailureIgnore>false</testFailureIgnore>
-            </configuration>
-            <executions>
-               <execution>
-                  <id>test</id>
-                  <goals>
-                     <goal>test</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
 
          <!-- Use mvn package for felicity to generate scaladocs. The spark pom has an extended example of this plugin -->
          <plugin>
