@@ -41,6 +41,7 @@ import org.apache.spark.sql.util.QueryExecutionListener
 import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
 import org.finra.herd.sdk.model._
 
+
 /** A custom data source that integrates with Herd for metadata management
     *
     * It delegates to the built-in Spark file formats (PARQUET, CSV, ORC) for the actual reading and writing of data.
@@ -112,25 +113,36 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
         .orElse(sparkSession.conf.getOption("spark.herd.credential.component"))
         .getOrElse(null)
 
-      val credPwd = credName.map(c => {
-        var context = new util.HashMap[String, String] {
-          put("AGS", credAGS)
-          put("SDLC", credSDLC)
-          if (credComponent != null) {
-            put("Component", credComponent)
-          }
+      var context = new util.HashMap[String, String] {
+        put("AGS", credAGS)
+        put("SDLC", credSDLC)
+        if (credComponent != null) {
+          put("Component", credComponent)
         }
+      }
 
-        var clientConf = new ClientConfiguration
-        // TODO: Add proxy configuration from environment: "CRED_PROXY" and "CRED_PORT"
-        val provider = new DefaultAWSCredentialsProviderChain
-        val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-        val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-        // TODO: The below map needs to be created and populated with the values as done by org.finra.herd.dao.helper.CredStashHelper or similar
-        new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(c, context)
-      })
+      val proxyHost = sparkSession.conf.getOption("spark.herd.proxy.host")
+      val proxyPort = sparkSession.conf.getOption("spark.herd.proxy.port")
 
-      (url, credName, credPwd)
+      val clientConf = new ClientConfiguration
+      if (proxyHost.isDefined && proxyPort.isDefined) {
+        clientConf.setProxyHost(proxyHost.get)
+        clientConf.setProxyPort(Integer.parseInt(proxyPort.get))
+      }
+
+      var prefixedCredName : String = null
+      if (context.containsKey("Component")) {
+        prefixedCredName = context.get("AGS") + "." + context.get("Component") + "." + context.get("SDLC") + "." + credName.get
+      } else {
+        prefixedCredName = context.get("AGS") + "." + context.get("SDLC") + "." + credName.get
+      }
+
+      val provider = new DefaultAWSCredentialsProviderChain
+      val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+      val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
+      val credPwd = new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(prefixedCredName, context)
+
+      (url, credName, Option(credPwd))
     }
   }
 
