@@ -16,11 +16,10 @@
 package org.finra.catalog
 
 import java.io.File
-import java.net.URLEncoder.encode
 import java.util
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 import scala.xml._
@@ -31,7 +30,6 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import org.apache.commons.codec.binary.Base64
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql._
@@ -102,11 +100,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   private val logger = LoggerFactory.getLogger(getClass)
 
   // for credStash
-  var credStash = getCredStash
-
-  // constants
-  private val BASIC = "Basic"
-  private val AUTHORIZATION = "Authorization"
+  var credStash: CredStashWrapper = getCredStash
 
   // XML pretty printer
   private val printer = new scala.xml.PrettyPrinter(80, 4)
@@ -118,15 +112,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   //  val nullValue = "\\N"
   val dateFormat = "yyyy-MM-dd"
 
-  private def restGetURL: String = {
-    host + "/herd-app/rest"
-  }
-
-  private def restPostURL: String = {
-    host + "/herd-app/rest"
-  }
-
-  private def restDeleteURL: String = {
+  private def baseRestUrl: String = {
     host + "/herd-app/rest"
   }
 
@@ -150,7 +136,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val provider = new DefaultAWSCredentialsProviderChain
     val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
     val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-    return new CredStashWrapper(ddb, kms)
+    new CredStashWrapper(ddb, kms)
   }
 
   /**
@@ -184,7 +170,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-   * Auxiliary constuctor using credstash
+   * Auxiliary constructor using credstash
    *
    * @param spark    spark context
    * @param host     DM host https://host.name.com:port
@@ -200,7 +186,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
 
   /**
-   * Auxiliary constuctor using username/password
+   * Auxiliary constructor using username/password
    *
    * @param spark    spark session
    * @param username username for DM
@@ -241,21 +227,22 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-   *  Retrieve the password using credstash
-    * @param spark    spark context
-    * @param credName credential name (e.g. username for DM)
-    * @param credAGS  AGS for credential lookup
-    * @param credSDLC SDLC for credential lookup
-    * @param credComponent Component for credential lookup
+   * Retrieve the password using credstash
+   *
+   * @param spark    spark context
+   * @param credName credential name (e.g. username for DM)
+   * @param credAGS  AGS for credential lookup
+   * @param credSDLC SDLC for credential lookup
+   * @param credComponent Component for credential lookup
    * @return the password
-    */
+   */
   def getPassword(spark: SparkSession,
                   credName: String,
                   credAGS: String,
                   credSDLC: String,
                   credComponent: String = null
                  ) : String = {
-    var context = new util.HashMap[String, String] {
+    val context = new util.HashMap[String, String] {
       put("AGS", credAGS)
       put("SDLC", credSDLC)
       if (credComponent != null) {
@@ -270,49 +257,18 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       prefixedCredName = context.get("AGS") + "." + context.get("SDLC") + "." + credName
     }
 
-    return credStash.getSecret(prefixedCredName, context)
-  }
-
-
-
-  /**
-   * utility function to encode parameters in the REST call
-   *
-   * MORE IMPORTANT: allows for object names like "SPEC _BADGE" (note the space!)
-   *
-   * @param in string to encode
-   * @return
-   */
-  private def encodeParameter(in: String): String = {
-    encode(in, "utf-8").replace("+", "%20")
+    credStash.getSecret(prefixedCredName, context)
   }
 
   /**
-   * helper function to encode the username and password
+   * It searches for business object data in a namespace and object
    *
-   * @return
+   * @param ns  namespace
+   * @param obj object name
+   * @return list of (object name, partition value) tuples
    */
-  private def encodeCredentials(): String = {
-    new String(Base64.encodeBase64String((username + ":" + password).getBytes))
-  }
-
-  /**
-   * creates the BASIC Auth header for the username and password
-   *
-   * @return
-   */
-  private def getHeader: String =
-    BASIC + " " + encodeCredentials()
-
-   /**
-    * It searches for business object data in a namespace and object
-    *
-    * @param ns  namespace
-    * @param obj object name
-    * @return list of (object name, partition value) tuples
-    */
   def dmSearchRequest(ns: String, obj: String): util.List[BusinessObjectData] = {
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val businessObjectDataSearchKey = new BusinessObjectDataSearchKey()
     businessObjectDataSearchKey.setNamespace(ns)
@@ -350,7 +306,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   private def dmDeleteFormat(ns: String, obj: String, schema: Int, usage: String = "PRC", format: String = "PARQUET"): Unit = {
     logger.debug(s"Deleting registered formats for obj $obj")
     try {
-      val ha = ds.defaultApiClientFactory(restDeleteURL, Some(this.username), Some(this.password))
+      val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
       ha.removeBusinessObjectFormat(ns, obj, usage, format, schema)
     } catch {
@@ -368,7 +324,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   private def dmDeleteObjectDefinition(ns: String, obj: String): Unit = {
     logger.debug(s"Deleting obj definition for $obj")
     try {
-      val ha = ds.defaultApiClientFactory(restDeleteURL, Some(this.username), Some(this.password))
+      val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
       ha.removeBusinessObjectDefinition(ns, obj)
     } catch {
@@ -395,7 +351,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     for ((ns, obj, usage, format, schema, pk, part, version) <- partitions) {
       logger.debug(s"Deleting registered partitions of $obj")
       try {
-        val ha = ds.defaultApiClientFactory(restDeleteURL, Some(this.username), Some(this.password))
+        val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
         ha.removeBusinessObjectData(ns, obj, usage, format, schema, pk, part, Seq(), version)
       } catch {
         case _: Throwable => logger.debug("WARNING: Could not remove object partitions.  Ignoring...")
@@ -410,7 +366,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return list of names
    */
   def dmAllObjectsInNamespace(ns: String): List[String] = {
-    val ha = ds.defaultApiClientFactory(restGetURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val businessObjectDefinitionKeys = ha.getBusinessObjectsByNamespace(ns).getBusinessObjectDefinitionKeys
 
@@ -571,7 +527,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     } catch {
       case e: Exception => // noinspection RedundantBlock
       {
-        logger.error("Could not read data from S3, empty DataFrame being returned, AWS REPONSE:\n" + e.getMessage)
+        logger.error("Could not read data from S3, empty DataFrame being returned, AWS RESPONSE:\n" + e.getMessage)
         spark.sqlContext.sparkSession.createDataFrame(spark.sqlContext.sparkContext.emptyRDD[Row], readSchema)
       }
     }
@@ -591,7 +547,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def queryPath(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, partitionValuesInOrder: Array[String],
                 schemaVersion: Int, dataVersion: Int): String = {
-    val ha = ds.defaultApiClientFactory(restGetURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val businessObjectData = ha.getBusinessObjectData(namespace, objectName, usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
       partitionValuesInOrder.drop(1), dataVersion)
@@ -612,7 +568,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def queryPathFromGenerateDdl(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
                                partitionValuesInOrder: Array[String], schemaVersion: Int, dataVersion: Int): List[String] = {
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val businessObjectDataDdl = ha.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
       schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
@@ -658,7 +614,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return list of namespaces
    */
   def getNamespaces(namespaceCode: String = ""): List[String] = {
-    val ha = ds.defaultApiClientFactory(restGetURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     if (namespaceCode.isEmpty) {
       val namespaceKeys = ha.getAllNamespaces.getNamespaceKeys
@@ -677,7 +633,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return DataFrame of BusinessObjectDefinition objects
    */
   def getBusinessObjectDefinitions(namespace: String = ""): DataFrame = {
-    val ha = ds.defaultApiClientFactory(restGetURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val businessObjectDefinitionKeys = ha.getBusinessObjectsByNamespace(namespace).getBusinessObjectDefinitionKeys
 
@@ -698,7 +654,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    *
    */
   def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int): String = {
-    val ha = ds.defaultApiClientFactory(restGetURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val businessObjectFormat = ha.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
 
@@ -714,7 +670,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return DataFrame of business object formats
    */
   def getBusinessObjectFormats(namespace: String, businessObjectDefinitionName: String, latestVersion: Boolean = true): DataFrame = {
-    val ha = ds.defaultApiClientFactory(restGetURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val businessObjectFormatKeys = ha.getBusinessObjectFormats(namespace, businessObjectDefinitionName, latestVersion).getBusinessObjectFormatKeys
 
@@ -1053,7 +1009,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
         StructField("Reason", StringType, nullable = false) :: parts.toList)
 
     // get data availability
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val businessObjectDataAvailability = ha.getBusinessObjectDataAvailability(namespace, objectName, usage, fileFormat,
        partitionKey, firstPartValue, lastPartValue)
@@ -1307,7 +1263,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val reasonCol = "Reason"
 
     val da = getDataAvailability(namespace, objectName, usage, fileFormat)
-      .filter(col(pp(0).name).isin(keyPartValues: _*))
+      .filter(col(pp.head.name).isin(keyPartValues: _*))
       .filter(col(reasonCol) === "VALID")
 
     // @todo ensure there is only one row for each key partition value given
@@ -1322,9 +1278,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   /**
    * Searches for the given table the list of given namespaces
    *
-   * @param objectName
-   * @param namespaces
-   * @return
+   * @param objectName the business object name
+   * @param namespaces the namespace
+   * @return namespace
    */
   def findNamespace(objectName: String, namespaces: List[String]): String = {
 
@@ -1350,12 +1306,12 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * Will search for the given objectName (table) preferring the given namespaces (in order) and the preferred file types
    *
    * The returned data frame will be created for the given key partition values.
-   * if any sub-partitions exist, will create the dataframe for all
+   * if any sub-partitions exist, will create the DataFrame for all
    *
    * @param objectName    table to search for in DM
-   * @param keyPartValues the key partition values to create dataframe for
+   * @param keyPartValues the key partition values to create DataFrame for
    * @param namespaces    ordered list of namespaces to search
-   * @param fileFormats   ordered list of prefered file formats
+   * @param fileFormats   ordered list of preferred file formats
    */
   def findDataFrame(
                      objectName: String,
@@ -1363,7 +1319,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                      namespaces: List[String] = "HUB" :: "ETLMGMT" :: Nil,
                      fileFormats: List[String] = "ORC" :: "BZ" :: "TXT" :: "CSV" :: Nil): DataFrame = {
 
-    var namespace: String = findNamespace(objectName, namespaces)
+    val namespace: String = findNamespace(objectName, namespaces)
     var fileFormat: String = null
     var usage: String = null
     var formatVersion: Int = -1
@@ -1372,18 +1328,18 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     require(namespace != null, "Cannot find table in namespaces: " + namespaces.mkString(", "))
 
     // get the business object formats
-    val bofs = getBusinessObjectFormats(namespace, objectName)
+    val formats = getBusinessObjectFormats(namespace, objectName)
 
     // search for the preferred file format
     for (aFileFormat <- fileFormats; if fileFormat == null && formatVersion < 0) {
-      val maxVersions = bofs
+      val maxVersions = formats
         .filter('formatFileType === aFileFormat)
         .select(max('formatVersion))
 
       if (maxVersions.count == 1) {
         formatVersion = maxVersions.first.getInt(0)
 
-        val aRow = bofs
+        val aRow = formats
           .filter('formatFileType === aFileFormat && 'formatVersion === formatVersion)
           .first
 
@@ -1397,7 +1353,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     // get the partitions
     val parts = getPartitions(namespace, objectName, usage, fileFormat)
-    val keyPart = parts(0).name
+    val keyPart = parts.head.name
 
     // get available data, only valid data!
     val availData = getDataAvailability(namespace, objectName, usage, fileFormat).filter('Reason === "VALID")
@@ -1433,7 +1389,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   val usage = "PRC"
   val fileFormat = "UNKNOWN"
   val storageUnit = "S3_DATABRICKS"
-  val ds = DefaultSource
+  val ds: DefaultSource.type = DefaultSource
 
   /** Pre-Registers a non-DataFrame object.  The method only pre-registers the object and retunrs storageDirectory.
    * It is user's responsibility and choice whether to write anything to this directory.
@@ -1454,11 +1410,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                                     partitionKey: String = "partition",
                                     partitionValue: String = "none"): (Int, Int, String) = {
 
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     Try(ha.getBusinessObjectByName(nameSpace, objectName)) match {
       case Success(_) => Unit
-      case Failure(ex: ApiException) if ex.getCode() == 404 =>
+      case Failure(ex: ApiException) if ex.getCode == 404 =>
         logger.info(s"Business object not found, registering it")
         ha.registerBusinessObject(nameSpace, objectName, "FINRA") // @todo: Should the Data Provider be a parameter?
         ha.registerBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, partitionKey, None)
@@ -1466,19 +1422,18 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     }
 
     val formatVersionToUse = formatVersion match {
-      case v if v >= 0 => {
+      case v if v >= 0 =>
         // check if exists and then use
         Try(ha.getBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, v)) match {
           case Success(_) => v
           case Failure(ex) => throw ex
         }
-      }
       case _ =>
         // use the latest version
         ha.getBusinessObjectFormats(nameSpace, objectName)
-          .getBusinessObjectFormatKeys()
+          .getBusinessObjectFormatKeys
           .asScala.head
-          .getBusinessObjectFormatVersion()
+          .getBusinessObjectFormatVersion
           .toInt
     }
 
@@ -1516,12 +1471,10 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                                          dataVersion: Int,
                                          status: ObjectStatus.Value = ObjectStatus.VALID): Unit = {
 
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    val ret = ha.updateBusinessObjectData(
-      nameSpace, objectName, usage, fileFormat, formatVersion,
-      partitionKey, partitionValue, Nil,
-      dataVersion, status)
+    ha.updateBusinessObjectData(nameSpace, objectName, usage, fileFormat, formatVersion,
+      partitionKey, partitionValue, Nil, dataVersion, status)
   }
 
   /** Retrieve a non-DataFrame object registered with DM.
@@ -1544,7 +1497,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                             partitionValue: String = "none",
                             dataVersion: Int = -1): String = {
 
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val dataVersionToUse: Integer = dataVersion match {
       case -1 => null
@@ -1552,26 +1505,25 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     }
 
     val formatVersionToUse = formatVersion match {
-      case v if v >= 0 => {
+      case v if v >= 0 =>
         // check if exists and then use
         Try(ha.getBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, v)) match {
           case Success(_) => v
           case Failure(ex) => throw ex
         }
-      }
       case _ =>
         // use the latest version
         ha.getBusinessObjectFormats(nameSpace, objectName)
-          .getBusinessObjectFormatKeys()
+          .getBusinessObjectFormatKeys
           .asScala.head
-          .getBusinessObjectFormatVersion()
+          .getBusinessObjectFormatVersion
           .toInt
     }
 
     val apiClient = new ApiClient()
-    apiClient.setBasePath(this.restPostURL)
-    List(this.username).foreach(apiClient.setUsername)
-    List(this.password).foreach(apiClient.setPassword)
+    apiClient.setBasePath(this.baseRestUrl)
+    List(this.username).foreach(username => apiClient.setUsername(username))
+    List(this.password).foreach(password => apiClient.setPassword(password))
 
     val api = new BusinessObjectDataApi(apiClient)
 
@@ -1607,7 +1559,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                         partitionKey: String = "partition",
                         partitionValue: String = "none"): Int = {
 
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     Try(ha.getBusinessObjectByName(nameSpace, objectName)) match {
       case Success(_) => Unit
@@ -1631,7 +1583,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                     fileFormat: String = "PARQUET"): DataFrame = {
 
     spark.read.format("herd")
-      .option("url", restPostURL)
+      .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
       .option("namespace", namespace)
@@ -1662,7 +1614,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                     fileFormat: String = "PARQUET"): Unit = {
 
     df.write.format("herd")
-      .option("url", restPostURL)
+      .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
       .option("namespace", namespace)
@@ -1695,11 +1647,11 @@ class TheCatalog(val urlDM: String,
   private val logger = LoggerFactory.getLogger(getClass)
   logger.debug("Initializing TheCatalog")
 
-  val fullUrlDM = urlDM + "/herd-app/rest"
+  val fullUrlDM: String = urlDM + "/herd-app/rest"
 
   // TODO fix credStash issue
 
-  val spark = SparkSession.builder
+  val spark: SparkSession = SparkSession.builder
     .master("local")
     .appName("DataCatalog->TheCatalog")
     .getOrCreate()
