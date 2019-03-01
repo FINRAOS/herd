@@ -40,11 +40,22 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
     bizObj
   }
 
+  override def getBusinessObjectsByNamespace(namespace: String): BusinessObjectDefinitionKeys = {
+    val businessObjectDefinitionKeysJson = Resources.toString(
+      Resources.getResource(s"herd-models/$testCase/businessObjectDefinitionKeys.json"), Charsets.UTF_8)
+
+    val businessObjectDefinitionKeys: BusinessObjectDefinitionKeys = mapper.readValue(
+      businessObjectDefinitionKeysJson, classOf[BusinessObjectDefinitionKeys])
+
+    businessObjectDefinitionKeys
+  }
+
   override def registerBusinessObject(namespace: String, businessObjectName: String, dataProvider: String): Unit = {
     // no op
   }
 
-  override def getBusinessObjectFormats(namespace: String, businessObjectName: String): BusinessObjectFormatKeys = {
+  override def getBusinessObjectFormats(namespace: String, businessObjectName: String,
+                                        latestBusinessObjectFormatVersion: Boolean = true): BusinessObjectFormatKeys = {
     val formatKeysJson = Resources.toString(
       Resources.getResource(s"herd-models/$testCase/businessObjectFormats.json"), Charsets.UTF_8)
     val formatKeys: BusinessObjectFormatKeys = mapper.readValue(formatKeysJson, classOf[BusinessObjectFormatKeys])
@@ -92,6 +103,15 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
     data
   }
 
+  override def searchBusinessObjectData(businessObjectDataSearchRequest: BusinessObjectDataSearchRequest, pageNum: Integer = 1,
+                                        pageSize: Integer = 1000): BusinessObjectDataSearchResult = {
+    val dataJson = Resources.toString(
+      Resources.getResource(s"herd-models/$testCase/businessObjectDataSearchResult.json"), Charsets.UTF_8)
+    val data = mapper.readValue(dataJson, classOf[BusinessObjectDataSearchResult])
+
+    data
+  }
+
   override def getBusinessObjectDataGenerateDdl(namespace: String, businessObjectName: String,
                                        formatUsage: String, formatFileType: String,
                                        formatVersion: Int, partitionKey: String, partitionValues: Seq[String],
@@ -104,6 +124,17 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
 
     val dataJson = Resources.toString(Resources.getResource(s"herd-models/$testCase/$dataFile"), Charsets.UTF_8)
     val data = mapper.readValue(dataJson, classOf[BusinessObjectDataDdl])
+
+    data
+
+  }
+  override def getBusinessObjectDataAvailability(namespace: String, businessObjectName: String,
+                                        formatUsage: String, formatFileType: String,
+                                        partitionKey: String, firstPartitionValue: String,
+                                        lastPartitionValue: String): BusinessObjectDataAvailability = {
+    val dataJson = Resources.toString(
+      Resources.getResource(s"herd-models/$testCase/businessObjectDataAvailability.json"), Charsets.UTF_8)
+    val data = mapper.readValue(dataJson, classOf[BusinessObjectDataAvailability])
 
     data
 
@@ -142,6 +173,15 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
 
   }
 
+  override def removeBusinessObjectDefinition(namespace: String, businessObjectName: String): Unit = {
+    // no op
+  }
+
+  override def removeBusinessObjectFormat(namespace: String, businessObjectName: String, formatUsage: String,
+                                          formatFileType: String, formatVersion: Int): Unit = {
+    // no op
+  }
+
   override def getStorage(name: String): Storage = {
     val storage = new Storage()
 
@@ -162,6 +202,24 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
     storage.setStoragePlatformName("S3")
 
     storage
+  }
+
+  override def getNamespaceByNamespaceCode(namespaceCode: String): Namespace = {
+    val namespaceJson = Resources.toString(
+      Resources.getResource(s"herd-models/$testCase/namespace.json"), Charsets.UTF_8)
+
+    val namespace: Namespace = mapper.readValue(namespaceJson, classOf[Namespace])
+
+    namespace
+  }
+
+  override def getAllNamespaces(): NamespaceKeys = {
+    val namespaceKeysJson = Resources.toString(
+      Resources.getResource(s"herd-models/$testCase/namespaceKeys.json"), Charsets.UTF_8)
+
+    val namespaceKeys: NamespaceKeys = mapper.readValue(namespaceKeysJson, classOf[NamespaceKeys])
+
+    namespaceKeys
   }
 }
 

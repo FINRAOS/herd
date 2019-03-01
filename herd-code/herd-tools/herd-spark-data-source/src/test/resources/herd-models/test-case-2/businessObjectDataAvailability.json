@@ -1,0 +1,46 @@
+{
+  "namespace": "FOO",
+  "businessObjectDefinitionName": "BAR",
+  "businessObjectFormatUsage": "PRC",
+  "businessObjectFormatFileType": "ORC",
+  "businessObjectFormatVersion": null,
+  "partitionValueFilters": [
+    {
+      "partitionKey": "DATE",
+      "partitionValues": null,
+      "partitionValueRange": {
+        "startPartitionValue": "2018-12-06",
+        "endPartitionValue": "2018-12-07"
+      },
+      "latestBeforePartitionValue": null,
+      "latestAfterPartitionValue": null
+    }
+  ],
+  "partitionValueFilter": null,
+  "businessObjectDataVersion": null,
+  "storageNames": null,
+  "storageName": null,
+  "availableStatuses": [
+    {
+      "businessObjectFormatVersion": 0,
+      "partitionValue": "2018-12-06",
+      "subPartitionValues": [],
+      "businessObjectDataVersion": 0,
+      "reason": "VALID"
+    }
+  ],
+  "notAvailableStatuses": [
+    {
+      "businessObjectFormatVersion": null,
+      "partitionValue": "2018-12-07",
+      "subPartitionValues": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "businessObjectDataVersion": null,
+      "reason": "NOT_REGISTERED"
+    }
+  ]
+}
