@@ -1,0 +1,10 @@
+{
+  "namespaceKeys": [
+    {
+      "namespaceCode": "FOO"
+    },
+    {
+      "namespaceCode": "BAR"
+    }
+  ]
+}

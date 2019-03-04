@@ -1,0 +1,43 @@
+{
+  "businessObjectDataElements": [
+    {
+      "id": 0,
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "BAR",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "BZ",
+      "businessObjectFormatVersion": 0,
+      "partitionKey": "DATE",
+      "partitionValue": "2018-12-06",
+      "subPartitionValues": null,
+      "version": 0,
+      "latestVersion": true,
+      "status": "VALID",
+      "storageUnits": null,
+      "attributes": null,
+      "businessObjectDataParents": null,
+      "businessObjectDataChildren": null,
+      "businessObjectDataStatusHistory": null,
+      "retentionExpirationDate": null
+    },
+    {
+      "id": 1,
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "BAR",
+      "businessObjectFormatUsage": "PRC",
+      "businessObjectFormatFileType": "BZ",
+      "businessObjectFormatVersion": 0,
+      "partitionKey": "DATE",
+      "partitionValue": "2018-12-04",
+      "subPartitionValues": null,
+      "version": 0,
+      "latestVersion": true,
+      "status": "VALID",
+      "storageUnits": null,
+      "attributes": null,
+      "businessObjectDataParents": null,
+      "businessObjectDataChildren": null,
+      "businessObjectDataStatusHistory": null,
+      "retentionExpirationDate": null
+    }]
+}
