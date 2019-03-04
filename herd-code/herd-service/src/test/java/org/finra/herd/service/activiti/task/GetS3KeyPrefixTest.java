@@ -49,8 +49,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         // Create a business object format entity.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES,
+                SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
 
         // Create an S3 storage.
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
@@ -152,7 +152,7 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         // Create a business object format entity without a schema.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -192,7 +192,7 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         // Create a business object format entity without a schema.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 

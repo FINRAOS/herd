@@ -44,7 +44,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Create and persist a business object format entity.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY);
 
         // Create a custom DDL.
         CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
@@ -138,7 +138,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Create and persist a business object format entity.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY);
 
         // Create a custom DDL using input parameters with leading and trailing empty spaces.
         CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
@@ -156,8 +156,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
     {
         // Create and persist a business object format entity using lower case values.
         businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
-            FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, FORMAT_DESCRIPTION.toLowerCase(), FORMAT_DOCUMENT_SCHEMA.toLowerCase(), true,
-            PARTITION_KEY.toLowerCase());
+            FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, FORMAT_DESCRIPTION.toLowerCase(), FORMAT_DOCUMENT_SCHEMA.toLowerCase(),
+            FORMAT_DOCUMENT_SCHEMA_URL.toLowerCase(), true, PARTITION_KEY.toLowerCase());
 
         // Create a custom DDL using upper case input parameters.
         CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
@@ -175,8 +175,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
     {
         // Create and persist a business object format entity using upper case values.
         businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
-            FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, FORMAT_DESCRIPTION.toUpperCase(), FORMAT_DOCUMENT_SCHEMA.toUpperCase(), true,
-            PARTITION_KEY.toUpperCase());
+            FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, FORMAT_DESCRIPTION.toUpperCase(), FORMAT_DOCUMENT_SCHEMA.toUpperCase(),
+            FORMAT_DOCUMENT_SCHEMA_URL.toUpperCase(), true, PARTITION_KEY.toUpperCase());
 
         // Create a custom DDL using lower case input parameters.
         CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
@@ -633,7 +633,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Create and persist a business object format entity.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY);
 
         // Retrieve a list of custom DDL keys, when none of the custom DDLs exist.
         CustomDdlKeys resultCustomDdlKeys =

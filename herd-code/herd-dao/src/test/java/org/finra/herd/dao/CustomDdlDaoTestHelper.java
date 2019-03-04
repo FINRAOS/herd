@@ -59,7 +59,7 @@ public class CustomDdlDaoTestHelper
             businessObjectFormatEntity = businessObjectFormatDaoTestHelper
                 .createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                     businessObjectFormatVersion, AbstractDaoTest.FORMAT_DESCRIPTION, AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA,
-                    AbstractDaoTest.LATEST_VERSION_FLAG_SET, AbstractDaoTest.PARTITION_KEY);
+                    AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractDaoTest.LATEST_VERSION_FLAG_SET, AbstractDaoTest.PARTITION_KEY);
         }
 
         return createCustomDdlEntity(businessObjectFormatEntity, customDdlName, ddl);
