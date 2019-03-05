@@ -309,10 +309,10 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setDescription(request.getDescription());
 
         // Update business object format document schema.
-        businessObjectFormatEntity.setDocumentSchema(getTrimmedDocumentSchema(request.getDocumentSchema()));
+        businessObjectFormatEntity.setDocumentSchema(getTrimmedString(request.getDocumentSchema()));
 
         // Update business object format document schema url.
-        businessObjectFormatEntity.setDocumentSchemaUrl(getTrimmedDocumentSchemaUrl(request.getDocumentSchemaUrl()));
+        businessObjectFormatEntity.setDocumentSchemaUrl(getTrimmedString(request.getDocumentSchemaUrl()));
 
         // Validate optional schema information.  This is also going to trim the relative schema column field values.
         validateBusinessObjectFormatSchema(request.getSchema(), businessObjectFormatEntity.getPartitionKey());
@@ -1209,8 +1209,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setLatestVersion(Boolean.TRUE);
         businessObjectFormatEntity.setPartitionKey(request.getPartitionKey());
         businessObjectFormatEntity.setDescription(request.getDescription());
-        businessObjectFormatEntity.setDocumentSchema(getTrimmedDocumentSchema(request.getDocumentSchema()));
-        businessObjectFormatEntity.setDocumentSchemaUrl(getTrimmedDocumentSchemaUrl(request.getDocumentSchemaUrl()));
+        businessObjectFormatEntity.setDocumentSchema(getTrimmedString(request.getDocumentSchema()));
+        businessObjectFormatEntity.setDocumentSchemaUrl(getTrimmedString(request.getDocumentSchemaUrl()));
 
         // Create the attributes if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributes()))
@@ -1542,26 +1542,14 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     }
 
     /**
-     * Removes the leading and trailing white spaces in the document schema
+     * Removes the leading and trailing white spaces in the given input String
      *
-     * @param documentSchema - document schema
+     * @param inputString - inputString
      *
-     * @return document schema with leading and trailing white spaces removed.
+     * @return inputString with leading and trailing white spaces removed.
      */
-    private String getTrimmedDocumentSchema(String documentSchema)
+    private String getTrimmedString(String inputString)
     {
-        return documentSchema != null ? documentSchema.trim() : documentSchema;
-    }
-
-    /**
-     * Removes the leading and trailing white spaces in the document schema url
-     *
-     * @param documentSchemaUrl - document schema url
-     *
-     * @return document schema url with leading and trailing white spaces removed.
-     */
-    private String getTrimmedDocumentSchemaUrl(String documentSchemaUrl)
-    {
-        return documentSchemaUrl != null ? documentSchemaUrl.trim() : documentSchemaUrl;
+        return inputString != null ? inputString.trim() : inputString;
     }
 }

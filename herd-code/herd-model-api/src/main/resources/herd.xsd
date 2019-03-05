@@ -2285,7 +2285,7 @@
          <xs:element name="documentSchemaUrl" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional URL of the documentSchema to an externally hosted XSD or JSON. Herd will not access this URL,
-                  it will simply store and retrieve the URL and teams can then access the URL
+                  it will simply store and retrieve the URL
                </xs:documentation>
             </xs:annotation>
          </xs:element>
