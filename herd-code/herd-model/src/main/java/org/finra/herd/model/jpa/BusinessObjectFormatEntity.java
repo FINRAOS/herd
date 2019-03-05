@@ -92,6 +92,9 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Column(name = "doc_schm_tx")
     private String documentSchema;
 
+    @Column(name = "doc_schm_url_tx")
+    private String documentSchemaUrl;
+
     @JsonManagedReference(value = "businessObjectFormat-attributes")
     @OneToMany(mappedBy = "businessObjectFormat", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("name")
@@ -404,5 +407,15 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setDocumentSchema(String documentSchema)
     {
         this.documentSchema = documentSchema;
+    }
+
+    public String getDocumentSchemaUrl()
+    {
+        return documentSchemaUrl;
+    }
+
+    public void setDocumentSchemaUrl(String documentSchemaUrl)
+    {
+        this.documentSchemaUrl = documentSchemaUrl;
     }
 }

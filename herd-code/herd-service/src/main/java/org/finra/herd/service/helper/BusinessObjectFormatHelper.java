@@ -106,6 +106,7 @@ public class BusinessObjectFormatHelper
         businessObjectFormat.setPartitionKey(businessObjectFormatEntity.getPartitionKey());
         businessObjectFormat.setDescription(businessObjectFormatEntity.getDescription());
         businessObjectFormat.setDocumentSchema(businessObjectFormatEntity.getDocumentSchema());
+        businessObjectFormat.setDocumentSchemaUrl(businessObjectFormatEntity.getDocumentSchemaUrl());
 
         // Add in the attributes.
         List<Attribute> attributes = new ArrayList<>();
