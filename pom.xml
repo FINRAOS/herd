@@ -111,6 +111,7 @@
       <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
       <maven.build.helper.plugin.version>3.0.0</maven.build.helper.plugin.version>
       <maven.checkstyle.plugin.version>2.17</maven.checkstyle.plugin.version>
+      <maven.clover.plugin.version>4.3.1</maven.clover.plugin.version>
       <maven.cobertura.plugin.version>2.7</maven.cobertura.plugin.version>
       <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
       <maven.dependency.plugin.version>3.0.2</maven.dependency.plugin.version>
@@ -922,6 +923,11 @@
                <groupId>org.bsc.maven</groupId>
                <artifactId>maven-processor-plugin</artifactId>
                <version>${maven.processor.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.openclover</groupId>
+               <artifactId>clover-maven-plugin</artifactId>
+               <version>${maven.clover.plugin.version}</version>
             </plugin>
             <plugin>
                <groupId>org.codehaus.mojo</groupId>
