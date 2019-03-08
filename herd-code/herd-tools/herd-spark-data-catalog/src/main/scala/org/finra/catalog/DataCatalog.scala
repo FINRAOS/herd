@@ -16,13 +16,10 @@
 package org.finra.catalog
 
 import java.io.File
-import java.net.{HttpURLConnection, URL}
-import java.net.URLEncoder.encode
 import java.util
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
-import scala.io.Source
 import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 import scala.xml._
@@ -32,8 +29,7 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
-import com.jessecoyle.{CredStashBouncyCastleCrypto, JCredStash}
-import org.apache.commons.codec.binary.Base64
+import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql._
@@ -56,6 +52,8 @@ case class Partition(n: String, v: String)
 /**
  * Business Object Definition
  *
+ * Defines the schema of the DataFrame for business object definitions.
+ *
  * @param namespace      namespace of the definition
  * @param definitionName name of the business object
  */
@@ -64,17 +62,17 @@ case class BusinessObjectDefinition(namespace: String, definitionName: String)
 /**
  * Business Object Format
  *
- * defines schema of dataframe for business object formats
+ * Defines schema of DataFrame for business object formats
  *
  */
 case class BusinessObjectFormat(namespace: String, definitionName: String, formatUsage: String, formatFileType: String, formatVersion: Integer)
 
 /**
- * Class to create DataFrames of FINRA data registered with DM
+ * Class to create DataFrames of data registered with Herd
  * Goal of the object is to provide a facility to create Spark DataFrames of any businessObject
- * registered with DM
+ * registered with Herd
  *
- * Browse for avilable objects
+ * Browse for available objects
  * get necessary parameters to query for a specific businessObject
  * get the businessObject as a Spark DataFrame
  *
@@ -82,10 +80,10 @@ case class BusinessObjectFormat(namespace: String, definitionName: String, forma
  *
  * - get a data frame given object identifiers
  * - be optimal on what file format is used (select format for user if possible)
- * - if format contains schema (ORC, parquet) no need to ask for schema from DM
- * @todo add way to browse avialable partitions
+ * - if format contains schema (ORC, parquet) no need to ask for schema from Herd
+ * @todo add way to browse available partitions
  * @todo handle multiple levels of partitions (today only does one)
- * @todo use parsing parameters as given by businessObjectFormats call to DM
+ * @todo use parsing parameters as given by businessObjectFormats call to Herd
  * @param spark the spark session
  *
  */
@@ -102,11 +100,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   private val logger = LoggerFactory.getLogger(getClass)
 
   // for credStash
-  var credStash = getCredStash
-
-  // constants
-  private val BASIC = "Basic"
-  private val AUTHORIZATION = "Authorization"
+  var credStash: CredStashWrapper = getCredStash
 
   // XML pretty printer
   private val printer = new scala.xml.PrettyPrinter(80, 4)
@@ -118,11 +112,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   //  val nullValue = "\\N"
   val dateFormat = "yyyy-MM-dd"
 
-  private def restGetURL: String = {
-    host + "/herd-app/rest"
-  }
-
-  private def restPostURL: String = {
+  private def baseRestUrl: String = {
     host + "/herd-app/rest"
   }
 
@@ -146,7 +136,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val provider = new DefaultAWSCredentialsProviderChain
     val ddb: AmazonDynamoDBClient = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.US_EAST_1)
     val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
-    return new CredStashWrapper(ddb, kms)
+    new CredStashWrapper(ddb, kms)
   }
 
   /**
@@ -154,7 +144,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    *
    * @param spark    spark context
    * @param host     DM host https://host.name.com:port
-   * @param credName credential name (e.g. username for DM)
+   * @param credName credential name (e.g. username for Herd)
    * @param credAGS  AGS for credential lookup
    * @param credSDLC SDLC for credential lookup
    * @param credComponent Component for credential lookup
@@ -180,7 +170,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-   * Auxiliary constuctor using credstash
+   * Auxiliary constructor using credstash
    *
    * @param spark    spark context
    * @param host     DM host https://host.name.com:port
@@ -196,7 +186,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
 
   /**
-   * Auxiliary constuctor using username/password
+   * Auxiliary constructor using username/password
    *
    * @param spark    spark session
    * @param username username for DM
@@ -237,21 +227,22 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-   *  Retrieve the password using credstash
-    * @param spark    spark context
-    * @param credName credential name (e.g. username for DM)
-    * @param credAGS  AGS for credential lookup
-    * @param credSDLC SDLC for credential lookup
-    * @param credComponent Component for credential lookup
+   * Retrieve the password using credstash
+   *
+   * @param spark    spark context
+   * @param credName credential name (e.g. username for DM)
+   * @param credAGS  AGS for credential lookup
+   * @param credSDLC SDLC for credential lookup
+   * @param credComponent Component for credential lookup
    * @return the password
-    */
+   */
   def getPassword(spark: SparkSession,
                   credName: String,
                   credAGS: String,
                   credSDLC: String,
                   credComponent: String = null
                  ) : String = {
-    var context = new util.HashMap[String, String] {
+    val context = new util.HashMap[String, String] {
       put("AGS", credAGS)
       put("SDLC", credSDLC)
       if (credComponent != null) {
@@ -266,258 +257,106 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       prefixedCredName = context.get("AGS") + "." + context.get("SDLC") + "." + credName
     }
 
-    return credStash.getSecret(prefixedCredName, context)
-  }
-
-
-
-  /**
-   * utility function to encode parameters in the REST call
-   *
-   * MORE IMPORTANT: allows for object names like "SPEC _BADGE" (note the space!)
-   *
-   * @param in string to encode
-   * @return
-   */
-  private def encodeParameter(in: String): String = {
-    encode(in, "utf-8").replace("+", "%20")
+    credStash.getSecret(prefixedCredName, context)
   }
 
   /**
-   * helper function to encode the username and password
-   *
-   * @return
-   */
-  private def encodeCredentials(): String = {
-    new String(Base64.encodeBase64String((username + ":" + password).getBytes))
-  }
-
-  /**
-   * creates the BASIC Auth header for the username and password
-   *
-   * @return
-   */
-  private def getHeader: String =
-    BASIC + " " + encodeCredentials()
-
-  /**
-   * creates the POST xml for a query on available partitions
-   *
-   * Purposely querying for a range that is effectively 'give me all partitions'
-   *
-   * @param namespace    DM namespace
-   * @param objectName   DM objectName
-   * @param usage        usage in DM
-   * @param fileFormat   file format in DM
-   * @param partitionKey key for the partition
-   *
-   */
-  private def getBusinessObjectDataAvailabilityRequest(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
-                                                       firstValue: String, lastValue: String): String = {
-    val queryString =
-      s"""
-         |<businessObjectDataAvailabilityRequest>
-         |  <namespace>$namespace</namespace>
-         |  <businessObjectDefinitionName>$objectName</businessObjectDefinitionName>
-         |  <businessObjectFormatUsage>$usage</businessObjectFormatUsage>
-         |  <businessObjectFormatFileType>$fileFormat</businessObjectFormatFileType>
-         |  <partitionValueFilters>
-         |    <partitionValueFilter>
-         |      <partitionKey>$partitionKey</partitionKey>
-         |        <partitionValueRange>
-         |          <startPartitionValue>$firstValue</startPartitionValue>
-         |          <endPartitionValue>$lastValue</endPartitionValue>
-         |        </partitionValueRange>
-         |      </partitionValueFilter>
-         |    </partitionValueFilters>
-         |</businessObjectDataAvailabilityRequest>
-       """.stripMargin
-
-    queryString
-  }
-
-  /**
-   * Calls the given URL and returns the response contents as a string
-   *
-   * @param restQuery DM REST call
-   * @return response of REST cal
-   */
-  def getREST(restQuery: String): String = {
-
-    val url = restGetURL + restQuery
-
-    val connection = new URL(url).openConnection
-    connection.setRequestProperty(AUTHORIZATION, getHeader)
-    connection.setRequestProperty("Content-Type", "application/xml")
-    connection.setRequestProperty("Accept", "application/xml")
-
-    Source.fromInputStream(connection.getInputStream).getLines.mkString("\n")
-  }
-
-  /**
-   * Calls the given URL and returns the response contents as a string
-   *
-   * @param restQuery DM REST call
-   * @param postData  data for the POST
-   * @return response of REST cal
-   */
-  def postREST(restQuery: String, postData: String): String = {
-
-    val url = restPostURL + restQuery
-
-    val conn = new URL(url).openConnection.asInstanceOf[HttpURLConnection]
-    conn.setRequestMethod("POST")
-    conn.setRequestProperty(AUTHORIZATION, getHeader)
-    conn.setRequestProperty("Content-Type", "application/xml")
-    conn.setRequestProperty("Accept", "application/xml")
-    conn.setUseCaches(false)
-
-    conn.setDoOutput(true)
-
-    try {
-      conn.getOutputStream.write(postData.getBytes)
-    } catch {
-      case t: Throwable => throw new IllegalArgumentException(s"REST Error: $restQuery\nPost: $postData", t)
-    }
-
-    Source.fromInputStream(conn.getInputStream).getLines.mkString("\n")
-  }
-
-
-  /**
-   * Calls the given URL with the DELETE method and returns the XML response contents as a string
-   *
-   * @param restQuery
-   * @return XML response from the Data Management
-   */
-  def deleteREST(restQuery: String): String = {
-    val url = restGetURL + restQuery
-
-    val connection = new URL(url).openConnection.asInstanceOf[HttpURLConnection]
-    connection.setRequestMethod("DELETE")
-    connection.setRequestProperty(AUTHORIZATION, getHeader)
-    connection.setRequestProperty("Content-Type", "application/xml")
-    connection.setRequestProperty("Accept", "application/xml")
-
-    Source.fromInputStream(connection.getInputStream).getLines.mkString("\n")
-  }
-
-  /**
-   * Search for a Business Object in a namespace
+   * It searches for business object data in a namespace and object
    *
    * @param ns  namespace
    * @param obj object name
-   * @return XML response
+   * @return list of (object name, partition value) tuples
    */
-  def dmSearchXML(ns: String, obj: String): scala.xml.Elem = {
-    val queryString =
-      s"""<businessObjectDataSearchRequest>
-       <businessObjectDataSearchFilters>
-          <businessObjectDataSearchFilter>
-               <businessObjectDataSearchKeys>
-                    <businessObjectDataSearchKey>
-                         <namespace>$ns</namespace>
-                         <businessObjectDefinitionName>$obj</businessObjectDefinitionName>
-                    </businessObjectDataSearchKey>
-               </businessObjectDataSearchKeys>
-          </businessObjectDataSearchFilter>
-     </businessObjectDataSearchFilters>
-  </businessObjectDataSearchRequest>"""
+  def dmSearchRequest(ns: String, obj: String): util.List[BusinessObjectData] = {
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    scala.xml.XML.loadString(postREST("/businessObjectData/search", queryString))
+    val businessObjectDataSearchKey = new BusinessObjectDataSearchKey()
+    businessObjectDataSearchKey.setNamespace(ns)
+    businessObjectDataSearchKey.setBusinessObjectDefinitionName(obj)
+    val businessObjectDataSearchFilter = new BusinessObjectDataSearchFilter()
+    businessObjectDataSearchFilter.addBusinessObjectDataSearchKeysItem(businessObjectDataSearchKey)
+    val businessObjectDataSearchRequest = new BusinessObjectDataSearchRequest()
+    businessObjectDataSearchRequest.addBusinessObjectDataSearchFiltersItem(businessObjectDataSearchFilter)
+
+    ha.searchBusinessObjectData(businessObjectDataSearchRequest).getBusinessObjectDataElements
   }
 
   /**
-   * Like dmSearchXML it searches for an object in a namespace, instead of XML it returns a list of tuples
+   * Like dmSearchRequest but returns a list of tuples
    *
    * @param ns  namespace
    * @param obj object name
    * @return list of (object name, partition value) tuples
    */
   def dmSearch(ns: String, obj: String): List[(String, String)] = {
-    val objects = dmSearchXML(ns, obj) \\ "businessObjectData"
-    objects.map { r => ((r \\ "businessObjectDefinitionName").text, (r \\ "partitionValue").text) }.toList
+    val businessObjectDataElements = dmSearchRequest(ns, obj)
+
+    (for (businessObjectData <- businessObjectDataElements.asScala)
+      yield (businessObjectData.getBusinessObjectDefinitionName, businessObjectData.getPartitionValue)).toList
   }
 
-  // val objList = dmSearch("DYNSURV", "TestObject2") // TODO: Move it to tests
-
   /**
-   * Deletes registered formats for an object in DM (private function to not allow users accidently execute it)
+   * Deletes registered formats for an object in DM (private function to not allow users accidentally execute it)
    *
    * @param ns     namespace
    * @param obj    object name
    * @param schema schema version
    * @return nothing
    */
-  private def dmDeleteFormat(ns: String, obj: String, schema: Int, usage: String = "PRC", format: String = "PARQUET") = {
+  private def dmDeleteFormat(ns: String, obj: String, schema: Int, usage: String = "PRC", format: String = "PARQUET"): Unit = {
     logger.debug(s"Deleting registered formats for obj $obj")
     try {
-      deleteREST(
-        s"/businessObjectFormats/namespaces/$ns/businessObjectDefinitionNames/$obj/businessObjectFormatUsages/$usage/businessObjectFormatFileTypes/" +
-          "$format/businessObjectFormatVersions/$schema")
+      val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+
+      ha.removeBusinessObjectFormat(ns, obj, usage, format, schema)
     } catch {
       case _: Throwable => logger.debug("WARNING: Could not remove format.  Ignoring...")
     }
   }
 
   /**
-   * Deletes object definition in DM  (private function to not allow users accidently execute it)
+   * Deletes object definition in DM  (private function to not allow users accidentally execute it)
    *
    * @param ns  namespace
    * @param obj object name
    * @return nothing
    */
-  private def dmDeleteObjectDefinition(ns: String, obj: String) = {
+  private def dmDeleteObjectDefinition(ns: String, obj: String): Unit = {
     logger.debug(s"Deleting obj definition for $obj")
     try {
-      deleteREST(s"/businessObjectDefinitions/namespaces/$ns/businessObjectDefinitionNames/$obj")
+      val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+
+      ha.removeBusinessObjectDefinition(ns, obj)
     } catch {
       case _: Throwable => logger.debug("WARNING: Could not remove object definition.  Ignoring...")
     }
   }
 
   /**
-   * Deletes registered partitions and files for a object in DM  (private function to not allow users accidently execute it)
+   * Deletes registered partitions and files for a object in DM  (private function to not allow users accidentally execute it)
    *
    * @param ns          namespace
    * @param obj         object name
    * @param deleteFiles set to true if want to delete files
    */
-  private def dmDeleteObjectPartitions(ns: String, obj: String, deleteFiles: Boolean = false) = {
+  private def dmDeleteObjectPartitions(ns: String, obj: String, deleteFiles: Boolean = false): Unit = {
+    val objList = dmSearchRequest(ns, obj)
 
-    val objList = dmSearchXML(ns, obj)
-    val partitions = for (o <- (objList \\ "businessObjectData")) yield {
-      (
-        (o \\ "namespace").text,
-        (o \\ "businessObjectDefinitionName").text,
-        (o \\ "businessObjectFormatUsage").text,
-        (o \\ "businessObjectFormatFileType").text,
-        (o \\ "businessObjectFormatVersion").text,
-        (o \\ "partitionKey").text,
-        (o \\ "partitionValue").text,
-        (o \\ "version").text
-      )
-    }
+    val partitions = (for (businessObjectData <- objList.asScala)
+      yield (businessObjectData.getNamespace, businessObjectData.getBusinessObjectDefinitionName,
+             businessObjectData.getBusinessObjectFormatUsage, businessObjectData.getBusinessObjectFormatFileType,
+             businessObjectData.getBusinessObjectFormatVersion, businessObjectData.getPartitionKey,
+             businessObjectData.getPartitionValue, businessObjectData.getVersion)).toList
+
     for ((ns, obj, usage, format, schema, pk, part, version) <- partitions) {
       logger.debug(s"Deleting registered partitions of $obj")
       try {
-        deleteREST(
-          s"/businessObjectData/namespaces/$ns/businessObjectDefinitionNames/$obj/businessObjectFormatUsages/$usage/businessObjectFormatFileTypes/"
-            + "$format/businessObjectFormatVersions/$schema/partitionValues/$part/businessObjectDataVersions/$version?deleteFiles=$deleteFiles")
+        val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+        ha.removeBusinessObjectData(ns, obj, usage, format, schema, pk, part, Seq(), version)
       } catch {
         case _: Throwable => logger.debug("WARNING: Could not remove object partitions.  Ignoring...")
       }
     }
-  }
-
-  /**
-   * Gets all objects registered in a namespace
-   *
-   * @param ns namespace
-   * @return XML response from DM
-   */
-  def dmAllObjectsInNamespaceXML(ns: String): scala.xml.Elem = {
-    scala.xml.XML.loadString(getREST(s"//businessObjectDefinitions/namespaces/$ns"))
   }
 
   /**
@@ -527,22 +366,24 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return list of names
    */
   def dmAllObjectsInNamespace(ns: String): List[String] = {
-    val objects = dmAllObjectsInNamespaceXML(ns) \\ "businessObjectDefinitionKey"
-    (for (obj <- (objects \ "businessObjectDefinitionName")) yield obj.text).toList
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+
+    val businessObjectDefinitionKeys = ha.getBusinessObjectsByNamespace(ns).getBusinessObjectDefinitionKeys
+
+    (for (obj <- businessObjectDefinitionKeys.asScala) yield obj.getBusinessObjectDefinitionName).toList
   }
 
   /**
    * This function removes objects, schemas, partitions, and files from a namespace.
-   * Too dangerous, so to execute uncomment the function calls within the loop
    *
-   * @param ns
+   * @param ns the namespace to wipe
    */
-  private def dmWipeNamespace(ns: String) = {
+  def dmWipeNamespace(ns: String): Unit = {
     val toDelete = dmAllObjectsInNamespace(ns)
     for (name <- toDelete) {
-      // dmDeleteFormat("DYNSURV", name, 0)
-      // dmDeleteObjectDefinition("DYNSURV", name)
-      // dmDeleteObjectPartitions("DYNSURV", name, false)
+      dmDeleteFormat(ns, name, 0)
+      dmDeleteObjectDefinition(ns, name)
+      dmDeleteObjectPartitions(ns, name)
     }
   }
 
@@ -664,7 +505,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
         // .. and an array of all file info.
         val fileStatuses = fs.listStatus(new Path(path))
 
-        // Get filenames...
+        // Get file names...
         val fileList = fileStatuses.map {
           _.getPath.toString
         }
@@ -673,7 +514,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
         val someFile = fileList(0)
 
         // Finally, get a schema from this file...
-        val schemaFromSingleFile = (spark.sqlContext.read.format("orc").load(someFile)).schema
+        val schemaFromSingleFile = spark.sqlContext.read.format("orc").load(someFile).schema
 
         // and read the DF
         spark.sqlContext.read.format(readFormat).options(readOptions).schema(schemaFromSingleFile).load(path)
@@ -686,7 +527,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     } catch {
       case e: Exception => // noinspection RedundantBlock
       {
-        logger.error("Could not read data from S3, empty DataFrame being returned, AWS REPONSE:\n" + e.getMessage)
+        logger.error("Could not read data from S3, empty DataFrame being returned, AWS RESPONSE:\n" + e.getMessage)
         spark.sqlContext.sparkSession.createDataFrame(spark.sqlContext.sparkContext.emptyRDD[Row], readSchema)
       }
     }
@@ -701,34 +542,18 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param objectName             DM objectName
    * @param usage                  usage in DM
    * @param fileFormat             file format in DM
-   * @param partitionValuesinOrder value of list of paritition (has to be in order) ++ adding List(Partition) -> redefine Partition to Maps
+   * @param partitionValuesInOrder value of list of partition (has to be in order) ++ adding List(Partition) -> redefine Partition to Maps
    * @return XML response from DM REST call
    */
-  def queryPath(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, partitionValuesinOrder: Array[String],
+  def queryPath(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, partitionValuesInOrder: Array[String],
                 schemaVersion: Int, dataVersion: Int): String = {
-    //    val primaryPartKey = getPartitionKey(namespace, objectName, usage, fileFormat, schemaVersion)
-    val subParitionURL = if (partitionValuesinOrder.length > 1) {
-      "&subPartitionValues=" + (partitionValuesinOrder.drop(1) mkString "|").toUpperCase
-    } else ""
-    val pvs = "partitionKey=" + partitionKey.toLowerCase + "&partitionValue=" + partitionValuesinOrder(0) + subParitionURL
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    var restQuery = "/businessObjectData/namespaces/" + encodeParameter(namespace.toUpperCase) +
-      "/businessObjectDefinitionNames/" + encodeParameter(objectName.toUpperCase) +
-      "/businessObjectFormatUsages/" + encodeParameter(usage.toUpperCase) +
-      "/businessObjectFormatFileTypes/" + encodeParameter(fileFormat.toUpperCase) +
-      s"?$pvs"
+    val businessObjectData = ha.getBusinessObjectData(namespace, objectName, usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
+      partitionValuesInOrder.drop(1), dataVersion)
 
-    if (schemaVersion >= 0) {
-      restQuery = restQuery + "&businessObjectFormatVersion=" + schemaVersion
-    }
-
-    if (dataVersion >= 0) {
-      restQuery = restQuery + "&businessObjectDataVersion=" + dataVersion
-    }
-
-    logger.debug(s"URL: $restQuery")
-
-    getREST(restQuery)
+    val xmlMapper = new XmlMapper
+    xmlMapper.writeValueAsString(businessObjectData)
   }
 
   /**
@@ -738,45 +563,18 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param objectName             DM objectName
    * @param usage                  usage in DM
    * @param fileFormat             file format in DM
-   * @param partitionValuesinOrder value of list of paritition (has to be in order) ++ adding List(Partition) -> redefine Partition to Maps
-   * @return XML response from DM REST call
+   * @param partitionValuesInOrder value of list of partition (has to be in order) ++ adding List(Partition) -> redefine Partition to Maps
+   * @return list of S3 key prefixes
    */
   def queryPathFromGenerateDdl(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
-                               partitionValuesinOrder: Array[String], schemaVersion: Int, dataVersion: Int): List[String] = {
-    val partitionValue = partitionValuesinOrder(0)
+                               partitionValuesInOrder: Array[String], schemaVersion: Int, dataVersion: Int): List[String] = {
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    val postQuery =
-      s"""
-         |<businessObjectDataDdlRequest>
-         |  <namespace>$namespace</namespace>
-         |  <businessObjectDefinitionName>$objectName</businessObjectDefinitionName>
-         |  <businessObjectFormatUsage>$usage</businessObjectFormatUsage>
-         |  <businessObjectFormatFileType>$fileFormat</businessObjectFormatFileType>
-         |  <businessObjectFormatVersion>$schemaVersion</businessObjectFormatVersion>
-         |  <partitionValueFilters>
-         |    <partitionValueFilter>
-         |      <partitionKey>$partitionKey</partitionKey>
-         |        <partitionValues>
-         |          <partitionValue>$partitionValue</partitionValue>
-         |        </partitionValues>
-         |      </partitionValueFilter>
-         |    </partitionValueFilters>
-         |    <businessObjectDataVersion>$dataVersion</businessObjectDataVersion>
-         |    <storageName>S3_MANAGED</storageName>
-         |    <outputFormat>HIVE_13_DDL</outputFormat>
-         |    <tableName>HerdSpark</tableName>
-         |</businessObjectDataDdlRequest>
-       """.stripMargin
+    val businessObjectDataDdl = ha.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
+      schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
 
-    // Remove format version or data version if the values are not populated
-    val queryBody = postQuery.replace("<businessObjectFormatVersion>-1</businessObjectFormatVersion>", "")
-      .replace("<businessObjectDataVersion>-1</businessObjectDataVersion>", "")
-
-    logger.debug(s"POST: $queryBody")
-    val resp = postREST("/businessObjectData/generateDdl", queryBody)
-    logger.debug(s"response: $resp")
-
-    val ss = XML.loadString(resp)
+    val xmlMapper = new XmlMapper
+    val ss = XML.loadString(xmlMapper.writeValueAsString(businessObjectDataDdl))
     val ddl = (ss \\ "businessObjectDataDdl" \ "ddl").text
     logger.debug(s"ddl: $ddl")
 
@@ -800,7 +598,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
           }
 
           // Only add the S3 key Prefixes when the partition values match
-          if (partitionValueList.mkString(",").startsWith(partitionValuesinOrder.mkString(","))) {
+          if (partitionValueList.mkString(",").startsWith(partitionValuesInOrder.mkString(","))) {
             s3KeyPrefixes += m.group(2)
           }
         })
@@ -812,24 +610,19 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   /**
    * Get available namespaces
    *
-   * @param namespace specific namespace, if empty searches all namespaces
-   * @return
+   * @param namespaceCode specific namespace, if empty searches all namespaces
+   * @return list of namespaces
    */
-  def getNamespaces(namespace: String = ""): List[String] = {
-    val restQuery = "/namespaces/" + encodeParameter(namespace.toUpperCase)
+  def getNamespaces(namespaceCode: String = ""): List[String] = {
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    logger.debug(s"URL: $restQuery")
+    if (namespaceCode.isEmpty) {
+      val namespaceKeys = ha.getAllNamespaces.getNamespaceKeys
 
-    val namespaces = XML.loadString(getREST(restQuery))
-
-    if (namespace.isEmpty) {
-      (namespaces \\ "namespaceKeys" \ "namespaceKey").map { ns =>
-        (ns \ "namespaceCode") text
-      }.toList
+      (for (namespaceKey <- namespaceKeys.asScala) yield namespaceKey.getNamespaceCode).toList
     } else {
-      (namespaces \\ "namespace").map { ns =>
-        (ns \ "namespaceCode") text
-      }.toList
+      val namespace = ha.getNamespaceByNamespaceCode(namespaceCode)
+      List(namespace.getNamespaceCode)
     }
   }
 
@@ -840,47 +633,13 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return DataFrame of BusinessObjectDefinition objects
    */
   def getBusinessObjectDefinitions(namespace: String = ""): DataFrame = {
-    var restQuery = "/businessObjectDefinitions"
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    if (!namespace.isEmpty) {
-      restQuery = restQuery +
-        "/namespaces/" + encodeParameter(namespace.toUpperCase)
-    }
+    val businessObjectDefinitionKeys = ha.getBusinessObjectsByNamespace(namespace).getBusinessObjectDefinitionKeys
 
-    logger.debug(s"URL: $restQuery")
-
-    val namespaces = XML.loadString(getREST(restQuery))
-
-    (namespaces \\ "businessObjectDefinitionKeys" \ "businessObjectDefinitionKey").map { bo =>
-      val ns = (bo \ "namespace") text
-      val name = (bo \ "businessObjectDefinitionName") text
-
-      BusinessObjectDefinition(ns, name)
-    }.toDF()
-  }
-
-  /**
-   *
-   * Constructs the REST query string for getBusinessObjectFormats
-   *
-   * @param namespace     namespace in DM
-   * @param objectName    objectName in DM
-   * @param usage         usage in DM
-   * @param fileFormat    file format for object
-   * @param schemaVersion schema version, -1 for latest
-   * @return REST query string
-   */
-  def getBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int): String = {
-    var restQuery = "/businessObjectFormats/namespaces/" + encodeParameter(namespace.toUpperCase) +
-      "/businessObjectDefinitionNames/" + encodeParameter(objectName.toUpperCase) +
-      "/businessObjectFormatUsages/" + encodeParameter(usage.toUpperCase) +
-      "/businessObjectFormatFileTypes/" + encodeParameter(fileFormat.toUpperCase)
-
-    if (schemaVersion >= 0) {
-      restQuery = restQuery + "?businessObjectFormatVersion=" + schemaVersion
-    }
-
-    restQuery
+    (for (businessObjectDefinitionKey <- businessObjectDefinitionKeys.asScala)
+      yield BusinessObjectDefinition(businessObjectDefinitionKey.getNamespace,
+        businessObjectDefinitionKey.getBusinessObjectDefinitionName)).toDF
   }
 
   /**
@@ -895,15 +654,12 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    *
    */
   def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int): String = {
-    val restQuery = getBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    logger.debug(s"URL: $restQuery")
+    val businessObjectFormat = ha.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
 
-    val restResp = getREST(restQuery)
-
-    logger.debug("Response Length: " + restResp.length)
-
-    restResp
+    val xmlMapper = new XmlMapper
+    xmlMapper.writeValueAsString(businessObjectFormat)
   }
 
   /**
@@ -914,24 +670,16 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return DataFrame of business object formats
    */
   def getBusinessObjectFormats(namespace: String, businessObjectDefinitionName: String, latestVersion: Boolean = true): DataFrame = {
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    val restQuery = "/businessObjectFormats/namespaces/" + encodeParameter(namespace.toUpperCase) +
-      "/businessObjectDefinitionNames/" + encodeParameter(businessObjectDefinitionName.toUpperCase) +
-      s"?latestBusinessObjectFormatVersion=$latestVersion"
+    val businessObjectFormatKeys = ha.getBusinessObjectFormats(namespace, businessObjectDefinitionName, latestVersion).getBusinessObjectFormatKeys
 
-    logger.debug(s"URL: $restQuery")
-
-    val boFormats = XML.loadString(getREST(restQuery))
-
-    (boFormats \\ "businessObjectFormatKeys" \\ "businessObjectFormatKey").map { bof =>
-      val namespace = (bof \ "namespace") text
-      val name = (bof \ "businessObjectDefinitionName") text
-      val usage = (bof \ "businessObjectFormatUsage") text
-      val fileType = (bof \ "businessObjectFormatFileType") text
-      val version = (bof \ "businessObjectFormatVersion") text
-
-      BusinessObjectFormat(namespace, name, usage, fileType, version.toInt)
-    }.toDF()
+    (for (businessObjectFormatKey <- businessObjectFormatKeys.asScala)
+      yield BusinessObjectFormat(businessObjectFormatKey.getNamespace,
+        businessObjectFormatKey.getBusinessObjectDefinitionName,
+        businessObjectFormatKey.getBusinessObjectFormatUsage,
+        businessObjectFormatKey.getBusinessObjectFormatFileType,
+        businessObjectFormatKey.getBusinessObjectFormatVersion)).toDF
   }
 
   /**
@@ -960,7 +708,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     }.filter(p => p != "")
 
-    // if fileFormat is "bz" its actuall bz2
+    // if fileFormat is "bz" its actual bz2
     var fFormat = fileFormat.toLowerCase
 
     if (fFormat == "bz") {
@@ -981,7 +729,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val s3Paths = storageName match {
       case "???S3_MANAGED" => // noinspection RedundantBlock
       {
-        // NOT IDEAL use the actual filenames
+        // NOT IDEAL use the actual file names
         (storageUnitPath \\ "storageUnit" \ "storageDirectory").map(p => storagePlatform + "://" + p.text + s"/*.$fFormat")
       }
       case _ =>
@@ -1210,7 +958,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param objectName      objectName in DM
    * @param usage           usage of data in DM
    * @param fileFormat      file format in DM
-   * @param partitionValues value of Map of paritition (order-independent)
+   * @param partitionValues value of Map of partition (order-independent)
    * @return list of paths for the data
    */
 
@@ -1220,11 +968,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val allPartitionKeys = getPartitions(namespace, objectName, usage, fileFormat, schemaVersion).fieldNames
     val partitionsMap = partitionValues.filter(p => p.v != null).flatMap(x => List(x.n.toLowerCase -> x.v.toLowerCase)).toMap
 
-    val partitionValuesinOrder = allPartitionKeys.filter(x => partitionsMap isDefinedAt x.toLowerCase).flatMap { x =>
+    val partitionValuesInOrder = allPartitionKeys.filter(x => partitionsMap isDefinedAt x.toLowerCase).flatMap { x =>
       List(x -> partitionsMap(x.toLowerCase))
     }.map(_._2)
 
-    queryPathFromGenerateDdl(namespace, objectName, usage, fileFormat, allPartitionKeys(0), partitionValuesinOrder, schemaVersion, dataVersion)
+    queryPathFromGenerateDdl(namespace, objectName, usage, fileFormat, allPartitionKeys(0), partitionValuesInOrder, schemaVersion, dataVersion)
   }
 
   /**
@@ -1261,37 +1009,21 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
         StructField("Reason", StringType, nullable = false) :: parts.toList)
 
     // get data availability
-    val postQuery = getBusinessObjectDataAvailabilityRequest(namespace, objectName, usage, fileFormat, partitionKey, firstPartValue, lastPartValue)
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    logger.debug(s"POST: $postQuery")
+    val businessObjectDataAvailability = ha.getBusinessObjectDataAvailability(namespace, objectName, usage, fileFormat,
+       partitionKey, firstPartValue, lastPartValue)
 
-    val resp = postREST("/businessObjectData/availability", postQuery)
+    val businessObjectDataAvailableStatuses = businessObjectDataAvailability.getAvailableStatuses
 
-    val ss = XML.loadString(resp)
-
-    val availData = (ss \\ "businessObjectDataAvailability" \\ "availableStatuses" \\ "businessObjectDataStatus").map { aStatus =>
-      val formatVersion = (aStatus \ "businessObjectFormatVersion") text
-      val partitionValue = (aStatus \ "partitionValue") text
-      val dataVersion = (aStatus \ "businessObjectDataVersion") text
-      val reason = (aStatus \ "reason") text
-
-      // these are the rest of the values to match with partitions
-      var partVals = (aStatus \\ "subPartitionValues" \ "partitionValue").map { av =>
-        av text
-      }.toList
-
-      // if there is empty data (no values given for schema
-      // add null values
-      while (partVals.length < (parts.length - 1)) {
-        partVals = partVals ::: List("")
-      }
-
-      // a row of data, the partition values at end to match schema of return
-      val aRow = Row.fromSeq(namespace :: objectName :: usage :: fileFormat :: formatVersion.toString :: dataVersion.toString :: reason :: partitionValue
-        :: partVals)
-
-      aRow
-    }.toList
+    val availData = (
+      for (businessObjectDataAvailableStatus <- businessObjectDataAvailableStatuses.asScala)
+      yield Row.fromSeq(Seq(businessObjectDataAvailability.getNamespace, businessObjectDataAvailability.getBusinessObjectDefinitionName,
+      businessObjectDataAvailability.getBusinessObjectFormatUsage, businessObjectDataAvailability.getBusinessObjectFormatFileType,
+      businessObjectDataAvailableStatus.getBusinessObjectFormatVersion.toString, businessObjectDataAvailableStatus.getBusinessObjectDataVersion.toString,
+      businessObjectDataAvailableStatus.getReason, businessObjectDataAvailableStatus.getPartitionValue,
+      businessObjectDataAvailableStatus.getSubPartitionValues))
+    ).toList
 
     // make list an RDD
     val rdd = spark.sparkContext.makeRDD(availData)
@@ -1531,7 +1263,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val reasonCol = "Reason"
 
     val da = getDataAvailability(namespace, objectName, usage, fileFormat)
-      .filter(col(pp(0).name).isin(keyPartValues: _*))
+      .filter(col(pp.head.name).isin(keyPartValues: _*))
       .filter(col(reasonCol) === "VALID")
 
     // @todo ensure there is only one row for each key partition value given
@@ -1546,9 +1278,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   /**
    * Searches for the given table the list of given namespaces
    *
-   * @param objectName
-   * @param namespaces
-   * @return
+   * @param objectName the business object name
+   * @param namespaces the namespace
+   * @return namespace
    */
   def findNamespace(objectName: String, namespaces: List[String]): String = {
 
@@ -1574,12 +1306,12 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * Will search for the given objectName (table) preferring the given namespaces (in order) and the preferred file types
    *
    * The returned data frame will be created for the given key partition values.
-   * if any sub-partitions exist, will create the dataframe for all
+   * if any sub-partitions exist, will create the DataFrame for all
    *
    * @param objectName    table to search for in DM
-   * @param keyPartValues the key partition values to create dataframe for
+   * @param keyPartValues the key partition values to create DataFrame for
    * @param namespaces    ordered list of namespaces to search
-   * @param fileFormats   ordered list of prefered file formats
+   * @param fileFormats   ordered list of preferred file formats
    */
   def findDataFrame(
                      objectName: String,
@@ -1587,7 +1319,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                      namespaces: List[String] = "HUB" :: "ETLMGMT" :: Nil,
                      fileFormats: List[String] = "ORC" :: "BZ" :: "TXT" :: "CSV" :: Nil): DataFrame = {
 
-    var namespace: String = findNamespace(objectName, namespaces)
+    val namespace: String = findNamespace(objectName, namespaces)
     var fileFormat: String = null
     var usage: String = null
     var formatVersion: Int = -1
@@ -1596,18 +1328,18 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     require(namespace != null, "Cannot find table in namespaces: " + namespaces.mkString(", "))
 
     // get the business object formats
-    val bofs = getBusinessObjectFormats(namespace, objectName)
+    val formats = getBusinessObjectFormats(namespace, objectName)
 
     // search for the preferred file format
     for (aFileFormat <- fileFormats; if fileFormat == null && formatVersion < 0) {
-      val maxVersions = bofs
+      val maxVersions = formats
         .filter('formatFileType === aFileFormat)
         .select(max('formatVersion))
 
       if (maxVersions.count == 1) {
         formatVersion = maxVersions.first.getInt(0)
 
-        val aRow = bofs
+        val aRow = formats
           .filter('formatFileType === aFileFormat && 'formatVersion === formatVersion)
           .first
 
@@ -1621,7 +1353,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     // get the partitions
     val parts = getPartitions(namespace, objectName, usage, fileFormat)
-    val keyPart = parts(0).name
+    val keyPart = parts.head.name
 
     // get available data, only valid data!
     val availData = getDataAvailability(namespace, objectName, usage, fileFormat).filter('Reason === "VALID")
@@ -1657,7 +1389,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   val usage = "PRC"
   val fileFormat = "UNKNOWN"
   val storageUnit = "S3_DATABRICKS"
-  val ds = DefaultSource
+  val ds: DefaultSource.type = DefaultSource
 
   /** Pre-Registers a non-DataFrame object.  The method only pre-registers the object and retunrs storageDirectory.
    * It is user's responsibility and choice whether to write anything to this directory.
@@ -1678,11 +1410,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                                     partitionKey: String = "partition",
                                     partitionValue: String = "none"): (Int, Int, String) = {
 
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     Try(ha.getBusinessObjectByName(nameSpace, objectName)) match {
       case Success(_) => Unit
-      case Failure(ex: ApiException) if ex.getCode() == 404 =>
+      case Failure(ex: ApiException) if ex.getCode == 404 =>
         logger.info(s"Business object not found, registering it")
         ha.registerBusinessObject(nameSpace, objectName, "FINRA") // @todo: Should the Data Provider be a parameter?
         ha.registerBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, partitionKey, None)
@@ -1690,19 +1422,18 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     }
 
     val formatVersionToUse = formatVersion match {
-      case v if v >= 0 => {
+      case v if v >= 0 =>
         // check if exists and then use
         Try(ha.getBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, v)) match {
           case Success(_) => v
           case Failure(ex) => throw ex
         }
-      }
       case _ =>
         // use the latest version
         ha.getBusinessObjectFormats(nameSpace, objectName)
-          .getBusinessObjectFormatKeys()
+          .getBusinessObjectFormatKeys
           .asScala.head
-          .getBusinessObjectFormatVersion()
+          .getBusinessObjectFormatVersion
           .toInt
     }
 
@@ -1740,12 +1471,10 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                                          dataVersion: Int,
                                          status: ObjectStatus.Value = ObjectStatus.VALID): Unit = {
 
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    val ret = ha.updateBusinessObjectData(
-      nameSpace, objectName, usage, fileFormat, formatVersion,
-      partitionKey, partitionValue, Nil,
-      dataVersion, status)
+    ha.updateBusinessObjectData(nameSpace, objectName, usage, fileFormat, formatVersion,
+      partitionKey, partitionValue, Nil, dataVersion, status)
   }
 
   /** Retrieve a non-DataFrame object registered with DM.
@@ -1768,7 +1497,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                             partitionValue: String = "none",
                             dataVersion: Int = -1): String = {
 
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val dataVersionToUse: Integer = dataVersion match {
       case -1 => null
@@ -1776,26 +1505,25 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     }
 
     val formatVersionToUse = formatVersion match {
-      case v if v >= 0 => {
+      case v if v >= 0 =>
         // check if exists and then use
         Try(ha.getBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, v)) match {
           case Success(_) => v
           case Failure(ex) => throw ex
         }
-      }
       case _ =>
         // use the latest version
         ha.getBusinessObjectFormats(nameSpace, objectName)
-          .getBusinessObjectFormatKeys()
+          .getBusinessObjectFormatKeys
           .asScala.head
-          .getBusinessObjectFormatVersion()
+          .getBusinessObjectFormatVersion
           .toInt
     }
 
     val apiClient = new ApiClient()
-    apiClient.setBasePath(this.restPostURL)
-    List(this.username).foreach(apiClient.setUsername)
-    List(this.password).foreach(apiClient.setPassword)
+    apiClient.setBasePath(this.baseRestUrl)
+    List(this.username).foreach(username => apiClient.setUsername(username))
+    List(this.password).foreach(password => apiClient.setPassword(password))
 
     val api = new BusinessObjectDataApi(apiClient)
 
@@ -1831,7 +1559,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                         partitionKey: String = "partition",
                         partitionValue: String = "none"): Int = {
 
-    val ha = ds.defaultApiClientFactory(restPostURL, Some(this.username), Some(this.password))
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     Try(ha.getBusinessObjectByName(nameSpace, objectName)) match {
       case Success(_) => Unit
@@ -1855,7 +1583,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                     fileFormat: String = "PARQUET"): DataFrame = {
 
     spark.read.format("herd")
-      .option("url", restPostURL)
+      .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
       .option("namespace", namespace)
@@ -1886,7 +1614,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                     fileFormat: String = "PARQUET"): Unit = {
 
     df.write.format("herd")
-      .option("url", restPostURL)
+      .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
       .option("namespace", namespace)
@@ -1919,11 +1647,11 @@ class TheCatalog(val urlDM: String,
   private val logger = LoggerFactory.getLogger(getClass)
   logger.debug("Initializing TheCatalog")
 
-  val fullUrlDM = urlDM + "/herd-app/rest"
+  val fullUrlDM: String = urlDM + "/herd-app/rest"
 
   // TODO fix credStash issue
 
-  val spark = SparkSession.builder
+  val spark: SparkSession = SparkSession.builder
     .master("local")
     .appName("DataCatalog->TheCatalog")
     .getOrCreate()

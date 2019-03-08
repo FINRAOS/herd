@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd</artifactId>
-      <version>0.90.0-SNAPSHOT</version>
+      <version>0.91.0-SNAPSHOT</version>
    </parent>
 
    <name>herd code</name>
@@ -273,6 +273,45 @@
                   </exclusions>
                </dependency>
             </dependencies>
+         </plugin>
+         <plugin>
+            <groupId>org.openclover</groupId>
+            <artifactId>clover-maven-plugin</artifactId>
+            <configuration>
+               <generateHtml>true</generateHtml>
+               <generateXml>true</generateXml>
+               <excludes>
+                  <exclude>**/com/kscs/util/jaxb/*.java</exclude>
+                  <exclude>**/org/finra/herd/model/annotation/*.java</exclude>
+                  <exclude>**/org/finra/herd/model/dto/*.java</exclude>
+                  <exclude>**/org/finra/herd/model/jpa/*.java</exclude>
+                  <exclude>**/org/finra/herd/app/config/*.java</exclude>
+                  <exclude>**/org/finra/herd/core/config/*.java</exclude>
+                  <exclude>**/org/finra/herd/dao/config/*.java</exclude>
+                  <exclude>**/org/finra/herd/rest/config/*.java</exclude>
+                  <exclude>**/org/finra/herd/service/config/*.java</exclude>
+                  <exclude>**/org/finra/herd/ui/config/*.java</exclude>
+                  <exclude>**/org/finra/herd/dao/impl/*OperationsImpl.java</exclude>
+                  <exclude>**/org/finra/herd/service/systemjobs/*.java</exclude>
+                  <exclude>**/org/finra/herd/dao/credstash/*.java</exclude>
+                  <exclude>**/org/finra/dm/service/activiti/*.java</exclude>
+                  <exclude>**/org/finra/dm/service/activiti/task/*.java</exclude>
+                  <exclude>**/org/finra/catalog/*.scala</exclude>
+                  <exclude>**/org/apache/spark/sql/execution/datasources/*.scala</exclude>
+                  <exclude>**/org/apache/spark/sql/herd/*.scala</exclude>
+                  <exclude>**/org/apache/spark/sql/hive/orc/*.scala</exclude>
+               </excludes>
+            </configuration>
+            <executions>
+               <execution>
+                  <id>clover-pre-site</id>
+                  <phase>pre-site</phase>
+                  <goals>
+                     <goal>aggregate</goal>
+                     <goal>clover</goal>
+                  </goals>
+               </execution>
+            </executions>
          </plugin>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>

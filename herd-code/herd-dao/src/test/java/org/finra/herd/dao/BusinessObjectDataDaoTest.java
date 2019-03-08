@@ -299,7 +299,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         BusinessObjectFormatKey businessObjectFormatKey =
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
+            .createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true,
+                PARTITION_KEY);
 
         // Create two versions of business object data instances with the latest version not located in the test storage.
         List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(businessObjectDataDaoTestHelper
@@ -530,7 +531,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Create a business object format.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY, PARTITION_KEY_GROUP);
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY, PARTITION_KEY_GROUP);
 
         // Create a business object data entity associated with the business object format.
         businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, INITIAL_DATA_VERSION, true, BDATA_STATUS);
@@ -1681,7 +1682,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         FileTypeEntity fileTypeEntity = super.fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION);
 
         BusinessObjectFormatEntity businessObjectFormatEntity = super.businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, null, true,
+            .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, null, null, true,
                 PARTITION_KEY, null, NO_ATTRIBUTES, null, null, null, schemaColumns, schemaColumns);
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
             businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
@@ -2224,7 +2225,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Create a business object format entity.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP);
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP);
 
         // Create two business object data entities that belong to the same business object format version.
         businessObjectDataDaoTestHelper

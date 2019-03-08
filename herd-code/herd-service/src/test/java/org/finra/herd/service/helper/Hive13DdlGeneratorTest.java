@@ -231,7 +231,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY);
         {
             SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
             schemaColumnEntity.setPosition(0);
@@ -267,7 +267,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, true, PARTITION_KEY);
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY);
 
         {
             SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();

@@ -83,8 +83,8 @@ public class BusinessObjectFormatDaoTestHelper
         {
             businessObjectFormatEntity =
                 createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                    businessObjectFormatVersion, AbstractDaoTest.FORMAT_DESCRIPTION, AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA, true,
-                    AbstractDaoTest.PARTITION_KEY);
+                    businessObjectFormatVersion, AbstractDaoTest.FORMAT_DESCRIPTION, AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA,
+                    AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA_URL, true, AbstractDaoTest.PARTITION_KEY);
         }
 
         return createBusinessObjectDataAttributeDefinitionEntity(businessObjectFormatEntity, businessObjectDataAttributeName,
@@ -123,12 +123,12 @@ public class BusinessObjectFormatDaoTestHelper
      */
     public BusinessObjectFormatEntity createBusinessObjectFormatEntity(String namespaceCode, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String fileType, Integer businessObjectFormatVersion, String businessObjectFormatDescription,
-        String businessObjectFormatDocumentSchema, Boolean businessObjectFormatLatestVersion, String businessObjectFormatPartitionKey,
-        String partitionKeyGroupName)
+        String businessObjectFormatDocumentSchema, String businessObjectFormatDocumentSchemaUrl, Boolean businessObjectFormatLatestVersion,
+        String businessObjectFormatPartitionKey, String partitionKeyGroupName)
     {
         return createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
-            businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatLatestVersion, businessObjectFormatPartitionKey,
-            partitionKeyGroupName, AbstractDaoTest.NO_ATTRIBUTES);
+            businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatDocumentSchemaUrl, businessObjectFormatLatestVersion,
+            businessObjectFormatPartitionKey, partitionKeyGroupName, AbstractDaoTest.NO_ATTRIBUTES);
     }
 
     /**
@@ -138,12 +138,12 @@ public class BusinessObjectFormatDaoTestHelper
      */
     public BusinessObjectFormatEntity createBusinessObjectFormatEntity(String namespaceCode, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String fileType, Integer businessObjectFormatVersion, String businessObjectFormatDescription,
-        String businessObjectFormatDocumentSchema, Boolean businessObjectFormatLatestVersion, String businessObjectFormatPartitionKey,
-        String partitionKeyGroupName, List<Attribute> attributes)
+        String businessObjectFormatDocumentSchema, String businessObjectFormatDocumentSchemaUrl, Boolean businessObjectFormatLatestVersion,
+        String businessObjectFormatPartitionKey, String partitionKeyGroupName, List<Attribute> attributes)
     {
         return createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
-            businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatLatestVersion, businessObjectFormatPartitionKey,
-            partitionKeyGroupName, attributes, null, null, null, null, null);
+            businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatDocumentSchemaUrl, businessObjectFormatLatestVersion,
+            businessObjectFormatPartitionKey, partitionKeyGroupName, attributes, null, null, null, null, null);
     }
 
     /**
@@ -153,9 +153,9 @@ public class BusinessObjectFormatDaoTestHelper
      */
     public BusinessObjectFormatEntity createBusinessObjectFormatEntity(String namespaceCode, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String fileType, Integer businessObjectFormatVersion, String businessObjectFormatDescription,
-        String businessObjectFormatDocumentSchema, Boolean businessObjectFormatLatestVersion, String businessObjectFormatPartitionKey,
-        String partitionKeyGroupName, List<Attribute> attributes, String schemaDelimiterCharacter, String schemaEscapeCharacter, String schemaNullValue,
-        List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
+        String businessObjectFormatDocumentSchema, String businessObjectFormatDocumentSchemaUrl, Boolean businessObjectFormatLatestVersion,
+        String businessObjectFormatPartitionKey, String partitionKeyGroupName, List<Attribute> attributes, String schemaDelimiterCharacter,
+        String schemaEscapeCharacter, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
     {
         // Create a business object definition entity if it does not exist.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
@@ -185,8 +185,9 @@ public class BusinessObjectFormatDaoTestHelper
         }
 
         return createBusinessObjectFormatEntity(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
-            businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatLatestVersion, businessObjectFormatPartitionKey,
-            partitionKeyGroupEntity, attributes, schemaDelimiterCharacter, schemaEscapeCharacter, schemaNullValue, schemaColumns, partitionColumns);
+            businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatDocumentSchemaUrl, businessObjectFormatLatestVersion,
+            businessObjectFormatPartitionKey, partitionKeyGroupEntity, attributes, schemaDelimiterCharacter, schemaEscapeCharacter, schemaNullValue,
+            schemaColumns, partitionColumns);
     }
 
     /**
@@ -196,15 +197,16 @@ public class BusinessObjectFormatDaoTestHelper
      */
     public BusinessObjectFormatEntity createBusinessObjectFormatEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, String businessObjectFormatDescription,
-        String businessObjectFormatDocumentSchema, Boolean businessObjectFormatLatestVersion, String businessObjectFormatPartitionKey,
-        PartitionKeyGroupEntity partitionKeyGroupEntity, List<Attribute> attributes, String schemaDelimiterCharacter, String schemaEscapeCharacter,
-        String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
+        String businessObjectFormatDocumentSchema, String businessObjectFormatDocumentSchemaUrl, Boolean businessObjectFormatLatestVersion,
+        String businessObjectFormatPartitionKey, PartitionKeyGroupEntity partitionKeyGroupEntity, List<Attribute> attributes, String schemaDelimiterCharacter,
+        String schemaEscapeCharacter, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
     {
         BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
 
         businessObjectFormatEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
         businessObjectFormatEntity.setDescription(businessObjectFormatDescription);
         businessObjectFormatEntity.setDocumentSchema(businessObjectFormatDocumentSchema);
+        businessObjectFormatEntity.setDocumentSchemaUrl(businessObjectFormatDocumentSchemaUrl);
         businessObjectFormatEntity.setFileType(fileTypeEntity);
         businessObjectFormatEntity.setBusinessObjectFormatVersion(businessObjectFormatVersion);
         businessObjectFormatEntity.setLatestVersion(businessObjectFormatLatestVersion);
@@ -323,12 +325,13 @@ public class BusinessObjectFormatDaoTestHelper
      * @return the newly created business object format entity.
      */
     public BusinessObjectFormatEntity createBusinessObjectFormatEntity(BusinessObjectFormatKey businessObjectFormatKey, String businessObjectFormatDescription,
-        String businessObjectFormatDocumentSchema, Boolean businessObjectFormatLatestVersion, String businessObjectFormatPartitionKey)
+        String businessObjectFormatDocumentSchema, String businessObjectFormatDocumentSchemaUrl, Boolean businessObjectFormatLatestVersion,
+        String businessObjectFormatPartitionKey)
     {
         return createBusinessObjectFormatEntity(businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
             businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
             businessObjectFormatKey.getBusinessObjectFormatVersion(), businessObjectFormatDescription, businessObjectFormatDocumentSchema,
-            businessObjectFormatLatestVersion, businessObjectFormatPartitionKey);
+            businessObjectFormatDocumentSchemaUrl, businessObjectFormatLatestVersion, businessObjectFormatPartitionKey);
     }
 
     /**
@@ -338,10 +341,12 @@ public class BusinessObjectFormatDaoTestHelper
      */
     public BusinessObjectFormatEntity createBusinessObjectFormatEntity(String namespaceCode, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String fileType, Integer businessObjectFormatVersion, String businessObjectFormatDescription,
-        String businessObjectFormatDocumentSchema, Boolean businessObjectFormatLatestVersion, String businessObjectFormatPartitionKey)
+        String businessObjectFormatDocumentSchema, String businessObjectFormatDocumentSchemaUrl, Boolean businessObjectFormatLatestVersion,
+        String businessObjectFormatPartitionKey)
     {
         return createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
-            businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatLatestVersion, businessObjectFormatPartitionKey, null);
+            businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatDocumentSchemaUrl, businessObjectFormatLatestVersion,
+            businessObjectFormatPartitionKey, null);
     }
 
     /**
