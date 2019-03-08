@@ -1,0 +1,12 @@
+{
+  "businessObjectDefinitionKeys": [
+    {
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "BAR"
+    },
+    {
+      "namespace": "FOO",
+      "businessObjectDefinitionName": "BAZ"
+    }
+  ]
+}

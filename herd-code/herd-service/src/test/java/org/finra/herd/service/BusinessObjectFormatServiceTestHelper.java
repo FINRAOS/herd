@@ -171,6 +171,7 @@ public class BusinessObjectFormatServiceTestHelper
      * @param partitionKey the business object format partition key
      * @param description the business object format description
      * @param documentSchema the business object format document schema
+     * @param documentSchemaUrl the business object format document schema url
      * @param attributes the list of attributes
      * @param attributeDefinitions the list of attribute definitions
      * @param schema the business object format schema
@@ -179,7 +180,7 @@ public class BusinessObjectFormatServiceTestHelper
      */
     public BusinessObjectFormatCreateRequest createBusinessObjectFormatCreateRequest(String namespaceCode, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String businessObjectFormatFileType, String partitionKey, String description, String documentSchema,
-        List<Attribute> attributes, List<AttributeDefinition> attributeDefinitions, Schema schema)
+        String documentSchemaUrl, List<Attribute> attributes, List<AttributeDefinition> attributeDefinitions, Schema schema)
     {
         BusinessObjectFormatCreateRequest businessObjectFormatCreateRequest = new BusinessObjectFormatCreateRequest();
 
@@ -190,6 +191,7 @@ public class BusinessObjectFormatServiceTestHelper
         businessObjectFormatCreateRequest.setPartitionKey(partitionKey);
         businessObjectFormatCreateRequest.setDescription(description);
         businessObjectFormatCreateRequest.setDocumentSchema(documentSchema);
+        businessObjectFormatCreateRequest.setDocumentSchemaUrl(documentSchemaUrl);
         businessObjectFormatCreateRequest.setAttributes(attributes);
         businessObjectFormatCreateRequest.setAttributeDefinitions(attributeDefinitions);
         businessObjectFormatCreateRequest.setSchema(schema);
@@ -201,18 +203,21 @@ public class BusinessObjectFormatServiceTestHelper
      * Creates a business object format update request.
      *
      * @param description the business object format description
+     * @param documentSchema the business object format document schema
+     * @param documentSchemaUrl the business object format document schema url
      * @param attributes the list of attributes
      * @param schema the business object format schema
      *
      * @return the created business object format create request
      */
-    public BusinessObjectFormatUpdateRequest createBusinessObjectFormatUpdateRequest(String description, String documentSchema, List<Attribute> attributes,
-        Schema schema)
+    public BusinessObjectFormatUpdateRequest createBusinessObjectFormatUpdateRequest(String description, String documentSchema,
+                                                                                     String documentSchemaUrl, List<Attribute> attributes, Schema schema)
     {
         BusinessObjectFormatUpdateRequest businessObjectFormatUpdateRequest = new BusinessObjectFormatUpdateRequest();
 
         businessObjectFormatUpdateRequest.setDescription(description);
         businessObjectFormatUpdateRequest.setDocumentSchema(documentSchema);
+        businessObjectFormatUpdateRequest.setDocumentSchemaUrl(documentSchemaUrl);
         businessObjectFormatUpdateRequest.setAttributes(attributes);
         businessObjectFormatUpdateRequest.setSchema(schema);
 
@@ -239,7 +244,7 @@ public class BusinessObjectFormatServiceTestHelper
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                 FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.FORMAT_DESCRIPTION,
-                AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
+                AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
                 AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE,
                 AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
     }
@@ -270,7 +275,7 @@ public class BusinessObjectFormatServiceTestHelper
             businessObjectFormatEntity = businessObjectFormatDaoTestHelper
                 .createBusinessObjectFormatEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                     businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.FORMAT_DESCRIPTION,
-                    AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.LATEST_VERSION_FLAG_SET, partitionKey,
+                    AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET, partitionKey,
                     AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES, schemaDelimiterCharacter, schemaEscapeCharacter,
                     schemaNullValue, schemaColumns, partitionColumns);
         }
@@ -308,7 +313,7 @@ public class BusinessObjectFormatServiceTestHelper
         BusinessObjectFormatCreateRequest request =
             createBusinessObjectFormatCreateRequest(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                 AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.PARTITION_KEY, AbstractServiceTest.FORMAT_DESCRIPTION,
-                AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, attributes, getTestAttributeDefinitions(), getTestSchema());
+                AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, attributes, getTestAttributeDefinitions(), getTestSchema());
 
         return businessObjectFormatService.createBusinessObjectFormat(request);
     }
@@ -683,6 +688,7 @@ public class BusinessObjectFormatServiceTestHelper
      * @param expectedPartitionKey the expected business object format partition key
      * @param expectedDescription the expected business object format description
      * @param expectedDocumentSchema the expected business object format document schema
+     * @param expectedDocumentSchemaUrl the expected business object format document schema url
      * @param expectedAttributes the expected attributes
      * @param expectedAttributeDefinitions the list of expected attribute definitions
      * @param expectedSchema the expected business object format schema
@@ -691,7 +697,7 @@ public class BusinessObjectFormatServiceTestHelper
     public void validateBusinessObjectFormat(Integer expectedBusinessObjectFormatId, String expectedNamespaceCode, String expectedBusinessObjectDefinitionName,
         String expectedBusinessObjectFormatUsage, String expectedBusinessObjectFormatFileType, Integer expectedBusinessObjectFormatVersion,
         Boolean expectedIsLatestVersion, String expectedPartitionKey, String expectedDescription, String expectedDocumentSchema,
-        List<Attribute> expectedAttributes, List<AttributeDefinition> expectedAttributeDefinitions, Schema expectedSchema,
+        String expectedDocumentSchemaUrl, List<Attribute> expectedAttributes, List<AttributeDefinition> expectedAttributeDefinitions, Schema expectedSchema,
         BusinessObjectFormat actualBusinessObjectFormat)
     {
         assertNotNull(actualBusinessObjectFormat);
@@ -709,6 +715,7 @@ public class BusinessObjectFormatServiceTestHelper
         assertEquals(expectedIsLatestVersion, actualBusinessObjectFormat.isLatestVersion());
         assertEquals(expectedPartitionKey, actualBusinessObjectFormat.getPartitionKey());
         assertEquals(expectedDocumentSchema, actualBusinessObjectFormat.getDocumentSchema());
+        assertEquals(expectedDocumentSchemaUrl, actualBusinessObjectFormat.getDocumentSchemaUrl());
         AbstractServiceTest.assertEqualsIgnoreNullOrEmpty("description", expectedDescription, actualBusinessObjectFormat.getDescription());
 
         // Ignoring the order, check if the actual list of attributes matches the expected list.

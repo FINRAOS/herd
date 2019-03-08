@@ -2282,6 +2282,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="documentSchemaUrl" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional URL of the documentSchema to an externally hosted XSD or JSON. Herd will not access this URL,
+                  it will simply store and retrieve the URL
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="attributes" type="attributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Format. "name" is the attribute name (i.e. the key) and
@@ -2352,6 +2359,13 @@
                   self-service validation of incoming data when registering business object data. It also allows the consumers to perform self-service
                   downstream actions like hydrating objects when consuming business object data. The documentSchema is optional. Currently any documentSchema is
                   accepted. Its content is not validated
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="documentSchemaUrl" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional URL of the documentSchema to an externally hosted XSD or JSON. Herd will not access this URL,
+                  it will simply store and retrieve the URL and teams can then access the URL
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -2514,6 +2528,13 @@
          <xs:element name="documentSchema" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The schema for document-style business object data registered with Herd</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="documentSchemaUrl" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional URL of the documentSchema to an externally hosted XSD or JSON. Herd will not access this URL,
+                  it will simply store and retrieve the URL and teams can then access the URL
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="attributes" type="attributes" minOccurs="0">

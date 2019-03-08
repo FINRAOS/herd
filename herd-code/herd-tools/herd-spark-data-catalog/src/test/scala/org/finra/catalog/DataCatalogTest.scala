@@ -29,7 +29,7 @@ import org.scalatest.mockito.MockitoSugar
 
 @RunWith(classOf[JUnitRunner])
 class DataCatalogTest extends FunSuite with MockitoSugar {
-  val spark = SparkSession
+  val spark: SparkSession = SparkSession
     .builder()
     .appName("catalog-test")
     .master("local[*]")
@@ -42,8 +42,8 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     val mockCredStash = mock[CredStashWrapper]
     // Inject the mock object
     dataCatalog.credStash = mockCredStash
-    var stringCaptor = ArgumentCaptor.forClass(classOf[String])
-    var mapCaptor = ArgumentCaptor.forClass(classOf[util.HashMap[String, String]])
+    val stringCaptor = ArgumentCaptor.forClass(classOf[String])
+    val mapCaptor = ArgumentCaptor.forClass(classOf[util.HashMap[String, String]])
 
     when(mockCredStash.getSecret(stringCaptor.capture, mapCaptor.capture)).thenReturn("testPassword")
     val secret = dataCatalog.getPassword(spark, "testUser", "ags", "dev", "catalog")
@@ -68,8 +68,8 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     val mockCredStash = mock[CredStashWrapper]
     // Inject the mock object
     dataCatalog.credStash = mockCredStash
-    var stringCaptor = ArgumentCaptor.forClass(classOf[String])
-    var mapCaptor = ArgumentCaptor.forClass(classOf[util.HashMap[String, String]])
+    val stringCaptor = ArgumentCaptor.forClass(classOf[String])
+    val mapCaptor = ArgumentCaptor.forClass(classOf[util.HashMap[String, String]])
 
     when(mockCredStash.getSecret(stringCaptor.capture, mapCaptor.capture)).thenReturn("testPassword")
     val secret = dataCatalog.getPassword(spark, "testUser", "ags", "dev", null)
@@ -84,6 +84,60 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     assertEquals(2, context.size)
     assertEquals("ags", context.get("AGS"))
     assertEquals("dev", context.get("SDLC"))
+  }
+
+  test("dmAllObjectsInNamespaceXML should return the business object definition keys in XML format") {
+    // @TODO: Create a unit test
+    // val dataCatalog = new DataCatalog(spark, "test.com")
+    // val businessObjectDefinitions = dataCatalog.dmAllObjectsInNamespace("FOO")
+  }
+
+  test("getNamespaces should return a list of namespaces") {
+    // @TODO: Create a unit test
+    // val dataCatalog = new DataCatalog(spark, "test.com")
+    // val namespaces = dataCatalog.getNamespaces()
+  }
+
+  test("getBusinessObjectDefinitions return should data frame containing business object definitions") {
+    // @TODO: Create a unit test
+    // val dataCatalog = new DataCatalog(spark, "test.com")
+    // val businessObjectDefinitions = dataCatalog.getBusinessObjectDefinitions("FOO")
+  }
+
+  test("queryPath should return a business object data XML") {
+    // @TODO: Create a unit test
+    // val dataCatalog = new DataCatalog(spark, "test.com")
+    // val businessObjectDataXML = dataCatalog.queryPath("FOO", "BAR", "PRC", "BZ", "DATE", Array("2018-12-06"), 0, 0)
+  }
+
+  test("callBusinessObjectFormatQuery should return a business object format XML") {
+    // @TODO: Create a unit test
+    // val dataCatalog = new DataCatalog(spark, "test.com")
+    // val businessObjectFormatXML = dataCatalog.callBusinessObjectFormatQuery("FOO", "BAR", "PRC", "BZ", 0)
+  }
+
+  test("getBusinessObjectFormats should return a business object formats in a data frame") {
+    // @TODO: Create a unit test
+    // val dataCatalog = new DataCatalog(spark, "test.com")
+    // val businessObjectFormatDataFrame = dataCatalog.getBusinessObjectFormats("FOO", "BAR")
+  }
+
+  test("dmSearch should return a list of tuples containing business object definition name and partition value") {
+    // @TODO: Create a unit test
+    // val dataCatalog = new DataCatalog(spark, "test.com")
+    // val dmSearchResults = dataCatalog.dmSearch("FOO", "BAR")
+  }
+
+  test("queryPathFromGenerateDdl should return a list of S3 key prefixes") {
+    // @TODO: Create a unit test
+    // val dataCatalog = new DataCatalog(spark, "test.com")
+    // val dmSearchResults = dataCatalog.queryPathFromGenerateDdl("FOO", "BAR", "PRC", "ORC", "DATE", Array("2018-12-06"), 0, 0)
+  }
+
+  test("getDataAvailabilityRange should return data availability") {
+    // @TODO: Create a unit test
+    // val dataCatalog = new DataCatalog(spark, "test.com")
+    // val dataAvailabilityDataFrame = dataCatalog.getDataAvailabilityRange("FOO", "BAR", "PRC", "ORC", "DATE", "2018-12-06", "2099-12-31", 0)
   }
 }
 

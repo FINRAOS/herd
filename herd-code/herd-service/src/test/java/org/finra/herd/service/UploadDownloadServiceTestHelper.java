@@ -106,8 +106,8 @@ public class UploadDownloadServiceTestHelper
         // Create a business object format entity.
         businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, AbstractServiceTest.FORMAT_DESCRIPTION, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
-                AbstractServiceTest.PARTITION_KEY);
+                businessObjectFormatVersion, AbstractServiceTest.FORMAT_DESCRIPTION, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA,
+                AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.PARTITION_KEY);
     }
 
     /**
