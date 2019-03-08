@@ -349,6 +349,11 @@ public enum ConfigurationValue
     EMR_CONFIGURE_DAEMON("emr.aws.configure.daemon", "s3://elasticmapreduce/bootstrap-actions/configure-daemons"),
 
     /**
+     * Bootstrapping script for NSCD support. There is no default.
+     */
+    EMR_NSCD_SCRIPT("emr.nscd.script", null),
+
+    /**
      * The list of product descriptions to filter by when looking up EMR spot price history.
      */
     EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS("emr.spot.price.history.product.descriptions", null),

@@ -823,7 +823,19 @@ public class EmrDaoImpl implements EmrDao
         // Add encryption script support if needed
         if (emrClusterDefinition.isEncryptionEnabled() != null && emrClusterDefinition.isEncryptionEnabled())
         {
-            bootstrapActions.add(getBootstrapActionConfig(ConfigurationValue.EMR_ENCRYPTION_SCRIPT.getKey(), getEncryptionScriptLocation()));
+            // Whenever the user requests for encryption, we have an encryption script that is stored in herd bucket.
+            // We use this encryption script to encrypt all the volumes of all the instances.
+            // Amazon plans to support encryption in EMR soon. Once that support is enabled, we can remove this script and use the one provided by AWS.
+            bootstrapActions.add(getBootstrapActionConfig(ConfigurationValue.EMR_ENCRYPTION_SCRIPT.getKey(),
+                getBootstrapScriptLocation(ConfigurationValue.EMR_ENCRYPTION_SCRIPT)));
+        }
+
+        // Add NSCD script support if the script location is not empty
+        if (StringUtils.isNotEmpty(configurationHelper.getProperty(ConfigurationValue.EMR_NSCD_SCRIPT)))
+        {
+            // Upon launch, all EMR clusters should have NSCD running to cache DNS host lookups so EMR does not overwhelm DNS servers
+            bootstrapActions
+                .add(getBootstrapActionConfig(ConfigurationValue.EMR_NSCD_SCRIPT.getKey(), getBootstrapScriptLocation(ConfigurationValue.EMR_NSCD_SCRIPT)));
         }
 
         // Add bootstrap actions.
@@ -862,17 +874,26 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
-     * Get the encryption script location from the bucket name and encryption script location.
+     * Get the bootstrap script location from the bucket name and bootstrap configuraton value.
      *
-     * @return location of the encryption script.
+     * @return location of the bootstrap script.
      */
-    private String getEncryptionScriptLocation()
+    private String getBootstrapScriptLocation(ConfigurationValue configurationValue)
     {
-        // Whenever the user requests for encryption, we have an encryption script that is stored in herd bucket.
-        // We use this encryption script to encrypt all the volumes of all the instances.
-        // Amazon plans to support encryption in EMR soon. Once that support is enabled, we can remove this script and use the one provided by AWS.
         return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(ConfigurationValue.EMR_ENCRYPTION_SCRIPT);
+            configurationHelper.getProperty(configurationValue);
+    }
+
+    /**
+     * Get the NSCD script location from the bucket name and nscd script location.
+     *
+     * @return location of the NSCD script.
+     */
+    private String getNscdScriptLocation()
+    {
+        // All EMR clusters launched should have NSCD running so EMR does not overwhelm DNS servers.
+        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
+            configurationHelper.getProperty(ConfigurationValue.EMR_NSCD_SCRIPT);
     }
 
     /**
