@@ -885,18 +885,6 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
-     * Get the NSCD script location from the bucket name and nscd script location.
-     *
-     * @return location of the NSCD script.
-     */
-    private String getNscdScriptLocation()
-    {
-        // All EMR clusters launched should have NSCD running so EMR does not overwhelm DNS servers.
-        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(ConfigurationValue.EMR_NSCD_SCRIPT);
-    }
-
-    /**
      * Creates the job flow instance configuration containing specification of the number and type of Amazon EC2 instances.
      *
      * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters
