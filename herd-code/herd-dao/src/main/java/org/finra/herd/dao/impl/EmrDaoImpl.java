@@ -827,15 +827,16 @@ public class EmrDaoImpl implements EmrDao
             // We use this encryption script to encrypt all the volumes of all the instances.
             // Amazon plans to support encryption in EMR soon. Once that support is enabled, we can remove this script and use the one provided by AWS.
             bootstrapActions.add(getBootstrapActionConfig(ConfigurationValue.EMR_ENCRYPTION_SCRIPT.getKey(),
-                getBootstrapScriptLocation(ConfigurationValue.EMR_ENCRYPTION_SCRIPT)));
+                getBootstrapScriptLocation(configurationHelper.getProperty(ConfigurationValue.EMR_ENCRYPTION_SCRIPT))));
         }
 
         // Add NSCD script support if the script location is not empty
-        if (StringUtils.isNotEmpty(configurationHelper.getProperty(ConfigurationValue.EMR_NSCD_SCRIPT)))
+        String emrNscdScript = configurationHelper.getProperty(ConfigurationValue.EMR_NSCD_SCRIPT);
+        if (StringUtils.isNotEmpty(emrNscdScript))
         {
             // Upon launch, all EMR clusters should have NSCD running to cache DNS host lookups so EMR does not overwhelm DNS servers
             bootstrapActions
-                .add(getBootstrapActionConfig(ConfigurationValue.EMR_NSCD_SCRIPT.getKey(), getBootstrapScriptLocation(ConfigurationValue.EMR_NSCD_SCRIPT)));
+                .add(getBootstrapActionConfig(ConfigurationValue.EMR_NSCD_SCRIPT.getKey(), getBootstrapScriptLocation(emrNscdScript)));
         }
 
         // Add bootstrap actions.
@@ -874,14 +875,13 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
-     * Get the bootstrap script location from the bucket name and bootstrap configuraton value.
+     * Get the bootstrap script location from the bucket name and bootstrap script configuration value.
      *
      * @return location of the bootstrap script.
      */
-    private String getBootstrapScriptLocation(ConfigurationValue configurationValue)
+    private String getBootstrapScriptLocation(String bootstrapConfigurationValue)
     {
-        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(configurationValue);
+        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) + bootstrapConfigurationValue;
     }
 
     /**
