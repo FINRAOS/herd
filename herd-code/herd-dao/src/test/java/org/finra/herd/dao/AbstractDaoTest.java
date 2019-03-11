@@ -351,11 +351,19 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_CLUSTER_NAME = "UT_EMR_CLUSTER" + RANDOM_SUFFIX;
 
+    public static final String EMR_CLUSTER_DAEMON_CONFIG_NAME = "UT_EMR_CLUSTER_DAEMON_CONFIG_NAME" + RANDOM_SUFFIX;
+
+    public static final String EMR_CLUSTER_DAEMON_CONFIG_VALUE = "UT_EMR_CLUSTER_DAEMON_CONFIG_VALUE" + RANDOM_SUFFIX;
+
     public static final String EMR_MASTER_SECURITY_GROUP = "UT_EMR_MASTER_SECURITY_GROUP" + RANDOM_SUFFIX;
 
     public static final String EMR_SLAVE_SECURITY_GROUP = "UT_EMR_SLAVE_SECURITY_GROUP" + RANDOM_SUFFIX;
 
+    public static final String EMR_CONFIGURE_DAEMON = "UT_EMR_CONFIGURE_DAEMON_" + RANDOM_SUFFIX;
+
     public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
+
+    public static final String EMR_NSCD_SCRIPT = "UT_EMR_NscdScript_" + RANDOM_SUFFIX;
 
     public static final boolean ENABLE_COLUMN_FIELDS = true;
 
@@ -820,6 +828,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String S3_BUCKET_NAME = "UT_S3_Bucket_Name" + RANDOM_SUFFIX;
 
     public static final String S3_BUCKET_NAME_2 = "UT_S3_Bucket_Name2" + RANDOM_SUFFIX;
+
+    public static final String S3_URL_PROTOCOL = "UT_S3_URL_PROTOCOL" + RANDOM_SUFFIX;
+
+    public static final String S3_URL_PATH_DELIMITER = "UT_S3_PATH_DELIMITER" + RANDOM_SUFFIX;
+
+    public static final String S3_STAGING_RESOURCE_BASE = "UT_S3_STAGING_RESOURCE_BASE" + RANDOM_SUFFIX;
 
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
 

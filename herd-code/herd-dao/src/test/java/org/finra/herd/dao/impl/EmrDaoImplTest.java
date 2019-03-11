@@ -33,7 +33,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
+import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClientBuilder;
+import com.amazonaws.services.elasticmapreduce.model.BootstrapActionConfig;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.amazonaws.services.elasticmapreduce.model.Configuration;
 import com.amazonaws.services.elasticmapreduce.model.EbsBlockDeviceConfig;
@@ -48,11 +51,14 @@ import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.MarketType;
+import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -65,6 +71,7 @@ import org.finra.herd.dao.EmrOperations;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsBlockDeviceConfig;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
@@ -108,11 +115,107 @@ public class EmrDaoImplTest extends AbstractDaoTest
 
     @Mock
     private JsonHelper jsonHelper;
+    @Captor
+    private ArgumentCaptor<AmazonElasticMapReduceClient> amazonElasticMapReduceClientArgumentCaptor;
+    @Captor
+    private ArgumentCaptor<RunJobFlowRequest> runJobFlowRequestArgumentCaptor;
 
     @Before
     public void before()
     {
         MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testCreateEmrClusterWithNscdBootstrapScript() {
+        // Create an AWS parameters DTO.
+        final AwsParamsDto awsParamsDto =
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST,
+                HTTP_PROXY_PORT, NO_AWS_REGION_NAME);
+        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
+        final InstanceDefinitions instanceDefinitions =
+            new InstanceDefinitions(new MasterInstanceDefinition(), new InstanceDefinition(), new InstanceDefinition());
+        emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
+        emrClusterDefinition.setNodeTags(Collections.emptyList());
+        when(configurationHelper.getProperty(ConfigurationValue.EMR_NSCD_SCRIPT)).thenReturn(EMR_NSCD_SCRIPT);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL)).thenReturn(S3_URL_PROTOCOL);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME)).thenReturn(S3_BUCKET_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE)).thenReturn(S3_STAGING_RESOURCE_BASE);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER)).thenReturn(S3_URL_PATH_DELIMITER);
+        when(configurationHelper.getProperty(ConfigurationValue.EMR_CONFIGURE_DAEMON)).thenReturn(EMR_CONFIGURE_DAEMON);
+        List<Parameter> daemonConfigs = new ArrayList<>();
+        Parameter daemonConfig = new Parameter();
+        daemonConfig.setName(EMR_CLUSTER_DAEMON_CONFIG_NAME);
+        daemonConfig.setValue(EMR_CLUSTER_DAEMON_CONFIG_VALUE);
+        daemonConfigs.add(daemonConfig);
+
+        emrClusterDefinition.setDaemonConfigurations(daemonConfigs);
+        AmazonElasticMapReduce amazonElasticMapReduce = AmazonElasticMapReduceClientBuilder.standard().build();
+        when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduce);
+        when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduce);
+        when(emrOperations.runEmrJobFlow(amazonElasticMapReduceClientArgumentCaptor.capture(), runJobFlowRequestArgumentCaptor.capture()))
+            .thenReturn(EMR_CLUSTER_ID);
+
+        // Create the cluster
+        String clusterId = emrDaoImpl.createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto);
+
+        // Verifications
+        RunJobFlowRequest runJobFlowRequest = runJobFlowRequestArgumentCaptor.getValue();
+        assertEquals(clusterId, EMR_CLUSTER_ID);
+        verify(configurationHelper).getProperty(ConfigurationValue.EMR_NSCD_SCRIPT);
+        verify(configurationHelper).getProperty(ConfigurationValue.S3_URL_PROTOCOL);
+        verify(configurationHelper).getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
+        verify(configurationHelper).getProperty(ConfigurationValue.EMR_CONFIGURE_DAEMON);
+        verify(awsClientFactory).getEmrClient(awsParamsDto);
+        verify(emrOperations).runEmrJobFlow((AmazonElasticMapReduceClient)amazonElasticMapReduce, runJobFlowRequest);
+        List<BootstrapActionConfig> bootstrapActionConfigs = runJobFlowRequest.getBootstrapActions();
+
+        // There should be two bootstrap actions: NSCD script, and emr daemon config
+        assertEquals(2, bootstrapActionConfigs.size());
+
+        // Verify NSCD bootstrap action
+        assertEquals(ConfigurationValue.EMR_NSCD_SCRIPT.getKey(), bootstrapActionConfigs.get(0).getName());
+        assertEquals(String.format("%s%s%s%s%s%s", S3_URL_PROTOCOL, S3_BUCKET_NAME, S3_URL_PATH_DELIMITER, S3_STAGING_RESOURCE_BASE,
+            S3_URL_PATH_DELIMITER, EMR_NSCD_SCRIPT), bootstrapActionConfigs.get(0).getScriptBootstrapAction().getPath());
+
+        // Verify EMR configure daemon bootstrap action
+        assertEquals(ConfigurationValue.EMR_CONFIGURE_DAEMON.getKey(), bootstrapActionConfigs.get(1).getName());
+        assertEquals(EMR_CONFIGURE_DAEMON, bootstrapActionConfigs.get(1).getScriptBootstrapAction().getPath());
+        assertEquals(String.format("%s=%s", EMR_CLUSTER_DAEMON_CONFIG_NAME, EMR_CLUSTER_DAEMON_CONFIG_VALUE),
+            bootstrapActionConfigs.get(1).getScriptBootstrapAction().getArgs().get(0));
+    }
+
+    @Test
+    public void testCreateEmrClusterNoNscdBootstrapScript() {
+        // Create an AWS parameters DTO.
+        final AwsParamsDto awsParamsDto =
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST,
+                HTTP_PROXY_PORT, NO_AWS_REGION_NAME);
+        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
+        final InstanceDefinitions instanceDefinitions =
+            new InstanceDefinitions(new MasterInstanceDefinition(), new InstanceDefinition(), new InstanceDefinition());
+        emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
+        emrClusterDefinition.setNodeTags(Collections.emptyList());
+
+        AmazonElasticMapReduce amazonElasticMapReduce = AmazonElasticMapReduceClientBuilder.standard().build();
+        when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduce);
+        when(emrOperations.runEmrJobFlow(amazonElasticMapReduceClientArgumentCaptor.capture(), runJobFlowRequestArgumentCaptor.capture()))
+            .thenReturn(EMR_CLUSTER_ID);
+
+        // Create the cluster without NSCD script configuration
+        String clusterId = emrDaoImpl.createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto);
+
+        // Verifications
+        assertEquals(clusterId, EMR_CLUSTER_ID);
+        verify(configurationHelper).getProperty(ConfigurationValue.EMR_NSCD_SCRIPT);
+        verify(awsClientFactory).getEmrClient(awsParamsDto);
+        verify(emrOperations).runEmrJobFlow(any(), any());
+        RunJobFlowRequest runJobFlowRequest = runJobFlowRequestArgumentCaptor.getValue();
+        List<BootstrapActionConfig> bootstrapActionConfigs = runJobFlowRequest.getBootstrapActions();
+
+        // There should be no bootstrap action
+        assertTrue(bootstrapActionConfigs.isEmpty());
     }
 
     @Test

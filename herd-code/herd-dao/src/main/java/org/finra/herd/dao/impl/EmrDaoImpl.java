@@ -1031,9 +1031,10 @@ public class EmrDaoImpl implements EmrDao
         }
 
         // Set the bootstrap actions
-        if (!getBootstrapActionConfigList(emrClusterDefinition).isEmpty())
+        List<BootstrapActionConfig> bootstrapActionConfigList = getBootstrapActionConfigList(emrClusterDefinition);
+        if (!bootstrapActionConfigList.isEmpty())
         {
-            runJobFlowRequest.setBootstrapActions(getBootstrapActionConfigList(emrClusterDefinition));
+            runJobFlowRequest.setBootstrapActions(bootstrapActionConfigList);
         }
 
         // Set the app installation steps
