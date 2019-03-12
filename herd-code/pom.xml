@@ -259,19 +259,42 @@
 
    </build>
 
-   <modules>
-      <module>herd-model-api</module>
-      <module>herd-model-api-15</module>
-      <module>herd-model</module>
-      <module>herd-core</module>
-      <module>herd-dao</module>
-      <module>herd-service</module>
-      <module>herd-ui</module>
-      <module>herd-rest</module>
-      <module>herd-app</module>
-      <module>herd-war</module>
-      <module>herd-tools</module>
-      <module>herd-sdk</module>
-   </modules>
+   <profiles>
+      <profile>
+         <id>herd-slim</id>
+         <modules>
+            <module>herd-model-api</module>
+            <module>herd-model-api-15</module>
+            <module>herd-model</module>
+            <module>herd-core</module>
+            <module>herd-dao</module>
+            <module>herd-service</module>
+            <module>herd-ui</module>
+            <module>herd-rest</module>
+            <module>herd-app</module>
+            <module>herd-war</module>
+         </modules>
+      </profile>
+      <profile>
+         <id>default</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+         </activation>
+         <modules>
+            <module>herd-model-api</module>
+            <module>herd-model-api-15</module>
+            <module>herd-model</module>
+            <module>herd-core</module>
+            <module>herd-dao</module>
+            <module>herd-service</module>
+            <module>herd-ui</module>
+            <module>herd-rest</module>
+            <module>herd-app</module>
+            <module>herd-war</module>
+            <module>herd-tools</module>
+            <module>herd-sdk</module>
+         </modules>
+      </profile>
+   </profiles>
 
 </project>
