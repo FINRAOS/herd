@@ -115,8 +115,10 @@ public class EmrDaoImplTest extends AbstractDaoTest
 
     @Mock
     private JsonHelper jsonHelper;
+
     @Captor
     private ArgumentCaptor<AmazonElasticMapReduceClient> amazonElasticMapReduceClientArgumentCaptor;
+
     @Captor
     private ArgumentCaptor<RunJobFlowRequest> runJobFlowRequestArgumentCaptor;
 
@@ -127,11 +129,12 @@ public class EmrDaoImplTest extends AbstractDaoTest
     }
 
     @Test
-    public void testCreateEmrClusterWithNscdBootstrapScript() {
+    public void testCreateEmrClusterWithNscdBootstrapScript()
+    {
         // Create an AWS parameters DTO.
         final AwsParamsDto awsParamsDto =
-            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST,
-                HTTP_PROXY_PORT, NO_AWS_REGION_NAME);
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                NO_AWS_REGION_NAME);
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         final InstanceDefinitions instanceDefinitions =
             new InstanceDefinitions(new MasterInstanceDefinition(), new InstanceDefinition(), new InstanceDefinition());
@@ -168,7 +171,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         verify(configurationHelper).getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
         verify(configurationHelper).getProperty(ConfigurationValue.EMR_CONFIGURE_DAEMON);
         verify(awsClientFactory).getEmrClient(awsParamsDto);
-        verify(emrOperations).runEmrJobFlow((AmazonElasticMapReduceClient)amazonElasticMapReduce, runJobFlowRequest);
+        verify(emrOperations).runEmrJobFlow((AmazonElasticMapReduceClient) amazonElasticMapReduce, runJobFlowRequest);
         List<BootstrapActionConfig> bootstrapActionConfigs = runJobFlowRequest.getBootstrapActions();
 
         // There should be two bootstrap actions: NSCD script, and emr daemon config
@@ -176,8 +179,9 @@ public class EmrDaoImplTest extends AbstractDaoTest
 
         // Verify NSCD bootstrap action
         assertEquals(ConfigurationValue.EMR_NSCD_SCRIPT.getKey(), bootstrapActionConfigs.get(0).getName());
-        assertEquals(String.format("%s%s%s%s%s%s", S3_URL_PROTOCOL, S3_BUCKET_NAME, S3_URL_PATH_DELIMITER, S3_STAGING_RESOURCE_BASE,
-            S3_URL_PATH_DELIMITER, EMR_NSCD_SCRIPT), bootstrapActionConfigs.get(0).getScriptBootstrapAction().getPath());
+        assertEquals(String
+                .format("%s%s%s%s%s%s", S3_URL_PROTOCOL, S3_BUCKET_NAME, S3_URL_PATH_DELIMITER, S3_STAGING_RESOURCE_BASE, S3_URL_PATH_DELIMITER, EMR_NSCD_SCRIPT),
+            bootstrapActionConfigs.get(0).getScriptBootstrapAction().getPath());
 
         // Verify EMR configure daemon bootstrap action
         assertEquals(ConfigurationValue.EMR_CONFIGURE_DAEMON.getKey(), bootstrapActionConfigs.get(1).getName());
@@ -187,11 +191,12 @@ public class EmrDaoImplTest extends AbstractDaoTest
     }
 
     @Test
-    public void testCreateEmrClusterNoNscdBootstrapScript() {
+    public void testCreateEmrClusterNoNscdBootstrapScript()
+    {
         // Create an AWS parameters DTO.
         final AwsParamsDto awsParamsDto =
-            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST,
-                HTTP_PROXY_PORT, NO_AWS_REGION_NAME);
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                NO_AWS_REGION_NAME);
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         final InstanceDefinitions instanceDefinitions =
             new InstanceDefinitions(new MasterInstanceDefinition(), new InstanceDefinition(), new InstanceDefinition());
