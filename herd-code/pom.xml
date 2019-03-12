@@ -82,19 +82,6 @@
          <groupId>io.swagger</groupId>
          <artifactId>swagger-annotations</artifactId>
       </dependency>
-      <!-- This dependency will ensure that logback-classic isn't used when the Cobertura code base is referenced via the cobertura-maven-plugin. -->
-      <dependency>
-         <groupId>net.sourceforge.cobertura</groupId>
-         <artifactId>cobertura</artifactId>
-         <version>${cobertura.version}</version>
-         <exclusions>
-            <exclusion>
-               <groupId>ch.qos.logback</groupId>
-               <artifactId>logback-classic</artifactId>
-            </exclusion>
-         </exclusions>
-         <scope>test</scope>
-      </dependency>
    </dependencies>
 
    <build>
@@ -190,95 +177,10 @@
             </dependencies>
          </plugin>
          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>cobertura-maven-plugin</artifactId>
-            <configuration>
-               <check/>
-               <formats>
-                  <format>html</format>
-                  <format>xml</format>
-               </formats>
-               <aggregate>true</aggregate>
-               <instrumentation>
-                  <!-- We are excluding model classes since they are more or less POJO's
-                      that don't contain business logic. It doesn't make sense to add test cases
-                      to test getters and setters. We are excluding Spring JavaConfig configurations
-                      (all within "config" packages) because it is Java code that creates Spring
-                      beans (similar to XML configurations) and not business logic. If you add
-                      additional exclusions, make sure you do a clean build. Otherwise, the classes
-                      you previously built will still exist in the clover database and will still
-                      be listed in the report. We are excluding the implementation of AWSOperations
-                      and S3Operations, since unit tests use a mock implementation. We are also excluding
-                      system jobs, since they would not be called directly from the unit tests. We are excluding
-                      deprecated activiti tasks. We are excluding all spark scala projects.
-                     -->
-                  <excludes>
-                     <exclude>com/kscs/util/jaxb/**</exclude>
-                     <exclude>org/finra/herd/model/**</exclude>
-                     <exclude>org/finra/herd/**/config/**</exclude>
-                     <exclude>org/finra/herd/dao/**/*OperationsImpl.class</exclude>
-                     <exclude>org/finra/herd/service/systemjobs/**</exclude>
-                     <exclude>org/finra/herd/sdk/**</exclude>
-                     <exclude>org/finra/herd/dao/credstash/**</exclude>
-                     <exclude>org/finra/dm/service/activiti/**</exclude>
-                     <exclude>org/finra/catalog/**</exclude>
-                     <exclude>org/apache/spark/sql/execution/datasources/**</exclude>
-                     <exclude>org/apache/spark/sql/herd/**</exclude>
-                     <exclude>org/apache/spark/sql/hive/orc/**</exclude>
-                  </excludes>
-               </instrumentation>
-            </configuration>
-            <executions>
-               <execution>
-                  <phase>test</phase>
-                  <goals>
-                     <goal>cobertura</goal>
-                  </goals>
-               </execution>
-            </executions>
-            <!--
-              This set of dependencies excludes logback-classic from the Cobertura execution and uses Log4J2 (via SLF4J) instead.
-              This is needed because our JUnits use Log4J2 and already have that JAR included in the classpath. If we let Cobertura use its default
-              logback-classic, SLF4J will display errors on the console when the JUnits are run since two logging implementations will be found on the
-              classpath.
-
-              In addition, we added a dependency on herd-build-tools which contains a basic default Log4J2 configuration file to use when running
-              JUnits via Cobertura. Without it, Log4J2 will sometimes display errors on the console that no configuration file is present.
-            -->
-            <dependencies>
-               <dependency>
-                  <groupId>org.apache.logging.log4j</groupId>
-                  <artifactId>log4j-slf4j-impl</artifactId>
-                  <version>${log4j.version}</version>
-               </dependency>
-               <dependency>
-                  <groupId>org.apache.logging.log4j</groupId>
-                  <artifactId>log4j-core</artifactId>
-                  <version>${log4j.version}</version>
-               </dependency>
-               <dependency>
-                  <groupId>org.finra.herd</groupId>
-                  <artifactId>herd-build-tools</artifactId>
-                  <version>${project.version}</version>
-               </dependency>
-               <dependency>
-                  <groupId>net.sourceforge.cobertura</groupId>
-                  <artifactId>cobertura</artifactId>
-                  <version>${cobertura.version}</version>
-                  <exclusions>
-                     <exclusion>
-                        <groupId>ch.qos.logback</groupId>
-                        <artifactId>logback-classic</artifactId>
-                     </exclusion>
-                  </exclusions>
-               </dependency>
-            </dependencies>
-         </plugin>
-         <plugin>
             <groupId>org.openclover</groupId>
             <artifactId>clover-maven-plugin</artifactId>
             <configuration>
-               <generateHtml>true</generateHtml>
+               <generateHtml>false</generateHtml>
                <generateXml>true</generateXml>
                <excludes>
                   <exclude>**/com/kscs/util/jaxb/*.java</exclude>
