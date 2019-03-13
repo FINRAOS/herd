@@ -261,7 +261,7 @@
 
    <profiles>
       <profile>
-         <id>herd-slim</id>
+         <id>herd-main</id>
          <modules>
             <module>herd-model-api</module>
             <module>herd-model-api-15</module>
@@ -273,6 +273,13 @@
             <module>herd-rest</module>
             <module>herd-app</module>
             <module>herd-war</module>
+         </modules>
+      </profile>
+      <profile>
+         <id>herd-extensions</id>
+         <modules>
+            <module>herd-tools</module>
+            <module>herd-sdk</module>
          </modules>
       </profile>
       <profile>
