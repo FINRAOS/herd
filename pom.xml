@@ -887,6 +887,14 @@
             <version>${opencsv.version}</version>
          </dependency>
 
+         <!-- hive -->
+         <dependency>
+            <groupId>org.spark-project.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <version>1.2.1.spark2</version>
+            <scope>compile</scope>
+         </dependency>
+
       </dependencies>
 
    </dependencyManagement>
@@ -1191,6 +1199,18 @@
          <organizationUrl>https://www.linkedin.com/pub/max-seo/98/184/a1b</organizationUrl>
          <roles>
             <role>developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>k26992</id>
+         <name>Mona Annaparthi</name>
+         <email>mona.annaparthi@finra.org</email>
+         <url>https://github.com/Mona62</url>
+         <organization>FINRA</organization>
+         <organizationUrl>http://www.finra.org</organizationUrl>
+         <roles>
+            <role>developer</role>
+            <role>tester</role>
          </roles>
       </developer>
       <developer>
