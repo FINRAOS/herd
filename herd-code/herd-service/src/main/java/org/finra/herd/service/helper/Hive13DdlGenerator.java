@@ -16,6 +16,7 @@
 package org.finra.herd.service.helper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -32,6 +33,8 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -89,6 +92,12 @@ public class Hive13DdlGenerator extends DdlGenerator
      * Hive file format for text files.
      */
     public static final String TEXT_HIVE_FILE_FORMAT = "TEXTFILE";
+
+    /**
+     * Hive complex data types list.
+     */
+    private static final List<String> HIVE_COMPLEX_DATA_TYPES =
+        Arrays.asList(Category.LIST.toString(), Category.MAP.toString(), Category.UNION.toString(), Category.STRUCT.toString());
 
     @Autowired
     private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
@@ -592,7 +601,8 @@ public class Hive13DdlGenerator extends DdlGenerator
             sb.append(")\n");
         }
 
-        // We output delimiter character, escape character, and null value only when they are defined in the business object format schema.
+        // We output delimiter character, collection items delimiter, map keys delimiter, escape character, and null value only when they are defined
+        // in the business object format schema.
         sb.append("ROW FORMAT DELIMITED");
         if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getDelimiter()))
         {
@@ -601,6 +611,16 @@ public class Hive13DdlGenerator extends DdlGenerator
                 escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getDelimiter(), true)),
                 StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getEscapeCharacter()) ? "" : String.format(" ESCAPED BY '%s'",
                     escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getEscapeCharacter(), true)))));
+        }
+        if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getCollectionItemsDelimiter()))
+        {
+            sb.append(String.format(" COLLECTION ITEMS TERMINATED BY '%s'",
+                escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getCollectionItemsDelimiter(), true))));
+        }
+        if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getMapKeysDelimiter()))
+        {
+            sb.append(String.format(" MAP KEYS TERMINATED BY '%s'",
+                escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getMapKeysDelimiter(), true))));
         }
         sb.append(
             String.format(" NULL DEFINED AS '%s'\n", escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getNullValue()))));
@@ -622,36 +642,59 @@ public class Hive13DdlGenerator extends DdlGenerator
     private String getHiveDataType(SchemaColumn schemaColumn, BusinessObjectFormatEntity businessObjectFormatEntity)
     {
         String hiveDataType;
-
-        if (schemaColumn.getType().equalsIgnoreCase("TINYINT") || schemaColumn.getType().equalsIgnoreCase("SMALLINT") ||
-            schemaColumn.getType().equalsIgnoreCase("INT") || schemaColumn.getType().equalsIgnoreCase("BIGINT") ||
-            schemaColumn.getType().equalsIgnoreCase("FLOAT") || schemaColumn.getType().equalsIgnoreCase("DOUBLE") ||
-            schemaColumn.getType().equalsIgnoreCase("TIMESTAMP") || schemaColumn.getType().equalsIgnoreCase("DATE") ||
-            schemaColumn.getType().equalsIgnoreCase("STRING") || schemaColumn.getType().equalsIgnoreCase("BOOLEAN") ||
-            schemaColumn.getType().equalsIgnoreCase("BINARY"))
+        try
         {
-            hiveDataType = schemaColumn.getType().toUpperCase();
+            if (schemaColumn.getType().equalsIgnoreCase("TINYINT") || schemaColumn.getType().equalsIgnoreCase("SMALLINT") ||
+                schemaColumn.getType().equalsIgnoreCase("INT") || schemaColumn.getType().equalsIgnoreCase("BIGINT") ||
+                schemaColumn.getType().equalsIgnoreCase("FLOAT") || schemaColumn.getType().equalsIgnoreCase("DOUBLE") ||
+                schemaColumn.getType().equalsIgnoreCase("TIMESTAMP") || schemaColumn.getType().equalsIgnoreCase("DATE") ||
+                schemaColumn.getType().equalsIgnoreCase("STRING") || schemaColumn.getType().equalsIgnoreCase("BOOLEAN") ||
+                schemaColumn.getType().equalsIgnoreCase("BINARY"))
+            {
+                hiveDataType = schemaColumn.getType().toUpperCase();
+            }
+            else if (schemaColumn.getType().equalsIgnoreCase("DECIMAL") || schemaColumn.getType().equalsIgnoreCase("NUMBER"))
+            {
+                hiveDataType = StringUtils.isNotBlank(schemaColumn.getSize()) ? String.format("DECIMAL(%s)", schemaColumn.getSize()) : "DECIMAL";
+            }
+            else if (schemaColumn.getType().equalsIgnoreCase("VARCHAR") || schemaColumn.getType().equalsIgnoreCase("CHAR"))
+            {
+                hiveDataType = String.format("%s(%s)", schemaColumn.getType().toUpperCase(), schemaColumn.getSize());
+            }
+            else if (schemaColumn.getType().equalsIgnoreCase("VARCHAR2"))
+            {
+                hiveDataType = String.format("VARCHAR(%s)", schemaColumn.getSize());
+            }
+            else if(isHiveComplexDataType(schemaColumn.getType()))
+            {
+                hiveDataType = String.format("%s", schemaColumn.getType().toUpperCase());
+            }
+            else
+            {
+                // this exception is thrown when the isHiveComplexDataType() method returns false (e.g : INT(5))
+                throw new IllegalArgumentException();
+            }
         }
-        else if (schemaColumn.getType().equalsIgnoreCase("DECIMAL") || schemaColumn.getType().equalsIgnoreCase("NUMBER"))
-        {
-            hiveDataType = StringUtils.isNotBlank(schemaColumn.getSize()) ? String.format("DECIMAL(%s)", schemaColumn.getSize()) : "DECIMAL";
-        }
-        else if (schemaColumn.getType().equalsIgnoreCase("VARCHAR") || schemaColumn.getType().equalsIgnoreCase("CHAR"))
-        {
-            hiveDataType = String.format("%s(%s)", schemaColumn.getType().toUpperCase(), schemaColumn.getSize());
-        }
-        else if (schemaColumn.getType().equalsIgnoreCase("VARCHAR2"))
-        {
-            hiveDataType = String.format("VARCHAR(%s)", schemaColumn.getSize());
-        }
-        else
+        catch (IllegalArgumentException e)
         {
             throw new IllegalArgumentException(String
-                .format("Column \"%s\" has an unsupported data type \"%s\" in the schema for business object format {%s}.", schemaColumn.getName(),
-                    schemaColumn.getType(), businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
+                .format("Column \"%s\" has an unsupported data type \"%s\" in the schema for business object format {%s}. Exception : \"%s\"",
+                    schemaColumn.getName(), schemaColumn.getType(),
+                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity), e.getMessage()));
         }
-
         return hiveDataType;
+    }
+
+    /**
+     * Determines if the given input string is a hive complex data type or not.
+     *
+     * @param inputString the input string
+     *
+     * @return true if the inputString is a hive complex data type, false otherwise
+     */
+    private boolean isHiveComplexDataType(String inputString)
+    {
+        return HIVE_COMPLEX_DATA_TYPES.contains(TypeInfoUtils.getTypeInfoFromTypeString(inputString).getCategory().toString());
     }
 
     /**

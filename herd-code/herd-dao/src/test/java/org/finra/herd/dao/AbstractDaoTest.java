@@ -874,6 +874,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_DELIMITER_PIPE = "|";
 
+    public static final String SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA = ",";
+
+    public static final String SCHEMA_COLLECTION_ITEMS_DELIMITER_PIPE = "|";
+
+    public static final String SCHEMA_MAP_KEYS_DELIMITER_EQUALS = "=";
+
+    public static final String SCHEMA_MAP_KEYS_DELIMITER_HASH = "#";
+
     public static final String SCHEMA_ESCAPE_CHARACTER_BACKSLASH = "\\";
 
     public static final String SCHEMA_ESCAPE_CHARACTER_TILDE = "~";

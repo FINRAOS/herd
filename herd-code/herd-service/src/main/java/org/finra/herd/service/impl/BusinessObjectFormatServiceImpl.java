@@ -1291,6 +1291,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
             businessObjectFormatEntity.setNullValue(schema.getNullValue());
             businessObjectFormatEntity.setDelimiter(schema.getDelimiter());
+            businessObjectFormatEntity.setCollectionItemsDelimiter(schema.getCollectionItemsDelimiter());
+            businessObjectFormatEntity.setMapKeysDelimiter(schema.getMapKeysDelimiter());
             businessObjectFormatEntity.setEscapeCharacter(schema.getEscapeCharacter());
             businessObjectFormatEntity.setPartitionKeyGroup(partitionKeyGroupEntity);
 
@@ -1389,6 +1391,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     {
         businessObjectFormatEntity.setNullValue(null);
         businessObjectFormatEntity.setDelimiter(null);
+        businessObjectFormatEntity.setCollectionItemsDelimiter(null);
+        businessObjectFormatEntity.setMapKeysDelimiter(null);
         businessObjectFormatEntity.setEscapeCharacter(null);
         businessObjectFormatEntity.setPartitionKeyGroup(null);
         businessObjectFormatEntity.getSchemaColumns().clear();

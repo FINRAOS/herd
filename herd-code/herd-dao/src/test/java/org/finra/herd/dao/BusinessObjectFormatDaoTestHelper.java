@@ -143,7 +143,7 @@ public class BusinessObjectFormatDaoTestHelper
     {
         return createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
             businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatDocumentSchemaUrl, businessObjectFormatLatestVersion,
-            businessObjectFormatPartitionKey, partitionKeyGroupName, attributes, null, null, null, null, null);
+            businessObjectFormatPartitionKey, partitionKeyGroupName, attributes, null, null, null, null, null, null, null);
     }
 
     /**
@@ -154,8 +154,9 @@ public class BusinessObjectFormatDaoTestHelper
     public BusinessObjectFormatEntity createBusinessObjectFormatEntity(String namespaceCode, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String fileType, Integer businessObjectFormatVersion, String businessObjectFormatDescription,
         String businessObjectFormatDocumentSchema, String businessObjectFormatDocumentSchemaUrl, Boolean businessObjectFormatLatestVersion,
-        String businessObjectFormatPartitionKey, String partitionKeyGroupName, List<Attribute> attributes, String schemaDelimiterCharacter,
-        String schemaEscapeCharacter, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
+        String businessObjectFormatPartitionKey, String partitionKeyGroupName, List<Attribute> attributes, String schemaDelimiter,
+        String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaNullValue,
+        List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
     {
         // Create a business object definition entity if it does not exist.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
@@ -186,7 +187,7 @@ public class BusinessObjectFormatDaoTestHelper
 
         return createBusinessObjectFormatEntity(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
             businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatDocumentSchemaUrl, businessObjectFormatLatestVersion,
-            businessObjectFormatPartitionKey, partitionKeyGroupEntity, attributes, schemaDelimiterCharacter, schemaEscapeCharacter, schemaNullValue,
+            businessObjectFormatPartitionKey, partitionKeyGroupEntity, attributes, schemaDelimiter, schemaCollectionItemsDelimiter,schemaMapKeysDelimiter, schemaEscapeCharacter, schemaNullValue,
             schemaColumns, partitionColumns);
     }
 
@@ -198,8 +199,9 @@ public class BusinessObjectFormatDaoTestHelper
     public BusinessObjectFormatEntity createBusinessObjectFormatEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, String businessObjectFormatDescription,
         String businessObjectFormatDocumentSchema, String businessObjectFormatDocumentSchemaUrl, Boolean businessObjectFormatLatestVersion,
-        String businessObjectFormatPartitionKey, PartitionKeyGroupEntity partitionKeyGroupEntity, List<Attribute> attributes, String schemaDelimiterCharacter,
-        String schemaEscapeCharacter, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
+        String businessObjectFormatPartitionKey, PartitionKeyGroupEntity partitionKeyGroupEntity, List<Attribute> attributes, String schemaDelimiter,
+        String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaNullValue,
+        List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
     {
         BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
 
@@ -231,7 +233,9 @@ public class BusinessObjectFormatDaoTestHelper
 
         if (schemaColumns != null && !schemaColumns.isEmpty())
         {
-            businessObjectFormatEntity.setDelimiter(schemaDelimiterCharacter);
+            businessObjectFormatEntity.setDelimiter(schemaDelimiter);
+            businessObjectFormatEntity.setCollectionItemsDelimiter(schemaCollectionItemsDelimiter);
+            businessObjectFormatEntity.setMapKeysDelimiter(schemaMapKeysDelimiter);
             businessObjectFormatEntity.setEscapeCharacter(schemaEscapeCharacter);
             businessObjectFormatEntity.setNullValue(schemaNullValue);
 

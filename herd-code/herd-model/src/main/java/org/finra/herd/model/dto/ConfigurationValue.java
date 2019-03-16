@@ -148,6 +148,16 @@ public enum ConfigurationValue
     FIELD_DATA_DELIMITER_ESCAPE_CHAR("field.data.delimiter.escape.char", "\\"),
 
     /**
+     * The collection items data delimiter to use for collection items data. The default is "\\002".
+     */
+    COLLECTION_ITEMS_DATA_DELIMITER("collection.iems.data.delimiter","\\002"),
+
+    /**
+     * The map keys data delimiter to use for map keys data. The default is "\\003".
+     */
+    MAP_KEYS_DATA_DELIMITER("map.keys.data.delimiter","\\003"),
+
+    /**
      * The S3 staging bucket name. The default is the empty string.
      */
     S3_STAGING_BUCKET_NAME("s3.staging.bucket.name", ""),

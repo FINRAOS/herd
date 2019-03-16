@@ -315,8 +315,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
                         relationalSchemaName),
                     new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
                         relationalTableName)), NO_ATTRIBUTE_DEFINITIONS,
-                new Schema(expectedSchema.getColumns().subList(0, expectedSchema.getColumns().size() - 1), NO_PARTITION_COLUMNS, EMPTY_STRING, null, null,
-                    NO_PARTITION_KEY_GROUP)));
+                new Schema(expectedSchema.getColumns().subList(0, expectedSchema.getColumns().size() - 1), NO_PARTITION_COLUMNS, EMPTY_STRING, null, null, null,
+                    null, NO_PARTITION_KEY_GROUP)));
 
         // Create a business object data key for the initial version of the relation table registration.
         BusinessObjectDataKey businessObjectDataKey =
@@ -405,7 +405,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
                         relationalSchemaName),
                     new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
                         relationalTableName)), NO_ATTRIBUTE_DEFINITIONS,
-                new Schema(relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns(), NO_PARTITION_COLUMNS, EMPTY_STRING, null, null,
+                new Schema(relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns(), NO_PARTITION_COLUMNS, EMPTY_STRING, null, null, null, null,
                     NO_PARTITION_KEY_GROUP)));
 
         // Create a business object data key for the initial version of the relation table registration.
