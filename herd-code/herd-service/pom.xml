@@ -141,6 +141,12 @@
          <groupId>org.jsoup</groupId>
          <artifactId>jsoup</artifactId>
       </dependency>
+
+      <!-- spark hive library -->
+      <dependency>
+         <groupId>org.spark-project.hive</groupId>
+         <artifactId>hive-exec</artifactId>
+      </dependency>
    </dependencies>
 
 </project>
