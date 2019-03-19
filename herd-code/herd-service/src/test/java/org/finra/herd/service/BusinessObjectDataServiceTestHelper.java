@@ -1102,7 +1102,10 @@ public class BusinessObjectDataServiceTestHelper
         sb.append("    `COLUMN016` VARCHAR(n),\n");
         sb.append("    `COLUMN017` CHAR(n),\n");
         sb.append("    `COLUMN018` BOOLEAN,\n");
-        sb.append("    `COLUMN019` BINARY)\n");
+        sb.append("    `COLUMN019` BINARY,\n");
+        sb.append("    `COLUMN020` ARRAY<BIGINT>,\n");
+        sb.append("    `COLUMN021` ARRAY<INT(5)>,\n");
+        sb.append("    `COLUMN022` MAP<INT,ARRAY<BIGINT>>)\n");
 
         if (partitionLevels > 0)
         {

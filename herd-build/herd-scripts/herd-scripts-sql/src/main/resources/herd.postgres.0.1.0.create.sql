@@ -117,9 +117,7 @@ CREATE TABLE bus_objct_frmt (
     updt_user_id character varying(100),
     prtn_key_tx character varying(30) NOT NULL,
     null_value_tx character varying(4),
-    dlmtr_tx character varying(4),
-    clctn_items_dlmtr_tx character varying(4)
-    map_keys_dlmtr_tx character varying(4),
+    dlmtr_tx character varying(4)
     escp_char_tx character varying(4),
     prtn_key_group_tx character varying(30),
     CONSTRAINT bus_objct_frmt_ck1 CHECK ((ltst_vrsn_fl = ANY (ARRAY['Y'::bpchar, 'N'::bpchar])))

@@ -135,6 +135,7 @@
       <mockito.version>2.10.0</mockito.version>
       <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
       <jsoup.version>1.11.3</jsoup.version>
+      <hive-exec.version>1.2.1.spark2</hive-exec.version>
 
       <!-- Compiler Information -->
       <maven.compiler.source>1.8</maven.compiler.source>
@@ -887,11 +888,11 @@
             <version>${opencsv.version}</version>
          </dependency>
 
-         <!-- hive -->
+         <!-- hive library -->
          <dependency>
             <groupId>org.spark-project.hive</groupId>
             <artifactId>hive-exec</artifactId>
-            <version>1.2.1.spark2</version>
+            <version>${hive-exec.version}</version>
             <scope>compile</scope>
          </dependency>
 

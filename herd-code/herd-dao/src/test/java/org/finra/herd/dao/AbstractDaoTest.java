@@ -864,7 +864,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String[][] SCHEMA_COLUMNS =
         new String[][] {{"TINYINT", null}, {"SMALLINT", null}, {"INT", null}, {"BIGINT", null}, {"FLOAT", null}, {"DOUBLE", null}, {"DECIMAL", null},
             {"DECIMAL", "p,s"}, {"NUMBER", null}, {"NUMBER", "p"}, {"NUMBER", "p,s"}, {"TIMESTAMP", null}, {"DATE", null}, {"STRING", null}, {"VARCHAR", "n"},
-            {"VARCHAR2", "n"}, {"CHAR", "n"}, {"BOOLEAN", null}, {"BINARY", null}};
+            {"VARCHAR2", "n"}, {"CHAR", "n"}, {"BOOLEAN", null}, {"BINARY", null}, {"array<bigint>", null}, {"array<int(5)>", null},
+            {"map<int,array<bigint>>", null}};
 
     public static final String SCHEMA_COLUMNS_NAME_FIELD = "schemaColumns.name";
 
@@ -1118,7 +1119,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TEST_DDL =
         "CREATE EXTERNAL TABLE `ITEMS` (\n" + "    `ORGNL_TRANSFORM` INT,\n" + "    `DATA` DOUBLE)\n" + "PARTITIONED BY (`TRANSFORM` INT)\n" +
-            "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '\\\\' NULL DEFINED AS '\\001'\n" + "STORED AS TEXTFILE;";
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '\\\\' COLLECTION ITEMS TERMINATED BY ',' MAP KEYS TERMINATED BY '#' " +
+            "NULL DEFINED AS '\\001'\n" + "STORED AS TEXTFILE;";
 
     public static final String TEST_DDL_2 = "DROP TABLE `Test`;\n" + "CREATE EXTERNAL TABLE `TEST`;";
 

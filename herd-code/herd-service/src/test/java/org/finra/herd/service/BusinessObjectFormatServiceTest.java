@@ -576,6 +576,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
         request.getSchema().setDelimiter(null);
+        request.getSchema().setCollectionItemsDelimiter(null);
+        request.getSchema().setMapKeysDelimiter(null);
         request.getSchema().setEscapeCharacter(null);
         businessObjectFormatService.createBusinessObjectFormat(request);
 
@@ -595,6 +597,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
         request.getSchema().setNullValue(EMPTY_STRING);   // This is a required parameter, so it cannot be set to null.
         request.getSchema().setDelimiter(null);
+        request.getSchema().setCollectionItemsDelimiter(null);
+        request.getSchema().setMapKeysDelimiter(null);
         request.getSchema().setEscapeCharacter(null);
         resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request);
 
@@ -603,6 +607,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         Schema expectedSchema = businessObjectFormatServiceTestHelper.getTestSchema();
         expectedSchema.setNullValue(null);
         expectedSchema.setDelimiter(null);
+        expectedSchema.setCollectionItemsDelimiter(null);
+        expectedSchema.setMapKeysDelimiter(null);
         expectedSchema.setEscapeCharacter(null);
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(resultBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
@@ -611,13 +617,15 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 expectedSchema, resultBusinessObjectFormat);
 
         // Create a third version of the business object format with a schema that is identical to the initial version schema,
-        // except that we now pass empty string values for all three row format parameters.
+        // except that we now pass empty string values for all the row format parameters.
         request = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
                 FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
         request.getSchema().setNullValue(EMPTY_STRING);
         request.getSchema().setDelimiter(EMPTY_STRING);
+        request.getSchema().setCollectionItemsDelimiter(EMPTY_STRING);
+        request.getSchema().setMapKeysDelimiter(EMPTY_STRING);
         request.getSchema().setEscapeCharacter(EMPTY_STRING);
         resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request);
 
@@ -641,6 +649,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
         request.getSchema().setDelimiter(null);
+        request.getSchema().setCollectionItemsDelimiter(null);
+        request.getSchema().setMapKeysDelimiter(null);
         request.getSchema().setEscapeCharacter(null);
         businessObjectFormatService.createBusinessObjectFormat(request);
 
@@ -678,6 +688,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             newSchema = businessObjectFormatServiceTestHelper.getTestSchema();
             newSchema.setNullValue(EMPTY_STRING);   // This is a required parameter, so it cannot be set to null.
             newSchema.setDelimiter(SCHEMA_DELIMITER_COMMA);
+            newSchema.setCollectionItemsDelimiter(null);
+            newSchema.setMapKeysDelimiter(null);
             newSchema.setEscapeCharacter(null);
             businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
                 .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
@@ -697,6 +709,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             newSchema = businessObjectFormatServiceTestHelper.getTestSchema();
             newSchema.setNullValue(EMPTY_STRING);   // This is a required parameter, so it cannot be set to null.
             newSchema.setDelimiter(null);
+            newSchema.setCollectionItemsDelimiter(null);
+            newSchema.setMapKeysDelimiter(null);
             newSchema.setEscapeCharacter(SCHEMA_ESCAPE_CHARACTER_TILDE);
             businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
                 .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
@@ -708,6 +722,49 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         {
             assertEquals("New format version schema is not \"additive\" to the previous format version schema. " +
                 "New format version escape character does not match to the previous format version escape character.", e.getMessage());
+        }
+
+        // Try to create a second version of the business object format with a schema that has a different collection items delimiter character.
+        try
+        {
+            newSchema = businessObjectFormatServiceTestHelper.getTestSchema();
+            newSchema.setNullValue(EMPTY_STRING);   // This is a required parameter, so it cannot be set to null.
+            newSchema.setDelimiter(null);
+            newSchema.setCollectionItemsDelimiter(SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA);
+            newSchema.setMapKeysDelimiter(null);
+            newSchema.setEscapeCharacter(null);
+            businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
+                .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
+                    FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                    businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), newSchema));
+            fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("New format version schema is not \"additive\" to the previous format version schema. " +
+                    "New format version collection items delimiter character does not match to the previous format version collection items delimiter character.",
+                e.getMessage());
+        }
+
+        // Try to create a second version of the business object format with a schema that has a different map keys delimiter character.
+        try
+        {
+            newSchema = businessObjectFormatServiceTestHelper.getTestSchema();
+            newSchema.setNullValue(EMPTY_STRING);   // This is a required parameter, so it cannot be set to null.
+            newSchema.setDelimiter(null);
+            newSchema.setCollectionItemsDelimiter(null);
+            newSchema.setMapKeysDelimiter(SCHEMA_MAP_KEYS_DELIMITER_HASH);
+            newSchema.setEscapeCharacter(null);
+            businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
+                .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
+                    FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                    businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), newSchema));
+            fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("New format version schema is not \"additive\" to the previous format version schema. " +
+                "New format version map keys delimiter character does not match to the previous format version map keys delimiter character.", e.getMessage());
         }
     }
 
@@ -800,6 +857,41 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         {
             assertEquals("New format version schema is not \"additive\" to the previous format version schema. " +
                 "New format version delimiter character does not match to the previous format version delimiter character.", e.getMessage());
+        }
+
+        // Try to create a second version of the business object format with a schema that has a different collection items delimiter.
+        try
+        {
+            newSchema = businessObjectFormatServiceTestHelper.getTestSchema();
+            newSchema.setCollectionItemsDelimiter(SCHEMA_COLLECTION_ITEMS_DELIMITER_PIPE);
+            businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
+                .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
+                    FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                    businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), newSchema));
+            fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("New format version schema is not \"additive\" to the previous format version schema. " +
+                    "New format version collection items delimiter character does not match to the previous format version collection items delimiter character.",
+                e.getMessage());
+        }
+
+        // Try to create a second version of the business object format with a schema that has a different map keys delimiter.
+        try
+        {
+            newSchema = businessObjectFormatServiceTestHelper.getTestSchema();
+            newSchema.setMapKeysDelimiter(SCHEMA_MAP_KEYS_DELIMITER_EQUALS);
+            businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
+                .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
+                    FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                    businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), newSchema));
+            fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("New format version schema is not \"additive\" to the previous format version schema. " +
+                "New format version map keys delimiter character does not match to the previous format version map keys delimiter character.", e.getMessage());
         }
 
         // Try to create a second version of the business object format with a schema that has a different schema escape character.
@@ -3021,14 +3113,15 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatDdlRequest.setIncludeIfNotExistsOption(false);
         BusinessObjectFormatDdl result = businessObjectFormatService.generateBusinessObjectFormatDdl(businessObjectFormatDdlRequest);
 
-        Assert.assertEquals("result DDL", result.getDdl(),
+        Assert.assertEquals("result DDL",
             "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n" + "    `COLUMN001` TINYINT,\n" +
                 "    `COLUMN002` SMALLINT COMMENT 'This is \\'COLUMN002\\' column. Here are \\'single\\' and \"double\" quotes along with a backslash \\.',\n" +
                 "    `COLUMN003` INT,\n" + "    `COLUMN004` BIGINT,\n" + "    `COLUMN005` FLOAT,\n" + "    `COLUMN006` DOUBLE,\n" +
                 "    `COLUMN007` DECIMAL,\n" + "    `COLUMN008` DECIMAL(p,s),\n" + "    `COLUMN009` DECIMAL,\n" + "    `COLUMN010` DECIMAL(p),\n" +
                 "    `COLUMN011` DECIMAL(p,s),\n" + "    `COLUMN012` TIMESTAMP,\n" + "    `COLUMN013` DATE,\n" + "    `COLUMN014` STRING,\n" +
                 "    `COLUMN015` VARCHAR(n),\n" + "    `COLUMN016` VARCHAR(n),\n" + "    `COLUMN017` CHAR(n),\n" + "    `COLUMN018` BOOLEAN,\n" +
-                "    `COLUMN019` BINARY);");
+                "    `COLUMN019` BINARY,\n" + "    `COLUMN020` ARRAY<BIGINT>,\n" + "    `COLUMN021` ARRAY<INT(5)>,\n" +
+                "    `COLUMN022` MAP<INT,ARRAY<BIGINT>>);", result.getDdl());
     }
 
     /**
@@ -3105,14 +3198,15 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatDdlRequest.setIncludeIfNotExistsOption(null);
         BusinessObjectFormatDdl result = businessObjectFormatService.generateBusinessObjectFormatDdl(businessObjectFormatDdlRequest);
 
-        Assert.assertEquals("result DDL", result.getDdl(),
+        Assert.assertEquals("result DDL",
             "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n" + "    `COLUMN001` TINYINT,\n" +
                 "    `COLUMN002` SMALLINT COMMENT 'This is \\'COLUMN002\\' column. Here are \\'single\\' and \"double\" quotes along with a backslash \\.',\n" +
                 "    `COLUMN003` INT,\n" + "    `COLUMN004` BIGINT,\n" + "    `COLUMN005` FLOAT,\n" + "    `COLUMN006` DOUBLE,\n" +
                 "    `COLUMN007` DECIMAL,\n" + "    `COLUMN008` DECIMAL(p,s),\n" + "    `COLUMN009` DECIMAL,\n" + "    `COLUMN010` DECIMAL(p),\n" +
                 "    `COLUMN011` DECIMAL(p,s),\n" + "    `COLUMN012` TIMESTAMP,\n" + "    `COLUMN013` DATE,\n" + "    `COLUMN014` STRING,\n" +
                 "    `COLUMN015` VARCHAR(n),\n" + "    `COLUMN016` VARCHAR(n),\n" + "    `COLUMN017` CHAR(n),\n" + "    `COLUMN018` BOOLEAN,\n" +
-                "    `COLUMN019` BINARY);");
+                "    `COLUMN019` BINARY,\n" + "    `COLUMN020` ARRAY<BIGINT>,\n" + "    `COLUMN021` ARRAY<INT(5)>,\n" +
+                "    `COLUMN022` MAP<INT,ARRAY<BIGINT>>);", result.getDdl());
     }
 
     @Test

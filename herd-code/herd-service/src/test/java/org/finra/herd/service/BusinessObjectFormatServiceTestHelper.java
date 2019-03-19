@@ -423,7 +423,10 @@ public class BusinessObjectFormatServiceTestHelper
         sb.append("    `COLUMN016` VARCHAR(n),\n");
         sb.append("    `COLUMN017` CHAR(n),\n");
         sb.append("    `COLUMN018` BOOLEAN,\n");
-        sb.append("    `COLUMN019` BINARY)\n");
+        sb.append("    `COLUMN019` BINARY,\n");
+        sb.append("    `COLUMN020` ARRAY<BIGINT>,\n");
+        sb.append("    `COLUMN021` ARRAY<INT(5)>,\n");
+        sb.append("    `COLUMN022` MAP<INT,ARRAY<BIGINT>>)\n");
 
         if (partitionLevels > 0)
         {
@@ -654,7 +657,7 @@ public class BusinessObjectFormatServiceTestHelper
         schema.setNullValue(AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N);
         schema.setDelimiter(AbstractServiceTest.SCHEMA_DELIMITER_PIPE);
         schema.setCollectionItemsDelimiter(AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA);
-        schema.setMapKeysDelimiter(AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_EQUALS);
+        schema.setMapKeysDelimiter(AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH);
         schema.setEscapeCharacter(AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH);
         schema.setPartitionKeyGroup(AbstractServiceTest.PARTITION_KEY_GROUP);
         schema.setColumns(schemaColumnDaoTestHelper.getTestSchemaColumns(AbstractServiceTest.RANDOM_SUFFIX));
@@ -755,6 +758,10 @@ public class BusinessObjectFormatServiceTestHelper
                 .assertEqualsIgnoreNullOrEmpty("null value", expectedSchema.getNullValue(), actualBusinessObjectFormat.getSchema().getNullValue());
             AbstractServiceTest
                 .assertEqualsIgnoreNullOrEmpty("delimiter", expectedSchema.getDelimiter(), actualBusinessObjectFormat.getSchema().getDelimiter());
+            AbstractServiceTest.assertEqualsIgnoreNullOrEmpty("collection items delimiter", expectedSchema.getCollectionItemsDelimiter(),
+                actualBusinessObjectFormat.getSchema().getCollectionItemsDelimiter());
+            AbstractServiceTest.assertEqualsIgnoreNullOrEmpty("map keys delimiter", expectedSchema.getMapKeysDelimiter(),
+                actualBusinessObjectFormat.getSchema().getMapKeysDelimiter());
             AbstractServiceTest.assertEqualsIgnoreNullOrEmpty("escape character", expectedSchema.getEscapeCharacter(),
                 actualBusinessObjectFormat.getSchema().getEscapeCharacter());
             assertEquals(expectedSchema.getPartitionKeyGroup(), actualBusinessObjectFormat.getSchema().getPartitionKeyGroup());
