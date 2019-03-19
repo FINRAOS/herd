@@ -109,6 +109,12 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Column(name = "dlmtr_tx")
     private String delimiter;
 
+    @Column(name = "clctn_items_dlmtr_tx")
+    private String collectionItemsDelimiter;
+
+    @Column(name = "map_keys_dlmtr_tx")
+    private String mapKeysDelimiter;
+
     @Column(name = "escp_char_tx")
     private String escapeCharacter;
 
@@ -288,6 +294,14 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     {
         this.delimiter = delimiter;
     }
+
+    public String getCollectionItemsDelimiter() { return collectionItemsDelimiter; }
+
+    public void setCollectionItemsDelimiter(String collectionItemsDelimiter) { this.collectionItemsDelimiter = collectionItemsDelimiter; }
+
+    public String getMapKeysDelimiter() { return mapKeysDelimiter; }
+
+    public void setMapKeysDelimiter(String mapKeysDelimiter) { this.mapKeysDelimiter = mapKeysDelimiter; }
 
     public String getEscapeCharacter()
     {

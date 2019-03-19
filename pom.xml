@@ -135,6 +135,7 @@
       <mockito.version>2.10.0</mockito.version>
       <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
       <jsoup.version>1.11.3</jsoup.version>
+      <hive-exec.version>1.2.1.spark2</hive-exec.version>
 
       <!-- Compiler Information -->
       <maven.compiler.source>1.8</maven.compiler.source>
@@ -887,6 +888,13 @@
             <version>${opencsv.version}</version>
          </dependency>
 
+         <!-- hive library -->
+         <dependency>
+            <groupId>org.spark-project.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <version>${hive-exec.version}</version>
+         </dependency>
+
       </dependencies>
 
    </dependencyManagement>
@@ -1191,6 +1199,18 @@
          <organizationUrl>https://www.linkedin.com/pub/max-seo/98/184/a1b</organizationUrl>
          <roles>
             <role>developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>k26992</id>
+         <name>Mona Annaparthi</name>
+         <email>mona.annaparthi@finra.org</email>
+         <url>https://github.com/Mona62</url>
+         <organization>FINRA</organization>
+         <organizationUrl>http://www.finra.org</organizationUrl>
+         <roles>
+            <role>developer</role>
+            <role>tester</role>
          </roles>
       </developer>
       <developer>

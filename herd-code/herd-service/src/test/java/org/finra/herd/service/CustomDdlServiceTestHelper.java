@@ -87,7 +87,10 @@ public class CustomDdlServiceTestHelper
         sb.append("    `COLUMN016` VARCHAR(n),\n");
         sb.append("    `COLUMN017` CHAR(n),\n");
         sb.append("    `COLUMN018` BOOLEAN,\n");
-        sb.append("    `COLUMN019` BINARY)\n");
+        sb.append("    `COLUMN019` BINARY,\n");
+        sb.append("    `COLUMN020` ARRAY<BIGINT>,\n");
+        sb.append("    `COLUMN021` ARRAY<INT(5)>,\n");
+        sb.append("    `COLUMN022` MAP<INT,ARRAY<BIGINT>>)\n");
 
         if (partitioned)
         {
@@ -95,7 +98,8 @@ public class CustomDdlServiceTestHelper
                 "`PRTN_CLMN005` BOOLEAN, `PRTN_CLMN006` DECIMAL, `PRTN_CLMN007` DECIMAL)\n");
         }
 
-        sb.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' NULL DEFINED AS '\\N'\n");
+        sb.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' COLLECTION ITEMS TERMINATED BY ',' MAP KEYS TERMINATED BY '#' " +
+            "NULL DEFINED AS '\\N'\n");
 
         if (partitioned)
         {

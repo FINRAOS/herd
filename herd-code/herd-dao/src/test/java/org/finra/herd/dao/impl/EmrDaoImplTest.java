@@ -134,7 +134,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         // Create an AWS parameters DTO.
         final AwsParamsDto awsParamsDto =
             new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
-                NO_AWS_REGION_NAME);
+                AWS_REGION_NAME_US_EAST_1);
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         final InstanceDefinitions instanceDefinitions =
             new InstanceDefinitions(new MasterInstanceDefinition(), new InstanceDefinition(), new InstanceDefinition());
@@ -153,7 +153,8 @@ public class EmrDaoImplTest extends AbstractDaoTest
         daemonConfigs.add(daemonConfig);
 
         emrClusterDefinition.setDaemonConfigurations(daemonConfigs);
-        AmazonElasticMapReduce amazonElasticMapReduce = AmazonElasticMapReduceClientBuilder.standard().build();
+        AmazonElasticMapReduce amazonElasticMapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(awsParamsDto.getAwsRegionName())
+            .build();
         when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduce);
         when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduce);
         when(emrOperations.runEmrJobFlow(amazonElasticMapReduceClientArgumentCaptor.capture(), runJobFlowRequestArgumentCaptor.capture()))
@@ -196,14 +197,15 @@ public class EmrDaoImplTest extends AbstractDaoTest
         // Create an AWS parameters DTO.
         final AwsParamsDto awsParamsDto =
             new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
-                NO_AWS_REGION_NAME);
+                AWS_REGION_NAME_US_EAST_1);
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         final InstanceDefinitions instanceDefinitions =
             new InstanceDefinitions(new MasterInstanceDefinition(), new InstanceDefinition(), new InstanceDefinition());
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Collections.emptyList());
 
-        AmazonElasticMapReduce amazonElasticMapReduce = AmazonElasticMapReduceClientBuilder.standard().build();
+        AmazonElasticMapReduce amazonElasticMapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(awsParamsDto.getAwsRegionName())
+            .build();
         when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduce);
         when(emrOperations.runEmrJobFlow(amazonElasticMapReduceClientArgumentCaptor.capture(), runJobFlowRequestArgumentCaptor.capture()))
             .thenReturn(EMR_CLUSTER_ID);
@@ -229,7 +231,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         // Create an AWS parameters DTO.
         AwsParamsDto awsParamsDto =
             new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
-                NO_AWS_REGION_NAME);
+                AWS_REGION_NAME_US_EAST_1);
 
         // Create a mock AmazonElasticMapReduceClient.
         AmazonElasticMapReduceClient amazonElasticMapReduceClient = mock(AmazonElasticMapReduceClient.class);
@@ -277,7 +279,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         // Create an AWS parameters DTO.
         AwsParamsDto awsParamsDto =
             new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
-                NO_AWS_REGION_NAME);
+                AWS_REGION_NAME_US_EAST_1);
 
         // Call the method under test.
         ClusterSummary result = emrDaoImpl.getActiveEmrClusterByName(BLANK_TEXT, awsParamsDto);

@@ -1013,6 +1013,22 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 oldSchema.getDelimiter().equals(newSchema.getDelimiter()),
             String.format("%s New format version delimiter character does not match to the previous format version delimiter character.", mainErrorMessage));
 
+        // Validate that there are no changes to the collection items delimiter character, which is a an optional parameter.
+        // Please note that null and an empty string values are both stored in the database as NULL.
+        Assert.isTrue(oldSchema.getCollectionItemsDelimiter() == null ?
+            newSchema.getCollectionItemsDelimiter() == null || newSchema.getCollectionItemsDelimiter().isEmpty() :
+            oldSchema.getCollectionItemsDelimiter().equals(newSchema.getCollectionItemsDelimiter()), String.format(
+            "%s New format version collection items delimiter character does not match to the previous format version collection items delimiter character.",
+            mainErrorMessage));
+
+        // Validate that there are no changes to the map keys delimiter character, which is a an optional parameter.
+        // Please note that null and an empty string values are both stored in the database as NULL.
+        Assert.isTrue(oldSchema.getMapKeysDelimiter() == null ?
+            newSchema.getMapKeysDelimiter() == null || newSchema.getMapKeysDelimiter().isEmpty() :
+            oldSchema.getMapKeysDelimiter().equals(newSchema.getMapKeysDelimiter()), String.format(
+            "%s New format version map keys delimiter character does not match to the previous format version map keys delimiter character.",
+            mainErrorMessage));
+
         // Validate that there are no changes to the escape character, which is a an optional parameter.
         // Please note that null and an empty string values are both stored in the database as NULL.
         Assert.isTrue(oldSchema.getEscapeCharacter() == null ? newSchema.getEscapeCharacter() == null || newSchema.getEscapeCharacter().isEmpty() :
@@ -1291,6 +1307,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
             businessObjectFormatEntity.setNullValue(schema.getNullValue());
             businessObjectFormatEntity.setDelimiter(schema.getDelimiter());
+            businessObjectFormatEntity.setCollectionItemsDelimiter(schema.getCollectionItemsDelimiter());
+            businessObjectFormatEntity.setMapKeysDelimiter(schema.getMapKeysDelimiter());
             businessObjectFormatEntity.setEscapeCharacter(schema.getEscapeCharacter());
             businessObjectFormatEntity.setPartitionKeyGroup(partitionKeyGroupEntity);
 
@@ -1389,6 +1407,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     {
         businessObjectFormatEntity.setNullValue(null);
         businessObjectFormatEntity.setDelimiter(null);
+        businessObjectFormatEntity.setCollectionItemsDelimiter(null);
+        businessObjectFormatEntity.setMapKeysDelimiter(null);
         businessObjectFormatEntity.setEscapeCharacter(null);
         businessObjectFormatEntity.setPartitionKeyGroup(null);
         businessObjectFormatEntity.getSchemaColumns().clear();

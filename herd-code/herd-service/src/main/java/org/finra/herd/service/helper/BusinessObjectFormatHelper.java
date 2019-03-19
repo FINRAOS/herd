@@ -138,6 +138,8 @@ public class BusinessObjectFormatHelper
             businessObjectFormat.setSchema(schema);
             schema.setNullValue(businessObjectFormatEntity.getNullValue());
             schema.setDelimiter(businessObjectFormatEntity.getDelimiter());
+            schema.setCollectionItemsDelimiter(businessObjectFormatEntity.getCollectionItemsDelimiter());
+            schema.setMapKeysDelimiter(businessObjectFormatEntity.getMapKeysDelimiter());
             schema.setEscapeCharacter(businessObjectFormatEntity.getEscapeCharacter());
             schema.setPartitionKeyGroup(
                 businessObjectFormatEntity.getPartitionKeyGroup() != null ? businessObjectFormatEntity.getPartitionKeyGroup().getPartitionKeyGroupName() :
