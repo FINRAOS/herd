@@ -308,7 +308,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
                 "Column \"col1\" has an unsupported data type \"MAP<DOUBLE,\" in the schema for business object format {namespace: \"" + NAMESPACE +
                     "\", businessObjectDefinitionName: \"" + BDEF_NAME + "\", businessObjectFormatUsage: \"" + FORMAT_USAGE_CODE +
                     "\", businessObjectFormatFileType: \"" + FORMAT_FILE_TYPE_CODE + "\", businessObjectFormatVersion: " + FORMAT_VERSION +
-                    "}. Exception : \"Error: type expected at the position 0 of 'MAP<DOUBLE,' but 'MAP' is found.\"",e.getMessage());
+                    "}. Exception : \"Error: type expected at the end of 'map<double,'\"",e.getMessage());
         }
     }
 

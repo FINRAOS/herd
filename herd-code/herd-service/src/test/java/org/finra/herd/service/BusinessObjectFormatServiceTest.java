@@ -2936,7 +2936,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                     "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}. Exception : \"%s\"", schemaColumn.getName(), schemaColumn.getType(),
                 request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
                 request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion(),
-                "Error: type expected at the position 0 of 'UNKNOWN' but 'UNKNOWN' is found."), e.getMessage());
+                "Internal error parsing position 0 of 'unknown'"), e.getMessage());
         }
     }
 

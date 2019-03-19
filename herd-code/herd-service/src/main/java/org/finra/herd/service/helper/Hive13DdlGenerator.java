@@ -665,7 +665,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             {
                 hiveDataType = String.format("VARCHAR(%s)", schemaColumn.getSize());
             }
-            else if(isHiveComplexDataType(schemaColumn.getType()))
+            else if(isHiveComplexDataType(schemaColumn.getType().toLowerCase()))
             {
                 hiveDataType = String.format("%s", schemaColumn.getType().toUpperCase());
             }
@@ -675,7 +675,7 @@ public class Hive13DdlGenerator extends DdlGenerator
                 throw new IllegalArgumentException();
             }
         }
-        catch (IllegalArgumentException e)
+        catch (RuntimeException e)
         {
             throw new IllegalArgumentException(String
                 .format("Column \"%s\" has an unsupported data type \"%s\" in the schema for business object format {%s}. Exception : \"%s\"",

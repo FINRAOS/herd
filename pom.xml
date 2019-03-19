@@ -893,7 +893,6 @@
             <groupId>org.spark-project.hive</groupId>
             <artifactId>hive-exec</artifactId>
             <version>${hive-exec.version}</version>
-            <scope>compile</scope>
          </dependency>
 
       </dependencies>

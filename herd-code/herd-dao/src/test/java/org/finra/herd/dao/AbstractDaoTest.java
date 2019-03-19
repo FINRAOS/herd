@@ -864,8 +864,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String[][] SCHEMA_COLUMNS =
         new String[][] {{"TINYINT", null}, {"SMALLINT", null}, {"INT", null}, {"BIGINT", null}, {"FLOAT", null}, {"DOUBLE", null}, {"DECIMAL", null},
             {"DECIMAL", "p,s"}, {"NUMBER", null}, {"NUMBER", "p"}, {"NUMBER", "p,s"}, {"TIMESTAMP", null}, {"DATE", null}, {"STRING", null}, {"VARCHAR", "n"},
-            {"VARCHAR2", "n"}, {"CHAR", "n"}, {"BOOLEAN", null}, {"BINARY", null}, {"array<bigint>", null}, {"array<int(5)>", null},
-            {"map<int,array<bigint>>", null}};
+            {"VARCHAR2", "n"}, {"CHAR", "n"}, {"BOOLEAN", null}, {"BINARY", null}, {"ARRAY<BIGINT>", null}, {"ARRAY<INT(5)>", null},
+            {"MAP<INT,ARRAY<BIGINT>>", null}};
 
     public static final String SCHEMA_COLUMNS_NAME_FIELD = "schemaColumns.name";
 
