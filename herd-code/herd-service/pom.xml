@@ -142,7 +142,7 @@
          <artifactId>jsoup</artifactId>
       </dependency>
 
-      <!-- hive library -->
+      <!-- spark hive library -->
       <dependency>
          <groupId>org.spark-project.hive</groupId>
          <artifactId>hive-exec</artifactId>
