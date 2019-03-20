@@ -29,6 +29,7 @@ import org.springframework.util.Assert;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatExternalInterfaceKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
@@ -306,6 +307,20 @@ public class BusinessObjectFormatHelper
         return new BusinessObjectFormatKey(businessObjectFormat.getNamespace(), businessObjectFormat.getBusinessObjectDefinitionName(),
             businessObjectFormat.getBusinessObjectFormatUsage(), businessObjectFormat.getBusinessObjectFormatFileType(),
             businessObjectFormat.getBusinessObjectFormatVersion());
+    }
+
+    /**
+     * Gets business object format key from the specified business object data key.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the business object format key
+     */
+    public BusinessObjectFormatKey getBusinessObjectFormatKey(BusinessObjectDataKey businessObjectDataKey)
+    {
+        return new BusinessObjectFormatKey(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+            businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+            businessObjectDataKey.getBusinessObjectFormatVersion());
     }
 
     /**

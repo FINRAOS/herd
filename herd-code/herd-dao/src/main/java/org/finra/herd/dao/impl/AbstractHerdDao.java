@@ -197,6 +197,27 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
         // Join to the other tables we can filter on.
         Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity = businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
 
+        return getQueryRestriction(builder, businessObjectFormatEntity, fileTypeEntity, businessObjectDefinitionEntity, namespaceEntity,
+            businessObjectFormatKey, ignoreBusinessObjectFormatVersion);
+    }
+
+    /**
+     * Builds a query restriction predicate for the specified business object format entity as per business object format key values.
+     *
+     * @param builder the criteria builder
+     * @param businessObjectFormatEntity the business object format entity that appears in the from clause
+     * @param fileTypeEntity the file type entity that appears in the from clause
+     * @param businessObjectDefinitionEntity the business object definition entity that appears in the from clause
+     * @param namespaceEntity the namespace entity that appears in the from clause
+     * @param businessObjectFormatKey the business object format key
+     * @param ignoreBusinessObjectFormatVersion specifies whether to ignore the business object format version when building the predicate
+     *
+     * @return the query restriction predicate
+     */
+    protected Predicate getQueryRestriction(CriteriaBuilder builder, From<?, BusinessObjectFormatEntity> businessObjectFormatEntity,
+        From<?, FileTypeEntity> fileTypeEntity, From<?, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity,
+        From<?, NamespaceEntity> namespaceEntity, BusinessObjectFormatKey businessObjectFormatKey, boolean ignoreBusinessObjectFormatVersion)
+    {
         // Create the standard restrictions based on the business object format key values (i.e. the standard where clauses).
 
         // Create a restriction on namespace code.

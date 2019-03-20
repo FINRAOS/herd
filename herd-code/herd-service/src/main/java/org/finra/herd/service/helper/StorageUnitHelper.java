@@ -34,6 +34,7 @@ import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitStatusChangeEvent;
+import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageAttributeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -202,22 +203,23 @@ public class StorageUnitHelper
     }
 
     /**
-     * Excludes storage units from the list with the specified business object data status.
+     * Excludes storage unit availability DTOs from the list with business object data status matching to the specified value.
      *
-     * @param storageUnitEntities the list of storage unit entities
+     * @param storageUnitAvailabilityDtos the list of storage unit availability DTOs
      * @param excludedBusinessObjectDataStatus the business object data status to be excluded
      *
-     * @return the updated list of storage units
+     * @return the updated list of storage unit availability DTOs
      */
-    public List<StorageUnitEntity> excludeBusinessObjectDataStatus(List<StorageUnitEntity> storageUnitEntities, String excludedBusinessObjectDataStatus)
+    public List<StorageUnitAvailabilityDto> excludeBusinessObjectDataStatus(List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos,
+        String excludedBusinessObjectDataStatus)
     {
-        List<StorageUnitEntity> result = new ArrayList<>();
+        List<StorageUnitAvailabilityDto> result = new ArrayList<>();
 
-        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtos)
         {
-            if (!storageUnitEntity.getBusinessObjectData().getStatus().getCode().equalsIgnoreCase(excludedBusinessObjectDataStatus))
+            if (!storageUnitAvailabilityDto.getBusinessObjectDataStatus().equalsIgnoreCase(excludedBusinessObjectDataStatus))
             {
-                result.add(storageUnitEntity);
+                result.add(storageUnitAvailabilityDto);
             }
         }
 
@@ -225,22 +227,23 @@ public class StorageUnitHelper
     }
 
     /**
-     * Excludes storage units from the list with primary and sub-partition values matching one of the excluded partitions.
+     * Excludes storage unit availability DTOs from the list with primary and sub-partition values matching one of the excluded partitions.
      *
-     * @param storageUnitEntities the list of storage unit entities
+     * @param storageUnitAvailabilityDtos the list of storage unit availability DTOs
      * @param excludedPartitions list of excluded partitions, where each partition consists of primary and optional sub-partition values
      *
-     * @return the updated list of storage units
+     * @return the updated list of storage unit availability DTOs
      */
-    public List<StorageUnitEntity> excludePartitions(List<StorageUnitEntity> storageUnitEntities, List<List<String>> excludedPartitions)
+    public List<StorageUnitAvailabilityDto> excludePartitions(List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos,
+        List<List<String>> excludedPartitions)
     {
-        List<StorageUnitEntity> result = new ArrayList<>();
+        List<StorageUnitAvailabilityDto> result = new ArrayList<>();
 
-        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtos)
         {
-            if (!excludedPartitions.contains(businessObjectDataHelper.getPrimaryAndSubPartitionValues(storageUnitEntity.getBusinessObjectData())))
+            if (!excludedPartitions.contains(businessObjectDataHelper.getPrimaryAndSubPartitionValues(storageUnitAvailabilityDto.getBusinessObjectDataKey())))
             {
-                result.add(storageUnitEntity);
+                result.add(storageUnitAvailabilityDto);
             }
         }
 
@@ -263,19 +266,19 @@ public class StorageUnitHelper
     }
 
     /**
-     * Creates a list of storage unit ids from a list of storage unit entities.
+     * Creates a list of storage unit ids from a list of storage unit availability DTOs.
      *
-     * @param storageUnitEntities the list of storage unit entities
+     * @param storageUnitAvailabilityDtos the list of storage unit availability DTOs
      *
      * @return the list of storage unit ids
      */
-    public List<Integer> getStorageUnitIds(List<StorageUnitEntity> storageUnitEntities)
+    public List<Integer> getStorageUnitIds(List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos)
     {
-        List<Integer> storageUnitIds = new ArrayList<>(storageUnitEntities.size());
+        List<Integer> storageUnitIds = new ArrayList<>(storageUnitAvailabilityDtos.size());
 
-        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtos)
         {
-            storageUnitIds.add(storageUnitEntity.getId());
+            storageUnitIds.add(storageUnitAvailabilityDto.getStorageUnitId());
         }
 
         return storageUnitIds;

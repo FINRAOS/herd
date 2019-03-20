@@ -41,7 +41,6 @@ import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
-import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 
@@ -141,7 +140,7 @@ public class StorageFileHelper
         List<StorageFile> storageFiles = createStorageFilesFromEntities(storageUnitEntity.getStorageFiles());
 
         // Validate storage file paths registered with this business object data in the specified storage.
-        validateStorageFilePaths(getFilePathsFromStorageFiles(storageFiles), s3KeyPrefix, storageUnitEntity.getBusinessObjectData(), storageName);
+        validateStorageFilePaths(getFilePathsFromStorageFiles(storageFiles), s3KeyPrefix, businessObjectDataKey, storageName);
 
         // Return the list of storage files.
         return storageFiles;
@@ -466,17 +465,17 @@ public class StorageFileHelper
      *
      * @param storageFilePaths the storage file paths to be validated
      * @param s3KeyPrefix the S3 key prefix that storage file paths are expected to start with
-     * @param businessObjectDataEntity the business object data entity
+     * @param businessObjectDataKey the business object data key
      * @param storageName the name of the storage that storage files are stored in
      */
-    public void validateStorageFilePaths(Collection<String> storageFilePaths, String s3KeyPrefix, BusinessObjectDataEntity businessObjectDataEntity,
+    public void validateStorageFilePaths(Collection<String> storageFilePaths, String s3KeyPrefix, BusinessObjectDataKey businessObjectDataKey,
         String storageName)
     {
         for (String storageFilePath : storageFilePaths)
         {
             Assert.isTrue(storageFilePath.startsWith(s3KeyPrefix), String
                 .format("Storage file \"%s\" registered with business object data {%s} in \"%s\" storage does not match the expected S3 key prefix \"%s\".",
-                    storageFilePath, businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), storageName, s3KeyPrefix));
+                    storageFilePath, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), storageName, s3KeyPrefix));
         }
     }
 

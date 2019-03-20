@@ -100,7 +100,7 @@ public class S3KeyPrefixHelper
         // Get business object format model object to directly access schema columns and partitions.
         BusinessObjectFormat businessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
 
-        return buildS3KeyPrefixHelper(s3KeyPrefixVelocityTemplate, businessObjectFormatEntity.getBusinessObjectDefinition().getDataProvider().getName(),
+        return buildS3KeyPrefix(s3KeyPrefixVelocityTemplate, businessObjectFormatEntity.getBusinessObjectDefinition().getDataProvider().getName(),
             businessObjectFormat, businessObjectDataKey, storageName);
     }
 
@@ -115,7 +115,7 @@ public class S3KeyPrefixHelper
      *
      * @return the S3 key prefix
      */
-    private String buildS3KeyPrefixHelper(String s3KeyPrefixVelocityTemplate, String dataProviderName, BusinessObjectFormat businessObjectFormat,
+    public String buildS3KeyPrefix(String s3KeyPrefixVelocityTemplate, String dataProviderName, BusinessObjectFormat businessObjectFormat,
         BusinessObjectDataKey businessObjectDataKey, String storageName)
     {
         // Create and populate the velocity context with variable values.
@@ -186,7 +186,7 @@ public class S3KeyPrefixHelper
     {
         return string.toLowerCase().replace('_', '-');
     }
-    
+
     /**
      * Build S3 key prefix for business object definition key
      * @param storageEntity storage entity

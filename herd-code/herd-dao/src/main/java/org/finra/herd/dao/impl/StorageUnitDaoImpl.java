@@ -17,6 +17,7 @@ package org.finra.herd.dao.impl;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.Tuple;
@@ -25,6 +26,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -35,8 +37,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.dao.StorageUnitDao;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -334,26 +338,26 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
     }
 
     @Override
-    public List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey,
+    public List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectFormatKey businessObjectFormatKey,
         List<List<String>> partitionFilters, Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames,
         String storagePlatformType, String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits)
     {
-        List<StorageUnitEntity> resultStorageUnitEntities = new ArrayList<>();
+        List<StorageUnitAvailabilityDto> results = new ArrayList<>();
 
         // Loop through each chunk of partition filters until we have reached the end of the list.
         for (int i = 0; i < partitionFilters.size(); i += MAX_PARTITION_FILTERS_PER_REQUEST)
         {
             // Get a sub-list for the current chunk of partition filters.
-            List<StorageUnitEntity> storageUnitEntitiesSubset =
-                getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatus,
-                    storageNames, storagePlatformType, excludedStoragePlatformType, selectOnlyAvailableStorageUnits, i,
+            List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtosSubset =
+                getStorageUnitsByPartitionFilters(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatus, storageNames,
+                    storagePlatformType, excludedStoragePlatformType, selectOnlyAvailableStorageUnits, i,
                     (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
 
             // Add the sub-list to the result.
-            resultStorageUnitEntities.addAll(storageUnitEntitiesSubset);
+            results.addAll(storageUnitAvailabilityDtosSubset);
         }
 
-        return resultStorageUnitEntities;
+        return results;
     }
 
     @Override
@@ -493,7 +497,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
     }
 
     /**
-     * Retrieves a list of storage unit entities per specified parameters. This method processes a sublist of partition filters specified by
+     * Retrieves a list of storage unit availability DTOs per specified parameters. This method processes a sublist of partition filters specified by
      * partitionFilterSubListFromIndex and partitionFilterSubListSize parameters.
      *
      * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
@@ -507,16 +511,16 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
      * business object data version and business object data status both are not specified, the latest data version for each set of partition values will be
      * used regardless of the status
      * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
-     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
-     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
-     * the storage platform type is specified
+     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
+     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storage names is not
+     * empty or the storage platform type is specified
      * @param partitionFilterSubListFromIndex the index of the first element in the partition filter sublist
      * @param partitionFilterSubListSize the size of the partition filter sublist
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
      *
-     * @return the list of storage unit entities sorted by partition values
+     * @return the list of storage unit availability DTOs sorted by partition values
      */
-    private List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey,
+    private List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectFormatKey businessObjectFormatKey,
         List<List<String>> partitionFilters, Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames,
         String storagePlatformType, String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits, int partitionFilterSubListFromIndex,
         int partitionFilterSubListSize)
@@ -537,6 +541,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
             businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+        Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity = businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
         Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntity = storageUnitEntity.join(StorageUnitEntity_.status);
 
         // Create the standard restrictions (i.e. the standard where clauses).
@@ -544,7 +549,8 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         // Create a standard restriction based on the business object format key values.
         // Please note that we specify not to ignore the business object format version.
         Predicate mainQueryRestriction =
-            getQueryRestriction(builder, businessObjectFormatEntity, fileTypeEntity, businessObjectDefinitionEntity, businessObjectFormatKey, false);
+            getQueryRestriction(builder, businessObjectFormatEntity, fileTypeEntity, businessObjectDefinitionEntity, namespaceEntity, businessObjectFormatKey,
+                false);
 
         // If a format version was not specified, use the latest available for this set of partition values.
         if (businessObjectFormatKey.getBusinessObjectFormatVersion() == null)
@@ -600,24 +606,74 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         }
         orderBy.add(builder.asc(storageEntity.get(StorageEntity_.name)));
 
+        // Get the columns.
+        Path<Integer> storageUnitIdColumn = storageUnitEntity.get(StorageUnitEntity_.id);
+        Path<String> namespaceCodeColumn = namespaceEntity.get(NamespaceEntity_.code);
+        Path<String> businessObjectDefinitionNameColumn = businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name);
+        Path<String> businessObjectFormatUsageColumn = businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage);
+        Path<String> fileTypeColumn = fileTypeEntity.get(FileTypeEntity_.code);
+        Path<Integer> businessObjectFormatVersionColumn = businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion);
+        Path<String> primaryPartitionValueColumn = businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue);
+        Path<String> subPartitionValue1Column = businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2);
+        Path<String> subPartitionValue2Column = businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3);
+        Path<String> subPartitionValue3Column = businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4);
+        Path<String> subPartitionValue4Column = businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5);
+        Path<Integer> businessObjectDataVersionColumn = businessObjectDataEntity.get(BusinessObjectDataEntity_.version);
+        Path<String> storageNameColumn = storageEntity.get(StorageEntity_.name);
+        Path<String> storageUnitDirectoryPathColumn = storageUnitEntity.get(StorageUnitEntity_.directoryPath);
+        Path<String> businessObjectDataStatusColumn = businessObjectDataEntity.get(BusinessObjectDataEntity_.statusCode);
+        Path<String> storageUnitStatusColumn = storageUnitEntity.get(StorageUnitEntity_.statusCode);
+        Path<Boolean> storageUnitAvailableColumn = storageUnitStatusEntity.get(StorageUnitStatusEntity_.available);
+
         // Add the clauses for the query.
-        // Please note that we use multiselect here in order to eliminate the Hibernate N+1 SELECT's problem,
-        // happening when we select storage unit entities and access their relative business object data entities.
-        // This is an alternative approach, since adding @Fetch(FetchMode.JOIN) failed to address the issue.
-        criteria
-            .multiselect(storageUnitEntity, storageUnitStatusEntity, storageEntity, storagePlatformEntity, businessObjectDataEntity, businessObjectFormatEntity)
-            .where(mainQueryRestriction).orderBy(orderBy);
+        criteria.multiselect(storageUnitIdColumn, namespaceCodeColumn, businessObjectDefinitionNameColumn, businessObjectFormatUsageColumn, fileTypeColumn,
+            businessObjectFormatVersionColumn, primaryPartitionValueColumn, subPartitionValue1Column, subPartitionValue2Column, subPartitionValue3Column,
+            subPartitionValue4Column, businessObjectDataVersionColumn, storageNameColumn, storageUnitDirectoryPathColumn, businessObjectDataStatusColumn,
+            storageUnitStatusColumn, storageUnitAvailableColumn).where(mainQueryRestriction).orderBy(orderBy);
 
         // Run the query to get a list of tuples back.
         List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
 
-        // Build a list of storage unit entities to return.
-        List<StorageUnitEntity> storageUnitEntities = new ArrayList<>();
+        // Build a list of storage unit availability DTOs to return.
+        List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos = new ArrayList<>();
         for (Tuple tuple : tuples)
         {
-            storageUnitEntities.add(tuple.get(storageUnitEntity));
+            storageUnitAvailabilityDtos.add(new StorageUnitAvailabilityDto(tuple.get(storageUnitIdColumn),
+                new BusinessObjectDataKey(tuple.get(namespaceCodeColumn), tuple.get(businessObjectDefinitionNameColumn),
+                    tuple.get(businessObjectFormatUsageColumn), tuple.get(fileTypeColumn), tuple.get(businessObjectFormatVersionColumn),
+                    tuple.get(primaryPartitionValueColumn), getSubPartitionValuesFromRawSubPartitionValues(Arrays
+                    .asList(tuple.get(subPartitionValue1Column), tuple.get(subPartitionValue2Column), tuple.get(subPartitionValue3Column),
+                        tuple.get(subPartitionValue4Column))), tuple.get(businessObjectDataVersionColumn)), tuple.get(storageNameColumn),
+                tuple.get(storageUnitDirectoryPathColumn), tuple.get(businessObjectDataStatusColumn), tuple.get(storageUnitStatusColumn),
+                tuple.get(storageUnitAvailableColumn)));
         }
 
-        return storageUnitEntities;
+        return storageUnitAvailabilityDtos;
+    }
+
+    /**
+     * Gets the sub-partition values for the specified list of raw sub-partition values.
+     *
+     * @param rawSubPartitionValues the list of raw sub-partition values
+     *
+     * @return the list of sub-partition values
+     */
+    private List<String> getSubPartitionValuesFromRawSubPartitionValues(List<String> rawSubPartitionValues)
+    {
+        List<String> subPartitionValues = new ArrayList<>();
+
+        for (String rawSubPartitionValue : rawSubPartitionValues)
+        {
+            if (rawSubPartitionValue != null)
+            {
+                subPartitionValues.add(rawSubPartitionValue);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return subPartitionValues;
     }
 }

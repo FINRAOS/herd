@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,17 +63,16 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         storageFilePaths = new ArrayList<>();
         expectedHivePartitions = new ArrayList<>();
         resultHivePartitions = hive13DdlGenerator
-            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity,
-                STORAGE_NAME);
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
         assertEquals(expectedHivePartitions, resultHivePartitions);
 
         // Single level partitioning.
         autoDiscoverableSubPartitionColumns = new ArrayList<>();
         storageFilePaths = getStorageFilePaths(Arrays.asList("/file1.dat", "/file2.dat"));
-        expectedHivePartitions = Arrays.asList(HivePartitionDto.builder().withPath("").withPartitionValues(Arrays.asList(PARTITION_VALUE)).build());
+        expectedHivePartitions =
+            Collections.singletonList(HivePartitionDto.builder().withPath("").withPartitionValues(Collections.singletonList(PARTITION_VALUE)).build());
         resultHivePartitions = hive13DdlGenerator
-            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity,
-                STORAGE_NAME);
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
         assertEquals(expectedHivePartitions, resultHivePartitions);
 
         // Test that we match column names in storage file paths ignoring the case.
@@ -82,8 +82,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             .asList(HivePartitionDto.builder().withPath("/COLUMN1=111/COLUMN2=222").withPartitionValues(Arrays.asList(PARTITION_VALUE, "111", "222")).build(),
                 HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
         resultHivePartitions = hive13DdlGenerator
-            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity,
-                STORAGE_NAME);
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
         assertEquals(expectedHivePartitions, resultHivePartitions);
     }
 
@@ -115,8 +114,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             List<String> storageFilePaths = getStorageFilePaths(badFilePaths.subList(i, i + 1));
             try
             {
-                hive13DdlGenerator.getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths,
-                    businessObjectDataEntity, STORAGE_NAME);
+                hive13DdlGenerator
+                    .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
                 fail("Should throw an IllegalArgumentException when storage file does not match the expected Hive sub-directory pattern.");
             }
             catch (IllegalArgumentException e)
@@ -145,7 +144,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         {
             hive13DdlGenerator
                 .getHivePartitions(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), autoDiscoverableSubPartitionColumns,
-                    TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity, STORAGE_NAME);
+                    TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
             fail("Should throw an IllegalArgumentException when multiple locations exist for the same Hive partition.");
         }
         catch (IllegalArgumentException e)
