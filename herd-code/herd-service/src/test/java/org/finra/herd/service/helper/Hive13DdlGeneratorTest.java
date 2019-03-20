@@ -252,7 +252,9 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
             schemaColumnEntity.setPosition(2);
             schemaColumnEntity.setName("col3");
-            schemaColumnEntity.setType("map<double,array<bigint(5)>>");
+            // Use complex schema data type with whitespaces in it.
+            // Expect the whitespaces to be removed whilke validating the complex data types.
+            schemaColumnEntity.setType("map <double, array<bigint(5)>>");
             businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
         }
         {
@@ -273,8 +275,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
 
         String expected =
             "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n" + "    `col1` VARCHAR(255) COMMENT 'lorem ipsum',\n" +
-                "    `col2` DATE,\n" + "    `col3` MAP<DOUBLE,ARRAY<BIGINT(5)>>,\n" + "    `col4` UNIONTYPE<INT,DOUBLE,ARRAY<STRING>,STRUCT<A:INT,B:STRING>>,\n" +
-                "    `col4` STRUCT<S:STRING,F:FLOAT,M:MAP<DOUBLE,ARRAY<BIGINT>>>);";
+                "    `col2` DATE,\n" + "    `col3` map<double,array<bigint(5)>>,\n" + "    `col4` uniontype<int,double,array<string>,struct<a:int,b:string>>,\n" +
+                "    `col4` struct<s:string,f:float,m:map<double,array<bigint>>>);";
 
         Assert.assertEquals("generated DDL", expected, actual);
     }

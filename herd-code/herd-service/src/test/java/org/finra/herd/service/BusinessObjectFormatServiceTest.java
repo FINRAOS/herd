@@ -3120,8 +3120,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 "    `COLUMN007` DECIMAL,\n" + "    `COLUMN008` DECIMAL(p,s),\n" + "    `COLUMN009` DECIMAL,\n" + "    `COLUMN010` DECIMAL(p),\n" +
                 "    `COLUMN011` DECIMAL(p,s),\n" + "    `COLUMN012` TIMESTAMP,\n" + "    `COLUMN013` DATE,\n" + "    `COLUMN014` STRING,\n" +
                 "    `COLUMN015` VARCHAR(n),\n" + "    `COLUMN016` VARCHAR(n),\n" + "    `COLUMN017` CHAR(n),\n" + "    `COLUMN018` BOOLEAN,\n" +
-                "    `COLUMN019` BINARY,\n" + "    `COLUMN020` ARRAY<BIGINT>,\n" + "    `COLUMN021` ARRAY<INT(5)>,\n" +
-                "    `COLUMN022` MAP<INT,ARRAY<BIGINT>>);", result.getDdl());
+                "    `COLUMN019` BINARY,\n" + "    `COLUMN020` array<bigint>,\n" + "    `COLUMN021` array<int(5)>,\n" +
+                "    `COLUMN022` map<int,array<bigint>>);", result.getDdl());
     }
 
     /**
@@ -3205,8 +3205,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 "    `COLUMN007` DECIMAL,\n" + "    `COLUMN008` DECIMAL(p,s),\n" + "    `COLUMN009` DECIMAL,\n" + "    `COLUMN010` DECIMAL(p),\n" +
                 "    `COLUMN011` DECIMAL(p,s),\n" + "    `COLUMN012` TIMESTAMP,\n" + "    `COLUMN013` DATE,\n" + "    `COLUMN014` STRING,\n" +
                 "    `COLUMN015` VARCHAR(n),\n" + "    `COLUMN016` VARCHAR(n),\n" + "    `COLUMN017` CHAR(n),\n" + "    `COLUMN018` BOOLEAN,\n" +
-                "    `COLUMN019` BINARY,\n" + "    `COLUMN020` ARRAY<BIGINT>,\n" + "    `COLUMN021` ARRAY<INT(5)>,\n" +
-                "    `COLUMN022` MAP<INT,ARRAY<BIGINT>>);", result.getDdl());
+                "    `COLUMN019` BINARY,\n" + "    `COLUMN020` array<bigint>,\n" + "    `COLUMN021` array<int(5)>,\n" +
+                "    `COLUMN022` map<int,array<bigint>>);", result.getDdl());
     }
 
     @Test

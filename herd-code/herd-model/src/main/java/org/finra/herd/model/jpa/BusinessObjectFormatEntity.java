@@ -295,13 +295,25 @@ public class BusinessObjectFormatEntity extends AuditableEntity
         this.delimiter = delimiter;
     }
 
-    public String getCollectionItemsDelimiter() { return collectionItemsDelimiter; }
+    public String getCollectionItemsDelimiter()
+    {
+        return collectionItemsDelimiter;
+    }
 
-    public void setCollectionItemsDelimiter(String collectionItemsDelimiter) { this.collectionItemsDelimiter = collectionItemsDelimiter; }
+    public void setCollectionItemsDelimiter(String collectionItemsDelimiter)
+    {
+        this.collectionItemsDelimiter = collectionItemsDelimiter;
+    }
 
-    public String getMapKeysDelimiter() { return mapKeysDelimiter; }
+    public String getMapKeysDelimiter()
+    {
+        return mapKeysDelimiter;
+    }
 
-    public void setMapKeysDelimiter(String mapKeysDelimiter) { this.mapKeysDelimiter = mapKeysDelimiter; }
+    public void setMapKeysDelimiter(String mapKeysDelimiter)
+    {
+        this.mapKeysDelimiter = mapKeysDelimiter;
+    }
 
     public String getEscapeCharacter()
     {

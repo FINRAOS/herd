@@ -1103,9 +1103,9 @@ public class BusinessObjectDataServiceTestHelper
         sb.append("    `COLUMN017` CHAR(n),\n");
         sb.append("    `COLUMN018` BOOLEAN,\n");
         sb.append("    `COLUMN019` BINARY,\n");
-        sb.append("    `COLUMN020` ARRAY<BIGINT>,\n");
-        sb.append("    `COLUMN021` ARRAY<INT(5)>,\n");
-        sb.append("    `COLUMN022` MAP<INT,ARRAY<BIGINT>>)\n");
+        sb.append("    `COLUMN020` array<bigint>,\n");
+        sb.append("    `COLUMN021` array<int(5)>,\n");
+        sb.append("    `COLUMN022` map<int,array<bigint>>)\n");
 
         if (partitionLevels > 0)
         {
