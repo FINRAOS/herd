@@ -99,6 +99,7 @@
          <Class name="~org.finra.herd.model.dto.StoragePolicyPriorityLevel"/>
          <Class name="~org.finra.herd.model.dto.StoragePolicySelection"/>
          <Class name="~org.finra.herd.model.dto.StoragePolicyTransitionParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.StorageUnitAvailabilityDto"/>
          <Class name="~org.finra.herd.model.dto.StorageUnitNotificationEventParamsDto"/>
          <Class name="~org.finra.herd.model.dto.StorageUnitNotificationEventParamsDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent"/>
