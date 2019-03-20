@@ -648,6 +648,10 @@ public class Hive13DdlGenerator extends DdlGenerator
     private String getHiveDataType(SchemaColumn schemaColumn, BusinessObjectFormatEntity businessObjectFormatEntity)
     {
         String hiveDataType;
+
+        // Remove all the whitespaces and convert the schema column data type to lower case.
+        // This sanitizedSchemaColumnDataType is only used for hive complex data types.
+        String sanitizedSchemaColumnDataType = schemaColumn.getType().replaceAll("\\s", "").toLowerCase();
         try
         {
             if (schemaColumn.getType().equalsIgnoreCase("TINYINT") || schemaColumn.getType().equalsIgnoreCase("SMALLINT") ||
@@ -671,9 +675,9 @@ public class Hive13DdlGenerator extends DdlGenerator
             {
                 hiveDataType = String.format("VARCHAR(%s)", schemaColumn.getSize());
             }
-            else if(isHiveComplexDataType(schemaColumn.getType().toLowerCase()))
+            else if (isHiveComplexDataType(sanitizedSchemaColumnDataType))
             {
-                hiveDataType = String.format("%s", schemaColumn.getType().toUpperCase());
+                hiveDataType = String.format("%s", sanitizedSchemaColumnDataType);
             }
             else
             {
