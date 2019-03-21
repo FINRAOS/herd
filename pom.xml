@@ -135,7 +135,7 @@
       <mockito.version>2.10.0</mockito.version>
       <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
       <jsoup.version>1.11.3</jsoup.version>
-      <hive-exec.version>1.2.1.spark2</hive-exec.version>
+      <hive-exec.version>2.3.4</hive-exec.version>
 
       <!-- Compiler Information -->
       <maven.compiler.source>1.8</maven.compiler.source>
@@ -890,9 +890,31 @@
 
          <!-- hive library -->
          <dependency>
-            <groupId>org.spark-project.hive</groupId>
+            <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
             <version>${hive-exec.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>org.codehaus.groovy</groupId>
+                  <artifactId>groovy-all</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>commons-io</groupId>
+                  <artifactId>commons-io</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.apache.logging.log4j</groupId>
+                  <artifactId>*</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.eclipse.jetty.orbit</groupId>
+                  <artifactId>javax.servlet</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>javax.servlet</groupId>
+                  <artifactId>servlet-api</artifactId>
+               </exclusion>
+            </exclusions>
          </dependency>
 
       </dependencies>

@@ -144,7 +144,7 @@
 
       <!-- spark hive library -->
       <dependency>
-         <groupId>org.spark-project.hive</groupId>
+         <groupId>org.apache.hive</groupId>
          <artifactId>hive-exec</artifactId>
       </dependency>
    </dependencies>
