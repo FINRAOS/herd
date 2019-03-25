@@ -527,9 +527,13 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
           "inferSchema" -> "false",
           "header" -> "false",
           "delimiter" -> {
-            schema.getDelimiter.contains("\\") match {
-              case true => schema.getDelimiter.replace("\\", "").toInt.toChar.toString
-              case false => schema.getDelimiter
+            if (schema.getDelimiter != null) {
+              schema.getDelimiter.contains("\\") match {
+                case true => schema.getDelimiter.replace("\\", "").toInt.toChar.toString
+                case false => schema.getDelimiter
+              }
+            } else {
+              null
             }
           },
           "collectionItemsDelimiter" -> {
