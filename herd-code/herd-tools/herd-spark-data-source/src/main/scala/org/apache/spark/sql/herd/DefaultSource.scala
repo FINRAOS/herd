@@ -533,15 +533,23 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
             }
           },
           "collectionItemsDelimiter" -> {
-            schema.getCollectionItemsDelimiter.contains("\\") match {
-              case true => schema.getCollectionItemsDelimiter.replace("\\", "").toInt.toChar.toString
-              case false => schema.getCollectionItemsDelimiter
+            if (schema.getCollectionItemsDelimiter != null) {
+              schema.getCollectionItemsDelimiter.contains("\\") match {
+                case true => schema.getCollectionItemsDelimiter.replace("\\", "").toInt.toChar.toString
+                case false => schema.getCollectionItemsDelimiter
+              }
+            } else {
+              null
             }
           },
           "mapKeysDelimiter" -> {
-            schema.getMapKeysDelimiter.contains("\\") match {
-              case true => schema.getMapKeysDelimiter.replace("\\", "").toInt.toChar.toString
-              case false => schema.getMapKeysDelimiter
+            if (schema.getMapKeysDelimiter != null) {
+              schema.getMapKeysDelimiter.contains("\\") match {
+                case true => schema.getMapKeysDelimiter.replace("\\", "").toInt.toChar.toString
+                case false => schema.getMapKeysDelimiter
+              }
+            } else {
+              null
             }
           },
           "nullValue" -> schema.getNullValue,
