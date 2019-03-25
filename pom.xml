@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.91.0-SNAPSHOT</version>
+   <version>0.92.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -32,7 +32,7 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <herd-ui.version>0.61.0</herd-ui.version>
+      <herd-ui.version>0.62.0</herd-ui.version>
 
       <!-- Third Party JAR Dependencies -->
       <!--
@@ -44,7 +44,6 @@
       <aspectj.version>1.8.11</aspectj.version>
       <aws.sdk.version>1.11.333</aws.sdk.version>
       <aws.sqs.messaging.version>1.0.4</aws.sqs.messaging.version>
-      <cobertura.version>2.1.1</cobertura.version>
       <commons.cli.version>1.4</commons.cli.version>
       <commons.codec.version>1.11</commons.codec.version>
       <commons.collections4.version>4.1</commons.collections4.version>
@@ -112,7 +111,6 @@
       <maven.build.helper.plugin.version>3.0.0</maven.build.helper.plugin.version>
       <maven.checkstyle.plugin.version>2.17</maven.checkstyle.plugin.version>
       <maven.clover.plugin.version>4.3.1</maven.clover.plugin.version>
-      <maven.cobertura.plugin.version>2.7</maven.cobertura.plugin.version>
       <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
       <maven.dependency.plugin.version>3.0.2</maven.dependency.plugin.version>
       <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
@@ -137,6 +135,7 @@
       <mockito.version>2.10.0</mockito.version>
       <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
       <jsoup.version>1.11.3</jsoup.version>
+      <hive-exec.version>2.3.4</hive-exec.version>
 
       <!-- Compiler Information -->
       <maven.compiler.source>1.8</maven.compiler.source>
@@ -889,6 +888,43 @@
             <version>${opencsv.version}</version>
          </dependency>
 
+         <!-- hive library -->
+         <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <version>${hive-exec.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>org.codehaus.groovy</groupId>
+                  <artifactId>groovy-all</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>commons-io</groupId>
+                  <artifactId>commons-io</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.apache.logging.log4j</groupId>
+                  <artifactId>*</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.eclipse.jetty.orbit</groupId>
+                  <artifactId>javax.servlet</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>javax.servlet</groupId>
+                  <artifactId>servlet-api</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.slf4j</groupId>
+                  <artifactId>slf4j-log4j12</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>com.google.code.gson</groupId>
+                  <artifactId>gson</artifactId>
+               </exclusion>
+            </exclusions>
+         </dependency>
+
       </dependencies>
 
    </dependencyManagement>
@@ -928,14 +964,6 @@
                <groupId>org.openclover</groupId>
                <artifactId>clover-maven-plugin</artifactId>
                <version>${maven.clover.plugin.version}</version>
-            </plugin>
-            <plugin>
-               <groupId>org.codehaus.mojo</groupId>
-               <artifactId>cobertura-maven-plugin</artifactId>
-               <version>${maven.cobertura.plugin.version}</version>
-               <configuration>
-                  <quiet>true</quiet>
-               </configuration>
             </plugin>
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
@@ -1201,6 +1229,18 @@
          <organizationUrl>https://www.linkedin.com/pub/max-seo/98/184/a1b</organizationUrl>
          <roles>
             <role>developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>k26992</id>
+         <name>Mona Annaparthi</name>
+         <email>mona.annaparthi@finra.org</email>
+         <url>https://github.com/Mona62</url>
+         <organization>FINRA</organization>
+         <organizationUrl>http://www.finra.org</organizationUrl>
+         <roles>
+            <role>developer</role>
+            <role>tester</role>
          </roles>
       </developer>
       <developer>

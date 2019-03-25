@@ -351,11 +351,19 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_CLUSTER_NAME = "UT_EMR_CLUSTER" + RANDOM_SUFFIX;
 
+    public static final String EMR_CLUSTER_DAEMON_CONFIG_NAME = "UT_EMR_CLUSTER_DAEMON_CONFIG_NAME" + RANDOM_SUFFIX;
+
+    public static final String EMR_CLUSTER_DAEMON_CONFIG_VALUE = "UT_EMR_CLUSTER_DAEMON_CONFIG_VALUE" + RANDOM_SUFFIX;
+
     public static final String EMR_MASTER_SECURITY_GROUP = "UT_EMR_MASTER_SECURITY_GROUP" + RANDOM_SUFFIX;
 
     public static final String EMR_SLAVE_SECURITY_GROUP = "UT_EMR_SLAVE_SECURITY_GROUP" + RANDOM_SUFFIX;
 
+    public static final String EMR_CONFIGURE_DAEMON = "UT_EMR_CONFIGURE_DAEMON_" + RANDOM_SUFFIX;
+
     public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
+
+    public static final String EMR_NSCD_SCRIPT = "UT_EMR_NscdScript_" + RANDOM_SUFFIX;
 
     public static final boolean ENABLE_COLUMN_FIELDS = true;
 
@@ -821,6 +829,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String S3_BUCKET_NAME_2 = "UT_S3_Bucket_Name2" + RANDOM_SUFFIX;
 
+    public static final String S3_URL_PROTOCOL = "UT_S3_URL_PROTOCOL" + RANDOM_SUFFIX;
+
+    public static final String S3_URL_PATH_DELIMITER = "UT_S3_PATH_DELIMITER" + RANDOM_SUFFIX;
+
+    public static final String S3_STAGING_RESOURCE_BASE = "UT_S3_STAGING_RESOURCE_BASE" + RANDOM_SUFFIX;
+
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
 
     public static final String S3_ENDPOINT = "UT_S3_Endpoint_" + RANDOM_SUFFIX;
@@ -850,7 +864,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String[][] SCHEMA_COLUMNS =
         new String[][] {{"TINYINT", null}, {"SMALLINT", null}, {"INT", null}, {"BIGINT", null}, {"FLOAT", null}, {"DOUBLE", null}, {"DECIMAL", null},
             {"DECIMAL", "p,s"}, {"NUMBER", null}, {"NUMBER", "p"}, {"NUMBER", "p,s"}, {"TIMESTAMP", null}, {"DATE", null}, {"STRING", null}, {"VARCHAR", "n"},
-            {"VARCHAR2", "n"}, {"CHAR", "n"}, {"BOOLEAN", null}, {"BINARY", null}};
+            {"VARCHAR2", "n"}, {"CHAR", "n"}, {"BOOLEAN", null}, {"BINARY", null}, {"ARRAY<BIGINT>", null}, {"ARRAY<INT(5)>", null},
+            {"MAP<INT,ARRAY<BIGINT>>", null}};
 
     public static final String SCHEMA_COLUMNS_NAME_FIELD = "schemaColumns.name";
 
@@ -859,6 +874,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SCHEMA_DELIMITER_COMMA = ",";
 
     public static final String SCHEMA_DELIMITER_PIPE = "|";
+
+    public static final String SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA = ",";
+
+    public static final String SCHEMA_COLLECTION_ITEMS_DELIMITER_PIPE = "|";
+
+    public static final String SCHEMA_MAP_KEYS_DELIMITER_EQUALS = "=";
+
+    public static final String SCHEMA_MAP_KEYS_DELIMITER_HASH = "#";
 
     public static final String SCHEMA_ESCAPE_CHARACTER_BACKSLASH = "\\";
 
@@ -1096,7 +1119,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TEST_DDL =
         "CREATE EXTERNAL TABLE `ITEMS` (\n" + "    `ORGNL_TRANSFORM` INT,\n" + "    `DATA` DOUBLE)\n" + "PARTITIONED BY (`TRANSFORM` INT)\n" +
-            "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '\\\\' NULL DEFINED AS '\\001'\n" + "STORED AS TEXTFILE;";
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '\\\\' COLLECTION ITEMS TERMINATED BY ',' MAP KEYS TERMINATED BY '#' " +
+            "NULL DEFINED AS '\\001'\n" + "STORED AS TEXTFILE;";
 
     public static final String TEST_DDL_2 = "DROP TABLE `Test`;\n" + "CREATE EXTERNAL TABLE `TEST`;";
 

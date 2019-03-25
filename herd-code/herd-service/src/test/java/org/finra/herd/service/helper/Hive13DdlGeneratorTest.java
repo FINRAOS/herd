@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,17 +63,16 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         storageFilePaths = new ArrayList<>();
         expectedHivePartitions = new ArrayList<>();
         resultHivePartitions = hive13DdlGenerator
-            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity,
-                STORAGE_NAME);
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
         assertEquals(expectedHivePartitions, resultHivePartitions);
 
         // Single level partitioning.
         autoDiscoverableSubPartitionColumns = new ArrayList<>();
         storageFilePaths = getStorageFilePaths(Arrays.asList("/file1.dat", "/file2.dat"));
-        expectedHivePartitions = Arrays.asList(HivePartitionDto.builder().withPath("").withPartitionValues(Arrays.asList(PARTITION_VALUE)).build());
+        expectedHivePartitions =
+            Collections.singletonList(HivePartitionDto.builder().withPath("").withPartitionValues(Collections.singletonList(PARTITION_VALUE)).build());
         resultHivePartitions = hive13DdlGenerator
-            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity,
-                STORAGE_NAME);
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
         assertEquals(expectedHivePartitions, resultHivePartitions);
 
         // Test that we match column names in storage file paths ignoring the case.
@@ -82,8 +82,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             .asList(HivePartitionDto.builder().withPath("/COLUMN1=111/COLUMN2=222").withPartitionValues(Arrays.asList(PARTITION_VALUE, "111", "222")).build(),
                 HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
         resultHivePartitions = hive13DdlGenerator
-            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity,
-                STORAGE_NAME);
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
         assertEquals(expectedHivePartitions, resultHivePartitions);
     }
 
@@ -115,8 +114,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             List<String> storageFilePaths = getStorageFilePaths(badFilePaths.subList(i, i + 1));
             try
             {
-                hive13DdlGenerator.getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths,
-                    businessObjectDataEntity, STORAGE_NAME);
+                hive13DdlGenerator
+                    .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
                 fail("Should throw an IllegalArgumentException when storage file does not match the expected Hive sub-directory pattern.");
             }
             catch (IllegalArgumentException e)
@@ -145,7 +144,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         {
             hive13DdlGenerator
                 .getHivePartitions(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), autoDiscoverableSubPartitionColumns,
-                    TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity, STORAGE_NAME);
+                    TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
             fail("Should throw an IllegalArgumentException when multiple locations exist for the same Hive partition.");
         }
         catch (IllegalArgumentException e)
@@ -248,13 +247,135 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             schemaColumnEntity.setType("date");
             businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
         }
+        {
+            SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
+            schemaColumnEntity.setPosition(2);
+            schemaColumnEntity.setName("col3");
+            // Use complex schema data type with whitespaces in it.
+            // Expect the whitespaces to be removed whilke validating the complex data types.
+            schemaColumnEntity.setType("map <double, array<bigint(5)>>");
+            businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
+        }
+        {
+            SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
+            schemaColumnEntity.setPosition(3);
+            schemaColumnEntity.setName("col4");
+            schemaColumnEntity.setType("uniontype<int,double,array<string>,struct<a:int,b:string>>");
+            businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
+        }
+        {
+            SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
+            schemaColumnEntity.setPosition(3);
+            schemaColumnEntity.setName("col4");
+            schemaColumnEntity.setType("struct<s:string,f:float,m:map<double,array<bigint>>>");
+            businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
+        }
         String actual = hive13DdlGenerator.generateReplaceColumnsStatement(businessObjectFormatDdlRequest, businessObjectFormatEntity);
 
         String expected =
             "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n" + "    `col1` VARCHAR(255) COMMENT 'lorem ipsum',\n" +
-                "    `col2` DATE);";
+                "    `col2` DATE,\n" + "    `col3` map<double,array<bigint(5)>>,\n" + "    `col4` uniontype<int,double,array<string>,struct<a:int,b:string>>,\n" +
+                "    `col4` struct<s:string,f:float,m:map<double,array<bigint>>>);";
 
         Assert.assertEquals("generated DDL", expected, actual);
+    }
+
+    @Test
+    public void testGenerateReplaceColumnsStatementErrorNotComplexType()
+    {
+        BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
+        businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY);
+        {
+            SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
+            schemaColumnEntity.setPosition(0);
+            schemaColumnEntity.setName("col1");
+            schemaColumnEntity.setType("MAP<DOUBLE,");
+            schemaColumnEntity.setSize("255");
+            schemaColumnEntity.setDescription("lorem ipsum");
+            businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
+        }
+        try
+        {
+            String actual = hive13DdlGenerator.generateReplaceColumnsStatement(businessObjectFormatDdlRequest, businessObjectFormatEntity);
+            Assert.fail("expected IllegalArgumentException, but no exception was thrown");
+        }
+        catch (Exception e)
+        {
+            Assert.assertEquals("thrown exception type", IllegalArgumentException.class, e.getClass());
+            Assert.assertEquals("thrown exception message",
+                "Column \"col1\" has an unsupported data type \"MAP<DOUBLE,\" in the schema for business object format {namespace: \"" + NAMESPACE +
+                    "\", businessObjectDefinitionName: \"" + BDEF_NAME + "\", businessObjectFormatUsage: \"" + FORMAT_USAGE_CODE +
+                    "\", businessObjectFormatFileType: \"" + FORMAT_FILE_TYPE_CODE + "\", businessObjectFormatVersion: " + FORMAT_VERSION +
+                    "}. Exception : \"Error: type expected at the end of 'map<double,'\"",e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGenerateReplaceColumnsStatementErrorNotValidSchemaColumnDataType()
+    {
+        BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
+        businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY);
+        {
+            SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
+            schemaColumnEntity.setPosition(0);
+            schemaColumnEntity.setName("col1");
+            schemaColumnEntity.setType("fooobaar");
+            schemaColumnEntity.setSize("255");
+            schemaColumnEntity.setDescription("lorem ipsum");
+            businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
+        }
+        try
+        {
+            String actual = hive13DdlGenerator.generateReplaceColumnsStatement(businessObjectFormatDdlRequest, businessObjectFormatEntity);
+            Assert.fail("expected IllegalArgumentException, but no exception was thrown");
+        }
+        catch (Exception e)
+        {
+            Assert.assertEquals("thrown exception type", IllegalArgumentException.class, e.getClass());
+            Assert.assertEquals("thrown exception message",
+                "Column \"col1\" has an unsupported data type \"fooobaar\" in the schema for business object format {namespace: \"" + NAMESPACE +
+                    "\", businessObjectDefinitionName: \"" + BDEF_NAME + "\", businessObjectFormatUsage: \"" + FORMAT_USAGE_CODE +
+                    "\", businessObjectFormatFileType: \"" + FORMAT_FILE_TYPE_CODE + "\", businessObjectFormatVersion: " + FORMAT_VERSION +
+                    "}. Exception : \"Error: type expected at the position 0 of 'fooobaar' but 'fooobaar' is found.\"",e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGenerateReplaceColumnsStatementErrorValidSchemaColumnPrimitiveDataType()
+    {
+        BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
+        businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, true, PARTITION_KEY);
+        {
+            SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
+            schemaColumnEntity.setPosition(0);
+            schemaColumnEntity.setName("col1");
+            schemaColumnEntity.setType("int(25)");
+            schemaColumnEntity.setDescription("lorem ipsum");
+            businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
+        }
+        try
+        {
+            String actual = hive13DdlGenerator.generateReplaceColumnsStatement(businessObjectFormatDdlRequest, businessObjectFormatEntity);
+            Assert.fail("expected IllegalArgumentException, but no exception was thrown");
+        }
+        catch (Exception e)
+        {
+            Assert.assertEquals("thrown exception type", IllegalArgumentException.class, e.getClass());
+            Assert.assertEquals("thrown exception message",
+                "Column \"col1\" has an unsupported data type \"int(25)\" in the schema for business object format {namespace: \"" + NAMESPACE +
+                    "\", businessObjectDefinitionName: \"" + BDEF_NAME + "\", businessObjectFormatUsage: \"" + FORMAT_USAGE_CODE +
+                    "\", businessObjectFormatFileType: \"" + FORMAT_FILE_TYPE_CODE + "\", businessObjectFormatVersion: " + FORMAT_VERSION +
+                    "}. Exception : \"null\"",e.getMessage());
+        }
     }
 
     /**

@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
@@ -107,7 +108,7 @@ public interface StorageUnitDao extends BaseJpaDao
     StorageUnitEntity getStorageUnitByStorageAndDirectoryPath(StorageEntity storageEntity, String directoryPath);
 
     /**
-     * Retrieves a list of storage unit entities per specified parameters.
+     * Retrieves a list of storage unit availability DTOs per specified parameters.
      *
      * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
      * available format version for each partition value will be used.
@@ -120,14 +121,14 @@ public interface StorageUnitDao extends BaseJpaDao
      * business object data version and business object data status both are not specified, the latest data version for each set of partition values will be
      * used regardless of the status.
      * @param storageNames the optional list of storage names where the business object data storage units should be looked for (case-insensitive)
-     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
-     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
-     * the storage platform type is specified
+     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
+     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storage names is not
+     * empty or the storage platform type is specified
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
      *
-     * @return the list of storage unit entities sorted by partition values and storage names
+     * @return the list of storage unit availability DTOs sorted by partition values and storage names
      */
-    List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
+    List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
         Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
         String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits);
 
