@@ -2671,6 +2671,18 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="collectionItemsDelimiter" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The collection items delimiter (e.g. ","). XML escaping should be used when specifying non-ASCII characters
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="mapKeysDelimiter" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The map keys delimiter (e.g. "="). XML escaping should be used when specifying non-ASCII characters
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="escapeCharacter" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The escape character (e.g. "\\\\").

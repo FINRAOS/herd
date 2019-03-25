@@ -18,9 +18,6 @@ package org.apache.spark.sql.herd
 import java.net.URI
 import java.util
 
-import scala.collection.JavaConverters._
-import scala.util.{Failure, Success, Try}
-
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
@@ -37,6 +34,8 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.util.QueryExecutionListener
+import scala.collection.JavaConverters._
+import scala.util.{Failure, Success, Try}
 
 import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
 import org.finra.herd.sdk.model._
@@ -531,6 +530,18 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
             schema.getDelimiter.contains("\\") match {
               case true => schema.getDelimiter.replace("\\", "").toInt.toChar.toString
               case false => schema.getDelimiter
+            }
+          },
+          "collectionItemsDelimiter" -> {
+            schema.getCollectionItemsDelimiter.contains("\\") match {
+              case true => schema.getCollectionItemsDelimiter.replace("\\", "").toInt.toChar.toString
+              case false => schema.getCollectionItemsDelimiter
+            }
+          },
+          "mapKeysDelimiter" -> {
+            schema.getMapKeysDelimiter.contains("\\") match {
+              case true => schema.getMapKeysDelimiter.replace("\\", "").toInt.toChar.toString
+              case false => schema.getMapKeysDelimiter
             }
           },
           "nullValue" -> schema.getNullValue,

@@ -503,6 +503,18 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="storageUnitAvailabilityDto">
+      <xs:sequence>
+         <xs:element name="storageUnitId" type="xs:int" minOccurs="0"/>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+         <xs:element name="storageUnitDirectoryPath" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0"/>
+         <xs:element name="storageUnitStatus" type="xs:string" minOccurs="0"/>
+         <xs:element name="storageUnitAvailable" type="xs:boolean" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="storageUnitNotificationEventParamsDto">
       <xs:complexContent>
          <xs:extension base="notificationEventParamsDto">

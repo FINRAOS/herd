@@ -507,7 +507,6 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
     partitionValueFilter.setPartitionValues(partitionValues.asJava)
     businessObjectDataDdlRequest.setPartitionValueFilters(List.fill(1)(partitionValueFilter).asJava)
 
-    businessObjectDataDdlRequest.setStorageNames(List.fill(1)("S3_MANAGED").asJava)
     businessObjectDataDdlRequest.setOutputFormat(BusinessObjectDataDdlRequest.OutputFormatEnum.HIVE_13_DDL)
     businessObjectDataDdlRequest.setBusinessObjectDataVersion(dataVersion)
     businessObjectDataDdlRequest.setTableName("HerdSpark")

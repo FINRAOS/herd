@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -40,6 +41,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -132,15 +134,17 @@ public class StorageUnitHelperTest extends AbstractServiceTest
         storageUnitEntity.setRestoreExpirationOn(restoredExpirationOn);
 
         // Call the method under test.
-        List<StorageUnit> result = storageUnitHelper.createStorageUnitsFromEntities(Arrays.asList(storageUnitEntity), NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
+        List<StorageUnit> result =
+            storageUnitHelper.createStorageUnitsFromEntities(Collections.singletonList(storageUnitEntity), NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(Arrays.asList(
+        assertEquals(Collections.singletonList(
             new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), new StorageDirectory(STORAGE_DIRECTORY_PATH), null, STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS_HISTORY, STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, HerdDateUtils.getXMLGregorianCalendarValue(restoredExpirationOn))), result);
+                NO_STORAGE_UNIT_STATUS_HISTORY, STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, HerdDateUtils.getXMLGregorianCalendarValue(restoredExpirationOn))),
+            result);
     }
 
     @Test
@@ -160,15 +164,17 @@ public class StorageUnitHelperTest extends AbstractServiceTest
     @Test
     public void testGetStorageUnitIds()
     {
-        // Create a storage unit entity.
-        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
-        storageUnitEntity.setId(INTEGER_VALUE);
+        // Create a storage unit availability DTOs.
+        StorageUnitAvailabilityDto storageUnitAvailabilityDto1 = new StorageUnitAvailabilityDto();
+        storageUnitAvailabilityDto1.setStorageUnitId(INTEGER_VALUE);
+        StorageUnitAvailabilityDto storageUnitAvailabilityDto2 = new StorageUnitAvailabilityDto();
+        storageUnitAvailabilityDto2.setStorageUnitId(INTEGER_VALUE_2);
 
         // Get a list of storage unit ids.
-        List<Integer> result = storageUnitHelper.getStorageUnitIds(Arrays.asList(storageUnitEntity));
+        List<Integer> result = storageUnitHelper.getStorageUnitIds(Arrays.asList(storageUnitAvailabilityDto1, storageUnitAvailabilityDto2));
 
         // Validate the returned object.
-        assertEquals(Arrays.asList(INTEGER_VALUE), result);
+        assertEquals(Arrays.asList(INTEGER_VALUE, INTEGER_VALUE_2), result);
 
         // Get a list of storage unit ids when the list of entities is empty.
         result = storageUnitHelper.getStorageUnitIds(new ArrayList<>());

@@ -34,6 +34,7 @@ import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -368,12 +369,23 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetStorageUnitsByPartitionFiltersAndStorages()
+    public void testGetStorageUnitsByPartitionFilters()
     {
         // Create database entities required for testing.
         List<StorageUnitEntity> expectedMultiStorageAvailableStorageUnits = businessObjectDataAvailabilityTestHelper
             .createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
                 BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, STORAGE_NAMES);
+
+        // Create a list of expected multi storage available storage unit availability DTOs.
+        List<StorageUnitAvailabilityDto> expectedMultiStorageAvailableStorageUnitAvailabilityDtos = new ArrayList<>();
+        for (StorageUnitEntity storageUnitEntity : expectedMultiStorageAvailableStorageUnits)
+        {
+            expectedMultiStorageAvailableStorageUnitAvailabilityDtos.add(new StorageUnitAvailabilityDto(storageUnitEntity.getId(),
+                new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    storageUnitEntity.getBusinessObjectData().getPartitionValue(), SUBPARTITION_VALUES, storageUnitEntity.getBusinessObjectData().getVersion()),
+                storageUnitEntity.getStorage().getName(), storageUnitEntity.getDirectoryPath(), BusinessObjectDataStatusEntity.VALID,
+                StorageUnitStatusEntity.ENABLED, STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET));
+        }
 
         // Build a list of partition values, large enough to cause executing the select queries in chunks.
         List<String> partitionValues = new ArrayList<>();
@@ -392,79 +404,81 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         }
 
         // Retrieve "available" storage units per specified parameters.
-        List<StorageUnitEntity> resultStorageUnitEntities1 = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
-            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), partitionFilters, DATA_VERSION, null,
-            STORAGE_NAMES, null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
-
-        // Validate the results.
-        assertNotNull(resultStorageUnitEntities1);
-        assertEquals(expectedMultiStorageAvailableStorageUnits, resultStorageUnitEntities1);
-
-        // Retrieve "available" storage units without specifying
-        // a business object format version, which is an optional parameter.
-        List<StorageUnitEntity> resultStorageUnitEntities2 = storageUnitDao
-            .getStorageUnitsByPartitionFiltersAndStorages(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+        List<StorageUnitAvailabilityDto> resultStorageUnitAvailabilityDtos1 = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 partitionFilters, DATA_VERSION, null, STORAGE_NAMES, null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertEquals(resultStorageUnitEntities1, resultStorageUnitEntities2);
+        assertNotNull(resultStorageUnitAvailabilityDtos1);
+        assertEquals(expectedMultiStorageAvailableStorageUnitAvailabilityDtos, resultStorageUnitAvailabilityDtos1);
+
+        // Retrieve "available" storage units without specifying
+        // a business object format version, which is an optional parameter.
+        List<StorageUnitAvailabilityDto> resultStorageUnitAvailabilityDtos2 = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                partitionFilters, DATA_VERSION, null, STORAGE_NAMES, null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+
+        // Validate the results.
+        assertEquals(resultStorageUnitAvailabilityDtos1, resultStorageUnitAvailabilityDtos2);
 
         // Retrieve "available" storage units without specifying
         // both business object format version and business object data version.
-        List<StorageUnitEntity> resultStorageUnitEntities3 = storageUnitDao
-            .getStorageUnitsByPartitionFiltersAndStorages(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+        List<StorageUnitAvailabilityDto> resultStorageUnitAvailabilityDtos3 = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
                 partitionFilters, null, null, STORAGE_NAMES, null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertEquals(resultStorageUnitEntities1, resultStorageUnitEntities3);
+        assertEquals(resultStorageUnitAvailabilityDtos1, resultStorageUnitAvailabilityDtos3);
 
         // Retrieve the "available" storage units and with VALID business object data
         // status without specifying both business object format version and business object data version.
-        List<StorageUnitEntity> resultStorageUnitEntities4 = storageUnitDao
-            .getStorageUnitsByPartitionFiltersAndStorages(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+        List<StorageUnitAvailabilityDto> resultStorageUnitAvailabilityDtos4 = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
                 partitionFilters, null, BusinessObjectDataStatusEntity.VALID, STORAGE_NAMES, null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertEquals(resultStorageUnitEntities1, resultStorageUnitEntities4);
+        assertEquals(resultStorageUnitAvailabilityDtos1, resultStorageUnitAvailabilityDtos4);
 
         // Try to retrieve "available" storage units, with wrong business object data
         // status and without specifying both business object format version and business object data version.
-        List<StorageUnitEntity> resultStorageUnitEntities5 = storageUnitDao
-            .getStorageUnitsByPartitionFiltersAndStorages(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+        List<StorageUnitAvailabilityDto> resultStorageUnitAvailabilityDtos5 = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
                 partitionFilters, null, BDATA_STATUS, STORAGE_NAMES, null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertTrue(resultStorageUnitEntities5.isEmpty());
+        assertTrue(resultStorageUnitAvailabilityDtos5.isEmpty());
 
         // Retrieve "available" storage units and with VALID business
         // object data status without specifying any of the storages or storage platform type.
-        List<StorageUnitEntity> resultStorageUnitEntities6 = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
-            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), partitionFilters, DATA_VERSION,
-            BusinessObjectDataStatusEntity.VALID, NO_STORAGE_NAMES, null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+        List<StorageUnitAvailabilityDto> resultStorageUnitAvailabilityDtos6 = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                partitionFilters, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, NO_STORAGE_NAMES, null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertEquals(resultStorageUnitEntities1, resultStorageUnitEntities6);
+        assertEquals(resultStorageUnitAvailabilityDtos1, resultStorageUnitAvailabilityDtos6);
 
         // Try to retrieve "available" storage units without
         // specifying any of the storages and providing a non-existing storage platform type.
-        List<StorageUnitEntity> resultStorageUnitEntities7 = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
-            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), partitionFilters, DATA_VERSION,
-            BusinessObjectDataStatusEntity.VALID, NO_STORAGE_NAMES, "I_DO_NOT_EXIST", null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+        List<StorageUnitAvailabilityDto> resultStorageUnitAvailabilityDtos7 = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                partitionFilters, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, NO_STORAGE_NAMES, "I_DO_NOT_EXIST", null,
+                SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertTrue(resultStorageUnitEntities7.isEmpty());
+        assertTrue(resultStorageUnitAvailabilityDtos7.isEmpty());
 
         // Try to retrieve "available" storage units when excluding the storage platform type that are test storage belongs to.
-        List<StorageUnitEntity> resultStorageUnitEntities8 = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
-            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), partitionFilters, DATA_VERSION,
-            BusinessObjectDataStatusEntity.VALID, NO_STORAGE_NAMES, null, StoragePlatformEntity.S3, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+        List<StorageUnitAvailabilityDto> resultStorageUnitAvailabilityDtos8 = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                partitionFilters, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, NO_STORAGE_NAMES, null, StoragePlatformEntity.S3,
+                SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertTrue(resultStorageUnitEntities8.isEmpty());
+        assertTrue(resultStorageUnitAvailabilityDtos8.isEmpty());
     }
 
     @Test
-    public void testGetStorageUnitsByPartitionFiltersAndStoragesNotEnabledStorageUnitStatus()
+    public void testGetStorageUnitsByPartitionFiltersNotEnabledStorageUnitStatus()
     {
         // Create enabled and disabled storage units for different partition values.
         StorageUnitEntity enabledStorageUnitEntity = storageUnitDaoTestHelper
@@ -474,6 +488,16 @@ public class StorageUnitDaoTest extends AbstractDaoTest
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH);
 
+        // Create a storage unit availability DTOs for both enabled and disabled storage units.
+        StorageUnitAvailabilityDto enabledStorageUnitAvailabilityDto = new StorageUnitAvailabilityDto(enabledStorageUnitEntity.getId(),
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, NO_STORAGE_DIRECTORY_PATH, BDATA_STATUS, StorageUnitStatusEntity.ENABLED,
+            STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET);
+        StorageUnitAvailabilityDto disabledStorageUnitAvailabilityDto = new StorageUnitAvailabilityDto(disabledStorageUnitEntity.getId(),
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+                NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, NO_STORAGE_DIRECTORY_PATH, BDATA_STATUS, StorageUnitStatusEntity.DISABLED,
+            NO_STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET);
+
         // Build a list of partition filters to select business object data.
         List<List<String>> partitionFilters = new ArrayList<>();
         for (String partitionValue : Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2))
@@ -482,38 +506,38 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         }
 
         // Retrieve "available" storage units per specified parameters.
-        List<StorageUnitEntity> resultStorageUnitEntities = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
-            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), partitionFilters, DATA_VERSION,
-            null, Collections.singletonList(STORAGE_NAME), null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+        List<StorageUnitAvailabilityDto> resultStorageUnitAvailabilityDtos = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                partitionFilters, DATA_VERSION, null, Collections.singletonList(STORAGE_NAME), null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertEquals(Collections.singletonList(enabledStorageUnitEntity), resultStorageUnitEntities);
+        assertEquals(Collections.singletonList(enabledStorageUnitAvailabilityDto), resultStorageUnitAvailabilityDtos);
 
         // Retrieve "available" storage units without specifying
         // a business object format version, which is an optional parameter.
-        resultStorageUnitEntities = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
-            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), partitionFilters, DATA_VERSION, null,
-            Collections.singletonList(STORAGE_NAME), null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+        resultStorageUnitAvailabilityDtos = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                partitionFilters, DATA_VERSION, null, Collections.singletonList(STORAGE_NAME), null, null, SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertEquals(Collections.singletonList(enabledStorageUnitEntity), resultStorageUnitEntities);
+        assertEquals(Collections.singletonList(enabledStorageUnitAvailabilityDto), resultStorageUnitAvailabilityDtos);
 
         // Retrieve storage units regardless of storage unit status per specified parameters.
-        resultStorageUnitEntities = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
-            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), partitionFilters, DATA_VERSION,
-            null, Collections.singletonList(STORAGE_NAME), null, null, NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+        resultStorageUnitAvailabilityDtos = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+                partitionFilters, DATA_VERSION, null, Collections.singletonList(STORAGE_NAME), null, null, NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertEquals(Arrays.asList(enabledStorageUnitEntity, disabledStorageUnitEntity), resultStorageUnitEntities);
+        assertEquals(Arrays.asList(enabledStorageUnitAvailabilityDto, disabledStorageUnitAvailabilityDto), resultStorageUnitAvailabilityDtos);
 
         // Retrieve storage units regardless of storage unit status without specifying
         // a business object format version, which is an optional parameter.
-        resultStorageUnitEntities = storageUnitDao.getStorageUnitsByPartitionFiltersAndStorages(
-            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), partitionFilters, DATA_VERSION, null,
-            Collections.singletonList(STORAGE_NAME), null, null, NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
+        resultStorageUnitAvailabilityDtos = storageUnitDao
+            .getStorageUnitsByPartitionFilters(new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                partitionFilters, DATA_VERSION, null, Collections.singletonList(STORAGE_NAME), null, null, NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
-        assertEquals(Arrays.asList(enabledStorageUnitEntity, disabledStorageUnitEntity), resultStorageUnitEntities);
+        assertEquals(Arrays.asList(enabledStorageUnitAvailabilityDto, disabledStorageUnitAvailabilityDto), resultStorageUnitAvailabilityDtos);
     }
 
     @Test
