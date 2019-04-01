@@ -317,8 +317,24 @@ trait Retry {
 class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retry {
   override val log: Logger = Logger.getLogger(classOf[DefaultHerdApi])
 
+  def getBusinessObjectDefinitionApi(apiClient: ApiClient) : BusinessObjectDefinitionApi = {
+    new BusinessObjectDefinitionApi(apiClient)
+  }
+
+  def getBusinessObjectDataApi(apiClient: ApiClient) : BusinessObjectDataApi = {
+    new BusinessObjectDataApi(apiClient)
+  }
+
+  def getBusinessObjectDataStorageFileApi(apiClient: ApiClient) : BusinessObjectDataStorageFileApi = {
+    new BusinessObjectDataStorageFileApi(apiClient)
+  }
+
+  def getBusinessObjectFormatApi(apiClient: ApiClient) : BusinessObjectFormatApi = {
+    new BusinessObjectFormatApi(apiClient)
+  }
+
   override def getBusinessObjectByName(namespace: String, businessObjectDefinitionName: String): BusinessObjectDefinition = {
-    val api = new BusinessObjectDefinitionApi(apiClient)
+    val api = getBusinessObjectDefinitionApi(apiClient)
 
     withRetry {
       api.businessObjectDefinitionGetBusinessObjectDefinition(namespace, businessObjectDefinitionName, false)
@@ -326,7 +342,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   }
 
   override def getBusinessObjectsByNamespace(namespace: String): BusinessObjectDefinitionKeys = {
-    val api = new BusinessObjectDefinitionApi(apiClient)
+    val api = getBusinessObjectDefinitionApi(apiClient)
 
     withRetry {
       api.businessObjectDefinitionGetBusinessObjectDefinitions1(namespace)
@@ -334,7 +350,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   }
 
   override def registerBusinessObject(namespace: String, businessObjectName: String, dataProvider: String): Unit = {
-    val api = new BusinessObjectDefinitionApi(apiClient)
+    val api = getBusinessObjectDefinitionApi(apiClient)
 
     val req = new BusinessObjectDefinitionCreateRequest()
     req.setNamespace(namespace)
@@ -348,7 +364,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
 
   override def getBusinessObjectFormats(namespace: String, businessObjectName: String,
                                         latestBusinessObjectFormatVersion: Boolean = true): BusinessObjectFormatKeys = {
-    val api = new BusinessObjectFormatApi(apiClient)
+    val api = getBusinessObjectFormatApi(apiClient)
 
     withRetry {
       api.businessObjectFormatGetBusinessObjectFormats(namespace, businessObjectName, latestBusinessObjectFormatVersion)
@@ -358,7 +374,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   override def getBusinessObjectFormat(namespace: String, businessObjectDefinitionName: String,
                                        formatUsage: String, formatFileType: String,
                                        formatVersion: Int): BusinessObjectFormat = {
-    val api = new BusinessObjectFormatApi(apiClient)
+    val api = getBusinessObjectFormatApi(apiClient)
 
     withRetry {
       api.businessObjectFormatGetBusinessObjectFormat(namespace, businessObjectDefinitionName, formatUsage,
@@ -366,9 +382,9 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
     }
   }
 
-  override def registerBusinessObjectFormat(namespace: String, businessObjectDefinitionName: String, formatUsage: String,
-                                            formatFileType: String, partitionKey: String, schema: Option[Schema]): Int = {
-    val api = new BusinessObjectFormatApi(apiClient)
+  override def registerBusinessObjectFormat(namespace: String, businessObjectDefinitionName: String,
+                                            formatUsage: String, formatFileType: String, partitionKey: String, schema: Option[Schema]): Int = {
+    val api = getBusinessObjectFormatApi(apiClient)
 
     val req = new BusinessObjectFormatCreateRequest()
     req.setNamespace(namespace)
@@ -494,7 +510,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
                                                 formatUsage: String, formatFileType: String,
                                                 formatVersion: Int, partitionKey: String, partitionValues: Seq[String],
                                                 dataVersion: Int): BusinessObjectDataDdl = {
-    val api = new BusinessObjectDataApi(apiClient)
+    val api = getBusinessObjectDataApi(apiClient)
     val businessObjectDataDdlRequest = new BusinessObjectDataDdlRequest()
     businessObjectDataDdlRequest.setNamespace(namespace)
     businessObjectDataDdlRequest.setBusinessObjectDefinitionName(businessObjectName)
@@ -524,7 +540,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
                                                  formatUsage: String, formatFileType: String,
                                                  partitionKey: String, firstPartitionValue: String,
                                                  lastPartitionValue: String): BusinessObjectDataAvailability = {
-    val api = new BusinessObjectDataApi(apiClient)
+    val api = getBusinessObjectDataApi(apiClient)
 
     val req = new BusinessObjectDataAvailabilityRequest
     req.setNamespace(namespace)
@@ -549,7 +565,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
                                           partitionValue: String, subPartitionValues: Seq[String],
                                           status: ObjectStatus.Value, storageName: String,
                                           storageDirectory: Option[String] = None): (Int, Seq[StorageUnit]) = {
-    val api = new BusinessObjectDataApi(apiClient)
+    val api = getBusinessObjectDataApi(apiClient)
 
     val req = new BusinessObjectDataCreateRequest()
     req.setNamespace(namespace)
@@ -606,7 +622,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
         file
     }.toList.asJava)
 
-    val api = new BusinessObjectDataStorageFileApi(apiClient)
+    val api = getBusinessObjectDataStorageFileApi(apiClient)
 
     withRetry {
       api.businessObjectDataStorageFileCreateBusinessObjectDataStorageFiles(req)
