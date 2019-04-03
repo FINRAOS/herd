@@ -18,9 +18,40 @@
    <!-- build the data source for spark version 2.3.0 -->
    <properties>
       <spark.version>2.3.0</spark.version>
+      <apache.spark.jackson.version>2.6.5</apache.spark.jackson.version>
    </properties>
 
    <dependencies>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-core</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-annotations</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-databind</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.jaxrs</groupId>
+         <artifactId>jackson-jaxrs-json-provider</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.datatype</groupId>
+         <artifactId>jackson-datatype-joda</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
 
       <dependency>
          <groupId>org.scala-lang</groupId>
@@ -70,19 +101,19 @@
 
       <dependency>
          <groupId>org.scalactic</groupId>
-         <artifactId>scalactic_2.11</artifactId>
+         <artifactId>scalactic_${scala.tools.version}</artifactId>
          <version>3.0.1</version>
       </dependency>
 
       <dependency>
          <groupId>com.fasterxml.jackson.dataformat</groupId>
          <artifactId>jackson-dataformat-xml</artifactId>
-         <version>2.9.8</version>
+         <version>${jackson.version}</version>
       </dependency>
 
       <dependency>
          <groupId>org.scalatest</groupId>
-         <artifactId>scalatest_2.11</artifactId>
+         <artifactId>scalatest_${scala.tools.version}</artifactId>
          <version>3.0.1</version>
          <scope>test</scope>
       </dependency>
