@@ -187,12 +187,6 @@
                <scalaVersion>${scala.version}</scalaVersion>
                <aggregate>true</aggregate>
                <highlighting>true</highlighting>
-               <!--
-               <excludedFiles>PruneHerdPartitions_Spark_2_1.scala</excludedFiles>
-               <excludedFiles>PruneHerdPartitions_Spark_2_2.scala</excludedFiles>
-               <excludedFiles>HerdFileIndex_Spark_2_1.scala</excludedFiles>
-               <excludedFiles>HerdOrcFileFormat.scala</excludedFiles>
-               -->
                <!-- other parameters -->
             </configuration>
             <executions>
