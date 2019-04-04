@@ -18,7 +18,6 @@
    <!-- build the data source for spark version 2.3.0 -->
    <properties>
       <spark.version>2.3.0</spark.version>
-      <apache.spark.jackson.version>2.6.5</apache.spark.jackson.version>
    </properties>
 
    <dependencies>

@@ -33,7 +33,6 @@
    <!-- build the data catalog for spark version 2.1.1 -->
    <properties>
       <spark.version>2.1.1</spark.version>
-      <apache.spark.jackson.version>2.6.5</apache.spark.jackson.version>
    </properties>
 
    <dependencies>
