@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.92.0-SNAPSHOT</version>
+      <version>0.93.0-SNAPSHOT</version>
    </parent>
 
    <name>herd service</name>
@@ -145,7 +145,7 @@
       <!-- spark hive library -->
       <dependency>
          <groupId>org.apache.hive</groupId>
-         <artifactId>hive-exec</artifactId>
+         <artifactId>hive-serde</artifactId>
       </dependency>
    </dependencies>
 
