@@ -317,8 +317,36 @@ trait Retry {
 class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retry {
   override val log: Logger = Logger.getLogger(classOf[DefaultHerdApi])
 
+  def getBusinessObjectDefinitionApi(apiClient: ApiClient) : BusinessObjectDefinitionApi = {
+    new BusinessObjectDefinitionApi(apiClient)
+  }
+
+  def getBusinessObjectDataApi(apiClient: ApiClient) : BusinessObjectDataApi = {
+    new BusinessObjectDataApi(apiClient)
+  }
+
+  def getBusinessObjectDataStorageFileApi(apiClient: ApiClient) : BusinessObjectDataStorageFileApi = {
+    new BusinessObjectDataStorageFileApi(apiClient)
+  }
+
+  def getBusinessObjectFormatApi(apiClient: ApiClient) : BusinessObjectFormatApi = {
+    new BusinessObjectFormatApi(apiClient)
+  }
+
+  def getStorageApi(apiClient: ApiClient) : StorageApi = {
+    new StorageApi(apiClient)
+  }
+
+  def getNamespaceApi(apiClient: ApiClient) : NamespaceApi = {
+    new NamespaceApi(apiClient)
+  }
+
+  def getBusinessObjectDataStatusApi(apiClient: ApiClient) : BusinessObjectDataStatusApi = {
+    new BusinessObjectDataStatusApi(apiClient)
+  }
+
   override def getBusinessObjectByName(namespace: String, businessObjectDefinitionName: String): BusinessObjectDefinition = {
-    val api = new BusinessObjectDefinitionApi(apiClient)
+    val api = getBusinessObjectDefinitionApi(apiClient)
 
     withRetry {
       api.businessObjectDefinitionGetBusinessObjectDefinition(namespace, businessObjectDefinitionName, false)
@@ -326,7 +354,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   }
 
   override def getBusinessObjectsByNamespace(namespace: String): BusinessObjectDefinitionKeys = {
-    val api = new BusinessObjectDefinitionApi(apiClient)
+    val api = getBusinessObjectDefinitionApi(apiClient)
 
     withRetry {
       api.businessObjectDefinitionGetBusinessObjectDefinitions1(namespace)
@@ -334,7 +362,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   }
 
   override def registerBusinessObject(namespace: String, businessObjectName: String, dataProvider: String): Unit = {
-    val api = new BusinessObjectDefinitionApi(apiClient)
+    val api = getBusinessObjectDefinitionApi(apiClient)
 
     val req = new BusinessObjectDefinitionCreateRequest()
     req.setNamespace(namespace)
@@ -348,7 +376,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
 
   override def getBusinessObjectFormats(namespace: String, businessObjectName: String,
                                         latestBusinessObjectFormatVersion: Boolean = true): BusinessObjectFormatKeys = {
-    val api = new BusinessObjectFormatApi(apiClient)
+    val api = getBusinessObjectFormatApi(apiClient)
 
     withRetry {
       api.businessObjectFormatGetBusinessObjectFormats(namespace, businessObjectName, latestBusinessObjectFormatVersion)
@@ -358,7 +386,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   override def getBusinessObjectFormat(namespace: String, businessObjectDefinitionName: String,
                                        formatUsage: String, formatFileType: String,
                                        formatVersion: Int): BusinessObjectFormat = {
-    val api = new BusinessObjectFormatApi(apiClient)
+    val api = getBusinessObjectFormatApi(apiClient)
 
     withRetry {
       api.businessObjectFormatGetBusinessObjectFormat(namespace, businessObjectDefinitionName, formatUsage,
@@ -366,9 +394,9 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
     }
   }
 
-  override def registerBusinessObjectFormat(namespace: String, businessObjectDefinitionName: String, formatUsage: String,
-                                            formatFileType: String, partitionKey: String, schema: Option[Schema]): Int = {
-    val api = new BusinessObjectFormatApi(apiClient)
+  override def registerBusinessObjectFormat(namespace: String, businessObjectDefinitionName: String,
+                                            formatUsage: String, formatFileType: String, partitionKey: String, schema: Option[Schema]): Int = {
+    val api = getBusinessObjectFormatApi(apiClient)
 
     val req = new BusinessObjectFormatCreateRequest()
     req.setNamespace(namespace)
@@ -386,7 +414,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   override def getBusinessObjectPartitions(namespace: String, businessObjectDefinitionName: String, formatUsage: String,
                                            formatFileType: String, formatVersion: Int,
                                            partitionFilter: Option[PartitionFilter]): Seq[(Int, String, Seq[String], Int)] = {
-    val api = new BusinessObjectDataApi(apiClient)
+    val api = getBusinessObjectDataApi(apiClient)
 
     partitionFilter match {
       case None =>
@@ -422,7 +450,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
           filter.setPartitionValueRange(filterRange)
         }
 
-        req.setIncludeAllRegisteredSubPartitions(true)
+        req.setIncludeAllRegisteredSubPartitions(false)
 
         withRetry {
           api.businessObjectDataCheckBusinessObjectDataAvailability(req)
@@ -440,7 +468,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
         req.setBusinessObjectFormatFileType(formatFileType)
         req.setPartitionValueFilters(null)
         req.setPartitionValueFilter(filter)
-        req.setIncludeAllRegisteredSubPartitions(true)
+        req.setIncludeAllRegisteredSubPartitions(false)
 
         val convertedFilter: PartitionValueFilter = filter
 
@@ -461,7 +489,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
                                      formatUsage: String, formatFileType: String,
                                      formatVersion: Int, partitionKey: String, partitionValue: String,
                                      subPartitionValues: Seq[String], dataVersion: Int): BusinessObjectData = {
-    val api = new BusinessObjectDataApi(apiClient)
+    val api = getBusinessObjectDataApi(apiClient)
 
     withRetry {
       api.businessObjectDataGetBusinessObjectData(
@@ -483,7 +511,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
 
   override def searchBusinessObjectData(businessObjectDataSearchRequest: BusinessObjectDataSearchRequest, pageNum: Integer = 1,
                                         pageSize: Integer = 1000): BusinessObjectDataSearchResult = {
-    val api = new BusinessObjectDataApi(apiClient)
+    val api = getBusinessObjectDataApi(apiClient)
 
     withRetry {
       api.businessObjectDataSearchBusinessObjectData(businessObjectDataSearchRequest, pageNum, pageSize)
@@ -494,7 +522,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
                                                 formatUsage: String, formatFileType: String,
                                                 formatVersion: Int, partitionKey: String, partitionValues: Seq[String],
                                                 dataVersion: Int): BusinessObjectDataDdl = {
-    val api = new BusinessObjectDataApi(apiClient)
+    val api = getBusinessObjectDataApi(apiClient)
     val businessObjectDataDdlRequest = new BusinessObjectDataDdlRequest()
     businessObjectDataDdlRequest.setNamespace(namespace)
     businessObjectDataDdlRequest.setBusinessObjectDefinitionName(businessObjectName)
@@ -524,7 +552,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
                                                  formatUsage: String, formatFileType: String,
                                                  partitionKey: String, firstPartitionValue: String,
                                                  lastPartitionValue: String): BusinessObjectDataAvailability = {
-    val api = new BusinessObjectDataApi(apiClient)
+    val api = getBusinessObjectDataApi(apiClient)
 
     val req = new BusinessObjectDataAvailabilityRequest
     req.setNamespace(namespace)
@@ -549,7 +577,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
                                           partitionValue: String, subPartitionValues: Seq[String],
                                           status: ObjectStatus.Value, storageName: String,
                                           storageDirectory: Option[String] = None): (Int, Seq[StorageUnit]) = {
-    val api = new BusinessObjectDataApi(apiClient)
+    val api = getBusinessObjectDataApi(apiClient)
 
     val req = new BusinessObjectDataCreateRequest()
     req.setNamespace(namespace)
@@ -606,7 +634,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
         file
     }.toList.asJava)
 
-    val api = new BusinessObjectDataStorageFileApi(apiClient)
+    val api = getBusinessObjectDataStorageFileApi(apiClient)
 
     withRetry {
       api.businessObjectDataStorageFileCreateBusinessObjectDataStorageFiles(req)
@@ -617,7 +645,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
                                         formatFileType: String, formatVersion: Int, partitionKey: String,
                                         partitionValue: String, subPartitionValues: Seq[String], dataVersion: Int,
                                         status: ObjectStatus.Value): Unit = {
-    val api = new BusinessObjectDataStatusApi(apiClient)
+    val api = getBusinessObjectDataStatusApi(apiClient)
 
     val req = new BusinessObjectDataStatusUpdateRequest()
     req.setStatus(status.toString)
@@ -691,7 +719,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
                                         formatFileType: String, formatVersion: Int, partitionKey: String,
                                         partitionValue: String, subPartitionValues: Seq[String],
                                         dataVersion: Int): Unit = {
-    val api = new BusinessObjectDataApi(apiClient)
+    val api = getBusinessObjectDataApi(apiClient)
 
     subPartitionValues.size match {
       case 0 => withRetry(api.businessObjectDataDeleteBusinessObjectData(
@@ -759,7 +787,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   }
 
   override def removeBusinessObjectDefinition(namespace: String, businessObjectName: String): Unit = {
-    val api = new BusinessObjectDefinitionApi()
+    val api = getBusinessObjectDefinitionApi(apiClient)
 
     withRetry {
       api.businessObjectDefinitionDeleteBusinessObjectDefinition(namespace, businessObjectName)
@@ -768,7 +796,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
 
   override def removeBusinessObjectFormat(namespace: String, businessObjectName: String, formatUsage: String,
                                  formatFileType: String, formatVersion: Int): Unit = {
-    val api = new BusinessObjectFormatApi(apiClient)
+    val api = getBusinessObjectFormatApi(apiClient)
 
     withRetry {
       api.businessObjectFormatDeleteBusinessObjectFormat(namespace, businessObjectName, formatUsage, formatFileType, formatVersion)
@@ -776,7 +804,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   }
 
   override def getStorage(name: String): Storage = {
-    val api = new StorageApi(apiClient)
+    val api = getStorageApi(apiClient)
 
     withRetry {
       api.storageGetStorage(name)
@@ -784,7 +812,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   }
 
   override def getNamespaceByNamespaceCode(namespaceCode: String): Namespace = {
-    val api = new NamespaceApi(apiClient)
+    val api = getNamespaceApi(apiClient)
 
     withRetry {
       api.namespaceGetNamespace(namespaceCode)
@@ -792,7 +820,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
   }
 
   override def getAllNamespaces: NamespaceKeys = {
-    val api = new NamespaceApi(apiClient)
+    val api = getNamespaceApi(apiClient)
 
     withRetry {
       api.namespaceGetNamespaces()

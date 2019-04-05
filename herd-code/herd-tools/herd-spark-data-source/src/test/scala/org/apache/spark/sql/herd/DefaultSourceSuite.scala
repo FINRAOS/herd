@@ -242,6 +242,8 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
 
   private val defaultParams = Map(
     "url" -> "http://localhost",
+    "username" -> "testUsername",
+    "password" -> "testPassword",
     "namespace" -> namespace,
     "businessObjectName" -> businessObjectDefinitionName,
     "businessObjectFormatFileType" -> "CSV, orc"
