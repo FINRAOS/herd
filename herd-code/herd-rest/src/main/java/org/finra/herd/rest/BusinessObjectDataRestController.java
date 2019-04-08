@@ -689,6 +689,8 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @param businessObjectDataVersion the version of the business object data
      * @param subPartitionValues the list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
      * @param expirationInDays the time, in days, between when the business object data is restored to the S3 bucket and when it expires
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object. Currently three options are supported: Expedited, Standard,
+     * and Bulk
      *
      * @return the business object data information
      */
@@ -706,12 +708,13 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
         @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues,
-        @RequestParam(value = "expirationInDays", required = false) Integer expirationInDays)
+        @RequestParam(value = "expirationInDays", required = false) Integer expirationInDays,
+        @RequestParam(value = "archiveRetrievalOption", required = false) String archiveRetrievalOption)
     {
         return businessObjectDataService.restoreBusinessObjectData(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
-                businessObjectDataVersion), expirationInDays);
+                businessObjectDataVersion), expirationInDays, archiveRetrievalOption);
     }
 
     /**

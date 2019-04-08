@@ -17,9 +17,12 @@ package org.finra.herd.service.impl;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
+import com.amazonaws.services.s3.model.Tier;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -137,9 +140,10 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
     @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)
+    public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays,
+        String archiveRetrievalOption)
     {
-        return prepareToInitiateRestoreImpl(businessObjectDataKey, expirationInDays);
+        return prepareToInitiateRestoreImpl(businessObjectDataKey, expirationInDays, archiveRetrievalOption);
     }
 
     /**
@@ -227,7 +231,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
 
             // Initiate restore requests for the list of objects in the Glacier bucket.
             // TODO: Make "expirationInDays" value configurable with default value set to 99 years (36135 days).
-            s3Service.restoreObjects(s3FileTransferRequestParamsDto, 36135);
+            s3Service.restoreObjects(s3FileTransferRequestParamsDto, 36135, businessObjectDataRestoreDto.getArchiveRetrievalOption());
         }
         catch (RuntimeException e)
         {
@@ -314,10 +318,12 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
      *
      * @param businessObjectDataKey the business object data key
      * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object.
      *
      * @return the DTO that holds various parameters needed to perform a business object data restore
      */
-    protected BusinessObjectDataRestoreDto prepareToInitiateRestoreImpl(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)
+    protected BusinessObjectDataRestoreDto prepareToInitiateRestoreImpl(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays,
+        String archiveRetrievalOption)
     {
         // Validate and trim the business object data key.
         businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, true, true);
@@ -328,6 +334,22 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
 
         // Validate the expiration time.
         Assert.isTrue(localExpirationInDays > 0, "Expiration in days value must be a positive integer.");
+
+        // Validate the archive retrieval option
+        if (StringUtils.isNotEmpty(archiveRetrievalOption))
+        {
+            try
+            {
+                Tier.fromValue(archiveRetrievalOption);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException(String.format("The archive retrieval option value \"%s\" is invalid. " +
+                    "Valid archive retrieval option values are:%s", archiveRetrievalOption, Stream.of(Tier.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList())));
+            }
+        }
 
         // Retrieve the business object data and ensure it exists.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
@@ -376,6 +398,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
         businessObjectDataRestoreDto.setS3BucketName(s3BucketName);
         businessObjectDataRestoreDto.setS3KeyPrefix(s3KeyPrefix);
         businessObjectDataRestoreDto.setStorageFiles(storageFiles);
+        businessObjectDataRestoreDto.setArchiveRetrievalOption(archiveRetrievalOption);
         businessObjectDataRestoreDto.setNewStorageUnitStatus(newStorageUnitStatusEntity.getCode());
         businessObjectDataRestoreDto.setOldStorageUnitStatus(oldOriginStorageUnitStatus);
 

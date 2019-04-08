@@ -35,9 +35,10 @@ public class TestBusinessObjectDataInitiateRestoreHelperServiceImpl extends Busi
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)
+    public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays,
+        String archiveRetrievalOption)
     {
-        return prepareToInitiateRestoreImpl(businessObjectDataKey, expirationInDays);
+        return prepareToInitiateRestoreImpl(businessObjectDataKey, expirationInDays, archiveRetrievalOption);
     }
 
     /**

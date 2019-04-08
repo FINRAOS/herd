@@ -172,10 +172,12 @@ public interface BusinessObjectDataService
      *
      * @param businessObjectDataKey the business object data key
      * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object. Currently three options are supported: Expedited, Standard,
+     * and Bulk
      *
      * @return the business object data information
      */
-    BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays);
+    BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption);
 
     /**
      * Retries a storage policy transition by forcing re-initiation of the archiving process for the specified business object data that is still in progress of
