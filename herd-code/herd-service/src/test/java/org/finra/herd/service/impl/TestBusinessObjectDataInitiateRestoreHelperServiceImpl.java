@@ -15,7 +15,6 @@
 */
 package org.finra.herd.service.impl;
 
-import com.amazonaws.services.s3.model.Tier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
