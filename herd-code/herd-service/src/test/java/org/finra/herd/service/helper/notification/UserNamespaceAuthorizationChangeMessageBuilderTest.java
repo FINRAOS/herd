@@ -38,8 +38,6 @@ import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEvent;
 import org.finra.herd.model.jpa.ConfigurationEntity;
-import org.finra.herd.service.helper.notification.AbstractNotificationMessageBuilderTestHelper;
-import org.finra.herd.service.helper.notification.UserNamespaceAuthorizationChangeMessageBuilder;
 
 /**
  * Tests the functionality for UserNamespaceAuthorizationChangeMessageBuilder.
@@ -59,7 +57,7 @@ public class UserNamespaceAuthorizationChangeMessageBuilderTest extends Abstract
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
                 USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -72,8 +70,36 @@ public class UserNamespaceAuthorizationChangeMessageBuilderTest extends Abstract
         assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
         String uuid = result.get(0).getMessageHeaders().get(4).getValue();
         assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
-        validateUserNamespaceAuthorizationChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, userNamespaceAuthorizationKey,
+        validateUserNamespaceAuthorizationChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, userNamespaceAuthorizationKey,
             getExpectedMessageHeaders(uuid), result.get(0));
+    }
+
+    @Test
+    public void testBuildUserNamespaceAuthorizationChangeMessagesJsonPayloadInvalidMessageType() throws Exception
+    {
+        // Create a user namespace authorization key.
+        UserNamespaceAuthorizationKey userNamespaceAuthorizationKey = new UserNamespaceAuthorizationKey(USER_ID, BDEF_NAMESPACE);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(INVALID_VALUE, MESSAGE_DESTINATION,
+                USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            userNamespaceAuthorizationChangeMessageBuilder
+                .buildNotificationMessages(new UserNamespaceAuthorizationChangeNotificationEvent(userNamespaceAuthorizationKey));
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Only \"%s\" notification message type is supported. Please update \"%s\" configuration entry.", MESSAGE_TYPE_SNS,
+                ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
     }
 
     @Test
@@ -86,7 +112,7 @@ public class UserNamespaceAuthorizationChangeMessageBuilderTest extends Abstract
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, NO_MESSAGE_DESTINATION,
                 USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -114,7 +140,7 @@ public class UserNamespaceAuthorizationChangeMessageBuilderTest extends Abstract
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
                 USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -124,7 +150,7 @@ public class UserNamespaceAuthorizationChangeMessageBuilderTest extends Abstract
 
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
-        validateUserNamespaceAuthorizationChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, userNamespaceAuthorizationKey, NO_MESSAGE_HEADERS,
+        validateUserNamespaceAuthorizationChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, userNamespaceAuthorizationKey, NO_MESSAGE_HEADERS,
             result.get(0));
     }
 
