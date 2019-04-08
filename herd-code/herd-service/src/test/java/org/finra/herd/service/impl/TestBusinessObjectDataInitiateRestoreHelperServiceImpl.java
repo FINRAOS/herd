@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.impl;
 
+import com.amazonaws.services.s3.model.Tier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -35,9 +36,10 @@ public class TestBusinessObjectDataInitiateRestoreHelperServiceImpl extends Busi
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)
+    public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays,
+        String archiveRetrievalOption)
     {
-        return prepareToInitiateRestoreImpl(businessObjectDataKey, expirationInDays);
+        return prepareToInitiateRestoreImpl(businessObjectDataKey, expirationInDays, archiveRetrievalOption);
     }
 
     /**

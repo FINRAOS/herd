@@ -92,7 +92,8 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
             assertEquals(storageUnitEntity.getStorageFiles().size() + 1, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
 
             // Initiate a restore request for the business object data.
-            BusinessObjectData businessObjectData = businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS);
+            BusinessObjectData businessObjectData = businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS,
+                ARCHIVE_RETRIEVAL_OPTION);
 
             // Validate the returned object.
             businessObjectDataServiceTestHelper
@@ -168,7 +169,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
             // Try to initiate a restore request for the business object data when S3 restore object operation fails with an Amazon service exception.
             try
             {
-                businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS);
+                businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
                 fail();
             }
             catch (IllegalStateException e)
@@ -228,7 +229,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
             // Try to initiate a restore request for the business object data.
             try
             {
-                businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS);
+                businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
                 fail();
             }
             catch (IllegalArgumentException e)

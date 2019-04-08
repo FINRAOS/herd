@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
+import com.amazonaws.services.s3.model.Tier;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -179,7 +180,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
         s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(glacierS3Files)));
 
         // To expire the restored S3 objects, initiate restore requests with expiration set to 1 day.
-        s3Service.restoreObjects(s3FileTransferRequestParamsDto, 1);
+        s3Service.restoreObjects(s3FileTransferRequestParamsDto, 1, null);
     }
 
     /**
