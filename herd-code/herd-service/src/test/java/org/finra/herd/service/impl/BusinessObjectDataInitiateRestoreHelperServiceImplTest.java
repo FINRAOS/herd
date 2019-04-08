@@ -18,6 +18,7 @@ package org.finra.herd.service.impl;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -30,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
@@ -499,7 +502,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
 
         // Specify the expected exception.
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(String.format(String.format("The archive retrieval option value \"%s\" is invalid", INVALID_ARCHIVE_RETRIEVAL_OPTION)));
+        expectedException.expectMessage(is(String.format(String.format("The archive retrieval option value \"%s\" is invalid. " +
+                "Valid archive retrieval option values are:%s", INVALID_ARCHIVE_RETRIEVAL_OPTION,
+                Stream.of(Tier.values()).map(Enum::name).collect(Collectors.toList())))));
 
         businessObjectDataInitiateRestoreHelperServiceImpl
             .prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, INVALID_ARCHIVE_RETRIEVAL_OPTION);

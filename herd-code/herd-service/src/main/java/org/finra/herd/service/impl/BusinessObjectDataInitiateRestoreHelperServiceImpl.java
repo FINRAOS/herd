@@ -17,6 +17,8 @@ package org.finra.herd.service.impl;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
@@ -342,7 +344,10 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
             }
             catch (IllegalArgumentException ex)
             {
-                throw new IllegalArgumentException(String.format("The archive retrieval option value \"%s\" is invalid", archiveRetrievalOption));
+                throw new IllegalArgumentException(String.format("The archive retrieval option value \"%s\" is invalid. " +
+                    "Valid archive retrieval option values are:%s", archiveRetrievalOption, Stream.of(Tier.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList())));
             }
         }
 
