@@ -30,10 +30,8 @@ insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('s3.managed.bucket.name
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('org.springframework.orm.jpa.vendor.Database', 'H2');
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('hibernate.dialect', 'org.hibernate.dialect.H2Dialect');
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.notification.sqs.incoming.queue.name', 'HERD_INCOMING_QUEUE');
-insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.notification.sqs.outgoing.queue.name', 'HERD_OUTGOING_QUEUE');
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.environment', 'TEST');
-insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.notification.sqs.environment', 'Development');
-insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.notification.sqs.enabled', 'true');
+insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.notification.enabled', 'true');
 
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.notification.sqs.sys.monitor.request.xpath.properties', 'incoming_message_correlation_id=/monitor/header/correlation-id
 incoming_message_context_message_type=/monitor/payload/contextMessageTypeToPublish
