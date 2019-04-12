@@ -336,7 +336,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
         Assert.isTrue(localExpirationInDays > 0, "Expiration in days value must be a positive integer.");
 
         // Trim the whitespaces
-        if (archiveRetrievalOption != null) {
+        if (archiveRetrievalOption != null)
+        {
             archiveRetrievalOption = archiveRetrievalOption.trim();
         }
 

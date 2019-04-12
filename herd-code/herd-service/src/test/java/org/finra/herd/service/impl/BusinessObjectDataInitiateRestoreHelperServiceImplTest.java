@@ -473,27 +473,32 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
     }
 
     @Test
-    public void testPrepareToInitiateRestoreNullArchiveRetrievalOption() {
+    public void testPrepareToInitiateRestoreNullArchiveRetrievalOption()
+    {
         validatePrepareToInitiateRestoreWithValidArchiveRetrievalOption(null);
     }
 
     @Test
-    public void testPrepareToInitiateRestoreBulkArchiveRetrievalOption() {
+    public void testPrepareToInitiateRestoreBulkArchiveRetrievalOption()
+    {
         validatePrepareToInitiateRestoreWithValidArchiveRetrievalOption(Tier.Bulk.toString());
     }
 
     @Test
-    public void testPrepareToInitiateRestoreStandardArchiveRetrievalOption() {
+    public void testPrepareToInitiateRestoreStandardArchiveRetrievalOption()
+    {
         validatePrepareToInitiateRestoreWithValidArchiveRetrievalOption(Tier.Standard.toString());
     }
 
     @Test
-    public void testPrepareToInitiateRestoreExpeditedArchiveRetrievalOption() {
+    public void testPrepareToInitiateRestoreExpeditedArchiveRetrievalOption()
+    {
         validatePrepareToInitiateRestoreWithValidArchiveRetrievalOption(Tier.Expedited.toString());
     }
 
     @Test
-    public void testPrepareToInitiateRestoreWhitespacesArchiveRetrievalOption() {
+    public void testPrepareToInitiateRestoreWhitespacesArchiveRetrievalOption()
+    {
         // Create an archive retrieval option with whitespaces
         String archiveRetrievalOption = "  " + Tier.Expedited.toString() + "  ";
 
@@ -522,17 +527,20 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
         when(storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity))
             .thenReturn(storageUnitEntities);
-        when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME)).thenReturn((String)ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue());
-        when(storageHelper.getStorageAttributeValueByName((String)ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue(), storageEntity, true)).thenReturn(S3_BUCKET_NAME);
-        when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey)).thenReturn(S3_KEY_PREFIX);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME))
+            .thenReturn((String) ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue());
+        when(storageHelper.getStorageAttributeValueByName((String) ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue(), storageEntity, true))
+            .thenReturn(S3_BUCKET_NAME);
+        when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey))
+            .thenReturn(S3_KEY_PREFIX);
         when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey)).thenReturn(storageFiles);
         when(storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING)).thenReturn(newStorageUnitStatusEntity);
         when(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)).thenReturn(businessObjectDataKey);
         when(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT)).thenReturn(S3_ENDPOINT);
 
         // Make the archive retrieval option null
-        BusinessObjectDataRestoreDto
-            businessObjectDataRestoreDto = businessObjectDataInitiateRestoreHelperServiceImpl.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, archiveRetrievalOption);
+        BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
+            businessObjectDataInitiateRestoreHelperServiceImpl.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, archiveRetrievalOption);
 
         // Validate the businessObjectDataRestoreDto
         assertEquals(businessObjectDataKey, businessObjectDataRestoreDto.getBusinessObjectDataKey());
