@@ -162,40 +162,6 @@
             </configuration>
          </plugin>
 
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-shade-plugin</artifactId>
-            <version>${maven.shade.plugin.version}</version>
-            <executions>
-               <execution>
-                  <id>catalog</id>
-                  <goals>
-                     <goal>shade</goal>
-                  </goals>
-                  <phase>package</phase>
-                  <configuration>
-                     <finalName>uber-${artifactId}-${project.version}</finalName>
-                                         <filters>
-                                             <filter>
-                                                 <artifact>*:*</artifact>
-                                                 <excludes>
-                                                     <exclude>META-INF/*.SF</exclude>
-                                                     <exclude>META-INF/*.DSA</exclude>
-                                                     <exclude>META-INF/*.RSA</exclude>
-                                              </excludes>
-                                             </filter>
-                                         </filters>
-                     <artifactSet>
-                        <excludes>
-                           <exclude>junit:junit</exclude>
-                           <exclude>com.amazonaws:*</exclude>
-                        </excludes>
-                     </artifactSet>
-                  </configuration>
-               </execution>
-            </executions>
-         </plugin>
-
          <!-- disable surefire -->
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -275,6 +241,45 @@
                   <goals>
                      <goal>check</goal>
                   </goals>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>${maven.shade.plugin.version}</version>
+            <configuration>
+               <finalName>${project.artifactId}-${project.version}_${scala.tools.version}-assembly</finalName>
+               <filters>
+                  <filter>
+                     <artifact>*</artifact>
+                     <excludes>
+                        <exclude>META-INF/*.SF</exclude>
+                        <exclude>META-INF/*.DSA</exclude>
+                        <exclude>META-INF/*.RSA</exclude>
+                     </excludes>
+                  </filter>
+               </filters>
+               <relocations>
+                  <relocation>
+                     <pattern>com.fasterxml.jackson</pattern>
+                     <shadedPattern>org.finra.herd.spark.com.fasterxml.jackson</shadedPattern>
+                     <includes>
+                        <include>com.fasterxml.jackson.**</include>
+                     </includes>
+                  </relocation>
+               </relocations>
+            </configuration>
+            <executions>
+               <execution>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>shade</goal>
+                  </goals>
+                  <configuration>
+                     <shadedArtifactAttached>true</shadedArtifactAttached>
+                  </configuration>
                </execution>
             </executions>
          </plugin>
