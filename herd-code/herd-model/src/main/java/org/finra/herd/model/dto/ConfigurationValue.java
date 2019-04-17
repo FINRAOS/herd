@@ -972,7 +972,18 @@ public enum ConfigurationValue
     /**
      * The storage attribute name for the JDBC user credential name. The default is "jdbc.user.credential.name".
      */
-    STORAGE_ATTRIBUTE_NAME_JDBC_USER_CREDENTIAL_NAME("storage.attribute.name.jdbc.user.credential.name", "jdbc.user.credential.name");
+    STORAGE_ATTRIBUTE_NAME_JDBC_USER_CREDENTIAL_NAME("storage.attribute.name.jdbc.user.credential.name", "jdbc.user.credential.name"),
+
+    /**
+     * The configuration set name to use for SES.
+     */
+    SES_CONFIGURATION_SET_NAME("ses.configset.name", null),
+
+    /**
+     * Email address to use in the 'bcc' field when sending emails thru SES as a means of records collection.
+     */
+    SES_RECORDS_COLLECTOR_ADDRESS("ses.records.collector.address", null);
+
 
     private Object defaultValue;
 
