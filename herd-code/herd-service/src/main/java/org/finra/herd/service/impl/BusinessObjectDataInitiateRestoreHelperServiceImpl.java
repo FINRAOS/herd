@@ -335,6 +335,12 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
         // Validate the expiration time.
         Assert.isTrue(localExpirationInDays > 0, "Expiration in days value must be a positive integer.");
 
+        // Trim the whitespaces
+        if (archiveRetrievalOption != null)
+        {
+            archiveRetrievalOption = archiveRetrievalOption.trim();
+        }
+
         // Validate the archive retrieval option
         if (StringUtils.isNotEmpty(archiveRetrievalOption))
         {
