@@ -46,8 +46,10 @@ public interface BusinessObjectDataInitiateRestoreHelperService
      *
      * @param businessObjectDataKey the business object data key
      * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object.
      *
      * @return the DTO that holds various parameters needed to perform a business object data restore
      */
-    public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays);
+    public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays,
+        String archiveRetrievalOption);
 }

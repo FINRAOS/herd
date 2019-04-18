@@ -109,7 +109,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImplTest extends Abst
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION);
+                NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
 
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
@@ -160,7 +160,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImplTest extends Abst
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, STORAGE_UNIT_STATUS_2,
-                STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION);
+                STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
 
         // Create an initial instance of S3 file transfer parameters DTO.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();

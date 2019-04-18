@@ -84,7 +84,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilderTe
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -98,9 +98,48 @@ public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilderTe
         assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
         String uuid = result.get(0).getMessageHeaders().get(4).getValue();
         assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
-        validateBusinessObjectDefinitionDescriptionSuggestionChangeMessage(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDefinitionDescriptionSuggestion,
+        validateBusinessObjectDefinitionDescriptionSuggestionChangeMessage(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDefinitionDescriptionSuggestion,
             UPDATED_BY, UPDATED_ON.toString(), Lists.newArrayList(CREATED_BY, USER_ID_2, USER_ID_3),
             String.format("https://udc.dev.finra.org/data-entities/%s/%s", BDEF_NAMESPACE, BDEF_NAME), getExpectedMessageHeaders(uuid), result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDefinitionDescriptionSuggestionChangeMessagesInvalidMessageType() throws Exception
+    {
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(BDEF_NAMESPACE);
+
+        // Create a business object definition description suggestion key.
+        BusinessObjectDefinitionDescriptionSuggestionKey businessObjectDefinitionDescriptionSuggestionKey =
+            new BusinessObjectDefinitionDescriptionSuggestionKey(BDEF_NAMESPACE, BDEF_NAME, USER_ID);
+
+        // Create a business object definition description suggestion.
+        BusinessObjectDefinitionDescriptionSuggestion businessObjectDefinitionDescriptionSuggestion =
+            new BusinessObjectDefinitionDescriptionSuggestion(ID, businessObjectDefinitionDescriptionSuggestionKey, DESCRIPTION_SUGGESTION,
+                BusinessObjectDefinitionDescriptionSuggestionStatusEntity.BusinessObjectDefinitionDescriptionSuggestionStatuses.PENDING.name(), CREATED_BY,
+                CREATED_ON);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(INVALID_VALUE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            businessObjectDefinitionDescriptionSuggestionChangeMessageBuilder.buildNotificationMessages(
+                new BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent(businessObjectDefinitionDescriptionSuggestion, UPDATED_BY, UPDATED_ON,
+                    namespaceEntity.getCode()));
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Only \"%s\" notification message type is supported. Please update \"%s\" configuration entry.", MESSAGE_TYPE_SNS,
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
     }
 
     @Test
@@ -133,7 +172,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilderTe
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -201,7 +240,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilderTe
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, NO_MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -246,7 +285,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilderTe
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -257,7 +296,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilderTe
 
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectDefinitionDescriptionSuggestionChangeMessage(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDefinitionDescriptionSuggestion,
+        validateBusinessObjectDefinitionDescriptionSuggestionChangeMessage(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDefinitionDescriptionSuggestion,
             UPDATED_BY, UPDATED_ON.toString(), Lists.newArrayList(CREATED_BY, USER_ID_2, USER_ID_3),
             String.format("https://udc.dev.finra.org/data-entities/%s/%s", BDEF_NAMESPACE, BDEF_NAME), NO_MESSAGE_HEADERS, result.get(0));
     }
@@ -321,7 +360,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilderTe
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -335,7 +374,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilderTe
         assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
         String uuid = result.get(0).getMessageHeaders().get(4).getValue();
         assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
-        validateBusinessObjectDefinitionDescriptionSuggestionChangeMessage(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDefinitionDescriptionSuggestion,
+        validateBusinessObjectDefinitionDescriptionSuggestionChangeMessage(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDefinitionDescriptionSuggestion,
             UPDATED_BY, UPDATED_ON.toString(), Lists.newArrayList(CREATED_BY),
             String.format("https://udc.dev.finra.org/data-entities/%s/%s", BDEF_NAMESPACE, BDEF_NAME), getExpectedMessageHeaders(uuid), result.get(0));
     }

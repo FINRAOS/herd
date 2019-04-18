@@ -18,6 +18,7 @@ package org.finra.herd.service.impl;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -30,11 +31,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
+import com.amazonaws.services.s3.model.Tier;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -46,6 +52,7 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -68,6 +75,9 @@ import org.finra.herd.service.helper.StorageUnitStatusDaoHelper;
  */
 public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends AbstractServiceTest
 {
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
     @Mock
     private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
 
@@ -130,7 +140,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION);
+                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
 
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
         S3FileTransferRequestParamsDto initialS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
@@ -176,12 +186,12 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         verify(storageFileHelper).validateRegisteredS3Files(storageFiles, actualS3Files, STORAGE_NAME, businessObjectDataKey);
         verify(storageFileHelper).createStorageFilesFromS3ObjectSummaries(actualS3Files);
         verify(storageFileHelper).getFiles(storageFilesCreatedFromActualS3Files);
-        verify(s3Service).restoreObjects(finalS3FileTransferRequestParamsDto, 36135);
+        verify(s3Service).restoreObjects(finalS3FileTransferRequestParamsDto, 36135, ARCHIVE_RETRIEVAL_OPTION);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results. The business object data restore DTO is expected not to be updated.
         assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION), businessObjectDataRestoreDto);
+            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION), businessObjectDataRestoreDto);
     }
 
     @Test
@@ -198,7 +208,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION);
+                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
 
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
         S3FileTransferRequestParamsDto initialS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
@@ -238,7 +248,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
             StorageClass.Standard.toString(), StorageClass.Glacier.toString(), S3_BUCKET_NAME), businessObjectDataRestoreDto.getException().getMessage());
         businessObjectDataRestoreDto.setException(NO_EXCEPTION);
         assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION), businessObjectDataRestoreDto);
+            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION), businessObjectDataRestoreDto);
     }
 
     @Test
@@ -459,6 +469,181 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         // Verify the external calls.
         verify(storageUnitDao).getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity);
         verify(businessObjectDataHelper).businessObjectDataEntityAltKeyToString(businessObjectDataEntity);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testPrepareToInitiateRestoreNullArchiveRetrievalOption()
+    {
+        validatePrepareToInitiateRestoreWithValidArchiveRetrievalOption(null);
+    }
+
+    @Test
+    public void testPrepareToInitiateRestoreBulkArchiveRetrievalOption()
+    {
+        validatePrepareToInitiateRestoreWithValidArchiveRetrievalOption(Tier.Bulk.toString());
+    }
+
+    @Test
+    public void testPrepareToInitiateRestoreStandardArchiveRetrievalOption()
+    {
+        validatePrepareToInitiateRestoreWithValidArchiveRetrievalOption(Tier.Standard.toString());
+    }
+
+    @Test
+    public void testPrepareToInitiateRestoreExpeditedArchiveRetrievalOption()
+    {
+        validatePrepareToInitiateRestoreWithValidArchiveRetrievalOption(Tier.Expedited.toString());
+    }
+
+    @Test
+    public void testPrepareToInitiateRestoreWhitespacesArchiveRetrievalOption()
+    {
+        // Create an archive retrieval option with whitespaces
+        String archiveRetrievalOption = "  " + Tier.Expedited.toString() + "  ";
+
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+
+        // Create a single storage unit
+        StorageEntity storageEntity = new StorageEntity();
+        storageEntity.setName(STORAGE_NAME);
+        StorageUnitStatusEntity storageUnitStatusEntity = new StorageUnitStatusEntity();
+        storageUnitStatusEntity.setCode(StorageUnitStatusEntity.ARCHIVED);
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setStorage(storageEntity);
+        storageUnitEntity.setStatus(storageUnitStatusEntity);
+        List<StorageUnitEntity> storageUnitEntities = Collections.singletonList(storageUnitEntity);
+
+        List<StorageFile> storageFiles = Collections.singletonList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT));
+        StorageUnitStatusEntity newStorageUnitStatusEntity = new StorageUnitStatusEntity();
+        newStorageUnitStatusEntity.setCode(StorageUnitStatusEntity.RESTORING);
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+        when(storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity))
+            .thenReturn(storageUnitEntities);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME))
+            .thenReturn((String) ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue());
+        when(storageHelper.getStorageAttributeValueByName((String) ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue(), storageEntity, true))
+            .thenReturn(S3_BUCKET_NAME);
+        when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey))
+            .thenReturn(S3_KEY_PREFIX);
+        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey)).thenReturn(storageFiles);
+        when(storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING)).thenReturn(newStorageUnitStatusEntity);
+        when(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)).thenReturn(businessObjectDataKey);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT)).thenReturn(S3_ENDPOINT);
+
+        // Make the archive retrieval option null
+        BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
+            businessObjectDataInitiateRestoreHelperServiceImpl.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, archiveRetrievalOption);
+
+        // Validate the businessObjectDataRestoreDto
+        assertEquals(businessObjectDataKey, businessObjectDataRestoreDto.getBusinessObjectDataKey());
+        assertEquals(STORAGE_NAME, businessObjectDataRestoreDto.getStorageName());
+        assertEquals(S3_ENDPOINT, businessObjectDataRestoreDto.getS3Endpoint());
+        assertEquals(S3_BUCKET_NAME, businessObjectDataRestoreDto.getS3BucketName());
+        assertEquals(S3_KEY_PREFIX, businessObjectDataRestoreDto.getS3KeyPrefix());
+        assertEquals(storageFiles, businessObjectDataRestoreDto.getStorageFiles());
+        // Verify the whitespaces are trimmed
+        assertEquals(Tier.Expedited.toString(), businessObjectDataRestoreDto.getArchiveRetrievalOption());
+        assertEquals(StorageUnitStatusEntity.RESTORING, businessObjectDataRestoreDto.getNewStorageUnitStatus());
+        assertEquals(StorageUnitStatusEntity.ARCHIVED, businessObjectDataRestoreDto.getOldStorageUnitStatus());
+    }
+
+    @Test
+    public void testPrepareToInitiateRestoreInvalidArchiveRetrievalOption()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(is(String.format(String.format("The archive retrieval option value \"%s\" is invalid. " +
+                "Valid archive retrieval option values are:%s", INVALID_ARCHIVE_RETRIEVAL_OPTION,
+                Stream.of(Tier.values()).map(Enum::name).collect(Collectors.toList())))));
+
+        businessObjectDataInitiateRestoreHelperServiceImpl
+            .prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, INVALID_ARCHIVE_RETRIEVAL_OPTION);
+
+        // Verify the external calls
+        verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    /**
+     * Validate the method PrepareToInitiateRestore. The archive retrieval option needs to be valid.
+     * @param archiveRetrievalOption the valid archive retrieval option
+     */
+    private void validatePrepareToInitiateRestoreWithValidArchiveRetrievalOption(String archiveRetrievalOption)
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+
+        // Create a single storage unit
+        StorageEntity storageEntity = new StorageEntity();
+        storageEntity.setName(STORAGE_NAME);
+        StorageUnitStatusEntity storageUnitStatusEntity = new StorageUnitStatusEntity();
+        storageUnitStatusEntity.setCode(StorageUnitStatusEntity.ARCHIVED);
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setStorage(storageEntity);
+        storageUnitEntity.setStatus(storageUnitStatusEntity);
+        List<StorageUnitEntity> storageUnitEntities = Collections.singletonList(storageUnitEntity);
+
+        List<StorageFile> storageFiles = Collections.singletonList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT));
+        StorageUnitStatusEntity newStorageUnitStatusEntity = new StorageUnitStatusEntity();
+        newStorageUnitStatusEntity.setCode(StorageUnitStatusEntity.RESTORING);
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+        when(storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity))
+            .thenReturn(storageUnitEntities);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME)).thenReturn((String)ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue());
+        when(storageHelper.getStorageAttributeValueByName((String)ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue(), storageEntity, true)).thenReturn(S3_BUCKET_NAME);
+        when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey)).thenReturn(S3_KEY_PREFIX);
+        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey)).thenReturn(storageFiles);
+        when(storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING)).thenReturn(newStorageUnitStatusEntity);
+        when(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)).thenReturn(businessObjectDataKey);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT)).thenReturn(S3_ENDPOINT);
+
+        // Make the archive retrieval option null
+        BusinessObjectDataRestoreDto
+            businessObjectDataRestoreDto = businessObjectDataInitiateRestoreHelperServiceImpl.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, archiveRetrievalOption);
+
+        // Validate the businessObjectDataRestoreDto
+        assertEquals(businessObjectDataKey, businessObjectDataRestoreDto.getBusinessObjectDataKey());
+        assertEquals(STORAGE_NAME, businessObjectDataRestoreDto.getStorageName());
+        assertEquals(S3_ENDPOINT, businessObjectDataRestoreDto.getS3Endpoint());
+        assertEquals(S3_BUCKET_NAME, businessObjectDataRestoreDto.getS3BucketName());
+        assertEquals(S3_KEY_PREFIX, businessObjectDataRestoreDto.getS3KeyPrefix());
+        assertEquals(storageFiles, businessObjectDataRestoreDto.getStorageFiles());
+        assertEquals(archiveRetrievalOption, businessObjectDataRestoreDto.getArchiveRetrievalOption());
+        assertEquals(StorageUnitStatusEntity.RESTORING, businessObjectDataRestoreDto.getNewStorageUnitStatus());
+        assertEquals(StorageUnitStatusEntity.ARCHIVED, businessObjectDataRestoreDto.getOldStorageUnitStatus());
+
+        // Verify the external calls
+        verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
+        verify(storageUnitDao).getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity);
+        verify(configurationHelper).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME);
+        verify(storageHelper).getStorageAttributeValueByName((String)ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue(), storageEntity, true);
+        verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
+        verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey);
+        verify(storageFileDaoHelper).validateStorageFilesCount(STORAGE_NAME, businessObjectDataKey, S3_KEY_PREFIX, storageFiles.size());
+        verify(storageUnitStatusDaoHelper).getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING);
+        verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, newStorageUnitStatusEntity, StorageUnitStatusEntity.RESTORING);
+        verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
+        verify(configurationHelper).getProperty(ConfigurationValue.S3_ENDPOINT);
         verifyNoMoreInteractionsHelper();
     }
 

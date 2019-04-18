@@ -43,6 +43,7 @@ import org.finra.herd.model.dto.NotificationEvent;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent;
 import org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEvent;
+import org.finra.herd.model.jpa.MessageTypeEntity;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.finra.herd.service.helper.VelocityHelper;
 
@@ -104,8 +105,7 @@ public abstract class AbstractNotificationMessageBuilder
     public abstract Map<String, Object> getNotificationMessageVelocityContextMap(NotificationEvent notificationEvent);
 
     /**
-     * Builds a list of notification messages for the change event. The result list might be empty if if no messages should be
-     * sent.
+     * Builds a list of notification messages for the change event. The result list might be empty if if no messages should be sent.
      *
      * @param notificationEvent the notification event
      *
@@ -137,6 +137,12 @@ public abstract class AbstractNotificationMessageBuilder
                 {
                     throw new IllegalStateException(String.format("Notification message type must be specified. Please update \"%s\" configuration entry.",
                         getMessageDefinitionKey(notificationEvent)));
+                }
+                else if (!notificationMessageDefinition.getMessageType().toUpperCase().equals(MessageTypeEntity.MessageEventTypes.SNS.toString()))
+                {
+                    throw new IllegalStateException(String
+                        .format("Only \"%s\" notification message type is supported. Please update \"%s\" configuration entry.",
+                            MessageTypeEntity.MessageEventTypes.SNS.toString(), getMessageDefinitionKey(notificationEvent)));
                 }
 
                 // Validate the notification message destination.
@@ -182,9 +188,7 @@ public abstract class AbstractNotificationMessageBuilder
         // Create and populate the velocity context with dynamic values. Note that we can't use periods within the context keys since they can't
         // be referenced in the velocity template (i.e. they're used to separate fields with the context object being referenced).
         return getBaseVelocityContextMapHelper(herdDaoSecurityHelper.getCurrentUsername(), ConfigurationValue.HERD_ENVIRONMENT.getKey().replace('.', '_'),
-            configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT),
-            ConfigurationValue.HERD_NOTIFICATION_SQS_ENVIRONMENT.getKey().replace('.', '_'),
-            configurationHelper.getProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_ENVIRONMENT));
+            configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT));
     }
 
     /**
@@ -193,21 +197,15 @@ public abstract class AbstractNotificationMessageBuilder
      * @param username the username or user id of the logged in user that caused this message to be generated
      * @param herdEnvironmentKey the name of the herd environment property
      * @param herdEnvironmentValue the value of the herd environment property
-     * @param herdNotificationSqsEnvironmentKey the name of the herd notification sqs environment property
-     * @param herdNotificationSqsEnvironmentValue the value of the herd notification sqs environment property
      *
      * @return the Velocity context map
      */
-    Map<String, Object> getBaseVelocityContextMapHelper(String username, String herdEnvironmentKey, String herdEnvironmentValue,
-        String herdNotificationSqsEnvironmentKey, String herdNotificationSqsEnvironmentValue)
+    Map<String, Object> getBaseVelocityContextMapHelper(String username, String herdEnvironmentKey, String herdEnvironmentValue)
     {
         Map<String, Object> context = new HashMap<>();
         context.put(herdEnvironmentKey, herdEnvironmentValue);
         context.put(escapeJson(herdEnvironmentKey) + WITH_JSON_SNAKE_CASE, escapeJson(herdEnvironmentValue));
         context.put(escapeXml(herdEnvironmentKey) + WITH_XML_SNAKE_CASE, escapeXml(herdEnvironmentValue));
-        context.put(herdNotificationSqsEnvironmentKey, herdNotificationSqsEnvironmentValue);
-        context.put(escapeJson(herdNotificationSqsEnvironmentKey) + WITH_JSON_SNAKE_CASE, escapeJson(herdNotificationSqsEnvironmentValue));
-        context.put(escapeXml(herdNotificationSqsEnvironmentKey) + WITH_XML_SNAKE_CASE, escapeXml(herdNotificationSqsEnvironmentValue));
         context.put("current_time", HerdDateUtils.now().toString());
         context.put("uuid", UUID.randomUUID().toString());
         addStringPropertyToContext(context, "username", username);

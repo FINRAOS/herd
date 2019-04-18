@@ -148,8 +148,8 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)
+    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption)
     {
-        return restoreBusinessObjectDataImpl(businessObjectDataKey, expirationInDays);
+        return restoreBusinessObjectDataImpl(businessObjectDataKey, expirationInDays, archiveRetrievalOption);
     }
 }

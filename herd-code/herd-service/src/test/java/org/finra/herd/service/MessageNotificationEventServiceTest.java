@@ -71,8 +71,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Trigger the notification.
@@ -83,7 +83,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
+            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID,
                 BusinessObjectDataStatusEntity.INVALID, Collections.singletonList(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE, ATTRIBUTE_VALUE_3)),
                 NO_MESSAGE_HEADERS, result.get(0));
@@ -108,8 +108,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Trigger the notification.
@@ -120,7 +120,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
+            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID,
                 BusinessObjectDataStatusEntity.INVALID, testAttributes, NO_MESSAGE_HEADERS, result.get(0));
     }
@@ -140,8 +140,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Trigger the notification.
@@ -152,7 +152,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
+            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID,
                 BusinessObjectDataStatusEntity.INVALID, Collections.singletonList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), NO_MESSAGE_HEADERS,
                 result.get(0));
@@ -175,8 +175,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Trigger the notification.
@@ -187,13 +187,13 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
+            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID,
                 BusinessObjectDataStatusEntity.INVALID, testAttributes, NO_MESSAGE_HEADERS, result.get(0));
     }
 
     @Test
-    public void testProcessBusinessObjectDataStatusChangeNotificationEventHerdSqsNotificationNotEnabled() throws Exception
+    public void testProcessBusinessObjectDataStatusChangeNotificationEventHerdNotificationNotEnabled() throws Exception
     {
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper.createTestValidBusinessObjectData();
@@ -201,7 +201,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
 
         // Override configuration.
         Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_ENABLED.getKey(), false);
+        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_ENABLED.getKey(), false);
         modifyPropertySourceInEnvironment(overrideMap);
 
         try
@@ -222,6 +222,37 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testProcessBusinessObjectDataStatusChangeNotificationEventInvalidMessageType() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper.createTestValidBusinessObjectData();
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration, so there will be an invalid message type specified in the relative notification message definition.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(INVALID_VALUE, MESSAGE_DESTINATION, MESSAGE_TEXT,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to trigger the notification.
+        try
+        {
+            messageNotificationEventService.processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID,
+                BusinessObjectDataStatusEntity.UPLOADING);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Only \"%s\" notification message type is supported. Please update \"%s\" configuration entry.", MESSAGE_TYPE_SNS,
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
     public void testProcessBusinessObjectDataStatusChangeNotificationEventNoBusinessObjectDataAttributeDefinitions() throws Exception
     {
         // Create a business object data entity with attributes, but without any attribute definitions.
@@ -235,8 +266,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Trigger the notification.
@@ -247,7 +278,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
+            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID,
                 BusinessObjectDataStatusEntity.INVALID, NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
     }
@@ -266,8 +297,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Trigger the notification.
@@ -278,7 +309,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
+            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID,
                 BusinessObjectDataStatusEntity.INVALID, NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
     }
@@ -296,7 +327,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION, MESSAGE_TEXT,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, NO_MESSAGE_DESTINATION, MESSAGE_TEXT,
                 Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -329,8 +360,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
 
@@ -342,7 +373,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
+            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID,
                 BusinessObjectDataStatusEntity.UPLOADING, Collections.singletonList(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE, ATTRIBUTE_VALUE_3)),
                 NO_MESSAGE_HEADERS, result.get(0));
@@ -392,7 +423,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, NO_MESSAGE_VELOCITY_TEMPLATE,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, NO_MESSAGE_VELOCITY_TEMPLATE,
                 Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -418,8 +449,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Trigger the message notification.
@@ -429,7 +460,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
+            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID, null, NO_ATTRIBUTES,
                 NO_MESSAGE_HEADERS, result.get(0));
     }
@@ -454,7 +485,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -484,7 +515,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
                 Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
         configurationDao.saveAndRefresh(configurationEntity);
@@ -496,13 +527,13 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectFormatServiceTestHelper
-            .validateBusinessObjectFormatVersionChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
+            .validateBusinessObjectFormatVersionChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectFormatKey,
                 HerdDaoSecurityHelper.SYSTEM_USER, businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION,
                 Collections.singletonList(new MessageHeader(KEY, VALUE)), result.get(0));
     }
 
     @Test
-    public void testProcessBusinessObjectFormatVersionChangeNotificationEventHerdSqsNotificationNotEnabled() throws Exception
+    public void testProcessBusinessObjectFormatVersionChangeNotificationEventHerdNotificationNotEnabled() throws Exception
     {
         // Create a business object format entity.
         BusinessObjectDataInvalidateUnregisteredRequest request =
@@ -516,7 +547,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
 
         // Override configuration.
         Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_ENABLED.getKey(), false);
+        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_ENABLED.getKey(), false);
         modifyPropertySourceInEnvironment(overrideMap);
 
         try
@@ -552,7 +583,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION, MESSAGE_TEXT,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, NO_MESSAGE_DESTINATION, MESSAGE_TEXT,
                 Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -626,7 +657,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -637,9 +668,36 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectFormatServiceTestHelper
-            .validateBusinessObjectFormatVersionChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectFormatKey,
+            .validateBusinessObjectFormatVersionChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectFormatKey,
                 HerdDaoSecurityHelper.SYSTEM_USER, businessObjectFormatKey.getBusinessObjectFormatVersion().toString(), NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION,
                 NO_MESSAGE_HEADERS, result.get(0));
+    }
+
+    @Test
+    public void testProcessStorageUnitStatusChangeNotificationEvent() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createTestValidBusinessObjectData(SUBPARTITION_VALUES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Trigger the notification.
+        List<NotificationMessage> result = messageNotificationEventService
+            .processStorageUnitStatusChangeNotificationEvent(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2);
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
     }
 
     @Test
@@ -656,7 +714,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
                 Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -667,12 +726,12 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         userNamespaceAuthorizationServiceTestHelper
-            .validateUserNamespaceAuthorizationChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, HerdDaoSecurityHelper.SYSTEM_USER,
+            .validateUserNamespaceAuthorizationChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, HerdDaoSecurityHelper.SYSTEM_USER,
                 userNamespaceAuthorizationKey, Collections.singletonList(new MessageHeader(KEY, VALUE)), result.get(0));
     }
 
     @Test
-    public void testProcessUserNamespaceAuthorizationChangeNotificationEventHerdSqsNotificationNotEnabled() throws Exception
+    public void testProcessUserNamespaceAuthorizationChangeNotificationEventHerdNotificationNotEnabled() throws Exception
     {
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey userNamespaceAuthorizationKey = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
@@ -683,7 +742,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
 
         // Override configuration.
         Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_SQS_ENABLED.getKey(), false);
+        overrideMap.put(ConfigurationValue.HERD_NOTIFICATION_ENABLED.getKey(), false);
         modifyPropertySourceInEnvironment(overrideMap);
 
         try
@@ -716,7 +775,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION, MESSAGE_TEXT,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, NO_MESSAGE_DESTINATION, MESSAGE_TEXT,
                 Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -782,8 +841,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                USER_NAMESPACE_AUTHORIZATION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Trigger the notification.
@@ -793,34 +852,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
         userNamespaceAuthorizationServiceTestHelper
-            .validateUserNamespaceAuthorizationChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, HerdDaoSecurityHelper.SYSTEM_USER,
+            .validateUserNamespaceAuthorizationChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, HerdDaoSecurityHelper.SYSTEM_USER,
                 userNamespaceAuthorizationKey, NO_MESSAGE_HEADERS, result.get(0));
-    }
-
-    @Test
-    public void testProcessStorageUnitStatusChangeNotificationEvent() throws Exception
-    {
-        // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
-            .createTestValidBusinessObjectData(SUBPARTITION_VALUES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectDefinitionServiceTestHelper.getNewAttributes());
-
-        // Get a business object data key.
-        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
-
-        // Override configuration.
-        ConfigurationEntity configurationEntity = new ConfigurationEntity();
-        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
-        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
-        configurationDao.saveAndRefresh(configurationEntity);
-
-        // Trigger the notification.
-        List<NotificationMessage> result = messageNotificationEventService
-            .processStorageUnitStatusChangeNotificationEvent(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2);
-
-        // Validate the results.
-        assertEquals(1, CollectionUtils.size(result));
     }
 }
