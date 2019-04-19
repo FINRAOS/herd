@@ -14,4 +14,3 @@
 * limitations under the License.
 */
 
-INSERT INTO cnfgn VALUES ('herd.notification.enabled', 'false', NULL);
