@@ -70,6 +70,7 @@ import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.SetObjectTaggingRequest;
 import com.amazonaws.services.s3.model.StorageClass;
 import com.amazonaws.services.s3.model.Tag;
+import com.amazonaws.services.s3.model.Tier;
 import com.amazonaws.services.s3.model.VersionListing;
 import com.amazonaws.services.s3.transfer.Copy;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
@@ -112,8 +113,6 @@ import org.finra.herd.model.dto.S3FileTransferResultsDto;
 public class S3DaoImpl implements S3Dao
 {
     private static final long DEFAULT_SLEEP_INTERVAL_MILLIS = 100;
-
-    private static final String GLACIER_RETRIEVAL_OPTION = "Bulk";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(S3DaoImpl.class);
 
@@ -581,7 +580,7 @@ public class S3DaoImpl implements S3Dao
     }
 
     @Override
-    public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays)
+    public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays, String archiveRetrievalOption)
     {
         LOGGER.info("Restoring a list of objects in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}", params.getS3KeyPrefix(),
             params.getS3BucketName(), params.getFiles().size());
@@ -598,8 +597,9 @@ public class S3DaoImpl implements S3Dao
 
                 // Create a restore object request.
                 RestoreObjectRequest requestRestore = new RestoreObjectRequest(params.getS3BucketName(), null, expirationInDays);
-                // Make Bulk as default glacier retrieval option
-                requestRestore.setGlacierJobParameters(new GlacierJobParameters().withTier(GLACIER_RETRIEVAL_OPTION));
+                // Make Bulk the default archive retrieval option if the option is not provided
+                requestRestore.setGlacierJobParameters(new GlacierJobParameters().withTier(
+                    StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : Tier.Bulk.toString()));
 
                 try
                 {

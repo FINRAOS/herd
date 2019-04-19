@@ -68,23 +68,6 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
     private BusinessObjectDataStatusChangeMessageBuilder businessObjectDataStatusChangeMessageBuilder;
 
     @Test
-    public void testGetEventTypeMessageDefinitionKeyMapOnAbstractNotificationMessageBuilder()
-    {
-        Map<Class<?>, ConfigurationValue> map = businessObjectDataStatusChangeMessageBuilder.getEventTypeMessageDefinitionKeyMap();
-        assertEquals(5, map.size());
-        assertEquals(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS,
-            map.get(BusinessObjectDataStatusChangeNotificationEvent.class));
-        assertEquals(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS,
-            map.get(BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent.class));
-        assertEquals(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS,
-            map.get(BusinessObjectFormatVersionChangeNotificationEvent.class));
-        assertEquals(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS,
-            map.get(StorageUnitStatusChangeNotificationEvent.class));
-        assertEquals(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS,
-            map.get(UserNamespaceAuthorizationChangeNotificationEvent.class));
-    }
-
-    @Test
     public void testAddObjectPropertyToContextOnAbstractNotificationMessageBuilder()
     {
         // Create an empty context map
@@ -136,8 +119,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                getMessageHeaderDefinitions())))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Build a notification message.
@@ -149,8 +132,40 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
         String uuid = result.get(0).getMessageHeaders().get(4).getValue();
         assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
-        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
             NO_ATTRIBUTES, getExpectedMessageHeaders(uuid), result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesJsonPayloadInvalidMessageType() throws Exception
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(INVALID_VALUE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            businessObjectDataStatusChangeMessageBuilder
+                .buildNotificationMessages(new BusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2));
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Only \"%s\" notification message type is supported. Please update \"%s\" configuration entry.", MESSAGE_TYPE_SNS,
+                ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()), e.getMessage());
+        }
     }
 
     @Test
@@ -178,8 +193,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Build a notification message.
@@ -188,7 +203,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
 
         // Validate the notification message.
         assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
             attributes.subList(0, 2), NO_MESSAGE_HEADERS, result.get(0));
     }
 
@@ -206,7 +221,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, NO_MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -238,8 +253,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Build a notification message.
@@ -248,7 +263,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
 
         // Validate the notification message.
         assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
             NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
     }
 
@@ -298,8 +313,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Build a notification message.
@@ -308,8 +323,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
 
         // Validate the notification message.
         assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, NO_BDATA_STATUS,
-            NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS,
+            NO_BDATA_STATUS, NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
     }
 
     @Test
@@ -330,8 +345,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Build a notification message.
@@ -340,7 +355,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
 
         // Validate the notification message.
         assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, expectedBusinessObjectDataKey, BDATA_STATUS,
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, expectedBusinessObjectDataKey, BDATA_STATUS,
             BDATA_STATUS_2, NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
     }
 
@@ -359,8 +374,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Build a notification message.
@@ -369,7 +384,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
 
         // Validate the notification message.
         assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
             Collections.singletonList(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE, ATTRIBUTE_VALUE_3)), NO_MESSAGE_HEADERS, result.get(0));
     }
 
@@ -387,8 +402,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Build a notification message.
@@ -397,7 +412,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
 
         // Validate the notification message.
         assertEquals(1, CollectionUtils.size(result));
-        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
+        validateBusinessObjectDataStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2,
             NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
     }
 
@@ -449,8 +464,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                getMessageHeaderDefinitions())))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Build a notification message.
@@ -463,7 +478,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         String uuid = result.get(0).getMessageHeaders().get(4).getValue();
         assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
         businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
+            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BDATA_STATUS, BDATA_STATUS_2, NO_ATTRIBUTES,
                 getExpectedMessageHeaders(uuid), result.get(0));
     }
@@ -537,7 +552,6 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         }
     }
 
-
     @Test
     public void testGetBaseVelocityContextMap()
     {
@@ -545,7 +559,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         Map<String, Object> result = businessObjectDataStatusChangeMessageBuilder.getBaseVelocityContextMap();
 
         // Validate the results.
-        assertEquals(14, CollectionUtils.size(result));
+        assertEquals(11, CollectionUtils.size(result));
     }
 
     @Test
@@ -553,29 +567,20 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
     {
         // Create names for properties that identify herd environment.
         final String herdEnvironmentKey = "herd_environment";
-        final String herdNotificationSqsEnvironmentKey = "herd_notification_sqs_environment";
 
-        // Get configuration values that identify herd environment.
+        // Get configuration value that identify herd environment.
         final String herdEnvironmentValue = configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT);
-        final String herdNotificationSqsEnvironmentValue = configurationHelper.getProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_ENVIRONMENT);
 
         // Call the method under test.
         Map<String, Object> result = businessObjectDataStatusChangeMessageBuilder
-            .getBaseVelocityContextMapHelper(USER_ID + SUFFIX_UNESCAPED, herdEnvironmentKey + SUFFIX_UNESCAPED, herdEnvironmentValue + SUFFIX_UNESCAPED,
-                herdNotificationSqsEnvironmentKey + SUFFIX_UNESCAPED, herdNotificationSqsEnvironmentValue + SUFFIX_UNESCAPED);
+            .getBaseVelocityContextMapHelper(USER_ID + SUFFIX_UNESCAPED, herdEnvironmentKey + SUFFIX_UNESCAPED, herdEnvironmentValue + SUFFIX_UNESCAPED);
 
         // Validate the results.
-        assertEquals(14, CollectionUtils.size(result));
+        assertEquals(11, CollectionUtils.size(result));
 
         assertEquals(herdEnvironmentValue + SUFFIX_UNESCAPED, result.get(herdEnvironmentKey + SUFFIX_UNESCAPED));
         assertEquals(herdEnvironmentValue + SUFFIX_ESCAPED_JSON, result.get(herdEnvironmentKey + SUFFIX_ESCAPED_JSON + "_with_json"));
         assertEquals(herdEnvironmentValue + SUFFIX_ESCAPED_XML, result.get(herdEnvironmentKey + SUFFIX_ESCAPED_XML + "_with_xml"));
-
-        assertEquals(herdNotificationSqsEnvironmentValue + SUFFIX_UNESCAPED, result.get(herdNotificationSqsEnvironmentKey + SUFFIX_UNESCAPED));
-        assertEquals(herdNotificationSqsEnvironmentValue + SUFFIX_ESCAPED_JSON,
-            result.get(herdNotificationSqsEnvironmentKey + SUFFIX_ESCAPED_JSON + "_with_json"));
-        assertEquals(herdNotificationSqsEnvironmentValue + SUFFIX_ESCAPED_XML,
-            result.get(herdNotificationSqsEnvironmentKey + SUFFIX_ESCAPED_XML + "_with_xml"));
 
         assertEquals(USER_ID + SUFFIX_UNESCAPED, result.get("username"));
         assertEquals(USER_ID + SUFFIX_ESCAPED_JSON, result.get("usernameWithJson"));
@@ -679,6 +684,22 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         assertEquals(BDEF_NAMESPACE + SUFFIX_ESCAPED_XML, result.get("namespaceWithXml"));
     }
 
+    @Test
+    public void testGetEventTypeMessageDefinitionKeyMapOnAbstractNotificationMessageBuilder()
+    {
+        Map<Class<?>, ConfigurationValue> map = businessObjectDataStatusChangeMessageBuilder.getEventTypeMessageDefinitionKeyMap();
+        assertEquals(5, map.size());
+        assertEquals(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS,
+            map.get(BusinessObjectDataStatusChangeNotificationEvent.class));
+        assertEquals(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS,
+            map.get(BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent.class));
+        assertEquals(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_MESSAGE_DEFINITIONS,
+            map.get(BusinessObjectFormatVersionChangeNotificationEvent.class));
+        assertEquals(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS,
+            map.get(StorageUnitStatusChangeNotificationEvent.class));
+        assertEquals(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS,
+            map.get(UserNamespaceAuthorizationChangeNotificationEvent.class));
+    }
 
     /**
      * Builds a notification message for a business object data status change event and validates it.
@@ -700,8 +721,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML,
-                NO_MESSAGE_HEADER_DEFINITIONS)))));
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Build a notification message.
@@ -711,7 +732,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         // Validate the notification message.
         assertEquals(1, CollectionUtils.size(result));
         businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey,
+            .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
                 businessObjectDataEntity.getId(), expectedTriggeredByUsername, BDATA_STATUS, BDATA_STATUS_2, NO_ATTRIBUTES, NO_MESSAGE_HEADERS, result.get(0));
     }
 

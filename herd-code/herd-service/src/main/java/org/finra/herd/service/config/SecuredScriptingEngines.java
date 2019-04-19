@@ -58,6 +58,10 @@ public class SecuredScriptingEngines extends ScriptingEngines
             {
                 return SecuredScriptingEngines.super.evaluate(script, language, bindings);
             }
-        }, Arrays.asList(new RuntimePermission("accessDeclaredMembers"), new ReflectPermission("suppressAccessChecks")));
+        }, Arrays
+            .asList(new RuntimePermission("accessDeclaredMembers"),
+                // Grants the permission to serialize/deserialize xml data type inside scripting engine
+                new RuntimePermission("accessClassInPackage.com.sun.org.apache.xerces.internal.jaxp.datatype"),
+                new ReflectPermission("suppressAccessChecks")));
     }
 }

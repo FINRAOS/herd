@@ -117,10 +117,10 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
         List<NotificationMessage> result = new ArrayList<>();
 
         // Check if message notification is enabled.
-        boolean herdSqsNotificationEnabled = configurationHelper.getBooleanProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_ENABLED);
+        boolean herdNotificationEnabled = configurationHelper.getBooleanProperty(ConfigurationValue.HERD_NOTIFICATION_ENABLED);
 
         // Only process messages if the service is enabled.
-        if (herdSqsNotificationEnabled)
+        if (herdNotificationEnabled)
         {
             // Process the list of notification messages.
             for (NotificationMessage notificationMessage : notificationMessages)

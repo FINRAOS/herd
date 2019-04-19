@@ -562,24 +562,14 @@ public enum ConfigurationValue
     NAMESPACE_IAM_ROLE_AUTHORIZATION_ENABLED("namespace.iam.role.authorization.enabled", "false"),
 
     /**
-     * Indicates whether the herd events are posted to AWS SQS.
+     * Indicates whether the herd events are posted to AWS SNS.
      */
-    HERD_NOTIFICATION_SQS_ENABLED("herd.notification.sqs.enabled", "false"),
-
-    /**
-     * AWS SQS queue name where herd events are posted to.
-     */
-    HERD_NOTIFICATION_SQS_OUTGOING_QUEUE_NAME("herd.notification.sqs.outgoing.queue.name", null),
+    HERD_NOTIFICATION_ENABLED("herd.notification.enabled", "false"),
 
     /**
      * AWS SQS queue name where herd events are posted to.
      */
     HERD_NOTIFICATION_SQS_INCOMING_QUEUE_NAME("herd.notification.sqs.incoming.queue.name", null),
-
-    /**
-     * The environment used to post message to SQS.
-     */
-    HERD_NOTIFICATION_SQS_ENVIRONMENT("herd.notification.sqs.environment", null),
 
     /**
      * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions

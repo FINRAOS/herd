@@ -179,7 +179,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
         s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(glacierS3Files)));
 
         // To expire the restored S3 objects, initiate restore requests with expiration set to 1 day.
-        s3Service.restoreObjects(s3FileTransferRequestParamsDto, 1);
+        s3Service.restoreObjects(s3FileTransferRequestParamsDto, 1, null);
     }
 
     /**

@@ -42,8 +42,6 @@ import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.dto.StorageUnitStatusChangeNotificationEvent;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.ConfigurationEntity;
-import org.finra.herd.service.helper.notification.AbstractNotificationMessageBuilderTestHelper;
-import org.finra.herd.service.helper.notification.StorageUnitStatusChangeMessageBuilder;
 
 /**
  * Tests the functionality for StorageUnitStatusChangeMessageBuilder.
@@ -65,7 +63,7 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -78,8 +76,39 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
         assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
         String uuid = result.get(0).getMessageHeaders().get(4).getValue();
         assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
-        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
+        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
             STORAGE_UNIT_STATUS_2, getExpectedMessageHeaders(uuid), result.get(0));
+    }
+
+    @Test
+    public void testBuildStorageUnitStatusChangeMessagesJsonPayloadInvalidMessageType() throws Exception
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+            new NotificationMessageDefinition(INVALID_VALUE, MESSAGE_DESTINATION,
+                BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+                Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            storageUnitStatusChangeMessageBuilder.buildNotificationMessages(
+                new StorageUnitStatusChangeNotificationEvent(businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2));
+            fail();
+        }
+        catch (IllegalStateException illegalStateException)
+        {
+            assertEquals(String.format("Only \"%s\" notification message type is supported. Please update \"%s\" configuration entry.", MESSAGE_TYPE_SNS,
+                ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey()), illegalStateException.getMessage());
+        }
     }
 
     @Test
@@ -94,7 +123,7 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, NO_MESSAGE_DESTINATION,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, NO_MESSAGE_DESTINATION,
                 BUSINESS_OBJECT_FORMAT_VERSION_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 Collections.singletonList(new MessageHeaderDefinition(KEY, VALUE)))))));
         configurationDao.saveAndRefresh(configurationEntity);
@@ -127,7 +156,7 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -137,7 +166,7 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
 
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
-        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
+        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
             STORAGE_UNIT_STATUS_2, NO_MESSAGE_HEADERS, result.get(0));
     }
 
@@ -186,7 +215,7 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -196,7 +225,7 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
 
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
-        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
+        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
             NO_STORAGE_UNIT_STATUS, NO_MESSAGE_HEADERS, result.get(0));
     }
 
@@ -218,7 +247,7 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -228,7 +257,7 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
 
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
-        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, expectedBusinessObjectDataKey, STORAGE_NAME,
+        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, expectedBusinessObjectDataKey, STORAGE_NAME,
             STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2, NO_MESSAGE_HEADERS, result.get(0));
     }
 
@@ -246,7 +275,7 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
         ConfigurationEntity configurationEntity = new ConfigurationEntity();
         configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_STORAGE_UNIT_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
-            new NotificationMessageDefinition(MESSAGE_TYPE, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
+            new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, STORAGE_UNIT_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON,
                 NO_MESSAGE_HEADER_DEFINITIONS)))));
         configurationDao.saveAndRefresh(configurationEntity);
 
@@ -256,7 +285,7 @@ public class StorageUnitStatusChangeMessageBuilderTest extends AbstractNotificat
 
         // Validate the results.
         assertEquals(1, CollectionUtils.size(result));
-        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
+        validateStorageUnitStatusChangeMessageWithJsonPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey, STORAGE_NAME, STORAGE_UNIT_STATUS,
             STORAGE_UNIT_STATUS_2, NO_MESSAGE_HEADERS, result.get(0));
     }
 

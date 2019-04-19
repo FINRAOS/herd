@@ -225,7 +225,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   <header>\n" +
         "      <producer>\n" +
         "         <name>testDomain/testApplication</name>\n" +
-        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "         <environment>$herd_environment</environment>\n" +
         "      </producer>\n" +
         "      <creation>\n" +
         "         <datetime>$current_time</datetime>\n" +
@@ -320,7 +320,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   <header>\n" +
         "      <producer>\n" +
         "         <name>testDomain/testApplication</name>\n" +
-        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "         <environment>$herd_environment</environment>\n" +
         "      </producer>\n" +
         "      <creation>\n" +
         "         <datetime>$current_time</datetime>\n" +
@@ -483,6 +483,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String MESSAGE_HEADER_KEY_SOURCE_SYSTEM = "sourceSystem";
 
     public static final String MESSAGE_HEADER_KEY_USER_ID = "userId";
+
+    public static final String MESSAGE_TYPE_SNS = "SNS";
 
     public static final String MESSAGE_VERSION = "UT_MessageVersion" + RANDOM_SUFFIX;
 
@@ -731,7 +733,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   <header>\n" +
         "      <producer>\n" +
         "         <name>testDomain/testApplication</name>\n" +
-        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "         <environment>$herd_environment</environment>\n" +
         "      </producer>\n" +
         "      <creation>\n" +
         "         <datetime>$current_time</datetime>\n" +
@@ -782,7 +784,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   <header>\n" +
         "      <producer>\n" +
         "         <name>testDomain/testApplication</name>\n" +
-        "         <environment>$herd_notification_sqs_environment</environment>\n" +
+        "         <environment>$herd_environment</environment>\n" +
         "      </producer>\n" +
         "      <creation>\n" +
         "         <datetime>$current_time</datetime>\n" +

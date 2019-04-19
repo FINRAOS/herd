@@ -2309,7 +2309,7 @@ public class S3DaoTest extends AbstractDaoTest
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(storageDaoTestHelper.getS3ManagedBucketName());
         params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
-        s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS);
+        s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
 
         // Validate that there is an ongoing restore request for this object.
         ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, null);
@@ -2335,7 +2335,7 @@ public class S3DaoTest extends AbstractDaoTest
             S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
             params.setS3BucketName(storageDaoTestHelper.getS3ManagedBucketName());
             params.setFiles(Arrays.asList(new File(testKey)));
-            s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS);
+            s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
             fail("Should throw an IllegalStateException when an S3 restore object operation fails.");
         }
         catch (IllegalStateException e)
@@ -2352,7 +2352,7 @@ public class S3DaoTest extends AbstractDaoTest
         // Initiate a restore request for an empty list of S3 files.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setFiles(new ArrayList<>());
-        s3Dao.restoreObjects(s3FileTransferRequestParamsDto, 0);
+        s3Dao.restoreObjects(s3FileTransferRequestParamsDto, 0, ARCHIVE_RETRIEVAL_OPTION);
     }
 
     @Test
@@ -2370,7 +2370,7 @@ public class S3DaoTest extends AbstractDaoTest
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(storageDaoTestHelper.getS3ManagedBucketName());
         params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
-        s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS);
+        s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
 
         // Validate that there is still an ongoing restore request for this object.
         ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, null);
@@ -2394,7 +2394,7 @@ public class S3DaoTest extends AbstractDaoTest
             S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
             params.setS3BucketName(storageDaoTestHelper.getS3ManagedBucketName());
             params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
-            s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS);
+            s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
             fail("Should throw an IllegalStateException when file has a non-Glacier storage class.");
         }
         catch (IllegalStateException e)
