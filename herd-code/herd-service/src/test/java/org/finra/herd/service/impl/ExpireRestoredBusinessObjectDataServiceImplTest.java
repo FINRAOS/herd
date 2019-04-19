@@ -87,7 +87,7 @@ public class ExpireRestoredBusinessObjectDataServiceImplTest extends AbstractSer
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, StorageUnitStatusEntity.EXPIRING,
-                StorageUnitStatusEntity.RESTORED, Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION);
+                StorageUnitStatusEntity.RESTORED, Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
 
         // Mock the external calls.
         when(expireRestoredBusinessObjectDataHelperService.prepareToExpireStorageUnit(storageUnitKey)).thenReturn(businessObjectDataRestoreDto);

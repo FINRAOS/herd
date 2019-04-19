@@ -518,9 +518,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)
+    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption)
     {
-        return restoreBusinessObjectDataImpl(businessObjectDataKey, expirationInDays);
+        return restoreBusinessObjectDataImpl(businessObjectDataKey, expirationInDays, archiveRetrievalOption);
     }
 
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
@@ -965,14 +965,16 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      *
      * @param businessObjectDataKey the business object data key
      * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object. Currently three options are supported: Expedited, Standard,
+     * and Bulk
      *
      * @return the business object data information
      */
-    BusinessObjectData restoreBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)
+    BusinessObjectData restoreBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption)
     {
         // Execute the initiate a restore request before step.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, expirationInDays);
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, expirationInDays, archiveRetrievalOption);
 
         // Create storage unit notification for the origin storage unit.
         notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,

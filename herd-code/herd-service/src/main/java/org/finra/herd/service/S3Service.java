@@ -132,8 +132,9 @@ public interface S3Service
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
      * restored
      * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
      */
-    void restoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays);
+    void restoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays, String archiveRetrievalOption);
 
     /**
      * Tags S3 objects with the specified S3 object tag.

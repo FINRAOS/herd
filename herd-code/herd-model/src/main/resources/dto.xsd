@@ -102,6 +102,7 @@
          <xs:element name="oldStorageUnitStatus" type="xs:string" minOccurs="0"/>
          <xs:element name="storageFiles" type="storageFile" minOccurs="0" maxOccurs="unbounded"/>
          <xs:element name="exception" type="runtimeException" minOccurs="0"/>
+         <xs:element name="archiveRetrievalOption" type="xs:string" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 

@@ -32,6 +32,7 @@ import javax.persistence.PersistenceContext;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.Tier;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.MapPropertySource;
@@ -376,6 +377,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String ERROR_MESSAGE = "UT_Error_Message_" + RANDOM_SUFFIX;
 
     public static final Integer EXPIRATION_IN_DAYS = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final String ARCHIVE_RETRIEVAL_OPTION = null;
+
+    public static final String INVALID_ARCHIVE_RETRIEVAL_OPTION = "UT_RETRIEVAL_OPTION_INVALID";
 
     public static final String EXTERNAL_INTERFACE = "UT_ExternalInterface_1_" + RANDOM_SUFFIX;
 

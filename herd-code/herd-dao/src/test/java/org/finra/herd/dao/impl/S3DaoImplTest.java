@@ -16,14 +16,18 @@
 package org.finra.herd.dao.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.retry.PredefinedRetryPolicies;
@@ -34,14 +38,19 @@ import com.amazonaws.services.s3.model.GetObjectTaggingRequest;
 import com.amazonaws.services.s3.model.GetObjectTaggingResult;
 import com.amazonaws.services.s3.model.ListVersionsRequest;
 import com.amazonaws.services.s3.model.MultiObjectDeleteException;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.RestoreObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.SetObjectTaggingRequest;
 import com.amazonaws.services.s3.model.SetObjectTaggingResult;
 import com.amazonaws.services.s3.model.Tag;
+import com.amazonaws.services.s3.model.Tier;
 import com.amazonaws.services.s3.model.VersionListing;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -59,6 +68,9 @@ import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
  */
 public class S3DaoImplTest extends AbstractDaoTest
 {
+
+    private static final String TEST_FILE = "UT_S3DaoImplTest_Test_File";
+
     @Mock
     private AwsHelper awsHelper;
 
@@ -322,6 +334,75 @@ public class S3DaoImplTest extends AbstractDaoTest
         {
             setLogLevel(loggerName, origLoggerLevel);
         }
+    }
+
+    @Test
+    public void testRestoreObjectsBulkArchiveRetrievalOption() {
+        runRestoreObjects(Tier.Bulk.toString());
+    }
+
+    @Test
+    public void testRestoreObjectsStandardArchiveRetrievalOption() {
+        runRestoreObjects(Tier.Standard.toString());
+    }
+
+    @Test
+    public void testRestoreObjectsExpeditedArchiveRetrievalOption() {
+        runRestoreObjects(Tier.Expedited.toString());
+    }
+
+    @Test
+    public void testRestoreObjectsNullArchiveRetrievalOption() {
+        runRestoreObjects(null);
+    }
+
+    /**
+     * Run restore objects method
+     * @param archiveRetrievalOption the archive retrieval option
+     */
+    private void runRestoreObjects(String archiveRetrievalOption)
+    {
+        List<File> files = Collections.singletonList(new File(TEST_FILE));
+
+        // Create an S3 file transfer request parameters DTO to access S3 objects.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX);
+        s3FileTransferRequestParamsDto.setFiles(files);
+
+        // Create a retry policy.
+        RetryPolicy retryPolicy =
+            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
+
+        // Create an Object Metadata
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setOngoingRestore(false);
+
+        ArgumentCaptor<AmazonS3Client> s3ClientCaptor = ArgumentCaptor.forClass(AmazonS3Client.class);
+        ArgumentCaptor<String> s3BucketNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<RestoreObjectRequest> requestStoreCaptor = ArgumentCaptor.forClass(RestoreObjectRequest.class);
+
+        // Mock the external calls.
+        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
+        doNothing().when(s3Operations).restoreObject(requestStoreCaptor.capture(), s3ClientCaptor.capture());
+
+        s3DaoImpl.restoreObjects(s3FileTransferRequestParamsDto, EXPIRATION_IN_DAYS, archiveRetrievalOption);
+
+        RestoreObjectRequest requestStore = requestStoreCaptor.getValue();
+        assertEquals(S3_BUCKET_NAME, s3BucketNameCaptor.getValue());
+        assertEquals(TEST_FILE, keyCaptor.getValue());
+
+        // Verify Bulk option is used when the option is not providered
+        assertEquals(StringUtils.isNotEmpty(archiveRetrievalOption)
+            ? archiveRetrievalOption : Tier.Bulk.toString(), requestStore.getGlacierJobParameters().getTier());
+
+        // Verify the external calls
+        verify(retryPolicyFactory).getRetryPolicy();
+        verify(s3Operations).getObjectMetadata(anyString(), anyString(), any(AmazonS3Client.class));
+        verify(s3Operations).restoreObject(any(RestoreObjectRequest.class), any(AmazonS3Client.class));
+        verifyNoMoreInteractionsHelper();
     }
 
     private void runTagObjectsTest()
