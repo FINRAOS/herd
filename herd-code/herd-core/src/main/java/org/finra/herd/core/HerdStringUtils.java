@@ -105,7 +105,7 @@ public class HerdStringUtils
     {
         if (StringUtils.isNotEmpty(text) && text.matches(CSV_INJECTION_REGEX))
         {
-            throw new IllegalArgumentException("The request body contains character(s) that can pose a security risk");
+            throw new IllegalArgumentException("One or more schema column fields start with a prohibited character");
         }
     }
 }

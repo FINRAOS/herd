@@ -35,7 +35,7 @@ public class HerdStringUtilsTest extends AbstractCoreTest
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    private static final String CSV_INJECTION_ERROR_MSG = "The request body contains character(s) that can pose a security risk";
+    private static final String CSV_INJECTION_ERROR_MSG = "One or more schema column fields start with a prohibited character";
 
     @Test
     public void testDecodeBase64()
