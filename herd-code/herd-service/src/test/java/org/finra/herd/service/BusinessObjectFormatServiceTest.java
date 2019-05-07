@@ -1075,7 +1075,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper.createTestDatabaseEntitiesForBusinessObjectFormatTesting();
 
         int i = 0;
-        for (String originalColumnSize : Arrays.asList("NOT_AN_INTEGER", NEGATIVE_COLUMN_SIZE, ZERO_COLUMN_SIZE))
+        for (String originalColumnSize : Arrays.asList("NOT_AN_INTEGER", ZERO_COLUMN_SIZE))
         {
             // Create an initial format schema with a regular column size having not a positive integer value.
             Schema initialSchema = new Schema(Arrays.asList(
@@ -1127,7 +1127,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
                 NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
-        for (String updatedColumnSize : Arrays.asList("NOT_AN_INTEGER", NEGATIVE_COLUMN_SIZE, ZERO_COLUMN_SIZE))
+        for (String updatedColumnSize : Arrays.asList("NOT_AN_INTEGER", ZERO_COLUMN_SIZE))
         {
             // Create an updated schema having a regular column size set to value that is not a positive integer.
             Schema updatedSchema = (Schema) initialSchema.clone();
@@ -2934,10 +2934,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         {
             assertEquals(String.format("Column \"%s\" has an unsupported data type \"%s\" in the schema for business object format " +
                     "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}. Exception : \"%s\"",
-                schemaColumn.getName(), schemaColumn.getType(), request.getNamespace(), request.getBusinessObjectDefinitionName(),
-                request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion(),
-                "Internal error parsing position 0 of 'unknown'"), e.getMessage());
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}. Exception : \"%s\"", schemaColumn.getName(), schemaColumn.getType(),
+                request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
+                request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion(), "Internal error parsing position 0 of 'unknown'"),
+                e.getMessage());
         }
     }
 

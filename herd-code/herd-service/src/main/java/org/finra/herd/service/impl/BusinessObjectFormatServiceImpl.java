@@ -1000,34 +1000,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     {
         HerdStringUtils.checkCsvInjection(schemaColumn.getName());
         HerdStringUtils.checkCsvInjection(schemaColumn.getType());
-        // Deal with the negative value
-        String columnSize = schemaColumn.getSize();
-        if (!isNegativeValue(columnSize))
-        {
-            HerdStringUtils.checkCsvInjection(columnSize);
-        }
+        HerdStringUtils.checkCsvInjection(schemaColumn.getSize());
         HerdStringUtils.checkCsvInjection(schemaColumn.getDefaultValue());
         HerdStringUtils.checkCsvInjection(schemaColumn.getDescription());
-    }
-
-    /**
-     * Check if the text is a negative value
-     *
-     * @param text the text
-     *
-     * @return true if the text is a negative value, false otherwise
-     */
-    private boolean isNegativeValue(String text)
-    {
-        try
-        {
-            double d = Double.parseDouble(text);
-        }
-        catch (NumberFormatException | NullPointerException exception)
-        {
-            return false;
-        }
-        return true;
     }
 
     /**
