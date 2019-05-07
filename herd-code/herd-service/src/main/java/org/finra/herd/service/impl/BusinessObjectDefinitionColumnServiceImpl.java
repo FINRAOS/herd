@@ -442,7 +442,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
         key.setBusinessObjectDefinitionName(
             alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
-        String businessObjectDefinitionColumnName = alternateKeyHelper.validateStringParameter("business object definition column name", key.getBusinessObjectDefinitionColumnName());
+        String businessObjectDefinitionColumnName =
+            alternateKeyHelper.validateStringParameter("business object definition column name", key.getBusinessObjectDefinitionColumnName());
         HerdStringUtils.checkCsvInjection(businessObjectDefinitionColumnName);
         key.setBusinessObjectDefinitionColumnName(businessObjectDefinitionColumnName);
 

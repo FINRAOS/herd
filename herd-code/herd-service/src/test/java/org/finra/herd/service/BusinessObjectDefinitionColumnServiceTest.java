@@ -462,8 +462,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create a business object definition column key.
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
-            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME,
-                BDEF_COLUMN_NAME_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO);
+            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO);
 
         // Specify the expected exception.
         expectedException.expect(IllegalArgumentException.class);
@@ -495,8 +494,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create a business object definition column.
         businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
-            new BusinessObjectDefinitionColumnCreateRequest(businessObjectDefinitionColumnKey,
-                COLUMN_NAME, BDEF_COLUMN_DESCRIPTION_STARTS_WITH_EQUALS_TO));
+            new BusinessObjectDefinitionColumnCreateRequest(businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION_STARTS_WITH_EQUALS_TO));
     }
 
     @Test

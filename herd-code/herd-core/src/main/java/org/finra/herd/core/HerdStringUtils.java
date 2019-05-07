@@ -100,7 +100,6 @@ public class HerdStringUtils
      * Check if the text is vulnerable to CSV Injection attack.
      *
      * @param text the text
-     *
      */
     public static void checkCsvInjection(String text)
     {
