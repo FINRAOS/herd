@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.impl;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -22,8 +23,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -32,9 +37,13 @@ import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatSchemaBackwardsCompatibilityUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
+import org.finra.herd.model.api.xml.Schema;
+import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -53,6 +62,9 @@ import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 
 public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
 {
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
     @Mock
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -105,6 +117,233 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
     public void before()
     {
         MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatSchemaColumnColumnNameStartWithEqualsTo()
+    {
+        // Create a schema column name that starts with "="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME_STARTS_WITH_EQUALS_TO, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateCreateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatSchemaColumnColumnNameStartWithWhiteSpacesThenEqualsTo()
+    {
+        // Create a schema column name that starts with "  ="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED,
+                NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null,
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateCreateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatSchemaColumnColumnTypeStartWithEqualsTo()
+    {
+        // Create a schema column type that starts with "="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_STARTS_WITH_EQUALS_TO, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateCreateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatSchemaColumnColumnTypeStartWithWhitespacesThenEqualsTo()
+    {
+        // Create a schema column type that starts with "   ="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateCreateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatSchemaColumnColumnSizeNegativeValue()
+    {
+        // Create a schema column size that starts with "-"
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, NEGATIVE_COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
+            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateCreateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatSchemaColumnColumnSizeStartsWithWhitespaceThenMinus()
+    {
+        // Create a schema column size that starts with "  -"
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE_START_WITH_WHITESPACES_THEN_MINUS, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateCreateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatSchemaColumnDefaultValueStartsWithEqualsTo()
+    {
+        // Create a schema column default value that starts with "  ="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE_STARTS_WITH_EQUALS_TO,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateCreateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatSchemaColumnDefaultValueStartsWithWhitespacesThenEqualsTo()
+    {
+        // Create a schema column default value that starts with "  ="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateCreateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatSchemaColumnDescriptionStartsWithEqualsTo()
+    {
+        // Create a schema column description value that starts with "="
+        Schema schema = new Schema(Arrays.asList(new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE,
+            COLUMN_DESCRIPTION_STARTS_WITH_EQUALS_TO)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null,
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+
+        validateCreateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaColumnColumnNameStartWithEqualsTo()
+    {
+        // Create a schema column name that starts with "="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME_STARTS_WITH_EQUALS_TO, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        validateUpdateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaColumnColumnNameStartWithWhiteSpacesThenEqualsTo()
+    {
+        // Create a schema column name that starts with "  ="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED,
+                NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null,
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateUpdateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaColumnColumnTypeStartWithEqualsTo()
+    {
+        // Create a schema column type that starts with "="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_STARTS_WITH_EQUALS_TO, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateUpdateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaColumnColumnTypeStartWithWhitespacesThenEqualsTo()
+    {
+        // Create a schema column type that starts with "   ="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateUpdateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaColumnColumnSizeNegativeValue()
+    {
+        // Create a schema column size that starts with "-"
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, NEGATIVE_COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
+            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateUpdateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaColumnColumnSizeStartsWithWhitespaceThenMinus()
+    {
+        // Create a schema column size that starts with "  -"
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE_START_WITH_WHITESPACES_THEN_MINUS, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateUpdateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaColumnDefaultValueStartsWithEqualsTo()
+    {
+        // Create a schema column default value that starts with "  ="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE_STARTS_WITH_EQUALS_TO,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateUpdateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaColumnDefaultValueStartsWithWhitespacesThenEqualsTo()
+    {
+        // Create a schema column default value that starts with "  ="
+        Schema schema = new Schema(Arrays.asList(
+            new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO,
+                COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            PARTITION_KEY_GROUP);
+
+        // Specify the expected exception.
+        validateUpdateBusinessObjectFormatSchemaColumn(schema);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatSchemaColumnDescriptionStartsWithEqualsTo()
+    {
+        // Create a schema column description value that starts with "="
+        Schema schema = new Schema(Arrays.asList(new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE,
+            COLUMN_DESCRIPTION_STARTS_WITH_EQUALS_TO)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null,
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+
+        validateUpdateBusinessObjectFormatSchemaColumn(schema);
     }
 
     @Test
@@ -483,4 +722,53 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
             businessObjectDefinitionHelper, businessObjectFormatDao, businessObjectFormatDaoHelper, businessObjectFormatHelper, customDdlDaoHelper,
             ddlGeneratorFactory, fileTypeDaoHelper, messageNotificationEventService, partitionKeyGroupDaoHelper, searchIndexUpdateHelper);
     }
+
+    /**
+     * Validates the create request on business object format with the specified column
+     *
+     * @param schema the format schema
+     */
+    private void validateCreateBusinessObjectFormatSchemaColumn(Schema schema)
+    {
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+
+        // Create a business object format.
+        businessObjectFormatServiceImpl.createBusinessObjectFormat(
+            new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, schema));
+
+        verifyNoMoreInteractionsHelper();
+    }
+
+    /**
+     * Validates the update request on business object format with the specified schema
+     *
+     * @param schema the format schema
+     */
+    private void validateUpdateBusinessObjectFormatSchemaColumn(Schema schema)
+    {
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION);
+
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
+        // Mock the external calls.
+        when(businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey)).thenReturn(businessObjectFormatEntity);
+
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+
+        // Create a business object format.
+        businessObjectFormatServiceImpl.updateBusinessObjectFormat(businessObjectFormatKey,
+            new BusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, schema));
+
+        verify(businessObjectFormatHelper).validateBusinessObjectFormatKey(businessObjectFormatKey);
+        verify(attributeHelper).validateFormatAttributes(NO_ATTRIBUTES);
+        verify(businessObjectFormatDaoHelper).getBusinessObjectFormatEntity(businessObjectFormatKey);
+
+        verifyNoMoreInteractionsHelper();
+    }
+
 }

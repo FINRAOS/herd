@@ -30,6 +30,9 @@ import org.jsoup.safety.Whitelist;
  */
 public class HerdStringUtils
 {
+    // Regex to check for CSV Injection. Any text that starts with "+", "=", "@", or "-" will be vulnerable to CSV Injection attack.
+    private static final String CSV_INJECTION_REGEX = "^[+=@-].*";
+
     /**
      * Decodes and return the base64 encoded string.
      *
@@ -91,5 +94,18 @@ public class HerdStringUtils
 
         // return 'cleaned' html body
         return clean.body().html();
+    }
+
+    /**
+     * Check if the text is vulnerable to CSV Injection attack.
+     *
+     * @param text the text
+     */
+    public static void checkCsvInjection(String text)
+    {
+        if (StringUtils.isNotEmpty(text) && text.matches(CSV_INJECTION_REGEX))
+        {
+            throw new IllegalArgumentException("One or more schema column fields start with a prohibited character");
+        }
     }
 }
