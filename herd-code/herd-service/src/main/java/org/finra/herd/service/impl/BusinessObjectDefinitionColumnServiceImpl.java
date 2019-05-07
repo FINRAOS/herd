@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.dao.BusinessObjectDefinitionColumnDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.SchemaColumnDao;
@@ -423,6 +424,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         validateBusinessObjectDefinitionColumnKey(request.getBusinessObjectDefinitionColumnKey());
 
         Assert.hasText(request.getSchemaColumnName(), "A schema column name must be specified.");
+
+        HerdStringUtils.checkCsvInjection(request.getDescription());
         request.setSchemaColumnName(request.getSchemaColumnName().trim());
     }
 
@@ -439,8 +442,10 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
         key.setBusinessObjectDefinitionName(
             alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
-        key.setBusinessObjectDefinitionColumnName(
-            alternateKeyHelper.validateStringParameter("business object definition column name", key.getBusinessObjectDefinitionColumnName()));
+        String businessObjectDefinitionColumnName = alternateKeyHelper.validateStringParameter("business object definition column name", key.getBusinessObjectDefinitionColumnName());
+        HerdStringUtils.checkCsvInjection(businessObjectDefinitionColumnName);
+        key.setBusinessObjectDefinitionColumnName(businessObjectDefinitionColumnName);
+
     }
 
     /**
@@ -484,5 +489,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
     private void validateBusinessObjectDefinitionColumnUpdateRequest(BusinessObjectDefinitionColumnUpdateRequest request)
     {
         Assert.notNull(request, "A business object definition column update request must be specified.");
+
+        HerdStringUtils.checkCsvInjection(request.getDescription());
     }
 }

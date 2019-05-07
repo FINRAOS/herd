@@ -189,9 +189,16 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BDEF_COLUMN_DESCRIPTION_2 = "UT_BusinessObjectDefinition_Column_Description_2_" + RANDOM_SUFFIX;
 
+    public static final String BDEF_COLUMN_DESCRIPTION_STARTS_WITH_EQUALS_TO = "=UT_BusinessObjectDefinition_Column_Description_1_" + RANDOM_SUFFIX;
+
     public static final String BDEF_COLUMN_NAME = "UT_BusinessObjectDefinition_Column_Name_1_" + RANDOM_SUFFIX;
 
     public static final String BDEF_COLUMN_NAME_2 = "UT_BusinessObjectDefinition_Column_Name_2_" + RANDOM_SUFFIX;
+
+    public static final String BDEF_COLUMN_NAME_STARTS_WITH_EQUALS_TO = "=UT_BusinessObjectDefinition_Column_Name_" + RANDOM_SUFFIX;
+
+    public static final String BDEF_COLUMN_NAME_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO =
+        "  =UT_BusinessObjectDefinition_Column_Name_" + RANDOM_SUFFIX;
 
     public static final String BDEF_DESCRIPTION = "UT_BusinessObjectDefinition_Description_" + RANDOM_SUFFIX;
 
@@ -1177,6 +1184,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String VOLUME_TYPE = "UT_VolumeType_" + RANDOM_SUFFIX;
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
+
+    public static final String CSV_INJECTION_ERROR_MSG =
+        "The request body contains character(s) that can pose a security risk";
 
     // A holding location for a property source.
     // When we remove the property source from the environment, we will place it here as a holding area. Then when we want to add it back into the
