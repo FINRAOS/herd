@@ -21,8 +21,8 @@ import java.util.Properties
 import org.apache.spark.sql.SparkSession
 import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
-import org.mockito.{Mockito, ArgumentCaptor}
 import org.mockito.Mockito.when
+import org.mockito.{ArgumentCaptor, Mockito}
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mockito.MockitoSugar
@@ -107,6 +107,28 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
 
     }
 
+//  test("Mock: dmAllObjectsInNamespace should return the business object definition keys in List format") {
+//    val dataCatalog = new DataCatalog(spark, "test.com")
+//    val mockHerdApi = mock[HerdApi]
+//    // Inject the herd api mock
+//    dataCatalog.herdApi = mockHerdApi
+//
+//    var businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys
+//    var businessObjectDefinitionKey = new BusinessObjectDefinitionKey
+//    businessObjectDefinitionKey.setBusinessObjectDefinitionName("bdef1")
+//    businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey)
+//
+//    businessObjectDefinitionKey = new BusinessObjectDefinitionKey
+//    businessObjectDefinitionKey.setBusinessObjectDefinitionName("bdef2")
+//    businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey)
+//    when(mockHerdApi.getBusinessObjectsByNamespace("testNamespace")).thenReturn(businessObjectDefinitionKeys)
+//
+//    // Test the method
+//    val objectList = dataCatalog.dmAllObjectsInNamespace("testNamespace")
+//    assertEquals(List("bdef1","bdef2"),objectList)
+//
+//  }
+
     test("getNamespaces should return a list of namespaces") {
       init()
       val namespaces = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).getNamespaces()
@@ -145,7 +167,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
       ).toDF("tdate", "int", "float", "double", "bigdecimal", "string", "boolean")
 
       val nameSpace = "DATAMGT"
-      val objName = "datamgt_bdef_partition"
+      val objName = "datamgt_bdef"
       val partitionKey = "tdate"
       val partitionValue01 = "2019-01-10"
       val partitionValue02 = "2019-02-10"
@@ -157,22 +179,22 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
 
     test("getDataAvailabilityRange should return data availability") {
       init()
-      val dataAvailabilityDataFrame = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).getDataAvailabilityRange("DATAMGT", "datamgt_bdef_partition", "PRC", "PARQUET", "tdate", "2019-01-01", "2099-12-31", 0)
+      val dataAvailabilityDataFrame = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).getDataAvailabilityRange("DATAMGT", "datamgt_bdef", "PRC", "PARQUET", "tdate", "2019-01-01", "2099-12-31", 0)
       dataAvailabilityDataFrame.show()
     }
-//
-//  test("queryPath should return a business object data XML") {
-//    // @TODO: Create a unit test
-//    // val dataCatalog = new DataCatalog(spark, "test.com")
-//    // val businessObjectDataXML = dataCatalog.queryPath("FOO", "BAR", "PRC", "BZ", "DATE", Array("2018-12-06"), 0, 0)
-//  }
-//
-//  test("callBusinessObjectFormatQuery should return a business object format XML") {
-//    // @TODO: Create a unit test
-//    // val dataCatalog = new DataCatalog(spark, "test.com")
-//    // val businessObjectFormatXML = dataCatalog.callBusinessObjectFormatQuery("FOO", "BAR", "PRC", "BZ", 0)
-//  }
-//
+
+  test("queryPath should return a business object data XML") {
+
+     val businessObjectDataXML = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).queryPath("DATAMGT", "datamgt_bdef", "formatUsage", "RELATIONAL_TABLE", "partition", Array("2018-12-07"), 0, 0)
+      print(businessObjectDataXML)
+  }
+
+  test("callBusinessObjectFormatQuery should return a business object format XML") {
+
+    val businessObjectFormatXML = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).callBusinessObjectFormatQuery("DATAMGT", "datamgt_bdef", "formatUsage", "RELATIONAL_TABLE", 0)
+    assertEquals(businessObjectFormatXML.contains("BusinessObjectFormat"),true)
+  }
+
 
 //
 //  test("dmSearch should return a list of tuples containing business object definition name and partition value") {
