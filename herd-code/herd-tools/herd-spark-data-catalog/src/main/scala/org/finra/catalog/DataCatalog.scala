@@ -96,11 +96,18 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   var username = ""
   var password = ""
 
+  val usage = "PRC"
+  val fileFormat = "UNKNOWN"
+  val storageUnit = "S3_DATABRICKS"
+  val ds: DefaultSource.type = DefaultSource
+
   // used for logging
   private val logger = LoggerFactory.getLogger(getClass)
 
   // for credStash
+
   var credStash: CredStashWrapper = getCredStash
+  var herdApi : HerdApi = getHerdApi
 
   // XML pretty printer
   private val printer = new scala.xml.PrettyPrinter(80, 4)
@@ -117,10 +124,19 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
+    * Create the HERD API
+    * @return
+    */
+  private def getHerdApi : HerdApi = {
+    ds.defaultApiClientFactory(baseRestUrl, Some(username), Some(password))
+  }
+
+  /**
    * Create a credStash instance
    *
    * @return CredStashWrapper instance
    */
+
   private def getCredStash : CredStashWrapper = {
     logger.info("Creating credStash wrapper")
 
@@ -268,7 +284,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return list of (object name, partition value) tuples
    */
   def dmSearchRequest(ns: String, obj: String): util.List[BusinessObjectData] = {
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val businessObjectDataSearchKey = new BusinessObjectDataSearchKey()
     businessObjectDataSearchKey.setNamespace(ns)
@@ -278,7 +294,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val businessObjectDataSearchRequest = new BusinessObjectDataSearchRequest()
     businessObjectDataSearchRequest.addBusinessObjectDataSearchFiltersItem(businessObjectDataSearchFilter)
 
-    ha.searchBusinessObjectData(businessObjectDataSearchRequest).getBusinessObjectDataElements
+    herdApi.searchBusinessObjectData(businessObjectDataSearchRequest).getBusinessObjectDataElements
   }
 
   /**
@@ -324,9 +340,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   private def dmDeleteObjectDefinition(ns: String, obj: String): Unit = {
     logger.debug(s"Deleting obj definition for $obj")
     try {
-      val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//      val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-      ha.removeBusinessObjectDefinition(ns, obj)
+      herdApi.removeBusinessObjectDefinition(ns, obj)
     } catch {
       case _: Throwable => logger.debug("WARNING: Could not remove object definition.  Ignoring...")
     }
@@ -351,8 +367,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     for ((ns, obj, usage, format, schema, pk, part, version) <- partitions) {
       logger.debug(s"Deleting registered partitions of $obj")
       try {
-        val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
-        ha.removeBusinessObjectData(ns, obj, usage, format, schema, pk, part, Seq(), version)
+//        val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+        herdApi.removeBusinessObjectData(ns, obj, usage, format, schema, pk, part, Seq(), version)
       } catch {
         case _: Throwable => logger.debug("WARNING: Could not remove object partitions.  Ignoring...")
       }
@@ -366,9 +382,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return list of names
    */
   def dmAllObjectsInNamespace(ns: String): List[String] = {
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//
+//    val businessObjectDefinitionKeys = ha.getBusinessObjectsByNamespace(ns).getBusinessObjectDefinitionKeys
 
-    val businessObjectDefinitionKeys = ha.getBusinessObjectsByNamespace(ns).getBusinessObjectDefinitionKeys
+    val businessObjectDefinitionKeys = herdApi.getBusinessObjectsByNamespace(ns).getBusinessObjectDefinitionKeys
 
     (for (obj <- businessObjectDefinitionKeys.asScala) yield obj.getBusinessObjectDefinitionName).toList
   }
@@ -378,6 +396,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    *
    * @param ns the namespace to wipe
    */
+
   def dmWipeNamespace(ns: String): Unit = {
     val toDelete = dmAllObjectsInNamespace(ns)
     for (name <- toDelete) {
@@ -547,10 +566,13 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def queryPath(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, partitionValuesInOrder: Array[String],
                 schemaVersion: Int, dataVersion: Int): String = {
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//
+//    val businessObjectData = ha.getBusinessObjectData(namespace, objectName, usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
+//      partitionValuesInOrder.drop(1), dataVersion)
 
-    val businessObjectData = ha.getBusinessObjectData(namespace, objectName, usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
-      partitionValuesInOrder.drop(1), dataVersion)
+    val businessObjectData =herdApi.getBusinessObjectData(namespace, objectName, usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
+          partitionValuesInOrder.drop(1), dataVersion)
 
     val xmlMapper = new XmlMapper
     xmlMapper.writeValueAsString(businessObjectData)
@@ -568,10 +590,13 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def queryPathFromGenerateDdl(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
                                partitionValuesInOrder: Array[String], schemaVersion: Int, dataVersion: Int): List[String] = {
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//
+//    val businessObjectDataDdl = ha.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
+//      schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
 
-    val businessObjectDataDdl = ha.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
-      schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
+    val businessObjectDataDdl = herdApi.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
+          schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
 
     val xmlMapper = new XmlMapper
     val ss = XML.loadString(xmlMapper.writeValueAsString(businessObjectDataDdl))
@@ -614,14 +639,14 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return list of namespaces
    */
   def getNamespaces(namespaceCode: String = ""): List[String] = {
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     if (namespaceCode.isEmpty) {
-      val namespaceKeys = ha.getAllNamespaces.getNamespaceKeys
+      val namespaceKeys = herdApi.getAllNamespaces.getNamespaceKeys
 
       (for (namespaceKey <- namespaceKeys.asScala) yield namespaceKey.getNamespaceCode).toList
     } else {
-      val namespace = ha.getNamespaceByNamespaceCode(namespaceCode)
+      val namespace = herdApi.getNamespaceByNamespaceCode(namespaceCode)
       List(namespace.getNamespaceCode)
     }
   }
@@ -633,9 +658,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return DataFrame of BusinessObjectDefinition objects
    */
   def getBusinessObjectDefinitions(namespace: String = ""): DataFrame = {
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    val businessObjectDefinitionKeys = ha.getBusinessObjectsByNamespace(namespace).getBusinessObjectDefinitionKeys
+    val businessObjectDefinitionKeys = herdApi.getBusinessObjectsByNamespace(namespace).getBusinessObjectDefinitionKeys
 
     (for (businessObjectDefinitionKey <- businessObjectDefinitionKeys.asScala)
       yield BusinessObjectDefinition(businessObjectDefinitionKey.getNamespace,
@@ -654,9 +679,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    *
    */
   def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int): String = {
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    val businessObjectFormat = ha.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
+    val businessObjectFormat = herdApi.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
 
     val xmlMapper = new XmlMapper
     xmlMapper.writeValueAsString(businessObjectFormat)
@@ -670,9 +695,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return DataFrame of business object formats
    */
   def getBusinessObjectFormats(namespace: String, businessObjectDefinitionName: String, latestVersion: Boolean = true): DataFrame = {
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    val businessObjectFormatKeys = ha.getBusinessObjectFormats(namespace, businessObjectDefinitionName, latestVersion).getBusinessObjectFormatKeys
+    val businessObjectFormatKeys = herdApi.getBusinessObjectFormats(namespace, businessObjectDefinitionName, latestVersion).getBusinessObjectFormatKeys
 
     (for (businessObjectFormatKey <- businessObjectFormatKeys.asScala)
       yield BusinessObjectFormat(businessObjectFormatKey.getNamespace,
@@ -1009,9 +1034,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
         StructField("Reason", StringType, nullable = false) :: parts.toList)
 
     // get data availability
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    val businessObjectDataAvailability = ha.getBusinessObjectDataAvailability(namespace, objectName, usage, fileFormat,
+    val businessObjectDataAvailability = herdApi.getBusinessObjectDataAvailability(namespace, objectName, usage, fileFormat,
        partitionKey, firstPartValue, lastPartValue)
 
     val businessObjectDataAvailableStatuses = businessObjectDataAvailability.getAvailableStatuses
@@ -1386,10 +1411,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   // some defaults for non-DataFrame object registration
-  val usage = "PRC"
-  val fileFormat = "UNKNOWN"
-  val storageUnit = "S3_DATABRICKS"
-  val ds: DefaultSource.type = DefaultSource
+
 
   /** Pre-Registers a non-DataFrame object.  The method only pre-registers the object and retunrs storageDirectory.
    * It is user's responsibility and choice whether to write anything to this directory.
@@ -1410,27 +1432,27 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                                     partitionKey: String = "partition",
                                     partitionValue: String = "none"): (Int, Int, String) = {
 
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    Try(ha.getBusinessObjectByName(nameSpace, objectName)) match {
+    Try(herdApi.getBusinessObjectByName(nameSpace, objectName)) match {
       case Success(_) => Unit
       case Failure(ex: ApiException) if ex.getCode == 404 =>
         logger.info(s"Business object not found, registering it")
-        ha.registerBusinessObject(nameSpace, objectName, "FINRA") // @todo: Should the Data Provider be a parameter?
-        ha.registerBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, partitionKey, None)
+        herdApi.registerBusinessObject(nameSpace, objectName, "FINRA") // @todo: Should the Data Provider be a parameter?
+        herdApi.registerBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, partitionKey, None)
       case Failure(ex) => throw ex
     }
 
     val formatVersionToUse = formatVersion match {
       case v if v >= 0 =>
         // check if exists and then use
-        Try(ha.getBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, v)) match {
+        Try(herdApi.getBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, v)) match {
           case Success(_) => v
           case Failure(ex) => throw ex
         }
       case _ =>
         // use the latest version
-        ha.getBusinessObjectFormats(nameSpace, objectName)
+        herdApi.getBusinessObjectFormats(nameSpace, objectName)
           .getBusinessObjectFormatKeys
           .asScala.head
           .getBusinessObjectFormatVersion
@@ -1438,7 +1460,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     }
 
     // Pre-register and get the path
-    val (dataVersion, storageUnits) = ha.registerBusinessObjectData(
+    val (dataVersion, storageUnits) = herdApi.registerBusinessObjectData(
       nameSpace, objectName, usage,
       fileFormat, formatVersionToUse,
       partitionKey, partitionValue, Nil,
@@ -1471,9 +1493,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                                          dataVersion: Int,
                                          status: ObjectStatus.Value = ObjectStatus.VALID): Unit = {
 
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    ha.updateBusinessObjectData(nameSpace, objectName, usage, fileFormat, formatVersion,
+    herdApi.updateBusinessObjectData(nameSpace, objectName, usage, fileFormat, formatVersion,
       partitionKey, partitionValue, Nil, dataVersion, status)
   }
 
@@ -1497,7 +1519,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                             partitionValue: String = "none",
                             dataVersion: Int = -1): String = {
 
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
     val dataVersionToUse: Integer = dataVersion match {
       case -1 => null
@@ -1507,13 +1529,13 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val formatVersionToUse = formatVersion match {
       case v if v >= 0 =>
         // check if exists and then use
-        Try(ha.getBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, v)) match {
+        Try(herdApi.getBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, v)) match {
           case Success(_) => v
           case Failure(ex) => throw ex
         }
       case _ =>
         // use the latest version
-        ha.getBusinessObjectFormats(nameSpace, objectName)
+        herdApi.getBusinessObjectFormats(nameSpace, objectName)
           .getBusinessObjectFormatKeys
           .asScala.head
           .getBusinessObjectFormatVersion
@@ -1559,14 +1581,14 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                         partitionKey: String = "partition",
                         partitionValue: String = "none"): Int = {
 
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
+//    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    Try(ha.getBusinessObjectByName(nameSpace, objectName)) match {
+    Try(herdApi.getBusinessObjectByName(nameSpace, objectName)) match {
       case Success(_) => Unit
       case Failure(ex) => throw ex
     }
 
-    ha.registerBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, partitionKey, None)
+    herdApi.registerBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, partitionKey, None)
   }
 
   /** retrieves a previously saved DataFrame

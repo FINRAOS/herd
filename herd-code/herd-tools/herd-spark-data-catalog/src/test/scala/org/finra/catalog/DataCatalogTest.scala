@@ -16,13 +16,14 @@
 package org.finra.catalog
 
 import java.util
-import java.util.Properties
 
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.herd.HerdApi
+import org.finra.herd.sdk.model._
 import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
+import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.when
-import org.mockito.{ArgumentCaptor, Mockito}
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mockito.MockitoSugar
@@ -31,168 +32,238 @@ import org.scalatest.mockito.MockitoSugar
 @RunWith(classOf[JUnitRunner])
 class DataCatalogTest extends FunSuite with MockitoSugar {
 
-    val spark: SparkSession = SparkSession
-    .builder()
-    .appName("catalog-test")
-    .master("local[*]")
-    .getOrCreate()
+      val spark: SparkSession = SparkSession
+      .builder()
+      .appName("catalog-test")
+      .master("local[*]")
+      .getOrCreate()
 
-    val properties=new Properties();
-    val mockDataCatalog=mock[DataCatalogWrapper]
-    val mockDC=mock[DataCatalog]
 
-    def init(): Unit ={
-      properties.load(ClassLoader.getSystemResourceAsStream("dataCatalog.properties"))
+      test("getPassword should return correct password from credStash when component is not null") {
+        val dataCatalog = new DataCatalog(spark, "test.com")
 
-      Mockito.doCallRealMethod().when(mockDataCatalog).getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password"))
-//      when(mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password"))).thenReturn(mockDC)
+        // Create mock credStash wrapper
+        val mockCredStash = mock[CredStashWrapper]
+        // Inject the mock object
+        dataCatalog.credStash = mockCredStash
+        val stringCaptor = ArgumentCaptor.forClass(classOf[String])
+        val mapCaptor = ArgumentCaptor.forClass(classOf[util.HashMap[String, String]])
+
+        when(mockCredStash.getSecret(stringCaptor.capture, mapCaptor.capture)).thenReturn("testPassword")
+        val secret = dataCatalog.getPassword(spark, "testUser", "ags", "dev", "catalog")
+        // Verify the secret
+        assertEquals("testPassword", secret)
+
+        // Verify prefixed credential name
+        assertEquals("ags.catalog.dev.testUser", stringCaptor.getValue)
+
+        // Verify context
+        val context : util.HashMap[String, String] = mapCaptor.getValue
+        assertEquals(3, context.size)
+        assertEquals("ags", context.get("AGS"))
+        assertEquals("dev", context.get("SDLC"))
+        assertEquals("catalog", context.get("Component"))
+      }
+
+       test("getPassword should return correct password from credStash when component is null") {
+        val dataCatalog = new DataCatalog(spark, "test.com")
+
+        // Create mock credStash wrapper
+        val mockCredStash = mock[CredStashWrapper]
+        // Inject the mock object
+        dataCatalog.credStash = mockCredStash
+        val stringCaptor = ArgumentCaptor.forClass(classOf[String])
+        val mapCaptor = ArgumentCaptor.forClass(classOf[util.HashMap[String, String]])
+
+        when(mockCredStash.getSecret(stringCaptor.capture, mapCaptor.capture)).thenReturn("testPassword")
+        val secret = dataCatalog.getPassword(spark, "testUser", "ags", "dev", null)
+        // Verify the secret
+        assertEquals("testPassword", secret)
+
+        // Verify prefixed credential name(component should not appear)
+        assertEquals("ags.dev.testUser", stringCaptor.getValue)
+
+        // Verify context
+        val context : util.HashMap[String, String] = mapCaptor.getValue
+        assertEquals(2, context.size)
+        assertEquals("ags", context.get("AGS"))
+        assertEquals("dev", context.get("SDLC"))
+      }
+
+      test("Mock: dmAllObjectsInNamespace should return the business object definition keys in List format") {
+        val dataCatalog = new DataCatalog(spark, "test.com")
+        val mockHerdApi = mock[HerdApi]
+        // Inject the herd api mock
+        dataCatalog.herdApi = mockHerdApi
+
+        var businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys
+        businessObjectDefinitionKeys.setBusinessObjectDefinitionKeys(new util.ArrayList[BusinessObjectDefinitionKey])
+
+        var businessObjectDefinitionKey = new BusinessObjectDefinitionKey
+        businessObjectDefinitionKey.setBusinessObjectDefinitionName("bdef1")
+        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey)
+
+        businessObjectDefinitionKey = new BusinessObjectDefinitionKey
+        businessObjectDefinitionKey.setBusinessObjectDefinitionName("bdef2")
+        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey)
+        when(mockHerdApi.getBusinessObjectsByNamespace("testNamespace")).thenReturn(businessObjectDefinitionKeys)
+
+        // Test the method
+        val objectList = dataCatalog.dmAllObjectsInNamespace("testNamespace")
+        assertEquals(List("bdef1","bdef2"),objectList)
+
+      }
+
+  test("Mock: getNamespaces should return a list of namespaces") {
+    val dataCatalog = new DataCatalog(spark, "test.com")
+    val mockHerdApi = mock[HerdApi]
+    // Inject the herd api mock
+    dataCatalog.herdApi = mockHerdApi
+
+    var businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys
+    businessObjectDefinitionKeys.setBusinessObjectDefinitionKeys(new util.ArrayList[BusinessObjectDefinitionKey])
+
+    var businessObjectDefinitionKey = new BusinessObjectDefinitionKey
+    businessObjectDefinitionKey.setNamespace("testNamespace1")
+    businessObjectDefinitionKeys.addBusinessObjectDefinitionKeysItem(businessObjectDefinitionKey)
+
+    businessObjectDefinitionKey.setNamespace("testNamespace2")
+    businessObjectDefinitionKeys.addBusinessObjectDefinitionKeysItem(businessObjectDefinitionKey)
+
+    var namespaceKeys=new NamespaceKeys
+    namespaceKeys.setNamespaceKeys(new util.ArrayList[NamespaceKey]())
+
+    var namespaceKey=new NamespaceKey
+
+    namespaceKey.setNamespaceCode("testNamespace1")
+    namespaceKeys.addNamespaceKeysItem(namespaceKey)
+
+    var namespaceKey1=new NamespaceKey
+    namespaceKey1.setNamespaceCode("testNamespace2")
+    namespaceKeys.addNamespaceKeysItem(namespaceKey1)
+
+    when(mockHerdApi.getAllNamespaces).thenReturn(namespaceKeys)
+
+    val objectList=dataCatalog.getNamespaces()
+    assertEquals(List("testNamespace1","testNamespace2"),objectList)
+
+  }
+
+  test("Mock: getBusinessObjectDefinitions return should data frame containing business object definitions") {
+    val dataCatalog = new DataCatalog(spark, "test.com")
+    val mockHerdApi = mock[HerdApi]
+    // Inject the herd api mock
+    dataCatalog.herdApi = mockHerdApi
+
+    var businessObjectDefinitionKey1=new BusinessObjectDefinitionKey
+    businessObjectDefinitionKey1.setBusinessObjectDefinitionName("object1")
+    businessObjectDefinitionKey1.setNamespace("testNamespace")
+
+    var businessObjectDefinitionKey2=new BusinessObjectDefinitionKey
+    businessObjectDefinitionKey2.setBusinessObjectDefinitionName("object2")
+    businessObjectDefinitionKey2.setNamespace("testNamespace")
+
+    var businessObjectDefinitionKeys=new BusinessObjectDefinitionKeys
+    businessObjectDefinitionKeys.setBusinessObjectDefinitionKeys(new util.ArrayList[BusinessObjectDefinitionKey]())
+
+    businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey1)
+    businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey2)
+
+    when(mockHerdApi.getBusinessObjectsByNamespace("testNamespace")).thenReturn(businessObjectDefinitionKeys)
+    val actualDF=dataCatalog.getBusinessObjectDefinitions("testNamespace")
+    import spark.implicits._
+    val expectedDF=List(("testNamespace","object1"),("testNamespace","object2")).toDF("namespace","definitionName")
+    assertEquals(expectedDF.except(actualDF).count,0)
     }
 
+      test("Mock: getBusinessObjectFormats should return a business object formats in a data frame") {
+        val dataCatalog = new DataCatalog(spark, "test.com")
+        val mockHerdApi = mock[HerdApi]
+        // Inject the herd api mock
+        dataCatalog.herdApi = mockHerdApi
 
-    test("getPassword should return correct password from credStash when component is not null") {
+        var businessObjectFormatKeys=new BusinessObjectFormatKeys
+        businessObjectFormatKeys.setBusinessObjectFormatKeys(new util.ArrayList[BusinessObjectFormatKey]())
+
+        var businessObjectFormatKey=new BusinessObjectFormatKey
+        businessObjectFormatKey.setBusinessObjectDefinitionName("testObject")
+        businessObjectFormatKey.setNamespace("testNamespace")
+        businessObjectFormatKey.setBusinessObjectFormatFileType("testFileType")
+        businessObjectFormatKey.setBusinessObjectFormatUsage("testUsage")
+        businessObjectFormatKey.setBusinessObjectFormatVersion(0)
+
+        businessObjectFormatKeys.addBusinessObjectFormatKeysItem(businessObjectFormatKey)
+
+        when(mockHerdApi.getBusinessObjectFormats("testNamespace","testObject",true)).thenReturn(businessObjectFormatKeys)
+        val businessObjectFormatDataFrame=dataCatalog.getBusinessObjectFormats("testNamespace","testObject")
+
+        import spark.implicits._
+        val expectedDF=List(("testNamespace","testObject","testUsage","testFileType","0")).toDF("namespace","definitionName","formatUsage","formatFileType","formatVersion")
+        assertEquals(expectedDF.except(businessObjectFormatDataFrame).count,0)
+
+      }
+
+    test("Mock: getDataAvailabilityRange should return data availability") {
       val dataCatalog = new DataCatalog(spark, "test.com")
+      val mockHerdApi = mock[HerdApi]
+      // Inject the herd api mock
+      dataCatalog.herdApi = mockHerdApi
 
-      // Create mock credStash wrapper
-      val mockCredStash = mock[CredStashWrapper]
-      // Inject the mock object
-      dataCatalog.credStash = mockCredStash
-      val stringCaptor = ArgumentCaptor.forClass(classOf[String])
-      val mapCaptor = ArgumentCaptor.forClass(classOf[util.HashMap[String, String]])
+      val businesObjectDataAvailability=new BusinessObjectDataAvailability
+      businesObjectDataAvailability.setNamespace("testNamespace")
+      businesObjectDataAvailability.setBusinessObjectDefinitionName("testObject")
+      businesObjectDataAvailability.setBusinessObjectFormatUsage("testUsage")
+      businesObjectDataAvailability.setBusinessObjectFormatFileType("testPartitionKey")
 
-      when(mockCredStash.getSecret(stringCaptor.capture, mapCaptor.capture)).thenReturn("testPassword")
-      val secret = dataCatalog.getPassword(spark, "testUser", "ags", "dev", "catalog")
-      // Verify the secret
-      assertEquals("testPassword", secret)
+      val businessObjectDataStatusList=new util.ArrayList[BusinessObjectDataStatus]
+      businesObjectDataAvailability.setAvailableStatuses(businessObjectDataStatusList)
 
-      // Verify prefixed credential name
-      assertEquals("ags.catalog.dev.testUser", stringCaptor.getValue)
+      var businessObjectDataStatus1= new BusinessObjectDataStatus
+      businessObjectDataStatus1.setBusinessObjectDataVersion(0)
+      businessObjectDataStatus1.setBusinessObjectFormatVersion(0)
+      businessObjectDataStatus1.setReason("object1")
+      businessObjectDataStatus1.setPartitionValue("2019-01-01")
 
-      // Verify context
-      val context : util.HashMap[String, String] = mapCaptor.getValue
-      assertEquals(3, context.size)
-      assertEquals("ags", context.get("AGS"))
-      assertEquals("dev", context.get("SDLC"))
-      assertEquals("catalog", context.get("Component"))
-    }
+      var businessObjectDataStatus2= new BusinessObjectDataStatus
+      businessObjectDataStatus2.setBusinessObjectDataVersion(0)
+      businessObjectDataStatus2.setBusinessObjectFormatVersion(0)
+      businessObjectDataStatus2.setReason("object2")
+      businessObjectDataStatus2.partitionValue("2019-02-01")
 
-     test("getPassword should return correct password from credStash when component is null") {
-      val dataCatalog = new DataCatalog(spark, "test.com")
+//      var businessObjectDataStatus3= new BusinessObjectDataStatus
+//      businessObjectDataStatus3.setBusinessObjectDataVersion(0)
+//      businessObjectDataStatus3.setBusinessObjectFormatVersion(0)
+//      businessObjectDataStatus3.setReason("object3")
+//      businessObjectDataStatus3.partitionValue("2018-12-01")
 
-      // Create mock credStash wrapper
-      val mockCredStash = mock[CredStashWrapper]
-      // Inject the mock object
-      dataCatalog.credStash = mockCredStash
-      val stringCaptor = ArgumentCaptor.forClass(classOf[String])
-      val mapCaptor = ArgumentCaptor.forClass(classOf[util.HashMap[String, String]])
+      businessObjectDataStatusList.add(businessObjectDataStatus1)
+      businessObjectDataStatusList.add(businessObjectDataStatus2)
+//      businessObjectDataStatusList.add(businessObjectDataStatus3)
 
-      when(mockCredStash.getSecret(stringCaptor.capture, mapCaptor.capture)).thenReturn("testPassword")
-      val secret = dataCatalog.getPassword(spark, "testUser", "ags", "dev", null)
-      // Verify the secret
-      assertEquals("testPassword", secret)
+      businesObjectDataAvailability.setAvailableStatuses(businessObjectDataStatusList)
 
-      // Verify prefixed credential name(component should not appear)
-      assertEquals("ags.dev.testUser", stringCaptor.getValue)
+      when(mockHerdApi.getBusinessObjectDataAvailability("testNamespace","testObject","testUsage","testFileType","testPartitionKey","2019-01-01","2099-12-31")).thenReturn(businesObjectDataAvailability)
 
-      // Verify context
-      val context : util.HashMap[String, String] = mapCaptor.getValue
-      assertEquals(2, context.size)
-      assertEquals("ags", context.get("AGS"))
-      assertEquals("dev", context.get("SDLC"))
-    }
-
-    test("dmAllObjectsInNamespace should return the business object definition keys in List format") {
-      init()
-      val objectList = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).dmAllObjectsInNamespace("DATAMGT")
-      assertEquals(List("datamgt_bdef","datamgt_bdef2"),objectList)
-
-    }
-
-//  test("Mock: dmAllObjectsInNamespace should return the business object definition keys in List format") {
-//    val dataCatalog = new DataCatalog(spark, "test.com")
-//    val mockHerdApi = mock[HerdApi]
-//    // Inject the herd api mock
-//    dataCatalog.herdApi = mockHerdApi
-//
-//    var businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys
-//    var businessObjectDefinitionKey = new BusinessObjectDefinitionKey
-//    businessObjectDefinitionKey.setBusinessObjectDefinitionName("bdef1")
-//    businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey)
-//
-//    businessObjectDefinitionKey = new BusinessObjectDefinitionKey
-//    businessObjectDefinitionKey.setBusinessObjectDefinitionName("bdef2")
-//    businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey)
-//    when(mockHerdApi.getBusinessObjectsByNamespace("testNamespace")).thenReturn(businessObjectDefinitionKeys)
-//
-//    // Test the method
-//    val objectList = dataCatalog.dmAllObjectsInNamespace("testNamespace")
-//    assertEquals(List("bdef1","bdef2"),objectList)
-//
-//  }
-
-    test("getNamespaces should return a list of namespaces") {
-      init()
-      val namespaces = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).getNamespaces()
-      assertEquals(namespaces.contains("DATAMGT"),true)
-    }
-
-    test("getBusinessObjectDefinitions return should data frame containing business object definitions") {
-      init()
-      val businessObjectDefinitions = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).getBusinessObjectDefinitions("DATAMGT")
-      businessObjectDefinitions.show()
+      val dataAvailabilityDataFrame = dataCatalog.getDataAvailabilityRange("testNamespace","testObject","testUsage","testFileType","testPartitionKey","2019-01-01","2099-12-31", 0)
+      dataAvailabilityDataFrame.show
       import spark.implicits._
-      val expectedDF=List(("DATAMGT","datamgt_bdef"),("DATAMGT","datamgt_bdef2")).toDF("namespace","definitionName")
-      assertEquals(expectedDF.except(businessObjectDefinitions).count,0)
-    }
+      val expectedDF=List(("testNamespace","testObject","testUsage","testPartitionKey","0","0","object1","2019-01-01"),
+                          ("testNamespace","testObject","testUsage","testPartitionKey","0","0","object2","2019-02-01")).toDF("Namespace","ObjectName","Usage","FileFormat","FormatVersion","DataVersion","Reason","")
 
-    test("getBusinessObjectFormats should return a business object formats in a data frame") {
-      init()
-      val businessObjectFormatDataFrame = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).getBusinessObjectFormats("DATAMGT", "datamgt_bdef")
-      import spark.implicits._
-      val expectedDF=List(("DATAMGT","datamgt_bdef","formatUsage","RELATIONAL_TABLE","0")).toDF("namespace","definitionName","formatUsage","formatFileType","formatVersion")
-      assertEquals(expectedDF.except(businessObjectFormatDataFrame).count,0)
-    }
-
-    test("saveDataframe stores a new object in S3 by registering it in DM"){
-      import spark.implicits._
-      val df01 = List(
-        ("2019-01-10", 1, 93051.234544f: Float, 93051.234544: Double, BigDecimal(3.3), "one", true),
-        ("2019-01-10", 4, 93052.234544f: Float, 93052.234544: Double, BigDecimal(6.6), "two", false),
-        ("2019-01-10", 7, 93053.234544f: Float, 93053.234544: Double, BigDecimal(9.9), "three", true)
-      ).toDF("tdate", "int", "float", "double", "bigdecimal", "string", "boolean")
-
-      val df02 = List(
-        ("2019-02-10", 1, 93054.234544f: Float, 93054.234544: Double, BigDecimal(3.3), "one", true),
-        ("2019-02-10", 4, 93055.234544f: Float, 93055.234544: Double, BigDecimal(6.6), "two", false),
-        ("2019-02-10", 7, 93056.234544f: Float, 93056.234544: Double, BigDecimal(9.9), "three", true)
-      ).toDF("tdate", "int", "float", "double", "bigdecimal", "string", "boolean")
-
-      val nameSpace = "DATAMGT"
-      val objName = "datamgt_bdef"
-      val partitionKey = "tdate"
-      val partitionValue01 = "2019-01-10"
-      val partitionValue02 = "2019-02-10"
-
-      mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).saveDataFrame(df01, nameSpace, objName, partitionKey, partitionValue01)
-      mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).saveDataFrame(df02, nameSpace, objName, partitionKey, partitionValue02)
-
-    }
-
-    test("getDataAvailabilityRange should return data availability") {
-      init()
-      val dataAvailabilityDataFrame = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).getDataAvailabilityRange("DATAMGT", "datamgt_bdef", "PRC", "PARQUET", "tdate", "2019-01-01", "2099-12-31", 0)
-      dataAvailabilityDataFrame.show()
+      assertEquals(dataAvailabilityDataFrame.except(expectedDF).count,0)
+      spark.stop()
     }
 
   test("queryPath should return a business object data XML") {
 
-     val businessObjectDataXML = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).queryPath("DATAMGT", "datamgt_bdef", "formatUsage", "RELATIONAL_TABLE", "partition", Array("2018-12-07"), 0, 0)
-      print(businessObjectDataXML)
+//     val businessObjectDataXML = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).queryPath("DATAMGT", "datamgt_bdef", "formatUsage", "RELATIONAL_TABLE", "partition", Array("2018-12-07"), 0, 0)
+//      print(businessObjectDataXML)
   }
 
   test("callBusinessObjectFormatQuery should return a business object format XML") {
 
-    val businessObjectFormatXML = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).callBusinessObjectFormatQuery("DATAMGT", "datamgt_bdef", "formatUsage", "RELATIONAL_TABLE", 0)
-    assertEquals(businessObjectFormatXML.contains("BusinessObjectFormat"),true)
+//    val businessObjectFormatXML = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).callBusinessObjectFormatQuery("DATAMGT", "datamgt_bdef", "formatUsage", "RELATIONAL_TABLE", 0)
+//    assertEquals(businessObjectFormatXML.contains("BusinessObjectFormat"),true)
   }
 
 
