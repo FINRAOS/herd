@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.finra.herd</groupId>
+      <artifactId>herd-tools</artifactId>
+      <version>0.96.0-SNAPSHOT</version>
+   </parent>
+
+   <name>herd spark data catalog</name>
+
+   <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
+   <artifactId>herd-spark-data-catalog</artifactId>
+
+   <!-- build the data source for spark version 2.3.0 -->
+   <properties>
+      <spark.version>2.3.0</spark.version>
+   </properties>
+
+   <dependencies>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-core</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-annotations</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-databind</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.jaxrs</groupId>
+         <artifactId>jackson-jaxrs-json-provider</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.datatype</groupId>
+         <artifactId>jackson-datatype-joda</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.scala-lang</groupId>
+         <artifactId>scala-library</artifactId>
+         <version>${scala.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-kms</artifactId>
+         <version>1.11.7</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <version>1.7.21</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>co.wrisk.jcredstash</groupId>
+         <artifactId>jcredstash</artifactId>
+      </dependency>
+
+      <!-- Spark bits, scoped for uber jar creation (provided) -->
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-sql_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-hive_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.finra.herd</groupId>
+         <artifactId>herd-spark-data-source</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.scalactic</groupId>
+         <artifactId>scalactic_${scala.tools.version}</artifactId>
+         <version>3.0.1</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.dataformat</groupId>
+         <artifactId>jackson-dataformat-xml</artifactId>
+         <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.scalatest</groupId>
+         <artifactId>scalatest_${scala.tools.version}</artifactId>
+         <version>3.0.1</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.pegdown</groupId>
+         <artifactId>pegdown</artifactId>
+         <version>1.1.0</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.mockito</groupId>
+         <artifactId>mockito-core</artifactId>
+         <scope>test</scope>
+      </dependency>
+
+   </dependencies>
+
+   <build>
+      <plugins>
+         <plugin>
+            <artifactId>maven-site-plugin</artifactId>
+            <version>3.3</version>
+            <configuration>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <version>${scala.maven.plugin.version}</version>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>compile</goal>
+                     <goal>testCompile</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <sourceDir>src/main/scala</sourceDir>
+               <testSourceDir>src/test/scala</testSourceDir>
+               <jvmArgs>
+                  <jvmArg>-Xms512m</jvmArg>
+                  <jvmArg>-Xmx1500m</jvmArg>
+               </jvmArgs>
+            </configuration>
+         </plugin>
+
+         <!-- disable surefire -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.7</version>
+            <configuration>
+               <skipTests>true</skipTests>
+            </configuration>
+         </plugin>
+
+         <!-- Use mvn package for felicity to generate scaladocs. The spark pom has an extended example of this plugin -->
+         <plugin>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <version>3.2.1</version>
+            <executions>
+               <execution>
+                  <id>Scaladoc</id>
+                  <goals>
+                     <goal>doc</goal>
+                     <goal>doc-jar</goal>
+                  </goals>
+                  <phase>prepare-package</phase>
+                  <configuration>
+                     <args>
+                        <arg>-no-link-warnings</arg>
+                     </args>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>Compile</id>
+                  <goals>
+                     <goal>compile</goal>
+                     <goal>testCompile</goal>
+                  </goals>
+                  <configuration>
+                     <args>
+                        <arg>-dependencyfile</arg>
+                        <arg>${project.build.directory}/.scala_dependencies</arg>
+                     </args>
+                  </configuration>
+               </execution>
+            </executions>
+            <configuration>
+               <excludes>
+                  <exclude>**/*TEST*.scala</exclude>
+               </excludes>
+               <jvmArgs>
+                  <jvmArg>-Xms512m</jvmArg>
+                  <jvmArg>-Xmx1500m</jvmArg>
+               </jvmArgs>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.scalastyle</groupId>
+            <artifactId>scalastyle-maven-plugin</artifactId>
+            <version>${scalastyle.version}</version>
+            <configuration>
+               <verbose>false</verbose>
+               <failOnViolation>true</failOnViolation>
+               <includeTestSourceDirectory>true</includeTestSourceDirectory>
+               <failOnWarning>false</failOnWarning>
+               <sourceDirectory>${project.basedir}/src/main/scala</sourceDirectory>
+               <testSourceDirectory>${project.basedir}/src/test/scala</testSourceDirectory>
+               <configLocation>scalastyle-config.xml</configLocation>
+            </configuration>
+            <executions>
+               <execution>
+                  <id>check-style-scala</id>
+                  <!-- bind to the packaging phase -->
+                  <phase>package</phase>
+                  <goals>
+                     <goal>check</goal>
+                  </goals>
+               </execution>
+               <execution>
+                  <goals>
+                     <goal>check</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>${maven.shade.plugin.version}</version>
+            <configuration>
+               <finalName>${project.artifactId}-${project.version}_${scala.tools.version}-assembly</finalName>
+               <filters>
+                  <filter>
+                     <artifact>*</artifact>
+                     <excludes>
+                        <exclude>META-INF/*.SF</exclude>
+                        <exclude>META-INF/*.DSA</exclude>
+                        <exclude>META-INF/*.RSA</exclude>
+                     </excludes>
+                  </filter>
+               </filters>
+               <relocations>
+                  <relocation>
+                     <pattern>com.fasterxml.jackson</pattern>
+                     <shadedPattern>org.finra.herd.spark.com.fasterxml.jackson</shadedPattern>
+                     <includes>
+                        <include>com.fasterxml.jackson.**</include>
+                     </includes>
+                  </relocation>
+               </relocations>
+            </configuration>
+            <executions>
+               <execution>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>shade</goal>
+                  </goals>
+                  <configuration>
+                     <shadedArtifactAttached>true</shadedArtifactAttached>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
+</project>
