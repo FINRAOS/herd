@@ -1199,7 +1199,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 
-    public static final String CSV_INJECTION_ERROR_MSG = "One or more schema column fields start with a prohibited character";
+    public static final String SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG = "One or more schema column fields start with a prohibited character.";
+
+    public static final String BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG =
+        "One or more business object definition column fields start with a prohibited character.";
 
     // A holding location for a property source.
     // When we remove the property source from the environment, we will place it here as a holding area. Then when we want to add it back into the

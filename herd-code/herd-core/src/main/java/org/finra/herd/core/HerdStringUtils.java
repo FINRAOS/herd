@@ -100,12 +100,13 @@ public class HerdStringUtils
      * Check if the text is vulnerable to CSV Injection attack.
      *
      * @param text the text
+     * @param errorMessage the error message in the exception when CVS Injection check fails
      */
-    public static void checkCsvInjection(String text)
+    public static void checkCsvInjection(String text, String errorMessage)
     {
         if (StringUtils.isNotEmpty(text) && text.matches(CSV_INJECTION_REGEX))
         {
-            throw new IllegalArgumentException("One or more schema column fields start with a prohibited character");
+            throw new IllegalArgumentException(errorMessage);
         }
     }
 }

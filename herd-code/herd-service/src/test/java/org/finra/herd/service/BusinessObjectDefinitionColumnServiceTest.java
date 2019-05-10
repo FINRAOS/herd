@@ -442,7 +442,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Specify the expected exception.
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+        expectedException.expectMessage(is(BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG));
 
         // Create a business object definition column.
         businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
@@ -466,7 +466,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Specify the expected exception.
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+        expectedException.expectMessage(is(BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG));
 
         // Create a business object definition column.
         businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
@@ -490,7 +490,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Specify the expected exception.
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+        expectedException.expectMessage(is(BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG));
 
         // Create a business object definition column.
         businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
