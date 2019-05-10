@@ -233,7 +233,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
       businessObjectDataStatus1.setReason("object1")
       businessObjectDataStatus1.setPartitionValue("2019-01-01")
 
-      var businessObjectDataStatus2= new BusinessObjectDataStatus
+      var businessObjectDataStatus2 = new BusinessObjectDataStatus
       businessObjectDataStatus2.setBusinessObjectDataVersion(0)
       businessObjectDataStatus2.setBusinessObjectFormatVersion(0)
       businessObjectDataStatus2.setReason("object2")
