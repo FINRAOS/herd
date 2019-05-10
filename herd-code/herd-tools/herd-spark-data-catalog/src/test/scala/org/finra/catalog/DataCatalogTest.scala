@@ -32,11 +32,20 @@ import org.scalatest.mockito.MockitoSugar
 @RunWith(classOf[JUnitRunner])
 class DataCatalogTest extends FunSuite with MockitoSugar {
 
-      val spark: SparkSession = SparkSession
+      private val spark: SparkSession = SparkSession
       .builder()
       .appName("catalog-test")
       .master("local[*]")
       .getOrCreate()
+
+      private val namespace = "testNamespace"
+      private val objectName = "testObject"
+      private val formatUsage = "testFormatUsage"
+      private val formatType = "testFormatType"
+      private val partitionKey = "testPartitonKey"
+      private val partitonValue = "2019-01-01"
+      private val dataVersion = 0
+      private val formatVersion = 0
 
 
       test("getPassword should return correct password from credStash when component is not null") {
@@ -90,7 +99,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
         assertEquals("dev", context.get("SDLC"))
       }
 
-      test("Mock: dmAllObjectsInNamespace should return the business object definition keys in List format") {
+      test("dmAllObjectsInNamespace should return the business object definition keys in List format") {
         val dataCatalog = new DataCatalog(spark, "test.com")
         val mockHerdApi = mock[HerdApi]
         // Inject the herd api mock
@@ -106,15 +115,15 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
         businessObjectDefinitionKey = new BusinessObjectDefinitionKey
         businessObjectDefinitionKey.setBusinessObjectDefinitionName("bdef2")
         businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey)
-        when(mockHerdApi.getBusinessObjectsByNamespace("testNamespace")).thenReturn(businessObjectDefinitionKeys)
+        when(mockHerdApi.getBusinessObjectsByNamespace(namespace)).thenReturn(businessObjectDefinitionKeys)
 
         // Test the method
-        val objectList = dataCatalog.dmAllObjectsInNamespace("testNamespace")
+        val objectList = dataCatalog.dmAllObjectsInNamespace(namespace)
         assertEquals(List("bdef1","bdef2"),objectList)
 
       }
 
-  test("Mock: getNamespaces should return a list of namespaces") {
+  test("getNamespaces should return a list of namespaces") {
     val dataCatalog = new DataCatalog(spark, "test.com")
     val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
@@ -130,95 +139,95 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     businessObjectDefinitionKey.setNamespace("testNamespace2")
     businessObjectDefinitionKeys.addBusinessObjectDefinitionKeysItem(businessObjectDefinitionKey)
 
-    var namespaceKeys=new NamespaceKeys
+    var namespaceKeys = new NamespaceKeys
     namespaceKeys.setNamespaceKeys(new util.ArrayList[NamespaceKey]())
 
-    var namespaceKey=new NamespaceKey
+    var namespaceKey = new NamespaceKey
 
     namespaceKey.setNamespaceCode("testNamespace1")
     namespaceKeys.addNamespaceKeysItem(namespaceKey)
 
-    var namespaceKey1=new NamespaceKey
+    var namespaceKey1 = new NamespaceKey
     namespaceKey1.setNamespaceCode("testNamespace2")
     namespaceKeys.addNamespaceKeysItem(namespaceKey1)
 
     when(mockHerdApi.getAllNamespaces).thenReturn(namespaceKeys)
 
-    val objectList=dataCatalog.getNamespaces()
+    val objectList = dataCatalog.getNamespaces()
     assertEquals(List("testNamespace1","testNamespace2"),objectList)
 
   }
 
-  test("Mock: getBusinessObjectDefinitions return should data frame containing business object definitions") {
+  test("getBusinessObjectDefinitions return should data frame containing business object definitions") {
     val dataCatalog = new DataCatalog(spark, "test.com")
     val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApi = mockHerdApi
 
-    var businessObjectDefinitionKey1=new BusinessObjectDefinitionKey
+    var businessObjectDefinitionKey1 = new BusinessObjectDefinitionKey
     businessObjectDefinitionKey1.setBusinessObjectDefinitionName("object1")
-    businessObjectDefinitionKey1.setNamespace("testNamespace")
+    businessObjectDefinitionKey1.setNamespace(namespace)
 
-    var businessObjectDefinitionKey2=new BusinessObjectDefinitionKey
+    var businessObjectDefinitionKey2 = new BusinessObjectDefinitionKey
     businessObjectDefinitionKey2.setBusinessObjectDefinitionName("object2")
-    businessObjectDefinitionKey2.setNamespace("testNamespace")
+    businessObjectDefinitionKey2.setNamespace(namespace)
 
-    var businessObjectDefinitionKeys=new BusinessObjectDefinitionKeys
+    var businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys
     businessObjectDefinitionKeys.setBusinessObjectDefinitionKeys(new util.ArrayList[BusinessObjectDefinitionKey]())
 
     businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey1)
     businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey2)
 
-    when(mockHerdApi.getBusinessObjectsByNamespace("testNamespace")).thenReturn(businessObjectDefinitionKeys)
-    val actualDF=dataCatalog.getBusinessObjectDefinitions("testNamespace")
+    when(mockHerdApi.getBusinessObjectsByNamespace(namespace)).thenReturn(businessObjectDefinitionKeys)
+    val actualDF = dataCatalog.getBusinessObjectDefinitions(namespace)
     import spark.implicits._
-    val expectedDF=List(("testNamespace","object1"),("testNamespace","object2")).toDF("namespace","definitionName")
+    val expectedDF = List((namespace,"object1"),(namespace,"object2")).toDF("namespace","definitionName")
     assertEquals(expectedDF.except(actualDF).count,0)
     }
 
-      test("Mock: getBusinessObjectFormats should return a business object formats in a data frame") {
+      test("getBusinessObjectFormats should return a business object formats in a data frame") {
         val dataCatalog = new DataCatalog(spark, "test.com")
         val mockHerdApi = mock[HerdApi]
         // Inject the herd api mock
         dataCatalog.herdApi = mockHerdApi
 
-        var businessObjectFormatKeys=new BusinessObjectFormatKeys
+        var businessObjectFormatKeys = new BusinessObjectFormatKeys
         businessObjectFormatKeys.setBusinessObjectFormatKeys(new util.ArrayList[BusinessObjectFormatKey]())
 
-        var businessObjectFormatKey=new BusinessObjectFormatKey
-        businessObjectFormatKey.setBusinessObjectDefinitionName("testObject")
-        businessObjectFormatKey.setNamespace("testNamespace")
-        businessObjectFormatKey.setBusinessObjectFormatFileType("testFileType")
-        businessObjectFormatKey.setBusinessObjectFormatUsage("testUsage")
-        businessObjectFormatKey.setBusinessObjectFormatVersion(0)
+        var businessObjectFormatKey = new BusinessObjectFormatKey
+        businessObjectFormatKey.setBusinessObjectDefinitionName(objectName)
+        businessObjectFormatKey.setNamespace(namespace)
+        businessObjectFormatKey.setBusinessObjectFormatFileType(formatType)
+        businessObjectFormatKey.setBusinessObjectFormatUsage(formatUsage)
+        businessObjectFormatKey.setBusinessObjectFormatVersion(formatVersion)
 
         businessObjectFormatKeys.addBusinessObjectFormatKeysItem(businessObjectFormatKey)
 
-        when(mockHerdApi.getBusinessObjectFormats("testNamespace","testObject",true)).thenReturn(businessObjectFormatKeys)
-        val businessObjectFormatDataFrame=dataCatalog.getBusinessObjectFormats("testNamespace","testObject")
+        when(mockHerdApi.getBusinessObjectFormats(namespace,objectName,true)).thenReturn(businessObjectFormatKeys)
+        val businessObjectFormatDataFrame = dataCatalog.getBusinessObjectFormats(namespace,objectName)
 
         import spark.implicits._
-        val expectedDF=List(("testNamespace","testObject","testUsage","testFileType","0")).toDF("namespace","definitionName","formatUsage","formatFileType","formatVersion")
+        val expectedDF = List((namespace,objectName,formatUsage,formatType,"0")).toDF("namespace","definitionName","formatUsage","formatFileType","formatVersion")
         assertEquals(expectedDF.except(businessObjectFormatDataFrame).count,0)
 
       }
 
-    test("Mock: getDataAvailabilityRange should return data availability") {
+    test("getDataAvailabilityRange should return data availability") {
       val dataCatalog = new DataCatalog(spark, "test.com")
       val mockHerdApi = mock[HerdApi]
       // Inject the herd api mock
       dataCatalog.herdApi = mockHerdApi
 
-      val businesObjectDataAvailability=new BusinessObjectDataAvailability
-      businesObjectDataAvailability.setNamespace("testNamespace")
-      businesObjectDataAvailability.setBusinessObjectDefinitionName("testObject")
-      businesObjectDataAvailability.setBusinessObjectFormatUsage("testUsage")
-      businesObjectDataAvailability.setBusinessObjectFormatFileType("testPartitionKey")
+      val businesObjectDataAvailability = new BusinessObjectDataAvailability
+      businesObjectDataAvailability.setNamespace(namespace)
+      businesObjectDataAvailability.setBusinessObjectDefinitionName(objectName)
+      businesObjectDataAvailability.setBusinessObjectFormatUsage(formatUsage)
+      businesObjectDataAvailability.setBusinessObjectFormatFileType(partitionKey)
 
-      val businessObjectDataStatusList=new util.ArrayList[BusinessObjectDataStatus]
+      val businessObjectDataStatusList = new util.ArrayList[BusinessObjectDataStatus]
       businesObjectDataAvailability.setAvailableStatuses(businessObjectDataStatusList)
 
-      var businessObjectDataStatus1= new BusinessObjectDataStatus
+      var businessObjectDataStatus1 = new BusinessObjectDataStatus
       businessObjectDataStatus1.setBusinessObjectDataVersion(0)
       businessObjectDataStatus1.setBusinessObjectFormatVersion(0)
       businessObjectDataStatus1.setReason("object1")
@@ -230,56 +239,125 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
       businessObjectDataStatus2.setReason("object2")
       businessObjectDataStatus2.partitionValue("2019-02-01")
 
-//      var businessObjectDataStatus3= new BusinessObjectDataStatus
-//      businessObjectDataStatus3.setBusinessObjectDataVersion(0)
-//      businessObjectDataStatus3.setBusinessObjectFormatVersion(0)
-//      businessObjectDataStatus3.setReason("object3")
-//      businessObjectDataStatus3.partitionValue("2018-12-01")
-
       businessObjectDataStatusList.add(businessObjectDataStatus1)
       businessObjectDataStatusList.add(businessObjectDataStatus2)
-//      businessObjectDataStatusList.add(businessObjectDataStatus3)
 
       businesObjectDataAvailability.setAvailableStatuses(businessObjectDataStatusList)
 
-      when(mockHerdApi.getBusinessObjectDataAvailability("testNamespace","testObject","testUsage","testFileType","testPartitionKey","2019-01-01","2099-12-31")).thenReturn(businesObjectDataAvailability)
+      when(mockHerdApi.getBusinessObjectDataAvailability(namespace,objectName,formatUsage,formatType,partitionKey,"2019-01-01","2099-12-31")).thenReturn(businesObjectDataAvailability)
 
-      val dataAvailabilityDataFrame = dataCatalog.getDataAvailabilityRange("testNamespace","testObject","testUsage","testFileType","testPartitionKey","2019-01-01","2099-12-31", 0)
+      val dataAvailabilityDataFrame = dataCatalog.getDataAvailabilityRange(namespace,objectName,formatUsage,formatType,partitionKey,"2019-01-01","2099-12-31", formatVersion)
       dataAvailabilityDataFrame.show
       import spark.implicits._
-      val expectedDF=List(("testNamespace","testObject","testUsage","testPartitionKey","0","0","object1","2019-01-01"),
-                          ("testNamespace","testObject","testUsage","testPartitionKey","0","0","object2","2019-02-01")).toDF("Namespace","ObjectName","Usage","FileFormat","FormatVersion","DataVersion","Reason","")
+      val expectedDF = List((namespace,objectName,formatUsage,partitionKey,"0","0","object1","2019-01-01"),
+                          (namespace,objectName,formatUsage,partitionKey,"0","0","object2","2019-02-01")).toDF("Namespace","ObjectName","Usage","FileFormat","FormatVersion","DataVersion","Reason","")
 
       assertEquals(dataAvailabilityDataFrame.except(expectedDF).count,0)
-      spark.stop()
+
     }
 
   test("queryPath should return a business object data XML") {
+    val dataCatalog = new DataCatalog(spark, "test.com")
+    val mockHerdApi = mock[HerdApi]
+    // Inject the herd api mock
+    dataCatalog.herdApi = mockHerdApi
 
-//     val businessObjectDataXML = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).queryPath("DATAMGT", "datamgt_bdef", "formatUsage", "RELATIONAL_TABLE", "partition", Array("2018-12-07"), 0, 0)
-//      print(businessObjectDataXML)
+    var businessObjectData = new BusinessObjectData
+    businessObjectData.setNamespace(namespace)
+    businessObjectData.setBusinessObjectDefinitionName(objectName)
+    businessObjectData.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectData.setBusinessObjectFormatFileType(formatType)
+    businessObjectData.setBusinessObjectFormatVersion(formatVersion)
+    businessObjectData.setVersion(dataVersion)
+    businessObjectData.setPartitionKey(partitionKey)
+    businessObjectData.setPartitionValue(partitonValue)
+
+    val partitionValue = Array(partitonValue)
+
+    when(mockHerdApi.getBusinessObjectData(namespace,objectName,formatUsage,formatType,0,partitionKey,partitionValue(0),partitionValue.drop(1),0)).thenReturn(businessObjectData)
+
+
+    val businessObjectDataXML = dataCatalog.queryPath(namespace,objectName,formatUsage, formatType, partitionKey, partitionValue, 0, 0)
+
+    val expectedDataXML = "<BusinessObjectData><id/><namespace>"+namespace+"</namespace><businessObjectDefinitionName>"+objectName+"</businessObjectDefinitionName><businessObjectFormatUsage>"+formatUsage+"</businessObjectFormatUsage><businessObjectFormatFileType>"+formatType+"</businessObjectFormatFileType><businessObjectFormatVersion>"+formatVersion+"</businessObjectFormatVersion><partitionKey>"+partitionKey+"</partitionKey><partitionValue>"+partitonValue+"</partitionValue><version>"+formatVersion+"</version><latestVersion/><status/><retentionExpirationDate/></BusinessObjectData>"
+    assertEquals(expectedDataXML,businessObjectDataXML)
   }
 
   test("callBusinessObjectFormatQuery should return a business object format XML") {
 
-//    val businessObjectFormatXML = mockDataCatalog.getDataCatalog(spark, properties.getProperty("host"), properties.getProperty("username"), properties.getProperty("password")).callBusinessObjectFormatQuery("DATAMGT", "datamgt_bdef", "formatUsage", "RELATIONAL_TABLE", 0)
-//    assertEquals(businessObjectFormatXML.contains("BusinessObjectFormat"),true)
+    val dataCatalog = new DataCatalog(spark, "test.com")
+    val mockHerdApi = mock[HerdApi]
+    // Inject the herd api mock
+    dataCatalog.herdApi = mockHerdApi
+
+    var businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
+    businessObjectFormat.setNamespace(namespace)
+    businessObjectFormat.setBusinessObjectDefinitionName(objectName)
+    businessObjectFormat.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectFormat.setBusinessObjectFormatFileType(formatType)
+    businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
+
+    when(mockHerdApi.getBusinessObjectFormat(namespace,objectName,formatUsage,formatType,formatVersion)).thenReturn(businessObjectFormat)
+
+    val businessObjectFormatXML = dataCatalog.callBusinessObjectFormatQuery(namespace,objectName,formatUsage,formatType,formatVersion)
+
+    val expectedXML = "<BusinessObjectFormat><id/><namespace>"+namespace+"</namespace><businessObjectDefinitionName>"+objectName+"</businessObjectDefinitionName><businessObjectFormatUsage>"+formatUsage+"</businessObjectFormatUsage><businessObjectFormatFileType>"+formatType+"</businessObjectFormatFileType><businessObjectFormatVersion>"+formatVersion+"</businessObjectFormatVersion><latestVersion/><partitionKey/><description/><documentSchema/><documentSchemaUrl/><schema/><recordFlag/><retentionPeriodInDays/><retentionType/><allowNonBackwardsCompatibleChanges/></BusinessObjectFormat>"
+
+    assertEquals(expectedXML,businessObjectFormatXML)
+
   }
 
+  test("dmSearch should return a list of tuples containing business object definition name and partition value") {
 
-//
-//  test("dmSearch should return a list of tuples containing business object definition name and partition value") {
-//    // @TODO: Create a unit test
-//    // val dataCatalog = new DataCatalog(spark, "test.com")
-//    // val dmSearchResults = dataCatalog.dmSearch("FOO", "BAR")
-//  }
-//
-//  test("queryPathFromGenerateDdl should return a list of S3 key prefixes") {
-//    // @TODO: Create a unit test
-//    // val dataCatalog = new DataCatalog(spark, "test.com")
-//    // val dmSearchResults = dataCatalog.queryPathFromGenerateDdl("FOO", "BAR", "PRC", "ORC", "DATE", Array("2018-12-06"), 0, 0)
-//  }
-//
+    val dataCatalog = new DataCatalog(spark, "test.com")
+    val mockHerdApi = mock[HerdApi]
+    // Inject the herd api mock
+    dataCatalog.herdApi = mockHerdApi
+
+    var businessObjectDataSearchKey = new BusinessObjectDataSearchKey()
+    businessObjectDataSearchKey.setNamespace(namespace)
+    businessObjectDataSearchKey.setBusinessObjectDefinitionName(objectName)
+    var businessObjectDataSearchFilter = new BusinessObjectDataSearchFilter()
+    businessObjectDataSearchFilter.addBusinessObjectDataSearchKeysItem(businessObjectDataSearchKey)
+    var businessObjectDataSearchRequest = new BusinessObjectDataSearchRequest()
+    businessObjectDataSearchRequest.addBusinessObjectDataSearchFiltersItem(businessObjectDataSearchFilter)
+
+    var businessObjectDataSearchResult=new BusinessObjectDataSearchResult
+    var businessObjectData=new BusinessObjectData
+    businessObjectData.setNamespace(namespace)
+    businessObjectData.setBusinessObjectDefinitionName(objectName)
+    businessObjectData.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectData.setBusinessObjectFormatFileType(formatType)
+    businessObjectData.setBusinessObjectFormatVersion(formatVersion)
+    businessObjectData.setVersion(dataVersion)
+    businessObjectData.setPartitionKey(partitionKey)
+    businessObjectData.setPartitionValue(partitonValue)
+
+    var businessObjectDataElements = new util.ArrayList[BusinessObjectData]()
+    businessObjectDataElements.add(businessObjectData)
+    businessObjectDataSearchResult.setBusinessObjectDataElements(businessObjectDataElements)
+
+    when(mockHerdApi.searchBusinessObjectData(businessObjectDataSearchRequest)).thenReturn(businessObjectDataSearchResult)
+    val dmSearchResults = dataCatalog.dmSearch(namespace, objectName)
+
+    assertEquals(List((objectName,partitonValue)),dmSearchResults)
+  }
+
+  test("queryPathFromGenerateDdl should return a list of S3 key prefixes") {
+
+    val dataCatalog = new DataCatalog(spark, "test.com")
+    val mockHerdApi = mock[HerdApi]
+    // Inject the herd api mock
+    dataCatalog.herdApi = mockHerdApi
+
+    val dmSearchResults = dataCatalog.queryPathFromGenerateDdl("FOO", "BAR", "PRC", "ORC", "DATE", Array("2018-12-06"), 0, 0)
+
+  }
+
+  test("stop spark")
+  {
+    spark.stop()
+  }
 
 }
 
