@@ -106,6 +106,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectFormatServiceImpl.class);
 
+    private static final String SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG =
+        "One or more schema column fields start with a prohibited character.";
+
     /**
      * List all schema column data types for which size increase is considered to be an additive schema change.
      */
@@ -999,11 +1002,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      */
     private void checkSchemaColumnCsvInjection(SchemaColumn schemaColumn)
     {
-        HerdStringUtils.checkCsvInjection(schemaColumn.getName());
-        HerdStringUtils.checkCsvInjection(schemaColumn.getType());
-        HerdStringUtils.checkCsvInjection(schemaColumn.getSize());
-        HerdStringUtils.checkCsvInjection(schemaColumn.getDefaultValue());
-        HerdStringUtils.checkCsvInjection(schemaColumn.getDescription());
+        HerdStringUtils.checkCsvInjection(schemaColumn.getName(), SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG);
+        HerdStringUtils.checkCsvInjection(schemaColumn.getType(), SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG);
+        HerdStringUtils.checkCsvInjection(schemaColumn.getSize(), SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG);
+        HerdStringUtils.checkCsvInjection(schemaColumn.getDefaultValue(), SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG);
+        HerdStringUtils.checkCsvInjection(schemaColumn.getDescription(), SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG);
     }
 
     /**

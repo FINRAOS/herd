@@ -732,7 +732,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
     {
         // Specify the expected exception.
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+        expectedException.expectMessage(is(SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG));
 
         // Create a business object format.
         businessObjectFormatServiceImpl.createBusinessObjectFormat(
@@ -758,7 +758,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
 
         // Specify the expected exception.
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+        expectedException.expectMessage(is(SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG));
 
         // Create a business object format.
         businessObjectFormatServiceImpl.updateBusinessObjectFormat(businessObjectFormatKey,

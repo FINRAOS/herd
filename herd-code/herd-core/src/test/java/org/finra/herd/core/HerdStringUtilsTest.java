@@ -35,7 +35,7 @@ public class HerdStringUtilsTest extends AbstractCoreTest
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    private static final String CSV_INJECTION_ERROR_MSG = "One or more schema column fields start with a prohibited character";
+    private static final String CSV_INJECTION_ERROR_MSG = "One or more schema column fields start with a prohibited character.";
 
     @Test
     public void testDecodeBase64()
@@ -106,7 +106,7 @@ public class HerdStringUtilsTest extends AbstractCoreTest
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
 
-        HerdStringUtils.checkCsvInjection("=abc");
+        HerdStringUtils.checkCsvInjection("=abc", CSV_INJECTION_ERROR_MSG);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class HerdStringUtilsTest extends AbstractCoreTest
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
 
-        HerdStringUtils.checkCsvInjection("+abc");
+        HerdStringUtils.checkCsvInjection("+abc", CSV_INJECTION_ERROR_MSG);
     }
 
     @Test
@@ -126,7 +126,7 @@ public class HerdStringUtilsTest extends AbstractCoreTest
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
 
-        HerdStringUtils.checkCsvInjection("@abc");
+        HerdStringUtils.checkCsvInjection("@abc", CSV_INJECTION_ERROR_MSG);
     }
 
     @Test
@@ -136,36 +136,36 @@ public class HerdStringUtilsTest extends AbstractCoreTest
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
 
-        HerdStringUtils.checkCsvInjection("-abc");
+        HerdStringUtils.checkCsvInjection("-abc", CSV_INJECTION_ERROR_MSG);
     }
 
     @Test
     public void testCheckCsvInjectionValidEmptyCharacter()
     {
-        HerdStringUtils.checkCsvInjection("");
+        HerdStringUtils.checkCsvInjection("", CSV_INJECTION_ERROR_MSG);
     }
 
     @Test
     public void testCheckCsvInjectionValidNull()
     {
-        HerdStringUtils.checkCsvInjection(null);
+        HerdStringUtils.checkCsvInjection(null, CSV_INJECTION_ERROR_MSG);
     }
 
     @Test
     public void testCheckCsvInjectionValidStartsWithNormalCharacter()
     {
-        HerdStringUtils.checkCsvInjection("hello");
+        HerdStringUtils.checkCsvInjection("hello", CSV_INJECTION_ERROR_MSG);
     }
 
     @Test
     public void testCheckCsvInjectionValidPlusCharacterInMiddle()
     {
-        HerdStringUtils.checkCsvInjection("abc+def");
+        HerdStringUtils.checkCsvInjection("abc+def", CSV_INJECTION_ERROR_MSG);
     }
 
     @Test
     public void testCheckCsvInjectionValidStartsWithBlank()
     {
-        HerdStringUtils.checkCsvInjection(" bc+def");
+        HerdStringUtils.checkCsvInjection(" bc+def", CSV_INJECTION_ERROR_MSG);
     }
 }
