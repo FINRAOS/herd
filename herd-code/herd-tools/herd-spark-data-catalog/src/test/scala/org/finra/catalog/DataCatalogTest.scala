@@ -296,11 +296,26 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     businessObjectFormat.setBusinessObjectFormatFileType(formatType)
     businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
 
+    var s=new Schema
+    var schemaColumn=new SchemaColumn
+    schemaColumn.setName("name")
+    schemaColumn.setType("String")
+    schemaColumn.setRequired(true)
+    schemaColumn.setDescription("name column")
+    schemaColumn.setSize("10")
+
+    s.addColumnsItem(schemaColumn)
+    var schemaColumns=new util.ArrayList[SchemaColumn]()
+    schemaColumns.add(schemaColumn)
+
+    businessObjectFormat.setSchema(s)
+
     when(mockHerdApi.getBusinessObjectFormat(namespace,objectName,formatUsage,formatType,formatVersion)).thenReturn(businessObjectFormat)
 
     val businessObjectFormatXML = dataCatalog.callBusinessObjectFormatQuery(namespace,objectName,formatUsage,formatType,formatVersion)
-
-    val expectedXML = "<BusinessObjectFormat><id/><namespace>"+namespace+"</namespace><businessObjectDefinitionName>"+objectName+"</businessObjectDefinitionName><businessObjectFormatUsage>"+formatUsage+"</businessObjectFormatUsage><businessObjectFormatFileType>"+formatType+"</businessObjectFormatFileType><businessObjectFormatVersion>"+formatVersion+"</businessObjectFormatVersion><latestVersion/><partitionKey/><description/><documentSchema/><documentSchemaUrl/><schema/><recordFlag/><retentionPeriodInDays/><retentionType/><allowNonBackwardsCompatibleChanges/></BusinessObjectFormat>"
+    val schema="<schema><columns><column><name>name</name><type>String</type><size>10</size><required>true</required><defaultValue/><description>name column</description></column></columns><nullValue/><delimiter/><collectionItemsDelimiter/><mapKeysDelimiter/><escapeCharacter/><partitionKeyGroup/></schema>"
+    val expectedXML = "<BusinessObjectFormat><id/><namespace>"+namespace+"</namespace><businessObjectDefinitionName>"+objectName+"</businessObjectDefinitionName><businessObjectFormatUsage>"+formatUsage+"</businessObjectFormatUsage><businessObjectFormatFileType>"+formatType+"</businessObjectFormatFileType><businessObjectFormatVersion>"+formatVersion+"</businessObjectFormatVersion><latestVersion/><partitionKey/><description/><documentSchema/><documentSchemaUrl/>"+
+      schema+"<recordFlag/><retentionPeriodInDays/><retentionType/><allowNonBackwardsCompatibleChanges/></BusinessObjectFormat>"
 
     assertEquals(expectedXML,businessObjectFormatXML)
 
