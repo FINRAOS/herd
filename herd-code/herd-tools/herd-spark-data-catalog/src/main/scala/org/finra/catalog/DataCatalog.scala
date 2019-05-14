@@ -126,14 +126,17 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   /**
     * Create the HERD API
-    * @return
+    *
+    * @return herdAPI instance
     */
   private def getHerdApi : HerdApi = {
     ds.defaultApiClientFactory(baseRestUrl, Some(username), Some(password))
   }
+
   /**
     * Create the API Client
-    * @return
+    *
+    * @return ApiClient instance
     */
   private def getAPIClient : ApiClient = {
     val apiClient = new ApiClient()
@@ -142,7 +145,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     List(this.password).foreach(password => apiClient.setPassword(password))
     return apiClient
   }
-
 
   /**
    * Create a credStash instance
@@ -567,7 +569,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def queryPath(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, partitionValuesInOrder: Array[String],
                 schemaVersion: Int, dataVersion: Int): String = {
-   val businessObjectData =herdApi.getBusinessObjectData(namespace, objectName, usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
+   val businessObjectData = herdApi.getBusinessObjectData(namespace, objectName, usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
           partitionValuesInOrder.drop(1), dataVersion)
 
     val xmlMapper = new XmlMapper
