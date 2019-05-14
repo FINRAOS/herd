@@ -108,6 +108,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   var credStash: CredStashWrapper = getCredStash
   var herdApi : HerdApi = getHerdApi
+  var apiClient : ApiClient = getAPIClient
 
   // XML pretty printer
   private val printer = new scala.xml.PrettyPrinter(80, 4)
@@ -130,6 +131,18 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   private def getHerdApi : HerdApi = {
     ds.defaultApiClientFactory(baseRestUrl, Some(username), Some(password))
   }
+  /**
+    * Create the API Client
+    * @return
+    */
+  private def getAPIClient : ApiClient = {
+    val apiClient = new ApiClient()
+    apiClient.setBasePath(this.baseRestUrl)
+    List(this.username).foreach(username => apiClient.setUsername(username))
+    List(this.password).foreach(password => apiClient.setPassword(password))
+    return apiClient
+  }
+
 
   /**
    * Create a credStash instance
@@ -573,9 +586,10 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def queryPathFromGenerateDdl(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
                                partitionValuesInOrder: Array[String], schemaVersion: Int, dataVersion: Int): List[String] = {
+    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    val businessObjectDataDdl = herdApi.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
-          schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
+    val businessObjectDataDdl = ha.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
+      schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
 
     val xmlMapper = new XmlMapper
     val ss = XML.loadString(xmlMapper.writeValueAsString(businessObjectDataDdl))
@@ -1508,11 +1522,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
           .getBusinessObjectFormatVersion
           .toInt
     }
-
-    val apiClient = new ApiClient()
-    apiClient.setBasePath(this.baseRestUrl)
-    List(this.username).foreach(username => apiClient.setUsername(username))
-    List(this.password).foreach(password => apiClient.setPassword(password))
 
     val api = new BusinessObjectDataApi(apiClient)
 
