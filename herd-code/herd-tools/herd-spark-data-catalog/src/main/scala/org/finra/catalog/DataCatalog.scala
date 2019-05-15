@@ -373,12 +373,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
              businessObjectData.getPartitionValue, businessObjectData.getVersion)).toList
 
     for ((ns, obj, usage, format, schema, pk, part, version) <- partitions) {
-      logger.debug(s"Deleting registered partitions of $obj")
-      try {
+        logger.debug(s"Deleting registered partitions of $obj")
         herdApi.removeBusinessObjectData(ns, obj, usage, format, schema, pk, part, Seq(), version)
-      } catch {
-        case _: Throwable => logger.debug("WARNING: Could not remove object partitions.  Ignoring...")
-      }
     }
   }
 

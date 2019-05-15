@@ -419,7 +419,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     assertEquals(List((objectName, partitonValue)), dmSearchResults)
   }
 
-  ignore("dmWipeNamespace should delete registered format for an object in DM")
+  test("dmWipeNamespace should delete registered format for an object in DM")
   {
     val dataCatalog = new DataCatalog(spark, "test.com")
     val mockHerdApi = mock[HerdApi]
@@ -469,7 +469,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     val thrown = intercept[Throwable]{
       dataCatalog.dmWipeNamespace(namespace)
     }
-
     assert(thrown.getMessage == "method was called")
   }
 
