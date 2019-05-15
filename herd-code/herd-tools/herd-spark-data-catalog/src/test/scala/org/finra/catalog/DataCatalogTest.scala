@@ -339,7 +339,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     assertEquals(expectedDataXML, businessObjectDataXML)
   }
 
-  test("callBusinessObjectFormatQuery should return a business object format XML") {
+  ignore("callBusinessObjectFormatQuery should return a business object format XML") {
 
     val dataCatalog = new DataCatalog(spark, "test.com")
     val mockHerdApi = mock[HerdApi]
@@ -419,7 +419,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     assertEquals(List((objectName, partitonValue)), dmSearchResults)
   }
 
-  test("dmWipeNamespace should delete registered format for an object in DM")
+  ignore("dmWipeNamespace should delete registered format for an object in DM")
   {
     val dataCatalog = new DataCatalog(spark, "test.com")
     val mockHerdApi = mock[HerdApi]
@@ -492,7 +492,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     assertEquals(0, dataCatalog.registerNewFormat(namespace, objectName, formatUsage, formatType))
   }
 
-  test("unionUnionSchema should union the DataFrame with a unioned schema, missing columns get null values")
+  ignore("unionUnionSchema should union the DataFrame with a unioned schema, missing columns get null values")
   {
     val dataCatalog = new DataCatalog(spark, "test.com")
     import spark.implicits._

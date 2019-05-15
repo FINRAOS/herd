@@ -125,19 +125,19 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-    * Create a herdAPI instance
-    *
-    * @return herdAPI instance
-    */
+   * Create a herdAPI instance
+   *
+   * @return herdAPI instance
+   */
   private def getHerdApi : HerdApi = {
     ds.defaultApiClientFactory(baseRestUrl, Some(username), Some(password))
   }
 
   /**
-    * Create a APIClient instance
-    *
-    * @return apiClient instance
-    */
+   * Create a APIClient instance
+   *
+   * @return apiClient instance
+   */
   private def getAPIClient : ApiClient = {
     val apiClient = new ApiClient()
     apiClient.setBasePath(this.baseRestUrl)
