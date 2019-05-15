@@ -19,19 +19,15 @@ import java.util
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.herd.HerdApi
-
-import org.finra.herd.sdk.model._
-
 import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
-
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.when
-
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mockito.MockitoSugar
 
+import org.finra.herd.sdk.model._
 
 @RunWith(classOf[JUnitRunner])
 class DataCatalogTest extends FunSuite with MockitoSugar {

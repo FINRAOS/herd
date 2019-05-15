@@ -125,7 +125,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-    * Create the HERD API
+    * Create a herdAPI instance
     *
     * @return herdAPI instance
     */
@@ -134,9 +134,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-    * Create the API Client
+    * Create a APIClient instance
     *
-    * @return ApiClient instance
+    * @return apiClient instance
     */
   private def getAPIClient : ApiClient = {
     val apiClient = new ApiClient()
