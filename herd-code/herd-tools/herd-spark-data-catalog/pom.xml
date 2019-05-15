@@ -217,6 +217,44 @@
             </configuration>
          </plugin>
          <plugin>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest-maven-plugin</artifactId>
+            <version>1.0</version>
+            <configuration>
+               <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+               <junitxml>.</junitxml>
+               <filereports>WDF TestSuite.txt</filereports>
+            </configuration>
+            <executions>
+               <execution>
+                  <id>test</id>
+                  <goals>
+                     <goal>test</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.scoverage</groupId>
+            <artifactId>scoverage-maven-plugin</artifactId>
+            <version>${scoverage.plugin.version}</version>
+            <configuration>
+               <scalaVersion>${scala.version}</scalaVersion>
+               <aggregate>true</aggregate>
+               <highlighting>true</highlighting>
+               <!-- other parameters -->
+            </configuration>
+            <executions>
+               <execution>
+                  <id>coverage</id>
+                  <phase>test</phase>
+                  <goals>
+                     <goal>integration-report</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
             <groupId>org.scalastyle</groupId>
             <artifactId>scalastyle-maven-plugin</artifactId>
             <version>${scalastyle.version}</version>
@@ -284,26 +322,7 @@
                </execution>
             </executions>
          </plugin>
-         <plugin>
-            <groupId>org.scoverage</groupId>
-            <artifactId>scoverage-maven-plugin</artifactId>
-            <version>${scoverage.plugin.version}</version>
-            <configuration>
-               <scalaVersion>${scala.version}</scalaVersion>
-               <aggregate>true</aggregate>
-               <highlighting>true</highlighting>
-               <!-- other parameters -->
-            </configuration>
-            <executions>
-               <execution>
-                  <id>coverage</id>
-                  <phase>test</phase>
-                  <goals>
-                     <goal>integration-report</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
+
 
       </plugins>
    </build>

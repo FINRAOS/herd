@@ -125,16 +125,19 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-    * Create the HERD API
-    * @return
-    */
+   * Create a herdAPI instance
+   *
+   * @return herdAPI instance
+   */
   private def getHerdApi : HerdApi = {
     ds.defaultApiClientFactory(baseRestUrl, Some(username), Some(password))
   }
+
   /**
-    * Create the API Client
-    * @return
-    */
+   * Create a APIClient instance
+   *
+   * @return apiClient instance
+   */
   private def getAPIClient : ApiClient = {
     val apiClient = new ApiClient()
     apiClient.setBasePath(this.baseRestUrl)
@@ -142,7 +145,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     List(this.password).foreach(password => apiClient.setPassword(password))
     return apiClient
   }
-
 
   /**
    * Create a credStash instance
@@ -371,12 +373,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
              businessObjectData.getPartitionValue, businessObjectData.getVersion)).toList
 
     for ((ns, obj, usage, format, schema, pk, part, version) <- partitions) {
-      logger.debug(s"Deleting registered partitions of $obj")
-      try {
+        logger.debug(s"Deleting registered partitions of $obj")
         herdApi.removeBusinessObjectData(ns, obj, usage, format, schema, pk, part, Seq(), version)
-      } catch {
-        case _: Throwable => logger.debug("WARNING: Could not remove object partitions.  Ignoring...")
-      }
     }
   }
 
@@ -567,7 +565,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def queryPath(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, partitionValuesInOrder: Array[String],
                 schemaVersion: Int, dataVersion: Int): String = {
-   val businessObjectData =herdApi.getBusinessObjectData(namespace, objectName, usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
+   val businessObjectData = herdApi.getBusinessObjectData(namespace, objectName, usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
           partitionValuesInOrder.drop(1), dataVersion)
 
     val xmlMapper = new XmlMapper
