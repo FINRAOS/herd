@@ -15,7 +15,9 @@
 */
 package org.finra.herd.service.helper;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -38,11 +40,16 @@ import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.dao.UserDao;
 import org.finra.herd.dao.UserNamespaceAuthorizationDao;
 import org.finra.herd.model.api.xml.NamespaceAuthorization;
+import org.finra.herd.model.api.xml.NamespaceKey;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.UserEntity;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
+import org.finra.herd.service.AbstractServiceTest;
 
-public class UserNamespaceAuthorizationHelperTest
+public class UserNamespaceAuthorizationHelperTest extends AbstractServiceTest
 {
     @InjectMocks
     private UserNamespaceAuthorizationHelper userNamespaceAuthorizationHelper;
@@ -157,5 +164,110 @@ public class UserNamespaceAuthorizationHelperTest
         verify(userNamespaceAuthorizationDao).getUserNamespaceAuthorizationsByUserIdStartsWith(eq(WildcardHelper.WILDCARD_TOKEN));
         verify(wildcardHelper).matches(eq(userId.toUpperCase()), eq(wildcardEntity.getUserId().toUpperCase()));
         verifyNoMoreInteractions(userNamespaceAuthorizationDao, wildcardHelper);
+    }
+
+    @Test
+    public void testBuildNamespaceAuthorizationsWithUserNamespaceAuthorizationNotEnabled()
+    {
+        ApplicationUser applicationUser = new ApplicationUser(getClass());
+        applicationUser.setUserId(USER_ID);
+
+        List<NamespaceKey> namespaceKeys = new ArrayList<>();
+        namespaceKeys.add(new NamespaceKey(NAMESPACE_CODE));
+
+        when(configurationHelper.getBooleanProperty(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED)).thenReturn(false);
+        when(namespaceDao.getNamespaces()).thenReturn(namespaceKeys);
+
+        userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
+
+        List<NamespaceAuthorization> namespaceAuthorizations = new ArrayList<>(applicationUser.getNamespaceAuthorizations());
+
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.EXECUTE), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.GRANT), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.READ), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE_ATTRIBUTE), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT), is(true));
+
+        verify(configurationHelper).getBooleanProperty(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED);
+        verify(namespaceDao).getNamespaces();
+        verifyNoMoreInteractions(userNamespaceAuthorizationDao, wildcardHelper);
+    }
+
+    @Test
+    public void testBuildNamespaceAuthorizationsWithNamespaceAuthorizationAdmin()
+    {
+        ApplicationUser applicationUser = new ApplicationUser(getClass());
+        applicationUser.setUserId(USER_ID);
+
+        UserEntity userEntity = new UserEntity();
+        userEntity.setUserId(USER_ID);
+        userEntity.setNamespaceAuthorizationAdmin(true);
+
+        List<NamespaceKey> namespaceKeys = new ArrayList<>();
+        namespaceKeys.add(new NamespaceKey(NAMESPACE_CODE));
+
+        when(configurationHelper.getBooleanProperty(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED)).thenReturn(true);
+        when(userDao.getUserByUserId(USER_ID)).thenReturn(userEntity);
+        when(namespaceDao.getNamespaces()).thenReturn(namespaceKeys);
+
+        userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
+
+        List<NamespaceAuthorization> namespaceAuthorizations = new ArrayList<>(applicationUser.getNamespaceAuthorizations());
+
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.EXECUTE), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.GRANT), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.READ), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE_ATTRIBUTE), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT), is(true));
+
+        verify(configurationHelper).getBooleanProperty(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED);
+        verify(userDao).getUserByUserId(USER_ID);
+        verify(namespaceDao).getNamespaces();
+        verifyNoMoreInteractions(userNamespaceAuthorizationDao, wildcardHelper);
+    }
+
+    @Test
+    public void testGetNamespacePermissions()
+    {
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = new UserNamespaceAuthorizationEntity();
+        userNamespaceAuthorizationEntity.setExecutePermission(true);
+        userNamespaceAuthorizationEntity.setGrantPermission(true);
+        userNamespaceAuthorizationEntity.setReadPermission(true);
+        userNamespaceAuthorizationEntity.setWritePermission(true);
+        userNamespaceAuthorizationEntity.setWriteAttributePermission(true);
+        userNamespaceAuthorizationEntity.setWriteDescriptiveContentPermission(true);
+
+        List<NamespacePermissionEnum> namespacePermissions = userNamespaceAuthorizationHelper.getNamespacePermissions(userNamespaceAuthorizationEntity);
+
+        assertThat(namespacePermissions.contains(NamespacePermissionEnum.EXECUTE), is(true));
+        assertThat(namespacePermissions.contains(NamespacePermissionEnum.GRANT), is(true));
+        assertThat(namespacePermissions.contains(NamespacePermissionEnum.READ), is(true));
+        assertThat(namespacePermissions.contains(NamespacePermissionEnum.WRITE), is(true));
+        assertThat(namespacePermissions.contains(NamespacePermissionEnum.WRITE_ATTRIBUTE), is(true));
+        assertThat(namespacePermissions.contains(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT), is(true));
+    }
+
+    @Test
+    public void testGetAllNamespaceAuthorizations()
+    {
+        List<NamespaceKey> namespaceKeys = new ArrayList<>();
+        namespaceKeys.add(new NamespaceKey(NAMESPACE_CODE));
+
+        when(namespaceDao.getNamespaces()).thenReturn(namespaceKeys);
+
+        List<NamespaceAuthorization> namespaceAuthorizations = new ArrayList<>(userNamespaceAuthorizationHelper.getAllNamespaceAuthorizations());
+
+        assertThat(namespaceAuthorizations.get(0).getNamespace(), is(NAMESPACE_CODE));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.EXECUTE), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.GRANT), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.READ), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE_ATTRIBUTE), is(true));
+        assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT), is(true));
+
+        verify(namespaceDao).getNamespaces();
+        verifyNoMoreInteractions(namespaceDao, userNamespaceAuthorizationDao, wildcardHelper);
     }
 }
