@@ -26,7 +26,7 @@ import com.jessecoyle.{CredStashBouncyCastleCrypto, JCredStash}
  *
  */
 class CredStashWrapper {
-  private var credStash = new JCredStash()
+  private var credStash : JCredStash = null
 
   /**
    * Constructor for the wrapper class that creates a JCredStash instance
