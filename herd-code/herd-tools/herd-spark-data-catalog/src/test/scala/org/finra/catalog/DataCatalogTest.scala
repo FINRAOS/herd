@@ -22,6 +22,7 @@ import org.apache.spark.sql.herd.HerdApi
 import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.{any, anyBoolean, anyInt, anyString}
 import org.mockito.Mockito.when
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -216,8 +217,10 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
   test("getDataAvailabilityRange should return data availability") {
     val dataCatalog = new DataCatalog(spark, "test.com")
     val mockHerdApi = mock[HerdApi]
+    var mockHerdApiWrapper = mock[HerdApiWrapper]
+    dataCatalog.herdApiWrapper = mockHerdApiWrapper
     // Inject the herd api mock
-    dataCatalog.herdApi = mockHerdApi
+    when(mockHerdApiWrapper.getHerdApi(any(), anyString(), anyString(), anyString())).thenReturn(mockHerdApi)
 
     val businesObjectDataAvailability = new BusinessObjectDataAvailability
     businesObjectDataAvailability.setNamespace(namespace)

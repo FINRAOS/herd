@@ -105,9 +105,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   private val logger = LoggerFactory.getLogger(getClass)
 
   // for credStash
-
   var credStash: CredStashWrapper = getCredStash
-  var herdApi : HerdApi = getHerdApi
+  var herdApiWrapper : HerdApiWrapper = new HerdApiWrapper
+  var herdApi : HerdApi = null
   var apiClient : ApiClient = getAPIClient
 
   // XML pretty printer
@@ -122,15 +122,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   private def baseRestUrl: String = {
     host + "/herd-app/rest"
-  }
-
-  /**
-   * Create a herdAPI instance
-   *
-   * @return herdAPI instance
-   */
-  private def getHerdApi : HerdApi = {
-    ds.defaultApiClientFactory(baseRestUrl, Some(username), Some(password))
   }
 
   /**
@@ -170,7 +161,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-   * Auxiliary constructor using credstash
+   * Auxiliary constructor using credstash"
    *
    * @param spark    spark context
    * @param host     DM host https://host.name.com:port
@@ -197,6 +188,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     this.username = credName
     this.password = getPassword(spark, credName, credAGS, credSDLC, credComponent)
+
+    herdApi = herdApiWrapper.getHerdApi(ds, baseRestUrl, username, password)
   }
 
   /**
@@ -228,6 +221,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     this.username = username
     this.password = password
+
+    herdApi = herdApiWrapper.getHerdApi(ds, baseRestUrl, username, password)
   }
 
   /**
