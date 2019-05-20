@@ -32,7 +32,6 @@ import javax.persistence.PersistenceContext;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.Tier;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.MapPropertySource;
@@ -189,9 +188,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BDEF_COLUMN_DESCRIPTION_2 = "UT_BusinessObjectDefinition_Column_Description_2_" + RANDOM_SUFFIX;
 
+    public static final String BDEF_COLUMN_DESCRIPTION_STARTS_WITH_EQUALS_TO = "=UT_BusinessObjectDefinition_Column_Description_1_" + RANDOM_SUFFIX;
+
     public static final String BDEF_COLUMN_NAME = "UT_BusinessObjectDefinition_Column_Name_1_" + RANDOM_SUFFIX;
 
     public static final String BDEF_COLUMN_NAME_2 = "UT_BusinessObjectDefinition_Column_Name_2_" + RANDOM_SUFFIX;
+
+    public static final String BDEF_COLUMN_NAME_STARTS_WITH_EQUALS_TO = "=UT_BusinessObjectDefinition_Column_Name_" + RANDOM_SUFFIX;
+
+    public static final String BDEF_COLUMN_NAME_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO = "  =UT_BusinessObjectDefinition_Column_Name_" + RANDOM_SUFFIX;
 
     public static final String BDEF_DESCRIPTION = "UT_BusinessObjectDefinition_Description_" + RANDOM_SUFFIX;
 
@@ -237,9 +242,17 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String COLUMN_DATA_TYPE_2 = "UT_Column_Data_Type_2_" + RANDOM_SUFFIX;
 
+    public static final String COLUMN_DATA_TYPE_STARTS_WITH_EQUALS_TO = "=UT_Column_Data_Type_" + RANDOM_SUFFIX;
+
+    public static final String COLUMN_DATA_TYPE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO = "  =UT_Column_Data_Type_" + RANDOM_SUFFIX;
+
     public static final String COLUMN_DATA_TYPE_CHAR = "CHAR";
 
     public static final String COLUMN_DEFAULT_VALUE = "UT_Column_Default_Value" + RANDOM_SUFFIX;
+
+    public static final String COLUMN_DEFAULT_VALUE_STARTS_WITH_EQUALS_TO = "=UT_Column_Default_Value" + RANDOM_SUFFIX;
+
+    public static final String COLUMN_DEFAULT_VALUE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO = "=UT_Column_Default_Value" + RANDOM_SUFFIX;
 
     public static final String COLUMN_DESCRIPTION = "UT_Column_Description_1_" + RANDOM_SUFFIX;
 
@@ -249,15 +262,23 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String COLUMN_DESCRIPTION_4 = "UT_Column_Description_4_" + RANDOM_SUFFIX;
 
+    public static final String COLUMN_DESCRIPTION_STARTS_WITH_EQUALS_TO = "=UT_Column_Description_1_" + RANDOM_SUFFIX;
+
     public static final String COLUMN_NAME = "UT_Column_Name_1_" + RANDOM_SUFFIX;
 
     public static final String COLUMN_NAME_2 = "UT_Column_Name_2_" + RANDOM_SUFFIX;
+
+    public static final String COLUMN_NAME_STARTS_WITH_EQUALS_TO = "=UT_Column_Name_1_" + RANDOM_SUFFIX;
+
+    public static final String COLUMN_NAME_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO = "   =UT_Column_Name_1_" + RANDOM_SUFFIX;
 
     public static final Boolean COLUMN_REQUIRED = true;
 
     public static final String COLUMN_SIZE = "1" + RANDOM_SUFFIX;
 
     public static final String COLUMN_SIZE_2 = "2" + RANDOM_SUFFIX;
+
+    public static final String COLUMN_SIZE_START_WITH_WHITESPACES_THEN_MINUS = "   -1" + RANDOM_SUFFIX;
 
     public static final String CONFIGURATION_KEY = "UT_Configuration_Key_" + RANDOM_SUFFIX;
 
@@ -1177,6 +1198,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String VOLUME_TYPE = "UT_VolumeType_" + RANDOM_SUFFIX;
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
+
+    public static final String SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG = "One or more schema column fields start with a prohibited character.";
+
+    public static final String BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG =
+        "One or more business object definition column fields start with a prohibited character.";
 
     // A holding location for a property source.
     // When we remove the property source from the environment, we will place it here as a holding area. Then when we want to add it back into the

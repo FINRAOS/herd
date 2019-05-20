@@ -41,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
@@ -104,6 +105,9 @@ import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatService
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectFormatServiceImpl.class);
+
+    private static final String SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG =
+        "One or more schema column fields start with a prohibited character.";
 
     /**
      * List all schema column data types for which size increase is considered to be an additive schema change.
@@ -556,7 +560,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     }
 
     @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE),
-        @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]",
+            @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]",
             permissions = NamespacePermissionEnum.READ)})
     @Override
     public BusinessObjectFormat updateBusinessObjectFormatParents(BusinessObjectFormatKey businessObjectFormatKey,
@@ -968,6 +972,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 schemaColumn.setType(schemaColumn.getType().trim());
                 schemaColumn.setSize(schemaColumn.getSize() == null ? null : schemaColumn.getSize().trim());
                 schemaColumn.setDefaultValue(schemaColumn.getDefaultValue() == null ? null : schemaColumn.getDefaultValue().trim());
+                // Check if schema column is prone to CSV Injection attack
+                checkSchemaColumnCsvInjection(schemaColumn);
 
                 // Ensure the column name isn't a duplicate within this list only by using a map.
                 String lowercaseSchemaColumnName = schemaColumn.getName().toLowerCase();
@@ -987,6 +993,20 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 schemaEqualityValidationMap.put(lowercaseSchemaColumnName, schemaColumn);
             }
         }
+    }
+
+    /**
+     * check if a schema column is prone to CSV Injection attack
+     *
+     * @param schemaColumn schema column
+     */
+    private void checkSchemaColumnCsvInjection(SchemaColumn schemaColumn)
+    {
+        HerdStringUtils.checkCsvInjection(schemaColumn.getName(), SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG);
+        HerdStringUtils.checkCsvInjection(schemaColumn.getType(), SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG);
+        HerdStringUtils.checkCsvInjection(schemaColumn.getSize(), SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG);
+        HerdStringUtils.checkCsvInjection(schemaColumn.getDefaultValue(), SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG);
+        HerdStringUtils.checkCsvInjection(schemaColumn.getDescription(), SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG);
     }
 
     /**
@@ -1023,11 +1043,10 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Validate that there are no changes to the map keys delimiter character, which is a an optional parameter.
         // Please note that null and an empty string values are both stored in the database as NULL.
-        Assert.isTrue(oldSchema.getMapKeysDelimiter() == null ?
-            newSchema.getMapKeysDelimiter() == null || newSchema.getMapKeysDelimiter().isEmpty() :
-            oldSchema.getMapKeysDelimiter().equals(newSchema.getMapKeysDelimiter()), String.format(
-            "%s New format version map keys delimiter character does not match to the previous format version map keys delimiter character.",
-            mainErrorMessage));
+        Assert.isTrue(oldSchema.getMapKeysDelimiter() == null ? newSchema.getMapKeysDelimiter() == null || newSchema.getMapKeysDelimiter().isEmpty() :
+            oldSchema.getMapKeysDelimiter().equals(newSchema.getMapKeysDelimiter()), String
+            .format("%s New format version map keys delimiter character does not match to the previous format version map keys delimiter character.",
+                mainErrorMessage));
 
         // Validate that there are no changes to the escape character, which is a an optional parameter.
         // Please note that null and an empty string values are both stored in the database as NULL.

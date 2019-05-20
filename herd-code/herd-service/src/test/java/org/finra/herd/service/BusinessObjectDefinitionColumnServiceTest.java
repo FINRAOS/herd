@@ -17,6 +17,7 @@ package org.finra.herd.service;
 
 import static org.finra.herd.service.impl.BusinessObjectDefinitionColumnServiceImpl.DESCRIPTION_FIELD;
 import static org.finra.herd.service.impl.BusinessObjectDefinitionColumnServiceImpl.SCHEMA_COLUMN_NAME_FIELD;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -27,7 +28,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
@@ -52,6 +55,9 @@ import org.finra.herd.model.jpa.SchemaColumnEntity;
  */
 public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTest
 {
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
     @Test
     public void testCreateBusinessObjectDefinitionColumn()
     {
@@ -417,6 +423,78 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         assertEquals(new BusinessObjectDefinitionColumn(resultBusinessObjectDefinitionColumn.getId(),
             new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME.toUpperCase()), COLUMN_NAME,
             BDEF_COLUMN_DESCRIPTION.toUpperCase(), NO_BUSINESS_OBJECT_DEFINITION_COLUMN_CHANGE_EVENTS), resultBusinessObjectDefinitionColumn);
+    }
+
+    @Test
+    public void testCreateBusinessObjectDefinitionColumnColumnNameStartsWithEqualsTo()
+    {
+        // Create and persist a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Create and persist a schema column for this business object format.
+        SchemaColumnEntity schemaColumnEntity = schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
+
+        // Create a business object definition column key.
+        BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
+            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_STARTS_WITH_EQUALS_TO);
+
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(is(BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG));
+
+        // Create a business object definition column.
+        businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+            new BusinessObjectDefinitionColumnCreateRequest(businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION));
+    }
+
+    @Test
+    public void testCreateBusinessObjectDefinitionColumnColumnNameStartsWithWhitespacesThenEqualsTo()
+    {
+        // Create and persist a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Create and persist a schema column for this business object format.
+        SchemaColumnEntity schemaColumnEntity = schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
+
+        // Create a business object definition column key.
+        BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
+            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO);
+
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(is(BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG));
+
+        // Create a business object definition column.
+        businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+            new BusinessObjectDefinitionColumnCreateRequest(businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION));
+    }
+
+    @Test
+    public void testCreateBusinessObjectDefinitionColumnDescriptionStartsWithEqualsTo()
+    {
+        // Create and persist a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Create and persist a schema column for this business object format.
+        SchemaColumnEntity schemaColumnEntity = schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
+
+        // Create a business object definition column key.
+        BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
+            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
+
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(is(BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG));
+
+        // Create a business object definition column.
+        businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+            new BusinessObjectDefinitionColumnCreateRequest(businessObjectDefinitionColumnKey, COLUMN_NAME, BDEF_COLUMN_DESCRIPTION_STARTS_WITH_EQUALS_TO));
     }
 
     @Test
