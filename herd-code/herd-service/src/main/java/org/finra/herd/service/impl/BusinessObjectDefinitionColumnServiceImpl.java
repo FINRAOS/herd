@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.dao.BusinessObjectDefinitionColumnDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.SchemaColumnDao;
@@ -79,6 +80,9 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
 
     // Constant to hold the description field option for the business object definition column search
     public static final String DESCRIPTION_FIELD = "description";
+
+    private static final String BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG =
+        "One or more business object definition column fields start with a prohibited character.";
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
@@ -423,6 +427,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         validateBusinessObjectDefinitionColumnKey(request.getBusinessObjectDefinitionColumnKey());
 
         Assert.hasText(request.getSchemaColumnName(), "A schema column name must be specified.");
+
+        HerdStringUtils.checkCsvInjection(request.getDescription(), BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG);
         request.setSchemaColumnName(request.getSchemaColumnName().trim());
     }
 
@@ -439,8 +445,11 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
         key.setBusinessObjectDefinitionName(
             alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
-        key.setBusinessObjectDefinitionColumnName(
-            alternateKeyHelper.validateStringParameter("business object definition column name", key.getBusinessObjectDefinitionColumnName()));
+        String businessObjectDefinitionColumnName =
+            alternateKeyHelper.validateStringParameter("business object definition column name", key.getBusinessObjectDefinitionColumnName());
+        HerdStringUtils.checkCsvInjection(businessObjectDefinitionColumnName, BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG);
+        key.setBusinessObjectDefinitionColumnName(businessObjectDefinitionColumnName);
+
     }
 
     /**
@@ -484,5 +493,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
     private void validateBusinessObjectDefinitionColumnUpdateRequest(BusinessObjectDefinitionColumnUpdateRequest request)
     {
         Assert.notNull(request, "A business object definition column update request must be specified.");
+
+        HerdStringUtils.checkCsvInjection(request.getDescription(), BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG);
     }
 }

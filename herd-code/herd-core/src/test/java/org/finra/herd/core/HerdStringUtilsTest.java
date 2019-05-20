@@ -15,6 +15,7 @@
 */
 package org.finra.herd.core;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 
 import java.nio.charset.StandardCharsets;
@@ -22,13 +23,20 @@ import java.util.Base64;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * Test driver for the {@link HerdStringUtils} class
  */
 public class HerdStringUtilsTest extends AbstractCoreTest
 {
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    private static final String CSV_INJECTION_ERROR_MSG = "One or more schema column fields start with a prohibited character.";
+
     @Test
     public void testDecodeBase64()
     {
@@ -89,5 +97,75 @@ public class HerdStringUtilsTest extends AbstractCoreTest
     {
         String result = HerdStringUtils.stripHtml("fragment<li><b> with <hlt>no</hlt></b> html</li>", "<hlt>", "<b>");
         assertEquals("fragment<b> with <hlt>no</hlt></b> html", result);
+    }
+
+    @Test
+    public void testCheckCsvInjectionStartsWithEqualsToCharacter()
+    {
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+
+        HerdStringUtils.checkCsvInjection("=abc", CSV_INJECTION_ERROR_MSG);
+    }
+
+    @Test
+    public void testCheckCsvInjectionStartsWithPlusCharacter()
+    {
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+
+        HerdStringUtils.checkCsvInjection("+abc", CSV_INJECTION_ERROR_MSG);
+    }
+
+    @Test
+    public void testCheckCsvInjectionStartsWithAtCharacter()
+    {
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+
+        HerdStringUtils.checkCsvInjection("@abc", CSV_INJECTION_ERROR_MSG);
+    }
+
+    @Test
+    public void testCheckCsvInjectionStartsWithMinusCharacter()
+    {
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(is(CSV_INJECTION_ERROR_MSG));
+
+        HerdStringUtils.checkCsvInjection("-abc", CSV_INJECTION_ERROR_MSG);
+    }
+
+    @Test
+    public void testCheckCsvInjectionValidEmptyCharacter()
+    {
+        HerdStringUtils.checkCsvInjection("", CSV_INJECTION_ERROR_MSG);
+    }
+
+    @Test
+    public void testCheckCsvInjectionValidNull()
+    {
+        HerdStringUtils.checkCsvInjection(null, CSV_INJECTION_ERROR_MSG);
+    }
+
+    @Test
+    public void testCheckCsvInjectionValidStartsWithNormalCharacter()
+    {
+        HerdStringUtils.checkCsvInjection("hello", CSV_INJECTION_ERROR_MSG);
+    }
+
+    @Test
+    public void testCheckCsvInjectionValidPlusCharacterInMiddle()
+    {
+        HerdStringUtils.checkCsvInjection("abc+def", CSV_INJECTION_ERROR_MSG);
+    }
+
+    @Test
+    public void testCheckCsvInjectionValidStartsWithBlank()
+    {
+        HerdStringUtils.checkCsvInjection(" bc+def", CSV_INJECTION_ERROR_MSG);
     }
 }
