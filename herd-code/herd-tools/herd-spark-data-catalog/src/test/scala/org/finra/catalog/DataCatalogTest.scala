@@ -369,8 +369,8 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     businessObjectFormat.setBusinessObjectFormatFileType(formatType)
     businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
 
-    var s = new Schema
-    var schemaColumn = new SchemaColumn
+    val s = new Schema
+    val schemaColumn = new SchemaColumn
     schemaColumn.setName("name")
     schemaColumn.setType("String")
     schemaColumn.setRequired(true)
@@ -514,7 +514,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
     assertEquals(0, dataCatalog.registerNewFormat(namespace, objectName, formatUsage, formatType))
   }
 
-  ignore("unionUnionSchema should union the DataFrame with a unioned schema, missing columns get null values")
+  test("unionUnionSchema should union the DataFrame with a unioned schema, missing columns get null values")
   {
     val dataCatalog = new DataCatalog(spark, "test.com")
     import spark.implicits._

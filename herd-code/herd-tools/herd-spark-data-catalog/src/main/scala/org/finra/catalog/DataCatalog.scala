@@ -211,29 +211,31 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-   * union the DataFrame with a unioned schema, missing columns get null values
+   * Union the DataFrame with a unioned schema, missing columns get null values
    *
    * @param otherDF DataFrame
    * @return DataFrame
    */
   def unionUnionSchema(dataFrame: DataFrame, otherDF: DataFrame): DataFrame = {
-    val missingDF = otherDF.schema.toSet.diff(dataFrame.schema.toSet)
-    val missingDFOther = dataFrame.schema.toSet.diff(otherDF.schema.toSet)
+    val dataFrameCols = dataFrame.columns.toList
+    val otherDFCols = otherDF.columns.toList
+    val allCols = (dataFrameCols ++ otherDFCols).distinct
 
-    var fullDF: DataFrame = dataFrame
-    var fullDFOther: DataFrame = otherDF
+    dataFrame.select(mergeColumns(dataFrameCols, allCols): _*).union(otherDF.select(mergeColumns(otherDFCols, allCols): _*))
+  }
 
-    // add nulls for missing columns in df1
-    for (field <- missingDF) {
-      fullDF = fullDF.withColumn(field.name, expr("null"))
-    }
-
-    // add nulls for missing columns in df2
-    for (field <- missingDFOther) {
-      fullDFOther = fullDFOther.withColumn(field.name, expr("null"))
-    }
-
-    fullDF union fullDFOther
+  /**
+   *  Add missing columns to the data frame schema
+   *
+   * @param cols list of columns for a data frame schema
+   * @param allCols lif of all columns from data frame schemas
+   *
+   */
+  private def mergeColumns(cols: List[String], allCols: List[String]) = {
+    allCols.map(x => x match {
+      case x if cols.contains(x) => col(x)
+      case _ => lit(null).as(x)
+    })
   }
 
   /**
