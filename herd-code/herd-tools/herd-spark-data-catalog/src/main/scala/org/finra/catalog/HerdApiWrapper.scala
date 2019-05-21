@@ -19,7 +19,6 @@ class HerdApiWrapper {
    * @param baseRestUrl the base url for HERD service
    * @param username    username of the account to access HERD
    * @param password    password of the account to access HERD
-   * @return
    */
   def this(dataSource: DefaultSource.type, baseRestUrl: String, username: String, password: String) {
     this()
@@ -43,7 +42,7 @@ class HerdApiWrapper {
   /**
    * Returns the API Client
    *
-   * @return the herd api instance
+   * @return the api client instance
    */
   def getApiClient(): ApiClient = {
     this.apiClient
