@@ -22,16 +22,15 @@ import org.apache.spark.sql.herd.HerdApi
 import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.{any, anyBoolean, anyInt, anyString}
 import org.mockito.Mockito.when
-import org.scalatest.FunSuite
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mockito.MockitoSugar
 
 import org.finra.herd.sdk.model._
 
 @RunWith(classOf[JUnitRunner])
-class DataCatalogTest extends FunSuite with MockitoSugar {
+class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach {
 
   private val spark: SparkSession = SparkSession
   .builder()
@@ -47,6 +46,15 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
   private val partitonValue = "2019-01-01"
   private val dataVersion = 0
   private val formatVersion = 0
+
+  var mockHerdApiWrapper : HerdApiWrapper = null
+  var mockHerdApi : HerdApi = null
+
+  // set up
+  override def beforeEach(): Unit = {
+    mockHerdApiWrapper = mock[HerdApiWrapper]
+    mockHerdApi = mock[HerdApi]
+  }
 
 
   test("getPassword should return correct password from credStash when component is not null") {
@@ -128,8 +136,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
 
   test("getNamespaces should return a list of namespaces") {
     val dataCatalog = new DataCatalog(spark, "test.com")
-    val mockHerdApiWrapper = mock[HerdApiWrapper]
-    val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
 
@@ -165,8 +171,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
 
   test("getBusinessObjectDefinitions return should data frame containing business object definitions") {
     val dataCatalog = new DataCatalog(spark, "test.com")
-    val mockHerdApiWrapper = mock[HerdApiWrapper]
-    val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
 
@@ -194,8 +198,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
 
   test("getBusinessObjectFormats should return a business object formats in a data frame") {
     val dataCatalog = new DataCatalog(spark, "test.com")
-    val mockHerdApiWrapper = mock[HerdApiWrapper]
-    val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
 
@@ -224,8 +226,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
 
   test("getDataAvailabilityRange should return data availability") {
     val dataCatalog = new DataCatalog(spark, "test.com")
-    val mockHerdApiWrapper = mock[HerdApiWrapper]
-    val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
 
@@ -255,7 +255,39 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
 
     businesObjectDataAvailability.setAvailableStatuses(businessObjectDataStatusList)
 
+    var businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
+    businessObjectFormat.setNamespace(namespace)
+    businessObjectFormat.setBusinessObjectDefinitionName(objectName)
+    businessObjectFormat.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectFormat.setBusinessObjectFormatFileType(formatType)
+    businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
+
+    val s = new Schema
+    s.setDelimiter("|")
+    s.setEscapeCharacter("\\")
+    val schemaColumn = new SchemaColumn
+    schemaColumn.setName("name")
+    schemaColumn.setType("String")
+    schemaColumn.setRequired(true)
+    schemaColumn.setDescription("name column")
+    schemaColumn.setSize("10")
+
+    s.addColumnsItem(schemaColumn)
+    var schemaColumns = new util.ArrayList[SchemaColumn]()
+    schemaColumns.add(schemaColumn)
+
+    val partitionColumn = new SchemaColumn
+    s.addPartitionsItem(partitionColumn)
+    partitionColumn.setName("partition")
+    partitionColumn.setType("String")
+    partitionColumn.setRequired(true)
+    partitionColumn.setDescription("partition column")
+    partitionColumn.setSize("10")
+
+    businessObjectFormat.setSchema(s)
+
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
     when(mockHerdApi.getBusinessObjectDataAvailability(namespace, objectName, formatUsage, formatType, partitionKey, "2019-01-01", "2099-12-31"))
       .thenReturn(businesObjectDataAvailability)
 
@@ -273,8 +305,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
 
   test("getDataAvailability should return data availability") {
     val dataCatalog = new DataCatalog(spark, "test.com")
-    val mockHerdApiWrapper = mock[HerdApiWrapper]
-    val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
 
@@ -304,7 +334,39 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
 
     businesObjectDataAvailability.setAvailableStatuses(businessObjectDataStatusList)
 
+    var businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
+    businessObjectFormat.setNamespace(namespace)
+    businessObjectFormat.setBusinessObjectDefinitionName(objectName)
+    businessObjectFormat.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectFormat.setBusinessObjectFormatFileType(formatType)
+    businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
+
+    val s = new Schema
+    s.setDelimiter("|")
+    s.setEscapeCharacter("\\")
+    val schemaColumn = new SchemaColumn
+    schemaColumn.setName("name")
+    schemaColumn.setType("String")
+    schemaColumn.setRequired(true)
+    schemaColumn.setDescription("name column")
+    schemaColumn.setSize("10")
+
+    s.addColumnsItem(schemaColumn)
+    var schemaColumns = new util.ArrayList[SchemaColumn]()
+    schemaColumns.add(schemaColumn)
+
+    val partitionColumn = new SchemaColumn
+    s.addPartitionsItem(partitionColumn)
+    partitionColumn.setName("partition")
+    partitionColumn.setType("String")
+    partitionColumn.setRequired(true)
+    partitionColumn.setDescription("partition column")
+    partitionColumn.setSize("10")
+
+    businessObjectFormat.setSchema(s)
+
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
     when(mockHerdApi.getBusinessObjectDataAvailability(namespace, objectName, formatUsage, formatType, partitionKey, "2019-01-01", "2099-12-31"))
       .thenReturn(businesObjectDataAvailability)
 
@@ -322,8 +384,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
 
   test("queryPath should return a business object data XML") {
     val dataCatalog = new DataCatalog(spark, "test.com")
-    val mockHerdApiWrapper = mock[HerdApiWrapper]
-    val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
 
@@ -357,8 +417,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
   ignore("callBusinessObjectFormatQuery should return a business object format XML") {
 
     val dataCatalog = new DataCatalog(spark, "test.com")
-    val mockHerdApiWrapper = mock[HerdApiWrapper]
-    val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
 
@@ -403,8 +461,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
   test("dmSearch should return a list of tuples containing business object definition name and partition value") {
 
     val dataCatalog = new DataCatalog(spark, "test.com")
-    val mockHerdApiWrapper = mock[HerdApiWrapper]
-    val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
 
@@ -441,8 +497,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
   test("dmWipeNamespace should delete registered format for an object in DM")
   {
     val dataCatalog = new DataCatalog(spark, "test.com")
-    val mockHerdApiWrapper = mock[HerdApiWrapper]
-    val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
 
@@ -503,8 +557,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar {
   test("registerNewFormat should register a new formatVersion in Herd and returns a new format version")
   {
     val dataCatalog = new DataCatalog(spark, "test.com")
-    val mockHerdApiWrapper = mock[HerdApiWrapper]
-    val mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
 
