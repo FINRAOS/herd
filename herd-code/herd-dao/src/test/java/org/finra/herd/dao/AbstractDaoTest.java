@@ -1065,7 +1065,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<NamespacePermissionEnum> SUPPORTED_NAMESPACE_PERMISSIONS = Collections.unmodifiableList(Arrays
         .asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT,
-            NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT));
+            NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE_ATTRIBUTE));
 
     public static final String TABLE_NAME = "Test_Table" + RANDOM_SUFFIX;
 
