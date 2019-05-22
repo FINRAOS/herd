@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.helper;
 
+import static org.finra.herd.service.AbstractServiceTest.NAMESPACE_CODE;
+import static org.finra.herd.service.AbstractServiceTest.USER_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -47,9 +49,8 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.UserEntity;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
-import org.finra.herd.service.AbstractServiceTest;
 
-public class UserNamespaceAuthorizationHelperTest extends AbstractServiceTest
+public class UserNamespaceAuthorizationHelperTest
 {
     @InjectMocks
     private UserNamespaceAuthorizationHelper userNamespaceAuthorizationHelper;
