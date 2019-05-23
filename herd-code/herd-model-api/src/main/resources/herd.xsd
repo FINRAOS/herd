@@ -3253,6 +3253,19 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDataParentsUpdateRequest" type="businessObjectDataParentsUpdateRequest"/>
+   <xs:complexType name="businessObjectDataParentsUpdateRequest">
+      <xs:all>
+         <xs:element name="businessObjectDataParents" type="businessObjectDataParents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional list of Business Object Data parents (i.e. predecessors) that were used/needed in the creation of this data. This
+                  is used for data lineage. Each parent consists of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="businessObjectDataRetentionInformationUpdateRequest" type="businessObjectDataRetentionInformationUpdateRequest"/>
    <xs:complexType name="businessObjectDataRetentionInformationUpdateRequest">
       <xs:all>
