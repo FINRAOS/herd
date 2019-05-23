@@ -85,10 +85,19 @@ public class UserNamespaceAuthorizationEntity extends AuditableEntity
     @Type(type = "yes_no")
     private Boolean grantPermission;
 
-
+    /**
+     * The write descriptive content permission column.
+     */
     @Column(name = "write_desc_content_prmsn_fl")
     @Type(type = "yes_no")
     private Boolean writeDescriptiveContentPermission;
+
+    /**
+     * The write attribute permission column.
+     */
+    @Column(name = "write_atrbt_prmsn_fl")
+    @Type(type = "yes_no")
+    private Boolean writeAttributePermission;
 
     public Integer getId()
     {
@@ -168,5 +177,15 @@ public class UserNamespaceAuthorizationEntity extends AuditableEntity
     public void setWriteDescriptiveContentPermission(Boolean writeDescriptiveContentPermission)
     {
         this.writeDescriptiveContentPermission = writeDescriptiveContentPermission;
+    }
+
+    public Boolean getWriteAttributePermission()
+    {
+        return writeAttributePermission;
+    }
+
+    public void setWriteAttributePermission(Boolean writeAttributePermission)
+    {
+        this.writeAttributePermission = writeAttributePermission;
     }
 }

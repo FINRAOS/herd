@@ -52,7 +52,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Creates a new business object data attribute.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param request the information needed to create a business object data attribute
      *
@@ -261,7 +261,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Updates an existing attribute for the business object data without subpartition values.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -297,7 +297,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Updates an existing attribute for the business object data with 1 subpartition value.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -335,7 +335,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Updates an existing attribute for the business object data with 2 subpartition values.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -376,7 +376,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Updates an existing attribute for the business object data with 3 subpartition values.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -418,7 +418,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Updates an existing attribute for the business object data with 4 subpartition values.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -462,7 +462,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Deletes an existing attribute for the business object data without subpartition values.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -497,7 +497,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Deletes an existing attribute for the business object data with 1 subpartition value.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -533,7 +533,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Deletes an existing attribute for the business object data with 2 subpartition values.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -573,7 +573,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Deletes an existing attribute for the business object data with 3 subpartition values.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -614,7 +614,7 @@ public class BusinessObjectDataAttributeRestController extends HerdBaseControlle
 
     /**
      * Deletes an existing attribute for the business object data with 4 subpartition values.
-     * <p>Requires WRITE permission on namespace</p>
+     * <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
