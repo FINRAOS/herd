@@ -572,9 +572,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val businessObjectDataDdl = ha.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
       schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
 
-    val xmlMapper = new XmlMapper
-    val ss = XML.loadString(xmlMapper.writeValueAsString(businessObjectDataDdl))
-    val ddl = (ss \\ "businessObjectDataDdl" \ "ddl").text
+    val ddl = businessObjectDataDdl.getDdl
     logger.debug(s"ddl: $ddl")
 
     // Parse the DDL, and grab the partition values and their S3 prefixes
