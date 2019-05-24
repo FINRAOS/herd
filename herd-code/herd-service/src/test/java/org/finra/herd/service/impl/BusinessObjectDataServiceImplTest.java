@@ -17,6 +17,7 @@ package org.finra.herd.service.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -27,8 +28,10 @@ import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -43,6 +46,7 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributesUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataParentsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
@@ -233,13 +237,14 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
                 DATA_VERSION);
 
         // Create a list of attributes.
-        List<Attribute> attributes = Arrays.asList(new Attribute(ATTRIBUTE_NAME, ATTRIBUTE_VALUE));
+        List<Attribute> attributes = Collections.singletonList(new Attribute(ATTRIBUTE_NAME, ATTRIBUTE_VALUE));
 
         // Create a business object data attributes update request.
         BusinessObjectDataAttributesUpdateRequest businessObjectDataAttributesUpdateRequest = new BusinessObjectDataAttributesUpdateRequest(attributes);
 
         // Create a list of attribute definitions.
-        List<BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntities = Arrays.asList(new BusinessObjectDataAttributeDefinitionEntity());
+        List<BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntities =
+            Collections.singletonList(new BusinessObjectDataAttributeDefinitionEntity());
 
         // Create a business object format definition.
         BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
@@ -292,7 +297,7 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("A business object data attributes update request must be specified."), e.getMessage());
+            assertEquals("A business object data attributes update request must be specified.", e.getMessage());
         }
 
         // Try to update business object data attributes when the list of attributes is not specified.
@@ -303,12 +308,198 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("A list of business object data attributes must be specified."), e.getMessage());
+            assertEquals("A list of business object data attributes must be specified.", e.getMessage());
         }
 
         // Verify the external calls.
         verify(businessObjectDataHelper, times(2)).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
         verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataParents()
+    {
+        // Create a business object data key for the first parent.
+        BusinessObjectDataKey businessObjectDataParentOneKey =
+            new BusinessObjectDataKey(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES_2, DATA_VERSION);
+
+        // Create a business object data key for the second parent.
+        BusinessObjectDataKey businessObjectDataParentTwoKey =
+            new BusinessObjectDataKey(NAMESPACE_3, BDEF_NAME_3, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE_3, FORMAT_VERSION, PARTITION_VALUE_3,
+                SUBPARTITION_VALUES_3, DATA_VERSION);
+
+        // Create a business object data key for the child.
+        BusinessObjectDataKey businessObjectDataChildKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create first business object data parent.
+        BusinessObjectDataEntity businessObjectDataParentOneEntity =
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataParentOneKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Create second business object data parent.
+        BusinessObjectDataEntity businessObjectDataParentTwoEntity =
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataParentTwoKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Create child business object data entity having a pre-registration status.
+        BusinessObjectDataEntity businessObjectDataChildEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectDataChildKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
+
+        // Associate child and first parent business object data entities.
+        businessObjectDataParentOneEntity.getBusinessObjectDataChildren().add(businessObjectDataChildEntity);
+        businessObjectDataChildEntity.getBusinessObjectDataParents().add(businessObjectDataParentOneEntity);
+
+        // Create a business object data parents update request.
+        BusinessObjectDataParentsUpdateRequest businessObjectDataParentsUpdateRequest =
+            new BusinessObjectDataParentsUpdateRequest(Collections.singletonList(businessObjectDataParentTwoKey));
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataChildKey)).thenReturn(businessObjectDataChildEntity);
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataParentTwoKey)).thenReturn(businessObjectDataParentTwoEntity);
+        when(businessObjectDataDao.saveAndRefresh(businessObjectDataChildEntity)).thenReturn(businessObjectDataChildEntity);
+        when(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataChildEntity)).thenReturn(businessObjectData);
+
+        // Call the method under test.
+        BusinessObjectData result =
+            businessObjectDataServiceImpl.updateBusinessObjectDataParents(businessObjectDataChildKey, businessObjectDataParentsUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataChildKey, true, true);
+        verify(businessObjectDataDaoHelper).validateBusinessObjectDataKeys(businessObjectDataParentsUpdateRequest.getBusinessObjectDataParents());
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataChildKey);
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataParentTwoKey);
+        verify(businessObjectDataDao).saveAndRefresh(businessObjectDataChildEntity);
+        verify(businessObjectDataHelper).createBusinessObjectDataFromEntity(businessObjectDataChildEntity);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectData, result);
+
+        // Validate the list of parents on the business object data entity.
+        assertEquals(1, CollectionUtils.size(businessObjectDataChildEntity.getBusinessObjectDataParents()));
+        assertEquals(businessObjectDataParentTwoEntity, businessObjectDataChildEntity.getBusinessObjectDataParents().get(0));
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataParentsBusinessObjectDataNotInPreRegistrationState()
+    {
+        // Create a business object data key for the first parent.
+        BusinessObjectDataKey businessObjectDataParentOneKey =
+            new BusinessObjectDataKey(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES_2, DATA_VERSION);
+
+        // Create a business object data key for the second parent.
+        BusinessObjectDataKey businessObjectDataParentTwoKey =
+            new BusinessObjectDataKey(NAMESPACE_3, BDEF_NAME_3, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE_3, FORMAT_VERSION, PARTITION_VALUE_3,
+                SUBPARTITION_VALUES_3, DATA_VERSION);
+
+        // Create a business object data key for the child.
+        BusinessObjectDataKey businessObjectDataChildKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create first business object data parent.
+        BusinessObjectDataEntity businessObjectDataParentOneEntity =
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataParentOneKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Create a child business object data entity having a non pre-registration status.
+        BusinessObjectDataEntity businessObjectDataChildEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectDataChildKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+
+        // Associate child and first parent business object data entities.
+        businessObjectDataParentOneEntity.getBusinessObjectDataChildren().add(businessObjectDataChildEntity);
+        businessObjectDataChildEntity.getBusinessObjectDataParents().add(businessObjectDataParentOneEntity);
+
+        // Create a business object data parents update request.
+        BusinessObjectDataParentsUpdateRequest businessObjectDataParentsUpdateRequest =
+            new BusinessObjectDataParentsUpdateRequest(Collections.singletonList(businessObjectDataParentTwoKey));
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataChildKey)).thenReturn(businessObjectDataChildEntity);
+
+        // Try to call the method under test.
+        try
+        {
+            businessObjectDataServiceImpl.updateBusinessObjectDataParents(businessObjectDataChildKey, businessObjectDataParentsUpdateRequest);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Unable to update parents for business object data because it has \"%s\" status, which is not one of pre-registration statuses.",
+                    BusinessObjectDataStatusEntity.VALID), e.getMessage());
+        }
+
+        // Verify the external calls.
+        verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataChildKey, true, true);
+        verify(businessObjectDataDaoHelper).validateBusinessObjectDataKeys(businessObjectDataParentsUpdateRequest.getBusinessObjectDataParents());
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataChildKey);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the business object data entity.
+        assertEquals(1, CollectionUtils.size(businessObjectDataChildEntity.getBusinessObjectDataParents()));
+        assertEquals(businessObjectDataParentOneEntity, businessObjectDataChildEntity.getBusinessObjectDataParents().get(0));
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataParentsListOfParentsIsNull()
+    {
+        // Create a business object data key for the parent.
+        BusinessObjectDataKey businessObjectDataParentKey =
+            new BusinessObjectDataKey(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES_2, DATA_VERSION);
+
+        // Create a business object data key for the child.
+        BusinessObjectDataKey businessObjectDataChildKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create business object data parent.
+        BusinessObjectDataEntity businessObjectDataParentEntity =
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataParentKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Create a child business object data entity having a pre-registration status.
+        BusinessObjectDataEntity businessObjectDataChildEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectDataChildKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
+
+        // Associate child and parent business object data entities.
+        businessObjectDataParentEntity.getBusinessObjectDataChildren().add(businessObjectDataChildEntity);
+        businessObjectDataChildEntity.getBusinessObjectDataParents().add(businessObjectDataParentEntity);
+
+        // Create a business object data parents update request with alist of parents passed as null.
+        BusinessObjectDataParentsUpdateRequest businessObjectDataParentsUpdateRequest = new BusinessObjectDataParentsUpdateRequest(null);
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataChildKey)).thenReturn(businessObjectDataChildEntity);
+        when(businessObjectDataDao.saveAndRefresh(businessObjectDataChildEntity)).thenReturn(businessObjectDataChildEntity);
+        when(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataChildEntity)).thenReturn(businessObjectData);
+
+        // Call the method under test.
+        BusinessObjectData result =
+            businessObjectDataServiceImpl.updateBusinessObjectDataParents(businessObjectDataChildKey, businessObjectDataParentsUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataChildKey, true, true);
+        verify(businessObjectDataDaoHelper).validateBusinessObjectDataKeys(businessObjectDataParentsUpdateRequest.getBusinessObjectDataParents());
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataChildKey);
+        verify(businessObjectDataDao).saveAndRefresh(businessObjectDataChildEntity);
+        verify(businessObjectDataHelper).createBusinessObjectDataFromEntity(businessObjectDataChildEntity);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectData, result);
+
+        // Validate the list of parents on the business object data entity.
+        assertTrue(CollectionUtils.isEmpty(businessObjectDataChildEntity.getBusinessObjectDataParents()));
     }
 
     @Test

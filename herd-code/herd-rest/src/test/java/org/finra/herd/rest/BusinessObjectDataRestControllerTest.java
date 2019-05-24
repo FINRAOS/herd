@@ -55,6 +55,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequ
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDataParentsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
@@ -740,6 +741,45 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
             verify(businessObjectDataService).updateBusinessObjectDataAttributes(businessObjectDataKey, businessObjectDataAttributesUpdateRequest);
         }
         verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataParents()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data parents update request.
+        BusinessObjectDataParentsUpdateRequest businessObjectDataParentsUpdateRequest = new BusinessObjectDataParentsUpdateRequest(Collections.singletonList(
+            new BusinessObjectDataKey(BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES_2, DATA_VERSION_2)));
+
+        // Create a delimited list of sub-partition values.
+        String delimitedSubPartitionValues = String.join("|", SUBPARTITION_VALUES);
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
+
+        // Mock the external calls.
+        when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
+        when(businessObjectDataService.updateBusinessObjectDataParents(businessObjectDataKey, businessObjectDataParentsUpdateRequest))
+            .thenReturn(businessObjectData);
+
+        // Call the method under test.
+        BusinessObjectData result = businessObjectDataRestController
+            .updateBusinessObjectDataParents(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
+                delimitedSubPartitionValues, businessObjectDataParentsUpdateRequest);
+
+        // Verify the external calls.
+        verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
+        verify(businessObjectDataService).updateBusinessObjectDataParents(businessObjectDataKey, businessObjectDataParentsUpdateRequest);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectData, result);
     }
 
     @Test
