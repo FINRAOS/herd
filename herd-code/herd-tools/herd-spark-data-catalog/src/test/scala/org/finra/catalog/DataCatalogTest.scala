@@ -17,17 +17,19 @@ package org.finra.catalog
 
 import java.util
 
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.herd.{ObjectStatus, HerdApi}
+import org.apache.spark.sql.herd.{HerdApi, ObjectStatus}
 import org.apache.spark.sql.types._
-import org.finra.herd.sdk.model._
 import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.when
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+
+import org.finra.herd.sdk.model._
 
 @RunWith(classOf[JUnitRunner])
 class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach {
@@ -53,6 +55,10 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
   // set up
   override def beforeEach(): Unit = {
+
+    val rootLogger = Logger.getRootLogger()
+    rootLogger.setLevel(Level.ERROR)
+
     dataCatalog = new DataCatalog(spark, "test.com")
     mockHerdApiWrapper = mock[HerdApiWrapper]
     mockHerdApi = mock[HerdApi]
@@ -296,20 +302,20 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     businesObjectDataAvailability.setNamespace(namespace)
     businesObjectDataAvailability.setBusinessObjectDefinitionName(objectName)
     businesObjectDataAvailability.setBusinessObjectFormatUsage(formatUsage)
-    businesObjectDataAvailability.setBusinessObjectFormatFileType(partitionKey)
+    businesObjectDataAvailability.setBusinessObjectFormatFileType(formatType)
 
     var businessObjectDataStatusList = new util.ArrayList[BusinessObjectDataStatus]
 
     var businessObjectDataStatus1 = new BusinessObjectDataStatus
     businessObjectDataStatus1.setBusinessObjectDataVersion(0)
     businessObjectDataStatus1.setBusinessObjectFormatVersion(0)
-    businessObjectDataStatus1.setReason("object1")
+    businessObjectDataStatus1.setReason("VALID")
     businessObjectDataStatus1.setPartitionValue("2019-01-01")
 
     var businessObjectDataStatus2 = new BusinessObjectDataStatus
     businessObjectDataStatus2.setBusinessObjectDataVersion(0)
     businessObjectDataStatus2.setBusinessObjectFormatVersion(0)
-    businessObjectDataStatus2.setReason("object2")
+    businessObjectDataStatus2.setReason("VALID")
     businessObjectDataStatus2.partitionValue("2019-02-01")
 
     businessObjectDataStatusList.add(businessObjectDataStatus1)
@@ -350,7 +356,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
     when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
-    when(mockHerdApi.getBusinessObjectDataAvailability(namespace, objectName, formatUsage, formatType, partitionKey, "2019-01-01", "2099-12-31"))
+    when(mockHerdApi.getBusinessObjectDataAvailability(namespace, objectName, formatUsage, formatType, partitionKey, "2000-01-01", "2099-12-31"))
       .thenReturn(businesObjectDataAvailability)
 
     val dataAvailabilityDataFrame = dataCatalog
@@ -636,16 +642,15 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
     when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
 
-    val df = dataCatalog.getDataFrame(namespace, objectName, formatUsage, formatType, List[String]{partitonValue})
+    val df = dataCatalog.getDataFrame(namespace, objectName, formatUsage, formatType, List[String]{partitonValue}, formatVersion)
 
     df.show()
-
 
   }
 
   test("createDataframe should return a dataframe")
   {
-    val map = Map("header"->"true","delimiter"->",")
+    val map = Map("header"->"true", "delimiter"->",")
     val schema = StructType(
       List(
         StructField("id", IntegerType, true),
@@ -653,7 +658,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
       )
     )
     val source = getClass.getResource("/test.csv").getPath
-    val df = dataCatalog.createDataFrame("csv",map,schema,source)
+    val df = dataCatalog.createDataFrame("csv", map, schema, source)
     import spark.implicits._
     val expectedDF = List(
       (11, "testName1"),
@@ -665,7 +670,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
   ignore("createDataframe without readSchema and format orc should return a dataframe")
   {
-    val map = Map("header"->"true","delimiter"->",")
+    val map = Map("header"->"true", "delimiter"->",")
     val schema = StructType(
       List(
         StructField("id", IntegerType, true),
@@ -673,18 +678,11 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
       )
     )
     val source = getClass.getResource("/test.csv").getPath
-//    val df = dataCatalog.createDataFrame("orc",map,null,source)
     val thrown = intercept[Exception]{
-      dataCatalog.createDataFrame("orc",map,null,source)
+      dataCatalog.createDataFrame("orc", map, null, source)
     }
     assert(thrown.getMessage.contains( "Could not read footer")==true)
-//    import spark.implicits._
-//    val expectedDF = List(
-//      (11, "testName1"),
-//      (22, "testName2")
-//    ).toDF("id", "name")
-//
-//    assertEquals(0, expectedDF.except(df).count)
+
   }
 
   test("getParseOptions should return map of parse options of the given object")
@@ -731,15 +729,15 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
     when(mockHerdApi.getBusinessObjectsByNamespace(namespace)).thenReturn(businessObjectDefinitionKeys)
-    val output = dataCatalog.findNamespace("object1",List(namespace))
+    val output = dataCatalog.findNamespace("object1", List(namespace))
 
-    assertEquals(namespace,output)
+    assertEquals(namespace, output)
 
   }
 
   test("preRegisterBusinessObjectPath pre-registers the object and returns storageDirectory")
   {
-    var businessObjectDefinition= new org.finra.herd.sdk.model.BusinessObjectDefinition
+    var businessObjectDefinition = new org.finra.herd.sdk.model.BusinessObjectDefinition
     businessObjectDefinition.setBusinessObjectDefinitionName(objectName)
     businessObjectDefinition.setNamespace(namespace)
 
@@ -771,16 +769,16 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     storageUnit.setStorageDirectory(storageDirectory)
 
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
-    when(mockHerdApi.getBusinessObjectByName(namespace,objectName)).thenReturn(businessObjectDefinition)
-    when(mockHerdApi.registerBusinessObject(namespace,objectName,"FINRA")).thenThrow(new IllegalStateException("method was called"))
+    when(mockHerdApi.getBusinessObjectByName(namespace, objectName)).thenReturn(businessObjectDefinition)
+    when(mockHerdApi.registerBusinessObject(namespace, objectName, "FINRA")).thenThrow(new IllegalStateException("method was called"))
     when(mockHerdApi.registerBusinessObjectFormat(namespace, objectName, formatUsage, formatType, partitionKey, None)).thenReturn(1)
-    when(mockHerdApi.getBusinessObjectFormat(namespace,objectName,formatUsage,formatType,formatVersion)).thenReturn(businessObjectFormat)
-    when(mockHerdApi.registerBusinessObjectData(namespace, objectName, "PRC","UNKNOWN", formatVersion,
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
+    when(mockHerdApi.registerBusinessObjectData(namespace, objectName, "PRC", "UNKNOWN", formatVersion,
       partitionKey, partitonValue, Nil,
-      ObjectStatus.UPLOADING, "S3_DATABRICKS", None)).thenReturn((1,Seq(storageUnit)))
+      ObjectStatus.UPLOADING, "S3_DATABRICKS", None)).thenReturn((1, Seq(storageUnit)))
 
-    val output = dataCatalog.preRegisterBusinessObjectPath(namespace,objectName,formatVersion,partitionKey,partitonValue)
-    assertEquals("(0,1,dummy)",output.toString())
+    val output = dataCatalog.preRegisterBusinessObjectPath(namespace, objectName, formatVersion, partitionKey, partitonValue)
+    assertEquals("(0,1,dummy)", output.toString())
 
   }
 
@@ -788,11 +786,11 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
   {
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
     when(mockHerdApi.
-    updateBusinessObjectData(namespace, objectName, "PRC","UNKNOWN", formatVersion,
-      partitionKey, partitonValue, Nil, dataVersion,ObjectStatus.VALID)).thenThrow(new IllegalStateException("method was called"))
+    updateBusinessObjectData(namespace, objectName, "PRC", "UNKNOWN", formatVersion,
+      partitionKey, partitonValue, Nil, dataVersion, ObjectStatus.VALID)).thenThrow(new IllegalStateException("method was called"))
 
     val thrown = intercept[Throwable]{
-      dataCatalog.completeRegisterBusinessObjectPath(namespace,objectName,formatVersion,partitionKey,partitonValue,dataVersion)
+      dataCatalog.completeRegisterBusinessObjectPath(namespace, objectName, formatVersion, partitionKey, partitonValue, dataVersion)
     }
 
     assert(thrown.getMessage == "method was called")
@@ -827,27 +825,48 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     partitionColumn.setType("DATE")
     partitionColumn.setRequired(true)
 
+    s.setDelimiter("|")
+    s.setEscapeCharacter("\\")
     s.addPartitionsItem(partitionColumn)
+
+    val schemaColumn = new SchemaColumn
+    schemaColumn.setName("name")
+    schemaColumn.setType("String")
+    schemaColumn.setRequired(true)
+    schemaColumn.setDescription("name column")
+
+    val schemaColumn1 = new SchemaColumn
+    schemaColumn1.setName("id")
+    schemaColumn1.setType("DECIMAL")
+    schemaColumn1.setRequired(false)
+    schemaColumn1.setDescription("id column")
+    schemaColumn1.setSize("32,10")
+
+    s.addColumnsItem(schemaColumn)
+    s.addColumnsItem(schemaColumn1)
+    var schemaColumns = new util.ArrayList[SchemaColumn]()
+    schemaColumns.add(schemaColumn)
+
     businessObjectFormat.setSchema(s)
 
     val businesObjectDataAvailability = new BusinessObjectDataAvailability
     businesObjectDataAvailability.setNamespace("HUB")
     businesObjectDataAvailability.setBusinessObjectDefinitionName(objectName)
     businesObjectDataAvailability.setBusinessObjectFormatUsage(formatUsage)
-    businesObjectDataAvailability.setBusinessObjectFormatFileType(partitionKey)
+    businesObjectDataAvailability.setBusinessObjectFormatFileType("ORC")
 
     var businessObjectDataStatusList = new util.ArrayList[BusinessObjectDataStatus]
 
     var businessObjectDataStatus1 = new BusinessObjectDataStatus
     businessObjectDataStatus1.setBusinessObjectDataVersion(0)
     businessObjectDataStatus1.setBusinessObjectFormatVersion(0)
-    businessObjectDataStatus1.setReason("object1")
+    businessObjectDataStatus1.setReason("VALID")
     businessObjectDataStatus1.setPartitionValue("2019-01-01")
 
     var businessObjectDataStatus2 = new BusinessObjectDataStatus
     businessObjectDataStatus2.setBusinessObjectDataVersion(0)
     businessObjectDataStatus2.setBusinessObjectFormatVersion(0)
-    businessObjectDataStatus2.setReason("object2")
+    businessObjectDataStatus2.setReason("VALID")
     businessObjectDataStatus2.partitionValue("2019-02-01")
 
     businessObjectDataStatusList.add(businessObjectDataStatus1)
@@ -869,15 +888,44 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey1)
     businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey2)
 
+    var businessObjectDataDDl = new BusinessObjectDataDdl
+    businessObjectDataDDl.setNamespace("HUB")
+    businessObjectDataDDl.setBusinessObjectDefinitionName(objectName)
+    businessObjectDataDDl.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectDataDDl.setBusinessObjectFormatFileType("ORC")
+    businessObjectDataDDl.setBusinessObjectDataVersion(dataVersion)
+    businessObjectDataDDl.setBusinessObjectFormatVersion(formatVersion)
+    businessObjectDataDDl.setDdl(
+      """
+        |CREATE EXTERNAL TABLE `exectest` (
+        |    `ORGNL_trade_exec_dt` DATE,
+        |    `avgsize` DOUBLE COMMENT 'This is an \'average size\' of the "test exec" data.',
+        |    `totalsize` DOUBLE,
+        |    `minsize` DOUBLE,
+        |    `maxsize` DOUBLE,
+        |    `totalcount` INT,
+        |    `belowavg` INT)
+        |PARTITIONED BY (`trade_rpt_dt` DATE, `trade_exec_dt` DATE)
+        |ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\' NULL DEFINED AS '\N'
+        |STORED AS TEXTFILE;
+        |
+        |ALTER TABLE exectest ADD PARTITION (`trade_rpt_dt`='2019-01-01') LOCATION 's3://dummy/dm/test/trade-rpt-dt=2019-01-01';
+      """.stripMargin)
+
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
     when(mockHerdApi.getBusinessObjectsByNamespace("HUB")).thenReturn(businessObjectDefinitionKeys)
     when(mockHerdApi.getBusinessObjectFormats("HUB", objectName, true)).thenReturn(businessObjectFormatKeys)
     when(mockHerdApi.getBusinessObjectFormat("HUB", objectName, formatUsage, "ORC", formatVersion)).thenReturn(businessObjectFormat)
-    when(mockHerdApi.getBusinessObjectDataAvailability("HUB", objectName, formatUsage, "ORC", partitionKey, "2019-01-01", "2099-12-31"))
+    when(mockHerdApi.getBusinessObjectDataAvailability("HUB", objectName, formatUsage, "ORC", partitionKey, "2000-01-01", "2099-12-31"))
       .thenReturn(businesObjectDataAvailability)
+    when(mockHerdApi.getBusinessObjectDataGenerateDdl("HUB", objectName, formatUsage, "ORC",
+      formatVersion, partitionKey, Seq(partitonValue), dataVersion)).thenReturn(businessObjectDataDDl)
 
-    val df=dataCatalog.findDataFrame(objectName,List(partitonValue))
-    df.show
+    val thrown = intercept[Exception]{
+      val df = dataCatalog.findDataFrame(objectName, List(partitonValue))
+    }
+
+    assertEquals("No FileSystem for scheme: s3", thrown.getMessage)
 
   }
 

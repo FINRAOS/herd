@@ -493,7 +493,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def createDataFrame(readFormat: String, readOptions: Map[String, String], readSchema: StructType, path: String): DataFrame = {
 
-    val df = try {
+    val df =
+    {
       // If readSchema was not null, we've already got it, so use it (for non-orc files). If not, try to get it from the file itself (for orc files).
       // If we can't get a schema from the file, try to read it without supplying the schema. This is the least efficient choice but better than nothing.
       if (readSchema != null && !readFormat.equals("orc")) {
@@ -524,15 +525,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
         // and if it's bz, txt, or csv, use parseSchema.
         spark.sqlContext.read.format(readFormat).options(readOptions).load(path)
       }
-    } catch {
-      case e: Exception => // noinspection RedundantBlock
-      {
-        logger.error("Could not read data from S3, empty DataFrame being returned, AWS RESPONSE:\n" + e.getMessage)
-        spark.sqlContext.sparkSession.createDataFrame(spark.sqlContext.sparkContext.emptyRDD[Row], readSchema)
-      }
     }
-
     df
+
   }
 
   /**
@@ -567,9 +562,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def queryPathFromGenerateDdl(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
                                partitionValuesInOrder: Array[String], schemaVersion: Int, dataVersion: Int): List[String] = {
-    val ha = ds.defaultApiClientFactory(baseRestUrl, Some(this.username), Some(this.password))
 
-    val businessObjectDataDdl = ha.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
+    val businessObjectDataDdl = herdApiWrapper.getHerdApi.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
       schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
 
     val ddl = businessObjectDataDdl.getDdl
@@ -650,7 +644,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int):
     org.finra.herd.sdk.model.BusinessObjectFormat = {
-     return herdApiWrapper.getHerdApi.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
+    return herdApiWrapper.getHerdApi.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
   }
 
   /**
@@ -866,9 +860,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schemaVersion schema version, <0 for current
    * @return Spark schema (structFields)
    */
-  def getPartitions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int = -1): StructType = {
+  def getPartitions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int): StructType = {
     val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
-
     parsePartitions(businessObjectFormat)
   }
 
@@ -992,7 +985,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     // get data availability
     val businessObjectDataAvailability = herdApiWrapper.getHerdApi.getBusinessObjectDataAvailability(namespace, objectName, usage, fileFormat,
        partitionKey, firstPartValue, lastPartValue)
-
     val businessObjectDataAvailableStatuses = businessObjectDataAvailability.getAvailableStatuses
 
     val availData = (
@@ -1029,7 +1021,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schemaVersion version of schema, <0 for latest
    * @return
    */
-  def getDataAvailability(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int = -1): DataFrame = {
+  def getDataAvailability(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int): DataFrame = {
 
     // need the first partition (the partitionKey)
     val parts = getPartitions(namespace, objectName, usage, fileFormat, schemaVersion)
@@ -1162,6 +1154,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    *
    */
   def getDataFrame(availableData: DataFrame): DataFrame = {
+
     val formatVersionCol = "FormatVersion"
     val dataVersionCol = "DataVersion"
     val reasonCol = "Reason"
@@ -1207,8 +1200,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
       // create the dataframe
       val aDF = getDataFrame(namespace, objectName, usage, fileFormat, parts, schemaVersion, dataVersion)
-
-      if (retDF == null) {
+       if (retDF == null) {
         retDF = aDF
       } else {
         // union the dataframes, using the union of their schemas
@@ -1230,8 +1222,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param keyPartValues list of key partition values
    * @return
    */
-  def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, keyPartValues: List[String]): DataFrame = {
-    val pp = getPartitions(namespace, objectName, usage, fileFormat)
+  def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, keyPartValues: List[String], formatVersion: Int): DataFrame = {
+    val pp = getPartitions(namespace, objectName, usage, fileFormat, formatVersion)
 
     if (pp.length > 1) {
       logger.error("object has multiple partitions, this works only for objects with one (key) partition")
@@ -1240,7 +1232,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val reasonCol = "Reason"
 
-    val da = getDataAvailability(namespace, objectName, usage, fileFormat)
+    val da = getDataAvailability(namespace, objectName, usage, fileFormat, formatVersion)
       .filter(col(pp.head.name).isin(keyPartValues: _*))
       .filter(col(reasonCol) === "VALID")
 
@@ -1316,7 +1308,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
       if (maxVersions.count == 1) {
         formatVersion = maxVersions.first.getInt(0)
-
         val aRow = formats
           .filter('formatFileType === aFileFormat && 'formatVersion === formatVersion)
           .first
@@ -1330,11 +1321,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     require(fileFormat != null, "Cannot find format given: " + fileFormats.mkString(", "))
 
     // get the partitions
-    val parts = getPartitions(namespace, objectName, usage, fileFormat)
+    val parts = getPartitions(namespace, objectName, usage, fileFormat, formatVersion)
     val keyPart = parts.head.name
 
     // get available data, only valid data!
-    val availData = getDataAvailability(namespace, objectName, usage, fileFormat).filter('Reason === "VALID")
+    val availData = getDataAvailability(namespace, objectName, usage, fileFormat, formatVersion).filter('Reason === "VALID")
 
     // filter for most recent versions for the key partition values given
     val dfData = availData
