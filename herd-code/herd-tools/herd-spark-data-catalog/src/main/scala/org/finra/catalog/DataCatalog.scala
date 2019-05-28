@@ -572,9 +572,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val businessObjectDataDdl = ha.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
       schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
 
-    val xmlMapper = new XmlMapper
-    val ss = XML.loadString(xmlMapper.writeValueAsString(businessObjectDataDdl))
-    val ddl = (ss \\ "businessObjectDataDdl" \ "ddl").text
+    val ddl = businessObjectDataDdl.getDdl
     logger.debug(s"ddl: $ddl")
 
     // Parse the DDL, and grab the partition values and their S3 prefixes
@@ -647,15 +645,12 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param usage         usage in DM
    * @param fileFormat    file format for object
    * @param schemaVersion schema version, -1 for latest
-   * @return REST call response (XML string)
+   * @return business object format instance
    *
    */
-  def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int): String = {
-
-    val businessObjectFormat = herdApiWrapper.getHerdApi.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
-
-    val xmlMapper = new XmlMapper
-    xmlMapper.writeValueAsString(businessObjectFormat)
+  def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int):
+    org.finra.herd.sdk.model.BusinessObjectFormat = {
+     return herdApiWrapper.getHerdApi.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
   }
 
   /**
@@ -760,30 +755,28 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def getSchema(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int = -1): StructType = {
 
-    val restResp = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
+    val bFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
 
-    val boFormats = XML.loadString(restResp)
-
-    parseSchema(boFormats)
+    parseSchema(bFormat)
   }
 
   /**
-   * Does the parsing of the XML REST response to get the schema
+   * Retrieve the format schema
    *
-   * @param boFormats XML elements of the business object format query
+   * @param businessObjectFormat the business object format instance
    * @return Spark schema (structFields)
    */
-  private def parseSchema(boFormats: Elem): StructType = {
-    val columns = boFormats \\ "businessObjectFormat" \\ "schema" \\ "columns"
+  private def parseSchema(businessObjectFormat : org.finra.herd.sdk.model.BusinessObjectFormat): StructType = {
+    val columns = businessObjectFormat.getSchema.getColumns.asScala
 
-    // get form the XML the columns, map them to a list of StructFields
-    val fields = (columns \\ "column").map { c =>
-      val n = (c \ "name") text
-      val t = (c \ "type") text
-      val s = (c \ "size") text
+    // map the columns to a list of StructFields
+    val fields = columns.map { c =>
+      val n = c.getName
+      val t = c.getType
+      val s = c.getSize
 
-      val required = (c \ "required") text
-      val description = (c \ "description") text
+      val required = c.getRequired
+      val description = c.getDescription
 
       // create a comment on each field, just to show how you can (ideal would be from DM)
       val commentJSON =
@@ -791,7 +784,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
       StructField(name = n,
         dataType = getStructType(t, s),
-        nullable = Try(required.toBoolean).getOrElse(true),
+        nullable = Try(required.booleanValue()).getOrElse(true),
         Metadata.fromJson(commentJSON))
     }
 
@@ -811,24 +804,23 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def getParseOptions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int = -1, csvBug: Boolean = false):
   Map[String, String] = {
-    val restResp = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
+    val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
 
-    val boFormats = XML.loadString(restResp)
 
-    parseParseOptions(boFormats, csvBug)
+    parseParseOptions(businessObjectFormat, csvBug)
   }
 
   /**
-   * Does the parsing of the XML REST elements for the parse options
+   * Returns the parse options
    *
-   * @param boFormats XML elements of the business object format query
+   * @param businessObjectFormat the business object format instance
    * @return Map of parse options
    */
-  private def parseParseOptions(boFormats: Elem, csvBug: Boolean): Map[String, String] = {
+  private def parseParseOptions(businessObjectFormat : org.finra.herd.sdk.model.BusinessObjectFormat, csvBug: Boolean): Map[String, String] = {
     //    val nullValue = boFormats \\ "businessObjectFormat" \\ "schema" \\ "nullValue" text
     val nullValue = "\\N"
-    var delimiter = boFormats \\ "businessObjectFormat" \\ "schema" \\ "delimiter" text
-    var escapeCharacter = boFormats \\ "businessObjectFormat" \\ "schema" \\ "escapeCharacter" text
+    var delimiter = businessObjectFormat.getSchema.getDelimiter
+    var escapeCharacter = businessObjectFormat.getSchema.getEscapeCharacter
     //    val partitionKeyGroup = boFormats \\ "businessObjectFormat" \\ "schema" \\ "partitionKeyGroup" text
 
     // ugly but gets the job done, having text that needs to recognise octal and unicode
@@ -875,33 +867,31 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return Spark schema (structFields)
    */
   def getPartitions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int = -1): StructType = {
-    val restResp = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
+    val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
 
-    val boFormats = XML.loadString(restResp)
-
-    parsePartitions(boFormats)
+    parsePartitions(businessObjectFormat)
   }
 
   /**
-   * Parses the XML REST return for the partitions
+   * Retrieve the schema partitions
    *
-   * @param boFormats XML elements of the business object format query
+   * @param businessObjectFormat the business object format instance
    * @return Spark schema (structFields)
    */
-  private def parsePartitions(boFormats: Elem): StructType = {
+  private def parsePartitions(businessObjectFormat : org.finra.herd.sdk.model.BusinessObjectFormat): StructType = {
     // get the partitionKey
-    val partitionKey = boFormats \\ "businessObjectFormat" \ "partitionKey" text
+    val partitionKey = businessObjectFormat.getPartitionKey
 
     // get the list of partitions
-    val partitions = boFormats \\ "businessObjectFormat" \\ "schema" \\ "partitions"
+    val partitions = businessObjectFormat.getSchema.getPartitions.asScala
 
     // get from the XML the partition columns, map them to a list of StructFields
-    val fields = (partitions \\ "column").map { c =>
-      val n = (c \ "name") text
-      val t = (c \ "type") text
-      val s = (c \ "size") text
+    val fields = partitions.map { c =>
+      val n = c.getName
+      val t = c.getType
+      val s = c.getSize
 
-      val description = (c \ "description") text
+      val description = c.getDescription
 
       // create a comment on each field, just to show how you can (ideal would be from DM)
       val commentJSON =
@@ -984,13 +974,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   def getDataAvailabilityRange(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, firstPartValue: String,
                                lastPartValue: String, schemaVersion: Int = -1): DataFrame = {
 
-    // Construct the schema
-    //
-    // get the partitions
-    val restResp = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
-    val boFormats = XML.loadString(restResp)
-
-    val parts = parsePartitions(boFormats)
+    val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
+    val parts = parsePartitions(businessObjectFormat)
 
     logger.debug(s"Partitions: $parts")
 
@@ -1029,7 +1014,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val df = spark.createDataFrame(rdd, sschema)
 
     // convert to final schema (ints, dates, etc.)
-    val parseOptions = parseParseOptions(boFormats, csvBug = true)
+    val parseOptions = parseParseOptions(businessObjectFormat, csvBug = true)
 
     convertToSchema(df, schema, parseOptions("nullValue"))
   }
@@ -1088,12 +1073,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     logger.debug("csvBug? " + csvBug)
 
     // call REST once
-    val restResp = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
-    val boFormats = XML.loadString(restResp)
+    val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
 
-    var readOptions = parseParseOptions(boFormats, csvBug)
-    val finalSchema = parseSchema(boFormats)
-    val parts = parsePartitions(boFormats)
+    var readOptions = parseParseOptions(businessObjectFormat, csvBug)
+    val finalSchema = parseSchema(businessObjectFormat)
+    val parts = parsePartitions(businessObjectFormat)
 
     // read options only for CSV files; ORC files won't work with the correct schema. We have to read with the embedded schema and then rename columns.
     if (sparkReader == "orc") {
