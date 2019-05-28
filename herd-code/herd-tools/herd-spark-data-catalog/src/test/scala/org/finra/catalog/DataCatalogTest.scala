@@ -21,14 +21,15 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.herd.{HerdApi, ObjectStatus}
 import org.apache.spark.sql.types._
-import org.finra.herd.sdk.model._
 import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.when
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+
+import org.finra.herd.sdk.model._
 
 @RunWith(classOf[JUnitRunner])
 class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach {
@@ -649,7 +650,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
   test("createDataframe should return a dataframe")
   {
-    val map = Map("header"->"true","delimiter"->",")
+    val map = Map("header"->"true", "delimiter"->",")
     val schema = StructType(
       List(
         StructField("id", IntegerType, true),
@@ -657,7 +658,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
       )
     )
     val source = getClass.getResource("/test.csv").getPath
-    val df = dataCatalog.createDataFrame("csv",map,schema,source)
+    val df = dataCatalog.createDataFrame("csv", map, schema, source)
     import spark.implicits._
     val expectedDF = List(
       (11, "testName1"),
@@ -669,7 +670,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
   ignore("createDataframe without readSchema and format orc should return a dataframe")
   {
-    val map = Map("header"->"true","delimiter"->",")
+    val map = Map("header"->"true", "delimiter"->",")
     val schema = StructType(
       List(
         StructField("id", IntegerType, true),
@@ -677,18 +678,11 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
       )
     )
     val source = getClass.getResource("/test.csv").getPath
-//    val df = dataCatalog.createDataFrame("orc",map,null,source)
     val thrown = intercept[Exception]{
-      dataCatalog.createDataFrame("orc",map,null,source)
+      dataCatalog.createDataFrame("orc", map, null, source)
     }
     assert(thrown.getMessage.contains( "Could not read footer")==true)
-//    import spark.implicits._
-//    val expectedDF = List(
-//      (11, "testName1"),
-//      (22, "testName2")
-//    ).toDF("id", "name")
-//
-//    assertEquals(0, expectedDF.except(df).count)
+
   }
 
   test("getParseOptions should return map of parse options of the given object")
@@ -735,15 +729,15 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
     when(mockHerdApi.getBusinessObjectsByNamespace(namespace)).thenReturn(businessObjectDefinitionKeys)
-    val output = dataCatalog.findNamespace("object1",List(namespace))
+    val output = dataCatalog.findNamespace("object1", List(namespace))
 
-    assertEquals(namespace,output)
+    assertEquals(namespace, output)
 
   }
 
   test("preRegisterBusinessObjectPath pre-registers the object and returns storageDirectory")
   {
-    var businessObjectDefinition= new org.finra.herd.sdk.model.BusinessObjectDefinition
+    var businessObjectDefinition = new org.finra.herd.sdk.model.BusinessObjectDefinition
     businessObjectDefinition.setBusinessObjectDefinitionName(objectName)
     businessObjectDefinition.setNamespace(namespace)
 
@@ -775,16 +769,16 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     storageUnit.setStorageDirectory(storageDirectory)
 
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
-    when(mockHerdApi.getBusinessObjectByName(namespace,objectName)).thenReturn(businessObjectDefinition)
-    when(mockHerdApi.registerBusinessObject(namespace,objectName,"FINRA")).thenThrow(new IllegalStateException("method was called"))
+    when(mockHerdApi.getBusinessObjectByName(namespace, objectName)).thenReturn(businessObjectDefinition)
+    when(mockHerdApi.registerBusinessObject(namespace, objectName, "FINRA")).thenThrow(new IllegalStateException("method was called"))
     when(mockHerdApi.registerBusinessObjectFormat(namespace, objectName, formatUsage, formatType, partitionKey, None)).thenReturn(1)
-    when(mockHerdApi.getBusinessObjectFormat(namespace,objectName,formatUsage,formatType,formatVersion)).thenReturn(businessObjectFormat)
-    when(mockHerdApi.registerBusinessObjectData(namespace, objectName, "PRC","UNKNOWN", formatVersion,
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
+    when(mockHerdApi.registerBusinessObjectData(namespace, objectName, "PRC", "UNKNOWN", formatVersion,
       partitionKey, partitonValue, Nil,
-      ObjectStatus.UPLOADING, "S3_DATABRICKS", None)).thenReturn((1,Seq(storageUnit)))
+      ObjectStatus.UPLOADING, "S3_DATABRICKS", None)).thenReturn((1, Seq(storageUnit)))
 
-    val output = dataCatalog.preRegisterBusinessObjectPath(namespace,objectName,formatVersion,partitionKey,partitonValue)
-    assertEquals("(0,1,dummy)",output.toString())
+    val output = dataCatalog.preRegisterBusinessObjectPath(namespace, objectName, formatVersion, partitionKey, partitonValue)
+    assertEquals("(0,1,dummy)", output.toString())
 
   }
 
@@ -792,11 +786,11 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
   {
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
     when(mockHerdApi.
-    updateBusinessObjectData(namespace, objectName, "PRC","UNKNOWN", formatVersion,
-      partitionKey, partitonValue, Nil, dataVersion,ObjectStatus.VALID)).thenThrow(new IllegalStateException("method was called"))
+    updateBusinessObjectData(namespace, objectName, "PRC", "UNKNOWN", formatVersion,
+      partitionKey, partitonValue, Nil, dataVersion, ObjectStatus.VALID)).thenThrow(new IllegalStateException("method was called"))
 
     val thrown = intercept[Throwable]{
-      dataCatalog.completeRegisterBusinessObjectPath(namespace,objectName,formatVersion,partitionKey,partitonValue,dataVersion)
+      dataCatalog.completeRegisterBusinessObjectPath(namespace, objectName, formatVersion, partitionKey, partitonValue, dataVersion)
     }
 
     assert(thrown.getMessage == "method was called")
@@ -894,7 +888,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey1)
     businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys.add(businessObjectDefinitionKey2)
 
-    var businessObjectDataDDl=new BusinessObjectDataDdl
+    var businessObjectDataDDl = new BusinessObjectDataDdl
     businessObjectDataDDl.setNamespace("HUB")
     businessObjectDataDDl.setBusinessObjectDefinitionName(objectName)
     businessObjectDataDDl.setBusinessObjectFormatUsage(formatUsage)
@@ -915,10 +909,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
         |ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\' NULL DEFINED AS '\N'
         |STORED AS TEXTFILE;
         |
-        |ALTER TABLE exectest ADD PARTITION (`trade_rpt_dt`='2019-01-01', `trade_exec_dt`='2019-01-01') LOCATION 's3://dummy/dm/test/test/txt/exectest/frmt-v0/data-v0/trade-rpt-dt=2019-01-01/trade_exec_dt=2019-01-01';
-        |ALTER TABLE exectest ADD PARTITION (`trade_rpt_dt`='2014-10-07', `trade_exec_dt`='2014-10-07') LOCATION 's3://dummy/dm/test/test/txt/exectest/frmt-v0/data-v0/trade-rpt-dt=2014-10-07/trade_exec_dt=2014-10-07';
-        |ALTER TABLE exectest ADD PARTITION (`trade_rpt_dt`='2014-10-08', `trade_exec_dt`='2014-10-07') LOCATION 's3://dummy/dm/test/test/txt/exectest/frmt-v0/data-v0/trade-rpt-dt=2014-10-08/trade_exec_dt=2014-10-07';
-        |ALTER TABLE exectest ADD PARTITION (`trade_rpt_dt`='2014-10-08', `trade_exec_dt`='2014-10-08') LOCATION 's3://dummy/dm/test/test/txt/exectest/frmt-v0/data-v0/trade-rpt-dt=2014-10-08/trade_exec_dt=2014-10-08';
+        |ALTER TABLE exectest ADD PARTITION (`trade_rpt_dt`='2019-01-01') LOCATION 's3://dummy/dm/test/trade-rpt-dt=2019-01-01';
       """.stripMargin)
 
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
@@ -931,10 +922,10 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
       formatVersion, partitionKey, Seq(partitonValue), dataVersion)).thenReturn(businessObjectDataDDl)
 
     val thrown = intercept[Exception]{
-      val df=dataCatalog.findDataFrame(objectName,List(partitonValue))
+      val df = dataCatalog.findDataFrame(objectName, List(partitonValue))
     }
 
-    assertEquals("No FileSystem for scheme: s3",thrown.getMessage)
+    assertEquals("No FileSystem for scheme: s3", thrown.getMessage)
 
   }
 
