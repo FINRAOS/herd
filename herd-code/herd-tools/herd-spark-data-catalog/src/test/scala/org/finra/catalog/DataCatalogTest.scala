@@ -641,10 +641,9 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
     when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
 
-    val df = dataCatalog.getDataFrame(namespace, objectName, formatUsage, formatType, List[String]{partitonValue})
+    val df = dataCatalog.getDataFrame(namespace, objectName, formatUsage, formatType, List[String]{partitonValue}, formatVersion)
 
     df.show()
-
 
   }
 
