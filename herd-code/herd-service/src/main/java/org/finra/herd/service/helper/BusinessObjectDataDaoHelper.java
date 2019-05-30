@@ -1268,7 +1268,7 @@ public class BusinessObjectDataDaoHelper
      *
      * @param keys the business object data keys to validate
      */
-    private void validateBusinessObjectDataKeys(List<BusinessObjectDataKey> keys)
+    public void validateBusinessObjectDataKeys(List<BusinessObjectDataKey> keys)
     {
         // Create a cloned business object data keys list where all keys are lowercase. This will be used for ensuring no duplicates are present in a
         // case-insensitive way.

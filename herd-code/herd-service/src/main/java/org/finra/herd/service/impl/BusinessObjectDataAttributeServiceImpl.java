@@ -83,7 +83,8 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
      * <p/>
      * This implementation starts a new transaction.
      */
-    @NamespacePermission(fields = "#request.businessObjectDataAttributeKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#request.businessObjectDataAttributeKey.namespace", permissions = {NamespacePermissionEnum.WRITE,
+        NamespacePermissionEnum.WRITE_ATTRIBUTE})
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDataAttribute createBusinessObjectDataAttribute(BusinessObjectDataAttributeCreateRequest request)
@@ -193,7 +194,8 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
      * <p/>
      * This implementation starts a new transaction.
      */
-    @NamespacePermission(fields = "#businessObjectDataAttributeKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#businessObjectDataAttributeKey.namespace", permissions = {NamespacePermissionEnum.WRITE,
+        NamespacePermissionEnum.WRITE_ATTRIBUTE})
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDataAttribute updateBusinessObjectDataAttribute(BusinessObjectDataAttributeKey businessObjectDataAttributeKey,
@@ -251,7 +253,8 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
      * <p/>
      * This implementation starts a new transaction.
      */
-    @NamespacePermission(fields = "#businessObjectDataAttributeKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#businessObjectDataAttributeKey.namespace", permissions = {NamespacePermissionEnum.WRITE,
+        NamespacePermissionEnum.WRITE_ATTRIBUTE})
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDataAttribute deleteBusinessObjectDataAttribute(BusinessObjectDataAttributeKey businessObjectDataAttributeKey)
