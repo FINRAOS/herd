@@ -795,7 +795,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Updates attributes for the business object data without subpartition values. <p>Requires WRITE permission on namespace</p>
+     * Updates attributes for the business object data without subpartition values. <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -828,7 +828,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Updates attributes for the business object data with 1 subpartition value. <p>Requires WRITE permission on namespace</p>
+     * Updates attributes for the business object data with 1 subpartition value. <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -863,7 +863,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Updates attributes for the business object data with 2 subpartition values. <p>Requires WRITE permission on namespace</p>
+     * Updates attributes for the business object data with 2 subpartition values. <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -900,7 +900,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Updates attributes for the business object data with 3 subpartition values. <p>Requires WRITE permission on namespace</p>
+     * Updates attributes for the business object data with 3 subpartition values. <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -940,7 +940,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Updates attributes for the business object data with 4 subpartition values. <p>Requires WRITE permission on namespace</p>
+     * Updates attributes for the business object data with 4 subpartition values. <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
