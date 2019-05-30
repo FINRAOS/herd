@@ -628,7 +628,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             new BusinessObjectDataSearchResult(businessObjectDataList));
     }
 
-    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = {NamespacePermissionEnum.WRITE, NamespacePermissionEnum.WRITE_ATTRIBUTE})
     @Override
     public BusinessObjectData updateBusinessObjectDataAttributes(BusinessObjectDataKey businessObjectDataKey,
         BusinessObjectDataAttributesUpdateRequest businessObjectDataAttributesUpdateRequest)
