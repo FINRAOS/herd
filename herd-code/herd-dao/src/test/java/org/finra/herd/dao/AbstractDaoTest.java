@@ -1057,6 +1057,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<String> SUBPARTITION_VALUES_2 =
         Arrays.asList("Ee" + RANDOM_SUFFIX, "Ff" + RANDOM_SUFFIX, "Gg" + RANDOM_SUFFIX, "Hh" + RANDOM_SUFFIX);
 
+    public static final List<String> SUBPARTITION_VALUES_3 =
+        Arrays.asList("Ii" + RANDOM_SUFFIX, "Jj" + RANDOM_SUFFIX, "Kk" + RANDOM_SUFFIX, "Ll" + RANDOM_SUFFIX);
+
     public static final String SUB_AGGREGATION_NAME = "UT_SubAggregationName_" + RANDOM_SUFFIX;
 
     public static final String SUB_PARTITION_VALUE_1 = "UT_SubPartition_1_" + RANDOM_SUFFIX;
@@ -1065,7 +1068,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<NamespacePermissionEnum> SUPPORTED_NAMESPACE_PERMISSIONS = Collections.unmodifiableList(Arrays
         .asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT,
-            NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT));
+            NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE_ATTRIBUTE));
 
     public static final String TABLE_NAME = "Test_Table" + RANDOM_SUFFIX;
 

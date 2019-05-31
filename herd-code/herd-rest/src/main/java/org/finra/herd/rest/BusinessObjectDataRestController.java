@@ -49,6 +49,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequ
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDataParentsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
@@ -794,7 +795,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Updates attributes for the business object data without subpartition values. <p>Requires WRITE permission on namespace</p>
+     * Updates attributes for the business object data without subpartition values. <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -827,7 +828,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Updates attributes for the business object data with 1 subpartition value. <p>Requires WRITE permission on namespace</p>
+     * Updates attributes for the business object data with 1 subpartition value. <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -862,7 +863,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Updates attributes for the business object data with 2 subpartition values. <p>Requires WRITE permission on namespace</p>
+     * Updates attributes for the business object data with 2 subpartition values. <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -899,7 +900,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Updates attributes for the business object data with 3 subpartition values. <p>Requires WRITE permission on namespace</p>
+     * Updates attributes for the business object data with 3 subpartition values. <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -939,7 +940,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Updates attributes for the business object data with 4 subpartition values. <p>Requires WRITE permission on namespace</p>
+     * Updates attributes for the business object data with 4 subpartition values. <p>Requires WRITE or WRITE_ATTRIBUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -976,6 +977,40 @@ public class BusinessObjectDataRestController extends HerdBaseController
         return businessObjectDataService.updateBusinessObjectDataAttributes(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value, subPartition3Value, subPartition4Value),
+                businessObjectDataVersion), request);
+    }
+
+    /**
+     * Updates parents information for an existing business object data by alternate key. <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the name of the business object definition
+     * @param businessObjectFormatUsage the usage of the business object format
+     * @param businessObjectFormatFileType the file type of the business object format
+     * @param businessObjectFormatVersion the version of the business object format
+     * @param partitionValue the primary partition value
+     * @param subPartitionValues the list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
+     * @param businessObjectDataVersion the version of the business object data
+     * @param request the information needed to update parents of the business object data
+     *
+     * @return the business object data information
+     */
+    @RequestMapping(value = "/businessObjectDataParents/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+        "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}" +
+        "/businessObjectDataVersions/{businessObjectDataVersion}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_PARENTS_PUT)
+    public BusinessObjectData updateBusinessObjectDataParents(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
+        @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues, @RequestBody BusinessObjectDataParentsUpdateRequest request)
+    {
+        return businessObjectDataService.updateBusinessObjectDataParents(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
                 businessObjectDataVersion), request);
     }
 
