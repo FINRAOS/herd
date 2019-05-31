@@ -20,6 +20,7 @@ import java.util
 import scala.collection.JavaConverters._
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyBoolean, anyInt, anyString}
@@ -42,11 +43,13 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
   val FORMAT_USAGE = "testUsage"
   val FILE_TYPE = "testFileType"
   val FORMAT_VERSION = 0
+  val FORMAT_VERSION_NEGATIVE_ONE = -1
   val PARTITION_KEY = "testPartitionKey"
   val PARTITION_VALUE = "testPartitionValue"
   val PARTITION_VALUE_1 = "testPartitionValue1"
   val PARTITION_VALUES = Seq(PARTITION_VALUE)
   val DATA_VERSION = 0
+  val DATA_VERSION_NEGATIVE_ONE = -1
   val STORAGE_NAME = "testStorageName"
   val STORAGE_DIRECTORY = "testDirectory"
 
@@ -180,6 +183,29 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     assertEquals(FORMAT_USAGE, formatUsageCaptor.getValue)
     assertEquals(FILE_TYPE, fileTypeCaptor.getValue)
     assertEquals(FORMAT_VERSION, formatVersionCatpor.getValue)
+  }
+
+  test("Test HerdApi.getBusinessObjectFormat with format version -1") {
+    val namespaceCaptor = ArgumentCaptor.forClass(classOf[String])
+    val businessObjectDefinitionCaptor = ArgumentCaptor.forClass(classOf[String])
+    val formatUsageCaptor = ArgumentCaptor.forClass(classOf[String])
+    val fileTypeCaptor = ArgumentCaptor.forClass(classOf[String])
+    val formatVersionCaptor = ArgumentCaptor.forClass(classOf[Int])
+    val businessObjectFormat = new BusinessObjectFormat
+    when(mockBusinessObjectFormatApi.businessObjectFormatGetBusinessObjectFormat(namespaceCaptor.capture(), businessObjectDefinitionCaptor.capture(),
+      formatUsageCaptor.capture(), fileTypeCaptor.capture(), formatVersionCaptor.capture())).thenReturn(businessObjectFormat)
+    when(defaultHerdApi.getBusinessObjectFormatApi(mockApiClient)).thenReturn(mockBusinessObjectFormatApi)
+
+    assertEquals(businessObjectFormat, defaultHerdApi.getBusinessObjectFormat(NAMESPACE, BUSINESS_OBJECT_DEFINITION, FORMAT_USAGE, FILE_TYPE,
+      FORMAT_VERSION_NEGATIVE_ONE))
+    verify(mockBusinessObjectFormatApi).businessObjectFormatGetBusinessObjectFormat(anyString(), anyString(), anyString(), anyString(), any())
+    verify(defaultHerdApi).getBusinessObjectFormatApi(mockApiClient)
+
+    assertEquals(NAMESPACE, namespaceCaptor.getValue)
+    assertEquals(BUSINESS_OBJECT_DEFINITION, businessObjectDefinitionCaptor.getValue)
+    assertEquals(FORMAT_USAGE, formatUsageCaptor.getValue)
+    assertEquals(FILE_TYPE, fileTypeCaptor.getValue)
+    assertNull(formatVersionCaptor.getValue)
   }
 
   test("Test HerdApi.registerBusinessObjectFormat") {
@@ -388,6 +414,32 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     assertEquals(PARTITION_KEY, partitionValueFilter.getPartitionKey)
     assertEquals(PARTITION_VALUES(0), partitionValueFilter.getPartitionValues.get(0))
     assertEquals(DATA_VERSION, businessObjectDataDdlRequest.getBusinessObjectDataVersion)
+    assertEquals(BusinessObjectDataDdlRequest.OutputFormatEnum.HIVE_13_DDL, businessObjectDataDdlRequest.getOutputFormat)
+    assertEquals("HerdSpark", businessObjectDataDdlRequest.getTableName)
+  }
+
+  test("Test HerdApi.getBusinessObjectDataGenerateDdl format version -1") {
+    val businessObjectDataDdlRequestCaptor = ArgumentCaptor.forClass(classOf[BusinessObjectDataDdlRequest])
+    val businessObjectDataDdl = new BusinessObjectDataDdl
+    when(mockBusinessObjectDataApi.businessObjectDataGenerateBusinessObjectDataDdl(businessObjectDataDdlRequestCaptor.capture()))
+      .thenReturn(businessObjectDataDdl)
+    when(defaultHerdApi.getBusinessObjectDataApi(mockApiClient)).thenReturn(mockBusinessObjectDataApi)
+
+    assertEquals(businessObjectDataDdl, defaultHerdApi.getBusinessObjectDataGenerateDdl(NAMESPACE, BUSINESS_OBJECT_DEFINITION, FORMAT_USAGE,
+      FILE_TYPE, FORMAT_VERSION_NEGATIVE_ONE, PARTITION_KEY, PARTITION_VALUES, DATA_VERSION_NEGATIVE_ONE))
+    verify(defaultHerdApi).getBusinessObjectDataApi(mockApiClient)
+    verify(mockBusinessObjectDataApi).businessObjectDataGenerateBusinessObjectDataDdl(any())
+
+    val businessObjectDataDdlRequest = businessObjectDataDdlRequestCaptor.getValue.asInstanceOf[BusinessObjectDataDdlRequest]
+    assertEquals(NAMESPACE, businessObjectDataDdlRequest.getNamespace)
+    assertEquals(BUSINESS_OBJECT_DEFINITION, businessObjectDataDdlRequest.getBusinessObjectDefinitionName)
+    assertEquals(FORMAT_USAGE, businessObjectDataDdlRequest.getBusinessObjectFormatUsage)
+    assertEquals(FILE_TYPE, businessObjectDataDdlRequest.getBusinessObjectFormatFileType)
+    assertNull(businessObjectDataDdlRequest.getBusinessObjectFormatVersion)
+    val partitionValueFilter = businessObjectDataDdlRequest.getPartitionValueFilters.get(0)
+    assertEquals(PARTITION_KEY, partitionValueFilter.getPartitionKey)
+    assertEquals(PARTITION_VALUES(0), partitionValueFilter.getPartitionValues.get(0))
+    assertNull(businessObjectDataDdlRequest.getBusinessObjectDataVersion)
     assertEquals(BusinessObjectDataDdlRequest.OutputFormatEnum.HIVE_13_DDL, businessObjectDataDdlRequest.getOutputFormat)
     assertEquals("HerdSpark", businessObjectDataDdlRequest.getTableName)
   }

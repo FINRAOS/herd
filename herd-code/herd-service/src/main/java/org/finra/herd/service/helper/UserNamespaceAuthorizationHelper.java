@@ -152,6 +152,10 @@ public class UserNamespaceAuthorizationHelper
         {
             namespacePermissions.add(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT);
         }
+        if (BooleanUtils.isTrue(userNamespaceAuthorizationEntity.getWriteAttributePermission()))
+        {
+            namespacePermissions.add(NamespacePermissionEnum.WRITE_ATTRIBUTE);
+        }
 
         return namespacePermissions;
     }
@@ -164,7 +168,7 @@ public class UserNamespaceAuthorizationHelper
     private List<NamespacePermissionEnum> getAllNamespacePermissions()
     {
         return Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT,
-            NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT);
+            NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE_ATTRIBUTE);
     }
 
     /**

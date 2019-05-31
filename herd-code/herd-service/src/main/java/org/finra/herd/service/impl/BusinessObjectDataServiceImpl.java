@@ -58,6 +58,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequ
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDataParentsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
@@ -627,7 +628,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             new BusinessObjectDataSearchResult(businessObjectDataList));
     }
 
-    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = {NamespacePermissionEnum.WRITE, NamespacePermissionEnum.WRITE_ATTRIBUTE})
     @Override
     public BusinessObjectData updateBusinessObjectDataAttributes(BusinessObjectDataKey businessObjectDataKey,
         BusinessObjectDataAttributesUpdateRequest businessObjectDataAttributesUpdateRequest)
@@ -652,6 +653,60 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
         // Update the attributes.
         attributeDaoHelper.updateBusinessObjectDataAttributes(businessObjectDataEntity, attributes);
+
+        // Persist and refresh the entity.
+        businessObjectDataEntity = businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+
+        // Create and return the business object data object from the persisted entity.
+        return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);
+    }
+
+    @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public BusinessObjectData updateBusinessObjectDataParents(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataParentsUpdateRequest businessObjectDataParentsUpdateRequest)
+    {
+        // Validate and trim the business object data key.
+        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+
+        // Validate the update request.
+        Assert.notNull(businessObjectDataParentsUpdateRequest, "A business object data parents update request must be specified.");
+
+        // Validate and trim the parents' keys.
+        businessObjectDataDaoHelper.validateBusinessObjectDataKeys(businessObjectDataParentsUpdateRequest.getBusinessObjectDataParents());
+
+        // Retrieve the business object data and ensure it exists.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+
+        // Fail if this business object data is not in a pre-registration status.
+        if (BooleanUtils.isNotTrue(businessObjectDataEntity.getStatus().getPreRegistrationStatus()))
+        {
+            throw new IllegalArgumentException(String
+                .format("Unable to update parents for business object data because it has \"%s\" status, which is not one of pre-registration statuses.",
+                    businessObjectDataEntity.getStatus().getCode()));
+        }
+
+        // Update parents.
+        List<BusinessObjectDataEntity> businessObjectDataParents = businessObjectDataEntity.getBusinessObjectDataParents();
+
+        // Remove all existing parents.
+        businessObjectDataParents.clear();
+
+        // Loop through all business object data parents specified in the request and add them one by one.
+        if (CollectionUtils.isNotEmpty(businessObjectDataParentsUpdateRequest.getBusinessObjectDataParents()))
+        {
+            for (BusinessObjectDataKey businessObjectDataParentKey : businessObjectDataParentsUpdateRequest.getBusinessObjectDataParents())
+            {
+                // Look up parent business object data.
+                BusinessObjectDataEntity businessObjectDataParentEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataParentKey);
+
+                // Add business object data entity being updated as a dependent (i.e. child) of the looked up parent.
+                businessObjectDataParentEntity.getBusinessObjectDataChildren().add(businessObjectDataEntity);
+
+                // Add the looked up parent as a parent of the business object data entity being updated.
+                businessObjectDataParents.add(businessObjectDataParentEntity);
+            }
+        }
 
         // Persist and refresh the entity.
         businessObjectDataEntity = businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);

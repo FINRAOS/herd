@@ -80,6 +80,7 @@ public class UserNamespaceAuthorizationDaoTestHelper
         userNamespaceAuthorizationEntity.setExecutePermission(namespacePermissions.contains(NamespacePermissionEnum.EXECUTE));
         userNamespaceAuthorizationEntity.setGrantPermission(namespacePermissions.contains(NamespacePermissionEnum.GRANT));
         userNamespaceAuthorizationEntity.setWriteDescriptiveContentPermission(namespacePermissions.contains(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT));
+        userNamespaceAuthorizationEntity.setWriteAttributePermission(namespacePermissions.contains(NamespacePermissionEnum.WRITE_ATTRIBUTE));
 
         return userNamespaceAuthorizationDao.saveAndRefresh(userNamespaceAuthorizationEntity);
     }
