@@ -234,7 +234,8 @@ private object HerdFileIndexBase extends Logging {
       val s3KeyPrefixPattern = new Regex("LOCATION '(s3.+?)';")
       s3KeyPrefixPattern.findAllIn(businessDataDdl).matchData.
         foreach(m => {
-          s3KeyPrefixes += m.group(1)
+          // Replace s3n with s3a since Hadoop has much better support on s3a
+          s3KeyPrefixes += m.group(1).replaceAll("s3n://", "s3a://")
         })
 
       return List((paths(0), s3KeyPrefixes))
@@ -257,7 +258,8 @@ private object HerdFileIndexBase extends Logging {
           while (index < partitionValueTuples.length && !done) {
             var partitionValueTuple = partitionValueTuples(index)
             if (ddlPartitionValue.startsWith(partitionValueTuple._2)) {
-              partitionValueTuple._3 += m.group(2)
+              // Replace s3n with s3a since Hadoop has much better support on s3a
+              partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "s3a://")
               done = true
             }
             index += 1
