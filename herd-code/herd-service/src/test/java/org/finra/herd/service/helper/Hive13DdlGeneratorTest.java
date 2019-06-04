@@ -129,6 +129,44 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     }
 
     @Test
+    public void testGetHivePartitionsPatternBadEmptyPartitions()
+    {
+        // Create a test business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
+                true, BDATA_STATUS);
+
+        List<SchemaColumn> autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
+        String pattern = hive13DdlGenerator.getHivePathPattern(autoDiscoverableSubPartitionColumns).pattern();
+
+        List<String> badEmptyPartitionFilePaths = Arrays.asList(
+            "/column1=a/column2=b_$FOLDER$",   // upper cases
+            "/column1=a/column2=b_$FolDeR$"    // mixed cases
+        );
+
+        // Get business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        for (int i = 0; i < badEmptyPartitionFilePaths.size(); i++)
+        {
+            List<String> storageFilePaths = getStorageFilePaths(badEmptyPartitionFilePaths.subList(i, i + 1));
+            try
+            {
+                hive13DdlGenerator
+                    .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+                fail("Should throw an IllegalArgumentException when storage file does not match the expected Hive sub-directory pattern.");
+            }
+            catch (IllegalArgumentException e)
+            {
+                assertEquals(String.format("Registered storage file or directory does not match the expected Hive sub-directory pattern. " +
+                        "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {^%s$}", STORAGE_NAME,
+                    storageFilePaths.get(0), businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), TEST_S3_KEY_PREFIX,
+                    pattern), e.getMessage());
+            }
+        }
+    }
+
+    @Test
     public void testGetHivePartitionEmptyPartition()
     {
         // Create a test business object data entity.

@@ -420,7 +420,8 @@ public class Hive13DdlGenerator extends DdlGenerator
             String partitionColumnName = partitionColumn.getName();
             // We are using a non-capturing group for the partition column names here - this is done by adding "?:" to the beginning of a capture group.
             sb.append("\\/(?:");
-            sb.append(Matcher.quoteReplacement(partitionColumnName));
+            // We are making partition column names case insensitive
+            sb.append("(?i)").append(Matcher.quoteReplacement(partitionColumnName));
             // Please note that for subpartition folder, we do support partition column names having all underscores replaced with hyphens.
             sb.append('|');
             sb.append(Matcher.quoteReplacement(partitionColumnName.replace("_", "-")));
@@ -434,8 +435,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             .append(REGEX_S3_EMPTY_PARTITION) // a trailing "_$folder$", which represents an empty partition in S3
             .append(")");
 
-        // We do a case-insensitive match for partition column names.
-        return Pattern.compile(sb.toString(), Pattern.CASE_INSENSITIVE);
+        return Pattern.compile(sb.toString());
     }
 
     /**
