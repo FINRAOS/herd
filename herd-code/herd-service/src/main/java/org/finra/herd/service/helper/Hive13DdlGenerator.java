@@ -96,7 +96,7 @@ public class Hive13DdlGenerator extends DdlGenerator
 
     /**
      * The regular expression that represents an empty partition in S3, this is because hadoop file system implements directory support in S3 by
-     * creating empty files with the "<directoryname>_$folder$" suffix
+     * creating empty files with the "directoryname_$folder$" suffix
      */
     public static final String REGEX_S3_EMPTY_PARTITION = "_\\$folder\\$$";
 
