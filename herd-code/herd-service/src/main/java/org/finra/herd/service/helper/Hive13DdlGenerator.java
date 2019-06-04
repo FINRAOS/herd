@@ -95,6 +95,12 @@ public class Hive13DdlGenerator extends DdlGenerator
     public static final String TEXT_HIVE_FILE_FORMAT = "TEXTFILE";
 
     /**
+     * The regular expression that represents an empty partition in S3, this is because hadoop file system implements directory support in S3 by
+     * creating empty files with the "<directoryname>_$folder$" suffix
+     */
+    public static final String REGEX_S3_EMPTY_PARTITION = "_\\$folder\\$$";
+
+    /**
      * Hive complex data types list.
      */
     private static final List<String> HIVE_COMPLEX_DATA_TYPES =
@@ -369,8 +375,9 @@ public class Hive13DdlGenerator extends DdlGenerator
                 partitionValues.add(matcher.group(i));
             }
 
-            // Get path for this partition by removing trailing "/" plus an optional file name from the relative file path.
-            String partitionPath = relativeFilePath.replaceAll("/[^/]*$", "");
+            // Get path for this partition by removing trailing "/" plus an optional file name from the relative file path,
+            // or the trailing "_$folder$", which represents an empty partition in S3.
+            String partitionPath = relativeFilePath.replaceAll(REGEX_S3_EMPTY_PARTITION, "/").replaceAll("\\/[^/]*$", "");
 
             // Check if we already have that partition discovered - that would happen if partition contains multiple data files.
             HivePartitionDto hivePartition = linkedHashMap.get(partitionValues);
@@ -413,18 +420,22 @@ public class Hive13DdlGenerator extends DdlGenerator
             String partitionColumnName = partitionColumn.getName();
             // We are using a non-capturing group for the partition column names here - this is done by adding "?:" to the beginning of a capture group.
             sb.append("\\/(?:");
-            sb.append(Matcher.quoteReplacement(partitionColumnName));
+            // We are making partition column names case insensitive
+            sb.append("(?i)").append(Matcher.quoteReplacement(partitionColumnName));
             // Please note that for subpartition folder, we do support partition column names having all underscores replaced with hyphens.
             sb.append('|');
             sb.append(Matcher.quoteReplacement(partitionColumnName.replace("_", "-")));
             sb.append(")=([^/]+)");
         }
 
-        // Add a regular expression for a trailing "/" and an optional file name.
-        sb.append("\\/[^/]*");
+        // Add additional regular expression
+        sb.append("(?:")   // use a non-capturing group
+            .append("\\/[^/]*")  // a trailing "/" and an optional file name
+            .append("|")    // OR
+            .append(REGEX_S3_EMPTY_PARTITION) // a trailing "_$folder$", which represents an empty partition in S3
+            .append(")");
 
-        // We do a case-insensitive match for partition column names.
-        return Pattern.compile(sb.toString(), Pattern.CASE_INSENSITIVE);
+        return Pattern.compile(sb.toString());
     }
 
     /**
