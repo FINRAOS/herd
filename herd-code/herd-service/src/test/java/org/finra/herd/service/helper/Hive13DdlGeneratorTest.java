@@ -129,6 +129,50 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     }
 
     @Test
+    public void testGetHivePartitionEmptyPartition()
+    {
+        // Create a test business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
+                BDATA_STATUS);
+
+        List<SchemaColumn> autoDiscoverableSubPartitionColumns;
+        List<String> storageFilePaths;
+        List<HivePartitionDto> expectedHivePartitions;
+        List<HivePartitionDto> resultHivePartitions;
+
+        // Get business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Single partition column with empty partition
+        autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("column1"));
+        storageFilePaths = getStorageFilePaths(Collections.singletonList("/column1=aa_$folder$"));
+        expectedHivePartitions =
+            Arrays.asList(HivePartitionDto.builder().withPath("/column1=aa").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa")).build());
+        resultHivePartitions = hive13DdlGenerator
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+        assertEquals(expectedHivePartitions, resultHivePartitions);
+
+        // Two partition columns with empty partition
+        autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
+        storageFilePaths = getStorageFilePaths(Collections.singletonList("/column1=aa/column2=bb_$folder$"));
+        expectedHivePartitions = Arrays
+            .asList(HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
+        resultHivePartitions = hive13DdlGenerator
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+        assertEquals(expectedHivePartitions, resultHivePartitions);
+
+        // Test storage file paths with an empty partition, and then a file on the same partition(file was added to the empty partition later on)
+        autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
+        storageFilePaths = getStorageFilePaths(Arrays.asList("/column1=aa/column2=bb_$folder$", "/column1=aa/column2=bb/file.dat"));
+        expectedHivePartitions = Arrays
+            .asList(HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
+        resultHivePartitions = hive13DdlGenerator
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+        assertEquals(expectedHivePartitions, resultHivePartitions);
+    }
+
+    @Test
     public void testGetHivePartitionsMultiplePathsFound()
     {
         // Create a test business object data entity.
