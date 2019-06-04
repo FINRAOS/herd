@@ -68,10 +68,7 @@ public class DownloaderWebClient extends DataBridgeWebClient
 
         StringBuilder uriPathBuilder = new StringBuilder(HERD_APP_REST_URI_PREFIX);
         uriPathBuilder.append("/businessObjectData");
-        if (manifest.getNamespace() != null)
-        {
-            uriPathBuilder.append("/namespaces/").append(manifest.getNamespace());
-        }
+        uriPathBuilder.append("/namespaces/").append(manifest.getNamespace());
         uriPathBuilder.append("/businessObjectDefinitionNames/").append(manifest.getBusinessObjectDefinitionName());
         uriPathBuilder.append("/businessObjectFormatUsages/").append(manifest.getBusinessObjectFormatUsage());
         uriPathBuilder.append("/businessObjectFormatFileTypes/").append(manifest.getBusinessObjectFormatFileType());

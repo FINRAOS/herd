@@ -26,9 +26,9 @@ import java.util.HashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 
 /**
  * Unit tests for UploaderManifestReader class.
@@ -50,6 +50,19 @@ public class UploaderManifestReaderTest extends AbstractUploaderTest
     public void testReadJsonManifestMissingRequiredParameters() throws IOException
     {
         UploaderInputManifestDto uploaderInputManifestDto;
+
+        // Try to create and read the uploader input manifest when namespace is not specified.
+        uploaderInputManifestDto = getTestUploaderInputManifestDto();
+        uploaderInputManifestDto.setNamespace(BLANK_TEXT);
+        try
+        {
+            uploaderManifestReader.readJsonManifest(createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), uploaderInputManifestDto));
+            fail("Should throw an IllegalArgumentException when namespace is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Manifest namespace must be specified.", e.getMessage());
+        }
 
         // Try to create and read the uploader input manifest when business object definition name is not specified.
         uploaderInputManifestDto = getTestUploaderInputManifestDto();

@@ -85,6 +85,7 @@ public abstract class DataBridgeManifestReader<M extends DataBridgeBaseManifestD
      */
     protected void validateManifest(M manifest) throws IllegalArgumentException
     {
+        Assert.hasText(manifest.getNamespace(), "Manifest namespace must be specified.");
         Assert.hasText(manifest.getBusinessObjectDefinitionName(), "Manifest business object definition name must be specified.");
         Assert.hasText(manifest.getBusinessObjectFormatFileType(), "Manifest business object format file type must be specified.");
         Assert.hasText(manifest.getBusinessObjectFormatUsage(), "Manifest business object format usage must be specified.");

@@ -46,6 +46,19 @@ public class DownloaderManifestReaderTest extends AbstractDownloaderTest
     {
         DownloaderInputManifestDto downloaderInputManifestDto;
 
+        // Try to create and read the downloader input manifest when namespace is not specified.
+        downloaderInputManifestDto = getTestDownloaderInputManifestDto();
+        downloaderInputManifestDto.setNamespace(BLANK_TEXT);
+        try
+        {
+            downloaderManifestReader.readJsonManifest(createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), downloaderInputManifestDto));
+            fail("Should throw an IllegalArgumentException when namespace is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Manifest namespace must be specified.", e.getMessage());
+        }
+
         // Try to create and read the downloader input manifest when business object definition name is not specified.
         downloaderInputManifestDto = getTestDownloaderInputManifestDto();
         downloaderInputManifestDto.setBusinessObjectDefinitionName(BLANK_TEXT);
