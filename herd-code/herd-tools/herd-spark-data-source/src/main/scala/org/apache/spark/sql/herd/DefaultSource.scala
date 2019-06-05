@@ -25,9 +25,11 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.jessecoyle.{CredStashBouncyCastleCrypto, JCredStash}
 import org.apache.hadoop.fs.Path
+import org.apache.spark.SparkException
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.parser.{CatalystSqlParser, ParseException}
 import org.apache.spark.sql.execution.QueryExecution
 import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.internal.SQLConf
@@ -643,10 +645,25 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
         DecimalType(precision, scale)
       case "TIMESTAMP" => TimestampType
       case "BOOLEAN" => BooleanType
-      case _ => sys.error(s"Unsupported column $col")
+      case _ => toComplexSparkType(col)
+
+    }
+
+  }
+
+  private def toComplexSparkType(col: SchemaColumn): DataType = {
+    try {
+      CatalystSqlParser.parseDataType(col.getType)
+
+    } catch {
+      case e: ParseException =>
+        throw new SparkException("Cannot recognize hive type string: " + col.getType, e)
     }
   }
+
 }
+
+
 
 object DefaultSource {
 
