@@ -95,8 +95,8 @@ public class Hive13DdlGenerator extends DdlGenerator
     public static final String TEXT_HIVE_FILE_FORMAT = "TEXTFILE";
 
     /**
-     * The regular expression that represents an empty partition in S3, this is because hadoop file system implements directory support in S3 by
-     * creating empty files with the "directoryname_$folder$" suffix
+     * The regular expression that represents an empty partition in S3, this is because hadoop file system implements directory support in S3 by creating empty
+     * files with the "directoryname_$folder$" suffix
      */
     public static final String REGEX_S3_EMPTY_PARTITION = "_\\$folder\\$$";
 
@@ -217,6 +217,7 @@ public class Hive13DdlGenerator extends DdlGenerator
         generateDdlRequest.storageEntities = storageEntities;
         generateDdlRequest.storageNames = storageNames;
         generateDdlRequest.suppressScanForUnregisteredSubPartitions = request.isSuppressScanForUnregisteredSubPartitions();
+        generateDdlRequest.combineMultiplePartitionsInSingleAlterTable = request.isCombineMultiplePartitionsInSingleAlterTable();
         generateDdlRequest.tableName = request.getTableName();
         return generateCreateTableDdlHelper(generateDdlRequest);
     }
@@ -841,10 +842,20 @@ public class Hive13DdlGenerator extends DdlGenerator
             // If drop partitions flag is set and the table is partitioned, drop partitions specified by the partition filters.
             if (generateDdlRequest.isPartitioned && BooleanUtils.isTrue(generateDdlRequest.includeDropPartitions))
             {
+                // If specified, combine dropping multiple partitions in a single ALTER TABLE statement.
+                if (BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable))
+                {
+                    sb.append(String.format("ALTER TABLE `%s` DROP IF EXISTS\n", generateDdlRequest.tableName));
+                }
+
                 // Add a drop partition statement for each partition filter entry.
+                int partitionFilterPosition = 1;
+                int partitionFiltersSize = CollectionUtils.size(generateDdlRequest.partitionFilters);
                 for (List<String> partitionFilter : generateDdlRequest.partitionFilters)
                 {
-                    sb.append(String.format("ALTER TABLE `%s` DROP IF EXISTS PARTITION (", generateDdlRequest.tableName));
+                    sb.append(BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? "    PARTITION (" :
+                        String.format("ALTER TABLE `%s` DROP IF EXISTS PARTITION (", generateDdlRequest.tableName));
+
                     // Specify all partition column values as per this partition filter.
                     List<String> partitionKeyValuePairs = new ArrayList<>();
                     for (int i = 0; i < partitionFilter.size(); i++)
@@ -858,7 +869,12 @@ public class Hive13DdlGenerator extends DdlGenerator
                         }
                     }
                     sb.append(StringUtils.join(partitionKeyValuePairs, ", "));
-                    sb.append(");\n");
+                    sb.append(')');
+                    sb.append(
+                        BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) && partitionFilterPosition < partitionFiltersSize ?
+                            ',' : ';');
+                    sb.append('\n');
+                    partitionFilterPosition++;
                 }
                 sb.append('\n');
             }
@@ -925,7 +941,12 @@ public class Hive13DdlGenerator extends DdlGenerator
             new BusinessObjectDefinitionKey(businessObjectFormatForSchema.getNamespace(), businessObjectFormatForSchema.getBusinessObjectDefinitionName()));
         String dataProviderName = businessObjectDefinitionEntity.getDataProvider().getName();
 
+        // Generate the beginning of the alter table statement.
+        String alterTableFirstToken = String.format("ALTER TABLE `%s` ADD %s", generateDdlRequest.tableName, ifNotExistsOption).trim();
+
         // Process all available business object data instances.
+        int storageUnitAvailabilityDtoPosition = 1;
+        int storageUnitAvailabilityDtosSize = CollectionUtils.size(storageUnitAvailabilityDtos);
         for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtos)
         {
             // Get storage name in upper case for this storage unit.
@@ -1035,10 +1056,23 @@ public class Hive13DdlGenerator extends DdlGenerator
                     .subList(1 + CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()),
                         businessObjectFormatForSchema.getSchema().getPartitions().size());
 
-                for (HivePartitionDto hivePartition : getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, s3KeyPrefix,
-                    storageFilePaths, storageUnitAvailabilityDto.getStorageName()))
+                // If specified, combine adding multiple partitions in a single ALTER TABLE statement.
+                if (storageUnitAvailabilityDtoPosition == 1 && BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable))
                 {
-                    sb.append(String.format("ALTER TABLE `%s` ADD %sPARTITION (", generateDdlRequest.tableName, ifNotExistsOption));
+                    sb.append(alterTableFirstToken);
+                    sb.append('\n');
+                }
+
+                // Get all Hive partitions and process them.
+                int hivePartitionPosition = 1;
+                List<HivePartitionDto> hivePartitions =
+                    getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, s3KeyPrefix, storageFilePaths,
+                        storageUnitAvailabilityDto.getStorageName());
+                int hivePartitionsSize = CollectionUtils.size(hivePartitions);
+                for (HivePartitionDto hivePartition : hivePartitions)
+                {
+                    sb.append(String.format("%s PARTITION (",
+                        BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? "   " : alterTableFirstToken));
                     // Specify all partition column values.
                     List<String> partitionKeyValuePairs = new ArrayList<>();
                     for (int i = 0; i < businessObjectFormatForSchema.getSchema().getPartitions().size(); i++)
@@ -1048,8 +1082,12 @@ public class Hive13DdlGenerator extends DdlGenerator
                         partitionKeyValuePairs.add(String.format("`%s`='%s'", partitionColumnName, partitionValue));
                     }
                     sb.append(StringUtils.join(partitionKeyValuePairs, ", "));
-                    sb.append(String.format(") LOCATION 's3n://%s/%s%s';\n", s3BucketName, s3KeyPrefix,
+                    sb.append(String.format(") LOCATION 's3n://%s/%s%s'", s3BucketName, s3KeyPrefix,
                         StringUtils.isNotBlank(hivePartition.getPath()) ? hivePartition.getPath() : ""));
+                    sb.append(BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) &&
+                        !(hivePartitionPosition == hivePartitionsSize && storageUnitAvailabilityDtoPosition == storageUnitAvailabilityDtosSize) ? ',' : ';');
+                    sb.append('\n');
+                    hivePartitionPosition++;
                 }
             }
             else // This is a non-partitioned table.
@@ -1069,6 +1107,7 @@ public class Hive13DdlGenerator extends DdlGenerator
                     replacements.put(NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, tableLocation);
                 }
             }
+            storageUnitAvailabilityDtoPosition++;
         }
     }
 
@@ -1226,6 +1265,8 @@ public class Hive13DdlGenerator extends DdlGenerator
         private List<String> storageNames;
 
         private Boolean suppressScanForUnregisteredSubPartitions;
+
+        private Boolean combineMultiplePartitionsInSingleAlterTable;
 
         private String tableName;
     }

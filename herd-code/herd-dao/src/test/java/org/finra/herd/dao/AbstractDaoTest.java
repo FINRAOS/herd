@@ -1066,6 +1066,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SUB_PARTITION_VALUE_2 = "UT_SubPartition_2_" + RANDOM_SUFFIX;
 
+    public static final String SUB_PARTITION_VALUE_3 = "UT_SubPartition_3_" + RANDOM_SUFFIX;
+
+    public static final String SUB_PARTITION_VALUE_4 = "UT_SubPartition_4_" + RANDOM_SUFFIX;
+
     public static final List<NamespacePermissionEnum> SUPPORTED_NAMESPACE_PERMISSIONS = Collections.unmodifiableList(Arrays
         .asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT,
             NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE_ATTRIBUTE));
