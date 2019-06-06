@@ -357,6 +357,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final Boolean COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE = true;
+
     public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
@@ -531,6 +533,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_COLUMN_REQUIRED = false;
 
     public static final String NO_COLUMN_SIZE = null;
+
+    public static final Boolean NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE = false;
 
     public static final Boolean NO_CREATE_NEW_VERSION = false;
 
