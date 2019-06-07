@@ -630,7 +630,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     col
   }
 
-  private def toComplexHerdType(column: StructField): String = {
+  def toComplexHerdType(column: StructField): String = {
 
       val typeString = if (column.metadata.contains(HIVE_TYPE_STRING)) {
         column.metadata.getString(HIVE_TYPE_STRING)
@@ -664,10 +664,10 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
   }
 
-  private def toComplexSparkType(col: SchemaColumn): DataType = {
+  def toComplexSparkType(col: SchemaColumn): DataType = {
     try {
-      println(col.getType)
-      println(CatalystSqlParser.parseDataType(col.getType))
+      println("\n\n\n\nhive column: " + col.getType)
+      println("spark column: " + CatalystSqlParser.parseDataType(col.getType) + "\n\n\n\n")
       CatalystSqlParser.parseDataType(col.getType)
 
     } catch {

@@ -23,6 +23,7 @@ import com.google.common.io.Resources
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.{types, _}
 import org.apache.spark.sql.types._
+import org.junit.Assert.assertEquals
 import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
 import scala.collection.JavaConverters._
 
@@ -463,6 +464,46 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
 
     writeDataFrame(new BaseHerdApi("test-case-6", parts), params, df)
+  }
+
+  test("conversion from Hive to Spark complex dataType") {
+    val parts = Map(
+      ("2017-01-01", "") -> "businessObjectData1.json"
+    )
+    val api = new BaseHerdApi("test-case-6", parts)
+    val source = new DefaultSource((_, _, _) => api)
+
+    val s1 = new SchemaColumn
+    s1.setType("map<double,array<bigint>>")
+    assertEquals("MapType(DoubleType,ArrayType(LongType,true),true)", source.toComplexSparkType(s1).toString)
+
+    val s2 = new SchemaColumn
+    s2.setType("struct<s:string,f:float,m:map<double,array<bigint>>>")
+    assertEquals("StructType(StructField(s,StringType,true)," +
+      " StructField(f,FloatType,true)," +
+      " StructField(m,MapType(DoubleType,ArrayType(LongType,true),true),true))",
+      source.toComplexSparkType(s2).toString)
+
+  }
+
+  test("conversion from Spark to Hive complex dataType") {
+    val parts = Map(
+      ("2017-01-01", "") -> "businessObjectData1.json"
+    )
+    val api = new BaseHerdApi("test-case-6", parts)
+    val source = new DefaultSource((_, _, _) => api)
+
+    val s = new StructField("mapCol", MapType(DoubleType, ArrayType(LongType, true), true), true)
+    assertEquals("map<double,array<bigint>>", source.toComplexHerdType(s).toString)
+
+    val s1 = StructField("structCol", StructType(List (StructField("s", StringType, true),
+                                             StructField("f", FloatType, true),
+                                             StructField("m", MapType(DoubleType, ArrayType(LongType, true), true), true)
+                                            )
+                                       )
+                        )
+    assertEquals("struct<s:string,f:float,m:map<double,array<bigint>>>", source.toComplexHerdType(s1).toString)
+
   }
 
   test("metadata only query") {
