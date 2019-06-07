@@ -623,10 +623,23 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
         col.setSize(d.precision + "," + d.scale)
       case TimestampType => col.setType("TIMESTAMP")
       case BooleanType => col.setType("BOOLEAN")
-      case _ => sys.error(s"Unsupported column type ${column.dataType}")
+      case _ => col.setType(toComplexHerdType(column))
+
     }
 
     col
+  }
+
+  private def toComplexHerdType(column: StructField): String = {
+
+      val typeString = if (column.metadata.contains(HIVE_TYPE_STRING)) {
+        column.metadata.getString(HIVE_TYPE_STRING)
+      } else {
+        column.dataType.catalogString
+      }
+
+    return typeString;
+
   }
 
   private def toSparkType(col: SchemaColumn): DataType = {
@@ -653,6 +666,8 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
   private def toComplexSparkType(col: SchemaColumn): DataType = {
     try {
+      println(col.getType)
+      println(CatalystSqlParser.parseDataType(col.getType))
       CatalystSqlParser.parseDataType(col.getType)
 
     } catch {
