@@ -383,6 +383,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
     val (dataSourceFormat, options) = toSparkDataSourceAndOptions(formatFileType, fmt.getSchema, parameters)
 
+
     log.info(s"Using $dataSourceFormat with options[${options.mkString(",")}]")
 
     val partitionValue = params.partitionValue.getOrElse("none")
@@ -517,6 +518,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
   private def toSparkDataSourceAndOptions(format: String, schema: Schema,
                                           options: Map[String, String]): (String, Map[String, String]) = {
+
     val compression = format.toLowerCase match {
       case "bz" => Map("compression" -> "bzip2")
       case "gz" => Map("compression" -> "gzip")
@@ -666,8 +668,6 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
   def toComplexSparkType(col: SchemaColumn): DataType = {
     try {
-      println("\n\n\n\nhive column: " + col.getType)
-      println("spark column: " + CatalystSqlParser.parseDataType(col.getType) + "\n\n\n\n")
       CatalystSqlParser.parseDataType(col.getType)
 
     } catch {
