@@ -1637,7 +1637,6 @@ class TheCatalog(val urlDM: String,
       df.write.format("herd")
         .option("namespace", "DYNSURV") // "DYNSURV" if stable, "SPARK_DS_TEST" for debugging
         .option("businessObjectName", objName)
-        .option("dataProvider", provider)
         .option("partitionKey", partitionKey)
         .option("partitionKeyGroup", partitionKeyGroup)
         .option("partitionValue", partitionValue)
@@ -1647,7 +1646,6 @@ class TheCatalog(val urlDM: String,
       df.write.format("herd")
         .option("namespace", otherNameSpace) // "DYNSURV" if stable, "SPARK_DS_TEST" for debugging
         .option("businessObjectName", objName)
-        .option("dataProvider", provider)
         .option("partitionKey", partitionKey)
         .option("partitionKeyGroup", partitionKeyGroup)
         .option("partitionValue", partitionValue)
