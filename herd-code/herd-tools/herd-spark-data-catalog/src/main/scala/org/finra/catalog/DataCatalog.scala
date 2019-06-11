@@ -1629,7 +1629,6 @@ class TheCatalog(val urlDM: String,
   def saveDataFrame(df: DataFrame,
                     namespace: String,
                     objName: String,
-                    provider: String,
                     partitionKey: String,
                     partitionValue: String,
                     partitionKeyGroup: String = "TRADE_DT") : Unit = namespace match {
