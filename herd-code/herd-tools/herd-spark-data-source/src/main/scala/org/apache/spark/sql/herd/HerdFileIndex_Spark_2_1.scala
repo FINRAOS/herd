@@ -86,8 +86,8 @@ private[sql] class HerdFileIndex(
   }
 
   protected def prunePartitions(
-                                 predicates: Seq[Expression],
-                                 partitionSpec: PartitionSpec): Seq[PartitionPath] = {
+      predicates: Seq[Expression],
+      partitionSpec: PartitionSpec): Seq[PartitionPath] = {
     val PartitionSpec(partitionColumns, partitions) = partitionSpec
     val partitionColumnNames = partitionColumns.map(_.name).toSet
     val partitionPruningPredicates = predicates.filter {
