@@ -1,18 +1,3 @@
-/*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
 package org.apache.spark.sql.execution.datasources
 
 import org.apache.spark.sql.catalyst.expressions.{And, AttributeReference, AttributeSet, ExpressionSet, SubqueryExpression}
@@ -27,12 +12,12 @@ private[sql] object PruneHerdPartitions extends Rule[LogicalPlan] {
     logicalRelation @
       LogicalRelation(fsRelation @
         HadoopFsRelation(
-          herdFileIndex: HerdFileIndex,
-          partitionSchema,
-          _,
-          _,
-          _,
-          _),
+        herdFileIndex: HerdFileIndex,
+        partitionSchema,
+        _,
+        _,
+        _,
+        _),
       _,
       _,
       _))
@@ -61,8 +46,8 @@ private[sql] object PruneHerdPartitions extends Rule[LogicalPlan] {
         val prunedFsRelation =
           fsRelation.copy(location = prunedFileIndex)(sparkSession)
         // Change table stats based on the sizeInBytes of pruned files
-//        val withStats = logicalRelation.catalogTable.map(_.copy(
-//          stats = Some(CatalogStatistics(sizeInBytes = BigInt(prunedFileIndex.sizeInBytes)))))
+        //        val withStats = logicalRelation.catalogTable.map(_.copy(
+        //          stats = Some(CatalogStatistics(sizeInBytes = BigInt(prunedFileIndex.sizeInBytes)))))
         val prunedLogicalRelation = logicalRelation.copy(
           relation = prunedFsRelation)
         // Keep partition-pruning predicates so that they are visible in physical planning
