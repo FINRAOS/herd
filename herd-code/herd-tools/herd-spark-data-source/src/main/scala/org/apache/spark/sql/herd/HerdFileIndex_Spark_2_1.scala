@@ -23,15 +23,15 @@ import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.types.StructType
 
 private[sql] class HerdFileIndex(
-                                  sparkSession: SparkSession,
-                                  api: () => HerdApi,
-                                  herdPartitions: Seq[(Int, String, Seq[String], Int)],
-                                  namespace: String,
-                                  businessObjectName: String,
-                                  formatUsage: String,
-                                  formatFileType: String,
-                                  partitionKey: String,
-                                  herdPartitionSchema: StructType)
+    sparkSession: SparkSession,
+    api: () => HerdApi,
+    herdPartitions: Seq[(Int, String, Seq[String], Int)],
+    namespace: String,
+    businessObjectName: String,
+    formatUsage: String,
+    formatFileType: String,
+    partitionKey: String,
+    herdPartitionSchema: StructType)
   extends HerdFileIndexBase(
     sparkSession,
     api,

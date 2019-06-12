@@ -35,25 +35,25 @@ private[sql] class HerdOrcFileFormat extends OrcFileFormat with Logging {
   override def supportBatch(sparkSession: SparkSession, dataSchema: StructType): Boolean = false
 
   override def buildReaderWithPartitionValues(
-                                               sparkSession: SparkSession,
-                                               dataSchema: StructType,
-                                               partitionSchema: StructType,
-                                               requiredSchema: StructType,
-                                               filters: Seq[Filter],
-                                               options: Map[String, String],
-                                               hadoopConf: Configuration): (PartitionedFile) => Iterator[InternalRow] = {
+      sparkSession: SparkSession,
+      dataSchema: StructType,
+      partitionSchema: StructType,
+      requiredSchema: StructType,
+      filters: Seq[Filter],
+      options: Map[String, String],
+      hadoopConf: Configuration): (PartitionedFile) => Iterator[InternalRow] = {
 
     buildReader(sparkSession, dataSchema, partitionSchema, requiredSchema, filters, options, hadoopConf)
   }
 
   override def buildReader(
-                            sparkSession: SparkSession,
-                            dataSchema: StructType,
-                            partitionSchema: StructType,
-                            requiredSchema: StructType,
-                            filters: Seq[Filter],
-                            options: Map[String, String],
-                            hadoopConf: Configuration): (PartitionedFile) => Iterator[InternalRow] = {
+      sparkSession: SparkSession,
+      dataSchema: StructType,
+      partitionSchema: StructType,
+      requiredSchema: StructType,
+      filters: Seq[Filter],
+      options: Map[String, String],
+      hadoopConf: Configuration): (PartitionedFile) => Iterator[InternalRow] = {
 
     // we cannot use vectorized reader in some cases due to
     // this HIVE issue https://issues.apache.org/jira/browse/HIVE-7189
