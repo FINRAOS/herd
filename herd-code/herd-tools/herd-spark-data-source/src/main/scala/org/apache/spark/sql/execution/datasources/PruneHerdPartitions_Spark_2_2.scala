@@ -15,7 +15,7 @@
 */
 package org.apache.spark.sql.execution.datasources
 
-import org.apache.spark.sql.catalyst.expressions.{And, AttributeReference, AttributeSet, ExpressionSet}
+import org.apache.spark.sql.catalyst.expressions.{And, AttributeReference, AttributeSet, ExpressionSet, SubqueryExpression}
 import org.apache.spark.sql.catalyst.planning.PhysicalOperation
 import org.apache.spark.sql.catalyst.plans.logical.{Filter, LogicalPlan, Project}
 import org.apache.spark.sql.catalyst.rules.Rule
@@ -51,19 +51,19 @@ private[sql] object PruneHerdPartitions extends Rule[LogicalPlan] {
         logicalRelation.resolve(
           partitionSchema, sparkSession.sessionState.analyzer.resolver)
       val partitionSet = AttributeSet(partitionColumns)
-      val partitionKeyFilters =
-        ExpressionSet(normalizedFilters.filter(_.references.subsetOf(partitionSet)))
+      val partitionKeyFilters = ExpressionSet(normalizedFilters.filter { f =>
+        f.references.subsetOf(partitionSet) && f.find(_.isInstanceOf[SubqueryExpression]).isEmpty
+      })
 
       if (partitionKeyFilters.nonEmpty) {
         val prunedFileIndex = herdFileIndex.filterPartitions(partitionKeyFilters.toSeq)
         val prunedFsRelation =
           fsRelation.copy(location = prunedFileIndex)(sparkSession)
         // Change table stats based on the sizeInBytes of pruned files
-        //        val withStats = logicalRelation.catalogTable.map(_.copy(
-        //          stats = Some(CatalogStatistics(sizeInBytes = BigInt(prunedFileIndex.sizeInBytes)))))
+//        val withStats = logicalRelation.catalogTable.map(_.copy(
+//          stats = Some(CatalogStatistics(sizeInBytes = BigInt(prunedFileIndex.sizeInBytes)))))
         val prunedLogicalRelation = logicalRelation.copy(
-          relation = prunedFsRelation,
-          expectedOutputAttributes = Some(logicalRelation.output))
+          relation = prunedFsRelation)
         // Keep partition-pruning predicates so that they are visible in physical planning
         val filterExpression = filters.reduceLeft(And)
         val filter = Filter(filterExpression, prunedLogicalRelation)
