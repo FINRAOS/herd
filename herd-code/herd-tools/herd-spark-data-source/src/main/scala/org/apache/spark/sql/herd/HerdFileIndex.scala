@@ -1,3 +1,18 @@
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package org.apache.spark.sql.herd
 
 import org.apache.hadoop.conf.Configuration
@@ -16,29 +31,32 @@ import scala.util.{Failure, Success, Try}
 
 import org.finra.herd.sdk.model.StorageUnit
 
- /** A custom [[org.apache.spark.sql.execution.datasources.FileIndex]] to use the partition
-  * paths provided by Herd, vs Spark's auto-discovery
+ /** A custom [[org.apache.spark.sql.execution.datasources.FileIndex]] to use the partition paths provided by Herd, vs Spark's auto-discovery
   *
-  * @param sparkSession
-  * @param api
-  * @param herdPartitions
-  * @param namespace
-  * @param businessObjectName
-  * @param formatUsage
-  * @param formatFileType
-  * @param partitionKey
-  * @param herdPartitionSchema
+  * The custom data source abstracts the logic of querying Herd and defining DataFrames from the source data, or writing and creating
+  * data sets. From an end-user's perspective using the Herd data source would be very similar to standard Spark data sources, using the DataFrameReader/Write
+  * interfaces.
+  *
+  * @param sparkSession        The spark session
+  * @param api                 The ApiClient instance needed by Herd SDK
+  * @param herdPartitions      The list of partitions
+  * @param namespace           The namespace
+  * @param businessObjectName  The business object definition name
+  * @param formatUsage         The business object format usage (e.g. PRC).
+  * @param formatFileType      The business object format file type (e.g. GZ).
+  * @param partitionKey        The business object format partition key.
+  * @param herdPartitionSchema The schema associated with the business object format
   */
 private[sql] abstract class HerdFileIndexBase(
-                                               sparkSession: SparkSession,
-                                               api: () => HerdApi,
-                                               herdPartitions: Seq[(Int, String, Seq[String], Int)],
-                                               namespace: String,
-                                               businessObjectName: String,
-                                               formatUsage: String,
-                                               formatFileType: String,
-                                               partitionKey: String,
-                                               herdPartitionSchema: StructType) extends FileIndex with Logging {
+                                             sparkSession: SparkSession,
+                                             api: () => HerdApi,
+                                             herdPartitions: Seq[(Int, String, Seq[String], Int)],
+                                             namespace: String,
+                                             businessObjectName: String,
+                                             formatUsage: String,
+                                             formatFileType: String,
+                                             partitionKey: String,
+                                             herdPartitionSchema: StructType) extends FileIndex with Logging {
 
   import HerdFileIndexBase._
 
@@ -46,15 +64,15 @@ private[sql] abstract class HerdFileIndexBase(
 
   protected val partitionSpec = {
     val partitions = herdPartitions.map {
-      case (formatVersion, partitionValue, subPartitionValues, dataVersion) => {
+      case (formatVersion, partitionValue, subPartitionValues, dataVersion) =>
         val row = if (herdPartitionSchema.nonEmpty) {
           val partValues = partitionValue +: subPartitionValues
           val values = partValues.zipWithIndex.map {
-            case (rawValue, index) => {
+            case (rawValue, index) =>
               val field = herdPartitionSchema(index)
 
               Cast(Literal.create(unescapePathName(rawValue), StringType), field.dataType).eval()
-            }
+
           }
 
           InternalRow.fromSeq(values)
@@ -77,7 +95,7 @@ private[sql] abstract class HerdFileIndexBase(
         val path = pathSettings.mkString("/")
 
         PartitionPath(row, path)
-      }
+
     }
 
     PartitionSpec(herdPartitionSchema, partitions)
@@ -87,6 +105,12 @@ private[sql] abstract class HerdFileIndexBase(
 
   override def rootPaths: Seq[Path] = partitionSpec.partitions.map(_.path)
 
+   /**
+    * List all files for the specified herd paths
+    *
+    * @param paths list of paths
+    * @return The list of files under herd paths
+    */
   protected def bulkListLeafFiles(paths: Seq[Path]): Seq[(Path, Array[FileStatus])] = {
     if (paths.size < sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold) {
       paths.map { path =>
@@ -113,14 +137,14 @@ private[sql] abstract class HerdFileIndexBase(
         }.collect()
 
       fileStatuses.map {
-        case (path, statuses) => {
+        case (path, statuses) =>
           val newPath = new Path(path)
           val newStatuses = statuses.map {
             case (filePath, size) => new FileStatus(size, false, 0, 0, 0, new Path(filePath))
           }.toArray
 
           (newPath, newStatuses)
-        }
+
       }
     }
   }
@@ -178,16 +202,15 @@ private object HerdFileIndexBase extends Logging {
     val storage = storageUnit.getStorage
 
     val prefix = storage.getStoragePlatformName match {
-      case "S3" => {
+      case "S3" =>
         val scheme = "s3a://"
         val bucket = storage
           .getAttributes
           .find(_.getName.equalsIgnoreCase("bucket.name"))
           .map(_.getValue)
           .getOrElse(sys.error("Missing 'bucket.name' attribute"))
-
         scheme + bucket + "/"
-      }
+
       case "FILE" => ""
       case _ => sys.error(s"Unsupported storage platform ${storage.getStoragePlatformName}")
     }
