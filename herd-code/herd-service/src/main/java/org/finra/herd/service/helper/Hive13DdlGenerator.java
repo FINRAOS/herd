@@ -96,9 +96,15 @@ public class Hive13DdlGenerator extends DdlGenerator
 
     /**
      * The regular expression that represents an empty partition in S3, this is because hadoop file system implements directory support in S3 by creating empty
-     * files with the "directoryname_$folder$" suffix
+     * files with the "directoryname_$folder$" suffix.
      */
     public static final String REGEX_S3_EMPTY_PARTITION = "_\\$folder\\$";
+
+    /**
+     * An empty partition in S3, this is because hadoop file system implements directory support in S3 by creating empty files with the "directoryname_$folder$"
+     * suffix.
+     */
+    public static final String S3_EMPTY_PARTITION = "_$folder$";
 
     /**
      * Hive complex data types list.
@@ -382,7 +388,9 @@ public class Hive13DdlGenerator extends DdlGenerator
             {
                 // Get path for this partition by removing trailing "/" plus an optional file name from the relative file path,
                 // or the trailing "_$folder$", which represents an empty partition in S3.
-                String partitionPath = relativeFilePath.replaceAll(REGEX_S3_EMPTY_PARTITION, "/").replaceAll("\\/[^/]*$", "");
+                String partitionPath =
+                    relativeFilePath.endsWith(S3_EMPTY_PARTITION) ? relativeFilePath.substring(0, relativeFilePath.length() - S3_EMPTY_PARTITION.length()) :
+                        relativeFilePath.replaceAll("\\/[^/]*$", "");
 
                 // Check if we already have that partition discovered - that would happen if partition contains multiple data files.
                 HivePartitionDto hivePartition = linkedHashMap.get(partitionValues);
