@@ -96,9 +96,15 @@ public class Hive13DdlGenerator extends DdlGenerator
 
     /**
      * The regular expression that represents an empty partition in S3, this is because hadoop file system implements directory support in S3 by creating empty
-     * files with the "directoryname_$folder$" suffix
+     * files with the "directoryname_$folder$" suffix.
      */
-    public static final String REGEX_S3_EMPTY_PARTITION = "_\\$folder\\$$";
+    public static final String REGEX_S3_EMPTY_PARTITION = "_\\$folder\\$";
+
+    /**
+     * An empty partition in S3, this is because hadoop file system implements directory support in S3 by creating empty files with the "directoryname_$folder$"
+     * suffix.
+     */
+    public static final String S3_EMPTY_PARTITION = "_$folder$";
 
     /**
      * Hive complex data types list.
@@ -360,7 +366,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             // Try to match the relative file path to the expected subpartition folders.
             Matcher matcher = pattern.matcher(relativeFilePath);
             Assert.isTrue(matcher.matches(), String.format("Registered storage file or directory does not match the expected Hive sub-directory pattern. " +
-                    "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {^%s$}", storageName, storageFile,
+                    "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {%s}", storageName, storageFile,
                 businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), s3KeyPrefix, pattern.pattern()));
 
             // Create a list of partition values.
@@ -376,25 +382,32 @@ public class Hive13DdlGenerator extends DdlGenerator
                 partitionValues.add(matcher.group(i));
             }
 
-            // Get path for this partition by removing trailing "/" plus an optional file name from the relative file path,
-            // or the trailing "_$folder$", which represents an empty partition in S3.
-            String partitionPath = relativeFilePath.replaceAll(REGEX_S3_EMPTY_PARTITION, "/").replaceAll("\\/[^/]*$", "");
-
-            // Check if we already have that partition discovered - that would happen if partition contains multiple data files.
-            HivePartitionDto hivePartition = linkedHashMap.get(partitionValues);
-
-            if (hivePartition != null)
+            // If we did not match all expected partition values, then this storage file path is not part
+            // of a fully qualified partition (this is an intermediate folder marker) and we ignore it.
+            if (!partitionValues.contains(null))
             {
-                // Partition is already discovered, so just validate that the relative paths match.
-                Assert.isTrue(hivePartition.getPath().equals(partitionPath), String.format(
-                    "Found two different locations for the same Hive partition. Storage: {%s}, business object data: {%s}, " +
-                        "S3 key prefix: {%s}, path[1]: {%s}, path[2]: {%s}", storageName,
-                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), s3KeyPrefix, hivePartition.getPath(), partitionPath));
-            }
-            else
-            {
-                // Add this partition to the hash map of discovered partitions.
-                linkedHashMap.put(partitionValues, new HivePartitionDto(partitionPath, partitionValues));
+                // Get path for this partition by removing trailing "/" plus an optional file name from the relative file path,
+                // or the trailing "_$folder$", which represents an empty partition in S3.
+                String partitionPath =
+                    relativeFilePath.endsWith(S3_EMPTY_PARTITION) ? relativeFilePath.substring(0, relativeFilePath.length() - S3_EMPTY_PARTITION.length()) :
+                        relativeFilePath.replaceAll("\\/[^/]*$", "");
+
+                // Check if we already have that partition discovered - that would happen if partition contains multiple data files.
+                HivePartitionDto hivePartition = linkedHashMap.get(partitionValues);
+
+                if (hivePartition != null)
+                {
+                    // Partition is already discovered, so just validate that the relative paths match.
+                    Assert.isTrue(hivePartition.getPath().equals(partitionPath), String.format(
+                        "Found two different locations for the same Hive partition. Storage: {%s}, business object data: {%s}, " +
+                            "S3 key prefix: {%s}, path[1]: {%s}, path[2]: {%s}", storageName,
+                        businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), s3KeyPrefix, hivePartition.getPath(), partitionPath));
+                }
+                else
+                {
+                    // Add this partition to the hash map of discovered partitions.
+                    linkedHashMap.put(partitionValues, new HivePartitionDto(partitionPath, partitionValues));
+                }
             }
         }
 
@@ -413,30 +426,63 @@ public class Hive13DdlGenerator extends DdlGenerator
      */
     public Pattern getHivePathPattern(List<SchemaColumn> partitionColumns)
     {
+        return Pattern.compile(getHivePathRegex(partitionColumns));
+    }
+
+    /**
+     * Gets a regex to match Hive partition sub-directories.
+     *
+     * @param partitionColumns the list of partition columns
+     *
+     * @return the newly created regex to match Hive partition sub-directories.
+     */
+    public String getHivePathRegex(List<SchemaColumn> partitionColumns)
+    {
         StringBuilder sb = new StringBuilder(26);
+
+        sb.append("^(?:");      // Start a non-capturing group for the entire regex.
 
         // For each partition column, add a regular expression to match "<COLUMN_NAME|COLUMN-NAME>=<VALUE>" sub-directory.
         for (SchemaColumn partitionColumn : partitionColumns)
         {
-            String partitionColumnName = partitionColumn.getName();
+            sb.append("(?:");   // Start a non-capturing group for the remainder of the regex.
+            sb.append("(?:");   // Start a non-capturing group for folder markers.
+            sb.append("\\/");   // Add a trailing "/".
+            sb.append('|');     // Ann an OR.
+            sb.append(REGEX_S3_EMPTY_PARTITION);    // Add a trailing "_$folder$", which represents an empty partition in S3.
+            sb.append(')');     // Close a non-capturing group for folder markers.
+            sb.append('|');     // Add an OR.
+            sb.append("(?:");   // Start a non-capturing group for "/<column name>=<column value>".
+            sb.append("\\/");   // Add a "/".
             // We are using a non-capturing group for the partition column names here - this is done by adding "?:" to the beginning of a capture group.
-            sb.append("\\/(?:");
-            // We are making partition column names case insensitive
-            sb.append("(?i)").append(Matcher.quoteReplacement(partitionColumnName));
-            // Please note that for subpartition folder, we do support partition column names having all underscores replaced with hyphens.
-            sb.append('|');
-            sb.append(Matcher.quoteReplacement(partitionColumnName.replace("_", "-")));
-            sb.append(")=([^/]+)");
+            sb.append("(?:");   // Start a non-capturing group for column name.
+            sb.append("(?i)");  // Match partition column names case insensitive.
+            sb.append(Matcher.quoteReplacement(partitionColumn.getName()));
+            sb.append('|');     // Add an OR.
+            // For sub-partition folder, we do support partition column names having all underscores replaced with hyphens.
+            sb.append(Matcher.quoteReplacement(partitionColumn.getName().replace("_", "-")));
+            sb.append(')');     // Close a non-capturing group for column name.
+            sb.append("=([^/]+)"); // Add a capturing group for a column value.
         }
 
-        // Add additional regular expression
-        sb.append("(?:")   // use a non-capturing group
-            .append("\\/[^/]*")  // a trailing "/" and an optional file name
-            .append("|")    // OR
-            .append(REGEX_S3_EMPTY_PARTITION) // a trailing "_$folder$", which represents an empty partition in S3
-            .append(")");
+        // Add additional regular expression for the trailing empty folder marker and/or "/" followed by an optional file name.
+        sb.append("(?:");   // Start a non-capturing group for folder markers and an optional file name.
+        sb.append("\\/");   // Add a trailing "/".
+        sb.append("[^/]*"); // Add an optional file name.
+        sb.append('|');     // Add an OR.
+        sb.append(REGEX_S3_EMPTY_PARTITION);    // Add a trailing "_$folder$", which represents an empty partition in S3.
+        sb.append(")");     // Close a non-capturing group for folder markers and an optional file name.
 
-        return Pattern.compile(sb.toString());
+        // Close all non-capturing groups that are still open.
+        for (int i = 0; i < 2 * partitionColumns.size(); i++)
+        {
+            sb.append(')');
+        }
+
+        sb.append(')');     // Close a non-capturing group for the entire regex.
+        sb.append('$');
+
+        return sb.toString();
     }
 
     /**
@@ -1117,8 +1163,8 @@ public class Hive13DdlGenerator extends DdlGenerator
                 sb.append(alterTableFirstToken).append('\n');
             }
 
-            sb.append(StringUtils
-                .join(addPartitionStatements, BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? ",\n" : ";\n"))
+            sb.append(
+                StringUtils.join(addPartitionStatements, BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? ",\n" : ";\n"))
                 .append(";\n");
         }
     }
