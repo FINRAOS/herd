@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -32,7 +33,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.dto.HivePartitionDto;
-import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -45,18 +45,15 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     @Test
     public void testGetHivePartitions()
     {
-        // Create a test business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
-                BDATA_STATUS);
-
         List<SchemaColumn> autoDiscoverableSubPartitionColumns;
         List<String> storageFilePaths;
         List<HivePartitionDto> expectedHivePartitions;
         List<HivePartitionDto> resultHivePartitions;
 
-        // Get business object data key.
-        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        // Create a business object data key without any sub-partitions.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES,
+                DATA_VERSION);
 
         // No storage files.
         autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
@@ -68,7 +65,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
 
         // Single level partitioning.
         autoDiscoverableSubPartitionColumns = new ArrayList<>();
-        storageFilePaths = getStorageFilePaths(Arrays.asList("/file1.dat", "/file2.dat"));
+        storageFilePaths = getStorageFilePaths(Arrays.asList("/file1.dat", "/file2.dat", "/"));
         expectedHivePartitions =
             Collections.singletonList(HivePartitionDto.builder().withPath("").withPartitionValues(Collections.singletonList(PARTITION_VALUE)).build());
         resultHivePartitions = hive13DdlGenerator
@@ -89,25 +86,31 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     @Test
     public void testGetHivePartitionsPatternMismatch()
     {
-        // Create a test business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
-                BDATA_STATUS);
-
         List<SchemaColumn> autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
         String pattern = hive13DdlGenerator.getHivePathPattern(autoDiscoverableSubPartitionColumns).pattern();
 
-        List<String> badFilePaths = Arrays.asList("/column1=a/column2=b/extra-folder/file.dat",   // extra folder
+        List<String> badFilePaths = Arrays.asList("/column1=a/column2=b/extra-folder/file.dat",   // unexpected extra folder after the last sub-partition
+            "/extra-folder/column1=a/column2=b/file.dat",   // unexpected extra folder before the first sub-partition
+            "//column1=a/column2=b/file.dat",               // unexpected extra '/' character before the first sub-partition
             "/column2=a/column1=b/file.dat",                // partition columns out of order
             "/column1=a/file.dat",                          // missing partition sub-directory
             "/column1=a/column2=/file.dat",                 // missing partition value
             "/column1=a/column2/file.dat",                  // missing partition value
             "/column1=a/a/column2=2/file.dat",              // slash in a partition value
-            "/column1=a/column2=2"                          // missing trailing '/' character
+            "/column1=a/column2=2",                         // missing trailing '/' character
+            "/file",                                        // unexpected file
+            "_$folder$/",                                   // unexpected '/' character after empty folder marker
+            "_$folder$/file",                               // unexpected file after empty folder marker
+            "/column1=a/file",                              // unexpected file
+            "/column1=a//",                                 // double trailing '/' character
+            "/column1=a_$folder$/file",                     // unexpected file after empty folder marker
+            "/column1=a/column2=2//"                        // double trailing '/' character
         );
 
-        // Get business object data key.
-        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        // Create a business object data key without any sub-partitions.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES,
+                DATA_VERSION);
 
         for (int i = 0; i < badFilePaths.size(); i++)
         {
@@ -116,14 +119,16 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             {
                 hive13DdlGenerator
                     .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
-                fail("Should throw an IllegalArgumentException when storage file does not match the expected Hive sub-directory pattern.");
+                fail(String.format("Should throw an IllegalArgumentException when storage file does not match the expected Hive sub-directory pattern.%n" +
+                        "    storageFilePaths: %s%n" + "    pattern: %s", StringUtils.join(storageFilePaths, " "),
+                    hive13DdlGenerator.getHivePathPattern(autoDiscoverableSubPartitionColumns).pattern()));
             }
             catch (IllegalArgumentException e)
             {
                 assertEquals(String.format("Registered storage file or directory does not match the expected Hive sub-directory pattern. " +
-                        "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {^%s$}", STORAGE_NAME,
-                    storageFilePaths.get(0), businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), TEST_S3_KEY_PREFIX,
-                    pattern), e.getMessage());
+                        "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {%s}", STORAGE_NAME,
+                    storageFilePaths.get(0), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), TEST_S3_KEY_PREFIX, pattern),
+                    e.getMessage());
             }
         }
     }
@@ -131,21 +136,16 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     @Test
     public void testGetHivePartitionsPatternBadEmptyPartitions()
     {
-        // Create a test business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
-                true, BDATA_STATUS);
-
         List<SchemaColumn> autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
         String pattern = hive13DdlGenerator.getHivePathPattern(autoDiscoverableSubPartitionColumns).pattern();
 
-        List<String> badEmptyPartitionFilePaths = Arrays.asList(
-            "/column1=a/column2=b_$FOLDER$",   // upper cases
-            "/column1=a/column2=b_$FolDeR$"    // mixed cases
-        );
+        // Create bad empty sub-partition file paths - one in upper case and one in mixed case.
+        List<String> badEmptyPartitionFilePaths = Arrays.asList("/column1=a/column2=b_$FOLDER$", "/column1=a/column2=b_$FolDeR$");
 
-        // Get business object data key.
-        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        // Create a business object data key without any sub-partitions.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES,
+                DATA_VERSION);
 
         for (int i = 0; i < badEmptyPartitionFilePaths.size(); i++)
         {
@@ -159,52 +159,112 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             catch (IllegalArgumentException e)
             {
                 assertEquals(String.format("Registered storage file or directory does not match the expected Hive sub-directory pattern. " +
-                        "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {^%s$}", STORAGE_NAME,
-                    storageFilePaths.get(0), businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), TEST_S3_KEY_PREFIX,
-                    pattern), e.getMessage());
+                        "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {%s}", STORAGE_NAME,
+                    storageFilePaths.get(0), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), TEST_S3_KEY_PREFIX, pattern),
+                    e.getMessage());
             }
         }
     }
 
     @Test
-    public void testGetHivePartitionEmptyPartition()
+    public void testGetHivePartitionEmptyPartitions()
     {
-        // Create a test business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
-                BDATA_STATUS);
-
         List<SchemaColumn> autoDiscoverableSubPartitionColumns;
         List<String> storageFilePaths;
         List<HivePartitionDto> expectedHivePartitions;
         List<HivePartitionDto> resultHivePartitions;
 
-        // Get business object data key.
-        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        // Create a business object data key without any sub-partitions.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES,
+                DATA_VERSION);
 
-        // Single partition column with empty partition
-        autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("column1"));
+        // No auto-discoverable sub-partition columns with empty partition represented by "/".
+        autoDiscoverableSubPartitionColumns = new ArrayList<>();
+        storageFilePaths = getStorageFilePaths(Collections.singletonList("/"));
+        expectedHivePartitions =
+            Collections.singletonList(HivePartitionDto.builder().withPath("").withPartitionValues(Collections.singletonList(PARTITION_VALUE)).build());
+        resultHivePartitions = hive13DdlGenerator
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+        assertEquals(expectedHivePartitions, resultHivePartitions);
+
+        // No auto-discoverable sub-partition columns with empty partition represented by "_$folder$".
+        autoDiscoverableSubPartitionColumns = new ArrayList<>();
+        storageFilePaths = getStorageFilePaths(Collections.singletonList("_$folder$"));
+        expectedHivePartitions =
+            Collections.singletonList(HivePartitionDto.builder().withPath("").withPartitionValues(Collections.singletonList(PARTITION_VALUE)).build());
+        resultHivePartitions = hive13DdlGenerator
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+        assertEquals(expectedHivePartitions, resultHivePartitions);
+
+        // Single sub-partition column with empty partition represented by "/".
+        autoDiscoverableSubPartitionColumns = getPartitionColumns(Collections.singletonList("column1"));
+        storageFilePaths = getStorageFilePaths(Collections.singletonList("/column1=aa/"));
+        expectedHivePartitions =
+            Collections.singletonList(HivePartitionDto.builder().withPath("/column1=aa").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa")).build());
+        resultHivePartitions = hive13DdlGenerator
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+        assertEquals(expectedHivePartitions, resultHivePartitions);
+
+        // Single sub-partition column with empty partition represented by "_$folder$".
+        autoDiscoverableSubPartitionColumns = getPartitionColumns(Collections.singletonList("column1"));
         storageFilePaths = getStorageFilePaths(Collections.singletonList("/column1=aa_$folder$"));
         expectedHivePartitions =
-            Arrays.asList(HivePartitionDto.builder().withPath("/column1=aa").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa")).build());
+            Collections.singletonList(HivePartitionDto.builder().withPath("/column1=aa").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa")).build());
         resultHivePartitions = hive13DdlGenerator
             .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
         assertEquals(expectedHivePartitions, resultHivePartitions);
 
-        // Two partition columns with empty partition
+        // Two sub-partition columns with empty partition represented by "/".
+        autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
+        storageFilePaths = getStorageFilePaths(Collections.singletonList("/column1=aa/column2=bb/"));
+        expectedHivePartitions = Collections.singletonList(
+            HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
+        resultHivePartitions = hive13DdlGenerator
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+        assertEquals(expectedHivePartitions, resultHivePartitions);
+
+        // Two sub-partition columns with empty partition represented by "_$folder$".
         autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
         storageFilePaths = getStorageFilePaths(Collections.singletonList("/column1=aa/column2=bb_$folder$"));
-        expectedHivePartitions = Arrays
-            .asList(HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
+        expectedHivePartitions = Collections.singletonList(
+            HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
         resultHivePartitions = hive13DdlGenerator
             .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
         assertEquals(expectedHivePartitions, resultHivePartitions);
 
-        // Test storage file paths with an empty partition, and then a file on the same partition(file was added to the empty partition later on)
+        // Two sub-partition columns with empty partition represented by "/" and with data files present.
+        autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
+        storageFilePaths = getStorageFilePaths(Arrays.asList("/column1=aa/column2=bb/", "/column1=aa/column2=bb/file.dat"));
+        expectedHivePartitions = Collections.singletonList(
+            HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
+        resultHivePartitions = hive13DdlGenerator
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+        assertEquals(expectedHivePartitions, resultHivePartitions);
+
+        // Two sub-partition columns with empty partition represented by "_$folder$" and with data files present.
         autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
         storageFilePaths = getStorageFilePaths(Arrays.asList("/column1=aa/column2=bb_$folder$", "/column1=aa/column2=bb/file.dat"));
-        expectedHivePartitions = Arrays
-            .asList(HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
+        expectedHivePartitions = Collections.singletonList(
+            HivePartitionDto.builder().withPath("/column1=aa/column2=bb").withPartitionValues(Arrays.asList(PARTITION_VALUE, "aa", "bb")).build());
+        resultHivePartitions = hive13DdlGenerator
+            .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+        assertEquals(expectedHivePartitions, resultHivePartitions);
+
+        // Maximum supported number of sub-partition columns with empty folders present on every level and with data files present at the last sub-partition.
+        // Different partition values are used to validate discovery logic for the fully qualified partitions.
+        autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column_1", "Column_2", "Column_3", "Column_4"));
+        storageFilePaths = getStorageFilePaths(Arrays
+            .asList("/", "_$folder$", "/column_1=a01/", "/column_1=a02_$folder$", "/column_1=a03/column-2=b01/", "/column_1=a04/column-2=b02_$folder$",
+                "/column_1=a05/column-2=b03/COLUMN_3=c01/", "/column_1=a06/column-2=b04/COLUMN_3=c02_$folder$",
+                "/column_1=a07/column-2=b05/COLUMN_3=c03/COLUMN-4=d01/", "/column_1=a08/column-2=b06/COLUMN_3=c04/COLUMN-4=d02_$folder$",
+                "/column_1=a09/column-2=b07/COLUMN_3=c05/COLUMN-4=d03/file.dat"));
+        expectedHivePartitions = Arrays.asList(HivePartitionDto.builder().withPath("/column_1=a07/column-2=b05/COLUMN_3=c03/COLUMN-4=d01")
+                .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a07", "b05", "c03", "d01")).build(),
+            HivePartitionDto.builder().withPath("/column_1=a08/column-2=b06/COLUMN_3=c04/COLUMN-4=d02")
+                .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a08", "b06", "c04", "d02")).build(),
+            HivePartitionDto.builder().withPath("/column_1=a09/column-2=b07/COLUMN_3=c05/COLUMN-4=d03")
+                .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a09", "b07", "c05", "d03")).build());
         resultHivePartitions = hive13DdlGenerator
             .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
         assertEquals(expectedHivePartitions, resultHivePartitions);
@@ -213,29 +273,46 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     @Test
     public void testGetHivePartitionsMultiplePathsFound()
     {
-        // Create a test business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
-                BDATA_STATUS);
-
         List<SchemaColumn> autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
         List<String> partitionPaths = Arrays.asList("/COLUMN1=111/COLUMN2=222", "/column1=111/COLUMN2=222");
         List<String> storageFilePaths = getStorageFilePaths(Arrays.asList(partitionPaths.get(0) + "/file.dat", partitionPaths.get(1) + "/file.dat"));
 
+        // Create a business object data key without any sub-partitions.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES,
+                DATA_VERSION);
+
         try
         {
             hive13DdlGenerator
-                .getHivePartitions(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), autoDiscoverableSubPartitionColumns,
-                    TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
+                .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
             fail("Should throw an IllegalArgumentException when multiple locations exist for the same Hive partition.");
         }
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Found two different locations for the same Hive partition. " +
                     "Storage: {%s}, business object data: {%s}, S3 key prefix: {%s}, path[1]: {%s}, path[2]: {%s}", STORAGE_NAME,
-                businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), TEST_S3_KEY_PREFIX, partitionPaths.get(0),
+                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), TEST_S3_KEY_PREFIX, partitionPaths.get(0),
                 partitionPaths.get(1)), e.getMessage());
         }
+    }
+
+    @Test
+    public void testGetHivePathRegex()
+    {
+        List<String> expectedRegularExpressions = Arrays
+            .asList("^(?:(?:\\/[^/]*|_\\$folder\\$))$", "^(?:(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_1|Column-1)=([^/]+)(?:\\/[^/]*|_\\$folder\\$))))$",
+                "^(?:(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_1|Column-1)=([^/]+)(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_2|Column-2)=([^/]+)(?:\\/[^/]*|_\\$folder\\$))))))$",
+                "^(?:(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_1|Column-1)=([^/]+)(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_2|Column-2)=([^/]+)(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_3|Column-3)=([^/]+)(?:\\/[^/]*|_\\$folder\\$))))))))$",
+                "^(?:(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_1|Column-1)=([^/]+)(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_2|Column-2)=([^/]+)(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_3|Column-3)=([^/]+)(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_4|Column-4)=([^/]+)(?:\\/[^/]*|_\\$folder\\$))))))))))$");
+
+        assertEquals(expectedRegularExpressions.get(0), hive13DdlGenerator.getHivePathRegex(new ArrayList<>()));
+        assertEquals(expectedRegularExpressions.get(1), hive13DdlGenerator.getHivePathRegex(getPartitionColumns(Collections.singletonList("Column_1"))));
+        assertEquals(expectedRegularExpressions.get(2), hive13DdlGenerator.getHivePathRegex(getPartitionColumns(Arrays.asList("Column_1", "Column_2"))));
+        assertEquals(expectedRegularExpressions.get(3),
+            hive13DdlGenerator.getHivePathRegex(getPartitionColumns(Arrays.asList("Column_1", "Column_2", "Column_3"))));
+        assertEquals(expectedRegularExpressions.get(4),
+            hive13DdlGenerator.getHivePathRegex(getPartitionColumns(Arrays.asList("Column_1", "Column_2", "Column_3", "Column_4"))));
     }
 
     @Test
@@ -356,7 +433,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
 
         String expected =
             "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n" + "    `col1` VARCHAR(255) COMMENT 'lorem ipsum',\n" +
-                "    `col2` DATE,\n" + "    `col3` map<double,array<bigint(5)>>,\n" + "    `col4` uniontype<int,double,array<string>,struct<a:int,b:string>>,\n" +
+                "    `col2` DATE,\n" + "    `col3` map<double,array<bigint(5)>>,\n" +
+                "    `col4` uniontype<int,double,array<string>,struct<a:int,b:string>>,\n" +
                 "    `col4` struct<s:string,f:float,m:map<double,array<bigint>>>);";
 
         Assert.assertEquals("generated DDL", expected, actual);
@@ -391,7 +469,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
                 "Column \"col1\" has an unsupported data type \"MAP<DOUBLE,\" in the schema for business object format {namespace: \"" + NAMESPACE +
                     "\", businessObjectDefinitionName: \"" + BDEF_NAME + "\", businessObjectFormatUsage: \"" + FORMAT_USAGE_CODE +
                     "\", businessObjectFormatFileType: \"" + FORMAT_FILE_TYPE_CODE + "\", businessObjectFormatVersion: " + FORMAT_VERSION +
-                    "}. Exception : \"Error: type expected at the end of 'map<double,'\"",e.getMessage());
+                    "}. Exception : \"Error: type expected at the end of 'map<double,'\"", e.getMessage());
         }
     }
 
@@ -424,7 +502,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
                 "Column \"col1\" has an unsupported data type \"fooobaar\" in the schema for business object format {namespace: \"" + NAMESPACE +
                     "\", businessObjectDefinitionName: \"" + BDEF_NAME + "\", businessObjectFormatUsage: \"" + FORMAT_USAGE_CODE +
                     "\", businessObjectFormatFileType: \"" + FORMAT_FILE_TYPE_CODE + "\", businessObjectFormatVersion: " + FORMAT_VERSION +
-                    "}. Exception : \"Error: type expected at the position 0 of 'fooobaar' but 'fooobaar' is found.\"",e.getMessage());
+                    "}. Exception : \"Error: type expected at the position 0 of 'fooobaar' but 'fooobaar' is found.\"", e.getMessage());
         }
     }
 
@@ -456,7 +534,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
                 "Column \"col1\" has an unsupported data type \"int(25)\" in the schema for business object format {namespace: \"" + NAMESPACE +
                     "\", businessObjectDefinitionName: \"" + BDEF_NAME + "\", businessObjectFormatUsage: \"" + FORMAT_USAGE_CODE +
                     "\", businessObjectFormatFileType: \"" + FORMAT_FILE_TYPE_CODE + "\", businessObjectFormatVersion: " + FORMAT_VERSION +
-                    "}. Exception : \"null\"",e.getMessage());
+                    "}. Exception : \"null\"", e.getMessage());
         }
     }
 
