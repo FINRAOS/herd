@@ -31,31 +31,31 @@ import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 
 /** A custom [[org.apache.spark.sql.execution.datasources.FileIndex]] to use the partition paths provided by Herd, vs Spark's auto-discovery
-  *
-  * The custom data source abstracts the logic of querying Herd and defining DataFrames from the source data, or writing and creating
-  * data sets. From an end-user's perspective using the Herd data source would be very similar to standard Spark data sources, using the DataFrameReader/Write
-  * interfaces.
-  *
-  * @param sparkSession        The spark session
-  * @param api                 The ApiClient instance needed by Herd SDK
-  * @param herdPartitions      The list of partitions
-  * @param namespace           The namespace
-  * @param businessObjectName  The business object definition name
-  * @param formatUsage         The business object format usage (e.g. PRC).
-  * @param formatFileType      The business object format file type (e.g. GZ).
-  * @param partitionKey        The business object format partition key.
-  * @param herdPartitionSchema The schema associated with the business object format
-  */
+ *
+ * The custom data source abstracts the logic of querying Herd and defining DataFrames from the source data, or writing and creating
+ * data sets. From an end-user's perspective using the Herd data source would be very similar to standard Spark data sources, using the DataFrameReader/Write
+ * interfaces.
+ *
+ * @param sparkSession        The spark session
+ * @param api                 The ApiClient instance needed by Herd SDK
+ * @param herdPartitions      The list of partitions
+ * @param namespace           The namespace
+ * @param businessObjectName  The business object definition name
+ * @param formatUsage         The business object format usage (e.g. PRC).
+ * @param formatFileType      The business object format file type (e.g. GZ).
+ * @param partitionKey        The business object format partition key.
+ * @param herdPartitionSchema The schema associated with the business object format
+ */
 private[sql] abstract class HerdFileIndexBase(
-                                               sparkSession: SparkSession,
-                                               api: () => HerdApi,
-                                               herdPartitions: Seq[(Int, String, Seq[String], Int)],
-                                               namespace: String,
-                                               businessObjectName: String,
-                                               formatUsage: String,
-                                               formatFileType: String,
-                                               partitionKey: String,
-                                               herdPartitionSchema: StructType) extends FileIndex with Logging {
+                                             sparkSession: SparkSession,
+                                             api: () => HerdApi,
+                                             herdPartitions: Seq[(Int, String, Seq[String], Int)],
+                                             namespace: String,
+                                             businessObjectName: String,
+                                             formatUsage: String,
+                                             formatFileType: String,
+                                             partitionKey: String,
+                                             herdPartitionSchema: StructType) extends FileIndex with Logging {
 
   import HerdFileIndexBase._
 
@@ -103,11 +103,11 @@ private[sql] abstract class HerdFileIndexBase(
   override def rootPaths: Seq[Path] = partitionSpec.partitions.map(_.path)
 
   /**
-    * List all files for the specified herd paths
-    *
-    * @param paths list of paths
-    * @return The list of files under herd paths
-    */
+   * List all files for the specified herd paths
+   *
+   * @param paths list of paths
+   * @return The list of files under herd paths
+   */
   protected def bulkListLeafFiles(paths: Seq[Path]): Seq[(Path, Array[FileStatus])] = {
     val localApiFactory = api
     val fileStatuses = if (paths.size < sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold) {
@@ -176,12 +176,12 @@ private object HerdFileIndexBase extends Logging {
   }
 
   /**
-    * Find all S3 directories(aka s3 key prefixes) specified by the paths
-    *
-    * @param api   The ApiClient instance needed by Herd SDK
-    * @param paths List of herd paths
-    * @return list of s3 key prefixes
-    */
+   * Find all S3 directories(aka s3 key prefixes) specified by the paths
+   *
+   * @param api   The ApiClient instance needed by Herd SDK
+   * @param paths List of herd paths
+   * @return list of s3 key prefixes
+   */
   def listS3KeyPrefixes(api: HerdApi, paths: Seq[String]): Seq[(String, Seq[String])] = {
     if (paths.isEmpty) {
       return Seq.empty
@@ -209,12 +209,12 @@ private object HerdFileIndexBase extends Logging {
   }
 
   /**
-    * Retrieve all the S3 directories(aka S3 key prefixes) from the business object data DDL
-    *
-    * @param businessDataDdl The business object data DDL
-    * @param paths           The list of herd paths
-    * @return list of s3 key prefixes
-    */
+   * Retrieve all the S3 directories(aka S3 key prefixes) from the business object data DDL
+   *
+   * @param businessDataDdl The business object data DDL
+   * @param paths           The list of herd paths
+   * @return list of s3 key prefixes
+   */
   private def getS3KeyPrefixes(businessDataDdl: String, paths: Seq[String]): Seq[(String, Seq[String])] = {
     val partitionKey = parsePartitionPath(paths(0))("partitionKey").get
     val partitionValueTuples = paths.map(path => {
@@ -273,12 +273,12 @@ private object HerdFileIndexBase extends Logging {
   }
 
   /**
-    * List all files under the s3 directories(aka S3 key prefixes)
-    *
-    * @param hadoopConf    hadoop configuration
-    * @param s3KeyPrefixes all s3 key prefixes
-    * @return list of files
-    */
+   * List all files under the s3 directories(aka S3 key prefixes)
+   *
+   * @param hadoopConf    hadoop configuration
+   * @param s3KeyPrefixes all s3 key prefixes
+   * @return list of files
+   */
   private def getAllFilesUnderS3KeyPrefixes(hadoopConf: Configuration, s3KeyPrefixes: Seq[String]): Seq[FileStatus] = {
     s3KeyPrefixes.flatMap {
       s3KeyPrefix => {
