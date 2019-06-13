@@ -25,13 +25,12 @@ import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.execution.datasources.{FileIndex, PartitionPath, PartitionSpec}
 import org.apache.spark.sql.types._
 import org.apache.spark.util.SerializableConfiguration
-import scala.collection.JavaConversions._
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
+import scala.util.matching.Regex
 
-import org.finra.herd.sdk.model.StorageUnit
-
- /** A custom [[org.apache.spark.sql.execution.datasources.FileIndex]] to use the partition paths provided by Herd, vs Spark's auto-discovery
+/** A custom [[org.apache.spark.sql.execution.datasources.FileIndex]] to use the partition paths provided by Herd, vs Spark's auto-discovery
   *
   * The custom data source abstracts the logic of querying Herd and defining DataFrames from the source data, or writing and creating
   * data sets. From an end-user's perspective using the Herd data source would be very similar to standard Spark data sources, using the DataFrameReader/Write
@@ -48,15 +47,15 @@ import org.finra.herd.sdk.model.StorageUnit
   * @param herdPartitionSchema The schema associated with the business object format
   */
 private[sql] abstract class HerdFileIndexBase(
-                                             sparkSession: SparkSession,
-                                             api: () => HerdApi,
-                                             herdPartitions: Seq[(Int, String, Seq[String], Int)],
-                                             namespace: String,
-                                             businessObjectName: String,
-                                             formatUsage: String,
-                                             formatFileType: String,
-                                             partitionKey: String,
-                                             herdPartitionSchema: StructType) extends FileIndex with Logging {
+                                               sparkSession: SparkSession,
+                                               api: () => HerdApi,
+                                               herdPartitions: Seq[(Int, String, Seq[String], Int)],
+                                               namespace: String,
+                                               businessObjectName: String,
+                                               formatUsage: String,
+                                               formatFileType: String,
+                                               partitionKey: String,
+                                               herdPartitionSchema: StructType) extends FileIndex with Logging {
 
   import HerdFileIndexBase._
 
@@ -72,7 +71,6 @@ private[sql] abstract class HerdFileIndexBase(
               val field = herdPartitionSchema(index)
 
               Cast(Literal.create(unescapePathName(rawValue), StringType), field.dataType).eval()
-
           }
 
           InternalRow.fromSeq(values)
@@ -95,7 +93,6 @@ private[sql] abstract class HerdFileIndexBase(
         val path = pathSettings.mkString("/")
 
         PartitionPath(row, path)
-
     }
 
     PartitionSpec(herdPartitionSchema, partitions)
@@ -105,47 +102,48 @@ private[sql] abstract class HerdFileIndexBase(
 
   override def rootPaths: Seq[Path] = partitionSpec.partitions.map(_.path)
 
-   /**
+  /**
     * List all files for the specified herd paths
     *
     * @param paths list of paths
     * @return The list of files under herd paths
     */
   protected def bulkListLeafFiles(paths: Seq[Path]): Seq[(Path, Array[FileStatus])] = {
-    if (paths.size < sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold) {
-      paths.map { path =>
-        val statuses = listLeafFiles(hadoopConf, api(), path.toString).toArray
-
-        (path, statuses)
-      }
+    val localApiFactory = api
+    val fileStatuses = if (paths.size < sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold) {
+      listS3KeyPrefixes(localApiFactory(), paths.map(_.toString))
+        .map {
+          case (path, s3KeyPrefixes) => (path, getAllFilesUnderS3KeyPrefixes(hadoopConf, s3KeyPrefixes).toArray)
+        }
+        .map {
+          case (path, statuses) => (path, statuses.map { s => (s.getPath.toString, s.getLen) })
+        }
+        .toArray
     } else {
       val serializableConfiguration = new SerializableConfiguration(hadoopConf)
       val parallelPartitionDiscoveryParallelism = sparkSession.sessionState.conf.parallelPartitionDiscoveryParallelism
       val numParallelism = Math.min(paths.size, parallelPartitionDiscoveryParallelism)
-      val localApiFactory = api
 
-      val fileStatuses = sparkSession.sparkContext
+      sparkSession.sparkContext
         .parallelize(paths.map(_.toString), numParallelism)
-        .mapPartitions { pathStrings =>
-          val localApi = localApiFactory()
-          pathStrings.toSeq.map { path =>
-            (path, listLeafFiles(serializableConfiguration.value, localApi, path))
-          }.iterator
+        .mapPartitions { pathStrings => listS3KeyPrefixes(localApiFactory(), pathStrings.toList).iterator }
+        .map {
+          case (path, s3KeyPrefixes) => (path, getAllFilesUnderS3KeyPrefixes(serializableConfiguration.value, s3KeyPrefixes).toArray)
         }
         .map {
           case (path, statuses) => (path, statuses.map { s => (s.getPath.toString, s.getLen) })
-        }.collect()
+        }
+        .collect()
+    }
 
-      fileStatuses.map {
-        case (path, statuses) =>
-          val newPath = new Path(path)
-          val newStatuses = statuses.map {
-            case (filePath, size) => new FileStatus(size, false, 0, 0, 0, new Path(filePath))
-          }.toArray
+    fileStatuses.map {
+      case (path, statuses) =>
+        val newPath = new Path(path)
+        val newStatuses = statuses.map {
+          case (filePath, size) => new FileStatus(size, false, 0, 0, 0, new Path(filePath))
+        }.toArray
 
-          (newPath, newStatuses)
-
-      }
+        (newPath, newStatuses)
     }
   }
 
@@ -177,54 +175,122 @@ private object HerdFileIndexBase extends Logging {
     path.split("/").map(_.split("=")).map(i => i.head -> i.drop(1).headOption).toMap
   }
 
-  def listLeafFiles(hadoopConf: Configuration, api: HerdApi, path: String): Seq[FileStatus] = {
-    val parts = parsePartitionPath(path)
+  /**
+    * Find all S3 directories(aka s3 key prefixes) specified by the paths
+    *
+    * @param api   The ApiClient instance needed by Herd SDK
+    * @param paths List of herd paths
+    * @return list of s3 key prefixes
+    */
+  def listS3KeyPrefixes(api: HerdApi, paths: Seq[String]): Seq[(String, Seq[String])] = {
+    if (paths.isEmpty) {
+      return Seq.empty
+    }
 
-    Try(api.getBusinessObjectData(
+    val parts = parsePartitionPath(paths(0))
+    val partitionKey = parts("partitionKey").get
+    val partitionValues = paths.map(path => parsePartitionPath(path)("partitionValue").get).toList
+
+    Try(api.getBusinessObjectDataGenerateDdl(
       parts("namespace").get,
       parts("businessObjectName").get,
       parts("formatUsage").get,
       parts("formatFileType").get,
       parts("formatVersion").get.toInt,
-      parts("partitionKey").get,
-      parts("partitionValue").get,
-      parts("subPartitionValues").map(_.split(",").toSeq).getOrElse(Seq.empty),
+      partitionKey,
+      partitionValues.distinct,
       parts("dataVersion").get.toInt
     )) match {
-      case Success(objectData) => objectData.getStorageUnits.flatMap(getFileStatuses(hadoopConf, _))
+      case Success(objectDataDdl) => getS3KeyPrefixes(objectDataDdl.getDdl(), paths)
       case Failure(error) =>
-        log.error(s"Could not fetch object data for $path", error)
+        log.error(s"Could not fetch object data DDL request for $partitionValues", error)
         Seq.empty
     }
   }
 
-  private def getFileStatuses(hadoopConf: Configuration, storageUnit: StorageUnit): Seq[FileStatus] = {
-    val storage = storageUnit.getStorage
+  /**
+    * Retrieve all the S3 directories(aka S3 key prefixes) from the business object data DDL
+    *
+    * @param businessDataDdl The business object data DDL
+    * @param paths           The list of herd paths
+    * @return list of s3 key prefixes
+    */
+  private def getS3KeyPrefixes(businessDataDdl: String, paths: Seq[String]): Seq[(String, Seq[String])] = {
+    val partitionKey = parsePartitionPath(paths(0))("partitionKey").get
+    val partitionValueTuples = paths.map(path => {
+      val parts = parsePartitionPath(path)
+      val primaryPartition = parts("partitionValue").get
+      val subPartitions = parts("subPartitionValues").getOrElse("")
+      if (!subPartitions.isEmpty) {
+        (path, primaryPartition + "," + subPartitions, new ArrayBuffer[String]())
+      } else {
+        (path, primaryPartition, new ArrayBuffer[String]())
+      }
+    }).toList
 
-    val prefix = storage.getStoragePlatformName match {
-      case "S3" =>
-        val scheme = "s3a://"
-        val bucket = storage
-          .getAttributes
-          .find(_.getName.equalsIgnoreCase("bucket.name"))
-          .map(_.getValue)
-          .getOrElse(sys.error("Missing 'bucket.name' attribute"))
-        scheme + bucket + "/"
+    var s3KeyPrefixes = new ArrayBuffer[String]()
+    if (partitionKey.equalsIgnoreCase("partition")) {
+      // Handling non-partitioned
+      val s3KeyPrefixPattern = new Regex("LOCATION '(s3.+?)';")
+      s3KeyPrefixPattern.findAllIn(businessDataDdl).matchData.
+        foreach(m => {
+          // Replace s3n with s3a since Hadoop has much better support on s3a
+          s3KeyPrefixes += m.group(1).replaceAll("s3n://", "s3a://")
+        })
 
-      case "FILE" => ""
-      case _ => sys.error(s"Unsupported storage platform ${storage.getStoragePlatformName}")
-    }
-
-    if (storageUnit.getStorageFiles == null) {
-      log.error(s"No storage files could be found for object")
-      Seq.empty
+      return List((paths(0), s3KeyPrefixes))
     } else {
-      storageUnit.getStorageFiles.map { f =>
-        val path = new Path(prefix + f.getFilePath)
+      // Parse the DDL, and grab the partition values and their S3 key prefixes
+      val s3KeyPrefixPattern = new Regex("PARTITION \\((.+?)\\) LOCATION '(s3.+?)';")
+      s3KeyPrefixPattern.findAllIn(businessDataDdl).matchData.
+        foreach(m => {
+          val partitionValues = m.group(1).replace("`", "").replace("'", "").replaceAll("\\s", "").split(",").toList
+          var partitionList = new ArrayBuffer[String]()
+          for (e <- partitionValues) {
+            partitionList += e.substring(e.indexOf("=") + 1)
+          }
 
-        val fs = path.getFileSystem(hadoopConf)
+          val ddlPartitionValue = partitionList.mkString(",")
 
-        new FileStatus(f.getFileSizeBytes, false, 0, 0, 0, path.makeQualified(fs.getUri, fs.getWorkingDirectory))
+          // Only add the S3 Prefixes when the partition values match
+          var done = false
+          var index = 0
+          while (index < partitionValueTuples.length && !done) {
+            var partitionValueTuple = partitionValueTuples(index)
+            if (ddlPartitionValue.startsWith(partitionValueTuple._2)) {
+              // Replace s3n with s3a since Hadoop has much better support on s3a
+              partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "s3a://")
+              done = true
+            }
+            index += 1
+          }
+        })
+
+      partitionValueTuples.map(p => {
+        (p._1, p._3)
+      })
+    }
+  }
+
+  /**
+    * List all files under the s3 directories(aka S3 key prefixes)
+    *
+    * @param hadoopConf    hadoop configuration
+    * @param s3KeyPrefixes all s3 key prefixes
+    * @return list of files
+    */
+  private def getAllFilesUnderS3KeyPrefixes(hadoopConf: Configuration, s3KeyPrefixes: Seq[String]): Seq[FileStatus] = {
+    s3KeyPrefixes.flatMap {
+      s3KeyPrefix => {
+        val s3Path = new Path(s3KeyPrefix)
+        val fs = s3Path.getFileSystem(hadoopConf)
+        var iterator = fs.listFiles(s3Path, true)
+        var fileStatusList = new ArrayBuffer[FileStatus]()
+        // Find all files under each directory
+        while (iterator.hasNext) {
+          fileStatusList += iterator.next()
+        }
+        fileStatusList.toList
       }
     }
   }
