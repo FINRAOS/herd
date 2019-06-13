@@ -27,12 +27,12 @@ private[sql] object PruneHerdPartitions extends Rule[LogicalPlan] {
     logicalRelation @
       LogicalRelation(fsRelation @
         HadoopFsRelation(
-        herdFileIndex: HerdFileIndex,
-        partitionSchema,
-        _,
-        _,
-        _,
-        _),
+          herdFileIndex: HerdFileIndex,
+          partitionSchema,
+          _,
+          _,
+          _,
+          _),
       _,
       _,
       _))

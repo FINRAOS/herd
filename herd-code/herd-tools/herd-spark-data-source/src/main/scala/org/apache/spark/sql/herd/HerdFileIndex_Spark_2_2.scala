@@ -65,7 +65,6 @@ private[sql] class HerdFileIndex(
           val fileStatuses = cachedAllFiles(path)
 
           PartitionDirectoryShim(values, fileStatuses)
-
       }
     }
 
@@ -83,7 +82,6 @@ private[sql] class HerdFileIndex(
             "\t" +
             s"${dir.files.asInstanceOf[Seq[Any]].map(FileStatusShim.getPath(_).toUri.getPath).mkString(",")}\t" +
             "AVAILABLE")
-
       }
     }
 
