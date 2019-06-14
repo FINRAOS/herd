@@ -498,13 +498,13 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       // If readSchema was not null, we've already got it, so use it (for non-orc files). If not, try to get it from the file itself (for orc files).
       // If we can't get a schema from the file, try to read it without supplying the schema. This is the least efficient choice but better than nothing.
       if (readSchema != null && !readFormat.equals("orc")) {
-        spark.sqlContext.read.format(readFormat).options(readOptions).schema(readSchema).load(path)
+        spark.sqlContext.read.format(readFormat).options(readOptions).schema(readSchema).load(path.replaceAll("s3n://", "s3a://"))
       }
 
       else {
         // This is here as a sort of worst case fallback, but this should never get executed. If the file is ORC, we will read schema from file,
         // and if it's bz, txt, or csv, use parseSchema.
-        spark.sqlContext.read.format(readFormat).options(readOptions).load(path)
+        spark.sqlContext.read.format(readFormat).options(readOptions).load(path.replaceAll("s3n://", "s3a://"))
       }
     }
     df
