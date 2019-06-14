@@ -95,6 +95,11 @@ public class Hive13DdlGenerator extends DdlGenerator
     public static final String TEXT_HIVE_FILE_FORMAT = "TEXTFILE";
 
     /**
+     * Hive file format for JSON files.
+     */
+    public static final String JSON_HIVE_FILE_FORMAT = "JSONFILE";
+
+    /**
      * The regular expression that represents an empty partition in S3, this is because hadoop file system implements directory support in S3 by creating empty
      * files with the "directoryname_$folder$" suffix.
      */
@@ -790,6 +795,10 @@ public class Hive13DdlGenerator extends DdlGenerator
         else if (fileFormat.equalsIgnoreCase(FileTypeEntity.ORC_FILE_TYPE))
         {
             hiveFileFormat = ORC_HIVE_FILE_FORMAT;
+        }
+        else if (fileFormat.equalsIgnoreCase(FileTypeEntity.JSON_FILE_TYPE))
+        {
+            hiveFileFormat = JSON_HIVE_FILE_FORMAT;
         }
         else
         {
