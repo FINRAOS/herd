@@ -95,6 +95,18 @@ public class Hive13DdlGenerator extends DdlGenerator
     public static final String TEXT_HIVE_FILE_FORMAT = "TEXTFILE";
 
     /**
+     * The regular expression that represents an empty partition in S3, this is because hadoop file system implements directory support in S3 by creating empty
+     * files with the "directoryname_$folder$" suffix.
+     */
+    public static final String REGEX_S3_EMPTY_PARTITION = "_\\$folder\\$";
+
+    /**
+     * An empty partition in S3, this is because hadoop file system implements directory support in S3 by creating empty files with the "directoryname_$folder$"
+     * suffix.
+     */
+    public static final String S3_EMPTY_PARTITION = "_$folder$";
+
+    /**
      * Hive complex data types list.
      */
     private static final List<String> HIVE_COMPLEX_DATA_TYPES =
@@ -211,6 +223,7 @@ public class Hive13DdlGenerator extends DdlGenerator
         generateDdlRequest.storageEntities = storageEntities;
         generateDdlRequest.storageNames = storageNames;
         generateDdlRequest.suppressScanForUnregisteredSubPartitions = request.isSuppressScanForUnregisteredSubPartitions();
+        generateDdlRequest.combineMultiplePartitionsInSingleAlterTable = request.isCombineMultiplePartitionsInSingleAlterTable();
         generateDdlRequest.tableName = request.getTableName();
         return generateCreateTableDdlHelper(generateDdlRequest);
     }
@@ -353,7 +366,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             // Try to match the relative file path to the expected subpartition folders.
             Matcher matcher = pattern.matcher(relativeFilePath);
             Assert.isTrue(matcher.matches(), String.format("Registered storage file or directory does not match the expected Hive sub-directory pattern. " +
-                    "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {^%s$}", storageName, storageFile,
+                    "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {%s}", storageName, storageFile,
                 businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), s3KeyPrefix, pattern.pattern()));
 
             // Create a list of partition values.
@@ -369,24 +382,32 @@ public class Hive13DdlGenerator extends DdlGenerator
                 partitionValues.add(matcher.group(i));
             }
 
-            // Get path for this partition by removing trailing "/" plus an optional file name from the relative file path.
-            String partitionPath = relativeFilePath.replaceAll("/[^/]*$", "");
-
-            // Check if we already have that partition discovered - that would happen if partition contains multiple data files.
-            HivePartitionDto hivePartition = linkedHashMap.get(partitionValues);
-
-            if (hivePartition != null)
+            // If we did not match all expected partition values, then this storage file path is not part
+            // of a fully qualified partition (this is an intermediate folder marker) and we ignore it.
+            if (!partitionValues.contains(null))
             {
-                // Partition is already discovered, so just validate that the relative paths match.
-                Assert.isTrue(hivePartition.getPath().equals(partitionPath), String.format(
-                    "Found two different locations for the same Hive partition. Storage: {%s}, business object data: {%s}, " +
-                        "S3 key prefix: {%s}, path[1]: {%s}, path[2]: {%s}", storageName,
-                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), s3KeyPrefix, hivePartition.getPath(), partitionPath));
-            }
-            else
-            {
-                // Add this partition to the hash map of discovered partitions.
-                linkedHashMap.put(partitionValues, new HivePartitionDto(partitionPath, partitionValues));
+                // Get path for this partition by removing trailing "/" plus an optional file name from the relative file path,
+                // or the trailing "_$folder$", which represents an empty partition in S3.
+                String partitionPath =
+                    relativeFilePath.endsWith(S3_EMPTY_PARTITION) ? relativeFilePath.substring(0, relativeFilePath.length() - S3_EMPTY_PARTITION.length()) :
+                        relativeFilePath.replaceAll("\\/[^/]*$", "");
+
+                // Check if we already have that partition discovered - that would happen if partition contains multiple data files.
+                HivePartitionDto hivePartition = linkedHashMap.get(partitionValues);
+
+                if (hivePartition != null)
+                {
+                    // Partition is already discovered, so just validate that the relative paths match.
+                    Assert.isTrue(hivePartition.getPath().equals(partitionPath), String.format(
+                        "Found two different locations for the same Hive partition. Storage: {%s}, business object data: {%s}, " +
+                            "S3 key prefix: {%s}, path[1]: {%s}, path[2]: {%s}", storageName,
+                        businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), s3KeyPrefix, hivePartition.getPath(), partitionPath));
+                }
+                else
+                {
+                    // Add this partition to the hash map of discovered partitions.
+                    linkedHashMap.put(partitionValues, new HivePartitionDto(partitionPath, partitionValues));
+                }
             }
         }
 
@@ -405,26 +426,63 @@ public class Hive13DdlGenerator extends DdlGenerator
      */
     public Pattern getHivePathPattern(List<SchemaColumn> partitionColumns)
     {
+        return Pattern.compile(getHivePathRegex(partitionColumns));
+    }
+
+    /**
+     * Gets a regex to match Hive partition sub-directories.
+     *
+     * @param partitionColumns the list of partition columns
+     *
+     * @return the newly created regex to match Hive partition sub-directories.
+     */
+    public String getHivePathRegex(List<SchemaColumn> partitionColumns)
+    {
         StringBuilder sb = new StringBuilder(26);
+
+        sb.append("^(?:");      // Start a non-capturing group for the entire regex.
 
         // For each partition column, add a regular expression to match "<COLUMN_NAME|COLUMN-NAME>=<VALUE>" sub-directory.
         for (SchemaColumn partitionColumn : partitionColumns)
         {
-            String partitionColumnName = partitionColumn.getName();
+            sb.append("(?:");   // Start a non-capturing group for the remainder of the regex.
+            sb.append("(?:");   // Start a non-capturing group for folder markers.
+            sb.append("\\/");   // Add a trailing "/".
+            sb.append('|');     // Ann an OR.
+            sb.append(REGEX_S3_EMPTY_PARTITION);    // Add a trailing "_$folder$", which represents an empty partition in S3.
+            sb.append(')');     // Close a non-capturing group for folder markers.
+            sb.append('|');     // Add an OR.
+            sb.append("(?:");   // Start a non-capturing group for "/<column name>=<column value>".
+            sb.append("\\/");   // Add a "/".
             // We are using a non-capturing group for the partition column names here - this is done by adding "?:" to the beginning of a capture group.
-            sb.append("\\/(?:");
-            sb.append(Matcher.quoteReplacement(partitionColumnName));
-            // Please note that for subpartition folder, we do support partition column names having all underscores replaced with hyphens.
-            sb.append('|');
-            sb.append(Matcher.quoteReplacement(partitionColumnName.replace("_", "-")));
-            sb.append(")=([^/]+)");
+            sb.append("(?:");   // Start a non-capturing group for column name.
+            sb.append("(?i)");  // Match partition column names case insensitive.
+            sb.append(Matcher.quoteReplacement(partitionColumn.getName()));
+            sb.append('|');     // Add an OR.
+            // For sub-partition folder, we do support partition column names having all underscores replaced with hyphens.
+            sb.append(Matcher.quoteReplacement(partitionColumn.getName().replace("_", "-")));
+            sb.append(')');     // Close a non-capturing group for column name.
+            sb.append("=([^/]+)"); // Add a capturing group for a column value.
         }
 
-        // Add a regular expression for a trailing "/" and an optional file name.
-        sb.append("\\/[^/]*");
+        // Add additional regular expression for the trailing empty folder marker and/or "/" followed by an optional file name.
+        sb.append("(?:");   // Start a non-capturing group for folder markers and an optional file name.
+        sb.append("\\/");   // Add a trailing "/".
+        sb.append("[^/]*"); // Add an optional file name.
+        sb.append('|');     // Add an OR.
+        sb.append(REGEX_S3_EMPTY_PARTITION);    // Add a trailing "_$folder$", which represents an empty partition in S3.
+        sb.append(")");     // Close a non-capturing group for folder markers and an optional file name.
 
-        // We do a case-insensitive match for partition column names.
-        return Pattern.compile(sb.toString(), Pattern.CASE_INSENSITIVE);
+        // Close all non-capturing groups that are still open.
+        for (int i = 0; i < 2 * partitionColumns.size(); i++)
+        {
+            sb.append(')');
+        }
+
+        sb.append(')');     // Close a non-capturing group for the entire regex.
+        sb.append('$');
+
+        return sb.toString();
     }
 
     /**
@@ -830,10 +888,18 @@ public class Hive13DdlGenerator extends DdlGenerator
             // If drop partitions flag is set and the table is partitioned, drop partitions specified by the partition filters.
             if (generateDdlRequest.isPartitioned && BooleanUtils.isTrue(generateDdlRequest.includeDropPartitions))
             {
-                // Add a drop partition statement for each partition filter entry.
+                // Generate the beginning of the alter table statement.
+                String alterTableFirstToken = String.format("ALTER TABLE `%s` DROP IF EXISTS", generateDdlRequest.tableName);
+
+                // Create a drop partition statement for each partition filter entry.
+                List<String> dropPartitionStatements = new ArrayList<>();
                 for (List<String> partitionFilter : generateDdlRequest.partitionFilters)
                 {
-                    sb.append(String.format("ALTER TABLE `%s` DROP IF EXISTS PARTITION (", generateDdlRequest.tableName));
+                    // Start building a drop partition statement for this partition filter.
+                    StringBuilder dropPartitionStatement = new StringBuilder();
+                    dropPartitionStatement.append(String.format("%s PARTITION (",
+                        BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? "   " : alterTableFirstToken));
+
                     // Specify all partition column values as per this partition filter.
                     List<String> partitionKeyValuePairs = new ArrayList<>();
                     for (int i = 0; i < partitionFilter.size(); i++)
@@ -846,10 +912,27 @@ public class Hive13DdlGenerator extends DdlGenerator
                             partitionKeyValuePairs.add(String.format("`%s`='%s'", partitionColumnName, partitionFilter.get(i)));
                         }
                     }
-                    sb.append(StringUtils.join(partitionKeyValuePairs, ", "));
-                    sb.append(");\n");
+
+                    // Complete the drop partition statement.
+                    dropPartitionStatement.append(StringUtils.join(partitionKeyValuePairs, ", ")).append(')');
+
+                    // Add this drop partition statement to the list.
+                    dropPartitionStatements.add(dropPartitionStatement.toString());
                 }
-                sb.append('\n');
+
+                // Add all drop partition statements to the main string builder.
+                if (CollectionUtils.isNotEmpty(dropPartitionStatements))
+                {
+                    // If specified, combine dropping multiple partitions in a single ALTER TABLE statement.
+                    if (BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable))
+                    {
+                        sb.append(alterTableFirstToken).append('\n');
+                    }
+
+                    sb.append(StringUtils
+                        .join(dropPartitionStatements, BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? ",\n" : ";\n"))
+                        .append(";\n\n");
+                }
             }
 
             // Process storage unit entities.
@@ -914,7 +997,11 @@ public class Hive13DdlGenerator extends DdlGenerator
             new BusinessObjectDefinitionKey(businessObjectFormatForSchema.getNamespace(), businessObjectFormatForSchema.getBusinessObjectDefinitionName()));
         String dataProviderName = businessObjectDefinitionEntity.getDataProvider().getName();
 
+        // Generate the beginning of the alter table statement.
+        String alterTableFirstToken = String.format("ALTER TABLE `%s` ADD %s", generateDdlRequest.tableName, ifNotExistsOption).trim();
+
         // Process all available business object data instances.
+        List<String> addPartitionStatements = new ArrayList<>();
         for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtos)
         {
             // Get storage name in upper case for this storage unit.
@@ -1024,10 +1111,14 @@ public class Hive13DdlGenerator extends DdlGenerator
                     .subList(1 + CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()),
                         businessObjectFormatForSchema.getSchema().getPartitions().size());
 
+                // Get and process Hive partitions.
                 for (HivePartitionDto hivePartition : getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, s3KeyPrefix,
                     storageFilePaths, storageUnitAvailabilityDto.getStorageName()))
                 {
-                    sb.append(String.format("ALTER TABLE `%s` ADD %sPARTITION (", generateDdlRequest.tableName, ifNotExistsOption));
+                    // Build an add partition statement for this hive partition.
+                    StringBuilder addPartitionStatement = new StringBuilder();
+                    addPartitionStatement.append(String.format("%s PARTITION (",
+                        BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? "   " : alterTableFirstToken));
                     // Specify all partition column values.
                     List<String> partitionKeyValuePairs = new ArrayList<>();
                     for (int i = 0; i < businessObjectFormatForSchema.getSchema().getPartitions().size(); i++)
@@ -1036,9 +1127,12 @@ public class Hive13DdlGenerator extends DdlGenerator
                         String partitionValue = hivePartition.getPartitionValues().get(i);
                         partitionKeyValuePairs.add(String.format("`%s`='%s'", partitionColumnName, partitionValue));
                     }
-                    sb.append(StringUtils.join(partitionKeyValuePairs, ", "));
-                    sb.append(String.format(") LOCATION 's3n://%s/%s%s';\n", s3BucketName, s3KeyPrefix,
+                    addPartitionStatement.append(StringUtils.join(partitionKeyValuePairs, ", "));
+                    addPartitionStatement.append(String.format(") LOCATION 's3n://%s/%s%s'", s3BucketName, s3KeyPrefix,
                         StringUtils.isNotBlank(hivePartition.getPath()) ? hivePartition.getPath() : ""));
+
+                    // Add this add partition statement to the list.
+                    addPartitionStatements.add(addPartitionStatement.toString());
                 }
             }
             else // This is a non-partitioned table.
@@ -1058,6 +1152,20 @@ public class Hive13DdlGenerator extends DdlGenerator
                     replacements.put(NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, tableLocation);
                 }
             }
+        }
+
+        // Add all add partition statements to the main string builder.
+        if (CollectionUtils.isNotEmpty(addPartitionStatements))
+        {
+            // If specified, combine adding multiple partitions in a single ALTER TABLE statement.
+            if (BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable))
+            {
+                sb.append(alterTableFirstToken).append('\n');
+            }
+
+            sb.append(
+                StringUtils.join(addPartitionStatements, BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? ",\n" : ";\n"))
+                .append(";\n");
         }
     }
 
@@ -1215,6 +1323,8 @@ public class Hive13DdlGenerator extends DdlGenerator
         private List<String> storageNames;
 
         private Boolean suppressScanForUnregisteredSubPartitions;
+
+        private Boolean combineMultiplePartitionsInSingleAlterTable;
 
         private String tableName;
     }

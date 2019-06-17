@@ -20,7 +20,6 @@ import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
 
@@ -163,7 +162,6 @@ public class UploaderWebClient extends DataBridgeWebClient
             }
 
             LOGGER.info(String.format("    HTTP GET URI: %s", httpGet.getURI().toString()));
-            LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(httpGet.getAllHeaders())));
 
             businessObjectDataVersions = getBusinessObjectDataVersions(httpClientOperations.execute(client, httpGet));
         }

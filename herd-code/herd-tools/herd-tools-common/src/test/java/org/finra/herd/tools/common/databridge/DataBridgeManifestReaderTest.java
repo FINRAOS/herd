@@ -65,6 +65,15 @@ public class DataBridgeManifestReaderTest
     }
 
     @Test
+    public void testReadJsonManifestNoNamespace() throws Exception
+    {
+        DataBridgeBaseManifestDto dataBridgeBaseManifestDto = getDataBridgeBaseManifestDto();
+        dataBridgeBaseManifestDto.setNamespace(null);
+
+        testReadJsonManifest(dataBridgeBaseManifestDto, "Manifest namespace must be specified.");
+    }
+
+    @Test
     public void testReadJsonManifestNoDefinitionName() throws Exception
     {
         DataBridgeBaseManifestDto dataBridgeBaseManifestDto = getDataBridgeBaseManifestDto();

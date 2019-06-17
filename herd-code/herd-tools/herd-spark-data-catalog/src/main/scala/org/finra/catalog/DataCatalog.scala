@@ -499,28 +499,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       // If we can't get a schema from the file, try to read it without supplying the schema. This is the least efficient choice but better than nothing.
       if (readSchema != null && !readFormat.equals("orc")) {
         spark.sqlContext.read.format(readFormat).options(readOptions).schema(readSchema).load(path)
-      } else if (readSchema == null && readFormat.equals("orc")) {
-        // get an fs object...
-        val fs = FileSystem.get(new java.net.URI(path), new Configuration())
+      }
 
-        // .. and an array of all file info.
-        val fileStatuses = fs.listStatus(new Path(path))
-
-        // Get file names...
-        val fileList = fileStatuses.map {
-          _.getPath.toString
-        }
-
-        // .. and pick the first filename. Since all files will have the same schema it doesn't matter which one we pick.
-        val someFile = fileList(0)
-
-        // Finally, get a schema from this file...
-        val schemaFromSingleFile = spark.sqlContext.read.format("orc").load(someFile).schema
-
-        // and read the DF
-        spark.sqlContext.read.format(readFormat).options(readOptions).schema(schemaFromSingleFile).load(path)
-
-      } else {
+      else {
         // This is here as a sort of worst case fallback, but this should never get executed. If the file is ORC, we will read schema from file,
         // and if it's bz, txt, or csv, use parseSchema.
         spark.sqlContext.read.format(readFormat).options(readOptions).load(path)
@@ -1055,6 +1036,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     // get the fileReading format. We treat ORC differently from the others..
     val sparkReader = fileFormat.toUpperCase match {
       case "ORC" => "orc"
+      case "PARQUET" => "parquet"
       case _ => "csv"
     }
 
@@ -1072,7 +1054,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val parts = parsePartitions(businessObjectFormat)
 
     // read options only for CSV files; ORC files won't work with the correct schema. We have to read with the embedded schema and then rename columns.
-    if (sparkReader == "orc") {
+    if (sparkReader == "orc" || sparkReader == "parquet") {
       readOptions = Map[String, String]()
       useSchemaFromREST = false
     }

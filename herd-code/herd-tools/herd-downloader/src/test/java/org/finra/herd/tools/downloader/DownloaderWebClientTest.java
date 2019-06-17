@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.Arrays;
 
-import com.google.common.base.Objects;
 import org.apache.http.HttpVersion;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.StringEntity;
@@ -61,49 +60,6 @@ import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
  */
 public class DownloaderWebClientTest extends AbstractDownloaderTest
 {
-    @Test
-    public void testGetBusinessObjectDataAssertNamespaceOptional() throws Exception
-    {
-        HttpClientOperations mockHttpClientOperations = mock(HttpClientOperations.class);
-        HttpClientOperations originalHttpClientOperations = (HttpClientOperations) ReflectionTestUtils.getField(downloaderWebClient, "httpClientOperations");
-        ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", mockHttpClientOperations);
-
-        try
-        {
-            String expectedHttpMethod = "GET";
-            String expectedUri = "https://testWebServiceHostname:1234/herd-app/rest/businessObjectData" +
-                "/businessObjectDefinitionNames/businessObjectDefinitionName/businessObjectFormatUsages/businessObjectFormatUsage" +
-                "/businessObjectFormatFileTypes/businessObjectFormatFileType?partitionKey=partitionKey&partitionValue=partitionValue&" +
-                "businessObjectFormatVersion=0&businessObjectDataVersion=1";
-
-            CloseableHttpResponse closeableHttpResponse = mock(CloseableHttpResponse.class);
-            when(mockHttpClientOperations.execute(any(), any())).thenReturn(closeableHttpResponse);
-
-            when(closeableHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
-            BusinessObjectData expectedBusinessObjectData = new BusinessObjectData();
-            expectedBusinessObjectData.setId(1234);
-            StringEntity httpEntity = new StringEntity(xmlHelper.objectToXml(expectedBusinessObjectData));
-            when(closeableHttpResponse.getEntity()).thenReturn(httpEntity);
-
-            DownloaderInputManifestDto manifest = new DownloaderInputManifestDto();
-            manifest.setBusinessObjectDefinitionName("businessObjectDefinitionName");
-            manifest.setBusinessObjectFormatUsage("businessObjectFormatUsage");
-            manifest.setBusinessObjectFormatFileType("businessObjectFormatFileType");
-            manifest.setBusinessObjectFormatVersion("0");
-            manifest.setPartitionKey("partitionKey");
-            manifest.setPartitionValue("partitionValue");
-            manifest.setBusinessObjectDataVersion("1");
-            assertEquals(expectedBusinessObjectData.getId(), downloaderWebClient.getBusinessObjectData(manifest).getId());
-
-            verify(mockHttpClientOperations).execute(any(), argThat(httpUriRequest -> Objects.equal(expectedHttpMethod, httpUriRequest.getMethod()) &&
-                Objects.equal(expectedUri, httpUriRequest.getURI().toString())));
-        }
-        finally
-        {
-            ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", originalHttpClientOperations);
-        }
-    }
-
     @Test
     public void testGetBusinessObjectDataAssertNoAuthorizationHeaderWhenNoSsl() throws Exception
     {
