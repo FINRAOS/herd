@@ -21,7 +21,6 @@ import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
 
@@ -68,10 +67,7 @@ public class DownloaderWebClient extends DataBridgeWebClient
 
         StringBuilder uriPathBuilder = new StringBuilder(HERD_APP_REST_URI_PREFIX);
         uriPathBuilder.append("/businessObjectData");
-        if (manifest.getNamespace() != null)
-        {
-            uriPathBuilder.append("/namespaces/").append(manifest.getNamespace());
-        }
+        uriPathBuilder.append("/namespaces/").append(manifest.getNamespace());
         uriPathBuilder.append("/businessObjectDefinitionNames/").append(manifest.getBusinessObjectDefinitionName());
         uriPathBuilder.append("/businessObjectFormatUsages/").append(manifest.getBusinessObjectFormatUsage());
         uriPathBuilder.append("/businessObjectFormatFileTypes/").append(manifest.getBusinessObjectFormatFileType());
@@ -102,7 +98,6 @@ public class DownloaderWebClient extends DataBridgeWebClient
         }
 
         LOGGER.info(String.format("    HTTP GET URI: %s", request.getURI().toString()));
-        LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(request.getAllHeaders())));
 
         BusinessObjectData businessObjectData =
             getBusinessObjectData(httpClientOperations.execute(client, request), "retrieve business object data from the registration server");

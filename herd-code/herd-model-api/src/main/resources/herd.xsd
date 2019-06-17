@@ -4432,6 +4432,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="combineMultiplePartitionsInSingleAlterTable" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies to add multiple partitions in a single ALTER TABLE statement. If includeDropPartitions is set to true, this flag also
+                  specifies to drop multiple partitions in a single ALTER TABLE statement
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
