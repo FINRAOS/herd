@@ -53,6 +53,11 @@ public class FileTypeEntity extends AuditableEntity
     public static final String TXT_FILE_TYPE = "TXT";
 
     /**
+     * File type for JSON files.
+     */
+    public static final String JSON_FILE_TYPE = "JSON";
+
+    /**
      * File type for relational tables.
      */
     public static final String RELATIONAL_TABLE_FILE_TYPE = "RELATIONAL_TABLE";
