@@ -547,6 +547,11 @@ public enum ConfigurationValue
     SECURITY_HTTP_HEADER_ROLE_REGEX("security.http.header.role.regex", null),
 
     /**
+     * Regex used to match role from a list of headers.
+     */
+    SECURITY_HTTP_HEADER_ROLES_REGEX("security.http.header.roles.regex", null),
+
+    /**
      * The regex group name to use to match a role.
      */
     SECURITY_HTTP_HEADER_ROLE_REGEX_GROUP("security.http.header.role.regex.group", null),

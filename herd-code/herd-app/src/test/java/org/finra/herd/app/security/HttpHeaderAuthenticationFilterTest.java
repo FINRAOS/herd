@@ -481,6 +481,166 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
         }
     }
 
+    @Test
+    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeadersSingleRole() throws Exception
+    {
+        String testUserId = "testUser";
+        String userIdSuffix = "suffix";
+        String userIdWithSuffix = testUserId + "@" + userIdSuffix;
+        // Create and persist the relative database entities.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(userIdWithSuffix, namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2), SUPPORTED_NAMESPACE_PERMISSIONS);
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(userIdWithSuffix, namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_3), SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Create an ordered set of expected namespace authorizations.
+        Set<NamespaceAuthorization> expectedNamespaceAuthorizations = new HashSet<>();
+        expectedNamespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_2, SUPPORTED_NAMESPACE_PERMISSIONS));
+        expectedNamespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_3, SUPPORTED_NAMESPACE_PERMISSIONS));
+
+        setupTestFunctions("testrole");
+
+        modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariablesWithMultiHeaderRoles());
+
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(testUserId, "testFirstName", "testLastName", "testEmail", "","Wed, 11 Mar 2015 10:24:09");
+            request.addHeader("privtestrole", true);
+            request.addHeader("useridSuffix", userIdSuffix);
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            validateHttpHeaderApplicationUser(userIdWithSuffix, "testFirstName", "testLastName", "testEmail", "testrole", "Wed, 11 Mar 2015 10:24:09",
+                TEST_FUNCTIONS, expectedNamespaceAuthorizations);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeadersRegexNoRole() throws Exception
+    {
+        modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariablesWithMultiHeaderRoles());
+
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders("testUserId", "testFirstName", "testLastName", "testEmail", "","Wed, 11 Mar 2015 10:24:09");
+            request.addHeader("useridSuffix", "suffix");
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            validateHttpHeaderApplicationUser("testUserId" + "@suffix", "testFirstName", "testLastName", "testEmail", (String) null, "Wed, 11 Mar 2015 10:24:09", null, null);
+
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeadersRegexNoUseridSuffix() throws Exception
+    {
+        Map<String, Object> overrideMap = getDefaultSecurityEnvironmentVariables();
+        overrideMap.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAMES.getKey(), "useridHeader=userId|firstNameHeader=firstName" +
+            "|lastNameHeader=lastName|emailHeader=email|sessionInitTimeHeader=sessionInitTime");
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders("testUserId", "testFirstName", "testLastName", "testEmail", "","Wed, 11 Mar 2015 10:24:09");
+            request.addHeader("useridSuffix", "suffix");
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            validateHttpHeaderApplicationUser("testUserId", "testFirstName", "testLastName", "testEmail", (String) null, "Wed, 11 Mar 2015 10:24:09", null, null);
+
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeadersMultiRoles() throws Exception{
+        String testUserId = "testUser";
+        String userIdSuffix = "suffix";
+        String userIdWithSuffix = testUserId + "@" + userIdSuffix;
+
+        modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariablesWithMultiHeaderRoles());
+
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(testUserId, "testFirstName", "testLastName", "testEmail", "","Wed, 11 Mar 2015 10:24:09");
+            request.addHeader("privtestrole1", true);
+            request.addHeader("privtestrole2", true);
+            request.addHeader("useridSuffix", userIdSuffix);
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+
+            Set<String> expectedRoles = new HashSet<>();
+            expectedRoles.add("testrole1");
+            expectedRoles.add("testrole2");
+            validateHttpHeaderApplicationUser(userIdWithSuffix, "testFirstName", "testLastName", "testEmail", expectedRoles, "Wed, 11 Mar 2015 10:24:09",
+                null, null);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+
+    }
+
+    @Test
+    public void testHttpHeaderAuthenticationFilterUserWithMultipleRoleHeadersAndSingleRoleHeaderTogether() throws Exception{
+        Map<String, Object> overrideMap = getDefaultSecurityEnvironmentVariables();
+        overrideMap.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAMES.getKey(), "useridHeader=userId|firstNameHeader=firstName" +
+            "|lastNameHeader=lastName|emailHeader=email|rolesHeader=roles|sessionInitTimeHeader=sessionInitTime");
+        overrideMap.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLES_REGEX.getKey(), "priv(.+)");
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders("testUserId", "testFirstName", "testLastName", "testEmail", "testrole1","Wed, 11 Mar 2015 10:24:09");
+            request.addHeader("privtestrole2", true);
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            //multi-header roles are not used if single-header roles found
+            validateHttpHeaderApplicationUser("testUserId", "testFirstName", "testLastName", "testEmail", "testrole1", "Wed, 11 Mar 2015 10:24:09", null, null);
+
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
     private void setupTestFunctions(String roleId)
     {
         SecurityRoleEntity securityRoleEntity = new SecurityRoleEntity();
