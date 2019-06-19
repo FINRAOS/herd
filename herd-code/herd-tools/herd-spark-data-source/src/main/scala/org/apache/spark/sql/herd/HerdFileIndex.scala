@@ -289,8 +289,9 @@ private object HerdFileIndexBase extends Logging {
         // Find all files under each directory
         while (iterator.hasNext) {
           val file = iterator.next()
-          if(!(file.getPath.toString.contains("_SUCCESS") || file.getPath.toString.contains("_committed_") || file.getPath.toString.contains("_started_")))
-              fileStatusList += file
+          if(!(file.getPath.toString.contains("_SUCCESS") || file.getPath.toString.contains("_committed_") || file.getPath.toString.contains("_started_"))) {
+            fileStatusList += file
+          }
 
         }
         fileStatusList.toList
