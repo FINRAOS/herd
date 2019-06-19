@@ -237,7 +237,6 @@ private object HerdFileIndexBase extends Logging {
           // Replace s3n with s3a since Hadoop has much better support on s3a
           s3KeyPrefixes += m.group(1).replaceAll("s3n://", "s3a://")
         })
-
       return List((paths(0), s3KeyPrefixes))
     } else {
       // Parse the DDL, and grab the partition values and their S3 key prefixes
@@ -268,7 +267,8 @@ private object HerdFileIndexBase extends Logging {
 
       partitionValueTuples.map(p => {
         (p._1, p._3)
-      })
+      }
+      )
     }
   }
 
@@ -288,7 +288,10 @@ private object HerdFileIndexBase extends Logging {
         var fileStatusList = new ArrayBuffer[FileStatus]()
         // Find all files under each directory
         while (iterator.hasNext) {
-          fileStatusList += iterator.next()
+          val file = iterator.next()
+          if(!(file.getPath.toString.contains("_SUCCESS") || file.getPath.toString.contains("_committed_") || file.getPath.toString.contains("_started_")))
+              fileStatusList += file
+
         }
         fileStatusList.toList
       }
