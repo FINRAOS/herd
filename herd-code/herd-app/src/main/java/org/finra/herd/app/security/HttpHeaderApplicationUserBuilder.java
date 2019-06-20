@@ -130,7 +130,6 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
     protected ApplicationUser buildUser(Map<String, String> headerMap, boolean includeRoles)
     {
         LOGGER.debug("Creating Application User From Headers");
-        System.out.println("Creating Application User From Headers");
 
         Map<String, String> headerNames = getHeaderNames();
         // Build the user in pieces.
@@ -183,7 +182,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
 
         // append the user id suffix if suffix value is configured in the environment
         String userIdSuffixHeader = getHeaderValueString(userIdSuffixHeaderName, httpHeaders);
-        if (userIdSuffixHeader != null)
+        if (!StringUtils.isEmpty(userIdSuffixHeader))
         {
             userId = userId + "@" + userIdSuffixHeader;
         }
@@ -226,26 +225,27 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
     protected void buildRoles(ApplicationUser applicationUser, Map<String, String> httpHeaders, String headerName)
     {
         Set<String> roles = new HashSet<>();
-        applicationUser.setRoles(roles);
 
+        //retrieve roles with single header
         String rolesHeaderValue = getHeaderValueString(headerName, httpHeaders);
         if (rolesHeaderValue != null)
         {
             parseRoles(rolesHeaderValue, roles);
         }
-        else if (headerName == null || rolesHeaderValue == null)
-        {
-            //headerName is null, so use multiple roles regex for headers
-            for (String header : httpHeaders.keySet())
-            {
-                parseRole(header, roles);
-            }
+        //retrieve roles with multiple headers
+        Set<String> rolesWithMuliHeaders = new HashSet<>();
+        parseRoles(httpHeaders, rolesWithMuliHeaders);
+
+        //throw exception if roles found in both single header and multiple headers
+        if(!roles.isEmpty() && !rolesWithMuliHeaders.isEmpty()){
+            throw new IllegalArgumentException("single header and multiple headers cannot be used together");
         }
 
-        /*
-         * If we need to have a mechanism to retrieve roles such that a single header represents a unique role, then the extra code to handle this situation
-         * could be added here.
-         */
+        if(!roles.isEmpty()){
+            applicationUser.setRoles(roles);
+        } else {
+            applicationUser.setRoles(rolesWithMuliHeaders);
+        }
     }
 
     /**
@@ -307,9 +307,30 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
     }
 
     /**
+     * <p> Filters all http request header values, and parses matched header to the given collection of roles with {@link #parseRoles(Map, Collection)}. </p>
+     * <p> The headers value are filtered with the configured value retrieved from {@link #getHttpHeaderRoleValue()}. </p> <p> If no filter value is
+     * configured (value is empty), then all headers will be passed(ie. The app is configured to use  multiple role header). </p>
+     *
+     * @param httpHeaders - the HTTP headers given in the current request
+     * @param roles - the collection of roles to add the parsed roles to
+     *
+     * @see <a href="http://www.regular-expressions.info/named.html">How to use named groups</a>
+     * @see Pattern
+     */
+    private void parseRoles(Map<String, String> httpHeaders, Collection<String> roles){
+        for (String header : httpHeaders.keySet())
+        {
+            String headerRoleValue = getHttpHeaderRoleValue();
+            if(StringUtils.isEmpty(headerRoleValue) ||  headerRoleValue.equals(httpHeaders.get(header))){
+                parseRole(header, roles);;
+            }
+        }
+    }
+
+    /**
      * <p> Parses the given header value for roles, and adds them to the given collection of roles. </p> <p> The roles are parsed using the configured regex
-     * retrieved from {@link #getHttpHeaderRolesRegex()}. </p> <p> The regex is matched against the value until no more matches are found. </p> <p> If no regex
-     * is configured (regex is empty), then this method does nothing (ie. The app is configured to use  multiple role header). </p>
+     * retrieved from {@link #getHttpHeaderRoleNameRegex()}. </p> <p> The regex is matched against the value until no more matches are found. </p> <p> If no
+     * regex is configured (regex is empty), then this method does nothing. </p>
      *
      * @param value - the string value to parse
      * @param roles - the collection of roles to add the parsed roles to
@@ -319,7 +340,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
      */
     private void parseRole(String value, Collection<String> roles)
     {
-        String regex = getHttpHeaderRolesRegex();
+        String regex = getHttpHeaderRoleNameRegex();
 
         // Do nothing if regex is not configured
         if (StringUtils.isNotBlank(regex))
@@ -446,13 +467,23 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
     }
 
     /**
-     * Gets the regex to use to parse a role headers. May return empty string, in which case the application should not attempt to apply role parsing.
+     * Gets the regex to use to parse a role header names. May return empty string, in which case the application should not attempt to apply role parsing.
      *
      * @return regex
      */
-    private String getHttpHeaderRolesRegex()
+    private String getHttpHeaderRoleNameRegex()
     {
-        return getProperty(ConfigurationValue.SECURITY_HTTP_HEADER_ROLES_REGEX);
+        return getProperty(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_NAME_REGEX);
+    }
+
+    /**
+     * Gets the value of a role header names. May return empty string, in which case the application should not attempt to apply role value checking.
+     *
+     * @return role header value
+     */
+    private String getHttpHeaderRoleValue()
+    {
+        return getProperty(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_VALUE);
     }
 
     /**
