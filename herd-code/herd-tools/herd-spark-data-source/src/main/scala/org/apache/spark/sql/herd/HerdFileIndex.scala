@@ -289,7 +289,7 @@ private object HerdFileIndexBase extends Logging {
         // Find all files under each directory
         while (iterator.hasNext) {
           val file = iterator.next()
-          //ignore non-parquet files when reading a DataFrame in parquet format
+          // ignore non-parquet files when reading a DataFrame in parquet format
           if (!formatFileType.equalsIgnoreCase("parquet") || file.getPath.toString.contains(".parquet")) {
             fileStatusList += file
           }
