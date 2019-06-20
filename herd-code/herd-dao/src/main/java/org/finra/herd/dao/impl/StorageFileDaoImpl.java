@@ -134,6 +134,7 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
         // Get the columns.
         Path<Integer> storageUnitIdColumn = storageFileEntity.get(StorageFileEntity_.storageUnitId);
         Path<String> storageFilePathColumn = storageFileEntity.get(StorageFileEntity_.path);
+        Path<Integer> storageFileIdColumn = storageFileEntity.get(StorageFileEntity_.id);
 
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate queryRestriction = getPredicateForInClause(builder, storageUnitIdColumn, storageUnitIds);
@@ -143,6 +144,9 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
 
         // Add the where clause.
         criteria.where(queryRestriction);
+
+        // Add the orderBy to the query so we can get consistent pagination results
+        criteria.orderBy(builder.asc(storageFileIdColumn));
 
         // Execute the query using pagination and populate the result map.
         int startPosition = 0;
