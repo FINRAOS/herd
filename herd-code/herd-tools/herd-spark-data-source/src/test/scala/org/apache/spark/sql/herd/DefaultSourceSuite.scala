@@ -313,7 +313,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     spark.stop()
   }
 
-  ignore("load with minimal options") {
+  test("load with minimal options") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
@@ -324,7 +324,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     result should contain theSameElementsAs(EXPECTED_ROWS)
   }
 
-  ignore("load all partitions and filter") {
+  test("load all partitions and filter") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json",
       ("2017-01-01", "") -> "businessObjectDataDdl1.json"
@@ -341,7 +341,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     result should contain theSameElementsAs(expected)
   }
 
-  ignore("load sub-partitioned data") {
+  test("load sub-partitioned data") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
@@ -352,7 +352,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     result should contain theSameElementsAs(EXPECTED_ROWS)
   }
 
-  ignore("load sub-partitioned data and prune by partition columns") {
+  test("load sub-partitioned data and prune by partition columns") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
@@ -365,7 +365,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     result should contain theSameElementsAs(expected)
   }
 
-  ignore("load sub-partitioned data and filter") {
+  test("load sub-partitioned data and filter") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
@@ -378,7 +378,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     result should contain theSameElementsAs(expected)
   }
 
-  ignore("load non-partitioned data") {
+  test("load non-partitioned data") {
     val parts = Map(("none", "") -> "businessObjectDataDdl.json")
     val df = getDataFrame(new BaseHerdApi("test-case-2", parts), defaultParams)
 
@@ -387,7 +387,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     result should contain theSameElementsAs(EXPECTED_ROWS)
   }
 
-  ignore("load and filter non-partitioned data") {
+  test("load and filter non-partitioned data") {
     val parts = Map(("none", "") -> "businessObjectDataDdl.json")
     val df = getDataFrame(new BaseHerdApi("test-case-2", parts), defaultParams)
 
@@ -398,7 +398,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     result should contain theSameElementsAs(expected)
   }
 
-  ignore("load from S3 storage platform") {
+  test("load from S3 storage platform") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
@@ -409,7 +409,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     result should contain theSameElementsAs(EXPECTED_ROWS)
   }
 
-  ignore("load ORC files") {
+  test("load ORC files") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
@@ -420,7 +420,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     rows should contain theSameElementsAs(ORC_EXPECTED_ROWS)
   }
 
-  ignore("load ORC files, prune and filter") {
+  test("load ORC files, prune and filter") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json",
       ("2017-01-01", "") -> "businessObjectDataDdl1.json"
