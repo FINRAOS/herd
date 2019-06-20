@@ -253,14 +253,28 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
 
         // Maximum supported number of sub-partition columns with empty folders present on every level and with data files present at the last sub-partition.
         // Different partition values are used to validate discovery logic for the fully qualified partitions.
-        // There are also sub-partitions added that contain empty folder marker as a sub-partition value, which is allowed.
+        // There are also the following two special cases added:
+        // - sub-partitions added that contain empty folder marker as a sub-partition value, which is allowed
+        // - sub-partitions with data files that start, contain, and/or end with an empty folder marker
         autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column_1", "Column_2", "Column_3", "Column_4"));
-        storageFilePaths = getStorageFilePaths(Arrays
-            .asList("/", "_$folder$", "/column_1=a01/", "/column_1=a02_$folder$", "/column_1=a03/column-2=b01/", "/column_1=a04/column-2=b02_$folder$",
-                "/column_1=a05/column-2=b03/COLUMN_3=c01/", "/column_1=a06/column-2=b04/COLUMN_3=c02_$folder$",
-                "/column_1=a07/column-2=b05/COLUMN_3=c03/COLUMN-4=d01/", "/column_1=a08/column-2=b06/COLUMN_3=c04/COLUMN-4=d02_$folder$",
-                "/column_1=a09/column-2=b07/COLUMN_3=c05/COLUMN-4=d03/file.dat", "/column_1=a10/column-2=b08/COLUMN_3=c06/COLUMN-4=d04_$folder$/",
-                "/column_1=a11/column-2=b09/COLUMN_3=c07/COLUMN-4=d05_$folder$/file"));
+        storageFilePaths = getStorageFilePaths(Arrays.asList("/",                       // an empty folder for the primary partition
+            "_$folder$",                                                                // an empty folder for the primary partition
+            "/column_1=a01/",                                                           // an empty folder for the first sub-partition
+            "/column_1=a02_$folder$",                                                   // an empty folder for the first sub-partition
+            "/column_1=a03/column-2=b01/",                                              // an empty folder for the second sub-partition
+            "/column_1=a04/column-2=b02_$folder$",                                      // an empty folder for the second sub-partition
+            "/column_1=a05/column-2=b03/COLUMN_3=c01/",                                 // an empty folder for the third sub-partition
+            "/column_1=a06/column-2=b04/COLUMN_3=c02_$folder$",                         // an empty folder for the third sub-partition
+            "/column_1=a07/column-2=b05/COLUMN_3=c03/COLUMN-4=d01/",                    // an empty folder for the forth sub-partition
+            "/column_1=a08/column-2=b06/COLUMN_3=c04/COLUMN-4=d02_$folder$",            // an empty folder for the forth sub-partition
+            "/column_1=a09/column-2=b07/COLUMN_3=c05/COLUMN-4=d03/file.dat",            // a data file present in the forth sub-partition
+            "/column_1=a10/column-2=b08/COLUMN_3=c06/COLUMN-4=d04_$folder$/",           // a sub-partition value is an empty folder marker
+            "/column_1=a11/column-2=b09/COLUMN_3=c07/COLUMN-4=d05_$folder$/file.dat",   // a sub-partition value is an empty folder marker
+            "/column_1=a12/column-2=b10/COLUMN_3=c08/COLUMN-4=d06/_$folder$file.dat",   // data file name starts an empty folder marker
+            "/column_1=a13/column-2=b11/COLUMN_3=c09/COLUMN-4=d07/file_$folder$.dat",   // data file name contains an empty folder marker
+            "/column_1=a14/column-2=b12/COLUMN_3=c10/COLUMN-4=d08/file.dat_$folder$",   // data file name ends with an empty folder marker
+            "/column_1=a15/column-2=b13/COLUMN_3=c11/COLUMN-4=d09/_$folder$"            // data file name is an empty folder marker
+        ));
         expectedHivePartitions = Arrays.asList(HivePartitionDto.builder().withPath("/column_1=a07/column-2=b05/COLUMN_3=c03/COLUMN-4=d01")
                 .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a07", "b05", "c03", "d01")).build(),
             HivePartitionDto.builder().withPath("/column_1=a08/column-2=b06/COLUMN_3=c04/COLUMN-4=d02")
@@ -270,7 +284,15 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             HivePartitionDto.builder().withPath("/column_1=a10/column-2=b08/COLUMN_3=c06/COLUMN-4=d04_$folder$")
                 .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a10", "b08", "c06", "d04_$folder$")).build(),
             HivePartitionDto.builder().withPath("/column_1=a11/column-2=b09/COLUMN_3=c07/COLUMN-4=d05_$folder$")
-                .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a11", "b09", "c07", "d05_$folder$")).build());
+                .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a11", "b09", "c07", "d05_$folder$")).build(),
+            HivePartitionDto.builder().withPath("/column_1=a12/column-2=b10/COLUMN_3=c08/COLUMN-4=d06")
+                .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a12", "b10", "c08", "d06")).build(),
+            HivePartitionDto.builder().withPath("/column_1=a13/column-2=b11/COLUMN_3=c09/COLUMN-4=d07")
+                .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a13", "b11", "c09", "d07")).build(),
+            HivePartitionDto.builder().withPath("/column_1=a14/column-2=b12/COLUMN_3=c10/COLUMN-4=d08")
+                .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a14", "b12", "c10", "d08")).build(),
+            HivePartitionDto.builder().withPath("/column_1=a15/column-2=b13/COLUMN_3=c11/COLUMN-4=d09")
+                .withPartitionValues(Arrays.asList(PARTITION_VALUE, "a15", "b13", "c11", "d09")).build());
         resultHivePartitions = hive13DdlGenerator
             .getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX, storageFilePaths, STORAGE_NAME);
         assertEquals(expectedHivePartitions, resultHivePartitions);
@@ -307,14 +329,14 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     public void testGetHivePathRegex()
     {
         List<String> expectedRegularExpressions = Arrays
-            .asList("^(?:(?:\\/[^/]*|_\\$folder\\$))$", "^(?:(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_1|Column-1)=([^/]+)(?:\\/[^/]*|_\\$folder\\$))))$",
+            .asList("^(?:(\\/[^/]*|_\\$folder\\$))$", "^(?:(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_1|Column-1)=([^/]+)(\\/[^/]*|_\\$folder\\$))))$",
                 "^(?:(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_1|Column-1)=([^/]+)(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_2|Column-2)=([^/]+)" +
-                    "(?:\\/[^/]*|_\\$folder\\$))))))$",
+                    "(\\/[^/]*|_\\$folder\\$))))))$",
                 "^(?:(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_1|Column-1)=([^/]+)(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_2|Column-2)=([^/]+)" +
-                    "(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_3|Column-3)=([^/]+)(?:\\/[^/]*|_\\$folder\\$))))))))$",
+                    "(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_3|Column-3)=([^/]+)(\\/[^/]*|_\\$folder\\$))))))))$",
                 "^(?:(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_1|Column-1)=([^/]+)(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_2|Column-2)=([^/]+)" +
                     "(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_3|Column-3)=([^/]+)(?:(?:\\/|_\\$folder\\$)|(?:\\/(?:(?i)Column_4|Column-4)=([^/]+)" +
-                    "(?:\\/[^/]*|_\\$folder\\$))))))))))$");
+                    "(\\/[^/]*|_\\$folder\\$))))))))))$");
 
         assertEquals(expectedRegularExpressions.get(0), hive13DdlGenerator.getHivePathRegex(new ArrayList<>()));
         assertEquals(expectedRegularExpressions.get(1), hive13DdlGenerator.getHivePathRegex(getPartitionColumns(Collections.singletonList("Column_1"))));
