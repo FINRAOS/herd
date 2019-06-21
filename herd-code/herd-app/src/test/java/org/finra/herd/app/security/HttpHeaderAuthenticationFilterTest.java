@@ -482,19 +482,19 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     }
 
     @Test
-    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeaderNameRegexNoHeaderValueConfigured() throws Exception
+    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeaderNameRegexNoMultiHeaderValueConfigured() throws Exception
     {
         testHttpHeaderAuthenticationFilterUserWithMultiRoleHeaderNameRegexSingleRole(false, "valid");
     }
 
     @Test
-    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeaderNameRegexSingleRoleValidHeaderValue() throws Exception
+    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeaderNameRegexSingleRoleValidMultiHeaderValue() throws Exception
     {
         testHttpHeaderAuthenticationFilterUserWithMultiRoleHeaderNameRegexSingleRole(true, "valid");
     }
 
     @Test
-    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeaderNameRegexSingleRoleInvalidHeaderValue() throws Exception
+    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeaderNameRegexSingleRoleInvalidMultiHeaderValue() throws Exception
     {
         testHttpHeaderAuthenticationFilterUserWithMultiRoleHeaderNameRegexSingleRole(true, "invalid");
     }
@@ -610,7 +610,7 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     }
 
     @Test
-    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeadersMultiRoles() throws Exception
+    public void testHttpHeaderAuthenticationFilterUserWithMultiRoleHeaderNameRegexMultiRoles() throws Exception
     {
         String testUserId = "testUser";
         String userIdSuffix = "suffix";
@@ -657,7 +657,7 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
         try
         {
             MockHttpServletRequest request =
-                getRequestWithHeaders("testUserId", "testFirstName", "testLastName", "testEmail", "testrole1", "Wed, 11 Mar 2015 10:24:09");
+                getRequestWithHeaders("testUserId", "testFirstName", "testLastName", "testEmail", "noRoleMemberOf", "Wed, 11 Mar 2015 10:24:09");
             request.addHeader("privtestrole2", "valid");
             // Invalidate user session if exists.
             invalidateApplicationUser(request);
@@ -665,7 +665,7 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
             httpHeaderAuthenticationFilter.init(new MockFilterConfig());
             httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-            //multi-header roles are not used if single-header roles found
+            //exception is throw if singleRoleHeaderValue and multiRoleHeaders are found
             validateHttpHeaderApplicationUser("testUserId", "testFirstName", "testLastName", "testEmail", "testrole1", "Wed, 11 Mar 2015 10:24:09", null, null);
 
         }

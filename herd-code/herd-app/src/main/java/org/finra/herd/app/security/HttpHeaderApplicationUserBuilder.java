@@ -224,27 +224,28 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
      */
     protected void buildRoles(ApplicationUser applicationUser, Map<String, String> httpHeaders, String headerName)
     {
-        Set<String> roles = new HashSet<>();
+        Set<String> rolesFromSingleRoleHeader = new HashSet<>();
 
-        //retrieve roles with single header
+        //retrieve roles from single role header
         String rolesHeaderValue = getHeaderValueString(headerName, httpHeaders);
         if (rolesHeaderValue != null)
         {
-            parseRoles(rolesHeaderValue, roles);
+            parseRoles(rolesHeaderValue, rolesFromSingleRoleHeader);
         }
-        //retrieve roles with multiple headers
-        Set<String> rolesWithMuliHeaders = new HashSet<>();
-        parseRoles(httpHeaders, rolesWithMuliHeaders);
+        //retrieve roles from multiple role headers
+        Set<String> rolesWithMultiRoleHeaders = new HashSet<>();
+        parseRoles(httpHeaders, rolesWithMultiRoleHeaders);
 
-        //throw exception if roles found in both single header and multiple headers
-        if(!roles.isEmpty() && !rolesWithMuliHeaders.isEmpty()){
-            throw new IllegalArgumentException("single header and multiple headers cannot be used together");
+        // we do not allow a single user to have roles from multiple identity providers. so throw an exception here if we detect the roles coming from multiple
+        // sources.
+        if(rolesHeaderValue != null && !rolesWithMultiRoleHeaders.isEmpty()){
+            throw new IllegalArgumentException("single header and multiple headers cannot be used together to retrieve roles");
         }
 
-        if(!roles.isEmpty()){
-            applicationUser.setRoles(roles);
+        if(rolesHeaderValue != null){
+            applicationUser.setRoles(rolesFromSingleRoleHeader);
         } else {
-            applicationUser.setRoles(rolesWithMuliHeaders);
+            applicationUser.setRoles(rolesWithMultiRoleHeaders);
         }
     }
 
