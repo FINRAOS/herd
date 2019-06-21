@@ -650,7 +650,7 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
         Map<String, Object> overrideMap = getDefaultSecurityEnvironmentVariables();
         overrideMap.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAMES.getKey(), "useridHeader=userId|firstNameHeader=firstName" +
             "|lastNameHeader=lastName|emailHeader=email|rolesHeader=roles|sessionInitTimeHeader=sessionInitTime");
-        overrideMap.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_NAME_REGEX.getKey(), "priv(.+)");
+        overrideMap.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAME_ROLE_REGEX.getKey(), "priv(.+)");
         overrideMap.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_VALUE.getKey(), "valid");
         modifyPropertySourceInEnvironment(overrideMap);
 

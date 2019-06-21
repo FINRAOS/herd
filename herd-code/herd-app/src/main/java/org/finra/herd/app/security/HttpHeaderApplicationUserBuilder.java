@@ -230,11 +230,11 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
         String rolesHeaderValue = getHeaderValueString(headerName, httpHeaders);
         if (rolesHeaderValue != null)
         {
-            parseRoles(rolesHeaderValue, rolesFromSingleRoleHeader);
+            parseRolesFromSingleHeader(rolesHeaderValue, rolesFromSingleRoleHeader);
         }
         //retrieve roles from multiple role headers
         Set<String> rolesFromMultiRoleHeaders = new HashSet<>();
-        parseRoles(httpHeaders, rolesFromMultiRoleHeaders);
+        parseRolesFromMultiHeaders(httpHeaders, rolesFromMultiRoleHeaders);
 
         // we do not allow a single user to have roles from multiple identity providers. so throw an exception here if we detect the roles coming from multiple
         // sources.
@@ -254,8 +254,8 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
      * regex group name retrieved from {@link #getHttpHeaderRoleRegex()} and {@link #getHttpHeaderRoleRegexGroupName()}. </p> <p> The regex is matched against
      * the value until no more matches are found. If the regex group name is set (not empty), then the group with the configured name will be extracted from the
      * match and be set as the role. If the regex group name is not set, then the entire match will be used as the role. Each matching role is then added to the
-     * collection of roles supplied. </p> <p> If no regex is configured (regex is empty), then this method does nothing (ie. The app is configured to not use
-     * multiple role header). </p>
+     * collection of roles supplied. </p> <p> If no regex is configured (regex is empty), then this method does nothing (ie. The app is configured to use
+     * single role header). </p>
      *
      * @param value - the string value to parse
      * @param roles - the collection of roles to add the parsed roles to
@@ -263,7 +263,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
      * @see <a href="http://www.regular-expressions.info/named.html">How to use named groups</a>
      * @see Pattern
      */
-    private void parseRoles(String value, Collection<String> roles)
+    private void parseRolesFromSingleHeader(String value, Collection<String> roles)
     {
         String regex = getHttpHeaderRoleRegex();
 
@@ -308,9 +308,11 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
     }
 
     /**
-     * <p> Filters all http request header values, and parses matched header to the given collection of roles with {@link #parseRoles(Map, Collection)}. </p>
-     * <p> The headers value are filtered with the configured value retrieved from {@link #getHttpHeaderRoleValue()}. </p> <p> If no filter value is
-     * configured (value is empty), then all headers will be passed(ie. The app is configured to use  multiple role header). </p>
+     * <p> Filters all http request header with configured header value, then parses matched headers to the given collection of roles with multiple headers
+     * regex. </p> <p> The headers value are filtered with the configured value retrieved from {@link #getHttpHeaderRoleValue()} ()}. </p> <p> If no filter value is
+     * configured (value is empty), then all headers will be parsed with role regex. <p> The filtered headers are parsed using the configured regex retrieved
+     * from {@link #getHttpHeaderNameRoleRegex()}. </p> <p> The regex is matched against the header until no more matches are found. </p> <p> If no
+     * regex is configured (regex is empty), then this method does nothing. </p> (ie. The app is configured to use  multiple role headers). </p>
      *
      * @param httpHeaders - the HTTP headers given in the current request
      * @param roles - the collection of roles to add the parsed roles to
@@ -318,44 +320,28 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
      * @see <a href="http://www.regular-expressions.info/named.html">How to use named groups</a>
      * @see Pattern
      */
-    private void parseRoles(Map<String, String> httpHeaders, Collection<String> roles){
-        for (String header : httpHeaders.keySet())
-        {
-            String headerRoleValue = getHttpHeaderRoleValue();
-            if(StringUtils.isEmpty(headerRoleValue) ||  headerRoleValue.equals(httpHeaders.get(header))){
-                parseRole(header, roles);;
-            }
-        }
-    }
-
-    /**
-     * <p> Parses the given header value for roles, and adds them to the given collection of roles. </p> <p> The roles are parsed using the configured regex
-     * retrieved from {@link #getHttpHeaderRoleNameRegex()}. </p> <p> The regex is matched against the value until no more matches are found. </p> <p> If no
-     * regex is configured (regex is empty), then this method does nothing. </p>
-     *
-     * @param value - the string value to parse
-     * @param roles - the collection of roles to add the parsed roles to
-     *
-     * @see <a href="http://www.regular-expressions.info/named.html">How to use named groups</a>
-     * @see Pattern
-     */
-    private void parseRole(String value, Collection<String> roles)
+    private void parseRolesFromMultiHeaders(Map<String, String> httpHeaders, Collection<String> roles)
     {
-        String regex = getHttpHeaderRoleNameRegex();
+        String httpHeaderNameRoleRegex = getHttpHeaderNameRoleRegex();
+        String httpHeaderRoleValue = getHttpHeaderRoleValue();
 
         // Do nothing if regex is not configured
-        if (StringUtils.isNotBlank(regex))
+        if (StringUtils.isNotBlank(httpHeaderNameRoleRegex))
         {
             // Compile the regex
-            Pattern pattern = Pattern.compile(regex);
-
-            // Create a matcher from the regex and the given value
-            Matcher matcher = pattern.matcher(value);
-
-            while (matcher.find())
+            Pattern pattern = Pattern.compile(httpHeaderNameRoleRegex);
+            for (String header : httpHeaders.keySet())
             {
-                String role = matcher.group(1);
-                roles.add(role);
+                if (StringUtils.isEmpty(httpHeaderRoleValue) || httpHeaderRoleValue.equals(httpHeaders.get(header)))
+                {
+                    // Create a matcher from the regex and the given header
+                    Matcher matcher = pattern.matcher(header);
+                    while (matcher.find())
+                    {
+                        String role = matcher.group(1);
+                        roles.add(role);
+                    }
+                }
             }
         }
     }
@@ -468,19 +454,19 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
     }
 
     /**
-     * Gets the regex to use to parse a role header names. May return empty string, in which case the application should not attempt to apply role parsing.
+     * Gets the regex to use to parse multiple role header names. May return empty string, in which case the application should not attempt to apply role parsing.
      *
-     * @return regex
+     * @return multiple headers role name regex
      */
-    private String getHttpHeaderRoleNameRegex()
+    private String getHttpHeaderNameRoleRegex()
     {
-        return getProperty(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_NAME_REGEX);
+        return getProperty(ConfigurationValue.SECURITY_HTTP_HEADER_NAME_ROLE_REGEX);
     }
 
     /**
      * Gets the value of a role header names. May return empty string, in which case the application should not attempt to apply role value checking.
      *
-     * @return role header value
+     * @return multiple headers role value
      */
     private String getHttpHeaderRoleValue()
     {

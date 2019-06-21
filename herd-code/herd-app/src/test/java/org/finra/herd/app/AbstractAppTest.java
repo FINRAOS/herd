@@ -127,7 +127,7 @@ public abstract class AbstractAppTest extends AbstractRestTest
         Map<String, Object> defaultEnvironmentVariables = new HashMap<>();
         defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAMES.getKey(), "useridHeader=userId|firstNameHeader=firstName" +
             "|lastNameHeader=lastName|emailHeader=email|sessionInitTimeHeader=sessionInitTime|useridSuffixHeader=useridSuffix");
-        defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_NAME_REGEX.getKey(), "priv(.+)");
+        defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAME_ROLE_REGEX.getKey(), "priv(.+)");
         defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_VALUE.getKey(), "valid");
         defaultEnvironmentVariables.put(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED.getKey(), "true");
         return defaultEnvironmentVariables;
