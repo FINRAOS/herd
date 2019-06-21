@@ -233,19 +233,19 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
             parseRoles(rolesHeaderValue, rolesFromSingleRoleHeader);
         }
         //retrieve roles from multiple role headers
-        Set<String> rolesWithMultiRoleHeaders = new HashSet<>();
-        parseRoles(httpHeaders, rolesWithMultiRoleHeaders);
+        Set<String> rolesFromMultiRoleHeaders = new HashSet<>();
+        parseRoles(httpHeaders, rolesFromMultiRoleHeaders);
 
         // we do not allow a single user to have roles from multiple identity providers. so throw an exception here if we detect the roles coming from multiple
         // sources.
-        if(rolesHeaderValue != null && !rolesWithMultiRoleHeaders.isEmpty()){
+        if(rolesHeaderValue != null && !rolesFromMultiRoleHeaders.isEmpty()){
             throw new IllegalArgumentException("single header and multiple headers cannot be used together to retrieve roles");
         }
 
         if(rolesHeaderValue != null){
             applicationUser.setRoles(rolesFromSingleRoleHeader);
         } else {
-            applicationUser.setRoles(rolesWithMultiRoleHeaders);
+            applicationUser.setRoles(rolesFromMultiRoleHeaders);
         }
     }
 
