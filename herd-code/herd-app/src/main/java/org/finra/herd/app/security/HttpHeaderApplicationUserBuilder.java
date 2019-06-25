@@ -238,13 +238,17 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
 
         // we do not allow a single user to have roles from multiple identity providers. so throw an exception here if we detect the roles coming from multiple
         // sources.
-        if(rolesHeaderValue != null && !rolesFromMultiRoleHeaders.isEmpty()){
+        if (rolesHeaderValue != null && !rolesFromMultiRoleHeaders.isEmpty())
+        {
             throw new IllegalArgumentException("single header and multiple headers cannot be used together to retrieve roles");
         }
 
-        if(rolesHeaderValue != null){
+        if (rolesHeaderValue != null)
+        {
             applicationUser.setRoles(rolesFromSingleRoleHeader);
-        } else {
+        }
+        else
+        {
             applicationUser.setRoles(rolesFromMultiRoleHeaders);
         }
     }
@@ -309,9 +313,9 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
 
     /**
      * <p> Filters all http request header with configured header value, then parses matched headers to the given collection of roles with multiple headers
-     * regex. </p> <p> The headers value are filtered with the configured value retrieved from {@link #getHttpHeaderRoleValue()} ()}. </p> <p> If no filter value is
-     * configured (value is empty), then all headers will be parsed with role regex. <p> The filtered headers are parsed using the configured regex retrieved
-     * from {@link #getHttpHeaderNameRoleRegex()}. </p> <p> The regex is matched against the header until no more matches are found. </p> <p> If no
+     * regex. </p> <p> The headers value are filtered with the configured value retrieved from {@link #getHttpHeaderRoleValue()} ()}. </p> <p> If no filter
+     * value is configured (value is empty), then all headers will be parsed with role regex. <p> The filtered headers are parsed using the configured regex
+     * retrieved from {@link #getHttpHeaderNameRoleRegex()}. </p> <p> The regex is matched against the header until no more matches are found. </p> <p> If no
      * regex is configured (regex is empty), then this method does nothing. </p> (ie. The app is configured to use  multiple role headers). </p>
      *
      * @param httpHeaders - the HTTP headers given in the current request
@@ -330,12 +334,12 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
         {
             // Compile the regex
             Pattern pattern = Pattern.compile(httpHeaderNameRoleRegex);
-            for (String header : httpHeaders.keySet())
+            for (Map.Entry<String, String> headerEntry : httpHeaders.entrySet())
             {
-                if (StringUtils.isEmpty(httpHeaderRoleValue) || httpHeaderRoleValue.equals(httpHeaders.get(header)))
+                if (StringUtils.isEmpty(httpHeaderRoleValue) || httpHeaderRoleValue.equals(headerEntry.getValue()))
                 {
                     // Create a matcher from the regex and the given header
-                    Matcher matcher = pattern.matcher(header);
+                    Matcher matcher = pattern.matcher(headerEntry.getKey());
                     while (matcher.find())
                     {
                         String role = matcher.group(1);
@@ -454,7 +458,8 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
     }
 
     /**
-     * Gets the regex to use to parse multiple role header names. May return empty string, in which case the application should not attempt to apply role parsing.
+     * Gets the regex to use to parse multiple role header names. May return empty string, in which case the application should not attempt to apply role
+     * parsing.
      *
      * @return multiple headers role name regex
      */
