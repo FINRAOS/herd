@@ -1101,11 +1101,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         assertEquals(1, actualBusinessObjectDefinitions.size());
 
-        for (BusinessObjectDefinition actualBdef : actualBusinessObjectDefinitions)
-        {
-            assertEquals("Test Description. Value should be <30> value should be <40>", actualBdef.getShortDescription());
-            break;
-        }
+        actualBusinessObjectDefinitions.stream().findFirst()
+            .ifPresent(actualBdef -> assertEquals(BDEF_DESCRIPTION_WITH_REMOVED_HTML, actualBdef.getShortDescription()));
     }
 
     @Test
