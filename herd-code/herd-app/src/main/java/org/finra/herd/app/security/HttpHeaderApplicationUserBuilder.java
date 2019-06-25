@@ -59,6 +59,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
     private UserNamespaceAuthorizationHelper userNamespaceAuthorizationHelper;
 
     public static final String HTTP_HEADER_USER_ID = "useridHeader";
+    public static final String HTTP_HEADER_USER_ID_SUFFIX = "useridSuffixHeader";
     public static final String HTTP_HEADER_FIRST_NAME = "firstNameHeader";
     public static final String HTTP_HEADER_LAST_NAME = "lastNameHeader";
     public static final String HTTP_HEADER_EMAIL = "emailHeader";
@@ -134,7 +135,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
         // Build the user in pieces.
         ApplicationUser applicationUser = createNewApplicationUser();
 
-        buildUserId(applicationUser, headerMap, headerNames.get(HTTP_HEADER_USER_ID));
+        buildUserId(applicationUser, headerMap, headerNames.get(HTTP_HEADER_USER_ID), headerNames.get(HTTP_HEADER_USER_ID_SUFFIX));
         buildFirstName(applicationUser, headerMap, headerNames.get(HTTP_HEADER_FIRST_NAME));
         buildLastName(applicationUser, headerMap, headerNames.get(HTTP_HEADER_LAST_NAME));
         buildEmail(applicationUser, headerMap, headerNames.get(HTTP_HEADER_EMAIL));
@@ -168,16 +169,23 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
      *
      * @param applicationUser the application user.
      * @param httpHeaders the HTTP headers.
-     * @param headerName the header name for the user Id.
+     * @param userIdHeaderName the header name for the user Id.
+     * @param userIdSuffixHeaderName  the header name for the user Id suffix
      */
-    protected void buildUserId(ApplicationUser applicationUser, Map<String, String> httpHeaders, String headerName)
+    protected void buildUserId(ApplicationUser applicationUser, Map<String, String> httpHeaders, String userIdHeaderName, String userIdSuffixHeaderName)
     {
-        String userId = getHeaderValueString(headerName, httpHeaders);
+        String userId = getHeaderValueString(userIdHeaderName, httpHeaders);
         if (userId == null)
         {
-            throw new IllegalArgumentException("userId is required. No value for userId was found in the header " + headerName);
+            throw new IllegalArgumentException("userId is required. No value for userId was found in the header " + userIdHeaderName);
         }
 
+        // append the user id suffix if suffix value is configured in the environment
+        String userIdSuffixHeader = getHeaderValueString(userIdSuffixHeaderName, httpHeaders);
+        if (!StringUtils.isEmpty(userIdSuffixHeader))
+        {
+            userId = userId + "@" + userIdSuffixHeader;
+        }
         applicationUser.setUserId(userId);
     }
 
@@ -216,19 +224,29 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
      */
     protected void buildRoles(ApplicationUser applicationUser, Map<String, String> httpHeaders, String headerName)
     {
-        Set<String> roles = new HashSet<>();
-        applicationUser.setRoles(roles);
+        Set<String> rolesFromSingleRoleHeader = new HashSet<>();
 
+        //retrieve roles from single role header
         String rolesHeaderValue = getHeaderValueString(headerName, httpHeaders);
         if (rolesHeaderValue != null)
         {
-            parseRoles(rolesHeaderValue, roles);
+            parseRolesFromSingleHeader(rolesHeaderValue, rolesFromSingleRoleHeader);
+        }
+        //retrieve roles from multiple role headers
+        Set<String> rolesFromMultiRoleHeaders = new HashSet<>();
+        parseRolesFromMultiHeaders(httpHeaders, rolesFromMultiRoleHeaders);
+
+        // we do not allow a single user to have roles from multiple identity providers. so throw an exception here if we detect the roles coming from multiple
+        // sources.
+        if(rolesHeaderValue != null && !rolesFromMultiRoleHeaders.isEmpty()){
+            throw new IllegalArgumentException("single header and multiple headers cannot be used together to retrieve roles");
         }
 
-        /*
-         * If we need to have a mechanism to retrieve roles such that a single header represents a unique role, then the extra code to handle this situation
-         * could be added here.
-         */
+        if(rolesHeaderValue != null){
+            applicationUser.setRoles(rolesFromSingleRoleHeader);
+        } else {
+            applicationUser.setRoles(rolesFromMultiRoleHeaders);
+        }
     }
 
     /**
@@ -236,8 +254,8 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
      * regex group name retrieved from {@link #getHttpHeaderRoleRegex()} and {@link #getHttpHeaderRoleRegexGroupName()}. </p> <p> The regex is matched against
      * the value until no more matches are found. If the regex group name is set (not empty), then the group with the configured name will be extracted from the
      * match and be set as the role. If the regex group name is not set, then the entire match will be used as the role. Each matching role is then added to the
-     * collection of roles supplied. </p> <p> If no regex is configured (regex is empty), then this method does nothing (ie. The app is configured to not use
-     * multiple role header). </p>
+     * collection of roles supplied. </p> <p> If no regex is configured (regex is empty), then this method does nothing (ie. The app is configured to use
+     * single role header). </p>
      *
      * @param value - the string value to parse
      * @param roles - the collection of roles to add the parsed roles to
@@ -245,7 +263,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
      * @see <a href="http://www.regular-expressions.info/named.html">How to use named groups</a>
      * @see Pattern
      */
-    private void parseRoles(String value, Collection<String> roles)
+    private void parseRolesFromSingleHeader(String value, Collection<String> roles)
     {
         String regex = getHttpHeaderRoleRegex();
 
@@ -284,6 +302,45 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
                 {
                     // Add the role to the result
                     roles.add(role);
+                }
+            }
+        }
+    }
+
+    /**
+     * <p> Filters all http request header with configured header value, then parses matched headers to the given collection of roles with multiple headers
+     * regex. </p> <p> The headers value are filtered with the configured value retrieved from {@link #getHttpHeaderRoleValue()} ()}. </p> <p> If no filter value is
+     * configured (value is empty), then all headers will be parsed with role regex. <p> The filtered headers are parsed using the configured regex retrieved
+     * from {@link #getHttpHeaderNameRoleRegex()}. </p> <p> The regex is matched against the header until no more matches are found. </p> <p> If no
+     * regex is configured (regex is empty), then this method does nothing. </p> (ie. The app is configured to use  multiple role headers). </p>
+     *
+     * @param httpHeaders - the HTTP headers given in the current request
+     * @param roles - the collection of roles to add the parsed roles to
+     *
+     * @see <a href="http://www.regular-expressions.info/named.html">How to use named groups</a>
+     * @see Pattern
+     */
+    private void parseRolesFromMultiHeaders(Map<String, String> httpHeaders, Collection<String> roles)
+    {
+        String httpHeaderNameRoleRegex = getHttpHeaderNameRoleRegex();
+        String httpHeaderRoleValue = getHttpHeaderRoleValue();
+
+        // Do nothing if regex is not configured
+        if (StringUtils.isNotBlank(httpHeaderNameRoleRegex))
+        {
+            // Compile the regex
+            Pattern pattern = Pattern.compile(httpHeaderNameRoleRegex);
+            for (String header : httpHeaders.keySet())
+            {
+                if (StringUtils.isEmpty(httpHeaderRoleValue) || httpHeaderRoleValue.equals(httpHeaders.get(header)))
+                {
+                    // Create a matcher from the regex and the given header
+                    Matcher matcher = pattern.matcher(header);
+                    while (matcher.find())
+                    {
+                        String role = matcher.group(1);
+                        roles.add(role);
+                    }
                 }
             }
         }
@@ -394,6 +451,26 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
     private String getHttpHeaderRoleRegex()
     {
         return getProperty(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_REGEX);
+    }
+
+    /**
+     * Gets the regex to use to parse multiple role header names. May return empty string, in which case the application should not attempt to apply role parsing.
+     *
+     * @return multiple headers role name regex
+     */
+    private String getHttpHeaderNameRoleRegex()
+    {
+        return getProperty(ConfigurationValue.SECURITY_HTTP_HEADER_NAME_ROLE_REGEX);
+    }
+
+    /**
+     * Gets the value of a role header names. May return empty string, in which case the application should not attempt to apply role value checking.
+     *
+     * @return multiple headers role value
+     */
+    private String getHttpHeaderRoleValue()
+    {
+        return getProperty(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_VALUE);
     }
 
     /**
