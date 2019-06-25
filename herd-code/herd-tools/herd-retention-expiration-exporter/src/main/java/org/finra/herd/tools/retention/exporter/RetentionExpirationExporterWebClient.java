@@ -23,7 +23,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -93,7 +92,6 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
             }
 
             LOGGER.info(String.format("    HTTP GET URI: %s", request.getURI().toString()));
-            LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(request.getAllHeaders())));
 
             BusinessObjectDefinition businessObjectDefinition = getBusinessObjectDefinition(httpClientOperations.execute(client, request));
 
@@ -153,7 +151,6 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
             request.setEntity(new StringEntity(stringWriter.toString()));
 
             LOGGER.info(String.format("    HTTP POST URI: %s", request.getURI().toString()));
-            LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(request.getAllHeaders())));
             LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", stringWriter.toString()));
 
             BusinessObjectDataSearchResult businessObjectDataSearchResult = getBusinessObjectDataSearchResult(httpClientOperations.execute(client, request));
