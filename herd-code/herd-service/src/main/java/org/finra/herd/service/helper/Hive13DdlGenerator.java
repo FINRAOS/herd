@@ -95,6 +95,11 @@ public class Hive13DdlGenerator extends DdlGenerator
     public static final String TEXT_HIVE_FILE_FORMAT = "TEXTFILE";
 
     /**
+     * Hive file format for JSON files.
+     */
+    public static final String JSON_HIVE_FILE_FORMAT = "JSONFILE";
+
+    /**
      * The regular expression that represents an empty partition in S3, this is because hadoop file system implements directory support in S3 by creating empty
      * files with the "directoryname_$folder$" suffix.
      */
@@ -377,20 +382,20 @@ public class Hive13DdlGenerator extends DdlGenerator
             partitionValues.addAll(businessObjectDataKey.getSubPartitionValues());
 
             // Extract relative partition values.
-            for (int i = 1; i <= matcher.groupCount(); i++)
+            for (int i = 1; i <= matcher.groupCount() - 1; i++)
             {
                 partitionValues.add(matcher.group(i));
             }
 
-            // If we did not match all expected partition values, then this storage file path is not part
-            // of a fully qualified partition (this is an intermediate folder marker) and we ignore it.
+            // Get the matched trailing folder markers and an optional file name.
+            String partitionPathTrailingPart = matcher.group(matcher.groupCount());
+
+            // If we did not match all expected partition values along with the trailing folder markers and an optional file name, then this storage file
+            // path is not part of a fully qualified partition (this is an intermediate folder marker) and we ignore it.
             if (!partitionValues.contains(null))
             {
-                // Get path for this partition by removing trailing "/" plus an optional file name from the relative file path,
-                // or the trailing "_$folder$", which represents an empty partition in S3.
-                String partitionPath =
-                    relativeFilePath.endsWith(S3_EMPTY_PARTITION) ? relativeFilePath.substring(0, relativeFilePath.length() - S3_EMPTY_PARTITION.length()) :
-                        relativeFilePath.replaceAll("\\/[^/]*$", "");
+                // Get path for this partition by removing trailing "/" followed by an optional file name or "_$folder$" which represents an empty folder in S3.
+                String partitionPath = relativeFilePath.substring(0, relativeFilePath.length() - StringUtils.length(partitionPathTrailingPart));
 
                 // Check if we already have that partition discovered - that would happen if partition contains multiple data files.
                 HivePartitionDto hivePartition = linkedHashMap.get(partitionValues);
@@ -450,7 +455,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             sb.append("\\/");   // Add a trailing "/".
             sb.append('|');     // Ann an OR.
             sb.append(REGEX_S3_EMPTY_PARTITION);    // Add a trailing "_$folder$", which represents an empty partition in S3.
-            sb.append(')');     // Close a non-capturing group for folder markers.
+            sb.append(')');     // Close the non-capturing group for folder markers.
             sb.append('|');     // Add an OR.
             sb.append("(?:");   // Start a non-capturing group for "/<column name>=<column value>".
             sb.append("\\/");   // Add a "/".
@@ -461,17 +466,17 @@ public class Hive13DdlGenerator extends DdlGenerator
             sb.append('|');     // Add an OR.
             // For sub-partition folder, we do support partition column names having all underscores replaced with hyphens.
             sb.append(Matcher.quoteReplacement(partitionColumn.getName().replace("_", "-")));
-            sb.append(')');     // Close a non-capturing group for column name.
+            sb.append(')');     // Close the non-capturing group for column name.
             sb.append("=([^/]+)"); // Add a capturing group for a column value.
         }
 
         // Add additional regular expression for the trailing empty folder marker and/or "/" followed by an optional file name.
-        sb.append("(?:");   // Start a non-capturing group for folder markers and an optional file name.
+        sb.append("(");     // Start a capturing group for folder markers and an optional file name.
         sb.append("\\/");   // Add a trailing "/".
         sb.append("[^/]*"); // Add an optional file name.
         sb.append('|');     // Add an OR.
         sb.append(REGEX_S3_EMPTY_PARTITION);    // Add a trailing "_$folder$", which represents an empty partition in S3.
-        sb.append(")");     // Close a non-capturing group for folder markers and an optional file name.
+        sb.append(")");     // Close the capturing group for folder markers and an optional file name.
 
         // Close all non-capturing groups that are still open.
         for (int i = 0; i < 2 * partitionColumns.size(); i++)
@@ -479,7 +484,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             sb.append(')');
         }
 
-        sb.append(')');     // Close a non-capturing group for the entire regex.
+        sb.append(')');     // Close the non-capturing group for the entire regex.
         sb.append('$');
 
         return sb.toString();
@@ -790,6 +795,10 @@ public class Hive13DdlGenerator extends DdlGenerator
         else if (fileFormat.equalsIgnoreCase(FileTypeEntity.ORC_FILE_TYPE))
         {
             hiveFileFormat = ORC_HIVE_FILE_FORMAT;
+        }
+        else if (fileFormat.equalsIgnoreCase(FileTypeEntity.JSON_FILE_TYPE))
+        {
+            hiveFileFormat = JSON_HIVE_FILE_FORMAT;
         }
         else
         {

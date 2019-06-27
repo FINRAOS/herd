@@ -21,7 +21,6 @@ import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
 
@@ -90,7 +89,6 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
             }
 
             LOGGER.info(String.format("    HTTP POST URI: %s", request.getURI().toString()));
-            LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(request.getAllHeaders())));
 
             BusinessObjectData businessObjectData = destroyBusinessObjectData(httpClientOperations.execute(client, request));
 
