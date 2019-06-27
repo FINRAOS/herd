@@ -55,7 +55,7 @@ private[sql] class HerdFileIndex(
         .filter(p => cachedAllFiles.get(p.path).isEmpty)
         .map(_.path)
 
-      cachedAllFiles ++= bulkListLeafFiles(pathsToFetch)
+      cachedAllFiles ++= bulkListLeafFiles(pathsToFetch, formatFileType)
 
       prunedPartitions.map {
         case PartitionPath(values, path) =>

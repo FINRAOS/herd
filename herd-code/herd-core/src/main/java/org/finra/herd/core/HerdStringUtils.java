@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;
@@ -58,7 +59,7 @@ public class HerdStringUtils
         // Parse out only html tags, truncate and return
         // Do a partial HTML parse just in case there are some elements that don't have ending tags or the like
         String toParse = description != null ? description : "";
-        return StringUtils.left(Jsoup.parseBodyFragment(toParse).body().text(), shortDescMaxLength);
+        return StringUtils.left(stripHtml(toParse), shortDescMaxLength);
     }
 
     /**
@@ -71,9 +72,11 @@ public class HerdStringUtils
      */
     public static String stripHtml(String fragment, String... whitelistTags)
     {
+        // Unescape HTML.
+        String unEscapedFragment = StringEscapeUtils.unescapeHtml4(fragment);
 
         // Parse out html tags except those from a given list of whitelist tags
-        Document dirty = Jsoup.parseBodyFragment(fragment);
+        Document dirty = Jsoup.parseBodyFragment(unEscapedFragment);
 
         Whitelist whitelist = new Whitelist();
 

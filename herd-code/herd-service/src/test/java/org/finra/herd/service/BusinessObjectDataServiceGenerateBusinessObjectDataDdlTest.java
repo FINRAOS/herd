@@ -1632,6 +1632,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         businessObjectFormatFileTypeMap.put(FileTypeEntity.ORC_FILE_TYPE, Hive13DdlGenerator.ORC_HIVE_FILE_FORMAT);
         businessObjectFormatFileTypeMap.put(FileTypeEntity.PARQUET_FILE_TYPE, Hive13DdlGenerator.PARQUET_HIVE_FILE_FORMAT);
         businessObjectFormatFileTypeMap.put(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT);
+        businessObjectFormatFileTypeMap.put(FileTypeEntity.JSON_FILE_TYPE, Hive13DdlGenerator.JSON_HIVE_FILE_FORMAT);
 
         for (String businessObjectFormatFileType : businessObjectFormatFileTypeMap.keySet())
         {
