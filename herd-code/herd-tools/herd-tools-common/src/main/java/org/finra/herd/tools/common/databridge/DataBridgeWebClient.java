@@ -27,7 +27,6 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -186,7 +185,6 @@ public abstract class DataBridgeWebClient
             post.setEntity(new StringEntity(sw.toString()));
 
             LOGGER.info(String.format("    HTTP POST URI: %s", post.getURI().toString()));
-            LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(post.getAllHeaders())));
             LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", sw.toString()));
 
             // getBusinessObjectDataStorageFilesCreateResponse() might return a null. That happens when the web client gets status code 200 back from
@@ -258,7 +256,6 @@ public abstract class DataBridgeWebClient
             }
 
             LOGGER.info(String.format("    HTTP GET URI: %s", request.getURI().toString()));
-            LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(request.getAllHeaders())));
 
             storage = getStorage(httpClientOperations.execute(client, request));
         }
@@ -361,7 +358,6 @@ public abstract class DataBridgeWebClient
             post.setEntity(new StringEntity(sw.toString()));
 
             LOGGER.info(String.format("    HTTP POST URI: %s", post.getURI().toString()));
-            LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(post.getAllHeaders())));
             LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", sw.toString()));
 
             businessObjectData =
@@ -436,7 +432,6 @@ public abstract class DataBridgeWebClient
             httpPut.setEntity(new StringEntity(sw.toString()));
 
             LOGGER.info(String.format("    HTTP POST URI: %s", httpPut.getURI().toString()));
-            LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(httpPut.getAllHeaders())));
             LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", sw.toString()));
 
             businessObjectDataStatusUpdateResponse = getBusinessObjectDataStatusUpdateResponse(httpClientOperations.execute(client, httpPut));
@@ -571,7 +566,6 @@ public abstract class DataBridgeWebClient
             }
 
             LOGGER.info(String.format("    HTTP GET URI: %s", request.getURI().toString()));
-            LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(request.getAllHeaders())));
 
             s3KeyPrefixInformation = getS3KeyPrefixInformation(httpClientOperations.execute(client, request));
         }

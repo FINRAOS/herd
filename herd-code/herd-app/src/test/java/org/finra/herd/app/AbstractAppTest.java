@@ -122,6 +122,17 @@ public abstract class AbstractAppTest extends AbstractRestTest
         return defaultEnvironmentVariables;
     }
 
+    protected Map<String, Object> getDefaultSecurityEnvironmentVariablesWithMultiHeaderRoles()
+    {
+        Map<String, Object> defaultEnvironmentVariables = new HashMap<>();
+        defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAMES.getKey(), "useridHeader=userId|firstNameHeader=firstName" +
+            "|lastNameHeader=lastName|emailHeader=email|sessionInitTimeHeader=sessionInitTime|useridSuffixHeader=useridSuffix");
+        defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAME_ROLE_REGEX.getKey(), "priv(.+)");
+        defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_VALUE.getKey(), "valid");
+        defaultEnvironmentVariables.put(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED.getKey(), "true");
+        return defaultEnvironmentVariables;
+    }
+
     /**
      * Delegates to validateHttpHeaderApplicationUser(String, String, String, String, Set, String) with a single role.
      *

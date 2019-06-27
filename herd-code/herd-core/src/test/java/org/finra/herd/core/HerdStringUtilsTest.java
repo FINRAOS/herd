@@ -79,6 +79,20 @@ public class HerdStringUtilsTest extends AbstractCoreTest
     }
 
     @Test
+    public void testStripHtmlDirtyFragmentWithEscapedHtml()
+    {
+        String result = HerdStringUtils.stripHtml("&lt;li&gt;fragment with escaped &lt;b&gt;html&lt;/b&gt;&lt;/li&gt;");
+        assertEquals("fragment with escaped html", result);
+    }
+
+    @Test
+    public void testStripHtmlDirtyFragmentWithEscapedHtmlAndUnrecognizedEntity()
+    {
+        String result = HerdStringUtils.stripHtml("&lt;li&gt;fragment with escaped &lt;b&gt;html&lt;/b&gt;&lt;/li&gt; & unrecognized entity &zzz;x");
+        assertEquals("fragment with escaped html &amp; unrecognized entity &amp;zzz;x", result);
+    }
+
+    @Test
     public void testStripHtmlDirtyFragmentWithWhitelist()
     {
         String result = HerdStringUtils.stripHtml("fragment<li><b> with <hlt>no</hlt></b> html</li>", "<hlt>");

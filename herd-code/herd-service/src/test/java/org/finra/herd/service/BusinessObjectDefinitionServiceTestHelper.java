@@ -20,12 +20,12 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jsoup.Jsoup;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.DataProviderDaoTestHelper;
 import org.finra.herd.dao.NamespaceDaoTestHelper;
 import org.finra.herd.model.api.xml.Attribute;
@@ -84,9 +84,15 @@ public class BusinessObjectDefinitionServiceTestHelper
         businessObjectDefinition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
         businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
         businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
-        String toParse = businessObjectDefinitionEntity.getDescription() != null ? businessObjectDefinitionEntity.getDescription() : "";
-        businessObjectDefinition.setShortDescription(StringUtils.left(Jsoup.parseBodyFragment(toParse).body().text(),
-            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class)));
+        businessObjectDefinition.setShortDescription(StringUtils
+            .left(businessObjectDefinitionEntity.getDescription() != null ? businessObjectDefinitionEntity.getDescription() : "",
+                configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class)));
+
+        // Update expected short descriptions if HTML is present.
+        if (StringUtils.equals(businessObjectDefinition.getShortDescription(), AbstractDaoTest.BDEF_DESCRIPTION_WITH_HTML_AND_CARET_VALUES))
+        {
+            businessObjectDefinition.setShortDescription(AbstractDaoTest.BDEF_DESCRIPTION_WITH_REMOVED_HTML);
+        }
 
         return businessObjectDefinition;
     }

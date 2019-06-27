@@ -108,12 +108,12 @@ private[sql] abstract class HerdFileIndexBase(
    * @param paths list of paths
    * @return The list of files under herd paths
    */
-  protected def bulkListLeafFiles(paths: Seq[Path]): Seq[(Path, Array[FileStatus])] = {
+  protected def bulkListLeafFiles(paths: Seq[Path], formatFileType: String): Seq[(Path, Array[FileStatus])] = {
     val localApiFactory = api
     val fileStatuses = if (paths.size < sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold) {
       listS3KeyPrefixes(localApiFactory(), paths.map(_.toString))
         .map {
-          case (path, s3KeyPrefixes) => (path, getAllFilesUnderS3KeyPrefixes(hadoopConf, s3KeyPrefixes).toArray)
+          case (path, s3KeyPrefixes) => (path, getAllFilesUnderS3KeyPrefixes(hadoopConf, s3KeyPrefixes, formatFileType).toArray)
         }
         .map {
           case (path, statuses) => (path, statuses.map { s => (s.getPath.toString, s.getLen) })
@@ -128,7 +128,7 @@ private[sql] abstract class HerdFileIndexBase(
         .parallelize(paths.map(_.toString), numParallelism)
         .mapPartitions { pathStrings => listS3KeyPrefixes(localApiFactory(), pathStrings.toList).iterator }
         .map {
-          case (path, s3KeyPrefixes) => (path, getAllFilesUnderS3KeyPrefixes(serializableConfiguration.value, s3KeyPrefixes).toArray)
+          case (path, s3KeyPrefixes) => (path, getAllFilesUnderS3KeyPrefixes(serializableConfiguration.value, s3KeyPrefixes, formatFileType).toArray)
         }
         .map {
           case (path, statuses) => (path, statuses.map { s => (s.getPath.toString, s.getLen) })
@@ -279,7 +279,7 @@ private object HerdFileIndexBase extends Logging {
    * @param s3KeyPrefixes all s3 key prefixes
    * @return list of files
    */
-  private def getAllFilesUnderS3KeyPrefixes(hadoopConf: Configuration, s3KeyPrefixes: Seq[String]): Seq[FileStatus] = {
+  private def getAllFilesUnderS3KeyPrefixes(hadoopConf: Configuration, s3KeyPrefixes: Seq[String], formatFileType: String): Seq[FileStatus] = {
     s3KeyPrefixes.flatMap {
       s3KeyPrefix => {
         val s3Path = new Path(s3KeyPrefix)
@@ -288,7 +288,12 @@ private object HerdFileIndexBase extends Logging {
         var fileStatusList = new ArrayBuffer[FileStatus]()
         // Find all files under each directory
         while (iterator.hasNext) {
-          fileStatusList += iterator.next()
+          val file = iterator.next()
+          // ignore non-parquet files when reading a DataFrame in parquet format
+          if (!formatFileType.equalsIgnoreCase("parquet") || file.getPath.toString.contains(".parquet")) {
+            fileStatusList += file
+          }
+
         }
         fileStatusList.toList
       }

@@ -21,13 +21,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.Charsets
 import com.google.common.io.Resources
 import org.apache.commons.io.FileUtils
-import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
-import org.apache.spark.sql.types.{DateType, IntegerType, StringType, StructType}
+import org.apache.spark.sql.{types, _}
+import org.apache.spark.sql.types._
+import org.junit.Assert.assertEquals
 import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
 import scala.collection.JavaConverters._
 
 import org.finra.herd.sdk.model._
-
 
 private class BaseHerdApi(testCase: String, partitions: Map[(String, String), String]) extends HerdApi with Serializable {
   private val mapper = new ObjectMapper()
@@ -264,6 +264,21 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
   }
 
+  private val EXPECTED_COMPLEX_ROWS = {
+    val fmt = new SimpleDateFormat("yyyy-MM-dd")
+
+    Seq(
+      Row(new java.sql.Date(fmt.parse("2017-01-01").getTime), "A", "row1", 100, Map("1"->"11")),
+      Row(new java.sql.Date(fmt.parse("2017-01-01").getTime), "A", "row2", 200, Map("2"->"22")),
+      Row(new java.sql.Date(fmt.parse("2017-01-01").getTime), "B", "row3", 300, Map("3"->"33")),
+      Row(new java.sql.Date(fmt.parse("2017-01-01").getTime), "B", "row4", 400, Map("4"->"44")),
+      Row(new java.sql.Date(fmt.parse("2017-01-02").getTime), "A", "row5", 500, Map("5"->"55")),
+      Row(new java.sql.Date(fmt.parse("2017-01-02").getTime), "A", "row6", 600, Map("6"->"66")),
+      Row(new java.sql.Date(fmt.parse("2017-01-02").getTime), "B", "row7", 700, Map("7"->"77")),
+      Row(new java.sql.Date(fmt.parse("2017-01-02").getTime), "B", "row8", 800, Map("8"->"88"))
+    )
+  }
+
   private val ORC_EXPECTED_ROWS = EXPECTED_ROWS.map(f => Row.fromSeq(f.toSeq :+ f(0)))
 
   private val EXPECTED_SCHEMA = new StructType()
@@ -271,6 +286,13 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     .add("SYMBOL", StringType)
     .add("COL1", StringType)
     .add("COL2", IntegerType)
+
+  private val EXPECTED_COMPLEX_SCHEMA = new StructType()
+    .add("SDATE", DateType)
+    .add("SYMBOL", StringType)
+    .add("COL1", StringType)
+    .add("COL2", IntegerType)
+    .add("COL3", MapType(StringType, StringType))
 
   private def getDataFrame(api: HerdApi, parameters: Map[String, String]): DataFrame = {
     val source = new DefaultSource((_, _, _) => api)
@@ -427,6 +449,61 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
 
     writeDataFrame(new BaseHerdApi("test-case-6", parts), params, df)
+
+  }
+
+  test("save complex dataType dataframe") {
+    FileUtils.deleteDirectory(new java.io.File("./test-output"))
+
+    val df = spark.createDataFrame(EXPECTED_COMPLEX_ROWS.asJava, EXPECTED_COMPLEX_SCHEMA).filter($"sdate" === "2017-01-01")
+
+    val params = defaultParams + ("partitionValue" -> "2017-01-01")
+
+    val parts = Map(
+      ("2017-01-01", "") -> "businessObjectData1.json"
+    )
+
+    writeDataFrame(new BaseHerdApi("test-case-6", parts), params, df)
+  }
+
+  test("conversion from Hive to Spark complex dataType") {
+    val parts = Map(
+      ("2017-01-01", "") -> "businessObjectData1.json"
+    )
+    val api = new BaseHerdApi("test-case-6", parts)
+    val source = new DefaultSource((_, _, _) => api)
+
+    val s1 = new SchemaColumn
+    s1.setType("map<double,array<bigint>>")
+    assertEquals("MapType(DoubleType,ArrayType(LongType,true),true)", source.toComplexSparkType(s1).toString)
+
+    val s2 = new SchemaColumn
+    s2.setType("struct<s:string,f:float,m:map<double,array<bigint>>>")
+    assertEquals("StructType(StructField(s,StringType,true)," +
+      " StructField(f,FloatType,true)," +
+      " StructField(m,MapType(DoubleType,ArrayType(LongType,true),true),true))",
+      source.toComplexSparkType(s2).toString)
+
+  }
+
+  test("conversion from Spark to Hive complex dataType") {
+    val parts = Map(
+      ("2017-01-01", "") -> "businessObjectData1.json"
+    )
+    val api = new BaseHerdApi("test-case-6", parts)
+    val source = new DefaultSource((_, _, _) => api)
+
+    val s = new StructField("mapCol", MapType(DoubleType, ArrayType(LongType, true), true), true)
+    assertEquals("map<double,array<bigint>>", source.toComplexHerdType(s).toString)
+
+    val s1 = StructField("structCol", StructType(List (StructField("s", StringType, true),
+                                             StructField("f", FloatType, true),
+                                             StructField("m", MapType(DoubleType, ArrayType(LongType, true), true), true)
+                                            )
+                                       )
+                        )
+    assertEquals("struct<s:string,f:float,m:map<double,array<bigint>>>", source.toComplexHerdType(s1).toString)
+
   }
 
   test("metadata only query") {

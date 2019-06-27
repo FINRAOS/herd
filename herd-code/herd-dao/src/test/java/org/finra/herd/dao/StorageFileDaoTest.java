@@ -188,9 +188,30 @@ public class StorageFileDaoTest extends AbstractDaoTest
     @Test
     public void testGetStoragePathsByStorageUnitIds() throws Exception
     {
+        // make it two pages
+        validateGetStoragePathsByStorageUnitIds(LOCAL_FILES.size() / 2);
+    }
+
+    @Test
+    public void testGetStoragePathsByStorageUnitIdsSinglePage() throws Exception
+    {
+        // make number of storage files less than the page size, so there only be 1 page
+        validateGetStoragePathsByStorageUnitIds(LOCAL_FILES.size() + 1);
+    }
+
+    @Test
+    public void testGetStoragePathsByStorageUnitIdsPageSizeOne() throws Exception
+    {
+        // Retrieve multiple pages since the page size is 1
+        validateGetStoragePathsByStorageUnitIds(1);
+
+    }
+
+    private void validateGetStoragePathsByStorageUnitIds(long pageSize) throws Exception
+    {
         // Override configuration.
         Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.STORAGE_FILE_PATHS_QUERY_PAGINATION_SIZE.getKey(), LOCAL_FILES.size() / 2);
+        overrideMap.put(ConfigurationValue.STORAGE_FILE_PATHS_QUERY_PAGINATION_SIZE.getKey(), pageSize);
         modifyPropertySourceInEnvironment(overrideMap);
 
         try
