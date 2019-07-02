@@ -174,18 +174,19 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImpl implements Busin
             .validateRegisteredS3Files(businessObjectDataRestoreDto.getStorageFiles(), actualS3Files, businessObjectDataRestoreDto.getStorageName(),
                 businessObjectDataRestoreDto.getBusinessObjectDataKey());
 
-        // Build a list of files to check for restore status by selection only objects that are currently archived in Glacier or DeepArchive (have Glacier storage class).
-        List<S3ObjectSummary> s3Files = new ArrayList<>();
+        // Build a list of files to check for restore status by selection only objects that are currently archived in Glacier or DeepArchive storage class.
+        List<S3ObjectSummary> glacierS3Files = new ArrayList<>();
         for (S3ObjectSummary s3ObjectSummary : actualS3Files)
         {
-            if (StorageClass.Glacier.toString().equals(s3ObjectSummary.getStorageClass()) || StorageClass.DeepArchive.toString().equals(s3ObjectSummary.getStorageClass()))
+            if (StorageClass.Glacier.toString().equals(s3ObjectSummary.getStorageClass()) ||
+                StorageClass.DeepArchive.toString().equals(s3ObjectSummary.getStorageClass()))
             {
-                s3Files.add(s3ObjectSummary);
+                glacierS3Files.add(s3ObjectSummary);
             }
         }
 
         // Validate that all S3 files are now restored.
-        s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(s3Files)));
+        s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(glacierS3Files)));
         s3Service.validateGlacierS3FilesRestored(s3FileTransferRequestParamsDto);
     }
 
