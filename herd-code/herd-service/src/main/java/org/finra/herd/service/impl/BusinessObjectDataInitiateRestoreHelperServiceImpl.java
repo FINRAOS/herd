@@ -212,17 +212,19 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
                 .validateRegisteredS3Files(businessObjectDataRestoreDto.getStorageFiles(), actualS3Files, businessObjectDataRestoreDto.getStorageName(),
                     businessObjectDataRestoreDto.getBusinessObjectDataKey());
 
-            // Validate that all files to be restored are currently archived in Glacier (have Glacier storage class).
-            // Fail on any S3 file that does not have Glacier storage class. This can happen when request to restore business object
+            // Validate that all files to be restored are currently archived in Glacier or DeepArchive storage class.
+            // Fail on any S3 file that does not have Glacier or DeepArchive storage class. This can happen when request to restore business object
             // data is posted after business object data archiving transition is executed (relative S3 objects get tagged),
-            // but before AWS actually transitions the S3 files to Glacier (changes S3 object storage class to Glacier).
+            // but before AWS actually transitions the S3 files to Glacier or DeepArchive (changes S3 object storage class to Glacier or DeepArchive).
             for (S3ObjectSummary s3ObjectSummary : actualS3Files)
             {
-                if (!StringUtils.equals(s3ObjectSummary.getStorageClass(), StorageClass.Glacier.toString()))
+                if (!(StringUtils.equals(s3ObjectSummary.getStorageClass(), StorageClass.Glacier.toString()) ||
+                    StringUtils.equals(s3ObjectSummary.getStorageClass(), StorageClass.DeepArchive.toString())))
                 {
                     throw new IllegalArgumentException(String
-                        .format("S3 file \"%s\" is not archived (found %s storage class when expecting %s). S3 Bucket Name: \"%s\"", s3ObjectSummary.getKey(),
-                            s3ObjectSummary.getStorageClass(), StorageClass.Glacier.toString(), s3FileTransferRequestParamsDto.getS3BucketName()));
+                        .format("S3 file \"%s\" is not archived (found %s storage class when expecting %s or %s). S3 Bucket Name: \"%s\"",
+                            s3ObjectSummary.getKey(), s3ObjectSummary.getStorageClass(), StorageClass.Glacier.toString(), StorageClass.DeepArchive.toString(),
+                            s3FileTransferRequestParamsDto.getS3BucketName()));
                 }
             }
 

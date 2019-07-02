@@ -166,17 +166,18 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
                 businessObjectDataRestoreDto.getBusinessObjectDataKey());
 
         // Build a list of files to expire by selection only objects that have Glacier storage class.
-        List<S3ObjectSummary> glacierS3Files = new ArrayList<>();
+        List<S3ObjectSummary> s3Files = new ArrayList<>();
         for (S3ObjectSummary s3ObjectSummary : actualS3Files)
         {
-            if (StorageClass.Glacier.toString().equals(s3ObjectSummary.getStorageClass()))
+            if (StorageClass.Glacier.toString().equals(s3ObjectSummary.getStorageClass()) ||
+                StorageClass.DeepArchive.toString().equals(s3ObjectSummary.getStorageClass()))
             {
-                glacierS3Files.add(s3ObjectSummary);
+                s3Files.add(s3ObjectSummary);
             }
         }
 
         // Set a list of files to expire.
-        s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(glacierS3Files)));
+        s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(s3Files)));
 
         // To expire the restored S3 objects, initiate restore requests with expiration set to 1 day.
         s3Service.restoreObjects(s3FileTransferRequestParamsDto, 1, null);
