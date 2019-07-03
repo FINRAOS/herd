@@ -621,6 +621,12 @@ public class S3DaoImpl implements S3Dao
                     s3Client.shutdown();
                 }
             }
+            catch (AmazonS3Exception amazonS3Exception)
+            {
+                throw new IllegalStateException(String
+                    .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(),
+                        amazonS3Exception.getMessage()));
+            }
             catch (Exception e)
             {
                 throw new IllegalStateException(String
