@@ -233,7 +233,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             catch (IllegalArgumentException e)
             {
                 assertEquals(String
-                    .format("Archived Glacier S3 file \"%s/%s\" is not restored. " + "StorageClass {GLACIER}, OngoingRestore flag {true}, S3 bucket name {%s}",
+                    .format("Archived S3 file \"%s/%s\" is not restored. " + "StorageClass {GLACIER}, OngoingRestore flag {true}, S3 bucket name {%s}",
                         TEST_S3_KEY_PREFIX, LOCAL_FILE, S3_BUCKET_NAME), e.getMessage());
             }
 
