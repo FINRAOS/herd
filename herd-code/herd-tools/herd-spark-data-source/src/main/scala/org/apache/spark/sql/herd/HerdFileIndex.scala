@@ -290,10 +290,12 @@ private object HerdFileIndexBase extends Logging {
         while (iterator.hasNext) {
           val file = iterator.next()
           // ignore non-parquet files when reading a DataFrame in parquet format
-          if (!formatFileType.equalsIgnoreCase("parquet") || file.getPath.toString.contains(".parquet")) {
+          if (
+            (!formatFileType.equalsIgnoreCase("parquet") && !formatFileType.equalsIgnoreCase("orc")) ||
+            (formatFileType.equalsIgnoreCase("parquet") && file.getPath.toString.toLowerCase.endsWith(".parquet")) ||
+            (formatFileType.equalsIgnoreCase("orc") && file.getPath.toString.toLowerCase.endsWith(".orc"))) {
             fileStatusList += file
           }
-
         }
         fileStatusList.toList
       }
