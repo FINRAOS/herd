@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao.impl;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Matchers.any;
@@ -186,6 +187,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         try
         {
             s3DaoImpl.restoreObjects(s3FileTransferRequestParamsDto, EXPIRATION_IN_DAYS, Tier.Expedited.toString());
+            fail();
         }
         catch (IllegalArgumentException e)
         {
