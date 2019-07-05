@@ -180,7 +180,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
         when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
 
-        doThrow(new IllegalArgumentException("Retrieval option is not supported by this storage class")).when(s3Operations)
+        doThrow(new AmazonServiceException("Retrieval option is not supported by this storage class")).when(s3Operations)
             .restoreObject(any(RestoreObjectRequest.class), any(AmazonS3.class));
 
         s3DaoImpl.restoreObjects(s3FileTransferRequestParamsDto, EXPIRATION_IN_DAYS, Tier.Expedited.toString());
