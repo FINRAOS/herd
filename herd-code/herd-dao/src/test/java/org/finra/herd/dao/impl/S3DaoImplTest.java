@@ -152,7 +152,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         verifyNoMoreInteractionsHelper();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testRestoreObjectsInDeepArchiveWithExpeditedArchiveRetrievalOption()
     {
         List<File> files = Collections.singletonList(new File(TEST_FILE));
@@ -183,7 +183,16 @@ public class S3DaoImplTest extends AbstractDaoTest
         doThrow(new AmazonServiceException("Retrieval option is not supported by this storage class")).when(s3Operations)
             .restoreObject(any(RestoreObjectRequest.class), any(AmazonS3.class));
 
-        s3DaoImpl.restoreObjects(s3FileTransferRequestParamsDto, EXPIRATION_IN_DAYS, Tier.Expedited.toString());
+        try
+        {
+            s3DaoImpl.restoreObjects(s3FileTransferRequestParamsDto, EXPIRATION_IN_DAYS, Tier.Expedited.toString());
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
+                    "Reason: Retrieval option is not supported by this storage class (Service: null; Status Code: 0; Error Code: null; Request ID: null)",
+                TEST_FILE, S3_BUCKET_NAME), e.getMessage());
+        }
     }
 
     @Test
