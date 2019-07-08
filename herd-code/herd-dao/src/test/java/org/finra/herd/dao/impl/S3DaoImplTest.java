@@ -15,10 +15,12 @@
 */
 package org.finra.herd.dao.impl;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -32,7 +34,9 @@ import java.util.List;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.retry.RetryPolicy;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.GetObjectTaggingRequest;
 import com.amazonaws.services.s3.model.GetObjectTaggingResult;
@@ -44,6 +48,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.SetObjectTaggingRequest;
 import com.amazonaws.services.s3.model.SetObjectTaggingResult;
+import com.amazonaws.services.s3.model.StorageClass;
 import com.amazonaws.services.s3.model.Tag;
 import com.amazonaws.services.s3.model.Tier;
 import com.amazonaws.services.s3.model.VersionListing;
@@ -146,6 +151,50 @@ public class S3DaoImplTest extends AbstractDaoTest
         verify(s3Operations).listVersions(any(ListVersionsRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).deleteObjects(any(DeleteObjectsRequest.class), any(AmazonS3Client.class));
         verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testRestoreObjectsInDeepArchiveWithExpeditedArchiveRetrievalOption()
+    {
+        List<File> files = Collections.singletonList(new File(TEST_FILE));
+
+        // Create an S3 file transfer request parameters DTO to access S3 objects.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX);
+        s3FileTransferRequestParamsDto.setFiles(files);
+
+        // Create a retry policy.
+        RetryPolicy retryPolicy =
+            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
+
+        // Create an Object Metadata with DeepArchive storage class.
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setOngoingRestore(false);
+        objectMetadata.setHeader(Headers.STORAGE_CLASS, StorageClass.DeepArchive);
+
+        ArgumentCaptor<AmazonS3Client> s3ClientCaptor = ArgumentCaptor.forClass(AmazonS3Client.class);
+        ArgumentCaptor<String> s3BucketNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+
+        // Mock the external calls.
+        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
+
+        doThrow(new AmazonServiceException("Retrieval option is not supported by this storage class")).when(s3Operations)
+            .restoreObject(any(RestoreObjectRequest.class), any(AmazonS3.class));
+
+        try
+        {
+            s3DaoImpl.restoreObjects(s3FileTransferRequestParamsDto, EXPIRATION_IN_DAYS, Tier.Expedited.toString());
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
+                    "Reason: Retrieval option is not supported by this storage class (Service: null; Status Code: 0; Error Code: null; Request ID: null)",
+                TEST_FILE, S3_BUCKET_NAME), e.getMessage());
+        }
     }
 
     @Test
@@ -338,29 +387,39 @@ public class S3DaoImplTest extends AbstractDaoTest
 
     @Test
     public void testRestoreObjectsBulkArchiveRetrievalOption() {
-        runRestoreObjects(Tier.Bulk.toString());
+        runRestoreObjects(Tier.Bulk.toString(), null);
     }
 
     @Test
     public void testRestoreObjectsStandardArchiveRetrievalOption() {
-        runRestoreObjects(Tier.Standard.toString());
+        runRestoreObjects(Tier.Standard.toString(), null);
     }
 
     @Test
     public void testRestoreObjectsExpeditedArchiveRetrievalOption() {
-        runRestoreObjects(Tier.Expedited.toString());
+        runRestoreObjects(Tier.Expedited.toString(), null);
     }
 
     @Test
     public void testRestoreObjectsNullArchiveRetrievalOption() {
-        runRestoreObjects(null);
+        runRestoreObjects(null, null);
+    }
+
+    @Test
+    public void testRestoreObjectsInDeepArchiveNullArchiveRetrievalOption() {
+        runRestoreObjects(null, StorageClass.DeepArchive);
+    }
+
+    @Test
+    public void testRestoreObjectsInDeepArchiveBulkArchiveRetrievalOption() {
+        runRestoreObjects(Tier.Bulk.toString(), StorageClass.DeepArchive);
     }
 
     /**
      * Run restore objects method
      * @param archiveRetrievalOption the archive retrieval option
      */
-    private void runRestoreObjects(String archiveRetrievalOption)
+    private void runRestoreObjects(String archiveRetrievalOption, StorageClass storageClass)
     {
         List<File> files = Collections.singletonList(new File(TEST_FILE));
 
@@ -377,6 +436,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Create an Object Metadata
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setOngoingRestore(false);
+        objectMetadata.setHeader(Headers.STORAGE_CLASS, storageClass);
 
         ArgumentCaptor<AmazonS3Client> s3ClientCaptor = ArgumentCaptor.forClass(AmazonS3Client.class);
         ArgumentCaptor<String> s3BucketNameCaptor = ArgumentCaptor.forClass(String.class);
