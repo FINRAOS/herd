@@ -286,12 +286,12 @@ private object HerdFileIndexBase extends Logging {
         val fs = s3Path.getFileSystem(hadoopConf)
         var iterator = fs.listFiles(s3Path, true)
         var fileStatusList = new ArrayBuffer[FileStatus]()
-        val committedRegex = new Regex("(/_committed_[0-9]*$)")
+
         // Find all files under each directory
         while (iterator.hasNext) {
           val file = iterator.next()
           // ignore _committed_ file
-          if (!committedRegex.findAllIn(file.getPath.toString).hasNext) {
+          if (!file.getPath.getName.matches("^_committed_.*$")) {
             fileStatusList += file
           }
         }
