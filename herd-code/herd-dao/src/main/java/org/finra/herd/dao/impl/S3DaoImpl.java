@@ -623,9 +623,18 @@ public class S3DaoImpl implements S3Dao
             }
             catch (Exception e)
             {
-                throw new IllegalStateException(String
-                    .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(), e.getMessage()),
-                    e);
+                if (StringUtils.contains(e.getMessage(), "Retrieval option is not supported by this storage class"))
+                {
+                    throw new IllegalArgumentException(String
+                        .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(),
+                            e.getMessage()), e);
+                }
+                else
+                {
+                    throw new IllegalStateException(String
+                        .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(),
+                            e.getMessage()), e);
+                }
             }
         }
     }
@@ -838,7 +847,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public void validateGlacierS3FilesRestored(S3FileTransferRequestParamsDto params) throws RuntimeException
     {
-        LOGGER.info("Checking for already restored Glacier storage class objects... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}",
+        LOGGER.info("Checking for already restored Glacier or DeepArchive storage class objects... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}",
             params.getS3KeyPrefix(), params.getS3BucketName(), params.getFiles().size());
 
         if (!CollectionUtils.isEmpty(params.getFiles()))
@@ -862,7 +871,7 @@ public class S3DaoImpl implements S3Dao
                         if (BooleanUtils.isNotFalse(objectMetadata.getOngoingRestore()))
                         {
                             throw new IllegalArgumentException(String
-                                .format("Archived Glacier S3 file \"%s\" is not restored. StorageClass {%s}, OngoingRestore flag {%s}, S3 bucket name {%s}",
+                                .format("Archived S3 file \"%s\" is not restored. StorageClass {%s}, OngoingRestore flag {%s}, S3 bucket name {%s}",
                                     key, objectMetadata.getStorageClass(), objectMetadata.getOngoingRestore(), params.getS3BucketName()));
                         }
                     }

@@ -688,10 +688,11 @@ public class MockS3OperationsImpl implements S3Operations
             // Get object metadata.
             ObjectMetadata objectMetadata = mockS3Object.getObjectMetadata();
 
-            // Fail if the object is not in Glacier.
-            if (!StorageClass.Glacier.toString().equals(objectMetadata.getStorageClass()))
+            // Fail if the object is not in Glacier or DeepArchive.
+            if (!(StorageClass.Glacier.toString().equals(objectMetadata.getStorageClass()) ||
+                StorageClass.DeepArchive.toString().equals(objectMetadata.getStorageClass())))
             {
-                AmazonServiceException amazonServiceException = new AmazonServiceException("object is not in Glacier");
+                AmazonServiceException amazonServiceException = new AmazonServiceException("object is not in Glacier or DeepArchive");
                 throw amazonServiceException;
             }
 
