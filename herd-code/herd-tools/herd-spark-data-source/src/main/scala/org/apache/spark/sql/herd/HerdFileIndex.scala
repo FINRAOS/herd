@@ -286,14 +286,14 @@ private object HerdFileIndexBase extends Logging {
         val fs = s3Path.getFileSystem(hadoopConf)
         var iterator = fs.listFiles(s3Path, true)
         var fileStatusList = new ArrayBuffer[FileStatus]()
+
         // Find all files under each directory
         while (iterator.hasNext) {
           val file = iterator.next()
-          // ignore non-parquet files when reading a DataFrame in parquet format
-          if (!formatFileType.equalsIgnoreCase("parquet") || file.getPath.toString.contains(".parquet")) {
+          // ignore _committed_ file
+          if (!file.getPath.getName.matches("^_committed_.*$")) {
             fileStatusList += file
           }
-
         }
         fileStatusList.toList
       }

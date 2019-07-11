@@ -2378,7 +2378,7 @@ public class S3DaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testRestoreObjectsNonGlacierObject()
+    public void testRestoreObjectsNonGlacierNonDeepArchiveObject()
     {
         // Put a 1 byte non-Glacier storage class file in S3.
         ObjectMetadata metadata = new ObjectMetadata();
@@ -2400,7 +2400,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                    "Reason: object is not in Glacier (Service: null; Status Code: 0; Error Code: null; Request ID: null)", TARGET_S3_KEY,
+                    "Reason: object is not in Glacier or DeepArchive (Service: null; Status Code: 0; Error Code: null; Request ID: null)", TARGET_S3_KEY,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -3107,7 +3107,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String
-                .format("Archived Glacier S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {true}, S3 bucket name {%s}",
+                .format("Archived S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {true}, S3 bucket name {%s}",
                     TARGET_S3_KEY, storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -3134,7 +3134,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String
-                .format("Archived Glacier S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {null}, S3 bucket name {%s}",
+                .format("Archived S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {null}, S3 bucket name {%s}",
                     TARGET_S3_KEY, storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }

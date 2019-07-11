@@ -16,9 +16,9 @@
 package org.finra.herd.service.impl;
 
 import static junit.framework.TestCase.fail;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -244,8 +244,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         // Validate the results. The business object data restore DTO is expected to be updated with an exception resulted from a non-Glacier S3 object.
         assertNotNull(businessObjectDataRestoreDto.getException());
         assertEquals(IllegalArgumentException.class, businessObjectDataRestoreDto.getException().getClass());
-        assertEquals(String.format("S3 file \"%s\" is not archived (found %s storage class when expecting %s). S3 Bucket Name: \"%s\"", S3_KEY,
-            StorageClass.Standard.toString(), StorageClass.Glacier.toString(), S3_BUCKET_NAME), businessObjectDataRestoreDto.getException().getMessage());
+        assertEquals(String.format("S3 file \"%s\" is not archived (found %s storage class when expecting %s or %s). S3 Bucket Name: \"%s\"", S3_KEY,
+            StorageClass.Standard.toString(), StorageClass.Glacier.toString(), StorageClass.DeepArchive.toString(), S3_BUCKET_NAME),
+            businessObjectDataRestoreDto.getException().getMessage());
         businessObjectDataRestoreDto.setException(NO_EXCEPTION);
         assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
             NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION), businessObjectDataRestoreDto);
