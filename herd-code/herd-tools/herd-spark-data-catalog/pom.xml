@@ -57,6 +57,7 @@
          <groupId>org.scala-lang</groupId>
          <artifactId>scala-library</artifactId>
          <version>${scala.version}</version>
+         <scope>provided</scope>
       </dependency>
 
       <dependency>
@@ -103,6 +104,16 @@
          <groupId>org.scalactic</groupId>
          <artifactId>scalactic_${scala.tools.version}</artifactId>
          <version>3.0.1</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.scala-lang</groupId>
+               <artifactId>scala-library</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.scala-lang</groupId>
+               <artifactId>scala-reflect</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
 
       <dependency>
