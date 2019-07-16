@@ -287,7 +287,7 @@ trait Retry {
 
   val log: Logger
 
-  private val MAX_TRIES = 3
+  private var MAX_TRIES = 3
 
   private val WAIT = 100
 
@@ -299,6 +299,8 @@ trait Retry {
         case Success(result) => result
         case Failure(ex) =>
           log.error("Error while call Herd API", ex)
+          if (ex.getMessage.contains("\"statusCode\":4"))
+              MAX_TRIES = 0
 
           if (tries < MAX_TRIES) {
             tries += 1
