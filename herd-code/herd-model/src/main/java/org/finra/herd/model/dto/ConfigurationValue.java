@@ -494,6 +494,12 @@ public enum ConfigurationValue
     STORAGE_POLICY_PROCESSOR_BDATA_SIZE_THRESHOLD_GB("storage.policy.processor.business.object.data.size.threshold.gigabytes", 10),
 
     /**
+     * The chunk size to use when selecting storage file paths per list of storage unit ids, where storage unit ids are listed in the "in" clause. The default
+     * chunk size is 100. Zero and negatives are treated as meaning no chunk size is set.
+     */
+    STORAGE_FILE_PATHS_QUERY_IN_CLAUSE_CHUNK_SIZE("storage.file.paths.query.in.clause.chunk.size", 100),
+
+    /**
      * The pagination size for the query that returns storage file paths. The default is 100000 results.
      */
     STORAGE_FILE_PATHS_QUERY_PAGINATION_SIZE("storage.file.paths.query.pagination.size", 100000),
