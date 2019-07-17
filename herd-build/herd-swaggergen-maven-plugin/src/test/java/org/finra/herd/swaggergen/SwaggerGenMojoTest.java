@@ -146,4 +146,28 @@ public class SwaggerGenMojoTest extends AbstractTest
 
         assertEquals(getResourceAsString("/yaml6.yaml"), getFileAsString(Paths.get(tempDir.getAbsolutePath(), outputFileName)));
     }
+
+    @Test
+    public void test_GetOperationsFilterShouldBeApplied() throws Exception
+    {
+        File tempDir = Files.createTempDir();
+        String outputFileName = "swagger.yaml";
+
+        SwaggerGenMojo swaggerGenMojo = new SwaggerGenMojo();
+        ReflectionTestUtils.setField(swaggerGenMojo, "outputDirectory", tempDir);
+        ReflectionTestUtils.setField(swaggerGenMojo, "outputFilename", outputFileName);
+        ReflectionTestUtils.setField(swaggerGenMojo, "restJavaPackage", "org.finra.herd.swaggergen.test.swaggerGenMojo.rest");
+        ReflectionTestUtils.setField(swaggerGenMojo, "modelJavaPackage", "org.finra.herd.swaggergen.test.swaggerGenMojo.model");
+        ReflectionTestUtils.setField(swaggerGenMojo, "modelErrorClassName", "ErrorResponse");
+        ReflectionTestUtils.setField(swaggerGenMojo, "tagPatternParameter", "(?<tag>.+?)RestController");
+        ReflectionTestUtils.setField(swaggerGenMojo, "title", "test_title");
+        ReflectionTestUtils.setField(swaggerGenMojo, "version", "test_version");
+        ReflectionTestUtils.setField(swaggerGenMojo, "basePath", "/test_basePath");
+        ReflectionTestUtils.setField(swaggerGenMojo, "schemeParameters", Arrays.asList("http", "https"));
+        ReflectionTestUtils.setField(swaggerGenMojo, "filter", "org.finra.herd.swaggergen.GetOperationsFilter");
+
+        swaggerGenMojo.execute();
+
+        assertEquals(getResourceAsString("/yaml_GetOperationsFilter.yaml"), getFileAsString(Paths.get(tempDir.getAbsolutePath(), outputFileName)));
+    }
 }

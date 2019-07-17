@@ -27,6 +27,9 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.swagger.core.filter.AbstractSpecFilter;
+import io.swagger.core.filter.SpecFilter;
+import io.swagger.core.filter.SwaggerSpecFilter;
 import io.swagger.models.Info;
 import io.swagger.models.Scheme;
 import io.swagger.models.SecurityRequirement;
@@ -124,6 +127,12 @@ public class SwaggerGenMojo extends AbstractMojo
     @org.apache.maven.plugins.annotations.Parameter(property = "authType")
     private String authType;
 
+    /**
+     *  Filter to be applied after swagger generated
+     * */
+    @org.apache.maven.plugins.annotations.Parameter(property = "filter")
+    private String filter;
+
     // A list of the Swagger security scheme definitions. Each one has a "type" to identify it if necessary.
     private static final List<SecuritySchemeDefinition> SECURITY_SCHEME_DEFINITIONS =
         new ArrayList<>(Arrays.asList(new BasicAuthDefinition(), new OAuth2Definition(), new ApiKeyAuthDefinition()));
@@ -170,6 +179,23 @@ public class SwaggerGenMojo extends AbstractMojo
 
         // Generate the definitions into Swagger based on the model classes collected.
         new DefinitionGenerator(getLog(), swagger, restControllerProcessor.getExampleClassNames(), modelClassFinder.getModelClasses(), xsdParser);
+
+        if (filter != null)
+        {
+            SwaggerSpecFilter specFilter = null;
+            try {
+                specFilter = (SwaggerSpecFilter) Class.forName(filter).newInstance();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            }
+
+            if (specFilter != null)
+                swagger = new SpecFilter().filter(swagger, specFilter, null, null, null);
+        }
 
         // Write to Swagger information to a YAML file.
         createYamlFile(swagger);
