@@ -623,7 +623,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return business object format instance
    *
    */
-  def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int):
+  def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: java.lang.Integer):
     org.finra.herd.sdk.model.BusinessObjectFormat = {
     return herdApiWrapper.getHerdApi.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
   }
@@ -728,7 +728,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schemaVersion schema version, <0 for latest
    * @return Spark schema (structFields)
    */
-  def getSchema(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int = -1): StructType = {
+  def getSchema(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: java.lang.Integer = null): StructType = {
 
     val bFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
 
@@ -777,7 +777,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schemaVersion schema version, <0 for latest
    * @return Map of parse options
    */
-  def getParseOptions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int = -1, csvBug: Boolean = false):
+  def getParseOptions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: java.lang.Integer = null, csvBug: Boolean = false):
   Map[String, String] = {
     val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
 
@@ -946,7 +946,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return
    */
   def getDataAvailabilityRange(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, firstPartValue: String,
-                               lastPartValue: String, schemaVersion: Int = -1): DataFrame = {
+                               lastPartValue: String, schemaVersion: java.lang.Integer = null): DataFrame = {
 
     val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
     val parts = parsePartitions(businessObjectFormat)
@@ -1030,8 +1030,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return Spark DataFrame of data
    */
   // noinspection SimplifyBoolean
-  def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, partitionValues: List[Partition], schemaVersion: Int = -1,
-                   dataVersion: Int = -1): DataFrame = {
+  def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, partitionValues: List[Partition], schemaVersion: java.lang.Integer = null,
+                   dataVersion: java.lang.Integer = null): DataFrame = {
 
     // get the fileReading format. We treat ORC differently from the others..
     val sparkReader = fileFormat.toUpperCase match {
@@ -1274,7 +1274,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val namespace: String = findNamespace(objectName, namespaces)
     var fileFormat: String = null
     var usage: String = null
-    var formatVersion: Int = -1
+    var formatVersion: java.lang.Integer = null
 
     // check that a namespace was found for the table
     require(namespace != null, "Cannot find table in namespaces: " + namespaces.mkString(", "))
@@ -1354,7 +1354,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def preRegisterBusinessObjectPath(nameSpace: String,
                                     objectName: String,
-                                    formatVersion: Int = -1,
+                                    formatVersion: java.lang.Integer = null,
                                     partitionKey: String = "partition",
                                     partitionValue: String = "none"): (Int, Int, String) = {
 
@@ -1367,7 +1367,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       case Failure(ex) => throw ex
     }
 
-    val formatVersionToUse = formatVersion match {
+    val formatVersionToUse: java.lang.Integer = formatVersion match {
       case v if v >= 0 =>
         // check if exists and then use
         Try(herdApiWrapper.getHerdApi.getBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, v)) match {
@@ -1436,17 +1436,18 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def getBusinessObjectPath(nameSpace: String,
                             objectName: String,
-                            formatVersion: Int = -1,
+                            formatVersion: java.lang.Integer = null,
                             partitionKey: String = "partition",
                             partitionValue: String = "none",
-                            dataVersion: Int = -1): String = {
+                            dataVersion: java.lang.Integer = null): String = {
 
-    val dataVersionToUse: Integer = dataVersion match {
-      case -1 => null
-      case other => other
-    }
+    val dataVersionToUse: java.lang.Integer = dataVersion
+//    match {
+////      case -1 => null
+//      case other => other
+//    }
 
-    val formatVersionToUse = formatVersion match {
+    val formatVersionToUse: java.lang.Integer = formatVersion match {
       case v if v >= 0 =>
         // check if exists and then use
         Try(herdApiWrapper.getHerdApi.getBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, v)) match {
