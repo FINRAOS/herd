@@ -43,13 +43,13 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
   val FORMAT_USAGE = "testUsage"
   val FILE_TYPE = "testFileType"
   val FORMAT_VERSION = 0
-  val FORMAT_VERSION_NEGATIVE_ONE = -1
+  val FORMAT_VERSION_NULL = null
   val PARTITION_KEY = "testPartitionKey"
   val PARTITION_VALUE = "testPartitionValue"
   val PARTITION_VALUE_1 = "testPartitionValue1"
   val PARTITION_VALUES = Seq(PARTITION_VALUE)
   val DATA_VERSION = 0
-  val DATA_VERSION_NEGATIVE_ONE = -1
+  val DATA_VERSION_NULL = null
   val STORAGE_NAME = "testStorageName"
   val STORAGE_DIRECTORY = "testDirectory"
 
@@ -197,7 +197,7 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     when(defaultHerdApi.getBusinessObjectFormatApi(mockApiClient)).thenReturn(mockBusinessObjectFormatApi)
 
     assertEquals(businessObjectFormat, defaultHerdApi.getBusinessObjectFormat(NAMESPACE, BUSINESS_OBJECT_DEFINITION, FORMAT_USAGE, FILE_TYPE,
-      FORMAT_VERSION_NEGATIVE_ONE))
+      FORMAT_VERSION_NULL))
     verify(mockBusinessObjectFormatApi).businessObjectFormatGetBusinessObjectFormat(anyString(), anyString(), anyString(), anyString(), any())
     verify(defaultHerdApi).getBusinessObjectFormatApi(mockApiClient)
 
@@ -426,7 +426,7 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     when(defaultHerdApi.getBusinessObjectDataApi(mockApiClient)).thenReturn(mockBusinessObjectDataApi)
 
     assertEquals(businessObjectDataDdl, defaultHerdApi.getBusinessObjectDataGenerateDdl(NAMESPACE, BUSINESS_OBJECT_DEFINITION, FORMAT_USAGE,
-      FILE_TYPE, FORMAT_VERSION_NEGATIVE_ONE, PARTITION_KEY, PARTITION_VALUES, DATA_VERSION_NEGATIVE_ONE))
+      FILE_TYPE, FORMAT_VERSION_NULL, PARTITION_KEY, PARTITION_VALUES, DATA_VERSION_NULL))
     verify(defaultHerdApi).getBusinessObjectDataApi(mockApiClient)
     verify(mockBusinessObjectDataApi).businessObjectDataGenerateBusinessObjectDataDdl(any())
 
