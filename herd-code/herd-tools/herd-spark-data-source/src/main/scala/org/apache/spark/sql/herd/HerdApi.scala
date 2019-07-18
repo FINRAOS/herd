@@ -282,7 +282,7 @@ trait HerdApi {
   def getAllNamespaces: NamespaceKeys
 }
 
-/** A simple Integererface that knows how to retry an action in case of error/failure */
+/** A simple Interface that knows how to retry an action in case of error/failure */
 trait Retry {
 
   val log: Logger
