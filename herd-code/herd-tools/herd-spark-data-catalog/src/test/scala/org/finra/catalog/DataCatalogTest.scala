@@ -775,7 +775,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
     when(mockHerdApi.registerBusinessObjectData(namespace, objectName, "PRC", "UNKNOWN", formatVersion,
       partitionKey, partitonValue, Nil,
-      ObjectStatus.UPLOADING, "S3_DATABRICKS", None)).thenReturn((1, Seq(storageUnit)))
+      ObjectStatus.UPLOADING, "S3_DATABRICKS", None)).thenReturn((new Integer(1), Seq(storageUnit)))
 
     val output = dataCatalog.preRegisterBusinessObjectPath(namespace, objectName, formatVersion, partitionKey, partitonValue)
     assertEquals("(0,1,dummy)", output.toString())
