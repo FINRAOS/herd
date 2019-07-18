@@ -619,7 +619,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param objectName    objectName in DM
    * @param usage         usage in DM
    * @param fileFormat    file format for object
-   * @param schemaVersion schema version, -1 for latest
+   * @param schemaVersion schema version, null for latest
    * @return business object format instance
    *
    */
@@ -1347,7 +1347,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    *
    * @param nameSpace      Namespace
    * @param objectName     Business object name
-   * @param formatVersion  An existing format version.  Specify -1 to get the latest.
+   * @param formatVersion  An existing format version.  Specify null to get the latest.
    * @param partitionKey   A partition key
    * @param partitionValue A partition value
    * @return a tuple (formatVersion, dataVersion, path), where the path is location of data to be stored
@@ -1428,10 +1428,10 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    *
    * @param nameSpace      Namespace
    * @param objectName     Business object name
-   * @param formatVersion  Format version.  Use -1 to get the latest format
+   * @param formatVersion  Format version.  Use null to get the latest format
    * @param partitionKey   Partition key
    * @param partitionValue Partition value
-   * @param dataVersion    Data version.  Use -1 to get the latest data version
+   * @param dataVersion    Data version.  Use null to get the latest data version
    * @return Path to the object
    */
   def getBusinessObjectPath(nameSpace: String,
@@ -1442,10 +1442,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                             dataVersion: Integer = null): String = {
 
     val dataVersionToUse: Integer = dataVersion
-//    match {
-////      case -1 => null
-//      case other => other
-//    }
 
     val formatVersionToUse: Integer = formatVersion match {
       case v if v >= 0 =>

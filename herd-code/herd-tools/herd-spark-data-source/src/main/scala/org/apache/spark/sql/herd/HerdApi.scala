@@ -390,7 +390,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
 
     withRetry {
       api.businessObjectFormatGetBusinessObjectFormat(namespace, businessObjectDefinitionName, formatUsage,
-        formatFileType, if (formatVersion == -1) null else formatVersion )
+        formatFileType, formatVersion)
     }
   }
 
@@ -528,9 +528,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
     businessObjectDataDdlRequest.setBusinessObjectDefinitionName(businessObjectName)
     businessObjectDataDdlRequest.setBusinessObjectFormatUsage(formatUsage)
     businessObjectDataDdlRequest.setBusinessObjectFormatFileType(formatFileType)
-    if (formatVersion != -1) {
-      businessObjectDataDdlRequest.setBusinessObjectFormatVersion(formatVersion)
-    }
+    businessObjectDataDdlRequest.setBusinessObjectFormatVersion(formatVersion)
 
     val partitionValueFilter = new PartitionValueFilter()
     partitionValueFilter.setPartitionKey(partitionKey)
@@ -538,9 +536,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
     businessObjectDataDdlRequest.setPartitionValueFilters(List.fill(1)(partitionValueFilter).asJava)
 
     businessObjectDataDdlRequest.setOutputFormat(BusinessObjectDataDdlRequest.OutputFormatEnum.HIVE_13_DDL)
-    if (dataVersion != -1) {
-      businessObjectDataDdlRequest.setBusinessObjectDataVersion(dataVersion)
-    }
+    businessObjectDataDdlRequest.setBusinessObjectDataVersion(dataVersion)
     businessObjectDataDdlRequest.setTableName("HerdSpark")
 
     withRetry {
