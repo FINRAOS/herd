@@ -36,9 +36,9 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.util.QueryExecutionListener
+
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
-
 import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
 import org.finra.herd.sdk.model._
 
