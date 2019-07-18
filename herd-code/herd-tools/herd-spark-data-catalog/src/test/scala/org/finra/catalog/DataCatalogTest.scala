@@ -796,7 +796,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     assert(thrown.getMessage == "method was called")
   }
 
-  test("findDataFrame should return data frame for the given key partition values")
+  ignore("findDataFrame should return data frame for the given key partition values")
   {
 
     var businessObjectFormatKeys = new BusinessObjectFormatKeys
