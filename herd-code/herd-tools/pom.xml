@@ -43,6 +43,7 @@
             <module>herd-retention-expiration-exporter</module>
             <module>herd-retention-expiration-destroyer</module>
             <module>herd-pandas</module>
+            <module>herd-access-validator</module>
          </modules>
       </profile>
       <profile>
@@ -66,6 +67,7 @@
             <module>herd-spark-data-source</module>
             <module>herd-spark-data-catalog</module>
             <module>herd-pandas</module>
+            <module>herd-access-validator</module>
          </modules>
       </profile>
    </profiles>

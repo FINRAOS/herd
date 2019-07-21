@@ -17,6 +17,7 @@ package org.finra.herd.core;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -181,5 +182,32 @@ public class HerdStringUtilsTest extends AbstractCoreTest
     public void testCheckCsvInjectionValidStartsWithBlank()
     {
         HerdStringUtils.checkCsvInjection(" bc+def", CSV_INJECTION_ERROR_MSG);
+    }
+
+    @Test
+    public void testConvertStringToInteger()
+    {
+        assertEquals(INTEGER_VALUE, HerdStringUtils.convertStringToInteger(INTEGER_VALUE.toString(), INTEGER_VALUE_2));
+    }
+
+    @Test
+    public void testConvertStringToIntegerBlankStringValue()
+    {
+        assertEquals(INTEGER_VALUE, HerdStringUtils.convertStringToInteger(null, INTEGER_VALUE));
+        assertEquals(INTEGER_VALUE, HerdStringUtils.convertStringToInteger(EMPTY_STRING, INTEGER_VALUE));
+    }
+
+    @Test
+    public void testConvertStringToIntegerInvalidIntegerValue()
+    {
+        try
+        {
+            HerdStringUtils.convertStringToInteger(INVALID_INTEGER_VALUE, INTEGER_VALUE);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Failed to convert \"%s\" value to %s.", INVALID_INTEGER_VALUE, Integer.class.getName()), e.getMessage());
+        }
     }
 }
