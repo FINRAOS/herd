@@ -48,10 +48,11 @@ import org.finra.herd.service.impl.S3ServiceImpl;
 @Configuration
 // Component scan all packages, but exclude the configuration ones since they are explicitly specified.
 @ComponentScan(value = {"org.finra.herd.tools.uploader", "org.finra.herd.tools.downloader", "org.finra.herd.tools.retention.exporter",
-    "org.finra.herd.tools.retention.destroyer",
+    "org.finra.herd.tools.retention.destroyer", "org.finra.herd.tools.access.validator",
     "org.finra.herd.tools.common.databridge"}, excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = {
     "org\\.finra\\.herd\\.tools\\.uploader\\.config\\..*", "org\\.finra\\.herd\\.tools\\.downloader\\.config\\..*",
-    "org\\.finra\\.herd\\.tools\\.retention\\.exporter\\.config\\..*", "org\\.finra\\.herd\\.tools\\.common\\.config\\..*"}))
+    "org\\.finra\\.herd\\.tools\\.retention\\.exporter\\.config\\..*", "org\\.finra\\.herd\\.tools\\.retention\\.destroyer\\.config\\..*",
+    "org\\.finra\\.herd\\.tools\\.access\\.validator\\.config\\..*", "org\\.finra\\.herd\\.tools\\.common\\.config\\..*"}))
 @Import(DataBridgeAopSpringModuleConfig.class)
 public class DataBridgeSpringModuleConfig
 {
