@@ -111,7 +111,7 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
       defaultHerdApi.getBusinessObjectByName(NAMESPACE, BUSINESS_OBJECT_DEFINITION)
     }
     assert(thrown.getMessage === "\"statusCode\":4")
-    // verify the method has been tried 4 times
+    // verify the method has been tried once
     verify(mockBusinessObjectDefinitionApi, times(1)).businessObjectDefinitionGetBusinessObjectDefinition(anyString(), anyString(), anyBoolean())
     verify(defaultHerdApi).getBusinessObjectDefinitionApi(mockApiClient)
 
