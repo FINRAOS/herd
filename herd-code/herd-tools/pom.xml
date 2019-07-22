@@ -50,6 +50,7 @@
          <modules>
             <module>herd-spark-data-source</module>
             <module>herd-spark-data-catalog</module>
+            <module>herd-spark-2.2-data-source</module>
          </modules>
       </profile>
       <profile>
@@ -65,6 +66,7 @@
             <module>herd-retention-expiration-destroyer</module>
             <module>herd-spark-data-source</module>
             <module>herd-spark-data-catalog</module>
+            <module>herd-spark-2.2-data-source</module>
             <module>herd-pandas</module>
          </modules>
       </profile>
