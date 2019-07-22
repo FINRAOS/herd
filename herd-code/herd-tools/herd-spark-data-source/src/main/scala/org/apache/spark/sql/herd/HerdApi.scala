@@ -299,8 +299,10 @@ trait Retry {
         case Success(result) => result
         case Failure(ex) =>
           log.error("Error while call Herd API", ex)
-
-          if (tries < MAX_TRIES) {
+          if (ex.getMessage != null && ex.getMessage.contains("\"statusCode\":4")) {
+            throw ex
+          }
+          else if (tries < MAX_TRIES) {
             tries += 1
             Thread.sleep(WAIT * tries)
             runRecursively(block)
