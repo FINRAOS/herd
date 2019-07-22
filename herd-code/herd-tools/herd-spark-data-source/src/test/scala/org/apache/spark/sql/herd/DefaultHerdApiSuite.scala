@@ -98,6 +98,28 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     assertEquals(false, includeUpdateHistoryCaptor.getValue)
   }
 
+  test("Test HerdApi.retry for 4xx error") {
+    val namespaceCaptor = ArgumentCaptor.forClass(classOf[String])
+    val businessObjectDefinitionCaptor = ArgumentCaptor.forClass(classOf[String])
+    val includeUpdateHistoryCaptor = ArgumentCaptor.forClass((classOf[Boolean]))
+    val businessObjectDefinition = new BusinessObjectDefinition
+    when(mockBusinessObjectDefinitionApi.businessObjectDefinitionGetBusinessObjectDefinition(namespaceCaptor.capture(),
+      businessObjectDefinitionCaptor.capture(), includeUpdateHistoryCaptor.capture())).thenThrow(new RuntimeException("\"statusCode\":4"))
+    when(defaultHerdApi.getBusinessObjectDefinitionApi(mockApiClient)).thenReturn(mockBusinessObjectDefinitionApi)
+
+    val thrown = intercept[RuntimeException] {
+      defaultHerdApi.getBusinessObjectByName(NAMESPACE, BUSINESS_OBJECT_DEFINITION)
+    }
+    assert(thrown.getMessage === "\"statusCode\":4")
+    // verify the method has been tried 4 times
+    verify(mockBusinessObjectDefinitionApi, times(1)).businessObjectDefinitionGetBusinessObjectDefinition(anyString(), anyString(), anyBoolean())
+    verify(defaultHerdApi).getBusinessObjectDefinitionApi(mockApiClient)
+
+    assertEquals(NAMESPACE, namespaceCaptor.getValue)
+    assertEquals(BUSINESS_OBJECT_DEFINITION, businessObjectDefinitionCaptor.getValue)
+    assertEquals(false, includeUpdateHistoryCaptor.getValue)
+  }
+
   test("Test HerdApi.getBusinessObjectByName") {
     val namespaceCaptor = ArgumentCaptor.forClass(classOf[String])
     val businessObjectDefinitionCaptor = ArgumentCaptor.forClass(classOf[String])
