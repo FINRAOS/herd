@@ -229,7 +229,7 @@ public class StorageUnitServiceImpl implements StorageUnitService
             roleArnConfigurationValue = ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN;
             defaultSessionDurationConfigurationValue = ConfigurationValue.AWS_S3_DEFAULT_UPLOAD_SESSION_DURATION_SECS;
             sessionDurationConfigurationValue = ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_SESSION_DURATION_SECS;
-            s3Actions = new S3Actions[] {S3Actions.PutObject};
+            s3Actions = new S3Actions[] {S3Actions.PutObject, S3Actions.DeleteObject};
             kmsActions = new KmsActions[] {KmsActions.GENERATE_DATA_KEY, KmsActions.DECRYPT};
         }
         else
