@@ -82,16 +82,14 @@ public class AccessValidatorApp
             AccessValidatorApp exporterApp = new AccessValidatorApp();
             returnValue = exporterApp.go(args);
         }
+        catch (ApiException apiException)
+        {
+            LOGGER.error("Error running herd access validator. {} statusCode={}", apiException.toString(), apiException.getCode());
+            returnValue = ToolsCommonConstants.ReturnValue.FAILURE;
+        }
         catch (Exception e)
         {
-            Integer apiExceptionStatusCode = null;
-            if (e instanceof ApiException)
-            {
-                ApiException apiException = (ApiException) e;
-                apiExceptionStatusCode = apiException.getCode();
-            }
-            LOGGER.error("Error running herd access validator. {}{}", e.toString(),
-                (apiExceptionStatusCode != null ? " statusCode=" + apiExceptionStatusCode : ""));
+            LOGGER.error("Error running herd access validator. {}", e.toString());
             returnValue = ToolsCommonConstants.ReturnValue.FAILURE;
         }
 

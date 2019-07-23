@@ -42,7 +42,7 @@ public class AccessValidatorAppTest extends AbstractAccessValidatorTest
     {
         String[] arguments = {};
 
-        // We are expecting this to fail with an FileNotFoundException.
+        // We are expecting this to fail with a FileNotFoundException.
         runApplicationAndCheckReturnValue(accessValidatorApp, arguments, new FileNotFoundException());
     }
 
@@ -51,7 +51,7 @@ public class AccessValidatorAppTest extends AbstractAccessValidatorTest
     {
         String[] arguments = {"--properties", PROPERTIES_FILE_PATH};
 
-        // We are expecting this to fail with an FileNotFoundException.
+        // We are expecting this to fail with a FileNotFoundException.
         runApplicationAndCheckReturnValue(accessValidatorApp, arguments, new FileNotFoundException());
     }
 
