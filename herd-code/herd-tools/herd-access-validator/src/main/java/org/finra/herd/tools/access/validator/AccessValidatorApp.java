@@ -31,6 +31,7 @@ import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.ArgumentParser;
 import org.finra.herd.core.config.CoreSpringModuleConfig;
 import org.finra.herd.model.api.xml.BuildInformation;
+import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.config.DataBridgeAopSpringModuleConfig;
 import org.finra.herd.tools.common.config.DataBridgeEnvSpringModuleConfig;
@@ -41,7 +42,7 @@ import org.finra.herd.tools.common.config.DataBridgeSpringModuleConfig;
  */
 public class AccessValidatorApp
 {
-    private static final String APPLICATION_NAME = "herd-access-validator-app";
+    static final String APPLICATION_NAME = "herd-access-validator-app";
 
     private static final String DEFAULT_PROPERTIES_FILE_PATH = ".properties";
 
@@ -51,7 +52,7 @@ public class AccessValidatorApp
 
     private Option propertiesFilePathOpt;
 
-    private AccessValidatorApp()
+    AccessValidatorApp()
     {
         argParser = new ArgumentParser(APPLICATION_NAME);
     }
@@ -83,7 +84,14 @@ public class AccessValidatorApp
         }
         catch (Exception e)
         {
-            LOGGER.error("Error running herd access validator. {}", e.toString(), e);
+            Integer apiExceptionStatusCode = null;
+            if (e instanceof ApiException)
+            {
+                ApiException apiException = (ApiException) e;
+                apiExceptionStatusCode = apiException.getCode();
+            }
+            LOGGER.error("Error running herd access validator. {}{}", e.toString(),
+                (apiExceptionStatusCode != null ? " statusCode=" + apiExceptionStatusCode : ""));
             returnValue = ToolsCommonConstants.ReturnValue.FAILURE;
         }
 
@@ -96,7 +104,7 @@ public class AccessValidatorApp
      *
      * @return the application context
      */
-    private ApplicationContext createApplicationContext()
+    ApplicationContext createApplicationContext()
     {
         // Create the Spring application context and register the JavaConfig classes we need.
         // We will use core (in case it's needed), the service aspect that times the duration of the service method calls, and our specific beans defined in
@@ -119,7 +127,7 @@ public class AccessValidatorApp
      * @return the return value of the application
      * @throws Exception if any problems were encountered
      */
-    private ToolsCommonConstants.ReturnValue go(String[] args) throws Exception
+    ToolsCommonConstants.ReturnValue go(String[] args) throws Exception
     {
         // Create the Spring application context.
         ApplicationContext applicationContext = createApplicationContext();
@@ -133,7 +141,7 @@ public class AccessValidatorApp
 
         // Call the controller with the user specified parameters to perform access validation.
         AccessValidatorController controller = applicationContext.getBean(AccessValidatorController.class);
-        controller.execute(argParser.getFileValue(propertiesFilePathOpt, new File(DEFAULT_PROPERTIES_FILE_PATH)));
+        controller.validateAccess(argParser.getFileValue(propertiesFilePathOpt, new File(DEFAULT_PROPERTIES_FILE_PATH)));
 
         // No exceptions were returned so return success.
         return ToolsCommonConstants.ReturnValue.SUCCESS;
@@ -151,7 +159,7 @@ public class AccessValidatorApp
     // Using System.out to inform user of usage or version information is okay.
     @SuppressWarnings("PMD.SystemPrintln")
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
-    private ToolsCommonConstants.ReturnValue parseCommandLineArguments(String[] args, ApplicationContext applicationContext)
+    ToolsCommonConstants.ReturnValue parseCommandLineArguments(String[] args, ApplicationContext applicationContext)
     {
         try
         {
