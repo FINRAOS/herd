@@ -10,8 +10,8 @@ import java.util.Map;
 /**
  * Sample filter to avoid all get operations for the resource
  **/
-public class GetOperationsFilter extends AbstractSpecFilter {
-
+public class GetOperationsFilter extends AbstractSpecFilter
+{
     private static final String GET = "get";
 
     @Override
@@ -20,8 +20,8 @@ public class GetOperationsFilter extends AbstractSpecFilter {
             ApiDescription api,
             Map<String, List<String>> params,
             Map<String, String> cookies,
-            Map<String, List<String>> headers) {
-
+            Map<String, List<String>> headers)
+    {
         return GET.equalsIgnoreCase(api.getMethod());
     }
 }
