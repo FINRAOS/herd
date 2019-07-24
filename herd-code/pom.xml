@@ -198,6 +198,7 @@
                   <exclude>**/org/finra/herd/dao/credstash/*.java</exclude>
                   <exclude>**/org/finra/dm/service/activiti/*.java</exclude>
                   <exclude>**/org/finra/dm/service/activiti/task/*.java</exclude>
+                  <exclude>**/org/finra/herd/tools/access/validator/*Operations.java</exclude>
                   <exclude>**/org/finra/catalog/*.scala</exclude>
                   <exclude>**/org/apache/spark/sql/execution/datasources/*.scala</exclude>
                   <exclude>**/org/apache/spark/sql/herd/*.scala</exclude>

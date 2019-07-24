@@ -56,6 +56,15 @@ public class AccessValidatorAppTest extends AbstractAccessValidatorTest
     }
 
     @Test
+    public void testGoUnknownParameter() throws Exception
+    {
+        String[] arguments = {"--unknown"};
+
+        // We are expecting this to fail.
+        runApplicationAndCheckReturnValue(accessValidatorApp, arguments, ToolsCommonConstants.ReturnValue.FAILURE);
+    }
+
+    @Test
     public void testParseCommandLineArgumentsHelpOpt()
     {
         String output = runTestGetSystemOut(() -> {

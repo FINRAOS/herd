@@ -76,7 +76,7 @@ abstract class AbstractAccessValidatorTest extends AbstractDataBridgeTest
     }
 
     /**
-     * Runs a application application  with the specified arguments and verifies that an expected exception will be thrown. An optional "no logging class" can
+     * Runs an application application  with the specified arguments and verifies that an expected exception will be thrown. An optional "no logging class" can
      * also be specified.
      *
      * @param accessValidatorApp the application
@@ -92,7 +92,23 @@ abstract class AbstractAccessValidatorTest extends AbstractDataBridgeTest
     }
 
     /**
-     * Runs a application application with the specified arguments and validates the response against an expected return value. An optional "no logging class"
+     * Runs an application application with the specified arguments and validates the response against an expected return value. An optional "no logging class"
+     * can also be specified.
+     *
+     * @param accessValidatorApp the application
+     * @param args the application arguments
+     * @param expectedReturnValue the expected application return value
+     *
+     * @throws Exception if any errors were found during the execution of the application
+     */
+    void runApplicationAndCheckReturnValue(AccessValidatorApp accessValidatorApp, String[] args, ToolsCommonConstants.ReturnValue expectedReturnValue)
+        throws Exception
+    {
+        runApplicationAndCheckReturnValue(accessValidatorApp, args, expectedReturnValue, null);
+    }
+
+    /**
+     * Runs an application application with the specified arguments and validates the response against an expected return value. An optional "no logging class"
      * can also be specified.
      *
      * @param accessValidatorApp the application
