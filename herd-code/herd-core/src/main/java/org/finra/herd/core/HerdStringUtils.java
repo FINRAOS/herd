@@ -112,4 +112,31 @@ public class HerdStringUtils
             throw new IllegalArgumentException(errorMessage);
         }
     }
+
+    /**
+     * Convert a <code>String</code> to an <code>Integer</code>, returning a default value if the string is blank.</p>
+     *
+     * @param stringValue the string to convert, may be null
+     * @param defaultValue the default value
+     *
+     * @return the Integer represented by the string, or the default if the string is blank
+     */
+    public static Integer convertStringToInteger(final String stringValue, final Integer defaultValue)
+    {
+        if (StringUtils.isNotBlank(stringValue))
+        {
+            try
+            {
+                return Integer.parseInt(stringValue);
+            }
+            catch (final NumberFormatException e)
+            {
+                throw new IllegalArgumentException(String.format("Failed to convert \"%s\" value to %s.", stringValue, Integer.class.getName()), e);
+            }
+        }
+        else
+        {
+            return defaultValue;
+        }
+    }
 }

@@ -361,8 +361,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMPTY_S3_BUCKET_NAME = "";
 
-    public static final String EMPTY_STRING = "";
-
     public static final String EMR_CLUSTER_DEFINITION_NAME = "UT_EmrClusterDefinitionName_1_" + RANDOM_SUFFIX;
 
     public static final String EMR_CLUSTER_DEFINITION_NAME_2 = "UT_EmrClusterDefinitionName_2_" + RANDOM_SUFFIX;
@@ -498,10 +496,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer INITIAL_VERSION = 0;
 
     public static final Integer INSTANCE_COUNT = getRandomInteger();
-
-    public static final Integer INTEGER_VALUE = (int) (Math.random() * Integer.MAX_VALUE);
-
-    public static final Integer INTEGER_VALUE_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer INVALID_DATA_VERSION = -1 * DATA_VERSION;
 
