@@ -306,6 +306,7 @@
                               <include name="**/src/main/java/**/*.java"/>
                               <include name="**/src/main/resources/**"/>
                               <include name="**/generated-sources/herd-swaggergen/herd.swagger.yaml"/>
+                              <include name="**/generated-sources/herd-swaggergen/herd.swagger.ext.yaml"/>
                            </fileset>
                         </copy>
                      </target>

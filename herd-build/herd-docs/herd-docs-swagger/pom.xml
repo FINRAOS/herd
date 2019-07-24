@@ -44,6 +44,7 @@
             <version>${project.version}</version>
             <executions>
                <execution>
+                  <id>generate-herd.swagger</id>
                   <phase>generate-resources</phase>
                   <goals>
                      <goal>herd-swaggergen</goal>
@@ -57,6 +58,24 @@
                      <basePath>/herd-app/rest</basePath>
                      <xsdName>herd.xsd</xsdName>
                      <authType>basic</authType>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>generate-herd.swagger.ext</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                     <goal>herd-swaggergen</goal>
+                  </goals>
+                  <configuration>
+                     <restJavaPackage>org.finra.herd.rest</restJavaPackage>
+                     <modelJavaPackage>org.finra.herd.model.api.xml</modelJavaPackage>
+                     <modelErrorClassName>ErrorInformation</modelErrorClassName>
+                     <outputFilename>herd.swagger.ext.yaml</outputFilename>
+                     <title>herd-external</title>
+                     <basePath>/herd-app/rest</basePath>
+                     <xsdName>herd.xsd</xsdName>
+                     <authType>basic</authType>
+                     <filter>org.finra.herd.swaggergen.GetOperationsFilter</filter>
                   </configuration>
                </execution>
             </executions>
