@@ -183,18 +183,27 @@ public class SwaggerGenMojo extends AbstractMojo
         if (filter != null)
         {
             SwaggerSpecFilter specFilter = null;
-            try {
+            try
+            {
                 specFilter = (SwaggerSpecFilter) Class.forName(filter).newInstance();
-            } catch (ClassNotFoundException e) {
+            }
+            catch (ClassNotFoundException e)
+            {
                 e.printStackTrace();
-            } catch (IllegalAccessException e) {
+            }
+            catch (IllegalAccessException e)
+            {
                 e.printStackTrace();
-            } catch (InstantiationException e) {
+            }
+            catch (InstantiationException e)
+            {
                 e.printStackTrace();
             }
 
             if (specFilter != null)
+            {
                 swagger = new SpecFilter().filter(swagger, specFilter, null, null, null);
+            }
         }
 
         // Write to Swagger information to a YAML file.
