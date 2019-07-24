@@ -51,6 +51,11 @@
 
    <dependencies>
       <dependency>
+         <groupId>org.finra.herd</groupId>
+         <artifactId>herd-sdk-resources</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
          <groupId>com.sun.jersey</groupId>
          <artifactId>jersey-client</artifactId>
       </dependency>
