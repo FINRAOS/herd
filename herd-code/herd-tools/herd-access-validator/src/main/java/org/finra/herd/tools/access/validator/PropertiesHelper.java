@@ -31,6 +31,10 @@ import org.springframework.stereotype.Component;
 @Component
 class PropertiesHelper
 {
+    static final String AWS_REGION_PROPERTY = "awsRegion";
+
+    static final String AWS_ROLE_ARN_PROPERTY = "awsRoleArn";
+
     static final String BUSINESS_OBJECT_DATA_VERSION_PROPERTY = "businessObjectDataVersion";
 
     static final String BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY = "businessObjectDefinitionName";
