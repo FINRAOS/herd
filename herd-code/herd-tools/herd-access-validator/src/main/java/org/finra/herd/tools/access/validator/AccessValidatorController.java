@@ -172,5 +172,8 @@ class AccessValidatorController
             IOUtils.copy(s3Object.getObjectContent(), stringWriter, Charset.defaultCharset());
             LOGGER.info("Downloaded S3 file content:{}{}", System.lineSeparator(), stringWriter.toString());
         }
+
+        // Log a success message at the end.
+        LOGGER.info("Finished: SUCCESS");
     }
 }
