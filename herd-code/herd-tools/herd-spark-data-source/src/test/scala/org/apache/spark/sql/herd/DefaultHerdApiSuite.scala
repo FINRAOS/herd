@@ -43,13 +43,13 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
   val FORMAT_USAGE = "testUsage"
   val FILE_TYPE = "testFileType"
   val FORMAT_VERSION = 0
-  val FORMAT_VERSION_NEGATIVE_ONE = -1
+  val FORMAT_VERSION_NULL = null
   val PARTITION_KEY = "testPartitionKey"
   val PARTITION_VALUE = "testPartitionValue"
   val PARTITION_VALUE_1 = "testPartitionValue1"
   val PARTITION_VALUES = Seq(PARTITION_VALUE)
   val DATA_VERSION = 0
-  val DATA_VERSION_NEGATIVE_ONE = -1
+  val DATA_VERSION_NULL = null
   val STORAGE_NAME = "testStorageName"
   val STORAGE_DIRECTORY = "testDirectory"
 
@@ -91,6 +91,28 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     assert(thrown.getMessage === "Boom!")
     // verify the method has been tried 4 times
     verify(mockBusinessObjectDefinitionApi, times(4)).businessObjectDefinitionGetBusinessObjectDefinition(anyString(), anyString(), anyBoolean())
+    verify(defaultHerdApi).getBusinessObjectDefinitionApi(mockApiClient)
+
+    assertEquals(NAMESPACE, namespaceCaptor.getValue)
+    assertEquals(BUSINESS_OBJECT_DEFINITION, businessObjectDefinitionCaptor.getValue)
+    assertEquals(false, includeUpdateHistoryCaptor.getValue)
+  }
+
+  test("Test HerdApi.retry for 4xx error") {
+    val namespaceCaptor = ArgumentCaptor.forClass(classOf[String])
+    val businessObjectDefinitionCaptor = ArgumentCaptor.forClass(classOf[String])
+    val includeUpdateHistoryCaptor = ArgumentCaptor.forClass((classOf[Boolean]))
+    val businessObjectDefinition = new BusinessObjectDefinition
+    when(mockBusinessObjectDefinitionApi.businessObjectDefinitionGetBusinessObjectDefinition(namespaceCaptor.capture(),
+      businessObjectDefinitionCaptor.capture(), includeUpdateHistoryCaptor.capture())).thenThrow(new RuntimeException("\"statusCode\":4"))
+    when(defaultHerdApi.getBusinessObjectDefinitionApi(mockApiClient)).thenReturn(mockBusinessObjectDefinitionApi)
+
+    val thrown = intercept[RuntimeException] {
+      defaultHerdApi.getBusinessObjectByName(NAMESPACE, BUSINESS_OBJECT_DEFINITION)
+    }
+    assert(thrown.getMessage === "\"statusCode\":4")
+    // verify the method has been tried once
+    verify(mockBusinessObjectDefinitionApi, times(1)).businessObjectDefinitionGetBusinessObjectDefinition(anyString(), anyString(), anyBoolean())
     verify(defaultHerdApi).getBusinessObjectDefinitionApi(mockApiClient)
 
     assertEquals(NAMESPACE, namespaceCaptor.getValue)
@@ -197,7 +219,7 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     when(defaultHerdApi.getBusinessObjectFormatApi(mockApiClient)).thenReturn(mockBusinessObjectFormatApi)
 
     assertEquals(businessObjectFormat, defaultHerdApi.getBusinessObjectFormat(NAMESPACE, BUSINESS_OBJECT_DEFINITION, FORMAT_USAGE, FILE_TYPE,
-      FORMAT_VERSION_NEGATIVE_ONE))
+      FORMAT_VERSION_NULL))
     verify(mockBusinessObjectFormatApi).businessObjectFormatGetBusinessObjectFormat(anyString(), anyString(), anyString(), anyString(), any())
     verify(defaultHerdApi).getBusinessObjectFormatApi(mockApiClient)
 
@@ -426,7 +448,7 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     when(defaultHerdApi.getBusinessObjectDataApi(mockApiClient)).thenReturn(mockBusinessObjectDataApi)
 
     assertEquals(businessObjectDataDdl, defaultHerdApi.getBusinessObjectDataGenerateDdl(NAMESPACE, BUSINESS_OBJECT_DEFINITION, FORMAT_USAGE,
-      FILE_TYPE, FORMAT_VERSION_NEGATIVE_ONE, PARTITION_KEY, PARTITION_VALUES, DATA_VERSION_NEGATIVE_ONE))
+      FILE_TYPE, FORMAT_VERSION_NULL, PARTITION_KEY, PARTITION_VALUES, DATA_VERSION_NULL))
     verify(defaultHerdApi).getBusinessObjectDataApi(mockApiClient)
     verify(mockBusinessObjectDataApi).businessObjectDataGenerateBusinessObjectDataDdl(any())
 
