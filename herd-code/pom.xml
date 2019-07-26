@@ -279,7 +279,7 @@
          <id>herd-extensions</id>
          <modules>
             <module>herd-tools</module>
-            <module>herd-sdk</module>
+            <module>herd-sdk-common</module>
          </modules>
       </profile>
       <profile>
@@ -299,7 +299,7 @@
             <module>herd-app</module>
             <module>herd-war</module>
             <module>herd-tools</module>
-            <module>herd-sdk</module>
+            <module>herd-sdk-common</module>
          </modules>
       </profile>
    </profiles>

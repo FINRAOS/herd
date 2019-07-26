@@ -19,6 +19,7 @@
    <modelVersion>4.0.0</modelVersion>
    <packaging>pom</packaging>
    <modules>
+      <module>herd-sdk</module>
       <module>herd-sdk-ext</module>
    </modules>
 
@@ -40,10 +41,10 @@
 
    </properties>
 
-   <name>herd sdk</name>
+   <name>herd sdk common</name>
 
    <!-- groupId and version are inherited from the parent and can be overridden here if needed. -->
-   <artifactId>herd-sdk</artifactId>
+   <artifactId>herd-sdk-common</artifactId>
 
    <description>This project contains swagger generated clients that invoke the herd REST API's.
    </description>
@@ -402,6 +403,7 @@
                </execution>
             </executions>
          </plugin>
+
       </plugins>
    </build>
 </project>
