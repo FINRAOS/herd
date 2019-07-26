@@ -22,12 +22,13 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.junit.Test;
 
@@ -186,50 +187,77 @@ public class StorageFileDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetStoragePathsByStorageUnitIds() throws Exception
+    public void testGetStorageFilePathsByStorageUnitIdsChunkSizeOne() throws Exception
     {
-        // make it two pages
-        validateGetStoragePathsByStorageUnitIds(LOCAL_FILES.size() / 2);
+        validateGetStoragePathsByStorageUnitIds(1, null);
     }
 
     @Test
-    public void testGetStoragePathsByStorageUnitIdsSinglePage() throws Exception
+    public void testGetStorageFilePathsByStorageUnitIdsDefaultChunkSizeAndPageSize() throws Exception
     {
-        // make number of storage files less than the page size, so there only be 1 page
-        validateGetStoragePathsByStorageUnitIds(LOCAL_FILES.size() + 1);
+        validateGetStoragePathsByStorageUnitIds(null, null);
     }
 
     @Test
-    public void testGetStoragePathsByStorageUnitIdsPageSizeOne() throws Exception
+    public void testGetStorageFilePathsByStorageUnitIdsMultipleChunks() throws Exception
     {
-        // Retrieve multiple pages since the page size is 1
-        validateGetStoragePathsByStorageUnitIds(1);
-
+        validateGetStoragePathsByStorageUnitIds(2, null);
     }
 
-    private void validateGetStoragePathsByStorageUnitIds(long pageSize) throws Exception
+    @Test
+    public void testGetStorageFilePathsByStorageUnitIdsMultiplePages() throws Exception
+    {
+        validateGetStoragePathsByStorageUnitIds(null, LOCAL_FILES.size() / 2);
+    }
+
+    @Test
+    public void testGetStorageFilePathsByStorageUnitIdsPageSizeOne() throws Exception
+    {
+        validateGetStoragePathsByStorageUnitIds(null, 1);
+    }
+
+    @Test
+    public void testGetStorageFilePathsByStorageUnitIdsSingleChunkAndSinglePage() throws Exception
+    {
+        validateGetStoragePathsByStorageUnitIds(LOCAL_FILES.size() * LOCAL_FILES.size(), LOCAL_FILES.size() * LOCAL_FILES.size());
+    }
+
+    private void validateGetStoragePathsByStorageUnitIds(Integer chunkSize, Integer pageSize) throws Exception
     {
         // Override configuration.
         Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.STORAGE_FILE_PATHS_QUERY_IN_CLAUSE_CHUNK_SIZE.getKey(), chunkSize);
         overrideMap.put(ConfigurationValue.STORAGE_FILE_PATHS_QUERY_PAGINATION_SIZE.getKey(), pageSize);
         modifyPropertySourceInEnvironment(overrideMap);
 
         try
         {
             // Create database entities required for testing.
-            StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-                .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
-            for (String file : LOCAL_FILES)
+            Map<Integer, Integer> expectedStorageFileCounts = new HashMap<>();
+            for (int i = 0; i < LOCAL_FILES.size(); i++)
             {
-                storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
+                StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+                    .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+                        PARTITION_VALUE + i, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+                for (String file : LOCAL_FILES.subList(0, LOCAL_FILES.size() - i))
+                {
+                    storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
+                }
+                expectedStorageFileCounts.put(storageUnitEntity.getId(), LOCAL_FILES.size() - i);
             }
 
-            // Retrieve storage file paths by storage unit ids.
-            MultiValuedMap<Integer, String> result = storageFileDao.getStorageFilePathsByStorageUnitIds(Lists.newArrayList(storageUnitEntity.getId()));
+            // Retrieve storage file paths by created above storage unit ids along with one non-exiting storage unit id.
+            List<Integer> storageUnitIds = new ArrayList<>();
+            storageUnitIds.addAll(expectedStorageFileCounts.keySet());
+            storageUnitIds.add(-1);
+            MultiValuedMap<Integer, String> results = storageFileDao.getStorageFilePathsByStorageUnitIds(storageUnitIds);
 
             // Validate the results.
-            assertEquals(LOCAL_FILES.size(), result.get(storageUnitEntity.getId()).size());
+            assertEquals(expectedStorageFileCounts.keySet(), results.keySet());
+            for (Integer storageUnitId : results.keySet())
+            {
+                assertEquals(Long.valueOf(expectedStorageFileCounts.get(storageUnitId)), Long.valueOf(CollectionUtils.size(results.get(storageUnitId))));
+            }
         }
         finally
         {

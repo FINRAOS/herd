@@ -49,7 +49,7 @@ import scala.util.matching.Regex
 private[sql] abstract class HerdFileIndexBase(
                                              sparkSession: SparkSession,
                                              api: () => HerdApi,
-                                             herdPartitions: Seq[(Int, String, Seq[String], Int)],
+                                             herdPartitions: Seq[(Integer, String, Seq[String], Integer)],
                                              namespace: String,
                                              businessObjectName: String,
                                              formatUsage: String,

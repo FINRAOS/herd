@@ -64,7 +64,7 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
   }
 
   override def getBusinessObjectFormat(namespace: String, businessObjectName: String, formatUsage: String,
-                                       formatFileType: String, formatVersion: Int): BusinessObjectFormat = {
+                                       formatFileType: String, formatVersion: Integer): BusinessObjectFormat = {
     val formatJson = Resources.toString(
       Resources.getResource(s"herd-models/$testCase/businessObjectFormat.json"), Charsets.UTF_8)
     val format: BusinessObjectFormat = mapper.readValue(formatJson, classOf[BusinessObjectFormat])
@@ -74,28 +74,28 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
 
   override def registerBusinessObjectFormat(namespace: String, businessObjectName: String, formatUsage: String,
                                             formatFileType: String, partitionKey: String,
-                                            schema: Option[Schema]): Int = {
+                                            schema: Option[Schema]): Integer = {
     // no op
     0
   }
 
   override def getBusinessObjectPartitions(namespace: String, businessObjectName: String, formatUsage: String,
-                                           formatFileType: String, formatVersion: Int,
-                                           partitionFilter: Option[PartitionFilter]): Seq[(Int, String, Seq[String], Int)] = {
+                                           formatFileType: String, formatVersion: Integer,
+                                           partitionFilter: Option[PartitionFilter]): Seq[(Integer, String, Seq[String], Integer)] = {
     val keysJson = Resources.toString(
       Resources.getResource(s"herd-models/$testCase/businessObjectDataByFormat.json"), Charsets.UTF_8)
     val keys = mapper.readValue(keysJson, classOf[BusinessObjectDataKeys])
 
     keys.getBusinessObjectDataKeys.asScala.map { element =>
-      (element.getBusinessObjectFormatVersion.toInt, element.getPartitionValue,
-        element.getSubPartitionValues.asScala.toSeq, element.getBusinessObjectDataVersion.toInt)
+      (element.getBusinessObjectFormatVersion, element.getPartitionValue,
+        element.getSubPartitionValues.asScala.toSeq, element.getBusinessObjectDataVersion)
     }
   }
 
   override def getBusinessObjectData(namespace: String, businessObjectName: String, formatUsage: String,
-                                     formatFileType: String, formatVersion: Int, partitionKey: String,
+                                     formatFileType: String, formatVersion: Integer, partitionKey: String,
                                      partitionValue: String, subPartitionValues: Seq[String],
-                                     dataVersion: Int): BusinessObjectData = {
+                                     dataVersion: Integer): BusinessObjectData = {
     val dataJson = Resources.toString(
       Resources.getResource(s"herd-models/$testCase/${partitions((partitionValue, subPartitionValues.mkString(",")))}"), Charsets.UTF_8)
     val data = mapper.readValue(dataJson, classOf[BusinessObjectData])
@@ -114,8 +114,8 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
 
   override def getBusinessObjectDataGenerateDdl(namespace: String, businessObjectName: String,
                                        formatUsage: String, formatFileType: String,
-                                       formatVersion: Int, partitionKey: String, partitionValues: Seq[String],
-                                       dataVersion: Int): BusinessObjectDataDdl = {
+                                       formatVersion: Integer, partitionKey: String, partitionValues: Seq[String],
+                                       dataVersion: Integer): BusinessObjectDataDdl = {
     val dataFile = if (partitionValues.length == 1) {
       partitions((partitionValues(0), ""))
     } else {
@@ -141,10 +141,10 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
   }
 
   override def registerBusinessObjectData(namespace: String, businessObjectName: String, formatUsage: String,
-                                          formatFileType: String, formatVersion: Int, partitionKey: String,
+                                          formatFileType: String, formatVersion: Integer, partitionKey: String,
                                           partitionValue: String, subPartitionValues: Seq[String],
                                           status: ObjectStatus.Value, storageName: String,
-                                          storageDirectory: Option[String] = None): (Int, Seq[StorageUnit]) = {
+                                          storageDirectory: Option[String] = None): (Integer, Seq[StorageUnit]) = {
     val dataJson = Resources.toString(
       Resources.getResource(s"herd-models/$testCase/registerBusinessObjectData1.json"), Charsets.UTF_8)
     val data = mapper.readValue(dataJson, classOf[BusinessObjectData])
@@ -153,23 +153,23 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
   }
 
   override def setStorageFiles(namespace: String, businessObjectName: String, formatUsage: String,
-                               formatFileType: String, formatVersion: Int, partitionKey: String,
-                               partitionValue: String, subPartitionValues: Seq[String], dataVersion: Int,
+                               formatFileType: String, formatVersion: Integer, partitionKey: String,
+                               partitionValue: String, subPartitionValues: Seq[String], dataVersion: Integer,
                                storageName: String, files: Seq[(String, Long)]): Unit = {
 
   }
 
   override def updateBusinessObjectData(namespace: String, businessObjectName: String, formatUsage: String,
-                                        formatFileType: String, formatVersion: Int, partitionKey: String,
-                                        partitionValue: String, subPartitionValues: Seq[String], dataVersion: Int,
+                                        formatFileType: String, formatVersion: Integer, partitionKey: String,
+                                        partitionValue: String, subPartitionValues: Seq[String], dataVersion: Integer,
                                         status: ObjectStatus.Value): Unit = {
 
   }
 
   override def removeBusinessObjectData(namespace: String, businessObjectName: String, formatUsage: String,
-                                        formatFileType: String, formatVersion: Int, partitionKey: String,
+                                        formatFileType: String, formatVersion: Integer, partitionKey: String,
                                         partitionValue: String, subPartitionValues: Seq[String],
-                                        dataVersion: Int): Unit = {
+                                        dataVersion: Integer): Unit = {
 
   }
 
@@ -178,7 +178,7 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
   }
 
   override def removeBusinessObjectFormat(namespace: String, businessObjectName: String, formatUsage: String,
-                                          formatFileType: String, formatVersion: Int): Unit = {
+                                          formatFileType: String, formatVersion: Integer): Unit = {
     // no op
   }
 

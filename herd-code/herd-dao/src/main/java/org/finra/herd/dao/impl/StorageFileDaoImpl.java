@@ -28,6 +28,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.springframework.stereotype.Repository;
@@ -121,6 +122,9 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
         // Create a map that can hold a collection of values against each key.
         MultiValuedMap<Integer, String> result = new ArrayListValuedHashMap<>();
 
+        // Retrieve the chunk size configured in the system to use when listing storage unit ids in the "in" clause.
+        Integer inClauseChunkSize = configurationHelper.getProperty(ConfigurationValue.STORAGE_FILE_PATHS_QUERY_IN_CLAUSE_CHUNK_SIZE, Integer.class);
+
         // Retrieve the pagination size for the storage file paths query configured in the system.
         Integer paginationSize = configurationHelper.getProperty(ConfigurationValue.STORAGE_FILE_PATHS_QUERY_PAGINATION_SIZE, Integer.class);
 
@@ -136,44 +140,57 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
         Path<String> storageFilePathColumn = storageFileEntity.get(StorageFileEntity_.path);
         Path<Integer> storageFileIdColumn = storageFileEntity.get(StorageFileEntity_.id);
 
-        // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate queryRestriction = getPredicateForInClause(builder, storageUnitIdColumn, storageUnitIds);
-
         // Add the select clause.
         criteria.multiselect(storageUnitIdColumn, storageFilePathColumn);
-
-        // Add the where clause.
-        criteria.where(queryRestriction);
 
         // Add the orderBy to the query so we can get consistent pagination results
         criteria.orderBy(builder.asc(storageFileIdColumn));
 
-        // Execute the query using pagination and populate the result map.
-        int startPosition = 0;
-        while (true)
+        // Get size of the storage unit list.
+        int listSize = CollectionUtils.size(storageUnitIds);
+
+        // Treat zero and negatives as meaning no need to split list of storage unit ids into chunks.
+        if (inClauseChunkSize <= 0)
         {
-            // Run the query to get a list of tuples back.
-            List<Tuple> tuples = entityManager.createQuery(criteria).setFirstResult(startPosition).setMaxResults(paginationSize).getResultList();
+            inClauseChunkSize = listSize;
+        }
 
-            // Populate the result map from the returned tuples (i.e. 1 tuple for each row).
-            for (Tuple tuple : tuples)
+        // Loop through each chunk of storage unit ids until we have reached the end of the list.
+        for (int i = 0; i < listSize; i += inClauseChunkSize)
+        {
+            // Get a sub-list for the current chunk of data.
+            List<Integer> storageUnitIdsSubList = storageUnitIds.subList(i, (listSize > (i + inClauseChunkSize) ? (i + inClauseChunkSize) : listSize));
+
+            // Add the where clause for the sub list.
+            criteria.where(getPredicateForInClause(builder, storageUnitIdColumn, storageUnitIdsSubList));
+
+            // Execute the query using pagination and populate the result map.
+            int startPosition = 0;
+            while (true)
             {
-                // Extract the tuple values.
-                Integer storageUnitId = tuple.get(storageUnitIdColumn);
-                String storageFilePath = tuple.get(storageFilePathColumn);
+                // Run the query to get a list of tuples back.
+                List<Tuple> tuples = entityManager.createQuery(criteria).setFirstResult(startPosition).setMaxResults(paginationSize).getResultList();
 
-                // Update the result map.
-                result.put(storageUnitId, storageFilePath);
+                // Populate the result map from the returned tuples (i.e. 1 tuple for each row).
+                for (Tuple tuple : tuples)
+                {
+                    // Extract the tuple values.
+                    Integer storageUnitId = tuple.get(storageUnitIdColumn);
+                    String storageFilePath = tuple.get(storageFilePathColumn);
+
+                    // Update the result map.
+                    result.put(storageUnitId, storageFilePath);
+                }
+
+                // Break out of the while loop if we got less results than the pagination size.
+                if (tuples.size() < paginationSize)
+                {
+                    break;
+                }
+
+                // Increment the start position.
+                startPosition += paginationSize;
             }
-
-            // Break out of the while loop if we got less results than the pagination size.
-            if (tuples.size() < paginationSize)
-            {
-                break;
-            }
-
-            // Increment the start position.
-            startPosition += paginationSize;
         }
 
         return result;

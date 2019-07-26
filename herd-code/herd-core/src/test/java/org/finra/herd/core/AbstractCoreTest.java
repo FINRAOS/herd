@@ -62,11 +62,17 @@ public abstract class AbstractCoreTest
 {
     public static final String BLANK_TEXT = "      \t\t ";
 
+    public static final String EMPTY_STRING = "";
+
     public static final long FILE_SIZE_0_BYTE = 0L;
 
     public static final long FILE_SIZE_1_KB = 1024L;
 
     public static final long FILE_SIZE_2_KB = 2048L;
+
+    public static final Integer INTEGER_VALUE = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final Integer INTEGER_VALUE_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final String INVALID_BOOLEAN_VALUE = "INVALID_BOOLEAN_VALUE";
 
