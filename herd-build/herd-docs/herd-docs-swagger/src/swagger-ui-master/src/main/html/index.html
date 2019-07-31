@@ -27,7 +27,10 @@
 			var url = "../herd.swagger.yaml";
 
         	var yaml = getURLParameter("yaml");
-        	if (yaml) url = "../" + yaml;
+        	if (yaml)
+        	{
+        		url = "../" + yaml;
+			}
 
             window.swaggerUi = new SwaggerUi({
                 url: url,
@@ -83,19 +86,16 @@
                 }
             }
 
-			function getURLParameter(sParam)
-			{
+			function getURLParameter(sParam) {
 				var sPageURL = window.location.search.substring(1);
 				var sURLVariables = sPageURL.split('&');
-				for (var i = 0; i < sURLVariables.length; i++)
-				{
+				for (var i = 0; i < sURLVariables.length; i++) {
 					var sParameterName = sURLVariables[i].split('=');
-					if (sParameterName[0] == sParam)
-					{
+					if (sParameterName[0] == sParam) {
 						return sParameterName[1];
 					}
 				}
-			}​
+			}
         });
     </script>
 </head>

@@ -75,7 +75,25 @@
                      <basePath>/herd-app/rest</basePath>
                      <xsdName>herd.xsd</xsdName>
                      <authType>basic</authType>
-                     <filter>org.finra.herd.swaggergen.GetOperationsFilter</filter>
+                     <applyOperationsFilter>true</applyOperationsFilter>
+                     <includeOperations>
+                        <param>BusinessObjectData.checkBusinessObjectDataAvailability</param>
+                        <param>BusinessObjectData.generateBusinessObjectDataDdl</param>
+                        <param>BusinessObjectData.getBusinessObjectData</param>
+                        <param>BusinessObjectData.getBusinessObjectDataVersions</param>
+                        <param>BusinessObjectData.searchBusinessObjectData</param>
+                        <param>BusinessObjectDefinition.getBusinessObjectDefinition</param>
+                        <param>BusinessObjectFormat.generateBusinessObjectFormatDdl</param>
+                        <param>BusinessObjectFormat.getBusinessObjectFormats</param>
+                        <param>BusinessObjectFormat.getBusinessObjectFormat</param>
+                        <param>CurrentUser.getCurrentUser</param>
+                        <param>ExpectedPartitionValue.getExpectedPartitionValues</param>
+                        <param>ExpectedPartitionValue.getExpectedPartitionValue</param>
+                        <param>Namespace.getNamespace</param>
+                        <param>PartitionKeyGroup.getPartitionKeyGroups</param>
+                        <param>PartitionKeyGroup.getPartitionKeyGroup</param>
+                        <param>Storage.getStorage</param>
+                     </includeOperations>
                   </configuration>
                </execution>
             </executions>

@@ -27,6 +27,7 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.swagger.core.filter.AbstractSpecFilter;
 import io.swagger.core.filter.SpecFilter;
 import io.swagger.core.filter.SwaggerSpecFilter;
@@ -130,8 +131,14 @@ public class SwaggerGenMojo extends AbstractMojo
     /**
      *  Filter to be applied after swagger generated
      * */
-    @org.apache.maven.plugins.annotations.Parameter(property = "filter")
-    private String filter;
+    @org.apache.maven.plugins.annotations.Parameter(property = "applyOperationsFilter")
+    private Boolean applyOperationsFilter;
+
+    /**
+     * The list of operations to include into filtered yaml.
+     */
+    @org.apache.maven.plugins.annotations.Parameter(property = "includeOperations")
+    private String[] includeOperations;
 
     // A list of the Swagger security scheme definitions. Each one has a "type" to identify it if necessary.
     private static final List<SecuritySchemeDefinition> SECURITY_SCHEME_DEFINITIONS =
@@ -180,30 +187,10 @@ public class SwaggerGenMojo extends AbstractMojo
         // Generate the definitions into Swagger based on the model classes collected.
         new DefinitionGenerator(getLog(), swagger, restControllerProcessor.getExampleClassNames(), modelClassFinder.getModelClasses(), xsdParser);
 
-        if (filter != null)
+        if (applyOperationsFilter != null)
         {
-            SwaggerSpecFilter specFilter = null;
-            try
-            {
-                specFilter = (SwaggerSpecFilter) Class.forName(filter).newInstance();
-            }
-            catch (ClassNotFoundException e)
-            {
-                e.printStackTrace();
-            }
-            catch (IllegalAccessException e)
-            {
-                e.printStackTrace();
-            }
-            catch (InstantiationException e)
-            {
-                e.printStackTrace();
-            }
-
-            if (specFilter != null)
-            {
-                swagger = new SpecFilter().filter(swagger, specFilter, null, null, null);
-            }
+            OperationsFilter specFilter = new OperationsFilter(includeOperations);
+            swagger = new SpecFilter().filter(swagger, specFilter, null, null, null);
         }
 
         // Write to Swagger information to a YAML file.

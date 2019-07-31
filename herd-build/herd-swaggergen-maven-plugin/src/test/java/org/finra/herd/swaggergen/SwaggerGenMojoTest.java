@@ -164,7 +164,8 @@ public class SwaggerGenMojoTest extends AbstractTest
         ReflectionTestUtils.setField(swaggerGenMojo, "version", "test_version");
         ReflectionTestUtils.setField(swaggerGenMojo, "basePath", "/test_basePath");
         ReflectionTestUtils.setField(swaggerGenMojo, "schemeParameters", Arrays.asList("http", "https"));
-        ReflectionTestUtils.setField(swaggerGenMojo, "filter", "org.finra.herd.swaggergen.GetOperationsFilter");
+        ReflectionTestUtils.setField(swaggerGenMojo, "applyOperationsFilter", true);
+        ReflectionTestUtils.setField(swaggerGenMojo, "includeOperations", new String[] {"Person.get"});
 
         swaggerGenMojo.execute();
 
