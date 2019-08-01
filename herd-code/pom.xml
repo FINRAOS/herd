@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd</artifactId>
-      <version>0.101.0-SNAPSHOT</version>
+      <version>0.102.0-SNAPSHOT</version>
    </parent>
 
    <name>herd code</name>
@@ -198,6 +198,7 @@
                   <exclude>**/org/finra/herd/dao/credstash/*.java</exclude>
                   <exclude>**/org/finra/dm/service/activiti/*.java</exclude>
                   <exclude>**/org/finra/dm/service/activiti/task/*.java</exclude>
+                  <exclude>**/org/finra/herd/tools/access/validator/*Operations.java</exclude>
                   <exclude>**/org/finra/catalog/*.scala</exclude>
                   <exclude>**/org/apache/spark/sql/execution/datasources/*.scala</exclude>
                   <exclude>**/org/apache/spark/sql/herd/*.scala</exclude>
