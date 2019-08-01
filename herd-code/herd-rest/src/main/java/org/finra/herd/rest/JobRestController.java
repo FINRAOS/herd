@@ -69,8 +69,8 @@ public class JobRestController extends HerdBaseController
      * @param namespace an optional namespace filter
      * @param jobName an optional job name filter
      * @param status an optional job status filter
-     * @param startTime an optional start time filter (ex. 2015, 2015-12, 2015-12-12T3:4:5)
-     * @param endTime an optional end time filter (ex. 2015, 2015-12, 2015-12-12T3:4:5)
+     * @param startTime an optional start time filter (ex. 2015, 2015-12, 2015-12-28, 2015-12-12T3:4:5)
+     * @param endTime an optional end time filter (ex. 2015, 2015-12, 2015-12-28, 2015-12-12T3:4:5)
      *
      * @return the list of job summaries.
      * @throws Exception if any problems were encountered.
