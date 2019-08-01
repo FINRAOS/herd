@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.exception.OutOfRangeException;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.security.access.annotation.Secured;
@@ -117,6 +118,13 @@ public abstract class HerdBaseController
      */
     DateTime getDateTime(String text)
     {
-        return StringUtils.isBlank(text) ? null : ISODateTimeFormat.dateTimeParser().parseDateTime(text.trim());
+        DateTime returnValue = StringUtils.isBlank(text) ? null : ISODateTimeFormat.dateTimeParser().parseDateTime(text.trim());
+        Integer year = returnValue.getYear();
+        if (year > 9999 || year < 1000)
+        {
+            throw new IllegalArgumentException("Provided date is out of range. Year should be 4 digits integer. Current argument value: \"" + year + "\".");
+        }
+
+        return returnValue;
     }
 }
