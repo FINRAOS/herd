@@ -129,13 +129,13 @@ public class SwaggerGenMojo extends AbstractMojo
     private String authType;
 
     /**
-     *  Filter to be applied after swagger generated
-     * */
+     *  Turn operations filter ON or OFF
+     */
     @org.apache.maven.plugins.annotations.Parameter(property = "applyOperationsFilter")
     private Boolean applyOperationsFilter;
 
     /**
-     * The list of operations to include into filtered yaml.
+     * If operations filter is ON only listed operations will get to the filtered yaml file.
      */
     @org.apache.maven.plugins.annotations.Parameter(property = "includeOperations")
     private String[] includeOperations;
