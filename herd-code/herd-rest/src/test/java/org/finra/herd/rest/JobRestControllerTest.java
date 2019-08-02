@@ -155,6 +155,42 @@ public class JobRestControllerTest extends AbstractRestTest
         assertEquals(jobSummaries, result);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetJobsYearOutOfRange() throws Exception
+    {
+        // Create a job summary.
+        JobSummary jobSummary = new JobSummary();
+        jobSummary.setId(JOB_ID);
+        jobSummary.setNamespace(JOB_NAMESPACE);
+        jobSummary.setJobName(JOB_NAME);
+
+        // Create a job summaries object.
+        JobSummaries jobSummaries = new JobSummaries(Arrays.asList(jobSummary));
+
+        // Mock the external calls.
+        when(jobService.getJobs(JOB_NAMESPACE, JOB_NAME, JobStatusEnum.RUNNING, START_TIME, END_TIME)).thenReturn(jobSummaries);
+
+        jobRestController.getJobs(JOB_NAMESPACE, JOB_NAME, JobStatusEnum.RUNNING, "20190606", "20190707");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetJobsWrongDatFormat() throws Exception
+    {
+        // Create a job summary.
+        JobSummary jobSummary = new JobSummary();
+        jobSummary.setId(JOB_ID);
+        jobSummary.setNamespace(JOB_NAMESPACE);
+        jobSummary.setJobName(JOB_NAME);
+
+        // Create a job summaries object.
+        JobSummaries jobSummaries = new JobSummaries(Arrays.asList(jobSummary));
+
+        // Mock the external calls.
+        when(jobService.getJobs(JOB_NAMESPACE, JOB_NAME, JobStatusEnum.RUNNING, START_TIME, END_TIME)).thenReturn(jobSummaries);
+
+        jobRestController.getJobs(JOB_NAMESPACE, JOB_NAME, JobStatusEnum.RUNNING, "adgwgsfg", "201907070948035049583045");
+    }
+
     @Test
     public void testSignalJob() throws Exception
     {
