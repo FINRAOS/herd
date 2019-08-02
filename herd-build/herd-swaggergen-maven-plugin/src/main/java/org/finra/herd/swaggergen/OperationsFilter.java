@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 herd contributors
+ * Copyright 2015 herd contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,15 +24,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Yaml filter to avoid all non GET operations for the resource
- * <p>
+ * Swagger spec filter that allow specific operations
+ *
  * If allowedOperations list provided - only operations within this list will appear in final yaml spec
  **/
-public class OperationsFilter extends AbstractSpecFilter {
+public class OperationsFilter extends AbstractSpecFilter
+{
     private List<String> allowedOperations;
 
-    public OperationsFilter(String[] allowedOperations) {
-        if (allowedOperations != null) {
+    /**
+     * Constructs OperationsFilter class.
+     *
+     * @param allowedOperations the list of operations to be included in the resulting yaml spec.
+     */
+    public OperationsFilter(String[] allowedOperations)
+    {
+        if (allowedOperations != null)
+        {
             this.allowedOperations = Arrays.asList(allowedOperations);
         }
     }
@@ -43,7 +51,8 @@ public class OperationsFilter extends AbstractSpecFilter {
             ApiDescription api,
             Map<String, List<String>> params,
             Map<String, String> cookies,
-            Map<String, List<String>> headers) {
+            Map<String, List<String>> headers)
+    {
         return allowedOperations == null ||
                 allowedOperations.size() == 0 ||
                 allowedOperations.stream().anyMatch(op -> operation.getOperationId().equalsIgnoreCase(op))
