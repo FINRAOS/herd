@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Yaml filter to avoid all non GET operations for the resource
- * <p>
+ * Swagger spec filter that allow specific operations
+ *
  * If allowedOperations list provided - only operations within this list will appear in final yaml spec
  **/
 public class OperationsFilter extends AbstractSpecFilter
@@ -33,7 +33,7 @@ public class OperationsFilter extends AbstractSpecFilter
     private List<String> allowedOperations;
 
     /**
-     * Constructs the model class finder.
+     * Constructs OperationsFilter class.
      *
      * @param allowedOperations the list of operations to be included in the resulting yaml spec.
      */
