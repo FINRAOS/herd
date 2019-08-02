@@ -38,6 +38,7 @@
       <module>herd-swaggergen-maven-plugin</module>
       <module>herd-scripts</module>
       <module>herd-docs</module>
+      <module>herd-sdk-resources</module>
    </modules>
 
 </project>

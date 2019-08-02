@@ -27,6 +27,10 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import io.swagger.core.filter.AbstractSpecFilter;
+import io.swagger.core.filter.SpecFilter;
+import io.swagger.core.filter.SwaggerSpecFilter;
 import io.swagger.models.Info;
 import io.swagger.models.Scheme;
 import io.swagger.models.SecurityRequirement;
@@ -124,6 +128,18 @@ public class SwaggerGenMojo extends AbstractMojo
     @org.apache.maven.plugins.annotations.Parameter(property = "authType")
     private String authType;
 
+    /**
+     *  Turn operations filter ON or OFF
+     */
+    @org.apache.maven.plugins.annotations.Parameter(property = "applyOperationsFilter")
+    private Boolean applyOperationsFilter;
+
+    /**
+     * If operations filter is ON only listed operations will get to the filtered yaml file.
+     */
+    @org.apache.maven.plugins.annotations.Parameter(property = "includeOperations")
+    private String[] includeOperations;
+
     // A list of the Swagger security scheme definitions. Each one has a "type" to identify it if necessary.
     private static final List<SecuritySchemeDefinition> SECURITY_SCHEME_DEFINITIONS =
         new ArrayList<>(Arrays.asList(new BasicAuthDefinition(), new OAuth2Definition(), new ApiKeyAuthDefinition()));
@@ -170,6 +186,12 @@ public class SwaggerGenMojo extends AbstractMojo
 
         // Generate the definitions into Swagger based on the model classes collected.
         new DefinitionGenerator(getLog(), swagger, restControllerProcessor.getExampleClassNames(), modelClassFinder.getModelClasses(), xsdParser);
+
+        if (applyOperationsFilter != null)
+        {
+            OperationsFilter specFilter = new OperationsFilter(includeOperations);
+            swagger = new SpecFilter().filter(swagger, specFilter, null, null, null);
+        }
 
         // Write to Swagger information to a YAML file.
         createYamlFile(swagger);
