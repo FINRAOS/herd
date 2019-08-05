@@ -192,6 +192,24 @@ public class JobRestControllerTest extends AbstractRestTest
     }
 
     @Test
+    public void testGetJobsDateIsEmpty() throws Exception
+    {
+        // Create a job summary.
+        JobSummary jobSummary = new JobSummary();
+        jobSummary.setId(JOB_ID);
+        jobSummary.setNamespace(JOB_NAMESPACE);
+        jobSummary.setJobName(JOB_NAME);
+
+        // Create a job summaries object.
+        JobSummaries jobSummaries = new JobSummaries(Arrays.asList(jobSummary));
+
+        // Mock the external calls.
+        when(jobService.getJobs(JOB_NAMESPACE, JOB_NAME, JobStatusEnum.RUNNING, START_TIME, END_TIME)).thenReturn(jobSummaries);
+
+        jobRestController.getJobs(JOB_NAMESPACE, JOB_NAME, JobStatusEnum.RUNNING, null, null);
+    }
+
+    @Test
     public void testSignalJob() throws Exception
     {
         // Create a job signal request.
