@@ -121,7 +121,7 @@ public abstract class HerdBaseController
 
         if (returnValue != null)
         {
-            Integer year = returnValue.getYear();
+            int year = returnValue.getYear();
 
             if (year > 9999 || year < 1000)
             {
