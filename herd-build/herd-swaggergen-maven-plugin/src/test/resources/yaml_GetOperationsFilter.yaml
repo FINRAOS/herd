@@ -1,0 +1,44 @@
+---
+swagger: "2.0"
+info:
+  version: "test_version"
+  title: "test_title"
+basePath: "/test_basePath"
+tags:
+- name: "Person"
+schemes:
+- "http"
+- "https"
+paths:
+  /person/{id}:
+    get:
+      tags:
+      - "Person"
+      summary: "get"
+      description: ""
+      operationId: "Person.get"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/person"
+        default:
+          description: "General Error"
+          schema:
+            $ref: "#/definitions/errorResponse"
+definitions:
+  errorResponse: {}
+  person:
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+    example: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<person>\n\
+      \    <id>0</id>\n    <name>string</name>\n</person>\n"
