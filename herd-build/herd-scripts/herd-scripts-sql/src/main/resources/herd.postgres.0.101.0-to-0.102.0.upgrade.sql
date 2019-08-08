@@ -13,3 +13,5 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+alter table schm_clmn alter column clmn_type_cd type varchar(500);
