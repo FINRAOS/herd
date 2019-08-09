@@ -117,6 +117,18 @@ public abstract class HerdBaseController
      */
     DateTime getDateTime(String text)
     {
-        return StringUtils.isBlank(text) ? null : ISODateTimeFormat.dateTimeParser().parseDateTime(text.trim());
+        DateTime returnValue = StringUtils.isBlank(text) ? null : ISODateTimeFormat.dateTimeParser().parseDateTime(text.trim());
+
+        if (returnValue != null)
+        {
+            int year = returnValue.getYear();
+
+            if (year > 9999 || year < 1000)
+            {
+                throw new IllegalArgumentException("Provided date is out of range. Year should be 4 digits integer. Current argument value: \"" + year + "\".");
+            }
+        }
+
+        return returnValue;
     }
 }

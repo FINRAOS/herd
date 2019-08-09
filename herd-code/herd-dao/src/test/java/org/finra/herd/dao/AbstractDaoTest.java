@@ -1582,7 +1582,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
      */
     public static DateTime getRandomDateTime()
     {
-        return new DateTime(new Random().nextLong()).withMillisOfSecond(0);
+        DateTime dt = new DateTime(new Random().nextLong()).withMillisOfSecond(0);
+        return dt.withYear(2019);
     }
 
     /**

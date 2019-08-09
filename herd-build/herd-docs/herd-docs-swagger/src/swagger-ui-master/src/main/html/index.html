@@ -24,7 +24,14 @@
     <script type="text/javascript">
         $(function ()
         {
-            var url = "../herd.swagger.yaml";
+			var url = "../herd.swagger.yaml";
+
+        	var yaml = getURLParameter("yaml");
+        	if (yaml)
+        	{
+        		url = "../" + yaml;
+			}
+
             window.swaggerUi = new SwaggerUi({
                 url: url,
                 apisSorter: "alpha",
@@ -78,6 +85,17 @@
                     console.log.apply(console, arguments);
                 }
             }
+
+			function getURLParameter(sParam) {
+				var sPageURL = window.location.search.substring(1);
+				var sURLVariables = sPageURL.split('&');
+				for (var i = 0; i < sURLVariables.length; i++) {
+					var sParameterName = sURLVariables[i].split('=');
+					if (sParameterName[0] == sParam) {
+						return sParameterName[1];
+					}
+				}
+			}
         });
     </script>
 </head>
