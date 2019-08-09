@@ -17,15 +17,23 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    <modelVersion>4.0.0</modelVersion>
+   <packaging>pom</packaging>
+   <modules>
+      <module>herd-sdk</module>
+      <module>herd-sdk-ext</module>
+   </modules>
 
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.101.0-SNAPSHOT</version>
+      <version>0.102.0-SNAPSHOT</version>
    </parent>
 
    <properties>
-
+      <swagger.spec.name>herd.swagger.yaml</swagger.spec.name>
+      <swagger.spec.path>
+         ${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/${swagger.spec.name}
+      </swagger.spec.path>
       <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
@@ -33,16 +41,21 @@
 
    </properties>
 
-   <name>herd sdk</name>
+   <name>herd sdk common</name>
 
    <!-- groupId and version are inherited from the parent and can be overridden here if needed. -->
-   <artifactId>herd-sdk</artifactId>
+   <artifactId>herd-sdk-common</artifactId>
 
    <description>This project contains swagger generated clients that invoke the herd REST API's.
    </description>
    <url>http://finraos.github.io/herd/</url>
 
    <dependencies>
+      <dependency>
+         <groupId>org.finra.herd</groupId>
+         <artifactId>herd-sdk-resources</artifactId>
+         <version>${project.version}</version>
+      </dependency>
       <dependency>
          <groupId>com.sun.jersey</groupId>
          <artifactId>jersey-client</artifactId>
@@ -87,20 +100,31 @@
    </dependencies>
 
    <build>
-
-      <!-- Add in the Swagger generated sources location as a resource so it can be correctly added with the maven-source-plugin. -->
-      <resources>
-         <resource>
-            <directory>target/generated-sources/swagger/src/main/java</directory>
-         </resource>
-      </resources>
-
       <plugins>
 
+         <plugin>
+            <artifactId>maven-remote-resources-plugin</artifactId>
+            <version>1.6.0</version>
+            <executions>
+               <execution>
+                  <id>process-remote-resources</id>
+                  <goals>
+                     <goal>process</goal>
+                  </goals>
+                  <configuration>
+                     <resourceBundles>
+                        <resourceBundle>org.finra.herd:herd-sdk-resources:${project.version}</resourceBundle>
+                     </resourceBundles>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
          <!--
-          Copy the generated YAML file from the herd-docs-swagger project to this one in the target directory so it can be picked up by the
-          swagger-codegen-maven-plugin.
+             Copy the generated YAML file from the herd-docs-swagger project to this one in the target directory so
+             it can be picked up by the swagger-codegen-maven-plugin.
          -->
+
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
@@ -119,7 +143,7 @@
                            <version>${project.version}</version>
                            <type>zip</type>
                            <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
-                           <includes>**/*.yaml</includes>
+                           <includes>**/${swagger.spec.name}</includes>
                         </artifactItem>
                      </artifactItems>
                   </configuration>
@@ -134,11 +158,14 @@
             </dependencies>
          </plugin>
 
-         <!-- Generate the SDK files from the YAML file. -->
+         <!-- Generate the SDK files from the YAML file  -->
+
          <plugin>
             <groupId>org.openapitools</groupId>
             <artifactId>openapi-generator-maven-plugin</artifactId>
             <executions>
+
+               <!-- Set of executions to generate complete herd-swagger API wrappers -->
                <execution>
                   <goals>
                      <goal>generate</goal>
@@ -146,9 +173,8 @@
                   <id>JAVA-Generation</id>
                   <phase>generate-resources</phase>
                   <configuration>
-                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
                      <output>${project.build.directory}/generated-sources/swagger</output>
-                     <!-- Don't add the output directory to the project as a source root since we added it as a resource ourselves above. -->
                      <addCompileSourceRoot>false</addCompileSourceRoot>
                      <generatorName>java</generatorName>
                      <apiPackage>org.finra.herd.sdk.api</apiPackage>
@@ -179,7 +205,7 @@
                   <id>Node-Generation</id>
                   <phase>prepare-package</phase>
                   <configuration>
-                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
                      <output>${project.build.directory}/node-client</output>
                      <generatorName>typescript-node</generatorName>
                   </configuration>
@@ -192,7 +218,7 @@
                   <id>AngularJS-Generation</id>
                   <phase>prepare-package</phase>
                   <configuration>
-                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
                      <output>${project.build.directory}/angularjs-client</output>
                      <generatorName>typescript-angularjs</generatorName>
                   </configuration>
@@ -205,7 +231,7 @@
                   <id>Angular-Generation</id>
                   <phase>prepare-package</phase>
                   <configuration>
-                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
                      <output>${project.build.directory}/angular-client</output>
                      <generatorName>typescript-angular</generatorName>
                      <configOptions>
@@ -222,7 +248,7 @@
                   <id>Python-Generation</id>
                   <phase>generate-resources</phase>
                   <configuration>
-                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
                      <output>${project.build.directory}/python-client</output>
                      <generatorName>python</generatorName>
                      <configOptions>
@@ -235,18 +261,30 @@
             </executions>
          </plugin>
 
-         <!-- Exclude the auto-generated java files from the main jar. -->
+         <!-- Add in the sources. -->
+
          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <configuration>
-               <excludes>
-                  <excludes>**/*.java</excludes>
-               </excludes>
-            </configuration>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>3.0.0</version>
+            <executions>
+               <execution>
+                  <id>add-source</id>
+                  <phase>generate-sources</phase>
+                  <goals>
+                     <goal>add-source</goal>
+                  </goals>
+                  <configuration>
+                     <sources>
+                        <source>${project.build.directory}/generated-sources/swagger/src/main/java</source>
+                     </sources>
+                  </configuration>
+               </execution>
+            </executions>
          </plugin>
 
-         <!-- Add in the sources. -->
+         <!-- Building sources jar -->
+
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
@@ -270,6 +308,8 @@
             </configuration>
          </plugin>
 
+         <!-- Building javadoc jar -->
+
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
@@ -287,7 +327,8 @@
             </configuration>
          </plugin>
 
-         <!-- Configure the Maven compiler to use JDK 1.5 to produce the appropriate class files that can be used with JDK 1.5 and up. -->
+         <!-- Configure thk25539 JDK 1.5 to produce the appropriate class files that can be used with JDK 1.5 and up. -->
+
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
@@ -297,6 +338,7 @@
             </configuration>
          </plugin>
 
+         <!-- Copy configuration files into generated client's folders -->
 
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -308,9 +350,11 @@
                   <configuration>
                      <target>
                         <copy overwrite="true" todir="${project.build.directory}/angular-client">
-                           <fileset dir="${project.basedir}/src/tsconfig/angular"/>
+                           <fileset
+                                   dir="${project.build.directory}/maven-shared-archive-resources/tsconfig/angular"/>
                            <filterset>
-                              <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
+                              <filter token="NPM_VERSION"
+                                      value="${project.version}.${maven.build.timestamp}"/>
                            </filterset>
                         </copy>
                      </target>
@@ -325,9 +369,11 @@
                   <configuration>
                      <target>
                         <copy overwrite="true" todir="${project.build.directory}/angularjs-client">
-                           <fileset dir="${project.basedir}/src/tsconfig/angularjs"/>
+                           <fileset
+                                   dir="${project.build.directory}/maven-shared-archive-resources/tsconfig/angularjs"/>
                            <filterset>
-                              <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
+                              <filter token="NPM_VERSION"
+                                      value="${project.version}.${maven.build.timestamp}"/>
                            </filterset>
                         </copy>
                      </target>
@@ -342,9 +388,11 @@
                   <configuration>
                      <target>
                         <copy overwrite="true" todir="${project.build.directory}/node-client">
-                           <fileset dir="${project.basedir}/src/tsconfig/node"/>
+                           <fileset
+                                   dir="${project.build.directory}/maven-shared-archive-resources/tsconfig/node"/>
                            <filterset>
-                              <filter token="NPM_VERSION" value="${project.version}.${maven.build.timestamp}"/>
+                              <filter token="NPM_VERSION"
+                                      value="${project.version}.${maven.build.timestamp}"/>
                            </filterset>
                         </copy>
                      </target>
@@ -356,9 +404,6 @@
             </executions>
          </plugin>
 
-
       </plugins>
-
    </build>
-
 </project>

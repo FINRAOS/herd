@@ -24,11 +24,36 @@
       <version>0.102.0-SNAPSHOT</version>
    </parent>
 
-   <name>herd build tools</name>
+   <properties>
+      <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+   </properties>
 
-   <artifactId>herd-build-tools</artifactId>
+   <name>herd sdk resources</name>
 
-   <description>This is the build tools pom which contains build supporting files such as code quality support files.</description>
+   <!-- groupId and version are inherited from the parent and can be overridden here if needed. -->
+   <artifactId>herd-sdk-resources</artifactId>
+
+   <description>This project contains shared files used to build herd-sdk and herd-sdk-ext.</description>
    <url>http://finraos.github.io/herd/</url>
 
+   <build>
+      <plugins>
+         <plugin>
+            <artifactId>maven-remote-resources-plugin</artifactId>
+            <version>1.6.0</version>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>bundle</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <includes>
+                  <include>**/*.*</include>
+               </includes>
+            </configuration>
+         </plugin>
+      </plugins>
+   </build>
 </project>
