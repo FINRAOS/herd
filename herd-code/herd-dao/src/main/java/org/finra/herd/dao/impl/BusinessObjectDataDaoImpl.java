@@ -114,7 +114,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     @Override
-    public BusinessObjectDataEntity getBusinessObjectDataByAltKeyAndStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
+    public BusinessObjectDataEntity getBusinessObjectDataByAltKeyAndStatus(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -151,8 +152,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
             Join<BusinessObjectFormatEntity, FileTypeEntity> subBusinessObjectFormatFileTypeEntity =
                 subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
-            Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
-                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
 
             // Create the standard restrictions (i.e. the standard where clauses).
             Predicate subQueryRestriction = builder.equal(subBusinessObjectDefinitionEntity, businessObjectDefinitionEntity);
@@ -166,8 +165,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
             // Add restrictions on business object data version and business object data status.
             Predicate subQueryRestrictionOnBusinessObjectDataVersionAndStatus =
-                getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity, subBusinessObjectDataStatusEntity,
-                    businessObjectDataKey.getBusinessObjectDataVersion(), businessObjectDataStatus);
+                getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity,
+                    businessObjectDataKey.getBusinessObjectDataVersion(), businessObjectDataStatusEntity);
             if (subQueryRestrictionOnBusinessObjectDataVersionAndStatus != null)
             {
                 subQueryRestriction = builder.and(subQueryRestriction, subQueryRestrictionOnBusinessObjectDataVersionAndStatus);
@@ -183,7 +182,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         if (businessObjectDataKey.getBusinessObjectDataVersion() == null)
         {
             // Since business object data version is not specified, just use the latest one as per specified business object data status.
-            if (businessObjectDataStatus != null)
+            if (businessObjectDataStatusEntity != null)
             {
                 // Business object data version is not specified, so get the latest one as per specified business object data status.
                 Subquery<Integer> subQuery = criteria.subquery(Integer.class);
@@ -192,8 +191,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 Root<BusinessObjectDataEntity> subBusinessObjectDataEntity = subQuery.from(BusinessObjectDataEntity.class);
 
                 // Join to the other tables we can filter on.
-                Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
-                    subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
                 Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntity =
                     subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
 
@@ -205,8 +202,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                     builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
 
                 // Create and add standard restrictions on business object data status.
-                subQueryRestriction = builder.and(subQueryRestriction, builder
-                    .equal(builder.upper(subBusinessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code)), businessObjectDataStatus.toUpperCase()));
+                subQueryRestriction = builder.and(subQueryRestriction,
+                    builder.equal(subBusinessObjectDataEntity.get(BusinessObjectDataEntity_.statusCode), businessObjectDataStatusEntity.getCode()));
 
                 subQuery.select(builder.max(subBusinessObjectDataEntity.get(BusinessObjectDataEntity_.version))).where(subQueryRestriction);
 
@@ -231,7 +228,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
             businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
             CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" : StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","),
-            businessObjectDataKey.getBusinessObjectDataVersion(), businessObjectDataStatus));
+            businessObjectDataKey.getBusinessObjectDataVersion(), businessObjectDataStatusEntity != null ? businessObjectDataStatusEntity.getCode() : "null"));
     }
 
     @Override
@@ -283,19 +280,19 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     @Override
     public String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
         String excludedStoragePlatformType, String upperBoundPartitionValue, String lowerBoundPartitionValue)
     {
-        return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatus,
+        return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatusEntity,
             storageNames, storagePlatformType, excludedStoragePlatformType, AggregateFunction.GREATEST, upperBoundPartitionValue, lowerBoundPartitionValue);
     }
 
     @Override
     public String getBusinessObjectDataMinPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
         String excludedStoragePlatformType)
     {
-        return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatus,
+        return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatusEntity,
             storageNames, storagePlatformType, excludedStoragePlatformType, AggregateFunction.LEAST, null, null);
     }
 
@@ -371,7 +368,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     @Override
     public List<BusinessObjectDataEntity> getBusinessObjectDataEntities(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
-        Integer businessObjectDataVersion, String businessObjectDataStatus, String storageName)
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, String storageName)
     {
         List<BusinessObjectDataEntity> resultBusinessObjectDataEntities = new ArrayList<>();
 
@@ -380,8 +377,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         {
             // Get a sub-list for the current chunk of partition filters.
             List<BusinessObjectDataEntity> chunkBusinessObjectDataEntities =
-                getBusinessObjectDataEntities(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatus, storageName, i,
-                    (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
+                getBusinessObjectDataEntities(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatusEntity, storageName,
+                    i, (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
 
             // Add the sub-list to the result.
             resultBusinessObjectDataEntities.addAll(chunkBusinessObjectDataEntities);
@@ -524,7 +521,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * available format version for each partition value will be used.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
      * the specified business object data status will be used for each partition value.
-     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified.
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
+     * specified
      * @param storageNames the optional list of storage names (case-insensitive)
      * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
      * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
@@ -536,8 +534,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @return the partition value
      */
     private String getBusinessObjectDataPartitionValue(int partitionColumnPosition, final BusinessObjectFormatKey businessObjectFormatKey,
-        final Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, final AggregateFunction aggregateFunction, String upperBoundPartitionValue, String lowerBoundPartitionValue)
+        final Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        String storagePlatformType, String excludedStoragePlatformType, final AggregateFunction aggregateFunction, String upperBoundPartitionValue,
+        String lowerBoundPartitionValue)
     {
         // We cannot use businessObjectFormatKey passed in since it is case-insensitive. Case-insensitive values requires upper() function in the SQL query, and
         // it has caused performance problems. So we need to extract case-sensitive business object format key from database so we can eliminate the upper()
@@ -622,7 +621,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         {
             Subquery<Integer> subQuery =
                 getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntityRoot, businessObjectFormatEntityJoin,
-                    businessObjectDataStatus, storageNames, storagePlatformType, excludedStoragePlatformType, false);
+                    businessObjectDataStatusEntity, storageNames, storagePlatformType, excludedStoragePlatformType, false);
 
             mainQueryRestriction =
                 builder.and(mainQueryRestriction, builder.in(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version)).value(subQuery));
@@ -666,9 +665,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * values for the relative partitions not to be used for selection passed as nulls.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
      * the specified business object data status is returned.
-     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified. When
-     * business object data version and business object data status both are not specified, the latest data version for each set of partition values will be
-     * used regardless of the status.
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
+     * specified. When business object data version and business object data status both are not specified, the latest data version for each set of partition
+     * values will be used regardless of the status
      * @param storageName the name of the storage where the business object data storage unit is located (case-insensitive)
      * @param partitionFilterSubListFromIndex the index of the first element in the partition filter sublist
      * @param partitionFilterSubListSize the size of the partition filter sublist
@@ -676,8 +675,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @return the list of business object data entities sorted by partition values
      */
     private List<BusinessObjectDataEntity> getBusinessObjectDataEntities(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
-        Integer businessObjectDataVersion, String businessObjectDataStatus, String storageName, int partitionFilterSubListFromIndex,
-        int partitionFilterSubListSize)
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, String storageName,
+        int partitionFilterSubListFromIndex, int partitionFilterSubListSize)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -720,8 +719,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
             Join<BusinessObjectFormatEntity, FileTypeEntity> subBusinessObjectFormatFileTypeEntity =
                 subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
-            Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
-                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
 
             // Create the standard restrictions (i.e. the standard where clauses).
             Predicate subQueryRestriction = builder.equal(subBusinessObjectDefinitionEntity, businessObjectDefinitionEntity);
@@ -735,8 +732,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
             // Add restrictions on business object data version and business object data status.
             Predicate subQueryRestrictionOnBusinessObjectDataVersionAndStatus =
-                getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity, subBusinessObjectDataStatusEntity,
-                    businessObjectDataVersion, businessObjectDataStatus);
+                getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity, businessObjectDataVersion,
+                    businessObjectDataStatusEntity);
             if (subQueryRestrictionOnBusinessObjectDataVersionAndStatus != null)
             {
                 subQueryRestriction = builder.and(subQueryRestriction, subQueryRestrictionOnBusinessObjectDataVersionAndStatus);
@@ -766,9 +763,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             // Business object data version is not specified, so get the latest one as per specified business object data status, if any.
             // Meaning, when both business object data version and business object data status are not specified, we just return
             // the latest business object data version in the specified storage.
-            Subquery<Integer> subQuery =
-                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity, businessObjectDataStatus,
-                    Collections.singletonList(storageName), null, null, false);
+            Subquery<Integer> subQuery = getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity,
+                businessObjectDataStatusEntity, Collections.singletonList(storageName), null, null, false);
 
             mainQueryRestriction =
                 builder.and(mainQueryRestriction, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));

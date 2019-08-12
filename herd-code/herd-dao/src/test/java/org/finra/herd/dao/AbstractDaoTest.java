@@ -63,6 +63,7 @@ import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.MessageHeader;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
 /**
@@ -637,6 +638,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_AWS_SECRET_KEY = null;
 
     public static final String NO_BDATA_STATUS = null;
+
+    public static final BusinessObjectDataStatusEntity NO_BDATA_STATUS_ENTITY = null;
 
     public static final Boolean NO_BDATA_STATUS_PRE_REGISTRATION_FLAG_SET = false;
 

@@ -986,7 +986,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Get the business object data based on the specified parameters. If a business object data version isn't specified,
         // the latest version of business object data of the specified business object data status is returned.
         BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataDaoHelper.getBusinessObjectDataEntityByKeyAndStatus(businessObjectDataKey, businessObjectDataStatusEntity.getCode());
+            businessObjectDataDaoHelper.getBusinessObjectDataEntityByKeyAndStatus(businessObjectDataKey, businessObjectDataStatusEntity);
 
         // If specified, ensure the partition key matches what's configured within the business object format.
         if (StringUtils.isNotBlank(businessObjectFormatPartitionKeyLocal))
@@ -1144,13 +1144,17 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             .buildPartitionFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), businessObjectFormatKey,
                 request.getBusinessObjectDataVersion(), storageNames, null, null, businessObjectFormatEntity);
 
+        // Get business object data status entity for the VALID status.
+        BusinessObjectDataStatusEntity validBusinessObjectDataStatusEntity =
+            businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
+
         // Retrieve a list of storage unit availability DTOs for the specified partition values. The list will be sorted by partition value that is identified
         // by partition column position. If a business object data version isn't specified, the latest VALID business object data version is returned.
         // Business object data availability works across all storage platform types, so the storage platform type is not specified in the herdDao call.
         // We want to select only "available" storage units, so we pass "true" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> availableStorageUnitAvailabilityDtos = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectFormatKey, partitionFilters, request.getBusinessObjectDataVersion(),
-                BusinessObjectDataStatusEntity.VALID, storageNames, null, null, true);
+                validBusinessObjectDataStatusEntity, storageNames, null, null, true);
 
         // Create business object data availability object instance and initialise it with request field values.
         BusinessObjectDataAvailability businessObjectDataAvailability = createBusinessObjectDataAvailability(request);

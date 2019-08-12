@@ -21,6 +21,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 
@@ -117,9 +118,9 @@ public interface StorageUnitDao extends BaseJpaDao
      * values for the relative partitions not to be used for selection passed as nulls.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
      * the specified business object data status is returned.
-     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified. When
-     * business object data version and business object data status both are not specified, the latest data version for each set of partition values will be
-     * used regardless of the status.
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
+     * specified. When business object data version and business object data status both are not specified, the latest data version for each set of partition
+     * values will be used regardless of the status
      * @param storageNames the optional list of storage names where the business object data storage units should be looked for (case-insensitive)
      * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
      * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storage names is not
@@ -129,7 +130,7 @@ public interface StorageUnitDao extends BaseJpaDao
      * @return the list of storage unit availability DTOs sorted by partition values and storage names
      */
     List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
-        Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
         String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits);
 
     /**

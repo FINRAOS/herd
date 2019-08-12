@@ -24,6 +24,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -48,11 +49,13 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * be used regardless of the status.
      *
      * @param businessObjectDataKey the business object data key
-     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified.
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
+     * specified
      *
      * @return the business object data
      */
-    BusinessObjectDataEntity getBusinessObjectDataByAltKeyAndStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus);
+    BusinessObjectDataEntity getBusinessObjectDataByAltKeyAndStatus(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity);
 
     /**
      * Gets a maximum available version of the specified business object data.
@@ -71,7 +74,8 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * available format version for each partition value will be used.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
      * the specified business object data status will be used for each partition value.
-     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified.
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
+     * specified
      * @param storageNames the optional list of storage names (case-insensitive)
      * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
      * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
@@ -82,7 +86,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * @return the maximum available partition value
      */
     String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
         String excludedStoragePlatformType, String upperBoundPartitionValue, String lowerBoundPartitionValue);
 
     /**
@@ -93,7 +97,8 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * available format version for each partition value will be used.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
      * the specified business object data status will be used for each partition value.
-     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified.
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
+     * specified
      * @param storageNames the optional list of storage names (case-insensitive)
      * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
      * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
@@ -102,7 +107,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * @return the maximum available partition value
      */
     String getBusinessObjectDataMinPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
         String excludedStoragePlatformType);
 
     /**
@@ -134,15 +139,15 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * values for the relative partitions not to be used for selection passed as nulls.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
      * the specified business object data status is returned.
-     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified. When
-     * business object data version and business object data status both are not specified, the latest data version for each set of partition values will be
-     * used regardless of the status.
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
+     * specified. When business object data version and business object data status both are not specified, the latest data version for each set of partition
+     * values will be used regardless of the status
      * @param storageName the name of the storage where the business object data storage unit is located (case-insensitive)
      *
      * @return the list of business object data entities sorted by partition values
      */
     List<BusinessObjectDataEntity> getBusinessObjectDataEntities(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
-        Integer businessObjectDataVersion, String businessObjectDataStatus, String storageName);
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, String storageName);
 
     /**
      * Selects business object data having storage files associated with the specified storage and status. Only tbe business object data records that are older

@@ -124,6 +124,9 @@ public class Hive13DdlGenerator extends DdlGenerator
     private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
+    private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
+
+    @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Autowired
@@ -827,6 +830,10 @@ public class Hive13DdlGenerator extends DdlGenerator
         // Override the business object format version with the original (optional) value from the request.
         businessObjectFormatKey.setBusinessObjectFormatVersion(generateDdlRequest.businessObjectFormatVersion);
 
+        // Get business object data status entity for the VALID status.
+        BusinessObjectDataStatusEntity validBusinessObjectDataStatusEntity =
+            businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
+
         // Retrieve a list of storage unit availability DTOs for the specified list of partition filters. The list will be sorted by partition values and
         // storage names. For a non-partitioned table, there should only exist a single business object data entity (with partitionValue equals to "none").
         // We do validate that all specified storage entities are of "S3" storage platform type, so we specify S3 storage platform type in the herdDao call
@@ -834,7 +841,7 @@ public class Hive13DdlGenerator extends DdlGenerator
         // only "available" storage units.
         List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectFormatKey, generateDdlRequest.partitionFilters, generateDdlRequest.businessObjectDataVersion,
-                BusinessObjectDataStatusEntity.VALID, generateDdlRequest.storageNames, StoragePlatformEntity.S3, null, true);
+                validBusinessObjectDataStatusEntity, generateDdlRequest.storageNames, StoragePlatformEntity.S3, null, true);
 
         // Exclude duplicate business object data per specified list of storage names.
         // If storage names are not specified, the method fails on business object data instances registered with multiple storage.
