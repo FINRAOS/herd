@@ -52,6 +52,8 @@ public class AccessValidatorApp
 
     private Option propertiesFilePathOpt;
 
+    private Option messageOpt;
+
     AccessValidatorApp()
     {
         argParser = new ArgumentParser(APPLICATION_NAME);
@@ -139,7 +141,9 @@ public class AccessValidatorApp
 
         // Call the controller with the user specified parameters to perform access validation.
         AccessValidatorController controller = applicationContext.getBean(AccessValidatorController.class);
-        controller.validateAccess(argParser.getFileValue(propertiesFilePathOpt, new File(DEFAULT_PROPERTIES_FILE_PATH)));
+        File propertiesFile = argParser.getFileValue(propertiesFilePathOpt, new File(DEFAULT_PROPERTIES_FILE_PATH));
+        Boolean messageFlag = argParser.getBooleanValue(messageOpt);
+        controller.validateAccess(propertiesFile, messageFlag);
 
         // No exceptions were returned so return success.
         return ToolsCommonConstants.ReturnValue.SUCCESS;
@@ -164,6 +168,8 @@ public class AccessValidatorApp
             propertiesFilePathOpt = argParser.addArgument("p", "properties", true, "Path to the properties file. Defaults to '.properties'.", false);
             Option helpOpt = argParser.addArgument("h", "help", false, "Display usage information and exit.", false);
             Option versionOpt = argParser.addArgument("v", "version", false, "Display version information and exit.", false);
+            messageOpt = argParser.addArgument("m", "message", false, "Use an AWS SQS message", false);
+
 
             // Parse command line arguments without failing on any missing required arguments by passing "false" as the second argument.
             argParser.parseArguments(args, false);
