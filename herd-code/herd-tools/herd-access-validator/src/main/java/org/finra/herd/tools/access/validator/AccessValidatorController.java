@@ -50,7 +50,6 @@ import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,18 +133,20 @@ class AccessValidatorController
 
         AmazonSQS amazonSQS = getAmazonSQSClient(awsCredentialsProvider, clientConfiguration, awsRegion);
 
-        BusinessObjectDataKey bDataKey;
+        BusinessObjectDataKey bdataKey;
 
         // Check if -m flag passed
-        if (BooleanUtils.isTrue(messageFlag))
+        if (messageFlag)
         {
-            bDataKey = herdApiClientOperations.getBDataKeySqs(amazonSQS, propertiesHelper.getProperty(AWS_SQS_QUEUE_URL));
+            bdataKey = herdApiClientOperations.getBdataKeySqs(amazonSQS, propertiesHelper.getProperty(AWS_SQS_QUEUE_URL));
 
-        } else {
-            bDataKey = getBDataKeyPropertiesFile();
+        }
+        else
+        {
+            bdataKey = getBdataKeyPropertiesFile();
         }
 
-        BusinessObjectData businessObjectData = getBusinessObjectData(apiClient, bDataKey);
+        BusinessObjectData businessObjectData = getBusinessObjectData(apiClient, bdataKey);
 
 
         // Get S3 bucket name.
@@ -180,6 +181,7 @@ class AccessValidatorController
      * Prints build and user information from registration server
      *
      * @param apiClient Herd API Client
+     *
      * @throws ApiException if a Herd API client error was encountered
      */
     private void printHerdInformation(ApiClient apiClient) throws ApiException
@@ -202,50 +204,54 @@ class AccessValidatorController
      *
      * @return BusinessObjectDataKey
      */
-    BusinessObjectDataKey getBDataKeyPropertiesFile()
+    BusinessObjectDataKey getBdataKeyPropertiesFile()
     {
-        BusinessObjectDataKey bDataKey = new BusinessObjectDataKey();
+        BusinessObjectDataKey bdataKey = new BusinessObjectDataKey();
 
         Integer businessObjectFormatVersion =
             HerdStringUtils.convertStringToInteger(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY), null);
         Integer businessObjectDataVersion = HerdStringUtils.convertStringToInteger(propertiesHelper.getProperty(BUSINESS_OBJECT_DATA_VERSION_PROPERTY), null);
 
-        bDataKey.setNamespace(propertiesHelper.getProperty(NAMESPACE_PROPERTY));
-        bDataKey.setBusinessObjectDefinitionName(propertiesHelper.getProperty(BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY));
-        bDataKey.setBusinessObjectFormatUsage(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_USAGE_PROPERTY));
-        bDataKey.setBusinessObjectFormatFileType(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_FILE_TYPE_PROPERTY));
-        bDataKey.setPartitionValue(propertiesHelper.getProperty(PRIMARY_PARTITION_VALUE_PROPERTY));
+        bdataKey.setNamespace(propertiesHelper.getProperty(NAMESPACE_PROPERTY));
+        bdataKey.setBusinessObjectDefinitionName(propertiesHelper.getProperty(BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY));
+        bdataKey.setBusinessObjectFormatUsage(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_USAGE_PROPERTY));
+        bdataKey.setBusinessObjectFormatFileType(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_FILE_TYPE_PROPERTY));
+        bdataKey.setPartitionValue(propertiesHelper.getProperty(PRIMARY_PARTITION_VALUE_PROPERTY));
 
         String subpartition = propertiesHelper.getProperty(SUB_PARTITION_VALUES_PROPERTY);
         if (subpartition != null)
-            bDataKey.setSubPartitionValues(Arrays.asList(subpartition.split( "\\s*\\|\\s*")));
+        {
+            bdataKey.setSubPartitionValues(Arrays.asList(subpartition.split("\\s*\\|\\s*")));
+        }
         else
-            bDataKey.setSubPartitionValues(null);
+        {
+            bdataKey.setSubPartitionValues(null);
+        }
 
-        bDataKey.setBusinessObjectFormatVersion(businessObjectFormatVersion);
-        bDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
+        bdataKey.setBusinessObjectFormatVersion(businessObjectFormatVersion);
+        bdataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
 
-        return bDataKey;
+        return bdataKey;
     }
 
     /**
-     *
      * @param apiClient Herd API Client
-     * @param bDataKey BusinessObjectDataKey
+     * @param bdataKey BusinessObjectDataKey
+     *
      * @return BusinessObjectData
      * @throws ApiException if a Herd API client error was encountered
      */
-    private BusinessObjectData getBusinessObjectData(ApiClient apiClient, BusinessObjectDataKey bDataKey) throws ApiException
+    private BusinessObjectData getBusinessObjectData(ApiClient apiClient, BusinessObjectDataKey bdataKey) throws ApiException
     {
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(apiClient);
 
         // Retrieve business object data from the registration server.
         LOGGER.info("Retrieving business object data information from the registration server...");
         BusinessObjectData businessObjectData = herdApiClientOperations
-            .businessObjectDataGetBusinessObjectData(businessObjectDataApi, bDataKey.getNamespace(), bDataKey.getBusinessObjectDefinitionName(),
-                bDataKey.getBusinessObjectFormatUsage(), bDataKey.getBusinessObjectFormatFileType(), null, bDataKey.getPartitionValue(),
-                StringUtils.join(bDataKey.getSubPartitionValues(), "|"), bDataKey.getBusinessObjectFormatVersion(), bDataKey.getBusinessObjectDataVersion(), null,
-                false, false);
+            .businessObjectDataGetBusinessObjectData(businessObjectDataApi, bdataKey.getNamespace(), bdataKey.getBusinessObjectDefinitionName(),
+                bdataKey.getBusinessObjectFormatUsage(), bdataKey.getBusinessObjectFormatFileType(), null, bdataKey.getPartitionValue(),
+                StringUtils.join(bdataKey.getSubPartitionValues(), "|"), bdataKey.getBusinessObjectFormatVersion(), bdataKey.getBusinessObjectDataVersion(),
+                null, false, false);
         LOGGER.info("{}", businessObjectData);
 
         // Check if retrieved business object data has storage unit registered with it.

@@ -20,6 +20,7 @@ import java.io.File;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
@@ -142,7 +143,7 @@ public class AccessValidatorApp
         // Call the controller with the user specified parameters to perform access validation.
         AccessValidatorController controller = applicationContext.getBean(AccessValidatorController.class);
         File propertiesFile = argParser.getFileValue(propertiesFilePathOpt, new File(DEFAULT_PROPERTIES_FILE_PATH));
-        Boolean messageFlag = argParser.getBooleanValue(messageOpt);
+        Boolean messageFlag = BooleanUtils.isTrue(argParser.getBooleanValue(messageOpt));
         controller.validateAccess(propertiesFile, messageFlag);
 
         // No exceptions were returned so return success.

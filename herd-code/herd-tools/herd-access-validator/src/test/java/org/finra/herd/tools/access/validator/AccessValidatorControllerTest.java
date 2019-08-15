@@ -134,12 +134,6 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, subpartition, false);
     }
 
-    @Test
-    public void testValidateAccessSqsMessageNullFlag() throws Exception
-    {
-        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, SUB_PARTITION_VALUES, null);
-    }
-
     private void testValidateAccessHelper(Integer businessObjectFormatVersion, Integer businessObjectDataVersion, String subPartitionValues, Boolean messageFlag) throws Exception
     {
         setupBusinessDataObject();
@@ -219,16 +213,16 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
 
     private void setupSqsTest() throws Exception
     {
-        BusinessObjectDataKey bDataKey = accessValidatorController.getBDataKeyPropertiesFile();
+        BusinessObjectDataKey bDataKey = accessValidatorController.getBdataKeyPropertiesFile();
 
         when(propertiesHelper.getProperty(AWS_SQS_QUEUE_URL)).thenReturn(AWS_SQS_URL);
-        when(herdApiClientOperations.getBDataKeySqs(any(AmazonSQS.class), eq(AWS_SQS_URL))).thenReturn(bDataKey);
+        when(herdApiClientOperations.getBdataKeySqs(any(AmazonSQS.class), eq(AWS_SQS_URL))).thenReturn(bDataKey);
     }
 
     private void verifySqsTest() throws Exception
     {
         verify(propertiesHelper).getProperty(AWS_SQS_QUEUE_URL);
-        verify(herdApiClientOperations).getBDataKeySqs(any(AmazonSQS.class), eq(AWS_SQS_URL));
+        verify(herdApiClientOperations).getBdataKeySqs(any(AmazonSQS.class), eq(AWS_SQS_URL));
     }
 
     /**

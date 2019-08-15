@@ -15,6 +15,8 @@
 */
 package org.finra.herd.tools.access.validator;
 
+import java.io.IOException;
+
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
@@ -93,12 +95,13 @@ class HerdApiClientOperations
      * @param client the AWS SQS client
      * @param queueUrl the AWS SQS queue url
      * @return BusinessObjectDataKey
+     * @throws IOException if fails to retrieve BusinessObjectDataKey from SQS message
      * @throws ApiException if fails to make API call
      */
-    BusinessObjectDataKey getBDataKeySqs(AmazonSQS client, String queueUrl) throws ApiException
+    BusinessObjectDataKey getBdataKeySqs(AmazonSQS client, String queueUrl) throws IOException, ApiException
     {
         ReceiveMessageRequest receiveMessageRequest =
-            new ReceiveMessageRequest().withMaxNumberOfMessages(1).withQueueUrl(queueUrl).withWaitTimeSeconds(10);
+            new ReceiveMessageRequest().withMaxNumberOfMessages(1).withQueueUrl(queueUrl).withWaitTimeSeconds(10).withVisibilityTimeout(0);
         ReceiveMessageResult currentMessage = client.receiveMessage(receiveMessageRequest);
         if (currentMessage != null && currentMessage.getMessages() != null && currentMessage.getMessages().size() > 0)
         {
@@ -107,14 +110,7 @@ class HerdApiClientOperations
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
 
-            try
-            {
-                return mapper.readValue(new JSONObject(receivedMessage.getBody()).getString("Message"), JsonMessage.class).getBusinessObjectDataKey();
-            }
-            catch (Exception e)
-            {
-                throw new ApiException("Error getting body from SQS message: " + e.getMessage());
-            }
+            return mapper.readValue(new JSONObject(receivedMessage.getBody()).getString("Message"), JsonMessage.class).getBusinessObjectDataKey();
         }
         throw new ApiException("No SQS message found in queue: " + queueUrl);
     }
