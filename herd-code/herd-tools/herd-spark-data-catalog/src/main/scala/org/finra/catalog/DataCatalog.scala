@@ -1512,11 +1512,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   def loadDataFrame(namespace: String,
                     objName: String,
                     usage: String = "PRC",
-                    fileFormat: String = "PARQUET",
-                    delimiter: String = null,
-                    escapeChar: String = null): DataFrame = {
+                    fileFormat: String = "PARQUET"): DataFrame = {
 
-    var baseLoadOptions = spark.read.format("herd")
+    spark.read.format("herd")
       .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
@@ -1524,16 +1522,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       .option("businessObjectName", objName)
       .option("businessObjectFormatUsage", usage)
       .option("businessObjectFormatFileType", fileFormat)
-
-    val options = Map("delimiter" -> Option(delimiter),
-      "escape" -> Option(escapeChar)
-    ).filter(opt => opt._2.nonEmpty)
-
-    // add optional parameters if specified by user
-    baseLoadOptions = options.foldLeft(baseLoadOptions)((df, opts) => df.option(opts._1, opts._2.get) )
-
-    // load the data
-    baseLoadOptions.load()
+      .load()
 
   }
 
@@ -1574,7 +1563,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
 
     val options = Map("delimiter" -> Option(delimiter),
-      "escape"    -> Option(escapeChar)
+      "escape" -> Option(escapeChar)
     ).filter(opt => opt._2.nonEmpty)
 
     // add optional parameters if specified by user
