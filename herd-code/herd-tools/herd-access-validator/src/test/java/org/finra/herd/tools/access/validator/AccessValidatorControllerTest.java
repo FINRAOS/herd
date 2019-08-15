@@ -22,7 +22,7 @@ import static org.finra.herd.dao.AbstractDaoTest.S3_KEY;
 import static org.finra.herd.tools.access.validator.AccessValidatorController.S3_BUCKET_NAME_ATTRIBUTE;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_REGION_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_ROLE_ARN_PROPERTY;
-import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_SQS_QUEUE_URL;
+import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_SQS_QUEUE_URL_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_DATA_VERSION_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_FORMAT_FILE_TYPE_PROPERTY;
@@ -49,7 +49,6 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.BooleanUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -96,7 +95,6 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
     @Mock
     private S3Operations s3Operations;
 
-
     @Before
     public void before()
     {
@@ -134,7 +132,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, subpartition, false);
     }
 
-    private void testValidateAccessHelper(Integer businessObjectFormatVersion, Integer businessObjectDataVersion, String subPartitionValues, Boolean messageFlag) throws Exception
+    private void testValidateAccessHelper(Integer businessObjectFormatVersion, Integer businessObjectDataVersion, String subPartitionValues,
+        Boolean messageFlag) throws Exception
     {
         setupBusinessDataObject();
 
@@ -160,8 +159,10 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
 
-        if (BooleanUtils.isTrue(messageFlag))
+        if (messageFlag)
+        {
             setupSqsTest();
+        }
 
         // Call the method under test.
         accessValidatorController.validateAccess(propertiesFile, messageFlag);
@@ -189,8 +190,10 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(AWS_ROLE_ARN_PROPERTY);
         verify(s3Operations).getS3Object(eq(getObjectRequest), any(AmazonS3.class));
 
-        if (BooleanUtils.isTrue(messageFlag))
+        if (messageFlag)
+        {
             verifySqsTest();
+        }
 
         verifyNoMoreInteractionsHelper();
     }
@@ -213,16 +216,16 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
 
     private void setupSqsTest() throws Exception
     {
-        BusinessObjectDataKey bDataKey = accessValidatorController.getBdataKeyPropertiesFile();
+        BusinessObjectDataKey bdataKey = accessValidatorController.getBdataKeyPropertiesFile();
 
-        when(propertiesHelper.getProperty(AWS_SQS_QUEUE_URL)).thenReturn(AWS_SQS_URL);
-        when(herdApiClientOperations.getBdataKeySqs(any(AmazonSQS.class), eq(AWS_SQS_URL))).thenReturn(bDataKey);
+        when(propertiesHelper.getProperty(AWS_SQS_QUEUE_URL_PROPERTY)).thenReturn(AWS_SQS_QUEUE_URL);
+        when(herdApiClientOperations.getBdataKeySqs(any(AmazonSQS.class), eq(AWS_SQS_QUEUE_URL))).thenReturn(bdataKey);
     }
 
     private void verifySqsTest() throws Exception
     {
-        verify(propertiesHelper).getProperty(AWS_SQS_QUEUE_URL);
-        verify(herdApiClientOperations).getBdataKeySqs(any(AmazonSQS.class), eq(AWS_SQS_URL));
+        verify(propertiesHelper).getProperty(AWS_SQS_QUEUE_URL_PROPERTY);
+        verify(herdApiClientOperations).getBdataKeySqs(any(AmazonSQS.class), eq(AWS_SQS_QUEUE_URL));
     }
 
     /**

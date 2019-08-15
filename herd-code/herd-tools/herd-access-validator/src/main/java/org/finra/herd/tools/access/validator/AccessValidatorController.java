@@ -17,7 +17,7 @@ package org.finra.herd.tools.access.validator;
 
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_REGION_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_ROLE_ARN_PROPERTY;
-import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_SQS_QUEUE_URL;
+import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_SQS_QUEUE_URL_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_DATA_VERSION_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_FORMAT_FILE_TYPE_PROPERTY;
@@ -109,7 +109,17 @@ class AccessValidatorController
         apiClient.setUsername(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY));
         apiClient.setPassword(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY));
 
-        printHerdInformation(apiClient);
+        // Setup specific API classes.
+        ApplicationApi applicationApi = new ApplicationApi(apiClient);
+        CurrentUserApi currentUserApi = new CurrentUserApi(apiClient);
+
+        // Retrieve build information from the registration server.
+        LOGGER.info("Retrieving build information from the registration server...");
+        LOGGER.info("{}", herdApiClientOperations.applicationGetBuildInfo(applicationApi));
+
+        // Retrieve user information from the registration server.
+        LOGGER.info("Retrieving user information from the registration server...");
+        LOGGER.info("{}", herdApiClientOperations.currentUserGetCurrentUser(currentUserApi));
 
         // Create AWS client configuration.
         ClientConfiguration clientConfiguration = new ClientConfiguration();
@@ -126,27 +136,49 @@ class AccessValidatorController
         // Create AWS S3 client using the assumed role.
         LOGGER.info("Creating AWS S3 client...", awsRoleArn);
 
-        AmazonS3 amazonS3 = getAmazonS3Client(awsCredentialsProvider, clientConfiguration, awsRegion);
+        AmazonS3 amazonS3 =
+            AmazonS3ClientBuilder.standard().withCredentials(awsCredentialsProvider).withClientConfiguration(clientConfiguration).withRegion(awsRegion).build();
 
         // Create AWS SQS client using the assumed role.
         LOGGER.info("Creating AWS SQS client...", awsRoleArn);
 
-        AmazonSQS amazonSQS = getAmazonSQSClient(awsCredentialsProvider, clientConfiguration, awsRegion);
+        AmazonSQS amazonSQS =
+            AmazonSQSClientBuilder.standard().withCredentials(awsCredentialsProvider).withClientConfiguration(clientConfiguration).withRegion(awsRegion)
+                .build();
 
         BusinessObjectDataKey bdataKey;
 
         // Check if -m flag passed
         if (messageFlag)
         {
-            bdataKey = herdApiClientOperations.getBdataKeySqs(amazonSQS, propertiesHelper.getProperty(AWS_SQS_QUEUE_URL));
+            String sqsQueueUrl = propertiesHelper.getProperty(AWS_SQS_QUEUE_URL_PROPERTY);
+            LOGGER.info("Getting message from SQS queue: {}", sqsQueueUrl);
+            bdataKey = herdApiClientOperations.getBdataKeySqs(amazonSQS, sqsQueueUrl);
 
         }
         else
         {
+            LOGGER.info("Creating BusinessObjectDataKey from properties file");
             bdataKey = getBdataKeyPropertiesFile();
         }
+        LOGGER.info("{}", bdataKey);
 
-        BusinessObjectData businessObjectData = getBusinessObjectData(apiClient, bdataKey);
+        BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(apiClient);
+
+        // Retrieve business object data from the registration server.
+        LOGGER.info("Retrieving business object data information from the registration server...");
+        BusinessObjectData businessObjectData = herdApiClientOperations
+            .businessObjectDataGetBusinessObjectData(businessObjectDataApi, bdataKey.getNamespace(), bdataKey.getBusinessObjectDefinitionName(),
+                bdataKey.getBusinessObjectFormatUsage(), bdataKey.getBusinessObjectFormatFileType(), null, bdataKey.getPartitionValue(),
+                StringUtils.join(bdataKey.getSubPartitionValues(), "|"), bdataKey.getBusinessObjectFormatVersion(), bdataKey.getBusinessObjectDataVersion(),
+                null, false, false);
+        LOGGER.info("{}", businessObjectData);
+
+        // Check if retrieved business object data has storage unit registered with it.
+        Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits()), "Business object data has no storage unit registered with it.");
+        Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits().get(0).getStorageFiles()),
+            "No storage files registered with the business object data storage unit.");
+        Assert.isTrue(businessObjectData.getStorageUnits().get(0).getStorage() != null, "Business object data storage unit does not have storage information.");
 
 
         // Get S3 bucket name.
@@ -175,28 +207,6 @@ class AccessValidatorController
 
         // Log a success message at the end.
         LOGGER.info("Finished: SUCCESS");
-    }
-
-    /**
-     * Prints build and user information from registration server
-     *
-     * @param apiClient Herd API Client
-     *
-     * @throws ApiException if a Herd API client error was encountered
-     */
-    private void printHerdInformation(ApiClient apiClient) throws ApiException
-    {
-        // Setup specific API classes.
-        ApplicationApi applicationApi = new ApplicationApi(apiClient);
-        CurrentUserApi currentUserApi = new CurrentUserApi(apiClient);
-
-        // Retrieve build information from the registration server.
-        LOGGER.info("Retrieving build information from the registration server...");
-        LOGGER.info("{}", herdApiClientOperations.applicationGetBuildInfo(applicationApi));
-
-        // Retrieve user information from the registration server.
-        LOGGER.info("Retrieving user information from the registration server...");
-        LOGGER.info("{}", herdApiClientOperations.currentUserGetCurrentUser(currentUserApi));
     }
 
     /**
@@ -232,46 +242,5 @@ class AccessValidatorController
         bdataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
 
         return bdataKey;
-    }
-
-    /**
-     * @param apiClient Herd API Client
-     * @param bdataKey BusinessObjectDataKey
-     *
-     * @return BusinessObjectData
-     * @throws ApiException if a Herd API client error was encountered
-     */
-    private BusinessObjectData getBusinessObjectData(ApiClient apiClient, BusinessObjectDataKey bdataKey) throws ApiException
-    {
-        BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(apiClient);
-
-        // Retrieve business object data from the registration server.
-        LOGGER.info("Retrieving business object data information from the registration server...");
-        BusinessObjectData businessObjectData = herdApiClientOperations
-            .businessObjectDataGetBusinessObjectData(businessObjectDataApi, bdataKey.getNamespace(), bdataKey.getBusinessObjectDefinitionName(),
-                bdataKey.getBusinessObjectFormatUsage(), bdataKey.getBusinessObjectFormatFileType(), null, bdataKey.getPartitionValue(),
-                StringUtils.join(bdataKey.getSubPartitionValues(), "|"), bdataKey.getBusinessObjectFormatVersion(), bdataKey.getBusinessObjectDataVersion(),
-                null, false, false);
-        LOGGER.info("{}", businessObjectData);
-
-        // Check if retrieved business object data has storage unit registered with it.
-        Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits()), "Business object data has no storage unit registered with it.");
-        Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits().get(0).getStorageFiles()),
-            "No storage files registered with the business object data storage unit.");
-        Assert.isTrue(businessObjectData.getStorageUnits().get(0).getStorage() != null, "Business object data storage unit does not have storage information.");
-
-        return businessObjectData;
-    }
-
-    private AmazonS3 getAmazonS3Client(AWSCredentialsProvider awsCredentialsProvider, ClientConfiguration clientConfiguration, String awsRegion)
-    {
-        return AmazonS3ClientBuilder.standard().withCredentials(awsCredentialsProvider).withClientConfiguration(clientConfiguration).withRegion(awsRegion)
-            .build();
-    }
-
-    private AmazonSQS getAmazonSQSClient(AWSCredentialsProvider awsCredentialsProvider, ClientConfiguration clientConfiguration, String awsRegion)
-    {
-        return AmazonSQSClientBuilder.standard().withCredentials(awsCredentialsProvider).withClientConfiguration(clientConfiguration).withRegion(awsRegion)
-            .build();
     }
 }

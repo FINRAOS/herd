@@ -35,7 +35,7 @@ class PropertiesHelper
 
     static final String AWS_ROLE_ARN_PROPERTY = "awsRoleArn";
 
-    static final String AWS_SQS_QUEUE_URL = "awsSqsQueueUrl";
+    static final String AWS_SQS_QUEUE_URL_PROPERTY = "awsSqsQueueUrl";
 
     static final String BUSINESS_OBJECT_DATA_VERSION_PROPERTY = "businessObjectDataVersion";
 
