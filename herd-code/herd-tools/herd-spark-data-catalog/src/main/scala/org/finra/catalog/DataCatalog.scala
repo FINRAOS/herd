@@ -1512,9 +1512,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   def loadDataFrame(namespace: String,
                     objName: String,
                     usage: String = "PRC",
-                    fileFormat: String = "PARQUET"): DataFrame = {
+                    fileFormat: String = "PARQUET",
+                    delimiter: String = null,
+                    escapeChar: String = null): DataFrame = {
 
-    spark.read.format("herd")
+    var baseLoadOptions = spark.read.format("herd")
       .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
@@ -1522,7 +1524,17 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       .option("businessObjectName", objName)
       .option("businessObjectFormatUsage", usage)
       .option("businessObjectFormatFileType", fileFormat)
-      .load()
+
+    val options = Map("delimiter" -> Option(delimiter),
+      "escape" -> Option(escapeChar)
+    ).filter(opt => opt._2.nonEmpty)
+
+    // add optional parameters if specified by user
+    baseLoadOptions = options.foldLeft(baseLoadOptions)((df, opts) => df.option(opts._1, opts._2.get) )
+
+    // load the data
+    baseLoadOptions.load()
+
   }
 
   /** saves a DataFrame and register with DM
@@ -1543,9 +1555,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                     partitionValue: String = "none",
                     partitionKeyGroup: String = "TRADE_DT",
                     usage: String = "PRC",
-                    fileFormat: String = "PARQUET"): Unit = {
+                    fileFormat: String = "PARQUET",
+                    delimiter: String = null,
+                    escapeChar: String = null): Unit = {
 
-    df.write.format("herd")
+    var baseWriteOptions = df.write.format("herd")
       .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
@@ -1557,7 +1571,17 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       .option("businessObjectFormatUsage", usage)
       .option("businessObjectFormatFileType", fileFormat)
       .option("registerNewFormat", "true")
-      .save()
+
+
+    val options = Map("delimiter" -> Option(delimiter),
+      "escape"    -> Option(escapeChar)
+    ).filter(opt => opt._2.nonEmpty)
+
+    // add optional parameters if specified by user
+    baseWriteOptions = options.foldLeft(baseWriteOptions)((df, opts) => df.option(opts._1, opts._2.get) )
+
+    // write out the data
+    baseWriteOptions.save()
   }
 }
 
