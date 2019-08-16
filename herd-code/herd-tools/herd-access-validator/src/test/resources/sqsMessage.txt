@@ -1,0 +1,15 @@
+{
+  "Type" : "Notification",
+  "MessageId" : "b534f71b-e3fa-584d-8883-a2cb2e80b67a",
+  "Message" : "{\n  \"eventDate\" : \"2019-08-16T11:26:50.769-04:00\",\n  \"businessObjectDataKey\" : {\n    \"namespace\" : \"DMFormatNamespace1\",\n    \"businessObjectDefinitionName\" : \"DMFormatDefinition\",\n    \"businessObjectFormatUsage\" : \"DMFormatUsage0\",\n    \"businessObjectFormatFileType\" : \"DMFile1\",\n    \"businessObjectFormatVersion\" : 0,\n    \"partitionValue\" : \"DMTestVal\",\n        \"businessObjectDataVersion\" : 0\n  },\n  \"newBusinessObjectDataStatus\" : \"VALID\"\n      }\n",
+  "Timestamp" : "2019-08-16T15:26:50.848Z",
+  "SignatureVersion" : "1",
+  "Signature" : "WA0/95YnwgFC9TzQrhy5cDoLa739bMOOG2cWNBeCcqzfvIZ3ZhFZuIc8Xnyaruq44i5mlcVJ0h8A0OpUUcJHqzrUayvi3W5Ef5LujMnXv9fxRc3b9yu7N8AaQN61AawXwjq3Xie35IH01xVbG4hHPzcqiWSQyC7sz68GbYLdsTUAn20kN1NFH46WetcTpgkvs9omL/AcNZvwVxzE9PdVvCi4pMkZdYSAKILNGYieRwG5UaQik2Nno3gcHICWwwnd2OZN8e2kk0NngqwU04PDNLUat5/H9fmETCCZUBUyS6yJElzE9/pZQ8Tl2SYsRct1EsXzuDa0oPEP4wENrp++9g==",
+  "MessageAttributes" : {
+    "environment" : {"Type":"String","Value":"DEV"},
+    "messageType" : {"Type":"String","Value":"BUS_OBJCT_DATA_STTS_CHG"},
+    "namespace" : {"Type":"String","Value":"DMFormatNamespace1"},
+    "messageId" : {"Type":"String","Value":"b30c83d6-645a-459a-96ed-4923bba3e22a"},
+    "messageVersion" : {"Type":"String","Value":"1"},
+  }
+}
