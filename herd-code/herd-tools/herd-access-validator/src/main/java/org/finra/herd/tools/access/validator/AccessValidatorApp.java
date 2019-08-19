@@ -20,6 +20,7 @@ import java.io.File;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
@@ -51,6 +52,8 @@ public class AccessValidatorApp
     private ArgumentParser argParser;
 
     private Option propertiesFilePathOpt;
+
+    private Option messageOpt;
 
     AccessValidatorApp()
     {
@@ -139,7 +142,9 @@ public class AccessValidatorApp
 
         // Call the controller with the user specified parameters to perform access validation.
         AccessValidatorController controller = applicationContext.getBean(AccessValidatorController.class);
-        controller.validateAccess(argParser.getFileValue(propertiesFilePathOpt, new File(DEFAULT_PROPERTIES_FILE_PATH)));
+        File propertiesFile = argParser.getFileValue(propertiesFilePathOpt, new File(DEFAULT_PROPERTIES_FILE_PATH));
+        Boolean messageFlag = BooleanUtils.isTrue(argParser.getBooleanValue(messageOpt));
+        controller.validateAccess(propertiesFile, messageFlag);
 
         // No exceptions were returned so return success.
         return ToolsCommonConstants.ReturnValue.SUCCESS;
@@ -164,6 +169,8 @@ public class AccessValidatorApp
             propertiesFilePathOpt = argParser.addArgument("p", "properties", true, "Path to the properties file. Defaults to '.properties'.", false);
             Option helpOpt = argParser.addArgument("h", "help", false, "Display usage information and exit.", false);
             Option versionOpt = argParser.addArgument("v", "version", false, "Display version information and exit.", false);
+            messageOpt = argParser.addArgument("m", "message", false, "Use an AWS SQS message", false);
+
 
             // Parse command line arguments without failing on any missing required arguments by passing "false" as the second argument.
             argParser.parseArguments(args, false);

@@ -89,4 +89,11 @@ public class AccessValidatorAppTest extends AbstractAccessValidatorTest
             .format(DataBridgeApp.BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(), buildInformation.getBuildOs(),
                 buildInformation.getBuildUser()), output);
     }
+
+    @Test
+    public void testParseCommandLineArgumentsMessageOpt()
+    {
+        String[] arguments = {"--message"};
+        assertEquals(null, accessValidatorApp.parseCommandLineArguments(arguments, applicationContext));
+    }
 }
