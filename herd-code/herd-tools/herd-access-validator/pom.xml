@@ -85,6 +85,10 @@
          <groupId>joda-time</groupId>
          <artifactId>joda-time</artifactId>
       </dependency>
+      <dependency>
+         <artifactId>aws-java-sdk-sqs</artifactId>
+         <groupId>com.amazonaws</groupId>
+      </dependency>
 
       <!-- Dependencies for unit tests -->
       <dependency>
