@@ -15,8 +15,18 @@
 */
 package org.finra.herd.tools.access.validator;
 
+import java.io.IOException;
+
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
+import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.sdk.api.ApplicationApi;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.CurrentUserApi;
@@ -77,6 +87,45 @@ class HerdApiClientOperations
             .businessObjectDataGetBusinessObjectData(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 partitionKey, partitionValue, subPartitionValues, businessObjectFormatVersion, businessObjectDataVersion, businessObjectDataStatus,
                 includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
+    }
+
+    /**
+     * Gets BusinessObjectDataKey from SQS message
+     *
+     * @param client the AWS SQS client
+     * @param queueUrl the AWS SQS queue url
+     * @return BusinessObjectDataKey
+     * @throws IOException if fails to retrieve BusinessObjectDataKey from SQS message
+     * @throws ApiException if fails to make API call
+     */
+    BusinessObjectDataKey getBdataKeySqs(AmazonSQS client, String queueUrl) throws IOException, ApiException
+    {
+        ReceiveMessageRequest receiveMessageRequest =
+            new ReceiveMessageRequest().withMaxNumberOfMessages(1).withQueueUrl(queueUrl).withWaitTimeSeconds(10).withVisibilityTimeout(0);
+        ReceiveMessageResult currentMessage = client.receiveMessage(receiveMessageRequest);
+        if (currentMessage != null && currentMessage.getMessages() != null && currentMessage.getMessages().size() > 0)
+        {
+            String receivedMessageBody = currentMessage.getMessages().get(0).getBody();
+
+            return mapJsontoBdataKey(receivedMessageBody).getBusinessObjectDataKey();
+        }
+        throw new ApiException("No SQS message found in queue: " + queueUrl);
+    }
+
+    /**
+     * Maps SQS message to JsonSqsMessageBody.class
+     *
+     * @param messageBody SQS message body
+     * @return BusinessObjectDataKey
+     * @throws IOException if fails to map message to JsonSqsMessageBody.class
+     */
+    JsonSqsMessageBody mapJsontoBdataKey (String messageBody) throws IOException
+    {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+        return mapper.readValue(new JSONObject(messageBody).getString("Message"), JsonSqsMessageBody.class);
     }
 
     /**
