@@ -60,6 +60,8 @@ abstract class AbstractAccessValidatorTest extends AbstractDataBridgeTest
 
     static final String SUB_PARTITION_VALUES = "testSubPartitionValues";
 
+    static final String AWS_SQS_QUEUE_URL = "testAwsSqsUrl";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAccessValidatorTest.class);
 
     @Autowired
