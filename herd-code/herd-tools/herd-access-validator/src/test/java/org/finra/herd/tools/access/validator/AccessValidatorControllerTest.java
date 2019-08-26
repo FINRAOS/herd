@@ -36,25 +36,20 @@ import static org.finra.herd.tools.access.validator.PropertiesHelper.PRIMARY_PAR
 import static org.finra.herd.tools.access.validator.PropertiesHelper.SUB_PARTITION_VALUES_PROPERTY;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.google.common.collect.Lists;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -138,25 +133,6 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, subpartition, false);
     }
 
-    @Test
-    public void testMapJsontoBdataKey() throws Exception
-    {
-        String fileName = "sqsMessage.txt";
-        String expectedNamespace = "DMFormatNamespace1";
-
-        Path path = Paths.get(getClass().getClassLoader().getResource(fileName).toURI());
-
-        Stream<String> lines = Files.lines(path);
-        String messageBody = lines.collect(Collectors.joining("\n")).trim();
-        lines.close();
-
-        HerdApiClientOperations apiClient = new HerdApiClientOperations();
-
-        BusinessObjectDataKey bdataKey = apiClient.mapJsontoBdataKey(messageBody).getBusinessObjectDataKey();
-
-        Assert.assertEquals("Did not get the correct namespace", expectedNamespace, bdataKey.getNamespace());
-    }
-
     private void testValidateAccessHelper(Integer businessObjectFormatVersion, Integer businessObjectDataVersion, String subPartitionValues,
         Boolean messageFlag) throws Exception
     {
@@ -190,9 +166,11 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         }
 
         // Call the method under test.
+        doNothing().when(herdApiClientOperations).checkPropertiesFile(propertiesHelper, messageFlag);
         accessValidatorController.validateAccess(propertiesFile, messageFlag);
 
         // Verify the external calls.
+        verify(herdApiClientOperations).checkPropertiesFile(propertiesHelper, messageFlag);
         verify(propertiesHelper).loadProperties(propertiesFile);
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);

@@ -101,4 +101,16 @@ class PropertiesHelper
         }
         LOGGER.info("Successfully loaded properties:%n{}", propertiesStringBuilder.toString());
     }
+
+    /**
+     * Check if property is missing
+     *
+     * @param key the property key
+     *
+     * @return true if property not found
+     */
+    Boolean isNull(String key)
+    {
+        return (properties.getProperty(key) == null);
+    }
 }
