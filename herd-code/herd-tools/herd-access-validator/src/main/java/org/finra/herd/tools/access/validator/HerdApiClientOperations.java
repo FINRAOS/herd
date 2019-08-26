@@ -184,7 +184,7 @@ class HerdApiClientOperations
 
         for (String property : requiredProperties)
         {
-            if (propertiesHelper.isNull(property))
+            if (propertiesHelper.isBlankOrNull(property))
             {
                 missingProperty = true;
                 errorMessage.append(property);
@@ -194,7 +194,7 @@ class HerdApiClientOperations
 
         if (messageFlag)
         {
-            if (propertiesHelper.isNull(AWS_SQS_QUEUE_URL_PROPERTY))
+            if (propertiesHelper.isBlankOrNull(AWS_SQS_QUEUE_URL_PROPERTY))
             {
                 missingProperty = true;
                 errorMessage.append(AWS_SQS_QUEUE_URL_PROPERTY);
@@ -208,7 +208,7 @@ class HerdApiClientOperations
 
             for (String property : requiredProperties)
             {
-                if (propertiesHelper.isNull(property))
+                if (propertiesHelper.isBlankOrNull(property))
                 {
                     missingProperty = true;
                     errorMessage.append(property);

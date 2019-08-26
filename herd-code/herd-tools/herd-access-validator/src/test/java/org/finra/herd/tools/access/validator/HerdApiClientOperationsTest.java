@@ -92,7 +92,7 @@ public class HerdApiClientOperationsTest
 
         for (String property : requiredProperties)
         {
-            when(propertiesHelper.isNull(property)).thenReturn(true);
+            when(propertiesHelper.isBlankOrNull(property)).thenReturn(true);
         }
 
         try
@@ -112,7 +112,7 @@ public class HerdApiClientOperationsTest
 
         for (String property : requiredProperties)
         {
-            verify(propertiesHelper).isNull(property);
+            verify(propertiesHelper).isBlankOrNull(property);
         }
 
         verifyNoMoreInteractionsHelper();
@@ -128,12 +128,12 @@ public class HerdApiClientOperationsTest
 
         for (String property : requiredProperties)
         {
-            when(propertiesHelper.isNull(property)).thenReturn(false);
+            when(propertiesHelper.isBlankOrNull(property)).thenReturn(false);
         }
 
         try
         {
-            when(propertiesHelper.isNull(AWS_SQS_QUEUE_URL_PROPERTY)).thenReturn(true);
+            when(propertiesHelper.isBlankOrNull(AWS_SQS_QUEUE_URL_PROPERTY)).thenReturn(true);
             herdApiClientOperations.checkPropertiesFile(propertiesHelper, true);
         }
         catch (ApiException e)
@@ -151,10 +151,10 @@ public class HerdApiClientOperationsTest
 
         for (String property : requiredProperties)
         {
-            verify(propertiesHelper).isNull(property);
+            verify(propertiesHelper).isBlankOrNull(property);
         }
 
-        verify(propertiesHelper).isNull(AWS_SQS_QUEUE_URL_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(AWS_SQS_QUEUE_URL_PROPERTY);
         verifyNoMoreInteractionsHelper();
     }
 

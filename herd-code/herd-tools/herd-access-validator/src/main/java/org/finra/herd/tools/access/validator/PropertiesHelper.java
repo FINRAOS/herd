@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -103,14 +104,14 @@ class PropertiesHelper
     }
 
     /**
-     * Check if property is missing
+     * Check if property is missing or blank
      *
      * @param key the property key
      *
      * @return true if property not found
      */
-    Boolean isNull(String key)
+    Boolean isBlankOrNull(String key)
     {
-        return (properties.getProperty(key) == null);
+        return StringUtils.isBlank(properties.getProperty(key));
     }
 }

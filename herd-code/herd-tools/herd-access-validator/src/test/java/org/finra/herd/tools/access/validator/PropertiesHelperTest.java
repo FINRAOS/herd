@@ -74,6 +74,20 @@ public class PropertiesHelperTest extends AbstractAccessValidatorTest
     @Test
     public void testIsNullProperty()
     {
-        assertTrue(propertiesHelper.isNull(INVALID_PROPERTY));
+        assertTrue(propertiesHelper.isBlankOrNull(INVALID_PROPERTY));
+    }
+
+    @Test
+    public void testIsBlankProperty() throws IOException
+    {
+        // Create a temporary file.
+        final File tempFile = temporaryFolder.newFile(PROPERTIES_FILE_PATH);
+
+        // Write several properties that are blank or have whitespace
+        FileUtils.writeStringToFile(tempFile, String.format("%s=%s%n%s=%s%n", HERD_USERNAME_PROPERTY, "", HERD_PASSWORD_PROPERTY, "  "),
+            StandardCharsets.UTF_8.name());
+
+        assertTrue(propertiesHelper.isBlankOrNull(HERD_USERNAME_PROPERTY));
+        assertTrue(propertiesHelper.isBlankOrNull(HERD_PASSWORD_PROPERTY));
     }
 }
