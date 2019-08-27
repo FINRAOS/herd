@@ -41,6 +41,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -56,13 +59,16 @@ import org.finra.herd.sdk.model.UserAuthorizations;
  * A helper class that wraps calls to Herd API clients.
  */
 @Component
+@EnableRetry
 class HerdApiClientOperations
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HerdApiClientOperations.class);
     private static final String SEARCH_KEYWORD_1 = "businessObjectDataKey";
     private static final String SEARCH_KEYWORD_2 = "BUS_OBJCT_DATA_STTS_CHG";
     private static final String JSON_KEY = "Message";
-    private static final int NUM_RETRIES = 3;
+    private static final int MAX_NUM_MESSAGES = 10;
+    private static final int WAIT_TIME_SECS = 1;
+    private static final int VISIBILITY_TIMEOUT_SECS = 0;
 
     /**
      * Gets the build information.
@@ -122,28 +128,28 @@ class HerdApiClientOperations
      * @throws IOException if fails to retrieve BusinessObjectDataKey from SQS message
      * @throws ApiException if fails to make API call
      */
+    @Retryable(value = ApiException.class, backoff = @Backoff(delay = 2000, multiplier = 2))
     BusinessObjectDataKey getBdataKeySqs(AmazonSQS client, String queueUrl) throws IOException, ApiException
     {
         ReceiveMessageRequest receiveMessageRequest =
-            new ReceiveMessageRequest().withMaxNumberOfMessages(10).withQueueUrl(queueUrl).withWaitTimeSeconds(1).withVisibilityTimeout(0);
-        for (int i = 1; i <= NUM_RETRIES; i++)
-        {
-            LOGGER.info("Attempt {} of {}", i, NUM_RETRIES);
-            ReceiveMessageResult receiveMessageResult = client.receiveMessage(receiveMessageRequest);
-            if (receiveMessageResult != null && receiveMessageResult.getMessages() != null && receiveMessageResult.getMessages().size() > 0)
-            {
-                List<Message> sqsMessageList = receiveMessageResult.getMessages();
+            new ReceiveMessageRequest().withMaxNumberOfMessages(MAX_NUM_MESSAGES).withQueueUrl(queueUrl).withWaitTimeSeconds(WAIT_TIME_SECS)
+                .withVisibilityTimeout(VISIBILITY_TIMEOUT_SECS);
 
-                LOGGER.info("Scanning {} messages for {} and {}", sqsMessageList.size(), SEARCH_KEYWORD_1, SEARCH_KEYWORD_2);
-                // Get message type BUS_OBJCT_DATA_STTS_CHG
-                for (Message sqsMessage : sqsMessageList)
+        LOGGER.info("Checking queue");
+        ReceiveMessageResult receiveMessageResult = client.receiveMessage(receiveMessageRequest);
+        if (receiveMessageResult != null && receiveMessageResult.getMessages() != null && receiveMessageResult.getMessages().size() > 0)
+        {
+            List<Message> sqsMessageList = receiveMessageResult.getMessages();
+
+            LOGGER.info("Scanning {} messages for {} and {}", sqsMessageList.size(), SEARCH_KEYWORD_1, SEARCH_KEYWORD_2);
+            // Get message type BUS_OBJCT_DATA_STTS_CHG
+            for (Message sqsMessage : sqsMessageList)
+            {
+                String receivedMessageBody = sqsMessage.getBody();
+                if (receivedMessageBody.contains(SEARCH_KEYWORD_1) && receivedMessageBody.contains(SEARCH_KEYWORD_2))
                 {
-                    String receivedMessageBody = sqsMessage.getBody();
-                    if (receivedMessageBody.contains(SEARCH_KEYWORD_1) && receivedMessageBody.contains(SEARCH_KEYWORD_2))
-                    {
-                        LOGGER.info("Received Message: {}", receivedMessageBody);
-                        return mapJsontoBdataKey(receivedMessageBody).getBusinessObjectDataKey();
-                    }
+                    LOGGER.info("Received Message: {}", receivedMessageBody);
+                    return mapJsontoBdataKey(receivedMessageBody).getBusinessObjectDataKey();
                 }
             }
         }
