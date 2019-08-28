@@ -103,6 +103,9 @@ class AccessValidatorController
         // Load properties.
         propertiesHelper.loadProperties(propertiesFile);
 
+        // Check properties
+        herdApiClientOperations.checkPropertiesFile(propertiesHelper, messageFlag);
+
         // Create the API client to a specific REST endpoint with proper authentication.
         ApiClient apiClient = new ApiClient();
         apiClient.setBasePath(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY));
