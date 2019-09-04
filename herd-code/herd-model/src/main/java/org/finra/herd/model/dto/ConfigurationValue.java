@@ -1000,7 +1000,6 @@ public enum ConfigurationValue
      */
     SES_RECORDS_COLLECTOR_ADDRESS("ses.records.collector.address", null);
 
-
     private Object defaultValue;
 
     // Properties

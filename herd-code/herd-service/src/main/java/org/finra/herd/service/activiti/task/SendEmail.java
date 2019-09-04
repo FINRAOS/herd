@@ -23,17 +23,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.dto.EmailDto;
 import org.finra.herd.service.SesService;
-import org.finra.herd.service.activiti.ActivitiHelper;
 
 /**
- * Activiti task to send an email.
- *
- * </p>
- * </p>
- *
+ * Activiti task to send an email. <p> </p> </p>
+ * <p>
  * <pre>
  *   <extensionElements>
  *     <activiti:field name="to" expression=""/>
@@ -49,25 +44,24 @@ import org.finra.herd.service.activiti.ActivitiHelper;
 @Component
 public class SendEmail extends BaseJavaDelegate
 {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(SendEmail.class);
 
-    @Autowired
-    private ActivitiHelper activitiHelper;
+    private Expression bcc;
 
-    @Autowired
-    private HerdStringHelper herdStringHelper;
+    private Expression cc;
+
+    private Expression html;
+
+    private Expression replyTo;
 
     @Autowired
     private SesService sesService;
 
-    private Expression to;
-    private Expression cc;
-    private Expression bcc;
     private Expression subject;
+
     private Expression text;
-    private Expression html;
-    private Expression replyTo;
+
+    private Expression to;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -81,21 +75,15 @@ public class SendEmail extends BaseJavaDelegate
 
     private EmailDto populateEmailDto(final DelegateExecution execution)
     {
-
         // Extract email information from incoming execution request and return a DTO
-        EmailDto emailDto =
-            new EmailDto.Builder(activitiHelper.getRequiredExpressionVariableAsString(to, execution, "to"))
-                .withCc(activitiHelper.getExpressionVariableAsString(cc, execution))
-                .withBcc(activitiHelper.getExpressionVariableAsString(bcc, execution))
-                .withSubject(activitiHelper.getExpressionVariableAsString(subject, execution))
-                .withText(activitiHelper.getExpressionVariableAsString(text, execution))
-                .withHtml(activitiHelper.getExpressionVariableAsString(html, execution))
-                .withReplyTo(activitiHelper.getExpressionVariableAsString(replyTo, execution)).build();
+        EmailDto emailDto = EmailDto.builder().withTo(activitiHelper.getExpressionVariableAsString(to, execution))
+            .withCc(activitiHelper.getExpressionVariableAsString(cc, execution)).withBcc(activitiHelper.getExpressionVariableAsString(bcc, execution))
+            .withSubject(activitiHelper.getRequiredExpressionVariableAsString(subject, execution, "subject"))
+            .withText(activitiHelper.getExpressionVariableAsString(text, execution)).withHtml(activitiHelper.getExpressionVariableAsString(html, execution))
+            .withReplyTo(activitiHelper.getExpressionVariableAsString(replyTo, execution)).build();
 
         LOGGER.info("Preparing to send email to recipient(s): \"{}\"", emailDto.getTo());
 
         return emailDto;
     }
-
-
 }

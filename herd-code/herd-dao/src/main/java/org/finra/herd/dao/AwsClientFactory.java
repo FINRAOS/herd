@@ -138,7 +138,6 @@ public class AwsClientFactory
     @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public AmazonSimpleEmailService getSesClient(AwsParamsDto awsParamsDto)
     {
-
         // Get client configuration
         ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsParamsDto);
 
@@ -155,6 +154,5 @@ public class AwsClientFactory
             return AmazonSimpleEmailServiceClientBuilder.standard().withClientConfiguration(clientConfiguration).withRegion(awsParamsDto.getAwsRegionName())
                 .build();
         }
-
     }
 }

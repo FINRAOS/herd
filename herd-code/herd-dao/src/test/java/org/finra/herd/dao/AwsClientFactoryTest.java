@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sqs.AmazonSQS;
 import org.junit.Test;
@@ -180,6 +181,54 @@ public class AwsClientFactoryTest extends AbstractDaoTest
     public void testGetEmrClientNoAwsCredentials()
     {
         assertNotNull(awsClientFactory.getEmrClient(
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1)));
+    }
+
+    @Test
+    public void testGetSesClient()
+    {
+        assertNotNull(awsClientFactory.getSesClient(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                AWS_REGION_NAME_US_EAST_1)));
+    }
+
+    @Test
+    public void testGetSesClientCacheHitMiss()
+    {
+        // Create an AWS parameters DTO that contains both AWS credentials and proxy information.
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                AWS_REGION_NAME_US_EAST_1);
+
+        // Get an Amazon SES client.
+        AmazonSimpleEmailService amazonSimpleEmailService = awsClientFactory.getSesClient(awsParamsDto);
+
+        // Confirm a cache hit.
+        assertEquals(amazonSimpleEmailService, awsClientFactory.getSesClient(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                AWS_REGION_NAME_US_EAST_1)));
+
+        // Confirm a cache miss due to AWS credentials.
+        assertNotEquals(amazonSimpleEmailService, awsClientFactory.getSesClient(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY_2, AWS_ASSUMED_ROLE_SECRET_KEY_2, AWS_ASSUMED_ROLE_SESSION_TOKEN_2, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                AWS_REGION_NAME_US_EAST_1)));
+
+        // Confirm a cache miss due to http proxy information.
+        assertNotEquals(amazonSimpleEmailService, awsClientFactory.getSesClient(
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST_2, HTTP_PROXY_PORT_2,
+                AWS_REGION_NAME_US_EAST_1)));
+
+        // Clear the cache.
+        cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
+
+        // Confirm a cache miss due to cleared cache.
+        assertNotEquals(amazonSimpleEmailService, awsClientFactory.getSesClient(awsParamsDto));
+    }
+
+    @Test
+    public void testGetSesClientNoAwsCredentials()
+    {
+        assertNotNull(awsClientFactory.getSesClient(
             new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1)));
     }
 }

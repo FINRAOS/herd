@@ -23,14 +23,11 @@ import org.finra.herd.model.dto.EmailDto;
  */
 public interface SesDao
 {
-
     /**
      * Sends an email with all the options as specified in the provided {@link EmailDto}
      *
      * @param awsParamsDto the specified client params
      * @param emailDto the specified information on the email to send
-     *
      */
     void sendEmail(AwsParamsDto awsParamsDto, EmailDto emailDto);
-
 }

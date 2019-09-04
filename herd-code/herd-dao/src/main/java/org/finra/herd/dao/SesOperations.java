@@ -25,14 +25,11 @@ import org.finra.herd.model.dto.EmailDto;
  */
 public interface SesOperations
 {
-
     /**
      * Sends an email with all the options as specified in the provided {@link EmailDto}
      *
      * @param sendEmailRequest the specified information on the email to send
      * @param simpleEmailService the specified ses service object
-     *
      */
     void sendEmail(SendEmailRequest sendEmailRequest, AmazonSimpleEmailService simpleEmailService);
-
 }

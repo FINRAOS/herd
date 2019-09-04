@@ -20,14 +20,12 @@ import org.finra.herd.model.dto.EmailDto;
 /**
  * The AWS SES service
  */
-public interface SesService {
-
+public interface SesService
+{
     /**
      * Sends an email with all SES actions as requested.
      *
      * @param emailDto the specified email along with options
-     *
      */
     void sendEmail(EmailDto emailDto);
-
 }

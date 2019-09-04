@@ -30,8 +30,8 @@ import org.finra.herd.service.SesService;
 @Service
 public class SesServiceImpl implements SesService
 {
-
     private final AwsHelper awsHelper;
+
     private final SesDao sesDao;
 
     @Autowired
@@ -50,5 +50,4 @@ public class SesServiceImpl implements SesService
         // Delegate to the corresponding DAO
         sesDao.sendEmail(awsParamsDto, emailDto);
     }
-
 }
