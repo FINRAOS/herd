@@ -30,19 +30,14 @@ import org.finra.herd.service.SesService;
 @Service
 public class SesServiceImpl implements SesService
 {
-    private final AwsHelper awsHelper;
-
-    private final SesDao sesDao;
+    @Autowired
+    private AwsHelper awsHelper;
 
     @Autowired
-    public SesServiceImpl(AwsHelper awsHelper, SesDao sesDao)
-    {
-        this.awsHelper = awsHelper;
-        this.sesDao = sesDao;
-    }
+    private SesDao sesDao;
 
     @Override
-    public void sendEmail(EmailDto emailDto)
+    public void sendEmail(final EmailDto emailDto)
     {
         // Fetch AWS information
         AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();

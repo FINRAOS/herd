@@ -48,6 +48,8 @@ public class SesDaoTest extends AbstractDaoTest
     @InjectMocks
     private SesDaoImpl sesDaoImpl;
 
+    private static final String SES_SOURCE_ADDRESS = "from@abc.com";
+
     private static final String SES_TO_ADDRESS = "test1@abc.com,test2@abc.com";
 
     private static final String SES_CC_ADDRESS = "test3@abc.com";
@@ -77,8 +79,6 @@ public class SesDaoTest extends AbstractDaoTest
     public void testSendEmail()
     {
         EmailDto emailDto = getDefaultEmailDto();
-        when(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM))
-            .thenReturn((String) ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM.getDefaultValue());
         when(configurationHelper.getProperty(ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS))
             .thenReturn((String) ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS.getDefaultValue());
         when(herdStringHelper.splitAndTrim(emailDto.getTo(), COMMA_DELIMITER)).thenReturn(new HashSet<>(Arrays.asList(SES_TO_ADDRESS.split(COMMA_DELIMITER))));
@@ -90,7 +90,8 @@ public class SesDaoTest extends AbstractDaoTest
 
         //verify argument
         verify(sesOperations).sendEmail(sendEmailRequestArgumentCaptor.capture(), any());
-        assertNull(sendEmailRequestArgumentCaptor.getValue().getSource());
+        verify(configurationHelper, never()).getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM);
+        assertEquals(SES_SOURCE_ADDRESS, sendEmailRequestArgumentCaptor.getValue().getSource());
         assertEqualsIgnoreOrder("to Address not correct", Arrays.asList(SES_TO_ADDRESS.split(COMMA_DELIMITER)),
             sendEmailRequestArgumentCaptor.getValue().getDestination().getToAddresses());
         assertEquals(Collections.singletonList(SES_CC_ADDRESS), sendEmailRequestArgumentCaptor.getValue().getDestination().getCcAddresses());
@@ -99,6 +100,24 @@ public class SesDaoTest extends AbstractDaoTest
         assertEquals(SES_TXT, sendEmailRequestArgumentCaptor.getValue().getMessage().getBody().getText().getData());
         assertNull(sendEmailRequestArgumentCaptor.getValue().getMessage().getBody().getHtml());
         assertNull(sendEmailRequestArgumentCaptor.getValue().getConfigurationSetName());
+    }
+
+    @Test
+    public void testSendEmailWithDefaultSourceValue()
+    {
+        EmailDto emailDto = getDefaultEmailDto();
+        emailDto.setSource(null);
+
+        when(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM))
+            .thenReturn((String) ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM.getDefaultValue());
+
+        //send email
+        sesDaoImpl.sendEmail(getAwsParamsDto(), emailDto);
+
+        //verify default config value is used for source
+        verify(sesOperations).sendEmail(sendEmailRequestArgumentCaptor.capture(), any());
+        verify(configurationHelper).getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM);
+        assertEquals(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM.getDefaultValue(), sendEmailRequestArgumentCaptor.getValue().getSource());
     }
 
     @Test
@@ -126,6 +145,6 @@ public class SesDaoTest extends AbstractDaoTest
     }
 
     private EmailDto getDefaultEmailDto(){
-        return new EmailDto(SES_TO_ADDRESS, SES_CC_ADDRESS, SES_BCC_ADDRESS, SES_SUBJECT, SES_TXT, SES_HTML, SES_REPLYTO);
+        return new EmailDto(SES_SOURCE_ADDRESS, SES_TO_ADDRESS, SES_CC_ADDRESS, SES_BCC_ADDRESS, SES_SUBJECT, SES_TXT, SES_HTML, SES_REPLYTO);
     }
 }

@@ -241,6 +241,7 @@
 
    <xs:complexType name="emailDto">
       <xs:sequence>
+         <xs:element name="source" type="xs:string" minOccurs="0"/>
          <xs:element name="to" type="xs:string" minOccurs="0"/>
          <xs:element name="cc" type="xs:string" minOccurs="0"/>
          <xs:element name="bcc" type="xs:string" minOccurs="0"/>

@@ -56,11 +56,6 @@ public class SesDaoImpl implements SesDao
     @Autowired
     private SesOperations sesOperations;
 
-    public SesDaoImpl()
-    {
-
-    }
-
     @Override
     public void sendEmail(final AwsParamsDto awsParamsDto, final EmailDto emailDto)
     {
@@ -78,14 +73,13 @@ public class SesDaoImpl implements SesDao
      *
      * @return the prepared destination information.
      */
-    private Destination prepareDestination(EmailDto emailDto)
+    private Destination prepareDestination(final EmailDto emailDto)
     {
         // Initialize a new destinations object
         Destination destination = new Destination();
-
-        // set 'to' addresses
         final String commaDelimiter = ",";
 
+        // set 'to' addresses
         if (Objects.nonNull(emailDto.getTo()))
         {
             destination.setToAddresses(herdStringHelper.splitAndTrim(emailDto.getTo(), commaDelimiter));
@@ -129,7 +123,7 @@ public class SesDaoImpl implements SesDao
      *
      * @return the prepared message
      */
-    private Message prepareMessage(EmailDto emailDto)
+    private Message prepareMessage(final EmailDto emailDto)
     {
         // Using UTF-8 which is a more commonly used charset. This is also the default for SES client.
         final String charset = "UTF-8";
@@ -160,7 +154,6 @@ public class SesDaoImpl implements SesDao
         message.setBody(emailBody);
 
         return message;
-
     }
 
     /**
@@ -177,7 +170,14 @@ public class SesDaoImpl implements SesDao
         SendEmailRequest sendEmailRequest = new SendEmailRequest();
 
         // set 'from' address to the configured 'send-from' email address
-        sendEmailRequest.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
+        if (Objects.nonNull(emailDto.getSource()))
+        {
+            sendEmailRequest.setSource(emailDto.getSource());
+        }
+        else
+        {
+            sendEmailRequest.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
+        }
 
         // get destination information and add to send email request
         Destination destination = prepareDestination(emailDto);

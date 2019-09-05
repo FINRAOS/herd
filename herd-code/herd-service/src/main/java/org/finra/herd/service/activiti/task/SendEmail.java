@@ -57,6 +57,8 @@ public class SendEmail extends BaseJavaDelegate
     @Autowired
     private SesService sesService;
 
+    private Expression source;
+
     private Expression subject;
 
     private Expression text;
@@ -76,8 +78,9 @@ public class SendEmail extends BaseJavaDelegate
     private EmailDto populateEmailDto(final DelegateExecution execution)
     {
         // Extract email information from incoming execution request and return a DTO
-        EmailDto emailDto = EmailDto.builder().withTo(activitiHelper.getExpressionVariableAsString(to, execution))
-            .withCc(activitiHelper.getExpressionVariableAsString(cc, execution)).withBcc(activitiHelper.getExpressionVariableAsString(bcc, execution))
+        EmailDto emailDto = EmailDto.builder().withSource(activitiHelper.getExpressionVariableAsString(source, execution))
+            .withTo(activitiHelper.getExpressionVariableAsString(to, execution)).withCc(activitiHelper.getExpressionVariableAsString(cc, execution))
+            .withBcc(activitiHelper.getExpressionVariableAsString(bcc, execution))
             .withSubject(activitiHelper.getRequiredExpressionVariableAsString(subject, execution, "subject"))
             .withText(activitiHelper.getExpressionVariableAsString(text, execution)).withHtml(activitiHelper.getExpressionVariableAsString(html, execution))
             .withReplyTo(activitiHelper.getExpressionVariableAsString(replyTo, execution)).build();
