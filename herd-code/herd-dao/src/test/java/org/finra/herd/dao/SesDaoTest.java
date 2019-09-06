@@ -85,10 +85,10 @@ public class SesDaoTest extends AbstractDaoTest
         when(herdStringHelper.splitAndTrim(emailDto.getCc(), COMMA_DELIMITER)).thenReturn(new HashSet<>(Arrays.asList(SES_CC_ADDRESS.split(COMMA_DELIMITER))));
         when(herdStringHelper.splitAndTrim(emailDto.getBcc(), COMMA_DELIMITER)).thenReturn(new HashSet<>(Arrays.asList(SES_BCC_ADDRESS.split(COMMA_DELIMITER))));
 
-        //send email
+        //Send email
         sesDaoImpl.sendEmail(getAwsParamsDto(), emailDto);
 
-        //verify argument
+        //Verify argument
         verify(sesOperations).sendEmail(sendEmailRequestArgumentCaptor.capture(), any());
         verify(configurationHelper, never()).getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM);
         assertEquals(SES_SOURCE_ADDRESS, sendEmailRequestArgumentCaptor.getValue().getSource());
@@ -111,10 +111,10 @@ public class SesDaoTest extends AbstractDaoTest
         when(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM))
             .thenReturn((String) ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM.getDefaultValue());
 
-        //send email
+        //Send email
         sesDaoImpl.sendEmail(getAwsParamsDto(), emailDto);
 
-        //verify default config value is used for source
+        //Verify default config value is used for source
         verify(sesOperations).sendEmail(sendEmailRequestArgumentCaptor.capture(), any());
         verify(configurationHelper).getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM);
         assertEquals(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM.getDefaultValue(), sendEmailRequestArgumentCaptor.getValue().getSource());
@@ -128,7 +128,7 @@ public class SesDaoTest extends AbstractDaoTest
         when(configurationHelper.getProperty(ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS))
             .thenReturn((String) ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS.getDefaultValue());
 
-        //verify null value for parameters
+        //Verify null value for parameters
         emailDto.setTo(null);
         emailDto.setBcc(null);
         emailDto.setSubject(null);

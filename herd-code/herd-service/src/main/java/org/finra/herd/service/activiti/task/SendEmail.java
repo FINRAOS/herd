@@ -57,8 +57,6 @@ public class SendEmail extends BaseJavaDelegate
     @Autowired
     private SesService sesService;
 
-    private Expression source;
-
     private Expression subject;
 
     private Expression text;
@@ -68,19 +66,18 @@ public class SendEmail extends BaseJavaDelegate
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
     {
-        // populate email dto with information from the incoming send email request
+        // Populate email dto with information from the incoming send email request
         EmailDto emailDto = populateEmailDto(execution);
 
-        // delegate to the corresponding service to send the email
+        // Delegate to the corresponding service to send the email
         sesService.sendEmail(emailDto);
     }
 
     private EmailDto populateEmailDto(final DelegateExecution execution)
     {
         // Extract email information from incoming execution request and return a DTO
-        EmailDto emailDto = EmailDto.builder().withSource(activitiHelper.getExpressionVariableAsString(source, execution))
-            .withTo(activitiHelper.getExpressionVariableAsString(to, execution)).withCc(activitiHelper.getExpressionVariableAsString(cc, execution))
-            .withBcc(activitiHelper.getExpressionVariableAsString(bcc, execution))
+        EmailDto emailDto = EmailDto.builder().withTo(activitiHelper.getExpressionVariableAsString(to, execution))
+            .withCc(activitiHelper.getExpressionVariableAsString(cc, execution)).withBcc(activitiHelper.getExpressionVariableAsString(bcc, execution))
             .withSubject(activitiHelper.getRequiredExpressionVariableAsString(subject, execution, "subject"))
             .withText(activitiHelper.getExpressionVariableAsString(text, execution)).withHtml(activitiHelper.getExpressionVariableAsString(html, execution))
             .withReplyTo(activitiHelper.getExpressionVariableAsString(replyTo, execution)).build();

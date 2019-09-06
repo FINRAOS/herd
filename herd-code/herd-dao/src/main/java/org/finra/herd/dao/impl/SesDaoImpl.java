@@ -59,10 +59,10 @@ public class SesDaoImpl implements SesDao
     @Override
     public void sendEmail(final AwsParamsDto awsParamsDto, final EmailDto emailDto)
     {
-        // prepare and fetch a send email request from the provided information
+        // Prepare and fetch a send email request from the provided information
         SendEmailRequest sendEmailRequest = prepareSendEmailRequest(emailDto);
 
-        // send the prepared email
+        // Send the prepared email
         sesOperations.sendEmail(sendEmailRequest, awsClientFactory.getSesClient(awsParamsDto));
     }
 
@@ -79,35 +79,35 @@ public class SesDaoImpl implements SesDao
         Destination destination = new Destination();
         final String commaDelimiter = ",";
 
-        // set 'to' addresses
+        // Set 'to' addresses
         if (Objects.nonNull(emailDto.getTo()))
         {
             destination.setToAddresses(herdStringHelper.splitAndTrim(emailDto.getTo(), commaDelimiter));
         }
 
-        // set 'cc' addresses if specified
+        // Set 'cc' addresses if specified
         if (Objects.nonNull(emailDto.getCc()))
         {
             destination.setCcAddresses(herdStringHelper.splitAndTrim(emailDto.getCc(), commaDelimiter));
         }
 
-        // declare a list of bcc addresses to set in the destinations being collected
+        // Declare a list of bcc addresses to set in the destinations being collected
         List<String> bccAddresses = new ArrayList<>();
 
-        // get the 'records-collector' address and add it to the bcc addresses list if specified
+        // Get the 'records-collector' address and add it to the bcc addresses list if specified
         String recordsCollector = configurationHelper.getProperty(ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS);
         if (Objects.nonNull(recordsCollector))
         {
             bccAddresses.add(recordsCollector);
         }
 
-        // get 'bcc' addresses specified in the request
+        // Get 'bcc' addresses specified in the request
         if (Objects.nonNull(emailDto.getBcc()))
         {
             bccAddresses.addAll(herdStringHelper.splitAndTrim(emailDto.getBcc(), commaDelimiter));
         }
 
-        // add the final list of collected bcc addresses to destination
+        // Add the final list of collected bcc addresses to destination
         if (!CollectionUtils.isEmpty(bccAddresses))
         {
             destination.setBccAddresses(bccAddresses);
@@ -150,7 +150,7 @@ public class SesDaoImpl implements SesDao
             emailBody.setHtml(new Content().withCharset(charset).withData(emailDto.getHtml()));
         }
 
-        // set the email body prepared above to the wrapper email message object.
+        // Set the email body prepared above to the wrapper email message object.
         message.setBody(emailBody);
 
         return message;
@@ -169,7 +169,7 @@ public class SesDaoImpl implements SesDao
         // Initialize a new send email request
         SendEmailRequest sendEmailRequest = new SendEmailRequest();
 
-        // set 'from' address to the configured 'send-from' email address
+        // Set 'from' address to the configured 'send-from' email address
         if (Objects.nonNull(emailDto.getSource()))
         {
             sendEmailRequest.setSource(emailDto.getSource());
@@ -179,15 +179,15 @@ public class SesDaoImpl implements SesDao
             sendEmailRequest.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
         }
 
-        // get destination information and add to send email request
+        // Get destination information and add to send email request
         Destination destination = prepareDestination(emailDto);
         sendEmailRequest.setDestination(destination);
 
-        // get message information and add to send email request
+        // Get message information and add to send email request
         Message message = prepareMessage(emailDto);
         sendEmailRequest.setMessage(message);
 
-        // get config set name and add to send email request
+        // Get config set name and add to send email request
         ConfigurationSet configurationSet = new ConfigurationSet().withName(configurationHelper.getProperty(ConfigurationValue.SES_CONFIGURATION_SET_NAME));
 
         sendEmailRequest.setConfigurationSetName(configurationSet.getName());
