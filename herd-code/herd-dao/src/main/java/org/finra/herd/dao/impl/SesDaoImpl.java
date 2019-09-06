@@ -174,10 +174,6 @@ public class SesDaoImpl implements SesDao
         {
             sendEmailRequest.setSource(emailDto.getSource());
         }
-        else
-        {
-            sendEmailRequest.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
-        }
 
         // Get destination information and add to send email request
         Destination destination = prepareDestination(emailDto);

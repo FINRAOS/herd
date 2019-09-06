@@ -90,7 +90,6 @@ public class SesDaoTest extends AbstractDaoTest
 
         //Verify argument
         verify(sesOperations).sendEmail(sendEmailRequestArgumentCaptor.capture(), any());
-        verify(configurationHelper, never()).getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM);
         assertEquals(SES_SOURCE_ADDRESS, sendEmailRequestArgumentCaptor.getValue().getSource());
         assertEqualsIgnoreOrder("to Address not correct", Arrays.asList(SES_TO_ADDRESS.split(COMMA_DELIMITER)),
             sendEmailRequestArgumentCaptor.getValue().getDestination().getToAddresses());
@@ -100,24 +99,6 @@ public class SesDaoTest extends AbstractDaoTest
         assertEquals(SES_TXT, sendEmailRequestArgumentCaptor.getValue().getMessage().getBody().getText().getData());
         assertNull(sendEmailRequestArgumentCaptor.getValue().getMessage().getBody().getHtml());
         assertNull(sendEmailRequestArgumentCaptor.getValue().getConfigurationSetName());
-    }
-
-    @Test
-    public void testSendEmailWithDefaultSourceValue()
-    {
-        EmailDto emailDto = getDefaultEmailDto();
-        emailDto.setSource(null);
-
-        when(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM))
-            .thenReturn((String) ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM.getDefaultValue());
-
-        //Send email
-        sesDaoImpl.sendEmail(getAwsParamsDto(), emailDto);
-
-        //Verify default config value is used for source
-        verify(sesOperations).sendEmail(sendEmailRequestArgumentCaptor.capture(), any());
-        verify(configurationHelper).getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM);
-        assertEquals(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM.getDefaultValue(), sendEmailRequestArgumentCaptor.getValue().getSource());
     }
 
     @Test
