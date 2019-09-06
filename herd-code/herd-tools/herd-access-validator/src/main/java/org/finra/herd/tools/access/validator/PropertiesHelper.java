@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,8 @@ class PropertiesHelper
     static final String AWS_REGION_PROPERTY = "awsRegion";
 
     static final String AWS_ROLE_ARN_PROPERTY = "awsRoleArn";
+
+    static final String AWS_SQS_QUEUE_URL_PROPERTY = "awsSqsQueueUrl";
 
     static final String BUSINESS_OBJECT_DATA_VERSION_PROPERTY = "businessObjectDataVersion";
 
@@ -98,5 +101,17 @@ class PropertiesHelper
                 .append(HERD_PASSWORD_PROPERTY.equalsIgnoreCase(propertyName) ? "***" : properties.getProperty(propertyName)).append('\n');
         }
         LOGGER.info("Successfully loaded properties:%n{}", propertiesStringBuilder.toString());
+    }
+
+    /**
+     * Check if property is missing or blank
+     *
+     * @param key the property key
+     *
+     * @return true if property not found
+     */
+    Boolean isBlankOrNull(String key)
+    {
+        return StringUtils.isBlank(properties.getProperty(key));
     }
 }

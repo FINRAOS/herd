@@ -612,7 +612,25 @@ public class S3DaoImpl implements S3Dao
                         if (BooleanUtils.isNotTrue(objectMetadata.getOngoingRestore()))
                         {
                             requestRestore.setKey(key);
-                            s3Operations.restoreObject(requestRestore, s3Client);
+
+                            try
+                            {
+                                // Try the S3 restore operation on this file.
+                                s3Operations.restoreObject(requestRestore, s3Client);
+                            }
+                            catch (AmazonS3Exception amazonS3Exception)
+                            {
+                                // If this exception has a status code of 409, log the information and continue to the next file.
+                                if (amazonS3Exception.getStatusCode() == HttpStatus.SC_CONFLICT)
+                                {
+                                    LOGGER.info("Restore already in progress for file with s3Key=\"{}\".", key);
+                                }
+                                // Else, we need to propagate the exception to the next level of try/catch block.
+                                else
+                                {
+                                    throw new Exception(amazonS3Exception);
+                                }
+                            }
                         }
                     }
                 }

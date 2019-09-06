@@ -17,6 +17,7 @@ package org.finra.herd.tools.access.validator;
 
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_REGION_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_ROLE_ARN_PROPERTY;
+import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_SQS_QUEUE_URL_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_DATA_VERSION_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_FORMAT_FILE_TYPE_PROPERTY;
@@ -33,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.UUID;
 
 import com.amazonaws.ClientConfiguration;
@@ -43,6 +45,9 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -54,6 +59,7 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.dao.S3Operations;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.sdk.api.ApplicationApi;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.CurrentUserApi;
@@ -82,18 +88,23 @@ class AccessValidatorController
     @Autowired
     private S3Operations s3Operations;
 
+
     /**
      * Runs the application with the given command line arguments.
      *
      * @param propertiesFile the properties file
+     * @param messageFlag message flag to read SQS message
      *
      * @throws IOException if an I/O error was encountered
      * @throws ApiException if a Herd API client error was encountered
      */
-    void validateAccess(File propertiesFile) throws IOException, ApiException
+    void validateAccess(File propertiesFile, Boolean messageFlag) throws IOException, ApiException
     {
         // Load properties.
         propertiesHelper.loadProperties(propertiesFile);
+
+        // Check properties
+        herdApiClientOperations.checkPropertiesFile(propertiesHelper, messageFlag);
 
         // Create the API client to a specific REST endpoint with proper authentication.
         ApiClient apiClient = new ApiClient();
@@ -104,7 +115,6 @@ class AccessValidatorController
         // Setup specific API classes.
         ApplicationApi applicationApi = new ApplicationApi(apiClient);
         CurrentUserApi currentUserApi = new CurrentUserApi(apiClient);
-        BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(apiClient);
 
         // Retrieve build information from the registration server.
         LOGGER.info("Retrieving build information from the registration server...");
@@ -113,18 +123,6 @@ class AccessValidatorController
         // Retrieve user information from the registration server.
         LOGGER.info("Retrieving user information from the registration server...");
         LOGGER.info("{}", herdApiClientOperations.currentUserGetCurrentUser(currentUserApi));
-
-        // Retrieve business object data from the registration server.
-        LOGGER.info("Retrieving business object data information from the registration server...");
-        Integer businessObjectFormatVersion =
-            HerdStringUtils.convertStringToInteger(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY), null);
-        Integer businessObjectDataVersion = HerdStringUtils.convertStringToInteger(propertiesHelper.getProperty(BUSINESS_OBJECT_DATA_VERSION_PROPERTY), null);
-        BusinessObjectData businessObjectData = herdApiClientOperations
-            .businessObjectDataGetBusinessObjectData(businessObjectDataApi, propertiesHelper.getProperty(NAMESPACE_PROPERTY),
-                propertiesHelper.getProperty(BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY), propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_USAGE_PROPERTY),
-                propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_FILE_TYPE_PROPERTY), null, propertiesHelper.getProperty(PRIMARY_PARTITION_VALUE_PROPERTY),
-                propertiesHelper.getProperty(SUB_PARTITION_VALUES_PROPERTY), businessObjectFormatVersion, businessObjectDataVersion, null, false, false);
-        LOGGER.info("{}", businessObjectData);
 
         // Create AWS client configuration.
         ClientConfiguration clientConfiguration = new ClientConfiguration();
@@ -140,14 +138,51 @@ class AccessValidatorController
 
         // Create AWS S3 client using the assumed role.
         LOGGER.info("Creating AWS S3 client...", awsRoleArn);
+
         AmazonS3 amazonS3 =
             AmazonS3ClientBuilder.standard().withCredentials(awsCredentialsProvider).withClientConfiguration(clientConfiguration).withRegion(awsRegion).build();
+
+        // Create AWS SQS client using the assumed role.
+        LOGGER.info("Creating AWS SQS client...", awsRoleArn);
+
+        AmazonSQS amazonSQS =
+            AmazonSQSClientBuilder.standard().withCredentials(awsCredentialsProvider).withClientConfiguration(clientConfiguration).withRegion(awsRegion)
+                .build();
+
+        BusinessObjectDataKey bdataKey;
+
+        // Check if -m flag passed
+        if (messageFlag)
+        {
+            String sqsQueueUrl = propertiesHelper.getProperty(AWS_SQS_QUEUE_URL_PROPERTY);
+            LOGGER.info("Getting message from SQS queue: {}", sqsQueueUrl);
+            bdataKey = herdApiClientOperations.getBdataKeySqs(amazonSQS, sqsQueueUrl);
+
+        }
+        else
+        {
+            LOGGER.info("Creating BusinessObjectDataKey from properties file");
+            bdataKey = getBdataKeyPropertiesFile();
+        }
+        LOGGER.info("{}", bdataKey);
+
+        BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(apiClient);
+
+        // Retrieve business object data from the registration server.
+        LOGGER.info("Retrieving business object data information from the registration server...");
+        BusinessObjectData businessObjectData = herdApiClientOperations
+            .businessObjectDataGetBusinessObjectData(businessObjectDataApi, bdataKey.getNamespace(), bdataKey.getBusinessObjectDefinitionName(),
+                bdataKey.getBusinessObjectFormatUsage(), bdataKey.getBusinessObjectFormatFileType(), null, bdataKey.getPartitionValue(),
+                StringUtils.join(bdataKey.getSubPartitionValues(), "|"), bdataKey.getBusinessObjectFormatVersion(), bdataKey.getBusinessObjectDataVersion(),
+                null, false, false);
+        LOGGER.info("{}", businessObjectData);
 
         // Check if retrieved business object data has storage unit registered with it.
         Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits()), "Business object data has no storage unit registered with it.");
         Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits().get(0).getStorageFiles()),
             "No storage files registered with the business object data storage unit.");
         Assert.isTrue(businessObjectData.getStorageUnits().get(0).getStorage() != null, "Business object data storage unit does not have storage information.");
+
 
         // Get S3 bucket name.
         String bucketName = null;
@@ -175,5 +210,40 @@ class AccessValidatorController
 
         // Log a success message at the end.
         LOGGER.info("Finished: SUCCESS");
+    }
+
+    /**
+     * Converts properties to BusinessObjectDataKey
+     *
+     * @return BusinessObjectDataKey
+     */
+    BusinessObjectDataKey getBdataKeyPropertiesFile()
+    {
+        BusinessObjectDataKey bdataKey = new BusinessObjectDataKey();
+
+        Integer businessObjectFormatVersion =
+            HerdStringUtils.convertStringToInteger(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY), null);
+        Integer businessObjectDataVersion = HerdStringUtils.convertStringToInteger(propertiesHelper.getProperty(BUSINESS_OBJECT_DATA_VERSION_PROPERTY), null);
+
+        bdataKey.setNamespace(propertiesHelper.getProperty(NAMESPACE_PROPERTY));
+        bdataKey.setBusinessObjectDefinitionName(propertiesHelper.getProperty(BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY));
+        bdataKey.setBusinessObjectFormatUsage(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_USAGE_PROPERTY));
+        bdataKey.setBusinessObjectFormatFileType(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_FILE_TYPE_PROPERTY));
+        bdataKey.setPartitionValue(propertiesHelper.getProperty(PRIMARY_PARTITION_VALUE_PROPERTY));
+
+        String subpartition = propertiesHelper.getProperty(SUB_PARTITION_VALUES_PROPERTY);
+        if (subpartition != null)
+        {
+            bdataKey.setSubPartitionValues(Arrays.asList(subpartition.split("\\s*\\|\\s*")));
+        }
+        else
+        {
+            bdataKey.setSubPartitionValues(null);
+        }
+
+        bdataKey.setBusinessObjectFormatVersion(businessObjectFormatVersion);
+        bdataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
+
+        return bdataKey;
     }
 }

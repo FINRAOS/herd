@@ -716,6 +716,37 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
   }
 
+  test("getParseOptions should return map of parse options with user defined delimiter and escape character of the given object")
+  {
+    var businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
+    businessObjectFormat.setNamespace(namespace)
+    businessObjectFormat.setBusinessObjectDefinitionName(objectName)
+    businessObjectFormat.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectFormat.setBusinessObjectFormatFileType(formatType)
+    businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
+
+
+    var s = new Schema
+    var partitionColumn = new SchemaColumn
+
+    partitionColumn.setName(partitionKey)
+    partitionColumn.setType("DATE")
+    partitionColumn.setRequired(true)
+
+    s.addPartitionsItem(partitionColumn)
+    s.setDelimiter("a")
+    s.setEscapeCharacter("b")
+    businessObjectFormat.setSchema(s)
+
+    when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
+
+    val parseOutput = dataCatalog.getParseOptions(namespace, objectName, formatUsage, formatType, formatVersion)
+
+    assertEquals("Map(nullValue -> \\N, escape -> b, dateFormat -> yyyy-MM-dd, mode -> PERMISSIVE, delimiter -> a)", parseOutput.toString())
+
+  }
+
   test("findNamespace searches for the given table in the list of given namespaces")
   {
     var businessObjectDefinitionKey1 = new BusinessObjectDefinitionKey

@@ -7,7 +7,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-tools</artifactId>
-      <version>0.102.0-SNAPSHOT</version>
+      <version>0.104.0-SNAPSHOT</version>
    </parent>
 
    <name>herd spark data catalog</name>
@@ -243,7 +243,6 @@
             <configuration>
                <scalaVersion>${scala.version}</scalaVersion>
                <aggregate>true</aggregate>
-               <highlighting>true</highlighting>
                <!-- other parameters -->
             </configuration>
             <executions>
@@ -268,6 +267,7 @@
                <sourceDirectory>${project.basedir}/src/main/scala</sourceDirectory>
                <testSourceDirectory>${project.basedir}/src/test/scala</testSourceDirectory>
                <configLocation>scalastyle-config.xml</configLocation>
+               <outputFile>${project.basedir}/target/scalastyle-output.xml</outputFile>
             </configuration>
             <executions>
                <execution>

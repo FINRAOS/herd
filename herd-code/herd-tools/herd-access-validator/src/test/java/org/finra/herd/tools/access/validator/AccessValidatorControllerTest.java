@@ -22,6 +22,7 @@ import static org.finra.herd.dao.AbstractDaoTest.S3_KEY;
 import static org.finra.herd.tools.access.validator.AccessValidatorController.S3_BUCKET_NAME_ATTRIBUTE;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_REGION_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_ROLE_ARN_PROPERTY;
+import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_SQS_QUEUE_URL_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_DATA_VERSION_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.BUSINESS_OBJECT_FORMAT_FILE_TYPE_PROPERTY;
@@ -35,6 +36,7 @@ import static org.finra.herd.tools.access.validator.PropertiesHelper.PRIMARY_PAR
 import static org.finra.herd.tools.access.validator.PropertiesHelper.SUB_PARTITION_VALUES_PROPERTY;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -46,6 +48,7 @@ import java.util.Collections;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.sqs.AmazonSQS;
 import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +57,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.S3Operations;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.sdk.api.ApplicationApi;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.CurrentUserApi;
@@ -65,6 +69,21 @@ import org.finra.herd.sdk.model.StorageUnit;
 
 public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
 {
+    // Create a test properties file path.
+    private final File propertiesFile = new File(PROPERTIES_FILE_PATH);
+
+    private BusinessObjectData businessObjectData = new BusinessObjectData();
+    private StorageUnit storageUnit = new StorageUnit();
+    private StorageFile storageFile = new StorageFile();
+    private Storage storage = new Storage();
+    private Attribute attribute = new Attribute();
+    private Attribute bucketNameAttribute = new Attribute();
+
+    // Create an AWS get object request.
+    private GetObjectRequest getObjectRequest = new GetObjectRequest(S3_BUCKET_NAME, S3_KEY);
+
+    private S3Object s3Object = new S3Object();
+
     @InjectMocks
     private AccessValidatorController accessValidatorController;
 
@@ -84,44 +103,40 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
     }
 
     @Test
-    public void testValidateAccess() throws Exception
+    public void testValidateAccessPropertiesFile() throws Exception
     {
-        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, SUB_PARTITION_VALUES);
+        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, SUB_PARTITION_VALUES, false);
     }
 
     @Test
     public void testValidateAccessMissingOptionalProperties() throws Exception
     {
-        testValidateAccessHelper(null, null, null);
+        testValidateAccessHelper(null, null, null, false);
     }
 
-    private void testValidateAccessHelper(Integer businessObjectFormatVersion, Integer businessObjectDataVersion, String subPartitionValues) throws Exception
+    @Test
+    public void testValidateAccessSqsMessage() throws Exception
     {
-        // Create a test properties file path.
-        final File propertiesFile = new File(PROPERTIES_FILE_PATH);
+        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, SUB_PARTITION_VALUES, true);
+    }
 
-        // Create a business object data herd sdk model object.
-        BusinessObjectData businessObjectData = new BusinessObjectData();
-        StorageUnit storageUnit = new StorageUnit();
-        businessObjectData.setStorageUnits(Collections.singletonList(storageUnit));
-        StorageFile storageFile = new StorageFile();
-        storageUnit.setStorageFiles(Collections.singletonList(storageFile));
-        storageFile.setFilePath(S3_KEY);
-        Storage storage = new Storage();
-        storageUnit.setStorage(storage);
-        Attribute bucketNameAttribute = new Attribute();
-        bucketNameAttribute.setName(S3_BUCKET_NAME_ATTRIBUTE);
-        bucketNameAttribute.setValue(S3_BUCKET_NAME);
-        Attribute attribute = new Attribute();
-        attribute.setName(ATTRIBUTE_NAME);
-        storage.setAttributes(Lists.newArrayList(attribute, bucketNameAttribute));
+    @Test
+    public void testValidateAccessSqsMessageMissingOptionalProperties() throws Exception
+    {
+        testValidateAccessHelper(null, null, null, true);
+    }
 
-        // Create an AWS get object request.
-        GetObjectRequest getObjectRequest = new GetObjectRequest(S3_BUCKET_NAME, S3_KEY);
+    @Test
+    public void testValidateAccessMultipleSubPartition() throws Exception
+    {
+        String subpartition = "One|Two|Three";
+        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, subpartition, false);
+    }
 
-        // Create an S3 object with an empty content.
-        S3Object s3Object = new S3Object();
-        s3Object.setObjectContent(new ByteArrayInputStream(new byte[] {0}));
+    private void testValidateAccessHelper(Integer businessObjectFormatVersion, Integer businessObjectDataVersion, String subPartitionValues,
+        Boolean messageFlag) throws Exception
+    {
+        setupBusinessDataObject();
 
         // Mock the external calls.
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
@@ -145,10 +160,17 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
 
+        if (messageFlag)
+        {
+            setupSqsTest();
+        }
+
         // Call the method under test.
-        accessValidatorController.validateAccess(propertiesFile);
+        doNothing().when(herdApiClientOperations).checkPropertiesFile(propertiesHelper, messageFlag);
+        accessValidatorController.validateAccess(propertiesFile, messageFlag);
 
         // Verify the external calls.
+        verify(herdApiClientOperations).checkPropertiesFile(propertiesHelper, messageFlag);
         verify(propertiesHelper).loadProperties(propertiesFile);
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
@@ -170,7 +192,43 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
         verify(propertiesHelper).getProperty(AWS_ROLE_ARN_PROPERTY);
         verify(s3Operations).getS3Object(eq(getObjectRequest), any(AmazonS3.class));
+
+        if (messageFlag)
+        {
+            verifySqsTest();
+        }
+
         verifyNoMoreInteractionsHelper();
+    }
+
+    private void setupBusinessDataObject()
+    {
+        // Create a business object data herd sdk model object.
+        businessObjectData.setStorageUnits(Collections.singletonList(storageUnit));
+        storageUnit.setStorageFiles(Collections.singletonList(storageFile));
+        storageFile.setFilePath(S3_KEY);
+        storageUnit.setStorage(storage);
+        bucketNameAttribute.setName(S3_BUCKET_NAME_ATTRIBUTE);
+        bucketNameAttribute.setValue(S3_BUCKET_NAME);
+        attribute.setName(ATTRIBUTE_NAME);
+        storage.setAttributes(Lists.newArrayList(attribute, bucketNameAttribute));
+
+        // Create an S3 object with an empty content.
+        s3Object.setObjectContent(new ByteArrayInputStream(new byte[] {0}));
+    }
+
+    private void setupSqsTest() throws Exception
+    {
+        BusinessObjectDataKey bdataKey = accessValidatorController.getBdataKeyPropertiesFile();
+
+        when(propertiesHelper.getProperty(AWS_SQS_QUEUE_URL_PROPERTY)).thenReturn(AWS_SQS_QUEUE_URL);
+        when(herdApiClientOperations.getBdataKeySqs(any(AmazonSQS.class), eq(AWS_SQS_QUEUE_URL))).thenReturn(bdataKey);
+    }
+
+    private void verifySqsTest() throws Exception
+    {
+        verify(propertiesHelper).getProperty(AWS_SQS_QUEUE_URL_PROPERTY);
+        verify(herdApiClientOperations).getBdataKeySqs(any(AmazonSQS.class), eq(AWS_SQS_QUEUE_URL));
     }
 
     /**

@@ -19,6 +19,7 @@ import static org.finra.herd.tools.access.validator.PropertiesHelper.HERD_PASSWO
 import static org.finra.herd.tools.access.validator.PropertiesHelper.HERD_USERNAME_PROPERTY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,5 +69,25 @@ public class PropertiesHelperTest extends AbstractAccessValidatorTest
 
         // Validate that getProperty() method returns null if the property is not found.
         assertNull(propertiesHelper.getProperty(INVALID_PROPERTY));
+    }
+
+    @Test
+    public void testIsNullProperty()
+    {
+        assertTrue(propertiesHelper.isBlankOrNull(INVALID_PROPERTY));
+    }
+
+    @Test
+    public void testIsBlankProperty() throws IOException
+    {
+        // Create a temporary file.
+        final File tempFile = temporaryFolder.newFile(PROPERTIES_FILE_PATH);
+
+        // Write several properties that are blank or have whitespace
+        FileUtils.writeStringToFile(tempFile, String.format("%s=%s%n%s=%s%n", HERD_USERNAME_PROPERTY, "", HERD_PASSWORD_PROPERTY, "  "),
+            StandardCharsets.UTF_8.name());
+
+        assertTrue(propertiesHelper.isBlankOrNull(HERD_USERNAME_PROPERTY));
+        assertTrue(propertiesHelper.isBlankOrNull(HERD_PASSWORD_PROPERTY));
     }
 }
