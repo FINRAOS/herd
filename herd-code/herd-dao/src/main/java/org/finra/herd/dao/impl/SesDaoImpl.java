@@ -25,6 +25,7 @@ import com.amazonaws.services.simpleemail.model.Content;
 import com.amazonaws.services.simpleemail.model.Destination;
 import com.amazonaws.services.simpleemail.model.Message;
 import com.amazonaws.services.simpleemail.model.SendEmailRequest;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
@@ -80,13 +81,13 @@ public class SesDaoImpl implements SesDao
         final String commaDelimiter = ",";
 
         // Set 'to' addresses
-        if (Objects.nonNull(emailDto.getTo()))
+        if (StringUtils.isNotEmpty(emailDto.getTo()))
         {
             destination.setToAddresses(herdStringHelper.splitAndTrim(emailDto.getTo(), commaDelimiter));
         }
 
         // Set 'cc' addresses if specified
-        if (Objects.nonNull(emailDto.getCc()))
+        if (StringUtils.isNotEmpty(emailDto.getCc()))
         {
             destination.setCcAddresses(herdStringHelper.splitAndTrim(emailDto.getCc(), commaDelimiter));
         }
@@ -96,13 +97,13 @@ public class SesDaoImpl implements SesDao
 
         // Get the 'records-collector' address and add it to the bcc addresses list if specified
         String recordsCollector = configurationHelper.getProperty(ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS);
-        if (Objects.nonNull(recordsCollector))
+        if (StringUtils.isNotEmpty(recordsCollector))
         {
             bccAddresses.add(recordsCollector);
         }
 
         // Get 'bcc' addresses specified in the request
-        if (Objects.nonNull(emailDto.getBcc()))
+        if (StringUtils.isNotEmpty(emailDto.getBcc()))
         {
             bccAddresses.addAll(herdStringHelper.splitAndTrim(emailDto.getBcc(), commaDelimiter));
         }
@@ -170,7 +171,7 @@ public class SesDaoImpl implements SesDao
         SendEmailRequest sendEmailRequest = new SendEmailRequest();
 
         // Set 'from' address to the configured 'send-from' email address
-        if (Objects.nonNull(emailDto.getSource()))
+        if (StringUtils.isNotEmpty(emailDto.getSource()))
         {
             sendEmailRequest.setSource(emailDto.getSource());
         }

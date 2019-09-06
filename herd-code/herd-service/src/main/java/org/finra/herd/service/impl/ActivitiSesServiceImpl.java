@@ -15,24 +15,21 @@
  */
 package org.finra.herd.service.impl;
 
-import java.util.Objects;
-
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.SesDao;
 import org.finra.herd.dao.helper.AwsHelper;
-import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmailDto;
 import org.finra.herd.service.SesService;
 
 /**
- * The SES service implementation
+ * The Activiti SES service implementation
  */
 @Service
-public class SesServiceImpl implements SesService
+public class ActivitiSesServiceImpl implements SesService
 {
     @Autowired
     private AwsHelper awsHelper;
@@ -41,15 +38,18 @@ public class SesServiceImpl implements SesService
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private SesDao sesDao;
+    private SesService sesService;
 
     @Override
     public void sendEmail(final EmailDto emailDto)
     {
-        // Fetch AWS information
-        AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
+        // Set 'from' address to the configured 'send-from' email address
+        if (StringUtils.isEmpty(emailDto.getSource()))
+        {
+            emailDto.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
+        }
 
-        // Delegate to the corresponding DAO
-        sesDao.sendEmail(awsParamsDto, emailDto);
+        // Delegate to the basic SES Service
+        sesService.sendEmail(emailDto);
     }
 }

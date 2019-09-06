@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.dto.EmailDto;
-import org.finra.herd.service.SesService;
+import org.finra.herd.service.impl.ActivitiSesServiceImpl;
 
 /**
  * Activiti task to send an email. <p> </p> </p>
@@ -55,7 +55,7 @@ public class SendEmail extends BaseJavaDelegate
     private Expression replyTo;
 
     @Autowired
-    private SesService sesService;
+    private ActivitiSesServiceImpl activitiSesService;
 
     private Expression subject;
 
@@ -70,7 +70,7 @@ public class SendEmail extends BaseJavaDelegate
         EmailDto emailDto = populateEmailDto(execution);
 
         // Delegate to the corresponding service to send the email
-        sesService.sendEmail(emailDto);
+        activitiSesService.sendEmail(emailDto);
     }
 
     private EmailDto populateEmailDto(final DelegateExecution execution)

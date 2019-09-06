@@ -20,7 +20,6 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.SesDao;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.model.dto.AwsParamsDto;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmailDto;
 import org.finra.herd.service.impl.SesServiceImpl;
 
@@ -41,9 +40,6 @@ public class SesServiceTest extends AbstractServiceTest
     @InjectMocks
     private SesServiceImpl sesService;
 
-    @Captor
-    private ArgumentCaptor<EmailDto> emailDtoArgumentCaptor;
-
     @Before
     public void before()
     {
@@ -55,7 +51,6 @@ public class SesServiceTest extends AbstractServiceTest
     {
         // Create an Email DTO.
         EmailDto emailDto = new EmailDto();
-        emailDto.setSource("test@abc.com");
 
         // Call the method under test.
         when(awsHelper.getAwsParamsDto()).thenReturn(new AwsParamsDto());
@@ -63,27 +58,5 @@ public class SesServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(sesDao).sendEmail(new AwsParamsDto(), emailDto);
-        verify(configurationHelper, never()).getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM);
-        verifyNoMoreInteractions(sesDao);
-    }
-
-    @Test
-    public void testSendEmailWithDefaultSourceValue()
-    {
-        // Create an Email DTO.
-        EmailDto emailDto = new EmailDto();
-
-        when(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM))
-            .thenReturn((String) ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM.getDefaultValue());
-        when(awsHelper.getAwsParamsDto()).thenReturn(new AwsParamsDto());
-
-        // Call the method under test.
-        sesService.sendEmail(emailDto);
-
-        // Verify the external calls and default source value
-        verify(sesDao).sendEmail(any(), emailDtoArgumentCaptor.capture());
-        verify(configurationHelper).getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM);
-        assertEquals(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM.getDefaultValue(), emailDtoArgumentCaptor.getValue().getSource());
-        verifyNoMoreInteractions(sesDao);
     }
 }
