@@ -15,8 +15,6 @@
  */
 package org.finra.herd.service.impl;
 
-import java.util.Objects;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +22,6 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.SesDao;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.model.dto.AwsParamsDto;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmailDto;
 import org.finra.herd.service.SesService;
 

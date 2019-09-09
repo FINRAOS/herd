@@ -2,7 +2,6 @@ package org.finra.herd.dao;
 
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -13,7 +12,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 
-import com.amazonaws.internal.SdkInternalList;
 import com.amazonaws.services.simpleemail.model.SendEmailRequest;
 import org.junit.Before;
 import org.junit.Test;
