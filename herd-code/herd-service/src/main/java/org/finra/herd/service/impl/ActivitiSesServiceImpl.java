@@ -32,9 +32,6 @@ import org.finra.herd.service.SesService;
 public class ActivitiSesServiceImpl implements SesService
 {
     @Autowired
-    private AwsHelper awsHelper;
-
-    @Autowired
     private ConfigurationHelper configurationHelper;
 
     @Autowired

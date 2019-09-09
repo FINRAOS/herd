@@ -27,7 +27,6 @@ import org.finra.herd.service.impl.SesServiceImpl;
  */
 public class ActivitiSesServiceTest extends AbstractServiceTest
 {
-
     @Mock
     private AwsHelper awsHelper;
 
