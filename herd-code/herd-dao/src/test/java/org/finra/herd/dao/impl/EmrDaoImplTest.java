@@ -93,6 +93,9 @@ import org.finra.herd.model.dto.ConfigurationValue;
 public class EmrDaoImplTest extends AbstractDaoTest
 {
     @Mock
+    private Map<String, String> emrClusterCache;
+
+    @Mock
     private AwsClientFactory awsClientFactory;
 
     @Mock
