@@ -34,14 +34,14 @@
    <properties>
       <!-- Override the path to npm binary for the environment running the build by specifying flag -Dnpm.bin.path=/path/to/npm -->
       <npm.bin.path>npm</npm.bin.path>
-      <herd.swagger.yamlFile>herd.swagger.html</herd.swagger.yamlFile>
+      <herd.swagger.yamlFile>herd.swagger.yaml</herd.swagger.yamlFile>
    </properties>
 
    <profiles>
       <profile>
          <id>ews</id>
          <properties>
-            <herd.swagger.yamlFile>herd.swagger.ext.html</herd.swagger.yamlFile>
+            <herd.swagger.yamlFile>herd.swagger.ext.yaml</herd.swagger.yamlFile>
          </properties>
       </profile>
    </profiles>
