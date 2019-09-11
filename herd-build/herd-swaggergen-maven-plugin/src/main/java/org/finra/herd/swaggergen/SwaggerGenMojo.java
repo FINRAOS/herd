@@ -187,7 +187,7 @@ public class SwaggerGenMojo extends AbstractMojo
         // Generate the definitions into Swagger based on the model classes collected.
         new DefinitionGenerator(getLog(), swagger, restControllerProcessor.getExampleClassNames(), modelClassFinder.getModelClasses(), xsdParser);
 
-        if (applyOperationsFilter != null)
+        if (applyOperationsFilter != null && applyOperationsFilter.equals(Boolean.TRUE))
         {
             OperationsFilter specFilter = new OperationsFilter(includeOperations);
             swagger = new SpecFilter().filter(swagger, specFilter, null, null, null);
