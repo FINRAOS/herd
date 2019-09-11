@@ -188,17 +188,22 @@ public class EmrDaoImpl implements EmrDao
         if (StringUtils.isNotBlank(clusterName))
         {
             // First check to see if this cluster name is stored locally in the EMR Cluster Cache.
-            // If the EMR cluster cache does not contain the cluster name then do a list cluster.
-            // Else use the id found in the EMR cluster cache.
+            // If the EMR cluster cache does contain the cluster name use the id found in the EMR cluster cache.
+            // Else the EMR cluster cache does not contain the cluster name then move on to do a list cluster.
             if (emrClusterCache.containsKey(clusterName.toUpperCase()))
             {
-                String clusterId = emrClusterCache.get(clusterName);
+                // Get the cluster id value from the EMR cluster cache with the cluster name key.
+                String clusterId = emrClusterCache.get(clusterName.toUpperCase());
 
+                // Retrieve the cluster status to validate the cluster.
                 String status = getEmrClusterStatusById(clusterName, awsParams);
 
                 LOGGER.info("Found the EMR cluster name in the EMR cluster cache. emrClusterName=\"{}\" emrClusterId=\"{}\" emrClusterStatus=\"{}\"",
                     clusterName.toUpperCase(), clusterId, status);
 
+                // If the status is not null and the status is in one of the active EMR cluster states,
+                // then return the cluster summary with the cluster id from the EMR cluster cache.
+                // Else remove the cluster from the EMR cluster cache and then move on to do a list cluster.
                 if (status != null && Arrays.asList(getActiveEmrClusterStates()).contains(status))
                 {
                     return new ClusterSummary().withId(clusterId).withName(clusterName);
