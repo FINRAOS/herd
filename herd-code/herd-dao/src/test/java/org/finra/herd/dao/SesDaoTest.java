@@ -92,7 +92,7 @@ public class SesDaoTest extends AbstractDaoTest
         assertEqualsIgnoreOrder("to Address not correct", Arrays.asList(SES_TO_ADDRESS.split(COMMA_DELIMITER)),
             sendEmailRequestArgumentCaptor.getValue().getDestination().getToAddresses());
         assertEquals(Collections.singletonList(SES_CC_ADDRESS), sendEmailRequestArgumentCaptor.getValue().getDestination().getCcAddresses());
-        assertEquals(Collections.singletonList(SES_BCC_ADDRESS), sendEmailRequestArgumentCaptor.getValue().getDestination().getBccAddresses());
+        assertEquals(0, sendEmailRequestArgumentCaptor.getValue().getDestination().getBccAddresses().size());
         assertEquals(SES_SUBJECT, sendEmailRequestArgumentCaptor.getValue().getMessage().getSubject().getData());
         assertEquals(SES_TXT, sendEmailRequestArgumentCaptor.getValue().getMessage().getBody().getText().getData());
         assertNull(sendEmailRequestArgumentCaptor.getValue().getMessage().getBody().getHtml());
