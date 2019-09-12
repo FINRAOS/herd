@@ -218,7 +218,8 @@ public class EmrDaoImpl implements EmrDao
                 }
             }
 
-            LOGGER.info("Could not find the EMR cluster name in the EMR cluster cache. Listing clusters. emrClusterName=\"{}\"", clusterName.toUpperCase());
+            LOGGER.info("The cluster name was not in the cluster cache. Make a list cluster request to find the cluster id. emrClusterName=\"{}\"",
+                clusterName.toUpperCase());
 
             /**
              * Call AWSOperations for ListClusters API. Need to list all the active clusters that are in
