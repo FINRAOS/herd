@@ -23,6 +23,8 @@ import java.util.Map;
  */
 public class LruCache<K, V> extends LinkedHashMap<K, V>
 {
+    private static final long serialVersionUID = 1L;
+
     /**
      * The number of entries at which an entry will be removed from the end of the linked hash map.
      */
