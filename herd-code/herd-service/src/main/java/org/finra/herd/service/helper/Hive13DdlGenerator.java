@@ -840,7 +840,9 @@ public class Hive13DdlGenerator extends DdlGenerator
         // below, so we select storage units only from all S3 storage entities, when the specified list of storage names is empty. We also specify to select
         // only "available" storage units.
         List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos = storageUnitDao
-            .getStorageUnitsByPartitionFilters(businessObjectFormatKey, generateDdlRequest.partitionFilters, generateDdlRequest.businessObjectDataVersion,
+            .getStorageUnitsByPartitionFilters(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
+                businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
+                businessObjectFormatKey.getBusinessObjectFormatVersion(), generateDdlRequest.partitionFilters, generateDdlRequest.businessObjectDataVersion,
                 validBusinessObjectDataStatusEntity, generateDdlRequest.storageNames, StoragePlatformEntity.S3, null, true);
 
         // Exclude duplicate business object data per specified list of storage names.
@@ -863,7 +865,9 @@ public class Hive13DdlGenerator extends DdlGenerator
         if (generateDdlRequest.businessObjectDataVersion == null && BooleanUtils.isTrue(generateDdlRequest.includeAllRegisteredSubPartitions) &&
             !CollectionUtils.isEmpty(matchedAvailablePartitionFilters))
         {
-            notAllowNonAvailableRegisteredSubPartitions(businessObjectFormatKey, matchedAvailablePartitionFilters, availablePartitions,
+            notAllowNonAvailableRegisteredSubPartitions(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
+                businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
+                businessObjectFormatKey.getBusinessObjectFormatVersion(), matchedAvailablePartitionFilters, availablePartitions,
                 generateDdlRequest.storageNames);
         }
 
@@ -1411,14 +1415,19 @@ public class Hive13DdlGenerator extends DdlGenerator
     /**
      * Searches for and fails on any of "non-available" registered sub-partitions as per list of "matched" partition filters.
      *
-     * @param businessObjectFormatKey the business object format key
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param businessObjectFormatUsage the business object format usage (case-insensitive)
+     * @param fileTypeEntity the file type entity
+     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest available
+     * format version for each partition value will be used
      * @param matchedAvailablePartitionFilters the list of "matched" partition filters
      * @param availablePartitions the list of already discovered "available" partitions, where each partition consists of primary and optional sub-partition
      * values
      * @param storageNames the list of storage names
      */
-    protected void notAllowNonAvailableRegisteredSubPartitions(BusinessObjectFormatKey businessObjectFormatKey,
-        List<List<String>> matchedAvailablePartitionFilters, List<List<String>> availablePartitions, List<String> storageNames)
+    protected void notAllowNonAvailableRegisteredSubPartitions(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage,
+        FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> matchedAvailablePartitionFilters,
+        List<List<String>> availablePartitions, List<String> storageNames)
     {
         // Query all matched partition filters to discover any non-available registered sub-partitions. Retrieve latest business object data per list of
         // matched filters regardless of business object data and/or storage unit statuses. This is done to discover all registered sub-partitions regardless
@@ -1426,8 +1435,8 @@ public class Hive13DdlGenerator extends DdlGenerator
         // storage platform type in the herdDao call below, so we select storage units only from all S3 storages, when the specified list of storages is empty.
         // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> matchedNotAvailableStorageUnitAvailabilityDtos = storageUnitDao
-            .getStorageUnitsByPartitionFilters(businessObjectFormatKey, matchedAvailablePartitionFilters, null, null, storageNames, StoragePlatformEntity.S3,
-                null, false);
+            .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
+                matchedAvailablePartitionFilters, null, null, storageNames, StoragePlatformEntity.S3, null, false);
 
         // Exclude all storage units with business object data having "DELETED" status.
         matchedNotAvailableStorageUnitAvailabilityDtos =
@@ -1447,11 +1456,11 @@ public class Hive13DdlGenerator extends DdlGenerator
             throw new ObjectNotFoundException(String.format(
                 "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
                     "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
-                    "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", businessObjectFormatKey.getNamespace(),
-                businessObjectFormatKey.getBusinessObjectDefinitionName(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
-                businessObjectFormatKey.getBusinessObjectFormatFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(),
-                businessObjectDataKey.getPartitionValue(), StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","),
-                businessObjectDataKey.getBusinessObjectDataVersion(), StringUtils.join(storageNames, ",")));
+                    "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).",
+                businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(), businessObjectFormatUsage,
+                fileTypeEntity.getCode(), businessObjectFormatVersion, businessObjectDataKey.getPartitionValue(),
+                StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","), businessObjectDataKey.getBusinessObjectDataVersion(),
+                StringUtils.join(storageNames, ",")));
         }
     }
 }

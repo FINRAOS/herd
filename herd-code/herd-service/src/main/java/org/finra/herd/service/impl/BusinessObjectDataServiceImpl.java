@@ -83,6 +83,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
+import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -611,8 +612,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Validate the total record count.
         if (totalRecordCount > businessObjectDataSearchMaxResultCount)
         {
-            throw new IllegalArgumentException(String
-                .format("Result limit of %d exceeded. Modify filters to further limit results.", businessObjectDataSearchMaxResultCount));
+            throw new IllegalArgumentException(
+                String.format("Result limit of %d exceeded. Modify filters to further limit results.", businessObjectDataSearchMaxResultCount));
         }
 
         // If total record count is zero, we return an empty result list. Otherwise, execute the search.
@@ -1066,21 +1067,28 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * sub-partitions as per list of "matched" partition filters to the specified list of not-available statuses.
      *
      * @param notAvailableStatuses the list of not-available statuses to be updated
-     * @param businessObjectFormatKey the business object format key
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param businessObjectFormatUsage the business object format usage (case-insensitive)
+     * @param fileTypeEntity the file type entity
+     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest available
+     * format version for each partition value will be used
      * @param matchedAvailablePartitionFilters the list of "matched" partition filters
      * @param availablePartitions the list of already discovered "available" partitions, where each partition consists of primary and optional sub-partition
      * values
      * @param storageNames the list of storage names
      */
-    private void addNotAvailableBusinessObjectDataStatuses(List<BusinessObjectDataStatus> notAvailableStatuses, BusinessObjectFormatKey businessObjectFormatKey,
-        List<List<String>> matchedAvailablePartitionFilters, List<List<String>> availablePartitions, List<String> storageNames)
+    private void addNotAvailableBusinessObjectDataStatuses(List<BusinessObjectDataStatus> notAvailableStatuses,
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage, FileTypeEntity fileTypeEntity,
+        Integer businessObjectFormatVersion, List<List<String>> matchedAvailablePartitionFilters, List<List<String>> availablePartitions,
+        List<String> storageNames)
     {
         // Now try to retrieve latest business object data per list of matched filters regardless of business object data and/or storage unit statuses.
         // This is done to include all registered sub-partitions in the response.
         // Business object data availability works across all storage platform types, so the storage platform type is not specified in the herdDao call.
         // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> matchedNotAvailableStorageUnitEntities = storageUnitDao
-            .getStorageUnitsByPartitionFilters(businessObjectFormatKey, matchedAvailablePartitionFilters, null, null, storageNames, null, null, false);
+            .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
+                matchedAvailablePartitionFilters, null, null, storageNames, null, null, false);
 
         // Exclude all storage units with business object data having "DELETED" status.
         matchedNotAvailableStorageUnitEntities =
@@ -1153,8 +1161,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Business object data availability works across all storage platform types, so the storage platform type is not specified in the herdDao call.
         // We want to select only "available" storage units, so we pass "true" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> availableStorageUnitAvailabilityDtos = storageUnitDao
-            .getStorageUnitsByPartitionFilters(businessObjectFormatKey, partitionFilters, request.getBusinessObjectDataVersion(),
-                validBusinessObjectDataStatusEntity, storageNames, null, null, true);
+            .getStorageUnitsByPartitionFilters(businessObjectFormatEntity.getBusinessObjectDefinition(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
+                businessObjectFormatEntity.getFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(), partitionFilters,
+                request.getBusinessObjectDataVersion(), validBusinessObjectDataStatusEntity, storageNames, null, null, true);
 
         // Create business object data availability object instance and initialise it with request field values.
         BusinessObjectDataAvailability businessObjectDataAvailability = createBusinessObjectDataAvailability(request);
@@ -1202,8 +1211,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // matched partition filters one more time to discover any non-available registered sub-partitions.
         if (includeAllRegisteredSubPartitions && !CollectionUtils.isEmpty(matchedAvailablePartitionFilters))
         {
-            addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, businessObjectFormatKey, matchedAvailablePartitionFilters, availablePartitions,
-                storageNames);
+            addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, businessObjectFormatEntity.getBusinessObjectDefinition(),
+                businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatEntity.getFileType(),
+                businessObjectFormatKey.getBusinessObjectFormatVersion(), matchedAvailablePartitionFilters, availablePartitions, storageNames);
         }
 
         // Get a list of unmatched partition filters.
@@ -1215,8 +1225,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Business object data availability works across all storage platform types, so the storage platform type is not specified in the herdDao call.
         // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> notAvailableStorageUnitAvailabilityDtos = storageUnitDao
-            .getStorageUnitsByPartitionFilters(businessObjectFormatKey, unmatchedPartitionFilters, request.getBusinessObjectDataVersion(), null, storageNames,
-                null, null, false);
+            .getStorageUnitsByPartitionFilters(businessObjectFormatEntity.getBusinessObjectDefinition(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
+                businessObjectFormatEntity.getFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(), unmatchedPartitionFilters,
+                request.getBusinessObjectDataVersion(), null, storageNames, null, null, false);
 
         // Populate the not-available statuses list.
         addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, notAvailableStorageUnitAvailabilityDtos);

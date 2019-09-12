@@ -18,10 +18,11 @@ package org.finra.herd.dao;
 import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
-import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 
@@ -111,8 +112,11 @@ public interface StorageUnitDao extends BaseJpaDao
     /**
      * Retrieves a list of storage unit availability DTOs per specified parameters.
      *
-     * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
-     * available format version for each partition value will be used.
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param businessObjectFormatUsage the business object format usage (case-insensitive)
+     * @param fileTypeEntity the file type entity
+     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest available
+     * format version for each partition value will be used
      * @param partitionFilters the list of partition filter to be used to select business object data instances. Each partition filter contains a list of
      * primary and sub-partition values in the right order up to the maximum partition levels allowed by business object data registration - with partition
      * values for the relative partitions not to be used for selection passed as nulls.
@@ -129,7 +133,8 @@ public interface StorageUnitDao extends BaseJpaDao
      *
      * @return the list of storage unit availability DTOs sorted by partition values and storage names
      */
-    List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
+    List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> partitionFilters,
         Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
         String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits);
 

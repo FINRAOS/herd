@@ -751,6 +751,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_PASSWORD = null;
 
+    public static final String NO_EXCLUDED_STORAGE_PLATFORM_TYPE  = null;
+
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
 
     public static final RegistrationDateRangeFilter NO_REGISTRATION_DATE_RANGE_FILTER = null;
@@ -776,6 +778,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_STORAGE_NAME = null;
 
     public static final List<String> NO_STORAGE_NAMES = null;
+
+    public static final String NO_STORAGE_PLATFORM_TYPE = null;
 
     public static final String NO_STORAGE_UNIT_STATUS = null;
 

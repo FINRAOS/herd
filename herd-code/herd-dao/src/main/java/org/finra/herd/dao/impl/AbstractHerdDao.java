@@ -245,6 +245,44 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
     }
 
     /**
+     * Builds a query restriction predicate for the specified business object format entity as per business object format alternate key values.
+     *
+     * @param builder the criteria builder
+     * @param businessObjectFormatEntityFrom the business object format entity that appears in the from clause of the main query
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param businessObjectFormatUsage the business object format usage (case-insensitive)
+     * @param fileTypeEntity the file type entity
+     * @param businessObjectFormatVersion the optional business object format version
+     *
+     * @return the query restriction predicate
+     */
+    protected Predicate getQueryRestriction(CriteriaBuilder builder, From<?, BusinessObjectFormatEntity> businessObjectFormatEntityFrom,
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage, FileTypeEntity fileTypeEntity,
+        Integer businessObjectFormatVersion)
+    {
+        // Create restriction on business object definition.
+        Predicate predicate =
+            builder.equal(businessObjectFormatEntityFrom.get(BusinessObjectFormatEntity_.businessObjectDefinitionId), businessObjectDefinitionEntity.getId());
+
+        // Create and append restriction on business object format usage.
+        predicate = builder.and(predicate,
+            builder.equal(builder.upper(businessObjectFormatEntityFrom.get(BusinessObjectFormatEntity_.usage)), businessObjectFormatUsage.toUpperCase()));
+
+        // Create and append restriction on business object format file type.
+        predicate =
+            builder.and(predicate, builder.equal(businessObjectFormatEntityFrom.get(BusinessObjectFormatEntity_.fileTypeCode), fileTypeEntity.getCode()));
+
+        // If specified, create and append restriction on business object format version.
+        if (businessObjectFormatVersion != null)
+        {
+            predicate = builder.and(predicate,
+                builder.equal(businessObjectFormatEntityFrom.get(BusinessObjectFormatEntity_.businessObjectFormatVersion), businessObjectFormatVersion));
+        }
+
+        return predicate;
+    }
+
+    /**
      * TODO This method may be bformat specific. Consider creating new abstract class to group all bformat related DAO. Gets a business object format key from
      * the specified business object data key.
      *

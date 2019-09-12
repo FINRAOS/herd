@@ -130,26 +130,6 @@ public interface BusinessObjectDataDao extends BaseJpaDao
     List<BusinessObjectDataEntity> getBusinessObjectDataEntities(BusinessObjectDataKey businessObjectDataKey);
 
     /**
-     * Retrieves a list of business object data entities per specified parameters.
-     *
-     * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
-     * available format version for each partition value will be used.
-     * @param partitionFilters the list of partition filter to be used to select business object data instances. Each partition filter contains a list of
-     * primary and sub-partition values in the right order up to the maximum partition levels allowed by business object data registration - with partition
-     * values for the relative partitions not to be used for selection passed as nulls.
-     * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
-     * the specified business object data status is returned.
-     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
-     * specified. When business object data version and business object data status both are not specified, the latest data version for each set of partition
-     * values will be used regardless of the status
-     * @param storageName the name of the storage where the business object data storage unit is located (case-insensitive)
-     *
-     * @return the list of business object data entities sorted by partition values
-     */
-    List<BusinessObjectDataEntity> getBusinessObjectDataEntities(BusinessObjectFormatKey businessObjectFormatKey, List<List<String>> partitionFilters,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, String storageName);
-
-    /**
      * Selects business object data having storage files associated with the specified storage and status. Only tbe business object data records that are older
      * than threshold minutes will be selected.
      *
