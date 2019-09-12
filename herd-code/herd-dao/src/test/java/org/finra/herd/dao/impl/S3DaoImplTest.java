@@ -37,6 +37,7 @@ import com.amazonaws.retry.RetryPolicy;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.Headers;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.GetObjectTaggingRequest;
 import com.amazonaws.services.s3.model.GetObjectTaggingResult;
@@ -53,6 +54,7 @@ import com.amazonaws.services.s3.model.Tag;
 import com.amazonaws.services.s3.model.Tier;
 import com.amazonaws.services.s3.model.VersionListing;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -73,6 +75,10 @@ import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
  */
 public class S3DaoImplTest extends AbstractDaoTest
 {
+
+    private static final String OTHER_EXCEPTION_MESSAGE = "OtherExceptionMessage";
+
+    private static final String RESTORE_ALREADY_IN_PROGRESS_EXCEPTION_MESSAGE = "RestoreAlreadyInProgress";
 
     private static final String TEST_FILE = "UT_S3DaoImplTest_Test_File";
 
@@ -386,37 +392,128 @@ public class S3DaoImplTest extends AbstractDaoTest
     }
 
     @Test
-    public void testRestoreObjectsBulkArchiveRetrievalOption() {
+    public void testRestoreObjectsBulkArchiveRetrievalOption()
+    {
         runRestoreObjects(Tier.Bulk.toString(), null);
     }
 
     @Test
-    public void testRestoreObjectsStandardArchiveRetrievalOption() {
+    public void testRestoreObjectsStandardArchiveRetrievalOption()
+    {
         runRestoreObjects(Tier.Standard.toString(), null);
     }
 
     @Test
-    public void testRestoreObjectsExpeditedArchiveRetrievalOption() {
+    public void testRestoreObjectsExpeditedArchiveRetrievalOption()
+    {
         runRestoreObjects(Tier.Expedited.toString(), null);
     }
 
     @Test
-    public void testRestoreObjectsNullArchiveRetrievalOption() {
+    public void testRestoreObjectsNullArchiveRetrievalOption()
+    {
         runRestoreObjects(null, null);
     }
 
     @Test
-    public void testRestoreObjectsInDeepArchiveNullArchiveRetrievalOption() {
+    public void testRestoreObjectsInDeepArchiveNullArchiveRetrievalOption()
+    {
         runRestoreObjects(null, StorageClass.DeepArchive);
     }
 
     @Test
-    public void testRestoreObjectsInDeepArchiveBulkArchiveRetrievalOption() {
+    public void testRestoreObjectsInDeepArchiveBulkArchiveRetrievalOption()
+    {
         runRestoreObjects(Tier.Bulk.toString(), StorageClass.DeepArchive);
+    }
+
+
+    @Test
+    public void testRestoreObjectsWithS3ExceptionRestoreAlreadyInProgress()
+    {
+        testRestoreObjectsWithS3Exception(RESTORE_ALREADY_IN_PROGRESS_EXCEPTION_MESSAGE, HttpStatus.SC_CONFLICT);
+    }
+
+    @Test
+    public void testRestoreObjectsWithS3ExceptionOther()
+    {
+        testRestoreObjectsWithS3Exception(OTHER_EXCEPTION_MESSAGE, HttpStatus.SC_METHOD_FAILURE);
+    }
+
+    private void testRestoreObjectsWithS3Exception(String exceptionMessage, int statusCode)
+    {
+        List<File> files = Collections.singletonList(new File(TEST_FILE));
+
+        // Create an S3 file transfer request parameters DTO to access S3 objects.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX);
+        s3FileTransferRequestParamsDto.setFiles(files);
+
+        // Create a retry policy.
+        RetryPolicy retryPolicy =
+            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
+
+        // Create an Object Metadata
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setOngoingRestore(false);
+        objectMetadata.setHeader(Headers.STORAGE_CLASS, StorageClass.DeepArchive);
+
+        ArgumentCaptor<AmazonS3Client> s3ClientCaptor = ArgumentCaptor.forClass(AmazonS3Client.class);
+        ArgumentCaptor<String> s3BucketNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<RestoreObjectRequest> requestStoreCaptor = ArgumentCaptor.forClass(RestoreObjectRequest.class);
+
+        // Create an Amazon S3 Exception
+        AmazonS3Exception amazonS3Exception = new AmazonS3Exception(exceptionMessage);
+        amazonS3Exception.setStatusCode(statusCode);
+
+        // Mock the external calls.
+        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
+        doThrow(amazonS3Exception).when(s3Operations).restoreObject(requestStoreCaptor.capture(), s3ClientCaptor.capture());
+
+        try
+        {
+            // Call the method under test.
+            s3DaoImpl.restoreObjects(s3FileTransferRequestParamsDto, EXPIRATION_IN_DAYS, Tier.Standard.toString());
+
+            // If this is not a restore already in progress exception message (409) then we should have caught an exception.
+            // Else if this is a restore already in progress message (409) then continue as usual.
+            if (!exceptionMessage.equals(RESTORE_ALREADY_IN_PROGRESS_EXCEPTION_MESSAGE))
+            {
+                // Should not be here. Fail!
+                fail();
+            }
+            else
+            {
+                RestoreObjectRequest requestStore = requestStoreCaptor.getValue();
+                assertEquals(S3_BUCKET_NAME, s3BucketNameCaptor.getValue());
+                assertEquals(TEST_FILE, keyCaptor.getValue());
+
+                // Verify Bulk option is used when the option is not provided
+                assertEquals(StringUtils.isNotEmpty(Tier.Standard.toString())
+                    ? Tier.Standard.toString() : Tier.Bulk.toString(), requestStore.getGlacierJobParameters().getTier());
+            }
+        }
+        catch (IllegalStateException illegalStateException)
+        {
+            assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
+                    "Reason: com.amazonaws.services.s3.model.AmazonS3Exception: %s " +
+                    "(Service: null; Status Code: %s; Error Code: null; Request ID: null; S3 Extended Request ID: null), S3 Extended Request ID: null",
+                TEST_FILE, S3_BUCKET_NAME, exceptionMessage, statusCode), illegalStateException.getMessage());
+        }
+
+        // Verify the external calls
+        verify(retryPolicyFactory).getRetryPolicy();
+        verify(s3Operations).getObjectMetadata(anyString(), anyString(), any(AmazonS3Client.class));
+        verify(s3Operations).restoreObject(any(RestoreObjectRequest.class), any(AmazonS3Client.class));
+        verifyNoMoreInteractionsHelper();
     }
 
     /**
      * Run restore objects method
+     *
      * @param archiveRetrievalOption the archive retrieval option
      */
     private void runRestoreObjects(String archiveRetrievalOption, StorageClass storageClass)
@@ -454,7 +551,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         assertEquals(S3_BUCKET_NAME, s3BucketNameCaptor.getValue());
         assertEquals(TEST_FILE, keyCaptor.getValue());
 
-        // Verify Bulk option is used when the option is not providered
+        // Verify Bulk option is used when the option is not provided
         assertEquals(StringUtils.isNotEmpty(archiveRetrievalOption)
             ? archiveRetrievalOption : Tier.Bulk.toString(), requestStore.getGlacierJobParameters().getTier());
 

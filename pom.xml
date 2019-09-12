@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.103.0-SNAPSHOT</version>
+   <version>0.104.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -32,7 +32,7 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <herd-ui.version>0.73.0</herd-ui.version>
+      <herd-ui.version>0.74.0</herd-ui.version>
 
       <!-- Third Party JAR Dependencies -->
       <!--
@@ -77,7 +77,7 @@
       <googlecode.json-simple.version>1.1.1</googlecode.json-simple.version>
       <plexus.utils.version>3.1.0</plexus.utils.version>
       <postgresql.driver.version>42.1.4.jre7</postgresql.driver.version>
-      <quartz.scheduler.version>2.3.0</quartz.scheduler.version>
+      <quartz.scheduler.version>2.3.1</quartz.scheduler.version>
       <roaster.version>2.20.4.Final</roaster.version>
       <scala.version>2.11.0</scala.version>
       <scala.tools.version>2.11</scala.tools.version>
@@ -290,6 +290,11 @@
                   <artifactId>commons-logging</artifactId>
                </exclusion>
             </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-ses</artifactId>
+            <version>${aws.sdk.version}</version>
          </dependency>
          <dependency>
             <groupId>com.amazonaws</groupId>

@@ -71,6 +71,8 @@
          <Class name="~org.finra.herd.model.dto.Ec2PriceDto"/>
          <Class name="~org.finra.herd.model.dto.ElasticsearchResponseDto"/>
          <Class name="~org.finra.herd.model.dto.ElasticsearchSettingsDto"/>
+         <Class name="~org.finra.herd.model.dto.EmailDto"/>
+         <Class name="~org.finra.herd.model.dto.EmailDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.EmrClusterAlternateKeyDto"/>
          <Class name="~org.finra.herd.model.dto.EmrClusterCreateDto"/>
          <Class name="~org.finra.herd.model.dto.EmrClusterPriceDto"/>
