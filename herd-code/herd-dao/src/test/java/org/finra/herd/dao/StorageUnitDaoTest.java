@@ -406,6 +406,12 @@ public class StorageUnitDaoTest extends AbstractDaoTest
             businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.VALID);
         assertNotNull(validBusinessObjectDataStatusEntity);
 
+        // Get storage platform entity for S3 storage platform type.
+        StoragePlatformEntity s3StoragePlatformEntity = storagePlatformDao.getStoragePlatformByName(StoragePlatformEntity.S3);
+
+        // Create an invalid storage platform entity.
+        StoragePlatformEntity invalidStoragePlatformEntity = storagePlatformDaoTestHelper.createStoragePlatformEntity(STORAGE_PLATFORM_CODE_2);
+
         // Build a list of partition values, large enough to cause executing the select queries in chunks.
         List<String> partitionValues = new ArrayList<>();
         for (int i = 0; i < AbstractHerdDao.MAX_PARTITION_FILTERS_PER_REQUEST; i++)
@@ -425,7 +431,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // Retrieve "available" storage units per specified parameters.
         List<StorageUnitAvailabilityDto> results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, partitionFilters,
-                DATA_VERSION, NO_BDATA_STATUS_ENTITY, STORAGE_NAMES, NO_STORAGE_PLATFORM_TYPE, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                DATA_VERSION, NO_BDATA_STATUS_ENTITY, STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -435,7 +441,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // a business object format version, which is an optional parameter.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, NO_FORMAT_VERSION, partitionFilters,
-                DATA_VERSION, NO_BDATA_STATUS_ENTITY, STORAGE_NAMES, NO_STORAGE_PLATFORM_TYPE, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                DATA_VERSION, NO_BDATA_STATUS_ENTITY, STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -445,7 +451,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // both business object format version and business object data version.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, NO_FORMAT_VERSION, partitionFilters,
-                NO_DATA_VERSION, NO_BDATA_STATUS_ENTITY, STORAGE_NAMES, NO_STORAGE_PLATFORM_TYPE, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                NO_DATA_VERSION, NO_BDATA_STATUS_ENTITY, STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -455,7 +461,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // status without specifying both business object format version and business object data version.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, NO_FORMAT_VERSION, partitionFilters,
-                NO_DATA_VERSION, validBusinessObjectDataStatusEntity, STORAGE_NAMES, NO_STORAGE_PLATFORM_TYPE, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                NO_DATA_VERSION, validBusinessObjectDataStatusEntity, STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -465,7 +471,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // status and without specifying both business object format version and business object data version.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, NO_FORMAT_VERSION, partitionFilters,
-                NO_DATA_VERSION, testBusinessObjectDataStatusEntity, STORAGE_NAMES, NO_STORAGE_PLATFORM_TYPE, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                NO_DATA_VERSION, testBusinessObjectDataStatusEntity, STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -474,7 +480,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // Retrieve "available" storage units and with VALID business object data status without specifying any of the storage names or storage platform type.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, partitionFilters,
-                DATA_VERSION, validBusinessObjectDataStatusEntity, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_TYPE, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                DATA_VERSION, validBusinessObjectDataStatusEntity, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -483,7 +489,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // Try to retrieve "available" storage units without specifying any storage names and providing a non-existing storage platform type.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, partitionFilters,
-                DATA_VERSION, validBusinessObjectDataStatusEntity, NO_STORAGE_NAMES, I_DO_NOT_EXIST, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                DATA_VERSION, validBusinessObjectDataStatusEntity, NO_STORAGE_NAMES, invalidStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -492,7 +498,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // Try to retrieve "available" storage units when excluding the storage platform type that are test storage belongs to.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, partitionFilters,
-                DATA_VERSION, validBusinessObjectDataStatusEntity, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_TYPE, StoragePlatformEntity.S3,
+                DATA_VERSION, validBusinessObjectDataStatusEntity, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, s3StoragePlatformEntity,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -539,7 +545,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // Retrieve "available" storage units per specified parameters.
         List<StorageUnitAvailabilityDto> results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, partitionFilters,
-                DATA_VERSION, NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), NO_STORAGE_PLATFORM_TYPE, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                DATA_VERSION, NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -549,7 +555,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // a business object format version, which is an optional parameter.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, NO_FORMAT_VERSION, partitionFilters,
-                DATA_VERSION, NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), NO_STORAGE_PLATFORM_TYPE, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                DATA_VERSION, NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -558,7 +564,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // Retrieve storage units regardless of storage unit status per specified parameters.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, partitionFilters,
-                DATA_VERSION, NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), NO_STORAGE_PLATFORM_TYPE, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                DATA_VERSION, NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.
@@ -568,7 +574,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // a business object format version, which is an optional parameter.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, NO_FORMAT_VERSION, partitionFilters,
-                DATA_VERSION, NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), NO_STORAGE_PLATFORM_TYPE, NO_EXCLUDED_STORAGE_PLATFORM_TYPE,
+                DATA_VERSION, NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 NO_SELECT_ONLY_AVAILABLE_STORAGE_UNITS);
 
         // Validate the results.

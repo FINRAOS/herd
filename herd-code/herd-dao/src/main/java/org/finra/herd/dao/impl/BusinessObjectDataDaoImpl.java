@@ -84,7 +84,6 @@ import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity_;
 import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.model.jpa.StorageEntity_;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity_;
@@ -280,20 +279,21 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     @Override
     public String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, String upperBoundPartitionValue, String lowerBoundPartitionValue)
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, String upperBoundPartitionValue,
+        String lowerBoundPartitionValue)
     {
         return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatusEntity,
-            storageNames, storagePlatformType, excludedStoragePlatformType, AggregateFunction.GREATEST, upperBoundPartitionValue, lowerBoundPartitionValue);
+            storageNames, storagePlatformEntity, excludedStoragePlatformEntity, AggregateFunction.GREATEST, upperBoundPartitionValue, lowerBoundPartitionValue);
     }
 
     @Override
     public String getBusinessObjectDataMinPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType)
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity)
     {
         return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatusEntity,
-            storageNames, storagePlatformType, excludedStoragePlatformType, AggregateFunction.LEAST, null, null);
+            storageNames, storagePlatformEntity, excludedStoragePlatformEntity, AggregateFunction.LEAST, null, null);
     }
 
     @Override
@@ -503,9 +503,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified
      * @param storageNames the optional list of storage names (case-insensitive)
-     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
-     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
-     * the storage platform type is specified
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
+     * empty or the storage platform entity is specified
      * @param aggregateFunction the aggregate function to use against partition values
      * @param upperBoundPartitionValue the optional inclusive upper bound for the maximum available partition value
      * @param lowerBoundPartitionValue the optional inclusive lower bound for the maximum available partition value
@@ -514,8 +514,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      */
     private String getBusinessObjectDataPartitionValue(int partitionColumnPosition, final BusinessObjectFormatKey businessObjectFormatKey,
         final Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
-        String storagePlatformType, String excludedStoragePlatformType, final AggregateFunction aggregateFunction, String upperBoundPartitionValue,
-        String lowerBoundPartitionValue)
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, final AggregateFunction aggregateFunction,
+        String upperBoundPartitionValue, String lowerBoundPartitionValue)
     {
         // We cannot use businessObjectFormatKey passed in since it is case-insensitive. Case-insensitive values requires upper() function in the SQL query, and
         // it has caused performance problems. So we need to extract case-sensitive business object format key from database so we can eliminate the upper()
@@ -554,7 +554,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntityJoin = businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
         Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntityJoin = storageUnitEntityJoin.join(StorageUnitEntity_.status);
         Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityJoin.join(StorageUnitEntity_.storage);
-        Join<StorageEntity, StoragePlatformEntity> storagePlatformEntityJoin = storageEntityJoin.join(StorageEntity_.storagePlatform);
 
         // Create the path.
         Expression<String> partitionValue;
@@ -599,8 +598,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         else
         {
             Subquery<Integer> subQuery =
-                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntityRoot, businessObjectFormatEntityJoin,
-                    businessObjectDataStatusEntity, storageNames, storagePlatformType, excludedStoragePlatformType, false);
+                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntityRoot, businessObjectDataStatusEntity, storageNames,
+                    storagePlatformEntity, excludedStoragePlatformEntity, false);
 
             mainQueryRestriction =
                 builder.and(mainQueryRestriction, builder.in(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version)).value(subQuery));
@@ -622,8 +621,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // If specified, add restriction on storage.
         mainQueryRestriction = builder.and(mainQueryRestriction,
-            getQueryRestrictionOnStorage(builder, storageEntityJoin, storagePlatformEntityJoin, storageNames, storagePlatformType,
-                excludedStoragePlatformType));
+            getQueryRestrictionOnStorage(builder, storageEntityJoin, storageNames, storagePlatformEntity, excludedStoragePlatformEntity));
 
         // Search across only "available" storage units.
         mainQueryRestriction = builder.and(mainQueryRestriction, builder.isTrue(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.available)));

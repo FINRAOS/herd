@@ -339,8 +339,8 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
     @Override
     public List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> partitionFilters,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits)
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits)
     {
         List<StorageUnitAvailabilityDto> results = new ArrayList<>();
 
@@ -350,8 +350,8 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
             // Get a sub-list for the current chunk of partition filters.
             List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtosSubset =
                 getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
-                    partitionFilters, businessObjectDataVersion, businessObjectDataStatusEntity, storageNames, storagePlatformType, excludedStoragePlatformType,
-                    selectOnlyAvailableStorageUnits, i,
+                    partitionFilters, businessObjectDataVersion, businessObjectDataStatusEntity, storageNames, storagePlatformEntity,
+                    excludedStoragePlatformEntity, selectOnlyAvailableStorageUnits, i,
                     (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
 
             // Add the sub-list to the result.
@@ -429,9 +429,9 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
      * specified. When business object data version and business object data status both are not specified, the latest data version for each set of partition
      * values will be used regardless of the status
      * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
-     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
-     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
-     * the storage platform type is specified
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
+     * empty or the storage platform entity is specified
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
      *
      * @return the sub-query to select the maximum business object data version
@@ -439,8 +439,8 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
     private Subquery<Integer> getMaximumBusinessObjectFormatVersionSubQuery(CriteriaBuilder builder, CriteriaQuery<?> criteria,
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity, From<?, BusinessObjectFormatEntity> businessObjectFormatEntityFrom,
         FileTypeEntity fileTypeEntity, From<?, BusinessObjectDataEntity> businessObjectDataEntityFrom, Integer businessObjectDataVersion,
-        BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits)
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, StoragePlatformEntity storagePlatformEntity,
+        StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits)
     {
         // Business object format version is not specified, so just use the latest available for this set of partition values.
         Subquery<Integer> subQuery = criteria.subquery(Integer.class);
@@ -452,7 +452,6 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntityJoin =
             subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
         Join<StorageUnitEntity, StorageEntity> subStorageEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.storage);
-        Join<StorageEntity, StoragePlatformEntity> subStoragePlatformEntityJoin = subStorageEntityJoin.join(StorageEntity_.storagePlatform);
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntityJoin =
             subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<StorageUnitEntity, StorageUnitStatusEntity> subStorageUnitStatusEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.status);
@@ -480,8 +479,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
 
         // Create and add a standard restriction on storage.
         subQueryRestriction = builder.and(subQueryRestriction,
-            getQueryRestrictionOnStorage(builder, subStorageEntityJoin, subStoragePlatformEntityJoin, storageNames, storagePlatformType,
-                excludedStoragePlatformType));
+            getQueryRestrictionOnStorage(builder, subStorageEntityJoin, storageNames, storagePlatformEntity, excludedStoragePlatformEntity));
 
         // If specified, add a restriction on storage unit status availability flag.
         if (selectOnlyAvailableStorageUnits)
@@ -513,9 +511,9 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
      * specified. When business object data version and business object data status both are not specified, the latest data version for each set of partition
      * values will be used regardless of the status
      * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
-     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
-     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storage names is not
-     * empty or the storage platform type is specified
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
+     * empty or the storage platform entity is specified
      * @param partitionFilterSubListFromIndex the index of the first element in the partition filter sublist
      * @param partitionFilterSubListSize the size of the partition filter sublist
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
@@ -524,8 +522,9 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
      */
     private List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> partitionFilters,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, boolean selectOnlyAvailableStorageUnits, int partitionFilterSubListFromIndex, int partitionFilterSubListSize)
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits,
+        int partitionFilterSubListFromIndex, int partitionFilterSubListSize)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -537,7 +536,6 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         // Join to the other tables we can filter on.
         Join<StorageUnitEntity, BusinessObjectDataEntity> businessObjectDataEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.businessObjectData);
         Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.storage);
-        Join<StorageEntity, StoragePlatformEntity> storagePlatformEntityJoin = storageEntityJoin.join(StorageEntity_.storagePlatform);
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
             businessObjectDataEntityJoin.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.status);
@@ -555,8 +553,8 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
             // Get the latest available format version for this set of partition values and per other restrictions.
             Subquery<Integer> subQuery =
                 getMaximumBusinessObjectFormatVersionSubQuery(builder, criteria, businessObjectDefinitionEntity, businessObjectFormatEntityJoin, fileTypeEntity,
-                    businessObjectDataEntityJoin, businessObjectDataVersion, businessObjectDataStatusEntity, storageNames, storagePlatformType,
-                    excludedStoragePlatformType, selectOnlyAvailableStorageUnits);
+                    businessObjectDataEntityJoin, businessObjectDataVersion, businessObjectDataStatusEntity, storageNames, storagePlatformEntity,
+                    excludedStoragePlatformEntity, selectOnlyAvailableStorageUnits);
 
             mainQueryRestriction = builder.and(mainQueryRestriction,
                 builder.in(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)).value(subQuery));
@@ -578,8 +576,8 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
             // Meaning, when both business object data version and business object data status are not specified, we just return
             // the latest business object data version in the specified storage.
             Subquery<Integer> subQuery =
-                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntityJoin, businessObjectFormatEntityJoin,
-                    businessObjectDataStatusEntity, storageNames, storagePlatformType, excludedStoragePlatformType, selectOnlyAvailableStorageUnits);
+                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntityJoin, businessObjectDataStatusEntity, storageNames,
+                    storagePlatformEntity, excludedStoragePlatformEntity, selectOnlyAvailableStorageUnits);
 
             mainQueryRestriction =
                 builder.and(mainQueryRestriction, builder.in(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.version)).value(subQuery));
@@ -587,8 +585,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
 
         // If specified, add restriction on storage.
         mainQueryRestriction = builder.and(mainQueryRestriction,
-            getQueryRestrictionOnStorage(builder, storageEntityJoin, storagePlatformEntityJoin, storageNames, storagePlatformType,
-                excludedStoragePlatformType));
+            getQueryRestrictionOnStorage(builder, storageEntityJoin, storageNames, storagePlatformEntity, excludedStoragePlatformEntity));
 
         // If specified, add a restriction on storage unit status availability flag.
         if (selectOnlyAvailableStorageUnits)

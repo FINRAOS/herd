@@ -28,6 +28,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
+import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 
 public interface BusinessObjectDataDao extends BaseJpaDao
@@ -77,17 +78,18 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified
      * @param storageNames the optional list of storage names (case-insensitive)
-     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
-     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
-     * the storage platform type is specified
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
+     * empty or the storage platform entity is specified
      * @param upperBoundPartitionValue the optional inclusive upper bound for the maximum available partition value
      * @param lowerBoundPartitionValue the optional inclusive lower bound for the maximum available partition value
      *
      * @return the maximum available partition value
      */
     String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, String upperBoundPartitionValue, String lowerBoundPartitionValue);
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, String upperBoundPartitionValue,
+        String lowerBoundPartitionValue);
 
     /**
      * Retrieves a minimum available partition value per specified parameters.
@@ -100,15 +102,15 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified
      * @param storageNames the optional list of storage names (case-insensitive)
-     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
-     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
-     * the storage platform type is specified
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
+     * empty or the storage platform entity is specified
      *
      * @return the maximum available partition value
      */
     String getBusinessObjectDataMinPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType);
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity);
 
     /**
      * Returns a number of business object data instances registered with this business object format.
