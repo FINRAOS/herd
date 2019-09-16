@@ -17,6 +17,7 @@ package org.finra.herd.dao.impl;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,6 +117,9 @@ public class EmrDaoImpl implements EmrDao
     private Ec2Dao ec2Dao;
 
     @Autowired
+    private Map<String, String> emrClusterCache;
+
+    @Autowired
     private EmrHelper emrHelper;
 
     @Autowired
@@ -170,6 +174,11 @@ public class EmrDaoImpl implements EmrDao
         LOGGER.info("runJobFlowRequest={}", jsonHelper.objectToJson(runJobFlowRequest));
         String clusterId = emrOperations.runEmrJobFlow(getEmrClient(awsParams), runJobFlowRequest);
         LOGGER.info("EMR cluster started. emrClusterId=\"{}\"", clusterId);
+
+        // Add the new cluster name and cluster id to the EMR cluster cache.
+        LOGGER.info("Adding EMR cluster to the EMR Cluster Cache. emrClusterName=\"{}\" emrClusterId=\"{}\"", clusterName.toUpperCase(), clusterId);
+        emrClusterCache.put(clusterName.toUpperCase(), clusterId);
+
         return clusterId;
     }
 
@@ -178,6 +187,40 @@ public class EmrDaoImpl implements EmrDao
     {
         if (StringUtils.isNotBlank(clusterName))
         {
+            // First check to see if this cluster name is stored locally in the EMR Cluster Cache.
+            // If the EMR cluster cache does contain the cluster name use the id found in the EMR cluster cache.
+            // Else the EMR cluster cache does not contain the cluster name then move on to do a list cluster.
+            if (emrClusterCache.containsKey(clusterName.toUpperCase()))
+            {
+                // Get the cluster id value from the EMR cluster cache with the cluster name key.
+                String clusterId = emrClusterCache.get(clusterName.toUpperCase());
+
+                // Retrieve the cluster status to validate the cluster.
+                String status = getEmrClusterStatusById(clusterName, awsParams);
+
+                LOGGER.info("Found the EMR cluster name in the EMR cluster cache. emrClusterName=\"{}\" emrClusterId=\"{}\" emrClusterStatus=\"{}\"",
+                    clusterName.toUpperCase(), clusterId, status);
+
+                // If the status is not null and the status is in one of the active EMR cluster states,
+                // then return the cluster summary with the cluster id from the EMR cluster cache.
+                // Else remove the cluster from the EMR cluster cache and then move on to do a list cluster.
+                if (status != null && Arrays.asList(getActiveEmrClusterStates()).contains(status))
+                {
+                    return new ClusterSummary().withId(clusterId).withName(clusterName);
+                }
+                else
+                {
+                    LOGGER.info("Removing cluster from EMR cluster cache. emrClusterName=\"{}\" emrClusterId=\"{}\" emrClusterStatus=\"{}\"",
+                        clusterName.toUpperCase(), clusterId, status);
+
+                    // Remove the cluster from the cache.
+                    emrClusterCache.remove(clusterName.toUpperCase());
+                }
+            }
+
+            LOGGER.info("The cluster name was not in the cluster cache. Make a list cluster request to find the cluster id. emrClusterName=\"{}\"",
+                clusterName.toUpperCase());
+
             /**
              * Call AWSOperations for ListClusters API. Need to list all the active clusters that are in
              * BOOTSTRAPPING/RUNNING/STARTING/WAITING states
@@ -203,6 +246,12 @@ public class EmrDaoImpl implements EmrDao
                 // Loop through all the active clusters returned by AWS
                 for (ClusterSummary clusterInstance : clusterResult.getClusters())
                 {
+                    LOGGER.info("Adding EMR cluster to the EMR Cluster Cache. emrClusterName=\"{}\" emrClusterId=\"{}\"",
+                        clusterInstance.getName().toUpperCase(), clusterInstance.getId());
+
+                    // Add this cluster instance to the EMR cluster cache.
+                    emrClusterCache.put(clusterInstance.getName().toUpperCase(), clusterInstance.getId());
+
                     // If the cluster name matches, then return the status
                     if (StringUtils.isNotBlank(clusterInstance.getName()) && clusterInstance.getName().equalsIgnoreCase(clusterName))
                     {
