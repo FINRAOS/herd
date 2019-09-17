@@ -336,7 +336,8 @@ public class EmrDaoImplTest extends AbstractDaoTest
         AmazonElasticMapReduceClient amazonElasticMapReduceClient = mock(AmazonElasticMapReduceClient.class);
 
         // Create a cluster summary.
-        ClusterSummary clusterSummary = new ClusterSummary().withName(EMR_CLUSTER_NAME).withId(EMR_CLUSTER_ID);
+        ClusterSummary clusterSummary =
+            new ClusterSummary().withName(EMR_CLUSTER_NAME).withId(EMR_CLUSTER_ID).withStatus(cluster == null ? null : cluster.getStatus());
 
         // Create a list cluster result with the matching cluster.
         ListClustersResult listClusterResult = new ListClustersResult().withClusters(clusterSummary);

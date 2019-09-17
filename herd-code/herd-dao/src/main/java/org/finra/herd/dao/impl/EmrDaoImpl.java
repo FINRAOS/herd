@@ -28,6 +28,7 @@ import com.amazonaws.services.elasticmapreduce.model.AddJobFlowStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.Application;
 import com.amazonaws.services.elasticmapreduce.model.BootstrapActionConfig;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
+import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.amazonaws.services.elasticmapreduce.model.Configuration;
 import com.amazonaws.services.elasticmapreduce.model.DescribeClusterRequest;
@@ -196,7 +197,9 @@ public class EmrDaoImpl implements EmrDao
                 String clusterId = emrClusterCache.get(clusterName.toUpperCase());
 
                 // Retrieve the cluster status to validate the cluster.
-                String status = getEmrClusterStatusById(clusterId, awsParams);
+                Cluster cluster = getEmrClusterById(clusterId, awsParams);
+                ClusterStatus clusterStatus = cluster == null ? null : cluster.getStatus();
+                String status = clusterStatus == null ? null : clusterStatus.getState();
 
                 LOGGER.info("Found the EMR cluster name in the EMR cluster cache. emrClusterName=\"{}\" emrClusterId=\"{}\" emrClusterStatus=\"{}\"",
                     clusterName.toUpperCase(), clusterId, status);
@@ -206,7 +209,7 @@ public class EmrDaoImpl implements EmrDao
                 // Else remove the cluster from the EMR cluster cache and then move on to do a list cluster.
                 if (status != null && Arrays.asList(getActiveEmrClusterStates()).contains(status))
                 {
-                    return new ClusterSummary().withId(clusterId).withName(clusterName);
+                    return new ClusterSummary().withId(clusterId).withName(clusterName).withStatus(clusterStatus);
                 }
                 else
                 {
