@@ -336,13 +336,17 @@ public class EmrDaoImplTest extends AbstractDaoTest
         AmazonElasticMapReduceClient amazonElasticMapReduceClient = mock(AmazonElasticMapReduceClient.class);
 
         // Create a cluster summary.
-        ClusterSummary clusterSummary = new ClusterSummary().withName(EMR_CLUSTER_NAME).withId(EMR_CLUSTER_ID);
+        ClusterSummary clusterSummary =
+            new ClusterSummary().withName(EMR_CLUSTER_NAME).withId(EMR_CLUSTER_ID).withStatus(cluster == null ? null : cluster.getStatus());
 
         // Create a list cluster result with the matching cluster.
         ListClustersResult listClusterResult = new ListClustersResult().withClusters(clusterSummary);
 
         // Create a describe cluster result.
         DescribeClusterResult describeClusterResult = new DescribeClusterResult().withCluster(cluster);
+
+        // Create a describe cluster request.
+        DescribeClusterRequest describeClusterRequest = new DescribeClusterRequest().withClusterId(EMR_CLUSTER_ID);
 
         // Mock the external calls.
         when(emrClusterCache.containsKey(EMR_CLUSTER_NAME.toUpperCase())).thenReturn(true);
@@ -358,7 +362,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         ClusterSummary result = emrDaoImpl.getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto);
 
         // Verify the external calls.
-        verify(emrOperations).describeClusterRequest(eq(amazonElasticMapReduceClient), any(DescribeClusterRequest.class));
+        verify(emrOperations).describeClusterRequest(eq(amazonElasticMapReduceClient), eq(describeClusterRequest));
 
         if (cluster == null)
         {
