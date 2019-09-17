@@ -196,7 +196,7 @@ public class EmrDaoImpl implements EmrDao
                 String clusterId = emrClusterCache.get(clusterName.toUpperCase());
 
                 // Retrieve the cluster status to validate the cluster.
-                String status = getEmrClusterStatusById(clusterName, awsParams);
+                String status = getEmrClusterStatusById(clusterId, awsParams);
 
                 LOGGER.info("Found the EMR cluster name in the EMR cluster cache. emrClusterName=\"{}\" emrClusterId=\"{}\" emrClusterStatus=\"{}\"",
                     clusterName.toUpperCase(), clusterId, status);
