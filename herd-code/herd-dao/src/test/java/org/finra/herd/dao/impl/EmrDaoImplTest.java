@@ -49,6 +49,7 @@ import com.amazonaws.services.elasticmapreduce.model.InstanceFleetProvisioningSp
 import com.amazonaws.services.elasticmapreduce.model.InstanceGroupConfig;
 import com.amazonaws.services.elasticmapreduce.model.InstanceRoleType;
 import com.amazonaws.services.elasticmapreduce.model.InstanceTypeConfig;
+import com.amazonaws.services.elasticmapreduce.model.InvalidRequestException;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
@@ -305,7 +306,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState("STARTING"));
 
         // Test the EMR Cluster LruCache is used.
-        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(cluster);
+        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(cluster, false);
     }
 
     @Test
@@ -315,17 +316,27 @@ public class EmrDaoImplTest extends AbstractDaoTest
         Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState(EMR_INVALID_STATE));
 
         // Test that the EMR Cluster LruCache is not used.
-        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(cluster);
+        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(cluster, false);
     }
 
     @Test
     public void testGetActiveEmrClusterByNameWhenClusterNameIsInLruCacheWithNullCluster()
     {
         // Test that the EMR Cluster LruCache is not used.
-        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(null);
+        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(null, false);
     }
 
-    private void getActiveEmrClusterByNameWhenClusterNameIsInLruCache(Cluster cluster)
+    @Test
+    public void testGetActiveEmrClusterByNameWhenClusterNameIsInLruCacheWithException()
+    {
+        // Create a cluster with a valid state.
+        Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState("STARTING"));
+
+        // Test that the EMR Cluster LruCache is not used.
+        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(cluster, true);
+    }
+
+    private void getActiveEmrClusterByNameWhenClusterNameIsInLruCache(Cluster cluster, boolean withException)
     {
         // Create an AWS parameters DTO.
         AwsParamsDto awsParamsDto =
@@ -351,7 +362,18 @@ public class EmrDaoImplTest extends AbstractDaoTest
         // Mock the external calls.
         when(emrClusterCache.containsKey(EMR_CLUSTER_NAME.toUpperCase())).thenReturn(true);
         when(emrClusterCache.get(EMR_CLUSTER_NAME.toUpperCase())).thenReturn(EMR_CLUSTER_ID);
-        when(emrOperations.describeClusterRequest(eq(amazonElasticMapReduceClient), any(DescribeClusterRequest.class))).thenReturn(describeClusterResult);
+
+        // If this is testing the exception case then throw an Exception.
+        if (withException)
+        {
+            when(emrOperations.describeClusterRequest(eq(amazonElasticMapReduceClient), any(DescribeClusterRequest.class)))
+                .thenThrow(new InvalidRequestException("Invalid Request"));
+        }
+        else
+        {
+            when(emrOperations.describeClusterRequest(eq(amazonElasticMapReduceClient), any(DescribeClusterRequest.class))).thenReturn(describeClusterResult);
+        }
+
         when(configurationHelper.getProperty(ConfigurationValue.EMR_VALID_STATES)).thenReturn(ConfigurationValue.EMR_VALID_STATES.getDefaultValue().toString());
         when(configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER))
             .thenReturn((String) ConfigurationValue.FIELD_DATA_DELIMITER.getDefaultValue());
@@ -364,7 +386,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         // Verify the external calls.
         verify(emrOperations).describeClusterRequest(eq(amazonElasticMapReduceClient), eq(describeClusterRequest));
 
-        if (cluster == null)
+        if (cluster == null || withException)
         {
             verify(configurationHelper).getProperty(ConfigurationValue.FIELD_DATA_DELIMITER);
             verify(configurationHelper).getProperty(ConfigurationValue.EMR_VALID_STATES);
