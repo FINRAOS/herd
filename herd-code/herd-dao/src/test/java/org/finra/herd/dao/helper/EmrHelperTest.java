@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +49,7 @@ import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +71,7 @@ import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.MasterInstanceDefinition;
 import org.finra.herd.model.api.xml.Parameter;
+
 /**
  * This class tests functionality within the AwsHelper class.
  */
@@ -80,7 +81,7 @@ public class EmrHelperTest extends AbstractDaoTest
     EmrHelper emrHelper;
 
     @Test
-    public void testBuildEmrClusterName() throws Exception
+    public void testBuildEmrClusterName()
     {
         String clusterName = emrHelper.buildEmrClusterName(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME);
 
@@ -88,7 +89,7 @@ public class EmrHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetS3StagingLocation() throws Exception
+    public void testGetS3StagingLocation()
     {
         String s3StagingLocation = emrHelper.getS3StagingLocation();
 
@@ -96,7 +97,7 @@ public class EmrHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testIsActiveEmrState() throws Exception
+    public void testIsActiveEmrState()
     {
         boolean isActive = emrHelper.isActiveEmrState("RUNNING");
 
@@ -104,7 +105,7 @@ public class EmrHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testEmrHadoopJarStepConfig() throws Exception
+    public void testEmrHadoopJarStepConfig()
     {
         StepConfig stepConfig = emrHelper.getEmrHadoopJarStepConfig("step_name", "jar_location", null, null, false);
 
@@ -115,7 +116,7 @@ public class EmrHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testEmrHadoopJarStepConfigNoContinueOnError() throws Exception
+    public void testEmrHadoopJarStepConfigNoContinueOnError()
     {
         StepConfig stepConfig = emrHelper.getEmrHadoopJarStepConfig("step_name", "jar_location", null, null, null);
 
@@ -126,7 +127,7 @@ public class EmrHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testEmrHadoopJarStepConfigContinueOnError() throws Exception
+    public void testEmrHadoopJarStepConfigContinueOnError()
     {
         StepConfig stepConfig = emrHelper.getEmrHadoopJarStepConfig("step_name", "jar_location", null, null, true);
 
@@ -137,14 +138,14 @@ public class EmrHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testEmrHadoopJarStepConfigWithArguments() throws Exception
+    public void testEmrHadoopJarStepConfigWithArguments()
     {
         List<String> arguments = new ArrayList<>();
         arguments.add("arg1");
 
         StepConfig stepConfig = emrHelper.getEmrHadoopJarStepConfig("step_name", "jar_location", null, arguments, false);
 
-        assertNotNull("step not retuned", stepConfig);
+        assertNotNull("step not returned", stepConfig);
 
         assertEquals("name not found", "step_name", stepConfig.getName());
         assertEquals("jar not found", "jar_location", stepConfig.getHadoopJarStep().getJar());
@@ -383,11 +384,12 @@ public class EmrHelperTest extends AbstractDaoTest
             String emrClusterName = "emrClusterName";
             String expectedEmrClusterId = "expectedEmrClusterId";
 
-            when(mockEmrDao.getActiveEmrClusterByName(any(), any())).thenReturn(new ClusterSummary().withId(expectedEmrClusterId).withName(emrClusterName));
+            when(mockEmrDao.getActiveEmrClusterByNameAndAccountId(any(), any(), any()))
+                .thenReturn(new ClusterSummary().withId(expectedEmrClusterId).withName(emrClusterName));
 
             assertEquals(expectedEmrClusterId, emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName, null));
 
-            verify(mockEmrDao).getActiveEmrClusterByName(eq(emrClusterName), any());
+            verify(mockEmrDao).getActiveEmrClusterByNameAndAccountId(eq(emrClusterName), any(), any());
             verifyNoMoreInteractions(mockEmrDao);
         }
         finally
@@ -408,7 +410,7 @@ public class EmrHelperTest extends AbstractDaoTest
             String emrClusterId = null;
             String emrClusterName = "emrClusterName";
 
-            when(mockEmrDao.getActiveEmrClusterByName(any(), any())).thenReturn(null);
+            when(mockEmrDao.getActiveEmrClusterByNameAndAccountId(any(), any(), any())).thenReturn(null);
 
             try
             {
@@ -420,7 +422,7 @@ public class EmrHelperTest extends AbstractDaoTest
                 assertEquals(String.format("The cluster with name \"%s\" does not exist.", emrClusterName), e.getMessage());
             }
 
-            verify(mockEmrDao).getActiveEmrClusterByName(eq(emrClusterName), any());
+            verify(mockEmrDao).getActiveEmrClusterByNameAndAccountId(eq(emrClusterName), any(), any());
             verifyNoMoreInteractions(mockEmrDao);
         }
         finally
@@ -510,7 +512,7 @@ public class EmrHelperTest extends AbstractDaoTest
         instanceFleets.add(instanceFleet);
         listInstanceFleetsResult.setInstanceFleets(instanceFleets);
 
-        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        assertEquals(Lists.newArrayList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         EmrClusterInstanceFleetStatus emrClusterInstanceFleetStatus = new EmrClusterInstanceFleetStatus();
         String emrClusterInstanceFleetStatus_State = "state 1";
@@ -521,7 +523,7 @@ public class EmrHelperTest extends AbstractDaoTest
         instanceFleetStatus.setState(emrClusterInstanceFleetStatus_State);
         instanceFleet.setStatus(instanceFleetStatus);
 
-        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        assertEquals(Lists.newArrayList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         String emrClusterInstanceFleetStatus_StateChangeCode = "change code 1";
         String emrClusterInstanceFleetStatus_StateChangeMsg = "change msg 1";
@@ -546,7 +548,7 @@ public class EmrHelperTest extends AbstractDaoTest
         emrClusterInstanceFleetTimeline.setEndDateTime(HerdDateUtils.getXMLGregorianCalendarValue(now));
         emrClusterInstanceFleetStatus.setTimeline(emrClusterInstanceFleetTimeline);
 
-        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        assertEquals(Lists.newArrayList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         String instanceType = "instance type 1";
         int weightedCapacity = 1;
@@ -571,9 +573,9 @@ public class EmrHelperTest extends AbstractDaoTest
         emrClusterInstanceTypeSpecification.setBidPrice(bidPrice);
         emrClusterInstanceTypeSpecification.setBidPriceAsPercentageOfOnDemandPrice(bidPricePercent);
         emrClusterInstanceTypeSpecification.setEbsOptimized(ebsOptimized);
-        expectedEmrInstanceFleet.setInstanceTypeSpecifications(Arrays.asList(emrClusterInstanceTypeSpecification));
+        expectedEmrInstanceFleet.setInstanceTypeSpecifications(Lists.newArrayList(emrClusterInstanceTypeSpecification));
 
-        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        assertEquals(Lists.newArrayList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         EbsBlockDevice ebsBlockDevice = new EbsBlockDevice();
         String device = "device 1";
@@ -584,8 +586,8 @@ public class EmrHelperTest extends AbstractDaoTest
         instanceTypeSpecification.setEbsBlockDevices(ebsBlockDevices);
         EmrClusterEbsBlockDevice emrClusterEbsBlockDevice = new EmrClusterEbsBlockDevice();
         emrClusterEbsBlockDevice.setDevice(device);
-        emrClusterInstanceTypeSpecification.setEbsBlockDevices(Arrays.asList(emrClusterEbsBlockDevice));
-        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        emrClusterInstanceTypeSpecification.setEbsBlockDevices(Lists.newArrayList(emrClusterEbsBlockDevice));
+        assertEquals(Lists.newArrayList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         int iops = 100;
         int sizeInGB = 20;
@@ -600,7 +602,7 @@ public class EmrHelperTest extends AbstractDaoTest
         emrClusterVolumeSpecification.setSizeInGB(sizeInGB);
         emrClusterVolumeSpecification.setVolumeType(volumeType);
         emrClusterEbsBlockDevice.setVolumeSpecification(emrClusterVolumeSpecification);
-        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        assertEquals(Lists.newArrayList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         InstanceFleetProvisioningSpecifications instanceFleetProvisioningSpecifications = new InstanceFleetProvisioningSpecifications();
         instanceFleet.setLaunchSpecifications(instanceFleetProvisioningSpecifications);
@@ -608,7 +610,7 @@ public class EmrHelperTest extends AbstractDaoTest
             new EmrClusterInstanceFleetProvisioningSpecifications();
         expectedEmrInstanceFleet.setLaunchSpecifications(emrClusterInstanceFleetProvisioningSpecifications);
 
-        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        assertEquals(Lists.newArrayList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         List<Configuration> configurations = new ArrayList<>();
         Configuration configuration = new Configuration();
@@ -619,9 +621,9 @@ public class EmrHelperTest extends AbstractDaoTest
         instanceTypeSpecification.setConfigurations(configurations);
         EmrClusterInstanceTypeConfiguration emrClusterInstanceTypeConfiguration = new EmrClusterInstanceTypeConfiguration();
         emrClusterInstanceTypeConfiguration.setClassification(classification);
-        emrClusterInstanceTypeSpecification.setConfigurations(Arrays.asList(emrClusterInstanceTypeConfiguration));
+        emrClusterInstanceTypeSpecification.setConfigurations(Lists.newArrayList(emrClusterInstanceTypeConfiguration));
 
-        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        assertEquals(Lists.newArrayList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         String paramKey = "param 1";
         String paramVal = "param val 1";
@@ -629,9 +631,9 @@ public class EmrHelperTest extends AbstractDaoTest
         map.put(paramKey, paramVal);
         configuration.setProperties(map);
         Parameter parameter = new Parameter(paramKey, paramVal);
-        emrClusterInstanceTypeConfiguration.setProperties(Arrays.asList(parameter));
+        emrClusterInstanceTypeConfiguration.setProperties(Lists.newArrayList(parameter));
 
-        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        assertEquals(Lists.newArrayList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
         int blockDurationMin = 30;
         String timeoutAction = "action 1";
@@ -650,7 +652,7 @@ public class EmrHelperTest extends AbstractDaoTest
         emrClusterSpotProvisioningSpecification.setTimeoutDurationMinutes(timeoutDurationMin);
         emrClusterInstanceFleetProvisioningSpecifications.setSpotSpecification(emrClusterSpotProvisioningSpecification);
 
-        assertEquals(Arrays.asList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
+        assertEquals(Lists.newArrayList(expectedEmrInstanceFleet), emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
 
     }
 }

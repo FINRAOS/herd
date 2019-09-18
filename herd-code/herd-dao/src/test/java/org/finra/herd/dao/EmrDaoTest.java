@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -66,6 +65,7 @@ import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.elasticmapreduce.model.StepState;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import com.amazonaws.services.elasticmapreduce.model.Tag;
+import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -155,7 +155,7 @@ public class EmrDaoTest extends AbstractDaoTest
         ClusterSummary clusterSummary = new ClusterSummary();
         clusterSummary.setId(clusterId);
         clusterSummary.setName(clusterName);
-        listClustersResult.setClusters(Arrays.asList(clusterSummary));
+        listClustersResult.setClusters(Lists.newArrayList(clusterSummary));
         when(mockEmrOperations.listEmrClusters(any(), any())).thenReturn(listClustersResult);
 
         /*
@@ -164,7 +164,7 @@ public class EmrDaoTest extends AbstractDaoTest
         when(mockEmrOperations.addJobFlowStepsRequest(any(), any())).thenAnswer(new Answer<List<String>>()
         {
             @Override
-            public List<String> answer(InvocationOnMock invocation) throws Throwable
+            public List<String> answer(InvocationOnMock invocation)
             {
                 AddJobFlowStepsRequest addJobFlowStepsRequest = invocation.getArgument(1);
                 assertEquals(clusterId, addJobFlowStepsRequest.getJobFlowId());
@@ -173,7 +173,7 @@ public class EmrDaoTest extends AbstractDaoTest
                 assertEquals(emrStepConfig, steps.get(0));
 
                 // return a single step with the given stepId
-                return Arrays.asList(stepId);
+                return Lists.newArrayList(stepId);
             }
         });
 
@@ -184,7 +184,7 @@ public class EmrDaoTest extends AbstractDaoTest
     public void addEmrMasterSecurityGroupsCallsEc2AddSecurityGroup() throws Exception
     {
         String clusterName = "clusterName";
-        List<String> securityGroups = Arrays.asList("securityGroup");
+        List<String> securityGroups = Lists.newArrayList("securityGroup");
         AwsParamsDto awsParams = getAwsParamsDto();
         String ec2InstanceId = "ec2InstanceId";
 
@@ -210,10 +210,10 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void addEmrMasterSecurityGroupsThrowWhenNoInstancesFound() throws Exception
+    public void addEmrMasterSecurityGroupsThrowWhenNoInstancesFound()
     {
         String clusterName = "clusterName";
-        List<String> securityGroups = Arrays.asList("securityGroup");
+        List<String> securityGroups = Lists.newArrayList("securityGroup");
         AwsParamsDto awsParams = getAwsParamsDto();
 
         ListClustersResult listClustersResult = new ListClustersResult();
@@ -251,7 +251,7 @@ public class EmrDaoTest extends AbstractDaoTest
         when(mockEmrOperations.listClusterInstancesRequest(any(), any())).thenAnswer(new Answer<ListInstancesResult>()
         {
             @Override
-            public ListInstancesResult answer(InvocationOnMock invocation) throws Throwable
+            public ListInstancesResult answer(InvocationOnMock invocation)
             {
                 /*
                  * Assert correct parameters are used when calling this method.
@@ -263,7 +263,7 @@ public class EmrDaoTest extends AbstractDaoTest
                 assertEquals("MASTER", instanceGroupTypes.get(0));
 
                 ListInstancesResult listInstancesResult = new ListInstancesResult();
-                listInstancesResult.setInstances(Arrays.asList(expectedInstance));
+                listInstancesResult.setInstances(Lists.newArrayList(expectedInstance));
                 return listInstancesResult;
             }
         });
@@ -274,7 +274,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getEmrMasterInstanceThrowsWhenNoInstance() throws Exception
+    public void getEmrMasterInstanceThrowsWhenNoInstance()
     {
         String clusterId = "clusterId";
 
@@ -293,7 +293,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void createEmrClusterAssertCallRunEmrJobFlowRequiredParamsOnly() throws Exception
+    public void createEmrClusterAssertCallRunEmrJobFlowRequiredParamsOnly()
     {
         String clusterName = "clusterName";
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
@@ -305,14 +305,14 @@ public class EmrDaoTest extends AbstractDaoTest
             new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
                 NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
-        emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
+        emrClusterDefinition.setNodeTags(Lists.newArrayList(new NodeTag("tagName", "tagValue")));
 
         String clusterId = "clusterId";
 
         when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
         {
             @Override
-            public String answer(InvocationOnMock invocation) throws Throwable
+            public String answer(InvocationOnMock invocation)
             {
                 /*
                  * Assert that the given EMR cluster definition produced the correct RunJobFlowRequest
@@ -353,7 +353,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void createEmrClusterAssertCallRunEmrJobFlowWithInstanceFleetAndMultipleSubnets() throws Exception
+    public void createEmrClusterAssertCallRunEmrJobFlowWithInstanceFleetAndMultipleSubnets()
     {
         // Create objects required for testing.
         final String clusterName = "clusterName";
@@ -370,21 +370,21 @@ public class EmrDaoTest extends AbstractDaoTest
 
         // Create an EMR cluster definition with instance fleet configuration and multiple EC2 subnet IDs.
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
-        emrClusterDefinition.setInstanceFleets(Arrays.asList(emrClusterDefinitionInstanceFleet));
+        emrClusterDefinition.setInstanceFleets(Lists.newArrayList(emrClusterDefinitionInstanceFleet));
         emrClusterDefinition.setSubnetId(String.format("%s , %s  ", EC2_SUBNET, EC2_SUBNET_2));
-        emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
+        emrClusterDefinition.setNodeTags(Lists.newArrayList(new NodeTag("tagName", "tagValue")));
 
         when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
         {
             @Override
-            public String answer(InvocationOnMock invocation) throws Throwable
+            public String answer(InvocationOnMock invocation)
             {
                 // Assert that the given EMR cluster definition produced the correct RunJobFlowRequest.
                 RunJobFlowRequest runJobFlowRequest = invocation.getArgument(1);
                 JobFlowInstancesConfig jobFlowInstancesConfig = runJobFlowRequest.getInstances();
                 assertEquals(0, CollectionUtils.size(jobFlowInstancesConfig.getInstanceGroups()));
                 final List<InstanceTypeConfig> expectedInstanceTypeConfigs = null;
-                assertEquals(Arrays.asList(
+                assertEquals(Lists.newArrayList(
                     new InstanceFleetConfig().withName(name).withInstanceFleetType(instanceFleetType).withTargetOnDemandCapacity(targetOnDemandCapacity)
                         .withTargetSpotCapacity(targetSpotCapacity).withInstanceTypeConfigs(expectedInstanceTypeConfigs).withLaunchSpecifications(null)),
                     jobFlowInstancesConfig.getInstanceFleets());
@@ -414,7 +414,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void createEmrClusterAssertCallRunEmrJobFlowOptionalParams() throws Exception
+    public void createEmrClusterAssertCallRunEmrJobFlowOptionalParams()
     {
         String clusterName = "clusterName";
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
@@ -429,7 +429,7 @@ public class EmrDaoTest extends AbstractDaoTest
             new InstanceDefinition(30, "taskInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
                 NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
-        emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue"), new NodeTag("", "tagValue"), new NodeTag("tagName", "")));
+        emrClusterDefinition.setNodeTags(Lists.newArrayList(new NodeTag("tagName", "tagValue"), new NodeTag("", "tagValue"), new NodeTag("tagName", "")));
 
         emrClusterDefinition.setSshKeyPairName("sshKeyPairName");
         emrClusterDefinition.setSubnetId("subnetId");
@@ -443,16 +443,16 @@ public class EmrDaoTest extends AbstractDaoTest
             EmrClusterDefinitionApplication emrClusterDefinitionApplication = new EmrClusterDefinitionApplication();
             emrClusterDefinitionApplication.setName("applicationName1");
             emrClusterDefinitionApplication.setVersion("applicationVersion1");
-            emrClusterDefinitionApplication.setArgs(Arrays.asList("applicationArg1"));
+            emrClusterDefinitionApplication.setArgs(Lists.newArrayList("applicationArg1"));
             emrClusterDefinition.getApplications().add(emrClusterDefinitionApplication);
         }
         {
             EmrClusterDefinitionApplication emrClusterDefinitionApplication = new EmrClusterDefinitionApplication();
             emrClusterDefinitionApplication.setName("applicationName2");
             emrClusterDefinitionApplication.setVersion("applicationVersion2");
-            emrClusterDefinitionApplication.setArgs(Arrays.asList("applicationArg2"));
+            emrClusterDefinitionApplication.setArgs(Lists.newArrayList("applicationArg2"));
             emrClusterDefinitionApplication
-                .setAdditionalInfoList(Arrays.asList(new Parameter("applicationAdditionalInfoName2", "applicationAdditionalInfoValue2")));
+                .setAdditionalInfoList(Lists.newArrayList(new Parameter("applicationAdditionalInfoName2", "applicationAdditionalInfoValue2")));
             emrClusterDefinition.getApplications().add(emrClusterDefinitionApplication);
         }
         emrClusterDefinition.setConfigurations(new ArrayList<>());
@@ -461,8 +461,8 @@ public class EmrDaoTest extends AbstractDaoTest
             emrClusterDefinitionConfiguration.setClassification("classification");
             EmrClusterDefinitionConfiguration emrClusterDefinitionConfigurationInner = new EmrClusterDefinitionConfiguration();
             emrClusterDefinitionConfigurationInner.setClassification("classificationInner");
-            emrClusterDefinitionConfiguration.setConfigurations(Arrays.asList(emrClusterDefinitionConfigurationInner));
-            emrClusterDefinitionConfiguration.setProperties(Arrays.asList(new Parameter("propertyKey", "propertyValue")));
+            emrClusterDefinitionConfiguration.setConfigurations(Lists.newArrayList(emrClusterDefinitionConfigurationInner));
+            emrClusterDefinitionConfiguration.setProperties(Lists.newArrayList(new Parameter("propertyKey", "propertyValue")));
             emrClusterDefinition.getConfigurations().add(emrClusterDefinitionConfiguration);
         }
         emrClusterDefinition.setLogBucket("logBucket");
@@ -472,18 +472,18 @@ public class EmrDaoTest extends AbstractDaoTest
         emrClusterDefinition.setAmiVersion("amiVersion");
         emrClusterDefinition.setAdditionalInfo("additionalInfo");
         emrClusterDefinition.setEncryptionEnabled(true);
-        emrClusterDefinition.setDaemonConfigurations(Arrays.asList(new Parameter("daemonConfigurationsKey", "daemonConfigurationsValue")));
+        emrClusterDefinition.setDaemonConfigurations(Lists.newArrayList(new Parameter("daemonConfigurationsKey", "daemonConfigurationsValue")));
         ConfigurationFiles configurationFiles = new ConfigurationFiles();
         configurationFiles.getConfigurationFiles().add(new ConfigurationFile("fileNameShortcut", "configFileLocation"));
         KeyValuePairConfigurations keyValuePairConfigurations = new KeyValuePairConfigurations();
         keyValuePairConfigurations.getKeyValuePairConfigurations().add(new KeyValuePairConfiguration("keyValueShortcut", "attribKey", "attribVal"));
-        emrClusterDefinition.setHadoopConfigurations(Arrays.asList(configurationFiles, keyValuePairConfigurations));
+        emrClusterDefinition.setHadoopConfigurations(Lists.newArrayList(configurationFiles, keyValuePairConfigurations));
         emrClusterDefinition.setCustomBootstrapActionAll(new ArrayList<>());
         {
             ScriptDefinition scriptDefinitionAll = new ScriptDefinition();
             scriptDefinitionAll.setScriptName("scriptDefinitionAllName1");
             scriptDefinitionAll.setScriptLocation("scriptDefinitionAllLocation1");
-            scriptDefinitionAll.setScriptArguments(Arrays.asList("scriptDefinitionAllArg1"));
+            scriptDefinitionAll.setScriptArguments(Lists.newArrayList("scriptDefinitionAllArg1"));
             emrClusterDefinition.getCustomBootstrapActionAll().add(scriptDefinitionAll);
         }
         {
@@ -497,7 +497,7 @@ public class EmrDaoTest extends AbstractDaoTest
             ScriptDefinition scriptDefinitionMaster = new ScriptDefinition();
             scriptDefinitionMaster.setScriptName("scriptDefinitionMasterName1");
             scriptDefinitionMaster.setScriptLocation("scriptDefinitionMasterLocation1");
-            scriptDefinitionMaster.setScriptArguments(Arrays.asList("scriptDefinitionMasterArg1"));
+            scriptDefinitionMaster.setScriptArguments(Lists.newArrayList("scriptDefinitionMasterArg1"));
             emrClusterDefinition.getCustomBootstrapActionMaster().add(scriptDefinitionMaster);
         }
         {
@@ -509,7 +509,7 @@ public class EmrDaoTest extends AbstractDaoTest
         emrClusterDefinition.setHiveVersion("hiveVersion");
         emrClusterDefinition.setPigVersion("pigVersion");
         emrClusterDefinition.setInstallOozie(true);
-        emrClusterDefinition.setHadoopJarSteps(Arrays.asList(new HadoopJarStep("stepName", "jarLocation", "mainClass", null, true)));
+        emrClusterDefinition.setHadoopJarSteps(Lists.newArrayList(new HadoopJarStep("stepName", "jarLocation", "mainClass", null, true)));
         emrClusterDefinition.setSupportedProduct("supportedProduct");
         emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
         emrClusterDefinition.setScaleDownBehavior("scaleDownBehavior");
@@ -524,7 +524,7 @@ public class EmrDaoTest extends AbstractDaoTest
         when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
         {
             @Override
-            public String answer(InvocationOnMock invocation) throws Throwable
+            public String answer(InvocationOnMock invocation)
             {
                 /*
                  * Assert that the given EMR cluster definition produced the correct RunJobFlowRequest
@@ -551,7 +551,7 @@ public class EmrDaoTest extends AbstractDaoTest
                     Application application = runJobFlowRequest.getApplications().get(0);
                     assertEquals("applicationName1", application.getName());
                     assertEquals("applicationVersion1", application.getVersion());
-                    assertEquals(Arrays.asList("applicationArg1"), application.getArgs());
+                    assertEquals(Lists.newArrayList("applicationArg1"), application.getArgs());
                 }
                 {
                     Application application = runJobFlowRequest.getApplications().get(1);
@@ -590,14 +590,14 @@ public class EmrDaoTest extends AbstractDaoTest
                     assertEquals("emr.aws.configure.daemon", bootstrapActionConfig.getName());
                     ScriptBootstrapActionConfig scriptBootstrapAction = bootstrapActionConfig.getScriptBootstrapAction();
                     assertEquals("s3://elasticmapreduce/bootstrap-actions/configure-daemons", scriptBootstrapAction.getPath());
-                    assertEquals(Arrays.asList("daemonConfigurationsKey=daemonConfigurationsValue"), scriptBootstrapAction.getArgs());
+                    assertEquals(Lists.newArrayList("daemonConfigurationsKey=daemonConfigurationsValue"), scriptBootstrapAction.getArgs());
                 }
                 {
                     BootstrapActionConfig bootstrapActionConfig = runJobFlowRequest.getBootstrapActions().get(2);
                     assertEquals("emr.aws.configure.hadoop", bootstrapActionConfig.getName());
                     ScriptBootstrapActionConfig scriptBootstrapAction = bootstrapActionConfig.getScriptBootstrapAction();
                     assertEquals("s3://us-east-1.elasticmapreduce/bootstrap-actions/configure-hadoop", scriptBootstrapAction.getPath());
-                    assertEquals(Arrays.asList("fileNameShortcut", "configFileLocation", "keyValueShortcut", "attribKey=attribVal"),
+                    assertEquals(Lists.newArrayList("fileNameShortcut", "configFileLocation", "keyValueShortcut", "attribKey=attribVal"),
                         scriptBootstrapAction.getArgs());
                 }
                 {
@@ -605,7 +605,7 @@ public class EmrDaoTest extends AbstractDaoTest
                     assertEquals("scriptDefinitionAllName1", bootstrapActionConfig.getName());
                     ScriptBootstrapActionConfig scriptBootstrapAction = bootstrapActionConfig.getScriptBootstrapAction();
                     assertEquals("scriptDefinitionAllLocation1", scriptBootstrapAction.getPath());
-                    assertEquals(Arrays.asList("scriptDefinitionAllArg1"), scriptBootstrapAction.getArgs());
+                    assertEquals(Lists.newArrayList("scriptDefinitionAllArg1"), scriptBootstrapAction.getArgs());
                 }
                 {
                     BootstrapActionConfig bootstrapActionConfig = runJobFlowRequest.getBootstrapActions().get(4);
@@ -617,15 +617,15 @@ public class EmrDaoTest extends AbstractDaoTest
                     assertEquals("scriptDefinitionMasterName1", bootstrapActionConfig.getName());
                     ScriptBootstrapActionConfig scriptBootstrapAction = bootstrapActionConfig.getScriptBootstrapAction();
                     assertEquals("s3://elasticmapreduce/bootstrap-actions/run-if", scriptBootstrapAction.getPath());
-                    assertEquals(Arrays.asList("instance.isMaster=true", "scriptDefinitionMasterLocation1", "scriptDefinitionMasterArg1"),
+                    assertEquals(Lists.newArrayList("instance.isMaster=true", "scriptDefinitionMasterLocation1", "scriptDefinitionMasterArg1"),
                         scriptBootstrapAction.getArgs());
                 }
                 {
                     BootstrapActionConfig bootstrapActionConfig = runJobFlowRequest.getBootstrapActions().get(6);
                     ScriptBootstrapActionConfig scriptBootstrapAction = bootstrapActionConfig.getScriptBootstrapAction();
-                    assertEquals(Arrays.asList("instance.isMaster=true", "scriptDefinitionMasterLocation2"), scriptBootstrapAction.getArgs());
+                    assertEquals(Lists.newArrayList("instance.isMaster=true", "scriptDefinitionMasterLocation2"), scriptBootstrapAction.getArgs());
                 }
-                assertEquals(Arrays.asList("supportedProduct"), runJobFlowRequest.getSupportedProducts());
+                assertEquals(Lists.newArrayList("supportedProduct"), runJobFlowRequest.getSupportedProducts());
                 assertEquals("securityConfiguration", runJobFlowRequest.getSecurityConfiguration());
                 assertEquals("scaleDownBehavior", runJobFlowRequest.getScaleDownBehavior());
                 assertEquals(EMR_MASTER_SECURITY_GROUP, runJobFlowRequest.getInstances().getEmrManagedMasterSecurityGroup());
@@ -641,7 +641,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void createEmrClusterAssertEncryptionDisabled() throws Exception
+    public void createEmrClusterAssertEncryptionDisabled()
     {
         /*
          * Use only minimum required options
@@ -656,7 +656,7 @@ public class EmrDaoTest extends AbstractDaoTest
             new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
                 NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
-        emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
+        emrClusterDefinition.setNodeTags(Lists.newArrayList(new NodeTag("tagName", "tagValue")));
 
         emrClusterDefinition.setEncryptionEnabled(false);
 
@@ -665,7 +665,7 @@ public class EmrDaoTest extends AbstractDaoTest
         when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
         {
             @Override
-            public String answer(InvocationOnMock invocation) throws Throwable
+            public String answer(InvocationOnMock invocation)
             {
                 RunJobFlowRequest runJobFlowRequest = invocation.getArgument(1);
                 // No bootstrap action should be added
@@ -678,7 +678,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void createEmrClusterAssertInstallOozieDisabled() throws Exception
+    public void createEmrClusterAssertInstallOozieDisabled()
     {
         /*
          * Use only minimum required options
@@ -693,7 +693,7 @@ public class EmrDaoTest extends AbstractDaoTest
             new InstanceDefinition(20, "coreInstanceType", NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION, NO_INSTANCE_SPOT_PRICE, NO_INSTANCE_MAX_SEARCH_PRICE,
                 NO_INSTANCE_ON_DEMAND_THRESHOLD));
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
-        emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
+        emrClusterDefinition.setNodeTags(Lists.newArrayList(new NodeTag("tagName", "tagValue")));
 
         emrClusterDefinition.setInstallOozie(false);
 
@@ -702,7 +702,7 @@ public class EmrDaoTest extends AbstractDaoTest
         when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
         {
             @Override
-            public String answer(InvocationOnMock invocation) throws Throwable
+            public String answer(InvocationOnMock invocation)
             {
                 RunJobFlowRequest runJobFlowRequest = invocation.getArgument(1);
                 // The oozie step should be skipped.
@@ -715,7 +715,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void terminateEmrCluster() throws Exception
+    public void terminateEmrCluster()
     {
         String clusterName = "clusterName";
         boolean overrideTerminationProtection = false;
@@ -736,7 +736,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getEmrClusterByIdAssertCallDescribeCluster() throws Exception
+    public void getEmrClusterByIdAssertCallDescribeCluster()
     {
         String clusterId = "clusterId";
         Cluster expectedCluster = new Cluster();
@@ -744,7 +744,7 @@ public class EmrDaoTest extends AbstractDaoTest
         when(mockEmrOperations.describeClusterRequest(any(), any())).thenAnswer(new Answer<DescribeClusterResult>()
         {
             @Override
-            public DescribeClusterResult answer(InvocationOnMock invocation) throws Throwable
+            public DescribeClusterResult answer(InvocationOnMock invocation)
             {
                 DescribeClusterRequest describeClusterRequest = invocation.getArgument(1);
                 assertEquals(clusterId, describeClusterRequest.getClusterId());
@@ -759,7 +759,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getEmrClusterByIdAssertNoCallWhenClusterIdIsBlank() throws Exception
+    public void getEmrClusterByIdAssertNoCallWhenClusterIdIsBlank()
     {
         String clusterId = "";
 
@@ -770,7 +770,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getEmrClusterByIdAssertReturnNullWhenDescribeClusterResponseIsNull() throws Exception
+    public void getEmrClusterByIdAssertReturnNullWhenDescribeClusterResponseIsNull()
     {
         String clusterId = "clusterId";
 
@@ -779,7 +779,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getEmrClusterByIdAssertReturnNullWhenDescribeClusterResponseClusterIsNull() throws Exception
+    public void getEmrClusterByIdAssertReturnNullWhenDescribeClusterResponseClusterIsNull()
     {
         String clusterId = "clusterId";
 
@@ -788,7 +788,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getEmrClusterStatusByIdAssertReturnClusterState() throws Exception
+    public void getEmrClusterStatusByIdAssertReturnClusterState()
     {
         String clusterId = "clusterId";
         ClusterState expectedState = ClusterState.BOOTSTRAPPING;
@@ -796,7 +796,7 @@ public class EmrDaoTest extends AbstractDaoTest
         when(mockEmrOperations.describeClusterRequest(any(), any())).then(new Answer<DescribeClusterResult>()
         {
             @Override
-            public DescribeClusterResult answer(InvocationOnMock invocation) throws Throwable
+            public DescribeClusterResult answer(InvocationOnMock invocation)
             {
                 DescribeClusterRequest describeClusterRequest = invocation.getArgument(1);
                 assertEquals(clusterId, describeClusterRequest.getClusterId());
@@ -814,14 +814,14 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getEmrClusterStatusByIdAssertReturnNullWhenClusterIsNull() throws Exception
+    public void getEmrClusterStatusByIdAssertReturnNullWhenClusterIsNull()
     {
         String clusterId = "clusterId";
 
         when(mockEmrOperations.describeClusterRequest(any(), any())).then(new Answer<DescribeClusterResult>()
         {
             @Override
-            public DescribeClusterResult answer(InvocationOnMock invocation) throws Throwable
+            public DescribeClusterResult answer(InvocationOnMock invocation)
             {
                 DescribeClusterRequest describeClusterRequest = invocation.getArgument(1);
                 assertEquals(clusterId, describeClusterRequest.getClusterId());
@@ -833,7 +833,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getActiveEmrClusterByNameAssertOnlyReturnClusterWithMatchingName() throws Exception
+    public void getActiveEmrClusterByNameAssertOnlyReturnClusterWithMatchingName()
     {
         String clusterName = "clusterName";
         String expectedClusterId = "clusterId3";
@@ -860,13 +860,13 @@ public class EmrDaoTest extends AbstractDaoTest
         }
         when(mockEmrOperations.listEmrClusters(any(), any())).thenReturn(listClustersResult);
 
-        ClusterSummary result = emrDao.getActiveEmrClusterByName(clusterName, getAwsParamsDto());
+        ClusterSummary result = emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, null, getAwsParamsDto());
         assertNotNull(result);
         assertEquals(expectedClusterId, result.getId());
     }
 
     @Test
-    public void getActiveEmrClusterByNameAssertUsesListMarker() throws Exception
+    public void getActiveEmrClusterByNameAssertUsesListMarker()
     {
         String clusterName = "clusterName";
         String expectedClusterId = "clusterId";
@@ -874,7 +874,7 @@ public class EmrDaoTest extends AbstractDaoTest
         when(mockEmrOperations.listEmrClusters(any(), any())).then(new Answer<ListClustersResult>()
         {
             @Override
-            public ListClustersResult answer(InvocationOnMock invocation) throws Throwable
+            public ListClustersResult answer(InvocationOnMock invocation)
             {
                 ListClustersRequest listClustersRequest = invocation.getArgument(1);
                 String marker = listClustersRequest.getMarker();
@@ -907,22 +907,22 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        ClusterSummary result = emrDao.getActiveEmrClusterByName(clusterName, getAwsParamsDto());
+        ClusterSummary result = emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, null, getAwsParamsDto());
         assertNotNull(result);
         assertEquals(expectedClusterId, result.getId());
     }
 
     @Test
-    public void getActiveEmrClusterByNameAssertReturnNullWhenClusterNameIsBlank() throws Exception
+    public void getActiveEmrClusterByNameAssertReturnNullWhenClusterNameIsBlank()
     {
         String clusterName = "";
         when(mockEmrOperations.listEmrClusters(any(), any())).thenReturn(new ListClustersResult());
 
-        assertNull(emrDao.getActiveEmrClusterByName(clusterName, getAwsParamsDto()));
+        assertNull(emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, null, getAwsParamsDto()));
     }
 
     @Test
-    public void getClusterActiveStepAssertCallListStepsAndReturnStepSummary() throws Exception
+    public void getClusterActiveStepAssertCallListStepsAndReturnStepSummary()
     {
         String clusterId = "clusterId";
         StepSummary expectedStepSummary = new StepSummary();
@@ -930,7 +930,7 @@ public class EmrDaoTest extends AbstractDaoTest
         when(mockEmrOperations.listStepsRequest(any(), any())).then(new Answer<ListStepsResult>()
         {
             @Override
-            public ListStepsResult answer(InvocationOnMock invocation) throws Throwable
+            public ListStepsResult answer(InvocationOnMock invocation)
             {
                 ListStepsRequest listStepsRequest = invocation.getArgument(1);
                 assertEquals(clusterId, listStepsRequest.getClusterId());
@@ -948,7 +948,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getClusterActiveStepAssertReturnNullWhenStepListIsEmpty() throws Exception
+    public void getClusterActiveStepAssertReturnNullWhenStepListIsEmpty()
     {
         String clusterId = "clusterId";
 
@@ -958,21 +958,21 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getClusterActiveStepAssertReturnFirstWhenStepListSizeGt1() throws Exception
+    public void getClusterActiveStepAssertReturnFirstWhenStepListSizeGt1()
     {
         String clusterId = "clusterId";
         StepSummary expectedStepSummary = new StepSummary();
         expectedStepSummary.setId("expected");
 
         ListStepsResult listStepsResult = new ListStepsResult();
-        listStepsResult.setSteps(Arrays.asList(expectedStepSummary, new StepSummary()));
+        listStepsResult.setSteps(Lists.newArrayList(expectedStepSummary, new StepSummary()));
         when(mockEmrOperations.listStepsRequest(any(), any())).thenReturn(listStepsResult);
 
         assertEquals(expectedStepSummary, emrDao.getClusterActiveStep(clusterId, getAwsParamsDto()));
     }
 
     @Test
-    public void getClusterStepAssertCallsDescribeStepAndReturnsStep() throws Exception
+    public void getClusterStepAssertCallsDescribeStepAndReturnsStep()
     {
         String clusterId = "clusterId";
         String stepId = "stepId";
@@ -981,7 +981,7 @@ public class EmrDaoTest extends AbstractDaoTest
         when(mockEmrOperations.describeStepRequest(any(), any())).then(new Answer<DescribeStepResult>()
         {
             @Override
-            public DescribeStepResult answer(InvocationOnMock invocation) throws Throwable
+            public DescribeStepResult answer(InvocationOnMock invocation)
             {
                 DescribeStepRequest describeStepRequest = invocation.getArgument(1);
                 assertEquals(clusterId, describeStepRequest.getClusterId());
@@ -997,7 +997,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getEmrClientAssertClientConfigurationSet() throws Exception
+    public void getEmrClientAssertClientConfigurationSet()
     {
         String httpProxyHost = "httpProxyHost";
         Integer httpProxyPort = 1234;
@@ -1013,7 +1013,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getEmrClientAssertClientConfigurationNotSetWhenProxyHostIsBlank() throws Exception
+    public void getEmrClientAssertClientConfigurationNotSetWhenProxyHostIsBlank()
     {
         String httpProxyHost = "";
         Integer httpProxyPort = 1234;
@@ -1028,7 +1028,7 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void getEmrClientAssertClientConfigurationNotSetWhenProxyPortIsNull() throws Exception
+    public void getEmrClientAssertClientConfigurationNotSetWhenProxyPortIsNull()
     {
         String httpProxyHost = "httpProxyHost";
         Integer httpProxyPort = null;

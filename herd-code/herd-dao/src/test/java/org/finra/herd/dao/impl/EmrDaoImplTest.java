@@ -91,6 +91,7 @@ import org.finra.herd.model.api.xml.MasterInstanceDefinition;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.EmrClusterCacheKey;
 
 /**
  * This class tests functionality within the EMR DAO implementation.
@@ -98,7 +99,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 public class EmrDaoImplTest extends AbstractDaoTest
 {
     @Mock
-    private Map<String, String> emrClusterCache;
+    private Map<EmrClusterCacheKey, String> emrClusterCache;
 
     @Mock
     private AwsClientFactory awsClientFactory;
@@ -268,7 +269,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         when(emrOperations.listEmrClusters(amazonElasticMapReduceClient, listClustersRequestWithMarker)).thenReturn(listClusterResult);
 
         // Call the method under test.
-        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto);
+        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, null, awsParamsDto);
 
         // Verify the external calls.
         verify(configurationHelper).getProperty(ConfigurationValue.EMR_VALID_STATES);
@@ -290,7 +291,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
                 AWS_REGION_NAME_US_EAST_1);
 
         // Call the method under test.
-        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByName(BLANK_TEXT, awsParamsDto);
+        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByNameAndAccountId(BLANK_TEXT, null, awsParamsDto);
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
@@ -300,43 +301,80 @@ public class EmrDaoImplTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetActiveEmrClusterByNameWhenClusterNameIsInLruCache()
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCache()
     {
         // Create a cluster with a valid state.
         Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState("STARTING"));
 
         // Test the EMR Cluster LruCache is used.
-        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(cluster, false);
+        getActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCache(cluster, AWS_ACCOUNT_ID, false);
     }
 
     @Test
-    public void testGetActiveEmrClusterByNameWhenClusterNameIsInLruCacheWithInvalidState()
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCacheWithNullAccountId()
+    {
+        // Create a cluster with a valid state.
+        Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState("STARTING"));
+
+        // Test the EMR Cluster LruCache is used.
+        getActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCache(cluster, null, false);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCacheWithInvalidState()
     {
         // Create a cluster with an invalid state.
         Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState(EMR_INVALID_STATE));
 
         // Test that the EMR Cluster LruCache is not used.
-        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(cluster, false);
+        getActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCache(cluster, AWS_ACCOUNT_ID, false);
     }
 
     @Test
-    public void testGetActiveEmrClusterByNameWhenClusterNameIsInLruCacheWithNullCluster()
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCacheWithInvalidStateWithNullAccountId()
+    {
+        // Create a cluster with an invalid state.
+        Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState(EMR_INVALID_STATE));
+
+        // Test that the EMR Cluster LruCache is not used.
+        getActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCache(cluster, null, false);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCacheWithNullCluster()
     {
         // Test that the EMR Cluster LruCache is not used.
-        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(null, false);
+        getActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCache(null, AWS_ACCOUNT_ID, false);
     }
 
     @Test
-    public void testGetActiveEmrClusterByNameWhenClusterNameIsInLruCacheWithException()
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCacheWithNullClusterWithNullAccountId()
+    {
+        // Test that the EMR Cluster LruCache is not used.
+        getActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCache(null, null, false);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCacheWithException()
     {
         // Create a cluster with a valid state.
         Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState("STARTING"));
 
         // Test that the EMR Cluster LruCache is not used.
-        getActiveEmrClusterByNameWhenClusterNameIsInLruCache(cluster, true);
+        getActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCache(cluster, AWS_ACCOUNT_ID, true);
     }
 
-    private void getActiveEmrClusterByNameWhenClusterNameIsInLruCache(Cluster cluster, boolean withException)
+    @Test
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCacheWithExceptionWithNullAccountId()
+    {
+        // Create a cluster with a valid state.
+        Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState("STARTING"));
+
+        // Test that the EMR Cluster LruCache is not used.
+        getActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCache(cluster, null, true);
+    }
+
+    private void getActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInLruCache(Cluster cluster, String accountId, boolean withException)
     {
         // Create an AWS parameters DTO.
         AwsParamsDto awsParamsDto =
@@ -359,9 +397,12 @@ public class EmrDaoImplTest extends AbstractDaoTest
         // Create a describe cluster request.
         DescribeClusterRequest describeClusterRequest = new DescribeClusterRequest().withClusterId(EMR_CLUSTER_ID);
 
+        // Build the EMR cluster cache key
+        EmrClusterCacheKey emrClusterCacheKey = new EmrClusterCacheKey(EMR_CLUSTER_NAME.toUpperCase(), accountId);
+
         // Mock the external calls.
-        when(emrClusterCache.containsKey(EMR_CLUSTER_NAME.toUpperCase())).thenReturn(true);
-        when(emrClusterCache.get(EMR_CLUSTER_NAME.toUpperCase())).thenReturn(EMR_CLUSTER_ID);
+        when(emrClusterCache.containsKey(emrClusterCacheKey)).thenReturn(true);
+        when(emrClusterCache.get(emrClusterCacheKey)).thenReturn(EMR_CLUSTER_ID);
 
         // If this is testing the exception case then throw an Exception.
         if (withException)
@@ -381,7 +422,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         when(emrOperations.listEmrClusters(any(AmazonElasticMapReduceClient.class), any(ListClustersRequest.class))).thenReturn(listClusterResult);
 
         // Call the method under test.
-        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto);
+        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, accountId, awsParamsDto);
 
         // Verify the external calls.
         verify(emrOperations).describeClusterRequest(eq(amazonElasticMapReduceClient), eq(describeClusterRequest));

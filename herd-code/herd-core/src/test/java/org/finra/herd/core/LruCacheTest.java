@@ -25,6 +25,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import org.finra.herd.model.dto.EmrClusterCacheKey;
+
 /**
  * Test for the {@link LruCache} class
  */
@@ -87,5 +89,29 @@ public class LruCacheTest extends AbstractCoreTest
         }
     }
 
+    /**
+     * Unit test to test the least recently used (LRU) cache with the EMR cluster cache key.
+     * This will confirm that the cluster names can be the same on different account names.
+     */
+    @Test
+    public void testLruCacheWithEmrClusterCacheKey()
+    {
+        // Initialize the cache
+        Map<EmrClusterCacheKey, String> lruCache = Collections.synchronizedMap(new LruCache<>(MAXIMUM_CACHE_SIZE));
 
+        // Create two keys with the same cluster name but with different account ids.
+        EmrClusterCacheKey key1 = new EmrClusterCacheKey("CLUSTER", "ACCOUNT1");
+        EmrClusterCacheKey key2 = new EmrClusterCacheKey("CLUSTER", "ACCOUNT2");
+
+        lruCache.put(key1, "VALUE1");
+        lruCache.put(key2, "VALUE2");
+
+        assertThat("LRU Cache not the correct size.", lruCache.size(), is(equalTo(2)));
+
+        String value1 = lruCache.get(key1);
+        String value2 = lruCache.get(key2);
+
+        assertThat("Value is not correct.", value1, is(equalTo("VALUE1")));
+        assertThat("Value is not correct.", value2, is(equalTo("VALUE2")));
+    }
 }
