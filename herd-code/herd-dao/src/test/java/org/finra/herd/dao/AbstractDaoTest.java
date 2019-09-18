@@ -63,7 +63,9 @@ import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.MessageHeader;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
+import org.finra.herd.model.jpa.StoragePlatformEntity;
 
 /**
  * This is an abstract base class that provides useful methods for DAO test drivers.
@@ -640,6 +642,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_BDATA_STATUS = null;
 
+    public static final BusinessObjectDataStatusEntity NO_BDATA_STATUS_ENTITY = null;
+
     public static final Boolean NO_BDATA_STATUS_PRE_REGISTRATION_FLAG_SET = false;
 
     public static final String NO_BDEF_COLUMN_DESCRIPTION = null;
@@ -673,6 +677,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final EmrClusterDefinitionVolumeSpecification NO_EMR_CLUSTER_DEFINITION_VOLUME_SPECIFICATION = null;
 
     public static final Boolean NO_ENABLE_HIT_HIGHLIGHTING = false;
+
+    public static final StoragePlatformEntity NO_EXCLUDED_STORAGE_PLATFORM_ENTITY = null;
+
+    public static final String NO_EXCLUDED_STORAGE_PLATFORM_TYPE  = null;
 
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
 
@@ -721,6 +729,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_JOB_NAMESPACE = null;
 
     public static final Boolean NO_LATEST_VERSION_FLAG_SET = false;
+
+    public static final String NO_LOWER_BOUND_PARTITION_VALUE = null;
 
     public static final Set<String> NO_MATCH = new HashSet<>();
 
@@ -776,6 +786,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> NO_STORAGE_NAMES = null;
 
+    public static final StoragePlatformEntity NO_STORAGE_PLATFORM_ENTITY = null;
+
+    public static final String NO_STORAGE_PLATFORM_TYPE = null;
+
     public static final String NO_STORAGE_UNIT_STATUS = null;
 
     public static final Boolean NO_STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET = false;
@@ -803,6 +817,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final XMLGregorianCalendar NO_UPDATED_ON = null;
 
     public static final Timestamp NO_UPDATED_ON_TIMESTAMP = null;
+
+    public static final String NO_UPPER_BOUND_PARTITION_VALUE = null;
 
     public static final String NO_USER_CREDENTIAL_NAME = null;
 
