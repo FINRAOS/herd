@@ -100,6 +100,7 @@ import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.ScriptDefinition;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.EmrClusterCacheKey;
 
 /**
  * The EMR DAO implementation.
@@ -119,7 +120,7 @@ public class EmrDaoImpl implements EmrDao
     private Ec2Dao ec2Dao;
 
     @Autowired
-    private Map<String, String> emrClusterCache;
+    private Map<EmrClusterCacheKey, String> emrClusterCache;
 
     @Autowired
     private EmrHelper emrHelper;
@@ -178,24 +179,29 @@ public class EmrDaoImpl implements EmrDao
         LOGGER.info("EMR cluster started. emrClusterId=\"{}\"", clusterId);
 
         // Add the new cluster name and cluster id to the EMR cluster cache.
-        LOGGER.info("Adding EMR cluster to the EMR Cluster Cache. emrClusterName=\"{}\" emrClusterId=\"{}\"", clusterName.toUpperCase(), clusterId);
-        emrClusterCache.put(clusterName.toUpperCase(), clusterId);
+        LOGGER.info("Adding EMR cluster to the EMR Cluster Cache. emrClusterName=\"{}\" emrClusterId=\"{}\" accountId=\"{}\"", clusterName.toUpperCase(),
+            clusterId);
+        EmrClusterCacheKey emrClusterCacheKey = new EmrClusterCacheKey(clusterName.toUpperCase(), emrClusterDefinition.getAccountId());
+        emrClusterCache.put(emrClusterCacheKey, clusterId);
 
         return clusterId;
     }
 
     @Override
-    public ClusterSummary getActiveEmrClusterByName(String clusterName, AwsParamsDto awsParams)
+    public ClusterSummary getActiveEmrClusterByNameAndAccountId(String clusterName, String accountId, AwsParamsDto awsParams)
     {
         if (StringUtils.isNotBlank(clusterName))
         {
-            // First check to see if this cluster name is stored locally in the EMR Cluster Cache.
-            // If the EMR cluster cache does contain the cluster name use the id found in the EMR cluster cache.
-            // Else the EMR cluster cache does not contain the cluster name then move on to do a list cluster.
-            if (emrClusterCache.containsKey(clusterName.toUpperCase()))
+            // Build the EMR cluster cache key
+            EmrClusterCacheKey emrClusterCacheKey = new EmrClusterCacheKey(clusterName.toUpperCase(), accountId);
+
+            // First check to see if this cluster id is stored locally in the EMR Cluster Cache.
+            // If the EMR cluster cache does contain the cluster key use the id found in the EMR cluster cache.
+            // Else the EMR cluster cache does not contain the cluster key then move on to do a list cluster.
+            if (emrClusterCache.containsKey(emrClusterCacheKey))
             {
                 // Get the cluster id value from the EMR cluster cache with the cluster name key.
-                String clusterId = emrClusterCache.get(clusterName.toUpperCase());
+                String clusterId = emrClusterCache.get(emrClusterCacheKey);
 
                 try
                 {
@@ -219,7 +225,7 @@ public class EmrDaoImpl implements EmrDao
                             clusterName.toUpperCase(), clusterId, status);
 
                         // Remove the cluster from the cache.
-                        emrClusterCache.remove(clusterName.toUpperCase());
+                        emrClusterCache.remove(emrClusterCacheKey);
                     }
                 }
                 catch (AmazonServiceException amazonServiceException)
@@ -262,7 +268,7 @@ public class EmrDaoImpl implements EmrDao
                         clusterInstance.getName().toUpperCase(), clusterInstance.getId());
 
                     // Add this cluster instance to the EMR cluster cache.
-                    emrClusterCache.put(clusterInstance.getName().toUpperCase(), clusterInstance.getId());
+                    emrClusterCache.put(new EmrClusterCacheKey(clusterInstance.getName().toUpperCase(), accountId), clusterInstance.getId());
 
                     // If the cluster name matches, then return the status
                     if (StringUtils.isNotBlank(clusterInstance.getName()) && clusterInstance.getName().equalsIgnoreCase(clusterName))

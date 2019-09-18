@@ -137,7 +137,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         when(emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions())).thenReturn(false);
         when(emrHelper.buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName())).thenReturn(EMR_CLUSTER_NAME);
-        when(emrDao.getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto)).thenReturn(clusterSummary);
+        when(emrDao.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto)).thenReturn(clusterSummary);
         when(emrDao.getEmrClusterStatusById(EMR_CLUSTER_ID, awsParamsDto)).thenReturn(EMR_CLUSTER_STATUS);
 
         // Call the method under test.
@@ -149,7 +149,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         verify(emrPricingHelper).updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
         verify(emrHelper).buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName());
-        verify(emrDao).getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto);
+        verify(emrDao).getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto);
         verify(emrDao).getEmrClusterStatusById(EMR_CLUSTER_ID, awsParamsDto);
         verifyNoMoreInteractionsHelper();
     }
@@ -178,7 +178,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         when(emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions())).thenReturn(false);
         when(emrHelper.buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName())).thenReturn(EMR_CLUSTER_NAME);
-        when(emrDao.getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto)).thenReturn(null);
+        when(emrDao.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto)).thenReturn(null);
         when(emrDao.createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto)).thenReturn(EMR_CLUSTER_ID);
         when(emrDao.getEmrClusterStatusById(EMR_CLUSTER_ID, awsParamsDto)).thenReturn(EMR_CLUSTER_STATUS);
 
@@ -191,7 +191,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         verify(emrPricingHelper).updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
         verify(emrHelper).buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName());
-        verify(emrDao).getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto);
+        verify(emrDao).getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto);
         verify(emrDao).createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto);
         verify(emrDao).getEmrClusterStatusById(EMR_CLUSTER_ID, awsParamsDto);
         verifyNoMoreInteractionsHelper();
@@ -260,7 +260,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         when(emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions())).thenReturn(false);
         when(emrHelper.buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName())).thenReturn(EMR_CLUSTER_NAME);
-        when(emrDao.getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto)).thenReturn(null);
+        when(emrDao.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto)).thenReturn(null);
         when(emrDao.createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto)).thenThrow(amazonServiceException);
 
         // Call the method under test.
@@ -272,7 +272,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         verify(emrPricingHelper).updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
         verify(emrHelper).buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName());
-        verify(emrDao).getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto);
+        verify(emrDao).getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto);
         verify(emrDao).createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto);
         verify(awsServiceHelper)
             .handleAmazonException(amazonServiceException, "An Amazon exception occurred while creating EMR cluster with name \"" + EMR_CLUSTER_NAME + "\".");

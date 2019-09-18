@@ -58,6 +58,7 @@ import org.finra.herd.dao.CacheKeyGenerator;
 import org.finra.herd.dao.ReloadablePropertySource;
 import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.EmrClusterCacheKey;
 import org.finra.herd.model.jpa.ConfigurationEntity;
 
 /**
@@ -76,8 +77,8 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     @Autowired
     private ConfigurationHelper configurationHelper;
 
-    // A thread safe cache used to hold the EMR cluster name and id pairs.
-    private Map<String, String> emrClusterCache = Collections.synchronizedMap(new LruCache<>(EMR_CLUSTER_CACHE_SIZE));
+    // A thread safe cache used to hold the EMR cluster key and id pairs.
+    private Map<EmrClusterCacheKey, String> emrClusterCache = Collections.synchronizedMap(new LruCache<>(EMR_CLUSTER_CACHE_SIZE));
 
     /**
      * The EMR cache size. Limits the size of the cache.
@@ -141,10 +142,10 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     /**
      * Bean used to get the EMR cluster cache.
      *
-     * @return the EMR cluster cache used to store cluster names and ids.
+     * @return the EMR cluster cache used to store cluster keys and ids.
      */
     @Bean
-    public Map<String, String> getEmrClusterCache()
+    public Map<EmrClusterCacheKey, String> getEmrClusterCache()
     {
         return emrClusterCache;
     }

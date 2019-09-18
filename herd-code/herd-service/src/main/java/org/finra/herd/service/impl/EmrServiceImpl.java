@@ -165,7 +165,7 @@ public class EmrServiceImpl implements EmrService
             }
             else
             {
-                ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(clusterName, awsParamsDto);
+                ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, accountId, awsParamsDto);
 
                 // Validate that, Cluster exists with the name
                 Assert.notNull(clusterSummary, "An EMR cluster must exists with the name \"" + clusterName + "\".");
