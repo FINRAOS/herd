@@ -239,6 +239,19 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="emailDto">
+      <xs:sequence>
+         <xs:element name="source" type="xs:string" minOccurs="0"/>
+         <xs:element name="to" type="xs:string" minOccurs="0"/>
+         <xs:element name="cc" type="xs:string" minOccurs="0"/>
+         <xs:element name="bcc" type="xs:string" minOccurs="0"/>
+         <xs:element name="subject" type="xs:string" minOccurs="0" />
+         <xs:element name="text" type="xs:string" minOccurs="0"/>
+         <xs:element name="html" type="xs:string" minOccurs="0"/>
+         <xs:element name="replyTo" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="emrClusterAlternateKeyDto">
       <xs:sequence>
          <xs:element name="namespace" type="xs:string" minOccurs="0"/>

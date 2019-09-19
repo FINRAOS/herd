@@ -22,6 +22,8 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClientBuilder;
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQS;
@@ -122,6 +124,34 @@ public class AwsClientFactory
         else
         {
             return AmazonElasticMapReduceClientBuilder.standard().withClientConfiguration(clientConfiguration).withRegion(awsParamsDto.getAwsRegionName())
+                .build();
+        }
+    }
+
+    /**
+     * Creates a cacheable client for AWS SES service with pluggable aws client params.
+     *
+     * @param awsParamsDto the specified aws parameters
+     *
+     * @return the Amazon SES client
+     */
+    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
+    public AmazonSimpleEmailService getSesClient(AwsParamsDto awsParamsDto)
+    {
+        // Get client configuration
+        ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsParamsDto);
+
+        // If specified, use the AWS credentials passed in.
+        if (StringUtils.isNotBlank(awsParamsDto.getAwsAccessKeyId()))
+        {
+            return AmazonSimpleEmailServiceClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(
+                new BasicSessionCredentials(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken())))
+                .withClientConfiguration(clientConfiguration).withRegion(awsParamsDto.getAwsRegionName()).build();
+        }
+        // Otherwise, use the default AWS credentials provider chain.
+        else
+        {
+            return AmazonSimpleEmailServiceClientBuilder.standard().withClientConfiguration(clientConfiguration).withRegion(awsParamsDto.getAwsRegionName())
                 .build();
         }
     }
