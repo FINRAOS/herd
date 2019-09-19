@@ -15,8 +15,6 @@
 */
 package org.finra.herd.dao.config;
 
-import java.util.Collections;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -52,13 +50,11 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import org.finra.herd.core.ApplicationContextHolder;
-import org.finra.herd.core.LruCache;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.CacheKeyGenerator;
 import org.finra.herd.dao.ReloadablePropertySource;
 import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.EmrClusterCacheKey;
 import org.finra.herd.model.jpa.ConfigurationEntity;
 
 /**
@@ -76,14 +72,6 @@ public class DaoSpringModuleConfig implements CachingConfigurer
 
     @Autowired
     private ConfigurationHelper configurationHelper;
-
-    // A thread safe cache used to hold the EMR cluster key and id pairs.
-    private Map<EmrClusterCacheKey, String> emrClusterCache = Collections.synchronizedMap(new LruCache<>(EMR_CLUSTER_CACHE_SIZE));
-
-    /**
-     * The EMR cache size. Limits the size of the cache.
-     */
-    private static final int EMR_CLUSTER_CACHE_SIZE = 10_000;
 
     /**
      * The herd cache name.
@@ -137,17 +125,6 @@ public class DaoSpringModuleConfig implements CachingConfigurer
         entityManagerFactory.setJpaProperties(jpaProperties());
 
         return entityManagerFactory;
-    }
-
-    /**
-     * Bean used to get the EMR cluster cache.
-     *
-     * @return the EMR cluster cache used to store cluster keys and ids.
-     */
-    @Bean
-    public Map<EmrClusterCacheKey, String> getEmrClusterCache()
-    {
-        return emrClusterCache;
     }
 
     /**
