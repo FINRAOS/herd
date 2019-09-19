@@ -162,7 +162,7 @@ public class EmrHelperTest extends AbstractServiceTest
      * This method tests the blank proxy details
      */
     @Test
-    public void testEmrAwsDtoBlankProxy() throws Exception
+    public void testEmrAwsDtoBlankProxy()
     {
         // Set the proxy as blank too to get the EMR client without proxy
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDto();
@@ -178,20 +178,22 @@ public class EmrHelperTest extends AbstractServiceTest
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
         // check cluster summary before creation
-        ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrHelper.getAwsParamsDto());
+        ClusterSummary clusterSummary = emrDao
+            .getActiveEmrClusterByNameAndAccountId(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrClusterDefinition.getAccountId(), emrHelper.getAwsParamsDto());
         assertNull(clusterSummary);
 
         // Create the cluster
         String clusterId = emrDao.createEmrCluster(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrClusterDefinition, emrHelper.getAwsParamsDto());
 
         // check cluster summary after creation
-        clusterSummary = emrDao.getActiveEmrClusterByName(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrHelper.getAwsParamsDto());
+        clusterSummary = emrDao
+            .getActiveEmrClusterByNameAndAccountId(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrClusterDefinition.getAccountId(), emrHelper.getAwsParamsDto());
         assertNotNull(clusterSummary);
         assertEquals(clusterId, clusterSummary.getId());
     }
 
     @Test
-    public void testGetEmrClusterByIdNull() throws Exception
+    public void testGetEmrClusterByIdNull()
     {
         Cluster cluster = emrDao.getEmrClusterById(null, null);
 
@@ -202,7 +204,7 @@ public class EmrHelperTest extends AbstractServiceTest
      * This method tests the blank cluster id for finding cluster status
      */
     @Test
-    public void testGetEmrClusterStatusByIdWithBlank() throws Exception
+    public void testGetEmrClusterStatusByIdWithBlank()
     {
         // Send blank for cluster id, and this method returns null for describeClusterResult
         emrDao.getEmrClusterStatusById(EMR_CLUSTER_DEFINITION_NAME, emrHelper.getAwsParamsDto());
@@ -211,7 +213,7 @@ public class EmrHelperTest extends AbstractServiceTest
     /**
      * This method fills-up the parameters required for the EMR cluster create request. This is called from all the other test methods.
      */
-    private EmrClusterCreateRequest getNewEmrClusterCreateRequest() throws Exception
+    private EmrClusterCreateRequest getNewEmrClusterCreateRequest()
     {
         // Create the definition.
         EmrClusterCreateRequest request = new EmrClusterCreateRequest();

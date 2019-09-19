@@ -387,6 +387,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
 
+    public static final String EMR_INVALID_STATE = "UT_EMR_InValidState_" + RANDOM_SUFFIX;
+
     public static final String EMR_NSCD_SCRIPT = "UT_EMR_NscdScript_" + RANDOM_SUFFIX;
 
     public static final boolean ENABLE_COLUMN_FIELDS = true;
