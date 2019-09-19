@@ -71,16 +71,15 @@ public interface EmrDao
     public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParams);
 
     /**
-     * Get an Active EMR cluster by the cluster name and account id. Cluster only in following states are returned: ClusterState.BOOTSTRAPPING,
-     * ClusterState.RUNNING, ClusterState.STARTING, ClusterState.WAITING
+     * Get an Active EMR cluster by the cluster name. Cluster only in following states are returned: ClusterState.BOOTSTRAPPING, ClusterState.RUNNING,
+     * ClusterState.STARTING, ClusterState.WAITING
      *
      * @param awsParams AWS related parameters for access/secret keys and proxy details.
      * @param clusterName the cluster name value.
-     * @param accountId the account id in which the cluster resides.
      *
      * @return the ClusterSummary object.
      */
-    public ClusterSummary getActiveEmrClusterByNameAndAccountId(String clusterName, String accountId, AwsParamsDto awsParams);
+    public ClusterSummary getActiveEmrClusterByName(String clusterName, AwsParamsDto awsParams);
 
     /**
      * Gets the active step on the cluster if any.

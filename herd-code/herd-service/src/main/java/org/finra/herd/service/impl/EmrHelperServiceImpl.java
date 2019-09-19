@@ -133,9 +133,7 @@ public class EmrHelperServiceImpl implements EmrHelperService
     EmrClusterCreateDto emrCreateClusterAwsSpecificStepsImpl(EmrClusterCreateRequest request, EmrClusterDefinition emrClusterDefinition,
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto)
     {
-        String accountId = emrClusterDefinition.getAccountId();
-
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(emrClusterDefinition.getAccountId());
 
         // If instance group definitions are specified, find best price and update definition.
         if (!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()))
@@ -170,7 +168,7 @@ public class EmrHelperServiceImpl implements EmrHelperService
             try
             {
                 // Try to get an active EMR cluster by its name.
-                ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, accountId, awsParamsDto);
+                ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(clusterName, awsParamsDto);
 
                 // If cluster does not already exist.
                 if (clusterSummary == null)
