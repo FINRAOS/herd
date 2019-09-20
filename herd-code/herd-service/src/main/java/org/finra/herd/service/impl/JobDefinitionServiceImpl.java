@@ -239,7 +239,7 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
         S3PropertiesLocation s3PropertiesLocation)
     {
         // Ensure the Activiti XML doesn't contain a CDATA wrapper.
-        Assert.isTrue(!activitiJobXml.contains("<![CDATA["), "Activiti XML can not contain a CDATA section.");
+        Assert.isTrue(!activitiJobXml.startsWith("<![CDATA["), "Activiti XML can not start with a CDATA section.");
 
         // Convert Activiti XML into BpmnModel and validate.
         BpmnModel bpmnModel;
