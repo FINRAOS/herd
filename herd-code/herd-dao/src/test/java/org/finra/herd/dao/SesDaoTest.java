@@ -24,9 +24,9 @@ import org.mockito.MockitoAnnotations;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.impl.SesDaoImpl;
+import org.finra.herd.model.api.xml.EmailSendRequest;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.EmailDto;
 
 
 public class SesDaoTest extends AbstractDaoTest
@@ -76,15 +76,19 @@ public class SesDaoTest extends AbstractDaoTest
     @Test
     public void testSendEmail()
     {
-        EmailDto emailDto = getDefaultEmailDto();
+        EmailSendRequest emailSendRequest = getDefaultEmailSendRequest();
+        when(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM)).thenReturn(SES_SOURCE_ADDRESS);
         when(configurationHelper.getProperty(ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS))
             .thenReturn((String) ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS.getDefaultValue());
-        when(herdStringHelper.splitAndTrim(emailDto.getTo(), COMMA_DELIMITER)).thenReturn(new HashSet<>(Arrays.asList(SES_TO_ADDRESS.split(COMMA_DELIMITER))));
-        when(herdStringHelper.splitAndTrim(emailDto.getCc(), COMMA_DELIMITER)).thenReturn(new HashSet<>(Arrays.asList(SES_CC_ADDRESS.split(COMMA_DELIMITER))));
-        when(herdStringHelper.splitAndTrim(emailDto.getBcc(), COMMA_DELIMITER)).thenReturn(new HashSet<>(Arrays.asList(SES_BCC_ADDRESS.split(COMMA_DELIMITER))));
+        when(herdStringHelper.splitAndTrim(emailSendRequest.getTo(), COMMA_DELIMITER))
+            .thenReturn(new HashSet<>(Arrays.asList(SES_TO_ADDRESS.split(COMMA_DELIMITER))));
+        when(herdStringHelper.splitAndTrim(emailSendRequest.getCc(), COMMA_DELIMITER))
+            .thenReturn(new HashSet<>(Arrays.asList(SES_CC_ADDRESS.split(COMMA_DELIMITER))));
+        when(herdStringHelper.splitAndTrim(emailSendRequest.getBcc(), COMMA_DELIMITER))
+            .thenReturn(new HashSet<>(Arrays.asList(SES_BCC_ADDRESS.split(COMMA_DELIMITER))));
 
         //Send email
-        sesDaoImpl.sendEmail(getAwsParamsDto(), emailDto);
+        sesDaoImpl.sendEmail(getAwsParamsDto(), emailSendRequest);
 
         //Verify argument
         verify(sesOperations).sendEmail(sendEmailRequestArgumentCaptor.capture(), any());
@@ -100,21 +104,22 @@ public class SesDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testNullParameters(){
-        EmailDto emailDto = getDefaultEmailDto();
+    public void testNullParameters()
+    {
+        EmailSendRequest emailSendRequest = getDefaultEmailSendRequest();
         when(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM))
             .thenReturn((String) ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM.getDefaultValue());
         when(configurationHelper.getProperty(ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS))
             .thenReturn((String) ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS.getDefaultValue());
 
         //Verify null value for parameters
-        emailDto.setTo(null);
-        emailDto.setBcc(null);
-        emailDto.setSubject(null);
-        emailDto.setText(null);
-        emailDto.setHtml(null);
-        emailDto.setReplyTo(null);
-        sesDaoImpl.sendEmail(getAwsParamsDto(), emailDto);
+        emailSendRequest.setTo(null);
+        emailSendRequest.setBcc(null);
+        emailSendRequest.setSubject(null);
+        emailSendRequest.setText(null);
+        emailSendRequest.setHtml(null);
+        emailSendRequest.setReplyTo(null);
+        sesDaoImpl.sendEmail(getAwsParamsDto(), emailSendRequest);
         verify(herdStringHelper, never()).splitAndTrim(null, COMMA_DELIMITER);
     }
 
@@ -123,7 +128,8 @@ public class SesDaoTest extends AbstractDaoTest
         return new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1);
     }
 
-    private EmailDto getDefaultEmailDto(){
-        return new EmailDto(SES_SOURCE_ADDRESS, SES_TO_ADDRESS, SES_CC_ADDRESS, SES_BCC_ADDRESS, SES_SUBJECT, SES_TXT, SES_HTML, SES_REPLYTO);
+    private EmailSendRequest getDefaultEmailSendRequest()
+    {
+        return new EmailSendRequest(SES_TO_ADDRESS, SES_CC_ADDRESS, SES_BCC_ADDRESS, SES_SUBJECT, SES_TXT, SES_HTML, SES_REPLYTO);
     }
 }

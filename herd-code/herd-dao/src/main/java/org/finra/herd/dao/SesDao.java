@@ -15,8 +15,8 @@
  */
 package org.finra.herd.dao;
 
+import org.finra.herd.model.api.xml.EmailSendRequest;
 import org.finra.herd.model.dto.AwsParamsDto;
-import org.finra.herd.model.dto.EmailDto;
 
 /**
  * A DAO for Amazon SES (Simple Email Service)
@@ -24,10 +24,10 @@ import org.finra.herd.model.dto.EmailDto;
 public interface SesDao
 {
     /**
-     * Sends an email with all the options as specified in the provided {@link EmailDto}
+     * Sends an email with all the options as specified in the provided emailSendRequest
      *
      * @param awsParamsDto the specified client params
-     * @param emailDto the specified information on the email to send
+     * @param emailSendRequest the specified information on the email to send
      */
-    void sendEmail(AwsParamsDto awsParamsDto, EmailDto emailDto);
+    void sendEmail(AwsParamsDto awsParamsDto, EmailSendRequest emailSendRequest);
 }

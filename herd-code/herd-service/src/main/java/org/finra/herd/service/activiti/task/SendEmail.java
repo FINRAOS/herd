@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.dto.EmailDto;
+import org.finra.herd.model.api.xml.EmailSendRequest;
 import org.finra.herd.service.impl.ActivitiSesServiceImpl;
 
 /**
@@ -66,24 +66,19 @@ public class SendEmail extends BaseJavaDelegate
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
     {
-        // Populate email dto with information from the incoming send email request
-        EmailDto emailDto = populateEmailDto(execution);
+        // Create the request.
+        EmailSendRequest emailSendRequest = new EmailSendRequest();
 
-        // Delegate to the corresponding service to send the email
-        activitiSesService.sendEmail(emailDto);
-    }
+        // Get expression variables from the execution.
+        emailSendRequest.setTo(activitiHelper.getExpressionVariableAsString(to, execution));
+        emailSendRequest.setCc(activitiHelper.getExpressionVariableAsString(cc, execution));
+        emailSendRequest.setBcc(activitiHelper.getExpressionVariableAsString(bcc, execution));
+        emailSendRequest.setSubject(activitiHelper.getRequiredExpressionVariableAsString(subject, execution, "subject"));
+        emailSendRequest.setText(activitiHelper.getExpressionVariableAsString(text, execution));
+        emailSendRequest.setHtml(activitiHelper.getExpressionVariableAsString(html, execution));
+        emailSendRequest.setReplyTo(activitiHelper.getExpressionVariableAsString(replyTo, execution));
 
-    private EmailDto populateEmailDto(final DelegateExecution execution)
-    {
-        // Extract email information from incoming execution request and return a DTO
-        EmailDto emailDto = EmailDto.builder().withTo(activitiHelper.getExpressionVariableAsString(to, execution))
-            .withCc(activitiHelper.getExpressionVariableAsString(cc, execution)).withBcc(activitiHelper.getExpressionVariableAsString(bcc, execution))
-            .withSubject(activitiHelper.getRequiredExpressionVariableAsString(subject, execution, "subject"))
-            .withText(activitiHelper.getExpressionVariableAsString(text, execution)).withHtml(activitiHelper.getExpressionVariableAsString(html, execution))
-            .withReplyTo(activitiHelper.getExpressionVariableAsString(replyTo, execution)).build();
-
-        LOGGER.info("Preparing to send email to recipient(s): \"{}\"", emailDto.getTo());
-
-        return emailDto;
+        // Call the activitiSesService to send the email.
+        activitiSesService.sendEmail(emailSendRequest);
     }
 }

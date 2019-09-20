@@ -35,9 +35,9 @@ import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.SesDao;
 import org.finra.herd.dao.SesOperations;
 import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.model.api.xml.EmailSendRequest;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.EmailDto;
 
 /**
  * The SES DAO Implementation
@@ -58,57 +58,57 @@ public class SesDaoImpl implements SesDao
     private SesOperations sesOperations;
 
     @Override
-    public void sendEmail(final AwsParamsDto awsParamsDto, final EmailDto emailDto)
+    public void sendEmail(final AwsParamsDto awsParamsDto, EmailSendRequest emailSendRequest)
     {
         // Prepare and fetch a send email request from the provided information
-        SendEmailRequest sendEmailRequest = prepareSendEmailRequest(emailDto);
+        SendEmailRequest awsSendEmailRequest = prepareSendEmailRequest(emailSendRequest);
 
         // Send the prepared email
-        sesOperations.sendEmail(sendEmailRequest, awsClientFactory.getSesClient(awsParamsDto));
+        sesOperations.sendEmail(awsSendEmailRequest, awsClientFactory.getSesClient(awsParamsDto));
     }
 
     /**
-     * Prepares the destination part of the email based on the information contained in a provided {@link EmailDto}
+     * Prepares the destination part of the email based on the information in the emailSendRequest
      *
-     * @param emailDto the specified email information.
+     * @param emailSendRequest the specified email information.
      *
      * @return the prepared destination information.
      */
-    private Destination prepareDestination(final EmailDto emailDto)
+    private Destination prepareDestination(EmailSendRequest emailSendRequest)
     {
-        // Initialize a new destinations object
+        // Initialize a new destinations object.
         Destination destination = new Destination();
         final String commaDelimiter = ",";
 
-        // Set 'to' addresses
-        if (StringUtils.isNotEmpty(emailDto.getTo()))
+        // Set 'to' addresses.
+        if (StringUtils.isNotEmpty(emailSendRequest.getTo()))
         {
-            destination.setToAddresses(herdStringHelper.splitAndTrim(emailDto.getTo(), commaDelimiter));
+            destination.setToAddresses(herdStringHelper.splitAndTrim(emailSendRequest.getTo(), commaDelimiter));
         }
 
-        // Set 'cc' addresses if specified
-        if (StringUtils.isNotEmpty(emailDto.getCc()))
+        // Set 'cc' addresses if specified.
+        if (StringUtils.isNotEmpty(emailSendRequest.getCc()))
         {
-            destination.setCcAddresses(herdStringHelper.splitAndTrim(emailDto.getCc(), commaDelimiter));
+            destination.setCcAddresses(herdStringHelper.splitAndTrim(emailSendRequest.getCc(), commaDelimiter));
         }
 
-        // Declare a list of bcc addresses to set in the destinations being collected
+        // Declare a list of bcc addresses to set in the destinations being collected.
         List<String> bccAddresses = new ArrayList<>();
 
-        // Get the 'records-collector' address and add it to the bcc addresses list if specified
+        // Get the 'records-collector' address and add it to the bcc addresses list if specified.
         String recordsCollector = configurationHelper.getProperty(ConfigurationValue.SES_RECORDS_COLLECTOR_ADDRESS);
         if (StringUtils.isNotEmpty(recordsCollector))
         {
             bccAddresses.add(recordsCollector);
         }
 
-        // Get 'bcc' addresses specified in the request
-        if (StringUtils.isNotEmpty(emailDto.getBcc()))
+        // Get 'bcc' addresses specified in the request.
+        if (StringUtils.isNotEmpty(emailSendRequest.getBcc()))
         {
-            bccAddresses.addAll(herdStringHelper.splitAndTrim(emailDto.getBcc(), commaDelimiter));
+            bccAddresses.addAll(herdStringHelper.splitAndTrim(emailSendRequest.getBcc(), commaDelimiter));
         }
 
-        // Add the final list of collected bcc addresses to destination
+        // Add the final list of collected bcc addresses to destination.
         if (!CollectionUtils.isEmpty(bccAddresses))
         {
             destination.setBccAddresses(bccAddresses);
@@ -118,13 +118,13 @@ public class SesDaoImpl implements SesDao
     }
 
     /**
-     * Prepares the message part of the email based on the information contained in a provided {@link EmailDto}
+     * Prepares the message part of the email based on the information in the emailSendRequest
      *
-     * @param emailDto the specified email information
+     * @param emailSendRequest the specified email information
      *
      * @return the prepared message
      */
-    private Message prepareMessage(final EmailDto emailDto)
+    private Message prepareMessage(EmailSendRequest emailSendRequest)
     {
         // Using UTF-8 which is a more commonly used charset. This is also the default for SES client.
         final String charset = "UTF-8";
@@ -132,23 +132,23 @@ public class SesDaoImpl implements SesDao
         // Initialize an empty email message.
         Message message = new Message();
 
-        // Insert subject if specified
-        if (Objects.nonNull(emailDto.getSubject()))
+        // Insert subject if specified.
+        if (Objects.nonNull(emailSendRequest.getSubject()))
         {
-            message.setSubject(new Content().withCharset(charset).withData(emailDto.getSubject()));
+            message.setSubject(new Content().withCharset(charset).withData(emailSendRequest.getSubject()));
         }
 
         // Insert text body if specified (this is the SES fall-back if the recipients email client does not support html).
         Body emailBody = new Body();
-        if (Objects.nonNull(emailDto.getText()))
+        if (Objects.nonNull(emailSendRequest.getText()))
         {
-            emailBody.setText(new Content().withCharset(charset).withData(emailDto.getText()));
+            emailBody.setText(new Content().withCharset(charset).withData(emailSendRequest.getText()));
         }
 
         // Insert html body if specified.
-        if (Objects.nonNull(emailDto.getHtml()))
+        if (Objects.nonNull(emailSendRequest.getHtml()))
         {
-            emailBody.setHtml(new Content().withCharset(charset).withData(emailDto.getHtml()));
+            emailBody.setHtml(new Content().withCharset(charset).withData(emailSendRequest.getHtml()));
         }
 
         // Set the email body prepared above to the wrapper email message object.
@@ -158,30 +158,27 @@ public class SesDaoImpl implements SesDao
     }
 
     /**
-     * Prepares a {@link SendEmailRequest} with information harvested from a specified {@link EmailDto}
+     * Prepares a {@link SendEmailRequest} with information harvested from emailSendRequest
      *
-     * @param emailDto the specified email information.
+     * @param emailSendRequest the specified email information.
      *
      * @return the prepared send email request.
      */
-    private SendEmailRequest prepareSendEmailRequest(final EmailDto emailDto)
+    private SendEmailRequest prepareSendEmailRequest(EmailSendRequest emailSendRequest)
     {
-        // Collect all required information and prepare individual email components required for the desired send email request
-        // Initialize a new send email request
+        // Collect all required information and prepare individual email components required for the desired send email request.
+        // Initialize a new aws send email request.
         SendEmailRequest sendEmailRequest = new SendEmailRequest();
 
-        // Set 'from' address to the configured 'send-from' email address
-        if (StringUtils.isNotEmpty(emailDto.getSource()))
-        {
-            sendEmailRequest.setSource(emailDto.getSource());
-        }
+        // Set 'from' address to the configured 'send-from' email address.
+        sendEmailRequest.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
 
         // Get destination information and add to send email request
-        Destination destination = prepareDestination(emailDto);
+        Destination destination = prepareDestination(emailSendRequest);
         sendEmailRequest.setDestination(destination);
 
         // Get message information and add to send email request
-        Message message = prepareMessage(emailDto);
+        Message message = prepareMessage(emailSendRequest);
         sendEmailRequest.setMessage(message);
 
         // Get config set name and add to send email request
