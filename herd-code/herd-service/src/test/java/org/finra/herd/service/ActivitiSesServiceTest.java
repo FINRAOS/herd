@@ -10,9 +10,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.model.api.xml.EmailSendRequest;
 import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.service.impl.ActivitiSesServiceImpl;
 import org.finra.herd.service.impl.SesServiceImpl;
 
@@ -26,6 +28,9 @@ public class ActivitiSesServiceTest extends AbstractServiceTest
 
     @Mock
     private SesServiceImpl sesService;
+
+    @Mock
+    private ConfigurationHelper configurationHelper;
 
     @InjectMocks
     private ActivitiSesServiceImpl activitiSesService;
@@ -41,6 +46,7 @@ public class ActivitiSesServiceTest extends AbstractServiceTest
     {
         // Create an EmailSendRequest.
         EmailSendRequest emailSendRequest = new EmailSendRequest();
+        emailSendRequest.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
 
         // Call the method under test.
         when(awsHelper.getAwsParamsDto()).thenReturn(new AwsParamsDto());

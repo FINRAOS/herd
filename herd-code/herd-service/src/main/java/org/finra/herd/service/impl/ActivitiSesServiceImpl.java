@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.EmailSendRequest;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.service.SesService;
 
 /**
@@ -41,6 +42,9 @@ public class ActivitiSesServiceImpl implements SesService
      */
     public void sendEmail(EmailSendRequest emailSendRequest)
     {
+        // Get the "from" field for activiti send email.
+        emailSendRequest.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
+
         // Call SES service to send email.
         sesService.sendEmail(emailSendRequest);
     }

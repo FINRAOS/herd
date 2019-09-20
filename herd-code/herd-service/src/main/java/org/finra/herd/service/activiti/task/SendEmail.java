@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.EmailSendRequest;
 import org.finra.herd.service.impl.ActivitiSesServiceImpl;
 
@@ -56,6 +57,9 @@ public class SendEmail extends BaseJavaDelegate
 
     @Autowired
     private ActivitiSesServiceImpl activitiSesService;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     private Expression subject;
 

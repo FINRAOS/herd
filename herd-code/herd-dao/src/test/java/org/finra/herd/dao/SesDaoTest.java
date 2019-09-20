@@ -130,6 +130,6 @@ public class SesDaoTest extends AbstractDaoTest
 
     private EmailSendRequest getDefaultEmailSendRequest()
     {
-        return new EmailSendRequest(SES_TO_ADDRESS, SES_CC_ADDRESS, SES_BCC_ADDRESS, SES_SUBJECT, SES_TXT, SES_HTML, SES_REPLYTO);
+        return new EmailSendRequest(SES_TO_ADDRESS, SES_CC_ADDRESS, SES_BCC_ADDRESS, SES_SUBJECT, SES_TXT, SES_HTML, SES_REPLYTO, SES_SOURCE_ADDRESS);
     }
 }

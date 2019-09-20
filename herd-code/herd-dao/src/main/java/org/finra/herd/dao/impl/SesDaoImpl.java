@@ -171,7 +171,7 @@ public class SesDaoImpl implements SesDao
         SendEmailRequest sendEmailRequest = new SendEmailRequest();
 
         // Set 'from' address to the configured 'send-from' email address.
-        sendEmailRequest.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
+        sendEmailRequest.setSource(emailSendRequest.getSource());
 
         // Get destination information and add to send email request
         Destination destination = prepareDestination(emailSendRequest);
