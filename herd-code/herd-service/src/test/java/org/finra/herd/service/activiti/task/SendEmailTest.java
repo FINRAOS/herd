@@ -25,7 +25,6 @@ public class SendEmailTest extends HerdActivitiServiceTaskTest
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("bcc", "${bcc}"));
         fieldExtensionList.add(buildFieldExtension("cc", "${cc}"));
-        fieldExtensionList.add(buildFieldExtension("html", "${html}"));
         fieldExtensionList.add(buildFieldExtension("replyTo", "${replyTo}"));
         fieldExtensionList.add(buildFieldExtension("subject", "${subject}"));
         fieldExtensionList.add(buildFieldExtension("text", "${text}"));
@@ -34,7 +33,6 @@ public class SendEmailTest extends HerdActivitiServiceTaskTest
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(buildParameter("bcc", "test1@abc.com"));
         parameters.add(buildParameter("cc", "test2@abc.com"));
-        parameters.add(buildParameter("html", "<html></html>"));
         parameters.add(buildParameter("replyTo", "test5@abc.com"));
         parameters.add(buildParameter("subject", "sample Email"));
         parameters.add(buildParameter("text", "sample test body"));
@@ -49,7 +47,6 @@ public class SendEmailTest extends HerdActivitiServiceTaskTest
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("bcc", "${bcc}"));
         fieldExtensionList.add(buildFieldExtension("cc", "${cc}"));
-        fieldExtensionList.add(buildFieldExtension("html", "${html}"));
         fieldExtensionList.add(buildFieldExtension("replyTo", "${replyTo}"));
         fieldExtensionList.add(buildFieldExtension("text", "${text}"));
         fieldExtensionList.add(buildFieldExtension("to", "${to}"));
@@ -57,7 +54,6 @@ public class SendEmailTest extends HerdActivitiServiceTaskTest
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(buildParameter("bcc", "test1@abc.com"));
         parameters.add(buildParameter("cc", "test2@abc.com"));
-        parameters.add(buildParameter("html", "<html></html>"));
         parameters.add(buildParameter("replyTo", "test5@abc.com"));
         parameters.add(buildParameter("text", "sample test body"));
         parameters.add(buildParameter("to", "test0@abc.com"));
