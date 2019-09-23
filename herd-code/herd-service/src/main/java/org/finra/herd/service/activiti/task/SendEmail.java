@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.EmailSendRequest;
 import org.finra.herd.service.impl.ActivitiSesServiceImpl;
 
@@ -37,7 +36,6 @@ import org.finra.herd.service.impl.ActivitiSesServiceImpl;
  *     <activiti:field name="bcc" expression=""/>
  *     <activiti:field name="subject" expression=""/>
  *     <activiti:field name="text" expression=""/>
- *     <activiti:field name="html" expression=""/>
  *     <activiti:field name="replyTo" expression=""/>
  *   </extensionElements>
  * </pre>
@@ -51,15 +49,10 @@ public class SendEmail extends BaseJavaDelegate
 
     private Expression cc;
 
-    private Expression html;
-
     private Expression replyTo;
 
     @Autowired
     private ActivitiSesServiceImpl activitiSesService;
-
-    @Autowired
-    private ConfigurationHelper configurationHelper;
 
     private Expression subject;
 
@@ -79,7 +72,6 @@ public class SendEmail extends BaseJavaDelegate
         emailSendRequest.setBcc(activitiHelper.getExpressionVariableAsString(bcc, execution));
         emailSendRequest.setSubject(activitiHelper.getRequiredExpressionVariableAsString(subject, execution, "subject"));
         emailSendRequest.setText(activitiHelper.getExpressionVariableAsString(text, execution));
-        emailSendRequest.setHtml(activitiHelper.getExpressionVariableAsString(html, execution));
         emailSendRequest.setReplyTo(activitiHelper.getExpressionVariableAsString(replyTo, execution));
 
         // Call the activitiSesService to send the email.

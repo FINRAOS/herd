@@ -58,8 +58,6 @@ public class SesDaoTest extends AbstractDaoTest
 
     private static final String SES_TXT = "sample test body";
 
-    private static final String SES_HTML = null;
-
     private static final String SES_REPLYTO = null;
 
     private static final String COMMA_DELIMITER = ",";
@@ -99,7 +97,6 @@ public class SesDaoTest extends AbstractDaoTest
         assertEquals(0, sendEmailRequestArgumentCaptor.getValue().getDestination().getBccAddresses().size());
         assertEquals(SES_SUBJECT, sendEmailRequestArgumentCaptor.getValue().getMessage().getSubject().getData());
         assertEquals(SES_TXT, sendEmailRequestArgumentCaptor.getValue().getMessage().getBody().getText().getData());
-        assertNull(sendEmailRequestArgumentCaptor.getValue().getMessage().getBody().getHtml());
         assertNull(sendEmailRequestArgumentCaptor.getValue().getConfigurationSetName());
     }
 
@@ -117,7 +114,6 @@ public class SesDaoTest extends AbstractDaoTest
         emailSendRequest.setBcc(null);
         emailSendRequest.setSubject(null);
         emailSendRequest.setText(null);
-        emailSendRequest.setHtml(null);
         emailSendRequest.setReplyTo(null);
         sesDaoImpl.sendEmail(getAwsParamsDto(), emailSendRequest);
         verify(herdStringHelper, never()).splitAndTrim(null, COMMA_DELIMITER);
@@ -130,6 +126,6 @@ public class SesDaoTest extends AbstractDaoTest
 
     private EmailSendRequest getDefaultEmailSendRequest()
     {
-        return new EmailSendRequest(SES_TO_ADDRESS, SES_CC_ADDRESS, SES_BCC_ADDRESS, SES_SUBJECT, SES_TXT, SES_HTML, SES_REPLYTO, SES_SOURCE_ADDRESS);
+        return new EmailSendRequest(SES_TO_ADDRESS, SES_CC_ADDRESS, SES_BCC_ADDRESS, SES_SUBJECT, SES_TXT, SES_REPLYTO, SES_SOURCE_ADDRESS);
     }
 }

@@ -145,12 +145,6 @@ public class SesDaoImpl implements SesDao
             emailBody.setText(new Content().withCharset(charset).withData(emailSendRequest.getText()));
         }
 
-        // Insert html body if specified.
-        if (Objects.nonNull(emailSendRequest.getHtml()))
-        {
-            emailBody.setHtml(new Content().withCharset(charset).withData(emailSendRequest.getHtml()));
-        }
-
         // Set the email body prepared above to the wrapper email message object.
         message.setBody(emailBody);
 

@@ -180,8 +180,5 @@
       <jaxb:bindings node="//xs:complexType[@name='notificationMessageDefinition']//xs:element[@name='messageVelocityTemplate']">
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
-      <jaxb:bindings node="//xs:complexType[@name='emailSendRequest']//xs:element[@name='html']">
-         <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
-      </jaxb:bindings>
    </jaxb:bindings>
 </jaxb:bindings>

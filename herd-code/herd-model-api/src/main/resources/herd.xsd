@@ -8835,7 +8835,6 @@
          <xs:element name="bcc" type="xs:string" minOccurs="0"/>
          <xs:element name="subject" type="xs:string"/>
          <xs:element name="text" type="xs:string" minOccurs="0"/>
-         <xs:element name="html" type="xs:string" minOccurs="0"/>
          <xs:element name="replyTo" type="xs:string" minOccurs="0"/>
          <xs:element name="source" type="xs:string" minOccurs="0"/>
       </xs:all>
