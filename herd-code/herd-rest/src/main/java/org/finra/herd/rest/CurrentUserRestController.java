@@ -17,12 +17,14 @@ package org.finra.herd.rest;
 
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.UserAuthorizations;
+import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.CurrentUserService;
 import org.finra.herd.ui.constants.UiConstants;
 
@@ -46,6 +48,7 @@ public class CurrentUserRestController
      */
     @RequestMapping(value = CURRENT_USER_URI_PREFIX, method = RequestMethod.GET)
     @PreAuthorize("isAuthenticated()")
+    @Secured(SecurityFunctions.FN_CURRENT_USER_GET)
     public UserAuthorizations getCurrentUser()
     {
         return currentUserService.getCurrentUser();
