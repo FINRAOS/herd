@@ -16,6 +16,7 @@
 package org.finra.herd.dao.config;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -59,6 +60,7 @@ import org.finra.herd.dao.ReloadablePropertySource;
 import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmrClusterCacheKey;
+import org.finra.herd.model.dto.EmrClusterCacheTimestamps;
 import org.finra.herd.model.jpa.ConfigurationEntity;
 
 /**
@@ -77,8 +79,20 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     @Autowired
     private ConfigurationHelper configurationHelper;
 
-    // A thread safe cache used to hold the EMR cluster key and id pairs.
-    private Map<EmrClusterCacheKey, String> emrClusterCache = Collections.synchronizedMap(new LruCache<>(EMR_CLUSTER_CACHE_SIZE));
+    /**
+     * A map holding thread safe caches, one per AWS account id, used to hold the EMR cluster key and id pairs.
+     */
+    private Map<String, Map<EmrClusterCacheKey, String>> emrClusterCacheMap = initializeEmrClusterCacheMap();
+
+    /**
+     * A map holding the EMR cluster cache timestamps for each AWS account id.
+     */
+    private Map<String, EmrClusterCacheTimestamps> emrClusterCacheTimestampsMap = initializeEmrClusterCacheTimestampsMap();
+
+    /**
+     * The default AWS account id key for the EMR cluster cache map
+     */
+    public static final String EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY = "EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY";
 
     /**
      * The EMR cache size. Limits the size of the cache.
@@ -140,14 +154,50 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     }
 
     /**
-     * Bean used to get the EMR cluster cache.
+     * Bean used to get the EMR cluster cache map.
      *
-     * @return the EMR cluster cache used to store cluster keys and ids.
+     * @return the EMR cluster cache map used to store cluster keys and ids by AWS account id.
      */
     @Bean
-    public Map<EmrClusterCacheKey, String> getEmrClusterCache()
+    public Map<String, Map<EmrClusterCacheKey, String>> getEmrClusterCacheMap()
     {
-        return emrClusterCache;
+        return emrClusterCacheMap;
+    }
+
+    /**
+     * Bean used to get the EMR cluster cache timestamps map.
+     *
+     * @return the EMR cluster cache timestamps map used to hold cache timestamps by AWS account id.
+     */
+    @Bean
+        public Map<String, EmrClusterCacheTimestamps> getEmrClusterCacheTimestampsMap()
+    {
+        return emrClusterCacheTimestampsMap;
+    }
+
+    /**
+     * Initializes the cluster cache map used to store EMR cluster caches by AWS account id.
+     *
+     * @return the EMR cluster cache map used to store cluster keys and ids by AWS account id.
+     */
+    private static Map<String, Map<EmrClusterCacheKey, String>> initializeEmrClusterCacheMap()
+    {
+        Map<String, Map<EmrClusterCacheKey, String>> initialMap = new HashMap<>();
+        initialMap.put(EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY, Collections.synchronizedMap(new LruCache<>(EMR_CLUSTER_CACHE_SIZE)));
+        return initialMap;
+    }
+
+    /**
+     * Initializes the cluster cache map used to store EMR cluster caches by AWS account id.
+     *
+     * @return the EMR cluster cache map used to store cluster keys and ids by AWS account id.
+     */
+    private static Map<String, EmrClusterCacheTimestamps> initializeEmrClusterCacheTimestampsMap()
+    {
+        Map<String, EmrClusterCacheTimestamps> initialMap = new HashMap<>();
+        EmrClusterCacheTimestamps emrClusterCacheTimestamps = new EmrClusterCacheTimestamps(null, null);
+        initialMap.put(EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY, emrClusterCacheTimestamps);
+        return initialMap;
     }
 
     /**

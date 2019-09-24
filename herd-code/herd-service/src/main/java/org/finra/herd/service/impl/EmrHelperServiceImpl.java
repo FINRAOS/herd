@@ -177,6 +177,8 @@ public class EmrHelperServiceImpl implements EmrHelperService
                 {
                     clusterId = emrDao.createEmrCluster(clusterName, emrClusterDefinition, awsParamsDto);
                     emrClusterCreated = true;
+                    emrClusterStatus = emrDao.getEmrClusterStatusById(clusterId, awsParamsDto);
+
                 }
                 // If the cluster already exists.
                 else
@@ -184,9 +186,11 @@ public class EmrHelperServiceImpl implements EmrHelperService
                     clusterId = clusterSummary.getId();
                     emrClusterCreated = false;
                     emrClusterAlreadyExists = true;
+
+                    // If the cluster already exists use the status from the get active EMR cluster by name and account id method call.
+                    emrClusterStatus = clusterSummary.getStatus().getState();
                 }
 
-                emrClusterStatus = emrDao.getEmrClusterStatusById(clusterId, awsParamsDto);
             }
             catch (AmazonServiceException ex)
             {

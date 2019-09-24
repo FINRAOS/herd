@@ -15,9 +15,15 @@
 */
 package org.finra.herd.dao.impl;
 
+import static org.finra.herd.dao.config.DaoSpringModuleConfig.EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY;
+
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +107,7 @@ import org.finra.herd.model.api.xml.ScriptDefinition;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmrClusterCacheKey;
+import org.finra.herd.model.dto.EmrClusterCacheTimestamps;
 
 /**
  * The EMR DAO implementation.
@@ -109,6 +116,8 @@ import org.finra.herd.model.dto.EmrClusterCacheKey;
 public class EmrDaoImpl implements EmrDao
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmrDaoImpl.class);
+
+    private static final int DELTA_UPDATE_BUFFER_IN_MINUTES = 1;
 
     @Autowired
     private AwsClientFactory awsClientFactory;
@@ -120,7 +129,10 @@ public class EmrDaoImpl implements EmrDao
     private Ec2Dao ec2Dao;
 
     @Autowired
-    private Map<EmrClusterCacheKey, String> emrClusterCache;
+    private Map<String, Map<EmrClusterCacheKey, String>> emrClusterCacheMap;
+
+    @Autowired
+    private Map<String, EmrClusterCacheTimestamps> emrClusterCacheTimestampsMap;
 
     @Autowired
     private EmrHelper emrHelper;
@@ -180,8 +192,11 @@ public class EmrDaoImpl implements EmrDao
 
         // Add the new cluster name and cluster id to the EMR cluster cache.
         LOGGER.info("Adding EMR cluster to the EMR Cluster Cache. emrClusterName=\"{}\" emrClusterId=\"{}\" accountId=\"{}\"", clusterName.toUpperCase(),
-            clusterId);
+            clusterId, emrClusterDefinition.getAccountId());
+
         EmrClusterCacheKey emrClusterCacheKey = new EmrClusterCacheKey(clusterName.toUpperCase(), emrClusterDefinition.getAccountId());
+        Map<EmrClusterCacheKey, String> emrClusterCache = emrClusterCacheMap
+            .get(emrClusterDefinition.getAccountId() == null ? EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY : emrClusterDefinition.getAccountId());
         emrClusterCache.put(emrClusterCacheKey, clusterId);
 
         return clusterId;
@@ -190,6 +205,12 @@ public class EmrDaoImpl implements EmrDao
     @Override
     public ClusterSummary getActiveEmrClusterByNameAndAccountId(String clusterName, String accountId, AwsParamsDto awsParams)
     {
+        // Initialize a cluster summary to null for the case that the cluster is not found in the list.
+        ClusterSummary clusterSummary = null;
+
+        // Get the cluster cache using the accountId as a key.
+        Map<EmrClusterCacheKey, String> emrClusterCache = emrClusterCacheMap.get(accountId);
+
         if (StringUtils.isNotBlank(clusterName))
         {
             // Build the EMR cluster cache key
@@ -239,6 +260,38 @@ public class EmrDaoImpl implements EmrDao
             LOGGER.info("The cluster name was not in the cluster cache. Make a list cluster request to find the cluster id. emrClusterName=\"{}\"",
                 clusterName.toUpperCase());
 
+            // Get the EMR cluster cache timeout values.
+            EmrClusterCacheTimestamps emrClusterCacheTimestamps =
+                emrClusterCacheTimestampsMap.get(accountId == null ? EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY : accountId);
+            LocalDateTime lastFullReload = emrClusterCacheTimestamps.getLastFullReload();
+            LocalDateTime lastDeltaUpdate = emrClusterCacheTimestamps.getLastDeltaUpdate();
+
+            // New cache timeout values.
+            LocalDateTime newLastFullReload;
+            LocalDateTime newLastDeltaUpdate;
+
+            // Default the created after date to null for the full update case.
+            Date createdAfter = null;
+
+            // If the last delta update is null or the last full reload is null or the if the difference between the current time and the lastFullReload is
+            // greater than ten minutes do a full reload.
+            if (lastDeltaUpdate == null || lastFullReload == null || Duration.between(lastDeltaUpdate, LocalDateTime.now()).toMinutes() > 10)
+            {
+                // Set the new last full reload time to the current time.
+                newLastFullReload = LocalDateTime.now();
+            }
+            else
+            {
+                // Set the created after date to the last delta update minus the delta update safety buffer time.
+                createdAfter = Date.from(lastDeltaUpdate.minusMinutes(DELTA_UPDATE_BUFFER_IN_MINUTES).atZone(ZoneId.systemDefault()).toInstant());
+
+                // Keep the last full reload the same.
+                newLastFullReload = lastFullReload;
+            }
+
+            // Set the new last delta update to the current time.
+            newLastDeltaUpdate = LocalDateTime.now();
+
             /**
              * Call AWSOperations for ListClusters API. Need to list all the active clusters that are in
              * BOOTSTRAPPING/RUNNING/STARTING/WAITING states
@@ -258,8 +311,8 @@ public class EmrDaoImpl implements EmrDao
                  * Call AWSOperations for ListClusters API.
                  * Need to include the Marker returned by the previous iteration
                  */
-                ListClustersResult clusterResult =
-                    emrOperations.listEmrClusters(getEmrClient(awsParams), listClustersRequest.withMarker(markerForListClusters));
+                ListClustersResult clusterResult = emrOperations
+                    .listEmrClusters(getEmrClient(awsParams), listClustersRequest.withMarker(markerForListClusters).withCreatedAfter(createdAfter));
 
                 // Loop through all the active clusters returned by AWS
                 for (ClusterSummary clusterInstance : clusterResult.getClusters())
@@ -270,18 +323,22 @@ public class EmrDaoImpl implements EmrDao
                     // Add this cluster instance to the EMR cluster cache.
                     emrClusterCache.put(new EmrClusterCacheKey(clusterInstance.getName().toUpperCase(), accountId), clusterInstance.getId());
 
-                    // If the cluster name matches, then return the status
+                    // If the cluster name matches, then set the clusterSummary to the clusterInstance
                     if (StringUtils.isNotBlank(clusterInstance.getName()) && clusterInstance.getName().equalsIgnoreCase(clusterName))
                     {
-                        return clusterInstance;
+                        clusterSummary = clusterInstance;
                     }
                 }
                 markerForListClusters = clusterResult.getMarker();
             }
             while (markerForListClusters != null);
+
+            // Update the cluster cache timestamps
+            emrClusterCacheTimestamps.setLastFullReload(newLastFullReload);
+            emrClusterCacheTimestamps.setLastDeltaUpdate(newLastDeltaUpdate);
         }
 
-        return null;
+        return clusterSummary;
     }
 
     /**
