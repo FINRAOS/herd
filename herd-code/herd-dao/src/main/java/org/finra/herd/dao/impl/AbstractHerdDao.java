@@ -47,7 +47,6 @@ import org.finra.herd.model.jpa.AuditableEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity_;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -59,7 +58,6 @@ import org.finra.herd.model.jpa.NamespaceEntity_;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageEntity_;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
-import org.finra.herd.model.jpa.StoragePlatformEntity_;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity_;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -246,6 +244,44 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
     }
 
     /**
+     * Builds a query restriction predicate for the specified business object format entity as per business object format alternate key values.
+     *
+     * @param builder the criteria builder
+     * @param businessObjectFormatEntityFrom the business object format entity that appears in the from clause of the main query
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param businessObjectFormatUsage the business object format usage (case-insensitive)
+     * @param fileTypeEntity the file type entity
+     * @param businessObjectFormatVersion the optional business object format version
+     *
+     * @return the query restriction predicate
+     */
+    protected Predicate getQueryRestriction(CriteriaBuilder builder, From<?, BusinessObjectFormatEntity> businessObjectFormatEntityFrom,
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage, FileTypeEntity fileTypeEntity,
+        Integer businessObjectFormatVersion)
+    {
+        // Create restriction on business object definition.
+        Predicate predicate =
+            builder.equal(businessObjectFormatEntityFrom.get(BusinessObjectFormatEntity_.businessObjectDefinitionId), businessObjectDefinitionEntity.getId());
+
+        // Create and append restriction on business object format usage.
+        predicate = builder.and(predicate,
+            builder.equal(builder.upper(businessObjectFormatEntityFrom.get(BusinessObjectFormatEntity_.usage)), businessObjectFormatUsage.toUpperCase()));
+
+        // Create and append restriction on business object format file type.
+        predicate =
+            builder.and(predicate, builder.equal(businessObjectFormatEntityFrom.get(BusinessObjectFormatEntity_.fileTypeCode), fileTypeEntity.getCode()));
+
+        // If specified, create and append restriction on business object format version.
+        if (businessObjectFormatVersion != null)
+        {
+            predicate = builder.and(predicate,
+                builder.equal(businessObjectFormatEntityFrom.get(BusinessObjectFormatEntity_.businessObjectFormatVersion), businessObjectFormatVersion));
+        }
+
+        return predicate;
+    }
+
+    /**
      * TODO This method may be bformat specific. Consider creating new abstract class to group all bformat related DAO. Gets a business object format key from
      * the specified business object data key.
      *
@@ -336,15 +372,15 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
      *
      * @param builder the criteria builder
      * @param businessObjectDataEntity the business object data entity that appears in the from clause
-     * @param businessObjectDataStatusEntity the business object data status entity that appears in the from clause
      * @param businessObjectDataVersion the business object data version
-     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified.
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
+     * specified
      *
      * @return the query restriction predicate or null if both business object data version and business object data status are not specified
      */
     protected Predicate getQueryRestrictionOnBusinessObjectDataVersionAndStatus(CriteriaBuilder builder,
-        From<?, BusinessObjectDataEntity> businessObjectDataEntity, From<?, BusinessObjectDataStatusEntity> businessObjectDataStatusEntity,
-        Integer businessObjectDataVersion, String businessObjectDataStatus)
+        From<?, BusinessObjectDataEntity> businessObjectDataEntity, Integer businessObjectDataVersion,
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity)
     {
         Predicate predicate = null;
 
@@ -354,10 +390,9 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
             predicate = builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.version), businessObjectDataVersion);
         }
         // Only if a business object data version is not specified, check if we need to add a restriction on the business object data status.
-        else if (businessObjectDataStatus != null)
+        else if (businessObjectDataStatusEntity != null)
         {
-            predicate =
-                builder.equal(builder.upper(businessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code)), businessObjectDataStatus.toUpperCase());
+            predicate = builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.statusCode), businessObjectDataStatusEntity.getCode());
         }
 
         return predicate;
@@ -367,40 +402,38 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
      * Builds a query restriction predicate for the storage.
      *
      * @param builder the criteria builder
-     * @param storageEntity the storage entity that appears in the from clause
-     * @param storagePlatformEntity the storage platform entity that appears in the from clause
+     * @param storageEntityFrom the storage entity that appears in the from clause
      * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
-     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
-     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
-     * the storage platform type is specified
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
+     * empty or the storage platform entity is specified
      *
      * @return the query restriction predicate
      */
-    protected Predicate getQueryRestrictionOnStorage(CriteriaBuilder builder, From<?, StorageEntity> storageEntity,
-        From<?, StoragePlatformEntity> storagePlatformEntity, List<String> storageNames, String storagePlatformType, String excludedStoragePlatformType)
+    protected Predicate getQueryRestrictionOnStorage(CriteriaBuilder builder, From<?, StorageEntity> storageEntityFrom, List<String> storageNames,
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity)
     {
         List<Predicate> predicates = new ArrayList<>();
 
-        // If specified, add restriction on storage.
+        // If specified, add restriction on storage names.
         if (!CollectionUtils.isEmpty(storageNames))
         {
-            // Add a storage name restriction to the main query where clause.
             List<String> uppercaseStorageNames = new ArrayList<>();
             for (String storageName : storageNames)
             {
                 uppercaseStorageNames.add(storageName.toUpperCase());
             }
-            predicates.add(builder.upper(storageEntity.get(StorageEntity_.name)).in(uppercaseStorageNames));
+            predicates.add(builder.upper(storageEntityFrom.get(StorageEntity_.name)).in(uppercaseStorageNames));
         }
-        else if (StringUtils.isNotBlank(storagePlatformType))
+        // Otherwise, add restriction on storage platform, if specified.
+        else if (storagePlatformEntity != null)
         {
-            // Select storage units only from the storages of the specified storage platform type.
-            predicates.add(builder.equal(storagePlatformEntity.get(StoragePlatformEntity_.name), storagePlatformType));
+            predicates.add(builder.equal(storageEntityFrom.get(StorageEntity_.storagePlatformCode), storagePlatformEntity.getName()));
         }
-        else if (StringUtils.isNotBlank(excludedStoragePlatformType))
+        // Otherwise, add restriction per excluded storage platform, if specified.
+        else if (excludedStoragePlatformEntity != null)
         {
-            // Ignore any storages of the excluded storage platform type.
-            predicates.add(builder.notEqual(storagePlatformEntity.get(StoragePlatformEntity_.name), excludedStoragePlatformType));
+            predicates.add(builder.notEqual(storageEntityFrom.get(StorageEntity_.storagePlatformCode), excludedStoragePlatformEntity.getName()));
         }
 
         return builder.and(predicates.toArray(new Predicate[predicates.size()]));
@@ -412,64 +445,59 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
      *
      * @param builder the criteria builder
      * @param criteria the criteria query
-     * @param businessObjectDataEntity the business object data entity that appears in the from clause of the main query
-     * @param businessObjectFormatEntity the business object format entity that appears in the from clause of the main query
-     * @param businessObjectDataStatus the business object data status
+     * @param businessObjectDataEntityFrom the business object data entity that appears in the from clause of the main query
+     * @param businessObjectDataStatusEntity the optional business object data status entity
      * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
-     * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
-     * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
-     * the storage platform type is specified
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
+     * empty or the storage platform entity is specified
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
      *
      * @return the sub-query to select the maximum business object data version
      */
     protected Subquery<Integer> getMaximumBusinessObjectDataVersionSubQuery(CriteriaBuilder builder, CriteriaQuery<?> criteria,
-        From<?, BusinessObjectDataEntity> businessObjectDataEntity, From<?, BusinessObjectFormatEntity> businessObjectFormatEntity,
-        String businessObjectDataStatus, List<String> storageNames, String storagePlatformType, String excludedStoragePlatformType,
+        From<?, BusinessObjectDataEntity> businessObjectDataEntityFrom, BusinessObjectDataStatusEntity businessObjectDataStatusEntity,
+        List<String> storageNames, StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity,
         boolean selectOnlyAvailableStorageUnits)
     {
         // Business object data version is not specified, so get the latest one in the specified storage.
         Subquery<Integer> subQuery = criteria.subquery(Integer.class);
 
         // The criteria root is the business object data.
-        Root<BusinessObjectDataEntity> subBusinessObjectDataEntity = subQuery.from(BusinessObjectDataEntity.class);
+        Root<BusinessObjectDataEntity> subBusinessObjectDataEntityRoot = subQuery.from(BusinessObjectDataEntity.class);
 
         // Join to the other tables we can filter on.
-        Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntity = subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
-        Join<StorageUnitEntity, StorageEntity> subStorageEntity = subStorageUnitEntity.join(StorageUnitEntity_.storage);
-        Join<StorageEntity, StoragePlatformEntity> subStoragePlatformEntity = subStorageEntity.join(StorageEntity_.storagePlatform);
-        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntity =
-            subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
-        Join<StorageUnitEntity, StorageUnitStatusEntity> subStorageUnitStatusEntity = subStorageUnitEntity.join(StorageUnitEntity_.status);
+        Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntityJoin =
+            subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
+        Join<StorageUnitEntity, StorageEntity> subStorageEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.storage);
+        Join<StorageUnitEntity, StorageUnitStatusEntity> subStorageUnitStatusEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.status);
 
         // Add a standard restriction on business object format.
-        Predicate subQueryRestriction = builder.equal(subBusinessObjectFormatEntity, businessObjectFormatEntity);
+        Predicate subQueryRestriction = builder.equal(subBusinessObjectDataEntityRoot.get(BusinessObjectDataEntity_.businessObjectFormatId),
+            businessObjectDataEntityFrom.get(BusinessObjectDataEntity_.businessObjectFormatId));
 
         // Create and add standard restrictions on primary and sub-partition values.
         subQueryRestriction =
-            builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
+            builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntityRoot, businessObjectDataEntityFrom));
 
         // If specified, create and add a standard restriction on business object data status.
-        if (businessObjectDataStatus != null)
+        if (businessObjectDataStatusEntity != null)
         {
-            Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
-                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
-
-            subQueryRestriction = builder.and(subQueryRestriction, builder
-                .equal(builder.upper(subBusinessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code)), businessObjectDataStatus.toUpperCase()));
+            subQueryRestriction = builder.and(subQueryRestriction,
+                builder.equal(subBusinessObjectDataEntityRoot.get(BusinessObjectDataEntity_.statusCode), businessObjectDataStatusEntity.getCode()));
         }
 
         // Create and add a standard restriction on storage.
         subQueryRestriction = builder.and(subQueryRestriction,
-            getQueryRestrictionOnStorage(builder, subStorageEntity, subStoragePlatformEntity, storageNames, storagePlatformType, excludedStoragePlatformType));
+            getQueryRestrictionOnStorage(builder, subStorageEntityJoin, storageNames, storagePlatformEntity, excludedStoragePlatformEntity));
 
         // If specified, add a restriction on storage unit status availability flag.
         if (selectOnlyAvailableStorageUnits)
         {
-            subQueryRestriction = builder.and(subQueryRestriction, builder.isTrue(subStorageUnitStatusEntity.get(StorageUnitStatusEntity_.available)));
+            subQueryRestriction = builder.and(subQueryRestriction, builder.isTrue(subStorageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.available)));
         }
 
-        subQuery.select(builder.max(subBusinessObjectDataEntity.get(BusinessObjectDataEntity_.version))).where(subQueryRestriction);
+        subQuery.select(builder.max(subBusinessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version))).where(subQueryRestriction);
 
         return subQuery;
     }

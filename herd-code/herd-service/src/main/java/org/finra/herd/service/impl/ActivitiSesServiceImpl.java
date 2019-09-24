@@ -15,13 +15,12 @@
  */
 package org.finra.herd.service.impl;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.model.api.xml.EmailSendRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.EmailDto;
 import org.finra.herd.service.SesService;
 
 /**
@@ -36,16 +35,17 @@ public class ActivitiSesServiceImpl implements SesService
     @Autowired
     private SesService sesService;
 
-    @Override
-    public void sendEmail(final EmailDto emailDto)
+    /**
+     * Sends email based on the information provided in the email send request
+     *
+     * @param emailSendRequest email send request with the information to send email
+     */
+    public void sendEmail(EmailSendRequest emailSendRequest)
     {
-        // Set 'from' address to the configured 'send-from' email address
-        if (StringUtils.isEmpty(emailDto.getSource()))
-        {
-            emailDto.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
-        }
+        // Get the "from" field for activiti send email.
+        emailSendRequest.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
 
-        // Delegate to the basic SES Service
-        sesService.sendEmail(emailDto);
+        // Call SES service to send email.
+        sesService.sendEmail(emailSendRequest);
     }
 }

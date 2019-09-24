@@ -57,7 +57,7 @@ public class StorageEntity extends AuditableEntity
     public static final String MANAGED_LOADING_DOCK_STORAGE = "S3_MANAGED_LOADING_DOCK";
 
     /**
-     *  Our official S3 sample file
+     * Our official S3 sample file
      */
     public static final String SAMPLE_DATA_FILE_STORAGE = "S3_MANAGED_SAMPLE_DATA";
 
@@ -68,6 +68,9 @@ public class StorageEntity extends AuditableEntity
     @ManyToOne
     @JoinColumn(name = "strge_pltfm_cd", referencedColumnName = "strge_pltfm_cd", nullable = false)
     private StoragePlatformEntity storagePlatform;
+
+    @Column(name = "strge_pltfm_cd", insertable = false, updatable = false)
+    private String storagePlatformCode;
 
     @JsonManagedReference
     @OneToMany(mappedBy = "storage", orphanRemoval = true, cascade = {CascadeType.ALL})
@@ -92,6 +95,16 @@ public class StorageEntity extends AuditableEntity
     public void setStoragePlatform(StoragePlatformEntity storagePlatform)
     {
         this.storagePlatform = storagePlatform;
+    }
+
+    public String getStoragePlatformCode()
+    {
+        return storagePlatformCode;
+    }
+
+    public void setStoragePlatformCode(String storagePlatformCode)
+    {
+        this.storagePlatformCode = storagePlatformCode;
     }
 
     public Collection<StorageAttributeEntity> getAttributes()

@@ -12,8 +12,9 @@ import org.mockito.MockitoAnnotations;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.SesDao;
 import org.finra.herd.dao.helper.AwsHelper;
+import org.finra.herd.model.api.xml.EmailSendRequest;
 import org.finra.herd.model.dto.AwsParamsDto;
-import org.finra.herd.model.dto.EmailDto;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.service.impl.SesServiceImpl;
 
 /**
@@ -42,14 +43,15 @@ public class SesServiceTest extends AbstractServiceTest
     @Test
     public void testSendEmail()
     {
-        // Create an Email DTO.
-        EmailDto emailDto = new EmailDto();
+        // Create an EmailSendRequest.
+        EmailSendRequest emailSendRequest = new EmailSendRequest();
+        emailSendRequest.setSource(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
 
         // Call the method under test.
         when(awsHelper.getAwsParamsDto()).thenReturn(new AwsParamsDto());
-        sesService.sendEmail(emailDto);
+        sesService.sendEmail(emailSendRequest);
 
         // Verify the external calls.
-        verify(sesDao).sendEmail(new AwsParamsDto(), emailDto);
+        verify(sesDao).sendEmail(new AwsParamsDto(), emailSendRequest);
     }
 }

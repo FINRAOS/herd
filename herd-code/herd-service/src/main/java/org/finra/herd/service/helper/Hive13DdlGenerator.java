@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.helper;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,7 +30,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
-import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -124,6 +124,9 @@ public class Hive13DdlGenerator extends DdlGenerator
     private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
+    private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
+
+    @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Autowired
@@ -149,6 +152,9 @@ public class Hive13DdlGenerator extends DdlGenerator
 
     @Autowired
     private StorageHelper storageHelper;
+
+    @Autowired
+    private StoragePlatformHelper storagePlatformHelper;
 
     @Autowired
     private StorageUnitDao storageUnitDao;
@@ -199,12 +205,15 @@ public class Hive13DdlGenerator extends DdlGenerator
             new BusinessObjectFormatKey(request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
                 request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion());
 
+        // Get storage platform entity for S3 storage platform type.
+        StoragePlatformEntity s3StoragePlatformEntity = storagePlatformHelper.getStoragePlatformEntity(StoragePlatformEntity.S3);
+
         // Build partition filters based on the specified partition value filters.
         // We do validate that all specified storages are of "S3" storage platform type, so we specify S3 storage platform type in
         // the call below, so we select storage units only from all S3 storages, when the specified list of storages is empty.
         List<List<String>> partitionFilters = businessObjectDataDaoHelper
             .buildPartitionFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), businessObjectFormatKey,
-                request.getBusinessObjectDataVersion(), storageNames, StoragePlatformEntity.S3, null, businessObjectFormatEntity);
+                request.getBusinessObjectDataVersion(), storageNames, s3StoragePlatformEntity, null, businessObjectFormatEntity);
 
         // If the partitionKey="partition" and partitionValue="none", then DDL should
         // return a DDL which treats business object data as a table, not a partition.
@@ -306,7 +315,7 @@ public class Hive13DdlGenerator extends DdlGenerator
         if (StringUtils.isNotEmpty(string))
         {
             // Convert the string to UTF-8 so we can the proper characters that were sent via XML.
-            String utf8String = new String(string.getBytes(Charsets.UTF_8), Charsets.UTF_8);
+            String utf8String = new String(string.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
 
             // Loop through each character and add each one to the return value.
             for (int i = 0; i < utf8String.length(); i++)
@@ -827,14 +836,23 @@ public class Hive13DdlGenerator extends DdlGenerator
         // Override the business object format version with the original (optional) value from the request.
         businessObjectFormatKey.setBusinessObjectFormatVersion(generateDdlRequest.businessObjectFormatVersion);
 
+        // Get business object data status entity for the VALID status.
+        BusinessObjectDataStatusEntity validBusinessObjectDataStatusEntity =
+            businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
+
+        // Get storage platform entity for S3 storage platform type.
+        StoragePlatformEntity s3StoragePlatformEntity = storagePlatformHelper.getStoragePlatformEntity(StoragePlatformEntity.S3);
+
         // Retrieve a list of storage unit availability DTOs for the specified list of partition filters. The list will be sorted by partition values and
         // storage names. For a non-partitioned table, there should only exist a single business object data entity (with partitionValue equals to "none").
         // We do validate that all specified storage entities are of "S3" storage platform type, so we specify S3 storage platform type in the herdDao call
         // below, so we select storage units only from all S3 storage entities, when the specified list of storage names is empty. We also specify to select
         // only "available" storage units.
         List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos = storageUnitDao
-            .getStorageUnitsByPartitionFilters(businessObjectFormatKey, generateDdlRequest.partitionFilters, generateDdlRequest.businessObjectDataVersion,
-                BusinessObjectDataStatusEntity.VALID, generateDdlRequest.storageNames, StoragePlatformEntity.S3, null, true);
+            .getStorageUnitsByPartitionFilters(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
+                businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
+                businessObjectFormatKey.getBusinessObjectFormatVersion(), generateDdlRequest.partitionFilters, generateDdlRequest.businessObjectDataVersion,
+                validBusinessObjectDataStatusEntity, generateDdlRequest.storageNames, s3StoragePlatformEntity, null, true);
 
         // Exclude duplicate business object data per specified list of storage names.
         // If storage names are not specified, the method fails on business object data instances registered with multiple storage.
@@ -856,8 +874,10 @@ public class Hive13DdlGenerator extends DdlGenerator
         if (generateDdlRequest.businessObjectDataVersion == null && BooleanUtils.isTrue(generateDdlRequest.includeAllRegisteredSubPartitions) &&
             !CollectionUtils.isEmpty(matchedAvailablePartitionFilters))
         {
-            notAllowNonAvailableRegisteredSubPartitions(businessObjectFormatKey, matchedAvailablePartitionFilters, availablePartitions,
-                generateDdlRequest.storageNames);
+            notAllowNonAvailableRegisteredSubPartitions(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
+                businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
+                businessObjectFormatKey.getBusinessObjectFormatVersion(), matchedAvailablePartitionFilters, availablePartitions,
+                generateDdlRequest.storageNames, s3StoragePlatformEntity);
         }
 
         // Fail on any missing business object data unless the flag is set to allow missing business object data.
@@ -1404,23 +1424,29 @@ public class Hive13DdlGenerator extends DdlGenerator
     /**
      * Searches for and fails on any of "non-available" registered sub-partitions as per list of "matched" partition filters.
      *
-     * @param businessObjectFormatKey the business object format key
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param businessObjectFormatUsage the business object format usage (case-insensitive)
+     * @param fileTypeEntity the file type entity
+     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest available
+     * format version for each partition value will be used
      * @param matchedAvailablePartitionFilters the list of "matched" partition filters
      * @param availablePartitions the list of already discovered "available" partitions, where each partition consists of primary and optional sub-partition
      * values
      * @param storageNames the list of storage names
+     * @param s3StoragePlatformEntity the S3 storage platform entity
      */
-    protected void notAllowNonAvailableRegisteredSubPartitions(BusinessObjectFormatKey businessObjectFormatKey,
-        List<List<String>> matchedAvailablePartitionFilters, List<List<String>> availablePartitions, List<String> storageNames)
+    protected void notAllowNonAvailableRegisteredSubPartitions(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage,
+        FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> matchedAvailablePartitionFilters,
+        List<List<String>> availablePartitions, List<String> storageNames, StoragePlatformEntity s3StoragePlatformEntity)
     {
         // Query all matched partition filters to discover any non-available registered sub-partitions. Retrieve latest business object data per list of
         // matched filters regardless of business object data and/or storage unit statuses. This is done to discover all registered sub-partitions regardless
-        // of business object data or storage unit statuses. We do validate that all specified storages are of "S3" storage platform type, so we specify S3
-        // storage platform type in the herdDao call below, so we select storage units only from all S3 storages, when the specified list of storages is empty.
+        // of business object data or storage unit statuses. We do validate that all specified storage entities are of "S3" storage platform type, so we
+        // specify S3 storage platform in the herdDao call below to select storage units only from S3 storage (when the list of storage names is empty).
         // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> matchedNotAvailableStorageUnitAvailabilityDtos = storageUnitDao
-            .getStorageUnitsByPartitionFilters(businessObjectFormatKey, matchedAvailablePartitionFilters, null, null, storageNames, StoragePlatformEntity.S3,
-                null, false);
+            .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
+                matchedAvailablePartitionFilters, null, null, storageNames, s3StoragePlatformEntity, null, false);
 
         // Exclude all storage units with business object data having "DELETED" status.
         matchedNotAvailableStorageUnitAvailabilityDtos =
@@ -1440,11 +1466,11 @@ public class Hive13DdlGenerator extends DdlGenerator
             throw new ObjectNotFoundException(String.format(
                 "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
                     "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
-                    "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", businessObjectFormatKey.getNamespace(),
-                businessObjectFormatKey.getBusinessObjectDefinitionName(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
-                businessObjectFormatKey.getBusinessObjectFormatFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(),
-                businessObjectDataKey.getPartitionValue(), StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","),
-                businessObjectDataKey.getBusinessObjectDataVersion(), StringUtils.join(storageNames, ",")));
+                    "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).",
+                businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(), businessObjectFormatUsage,
+                fileTypeEntity.getCode(), businessObjectFormatVersion, businessObjectDataKey.getPartitionValue(),
+                StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","), businessObjectDataKey.getBusinessObjectDataVersion(),
+                StringUtils.join(storageNames, ",")));
         }
     }
 }
