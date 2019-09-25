@@ -15,10 +15,9 @@
 */
 package org.finra.herd.dao.config;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
@@ -53,7 +52,6 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import org.finra.herd.core.ApplicationContextHolder;
-import org.finra.herd.core.LruCache;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.CacheKeyGenerator;
 import org.finra.herd.dao.ReloadablePropertySource;
@@ -93,11 +91,6 @@ public class DaoSpringModuleConfig implements CachingConfigurer
      * The default AWS account id key for the EMR cluster cache map
      */
     public static final String EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY = "EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY";
-
-    /**
-     * The EMR cache size. Limits the size of the cache.
-     */
-    private static final int EMR_CLUSTER_CACHE_SIZE = 10_000;
 
     /**
      * The herd cache name.
@@ -182,8 +175,8 @@ public class DaoSpringModuleConfig implements CachingConfigurer
      */
     private static Map<String, Map<EmrClusterCacheKey, String>> initializeEmrClusterCacheMap()
     {
-        Map<String, Map<EmrClusterCacheKey, String>> initialMap = new HashMap<>();
-        initialMap.put(EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY, Collections.synchronizedMap(new LruCache<>(EMR_CLUSTER_CACHE_SIZE)));
+        Map<String, Map<EmrClusterCacheKey, String>> initialMap = new ConcurrentHashMap<>();
+        initialMap.put(EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY, new ConcurrentHashMap<>());
         return initialMap;
     }
 
@@ -194,7 +187,7 @@ public class DaoSpringModuleConfig implements CachingConfigurer
      */
     private static Map<String, EmrClusterCacheTimestamps> initializeEmrClusterCacheTimestampsMap()
     {
-        Map<String, EmrClusterCacheTimestamps> initialMap = new HashMap<>();
+        Map<String, EmrClusterCacheTimestamps> initialMap = new ConcurrentHashMap<>();
         EmrClusterCacheTimestamps emrClusterCacheTimestamps = new EmrClusterCacheTimestamps(null, null);
         initialMap.put(EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY, emrClusterCacheTimestamps);
         return initialMap;

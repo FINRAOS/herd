@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.google.common.collect.Lists;
 import org.junit.Before;
@@ -131,6 +132,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         // Create a cluster summary object
         ClusterSummary clusterSummary = new ClusterSummary();
         clusterSummary.setId(EMR_CLUSTER_ID);
+        clusterSummary.setStatus(new ClusterStatus().withState(EMR_CLUSTER_STATUS));
 
         // Mock the external calls.
         when(emrHelper.getAwsParamsDtoByAccountId(emrClusterDefinition.getAccountId())).thenReturn(awsParamsDto);
@@ -138,7 +140,6 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         when(emrHelper.buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName())).thenReturn(EMR_CLUSTER_NAME);
         when(emrDao.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto)).thenReturn(clusterSummary);
-        when(emrDao.getEmrClusterStatusById(EMR_CLUSTER_ID, awsParamsDto)).thenReturn(EMR_CLUSTER_STATUS);
 
         // Call the method under test.
         emrHelperServiceImpl.emrCreateClusterAwsSpecificSteps(emrClusterCreateRequest, emrClusterDefinition, emrClusterAlternateKeyDto);
@@ -150,7 +151,6 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         verify(emrHelper).buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName());
         verify(emrDao).getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto);
-        verify(emrDao).getEmrClusterStatusById(EMR_CLUSTER_ID, awsParamsDto);
         verifyNoMoreInteractionsHelper();
     }
 
