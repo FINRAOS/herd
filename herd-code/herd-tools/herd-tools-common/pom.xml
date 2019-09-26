@@ -73,6 +73,10 @@
                <groupId>com.amazonaws</groupId>
             </exclusion>
             <exclusion>
+               <artifactId>aws-java-sdk-models</artifactId>
+               <groupId>com.amazonaws</groupId>
+            </exclusion>
+            <exclusion>
                <artifactId>quartz</artifactId>
                <groupId>org.quartz-scheduler</groupId>
             </exclusion>
