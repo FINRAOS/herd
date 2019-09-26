@@ -197,6 +197,7 @@ class AccessValidatorController
         Assert.isTrue(StringUtils.isNotBlank(bucketName), "S3 bucket name is not configured for the storage.");
 
         // Download S3 files registered with the business object data.
+        // Only getting the first 200 bytes to prevent downloading massive files
         LOGGER.info("Downloading S3 files registered with the business object data...");
         for (StorageFile storageFile : businessObjectData.getStorageUnits().get(0).getStorageFiles())
         {
