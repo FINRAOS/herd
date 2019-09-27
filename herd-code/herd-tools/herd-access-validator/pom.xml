@@ -32,6 +32,10 @@
    <description>This is herd access validator application. This tool can be used to validate access to remote herd server.</description>
    <url>http://finraos.github.io/herd/</url>
 
+   <properties>
+      <json.version>20180813</json.version>
+   </properties>
+
    <dependencies>
 
       <dependency>
@@ -85,7 +89,7 @@
       <dependency>
          <groupId>org.json</groupId>
          <artifactId>json</artifactId>
-         <version>20180813</version>
+         <version>${json.version}</version>
       </dependency>
 
       <!-- Dependencies for unit tests -->
