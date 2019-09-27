@@ -78,6 +78,7 @@ class AccessValidatorController
     static final String S3_BUCKET_NAME_ATTRIBUTE = "bucket.name";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessValidatorController.class);
+    private static final int MAX_BYTE_DOWNLOAD = 200;
 
     @Autowired
     private HerdApiClientOperations herdApiClientOperations;
@@ -197,11 +198,12 @@ class AccessValidatorController
         Assert.isTrue(StringUtils.isNotBlank(bucketName), "S3 bucket name is not configured for the storage.");
 
         // Download S3 files registered with the business object data.
+        // Only getting the first 200 bytes to prevent downloading massive files
         LOGGER.info("Downloading S3 files registered with the business object data...");
         for (StorageFile storageFile : businessObjectData.getStorageUnits().get(0).getStorageFiles())
         {
             LOGGER.info("Downloading \"{}/{}\" S3 file...", bucketName, storageFile.getFilePath());
-            GetObjectRequest getObjectRequest = new GetObjectRequest(bucketName, storageFile.getFilePath());
+            GetObjectRequest getObjectRequest = new GetObjectRequest(bucketName, storageFile.getFilePath()).withRange(0, MAX_BYTE_DOWNLOAD);
             S3Object s3Object = s3Operations.getS3Object(getObjectRequest, amazonS3);
             StringWriter stringWriter = new StringWriter();
             IOUtils.copy(s3Object.getObjectContent(), stringWriter, Charset.defaultCharset());

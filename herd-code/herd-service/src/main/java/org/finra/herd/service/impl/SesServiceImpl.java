@@ -21,8 +21,8 @@ import org.springframework.stereotype.Service;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.SesDao;
 import org.finra.herd.dao.helper.AwsHelper;
+import org.finra.herd.model.api.xml.EmailSendRequest;
 import org.finra.herd.model.dto.AwsParamsDto;
-import org.finra.herd.model.dto.EmailDto;
 import org.finra.herd.service.SesService;
 
 /**
@@ -41,12 +41,12 @@ public class SesServiceImpl implements SesService
     private SesDao sesDao;
 
     @Override
-    public void sendEmail(final EmailDto emailDto)
+    public void sendEmail(EmailSendRequest emailSendRequest)
     {
-        // Fetch AWS information
+        // Fetch AWS information.
         AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
 
-        // Delegate to the corresponding DAO
-        sesDao.sendEmail(awsParamsDto, emailDto);
+        // Delegate to the corresponding DAO.
+        sesDao.sendEmail(awsParamsDto, emailSendRequest);
     }
 }
