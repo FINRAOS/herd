@@ -32,11 +32,46 @@
    <description>This is herd access validator application. This tool can be used to validate access to remote herd server.</description>
    <url>http://finraos.github.io/herd/</url>
 
+   <properties>
+      <json.version>20180813</json.version>
+   </properties>
+
    <dependencies>
 
       <dependency>
          <groupId>${project.groupId}</groupId>
          <artifactId>herd-tools-common</artifactId>
+         <!-- Removing herd-service dependencies -->
+         <exclusions>
+            <exclusion>
+               <groupId>org.apache.hive</groupId>
+               <artifactId>hive-serde</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.elasticsearch</groupId>
+               <artifactId>elasticsearch</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.elasticsearch.client</groupId>
+               <artifactId>transport</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>com.amazonaws</groupId>
+               <artifactId>aws-java-sdk</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>com.amazonaws</groupId>
+               <artifactId>aws-java-sdk-ec2</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>com.amazonaws</groupId>
+               <artifactId>aws-java-sdk-emr</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>com.amazonaws</groupId>
+               <artifactId>aws-java-sdk-glacier</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
       <dependency>
          <groupId>${project.groupId}</groupId>
@@ -48,46 +83,13 @@
          <version>${project.version}</version>
       </dependency>
       <dependency>
-         <groupId>org.springframework</groupId>
-         <artifactId>spring-context</artifactId>
-      </dependency>
-
-      <!-- Dependencies for the herd-sdk -->
-      <dependency>
-         <groupId>com.brsanthu</groupId>
-         <artifactId>migbase64</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>com.fasterxml.jackson.core</groupId>
-         <artifactId>jackson-annotations</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>com.fasterxml.jackson.core</groupId>
-         <artifactId>jackson-databind</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>com.fasterxml.jackson.datatype</groupId>
-         <artifactId>jackson-datatype-joda</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>com.fasterxml.jackson.jaxrs</groupId>
-         <artifactId>jackson-jaxrs-json-provider</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>com.sun.jersey</groupId>
-         <artifactId>jersey-client</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>com.sun.jersey.contribs</groupId>
-         <artifactId>jersey-multipart</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>joda-time</groupId>
-         <artifactId>joda-time</artifactId>
-      </dependency>
-      <dependency>
-         <artifactId>aws-java-sdk-sqs</artifactId>
          <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-sqs</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.json</groupId>
+         <artifactId>json</artifactId>
+         <version>${json.version}</version>
       </dependency>
 
       <!-- Dependencies for unit tests -->
