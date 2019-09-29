@@ -445,6 +445,7 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
      *
      * @param builder the criteria builder
      * @param criteria the criteria query
+     * @param businessObjectFormatEntityFrom the business object format entity that appears in the from clause of the main query
      * @param businessObjectDataEntityFrom the business object data entity that appears in the from clause of the main query
      * @param businessObjectDataStatusEntity the optional business object data status entity
      * @param storageEntities the optional list of storage entities where business object data storage units should be looked for
@@ -456,9 +457,9 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
      * @return the sub-query to select the maximum business object data version
      */
     protected Subquery<Integer> getMaximumBusinessObjectDataVersionSubQuery(CriteriaBuilder builder, CriteriaQuery<?> criteria,
-        From<?, BusinessObjectDataEntity> businessObjectDataEntityFrom, BusinessObjectDataStatusEntity businessObjectDataStatusEntity,
-        List<StorageEntity> storageEntities, StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity,
-        boolean selectOnlyAvailableStorageUnits)
+        From<?, BusinessObjectFormatEntity> businessObjectFormatEntityFrom, From<?, BusinessObjectDataEntity> businessObjectDataEntityFrom,
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities, StoragePlatformEntity storagePlatformEntity,
+        StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits)
     {
         // Business object data version is not specified, so get the latest one in the specified storage.
         Subquery<Integer> subQuery = criteria.subquery(Integer.class);
@@ -469,11 +470,12 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntityJoin =
             subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntityJoin =
+            subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<StorageUnitEntity, StorageUnitStatusEntity> subStorageUnitStatusEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.status);
 
         // Add a standard restriction on business object format.
-        Predicate subQueryRestriction = builder.equal(subBusinessObjectDataEntityRoot.get(BusinessObjectDataEntity_.businessObjectFormatId),
-            businessObjectDataEntityFrom.get(BusinessObjectDataEntity_.businessObjectFormatId));
+        Predicate subQueryRestriction = builder.equal(subBusinessObjectFormatEntityJoin, businessObjectFormatEntityFrom);
 
         // Create and add standard restrictions on primary and sub-partition values.
         subQueryRestriction =

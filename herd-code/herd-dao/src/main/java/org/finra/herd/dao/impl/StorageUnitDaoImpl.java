@@ -574,8 +574,8 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
             // Meaning, when both business object data version and business object data status are not specified, we just return
             // the latest business object data version in the specified storage.
             Subquery<Integer> subQuery =
-                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntityJoin, businessObjectDataStatusEntity, storageEntities,
-                    storagePlatformEntity, excludedStoragePlatformEntity, selectOnlyAvailableStorageUnits);
+                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectFormatEntityJoin, businessObjectDataEntityJoin,
+                    businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, selectOnlyAvailableStorageUnits);
 
             mainQueryRestriction =
                 builder.and(mainQueryRestriction, builder.in(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.version)).value(subQuery));

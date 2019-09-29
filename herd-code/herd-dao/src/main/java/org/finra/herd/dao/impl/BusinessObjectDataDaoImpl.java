@@ -598,8 +598,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         else
         {
             Subquery<Integer> subQuery =
-                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntityRoot, businessObjectDataStatusEntity, storageEntities,
-                    storagePlatformEntity, excludedStoragePlatformEntity, false);
+                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectFormatEntityJoin, businessObjectDataEntityRoot,
+                    businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, false);
 
             mainQueryRestriction =
                 builder.and(mainQueryRestriction, builder.in(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version)).value(subQuery));
