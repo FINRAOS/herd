@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.OneToMany;
@@ -402,38 +403,37 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
      * Builds a query restriction predicate for the storage.
      *
      * @param builder the criteria builder
-     * @param storageEntityFrom the storage entity that appears in the from clause
-     * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
-     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
-     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
-     * empty or the storage platform entity is specified
+     * @param storageUnitEntityFrom the storage unit entity that appears in the from clause
+     * @param storageEntities the optional list of storage entities where business object data storage units should be looked for
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
+     * not empty or the storage platform entity is specified
      *
      * @return the query restriction predicate
      */
-    protected Predicate getQueryRestrictionOnStorage(CriteriaBuilder builder, From<?, StorageEntity> storageEntityFrom, List<String> storageNames,
-        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity)
+    protected Predicate getQueryRestrictionOnStorage(CriteriaBuilder builder, From<?, StorageUnitEntity> storageUnitEntityFrom,
+        List<StorageEntity> storageEntities, StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity)
     {
         List<Predicate> predicates = new ArrayList<>();
 
         // If specified, add restriction on storage names.
-        if (!CollectionUtils.isEmpty(storageNames))
+        if (!CollectionUtils.isEmpty(storageEntities))
         {
-            List<String> uppercaseStorageNames = new ArrayList<>();
-            for (String storageName : storageNames)
-            {
-                uppercaseStorageNames.add(storageName.toUpperCase());
-            }
-            predicates.add(builder.upper(storageEntityFrom.get(StorageEntity_.name)).in(uppercaseStorageNames));
+            Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityFrom.join(StorageUnitEntity_.storage);
+            List<String> storageNames = storageEntities.stream().map(StorageEntity::getName).collect(Collectors.toList());
+            predicates.add(storageEntityJoin.get(StorageEntity_.name).in(storageNames));
         }
         // Otherwise, add restriction on storage platform, if specified.
         else if (storagePlatformEntity != null)
         {
-            predicates.add(builder.equal(storageEntityFrom.get(StorageEntity_.storagePlatformCode), storagePlatformEntity.getName()));
+            Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityFrom.join(StorageUnitEntity_.storage);
+            predicates.add(builder.equal(storageEntityJoin.get(StorageEntity_.storagePlatformCode), storagePlatformEntity.getName()));
         }
         // Otherwise, add restriction per excluded storage platform, if specified.
         else if (excludedStoragePlatformEntity != null)
         {
-            predicates.add(builder.notEqual(storageEntityFrom.get(StorageEntity_.storagePlatformCode), excludedStoragePlatformEntity.getName()));
+            Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityFrom.join(StorageUnitEntity_.storage);
+            predicates.add(builder.notEqual(storageEntityJoin.get(StorageEntity_.storagePlatformCode), excludedStoragePlatformEntity.getName()));
         }
 
         return builder.and(predicates.toArray(new Predicate[predicates.size()]));
@@ -447,17 +447,17 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
      * @param criteria the criteria query
      * @param businessObjectDataEntityFrom the business object data entity that appears in the from clause of the main query
      * @param businessObjectDataStatusEntity the optional business object data status entity
-     * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
-     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
-     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
-     * empty or the storage platform entity is specified
+     * @param storageEntities the optional list of storage entities where business object data storage units should be looked for
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
+     * not empty or the storage platform entity is specified
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
      *
      * @return the sub-query to select the maximum business object data version
      */
     protected Subquery<Integer> getMaximumBusinessObjectDataVersionSubQuery(CriteriaBuilder builder, CriteriaQuery<?> criteria,
         From<?, BusinessObjectDataEntity> businessObjectDataEntityFrom, BusinessObjectDataStatusEntity businessObjectDataStatusEntity,
-        List<String> storageNames, StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity,
+        List<StorageEntity> storageEntities, StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity,
         boolean selectOnlyAvailableStorageUnits)
     {
         // Business object data version is not specified, so get the latest one in the specified storage.
@@ -469,7 +469,6 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntityJoin =
             subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
-        Join<StorageUnitEntity, StorageEntity> subStorageEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.storage);
         Join<StorageUnitEntity, StorageUnitStatusEntity> subStorageUnitStatusEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.status);
 
         // Add a standard restriction on business object format.
@@ -489,7 +488,7 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
 
         // Create and add a standard restriction on storage.
         subQueryRestriction = builder.and(subQueryRestriction,
-            getQueryRestrictionOnStorage(builder, subStorageEntityJoin, storageNames, storagePlatformEntity, excludedStoragePlatformEntity));
+            getQueryRestrictionOnStorage(builder, subStorageUnitEntityJoin, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
 
         // If specified, add a restriction on storage unit status availability flag.
         if (selectOnlyAvailableStorageUnits)
