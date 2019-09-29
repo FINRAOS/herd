@@ -554,6 +554,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             businessObjectDefinitionEntityJoin.join(BusinessObjectDefinitionEntity_.namespace);
         Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntityJoin = businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
         Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntityJoin = storageUnitEntityJoin.join(StorageUnitEntity_.status);
+        Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityJoin.join(StorageUnitEntity_.storage);
 
         // Create the path.
         Expression<String> partitionValue;
@@ -621,7 +622,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // If specified, add restriction on storage.
         mainQueryRestriction = builder.and(mainQueryRestriction,
-            getQueryRestrictionOnStorage(builder, storageUnitEntityJoin, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
+            getQueryRestrictionOnStorage(builder, storageEntityJoin, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
 
         // Search across only "available" storage units.
         mainQueryRestriction = builder.and(mainQueryRestriction, builder.isTrue(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.available)));

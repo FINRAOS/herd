@@ -451,6 +451,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntityJoin =
             subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
+        Join<StorageUnitEntity, StorageEntity> subStorageEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.storage);
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntityJoin =
             subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<StorageUnitEntity, StorageUnitStatusEntity> subStorageUnitStatusEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.status);
@@ -478,7 +479,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
 
         // Create and add a standard restriction on storage.
         subQueryRestriction = builder.and(subQueryRestriction,
-            getQueryRestrictionOnStorage(builder, subStorageUnitEntityJoin, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
+            getQueryRestrictionOnStorage(builder, subStorageEntityJoin, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
 
         // If specified, add a restriction on storage unit status availability flag.
         if (selectOnlyAvailableStorageUnits)
@@ -534,6 +535,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
 
         // Join to the other tables we can filter on.
         Join<StorageUnitEntity, BusinessObjectDataEntity> businessObjectDataEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.businessObjectData);
+        Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.storage);
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
             businessObjectDataEntityJoin.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.status);
@@ -583,7 +585,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
 
         // If specified, add restriction on storage.
         mainQueryRestriction = builder.and(mainQueryRestriction,
-            getQueryRestrictionOnStorage(builder, storageUnitEntityRoot, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
+            getQueryRestrictionOnStorage(builder, storageEntityJoin, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
 
         // If specified, add a restriction on storage unit status availability flag.
         if (selectOnlyAvailableStorageUnits)
@@ -597,7 +599,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         {
             orderBy.add(builder.asc(businessObjectDataEntityJoin.get(businessObjectDataPartition)));
         }
-        orderBy.add(builder.asc(storageUnitEntityRoot.get(StorageUnitEntity_.storageName)));
+        orderBy.add(builder.asc(storageEntityJoin.get(StorageEntity_.name)));
 
         // Get the columns.
         Path<Integer> storageUnitIdColumn = storageUnitEntityRoot.get(StorageUnitEntity_.id);
@@ -609,7 +611,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         Path<String> subPartitionValue3Column = businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.partitionValue4);
         Path<String> subPartitionValue4Column = businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.partitionValue5);
         Path<Integer> businessObjectDataVersionColumn = businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.version);
-        Path<String> storageNameColumn = storageUnitEntityRoot.get(StorageUnitEntity_.storageName);
+        Path<String> storageNameColumn = storageEntityJoin.get(StorageEntity_.name);
         Path<String> storageUnitDirectoryPathColumn = storageUnitEntityRoot.get(StorageUnitEntity_.directoryPath);
         Path<String> businessObjectDataStatusColumn = businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.statusCode);
         Path<String> storageUnitStatusColumn = storageUnitEntityRoot.get(StorageUnitEntity_.statusCode);

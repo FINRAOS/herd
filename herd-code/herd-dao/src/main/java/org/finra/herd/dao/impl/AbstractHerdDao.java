@@ -403,7 +403,7 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
      * Builds a query restriction predicate for the storage.
      *
      * @param builder the criteria builder
-     * @param storageUnitEntityFrom the storage unit entity that appears in the from clause
+     * @param storageEntityFrom the storage entity that appears in the from clause
      * @param storageEntities the optional list of storage entities where business object data storage units should be looked for
      * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
      * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
@@ -411,29 +411,26 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
      *
      * @return the query restriction predicate
      */
-    protected Predicate getQueryRestrictionOnStorage(CriteriaBuilder builder, From<?, StorageUnitEntity> storageUnitEntityFrom,
-        List<StorageEntity> storageEntities, StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity)
+    protected Predicate getQueryRestrictionOnStorage(CriteriaBuilder builder, From<?, StorageEntity> storageEntityFrom, List<StorageEntity> storageEntities,
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity)
     {
         List<Predicate> predicates = new ArrayList<>();
 
         // If specified, add restriction on storage names.
         if (!CollectionUtils.isEmpty(storageEntities))
         {
-            Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityFrom.join(StorageUnitEntity_.storage);
             List<String> storageNames = storageEntities.stream().map(StorageEntity::getName).collect(Collectors.toList());
-            predicates.add(storageEntityJoin.get(StorageEntity_.name).in(storageNames));
+            predicates.add(storageEntityFrom.get(StorageEntity_.name).in(storageNames));
         }
         // Otherwise, add restriction on storage platform, if specified.
         else if (storagePlatformEntity != null)
         {
-            Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityFrom.join(StorageUnitEntity_.storage);
-            predicates.add(builder.equal(storageEntityJoin.get(StorageEntity_.storagePlatformCode), storagePlatformEntity.getName()));
+            predicates.add(builder.equal(storageEntityFrom.get(StorageEntity_.storagePlatformCode), storagePlatformEntity.getName()));
         }
         // Otherwise, add restriction per excluded storage platform, if specified.
         else if (excludedStoragePlatformEntity != null)
         {
-            Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityFrom.join(StorageUnitEntity_.storage);
-            predicates.add(builder.notEqual(storageEntityJoin.get(StorageEntity_.storagePlatformCode), excludedStoragePlatformEntity.getName()));
+            predicates.add(builder.notEqual(storageEntityFrom.get(StorageEntity_.storagePlatformCode), excludedStoragePlatformEntity.getName()));
         }
 
         return builder.and(predicates.toArray(new Predicate[predicates.size()]));
@@ -470,6 +467,7 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntityJoin =
             subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
+        Join<StorageUnitEntity, StorageEntity> subStorageEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.storage);
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntityJoin =
             subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<StorageUnitEntity, StorageUnitStatusEntity> subStorageUnitStatusEntityJoin = subStorageUnitEntityJoin.join(StorageUnitEntity_.status);
@@ -490,7 +488,7 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
 
         // Create and add a standard restriction on storage.
         subQueryRestriction = builder.and(subQueryRestriction,
-            getQueryRestrictionOnStorage(builder, subStorageUnitEntityJoin, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
+            getQueryRestrictionOnStorage(builder, subStorageEntityJoin, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
 
         // If specified, add a restriction on storage unit status availability flag.
         if (selectOnlyAvailableStorageUnits)
