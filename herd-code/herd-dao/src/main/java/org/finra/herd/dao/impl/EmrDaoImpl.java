@@ -229,36 +229,27 @@ public class EmrDaoImpl implements EmrDao
                 // Get the cluster id value from the EMR cluster cache with the cluster name key.
                 String clusterId = emrClusterCache.get(emrClusterCacheKey);
 
-                try
+                // Retrieve the cluster status to validate the cluster.
+                Cluster cluster = getEmrClusterById(clusterId, awsParams);
+                ClusterStatus clusterStatus = cluster == null ? null : cluster.getStatus();
+                String status = clusterStatus == null ? null : clusterStatus.getState();
+                LOGGER.info("Found the EMR cluster name in the EMR cluster cache. emrClusterName=\"{}\" emrClusterId=\"{}\" emrClusterStatus=\"{}\"",
+                    clusterName.toUpperCase(), clusterId, status);
+
+                // If the status is not null and the status is in one of the active EMR cluster states,
+                // then return the cluster summary with the cluster id from the EMR cluster cache.
+                // Else remove the cluster from the EMR cluster cache and then move on to do a list cluster.
+                if (status != null && Arrays.asList(getActiveEmrClusterStates()).contains(status))
                 {
-                    // Retrieve the cluster status to validate the cluster.
-                    Cluster cluster = getEmrClusterById(clusterId, awsParams);
-                    ClusterStatus clusterStatus = cluster == null ? null : cluster.getStatus();
-                    String status = clusterStatus == null ? null : clusterStatus.getState();
-                    LOGGER.info("Found the EMR cluster name in the EMR cluster cache. emrClusterName=\"{}\" emrClusterId=\"{}\" emrClusterStatus=\"{}\"",
+                    return new ClusterSummary().withId(clusterId).withName(clusterName).withStatus(clusterStatus);
+                }
+                else
+                {
+                    LOGGER.info("Removing cluster from EMR cluster cache. emrClusterName=\"{}\" emrClusterId=\"{}\" emrClusterStatus=\"{}\"",
                         clusterName.toUpperCase(), clusterId, status);
 
-                    // If the status is not null and the status is in one of the active EMR cluster states,
-                    // then return the cluster summary with the cluster id from the EMR cluster cache.
-                    // Else remove the cluster from the EMR cluster cache and then move on to do a list cluster.
-                    if (status != null && Arrays.asList(getActiveEmrClusterStates()).contains(status))
-                    {
-                        return new ClusterSummary().withId(clusterId).withName(clusterName).withStatus(clusterStatus);
-                    }
-                    else
-                    {
-                        LOGGER.info("Removing cluster from EMR cluster cache. emrClusterName=\"{}\" emrClusterId=\"{}\" emrClusterStatus=\"{}\"",
-                            clusterName.toUpperCase(), clusterId, status);
-
-                        // Remove the cluster from the cache.
-                        emrClusterCache.remove(emrClusterCacheKey);
-                    }
-                }
-                catch (AmazonServiceException amazonServiceException)
-                {
-                    // Log the exception and continue with the list cluster call.
-                    LOGGER.warn("Caught exception while trying to obtain the EMR cluster by Id and check the status. emrClusterName=\"{}\" emrClusterId=\"{}\"",
-                        clusterName, clusterId);
+                    // Remove the cluster from the cache.
+                    emrClusterCache.remove(emrClusterCacheKey);
                 }
             }
 
