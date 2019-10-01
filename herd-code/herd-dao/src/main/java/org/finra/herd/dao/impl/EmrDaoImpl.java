@@ -120,6 +120,8 @@ public class EmrDaoImpl implements EmrDao
 
     private static final int DELTA_UPDATE_BUFFER_IN_MINUTES = 1;
 
+    private static final int FULL_RELOAD_CACHE_TIME_PERIOD_IN_MINUTES = 10;
+
     @Autowired
     private AwsClientFactory awsClientFactory;
 
@@ -268,9 +270,10 @@ public class EmrDaoImpl implements EmrDao
             // Default the created after date to null for the full update case.
             Date createdAfter = null;
 
-            // If the last delta update is null or the last full reload is null or the if the difference between the current time and the lastFullReload is
-            // greater than ten minutes do a full reload.
-            if (lastDeltaUpdate == null || lastFullReload == null || Duration.between(lastDeltaUpdate, LocalDateTime.now()).toMinutes() > 10)
+            // If the last delta update is null, or the last full reload is null, or the if the difference between the current time and the lastFullReload is
+            // greater than FULL_RELOAD_CACHE_TIME_PERIOD_IN_MINUTES, then do a full reload.
+            if (lastDeltaUpdate == null || lastFullReload == null ||
+                Duration.between(lastFullReload, LocalDateTime.now()).toMinutes() > FULL_RELOAD_CACHE_TIME_PERIOD_IN_MINUTES)
             {
                 // Set the new last full reload time to the current time.
                 newLastFullReload = LocalDateTime.now();
