@@ -126,17 +126,17 @@ public interface StorageUnitDao extends BaseJpaDao
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified. When business object data version and business object data status both are not specified, the latest data version for each set of partition
      * values will be used regardless of the status
-     * @param storageNames the optional list of storage names where the business object data storage units should be looked for (case-insensitive)
-     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
-     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
-     * empty or the storage platform entity is specified
+     * @param storageEntities the optional list of storage entities where business object data storage units should be looked for
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
+     * not empty or the storage platform entity is specified
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
      *
      * @return the list of storage unit availability DTOs sorted by partition values and storage names
      */
     List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> partitionFilters,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
         StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits);
 
     /**

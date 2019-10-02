@@ -279,21 +279,22 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     @Override
     public String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
         StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, String upperBoundPartitionValue,
         String lowerBoundPartitionValue)
     {
         return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatusEntity,
-            storageNames, storagePlatformEntity, excludedStoragePlatformEntity, AggregateFunction.GREATEST, upperBoundPartitionValue, lowerBoundPartitionValue);
+            storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, AggregateFunction.GREATEST, upperBoundPartitionValue,
+            lowerBoundPartitionValue);
     }
 
     @Override
     public String getBusinessObjectDataMinPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
         StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity)
     {
         return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatusEntity,
-            storageNames, storagePlatformEntity, excludedStoragePlatformEntity, AggregateFunction.LEAST, null, null);
+            storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, AggregateFunction.LEAST, null, null);
     }
 
     @Override
@@ -502,10 +503,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * the specified business object data status will be used for each partition value.
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified
-     * @param storageNames the optional list of storage names (case-insensitive)
-     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
-     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
-     * empty or the storage platform entity is specified
+     * @param storageEntities the optional list of storage entities
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
+     * not empty or the storage platform entity is specified
      * @param aggregateFunction the aggregate function to use against partition values
      * @param upperBoundPartitionValue the optional inclusive upper bound for the maximum available partition value
      * @param lowerBoundPartitionValue the optional inclusive lower bound for the maximum available partition value
@@ -513,7 +514,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @return the partition value
      */
     private String getBusinessObjectDataPartitionValue(int partitionColumnPosition, final BusinessObjectFormatKey businessObjectFormatKey,
-        final Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        final Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
         StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, final AggregateFunction aggregateFunction,
         String upperBoundPartitionValue, String lowerBoundPartitionValue)
     {
@@ -598,8 +599,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         else
         {
             Subquery<Integer> subQuery =
-                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntityRoot, businessObjectDataStatusEntity, storageNames,
-                    storagePlatformEntity, excludedStoragePlatformEntity, false);
+                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectFormatEntityJoin, businessObjectDataEntityRoot,
+                    businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, false);
 
             mainQueryRestriction =
                 builder.and(mainQueryRestriction, builder.in(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version)).value(subQuery));
@@ -621,7 +622,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // If specified, add restriction on storage.
         mainQueryRestriction = builder.and(mainQueryRestriction,
-            getQueryRestrictionOnStorage(builder, storageEntityJoin, storageNames, storagePlatformEntity, excludedStoragePlatformEntity));
+            getQueryRestrictionOnStorage(builder, storageEntityJoin, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
 
         // Search across only "available" storage units.
         mainQueryRestriction = builder.and(mainQueryRestriction, builder.isTrue(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.available)));

@@ -928,11 +928,14 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         }
 
         // Validate that storage entities, specified in the request, exist, of a proper storage platform type, and have S3 bucket name configured.
-        Map<String, StorageEntity> storageEntities = new HashMap<>();
-        Map<String, String> s3BucketNames = new HashMap<>();
+        List<StorageEntity> requestedStorageEntities = new ArrayList<>();
+        Map<String, StorageEntity> cachedStorageEntities = new HashMap<>();
+        Map<String, String> cachedS3BucketNames = new HashMap<>();
         for (String storageName : storageNames)
         {
+            // Get the requested storage entity.
             StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageName);
+            requestedStorageEntities.add(storageEntity);
 
             // Only S3 storage platform is currently supported.
             Assert.isTrue(storageEntity.getStoragePlatform().getName().equals(StoragePlatformEntity.S3),
@@ -944,14 +947,15 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
             // Memorize retrieved values for faster processing.
             String upperCaseStorageName = storageName.toUpperCase();
-            storageEntities.put(upperCaseStorageName, storageEntity);
-            s3BucketNames.put(upperCaseStorageName, s3BucketName);
+            cachedStorageEntities.put(upperCaseStorageName, storageEntity);
+            cachedS3BucketNames.put(upperCaseStorageName, s3BucketName);
         }
 
         // Create and initialize a business object data DDL object instance.
         BusinessObjectDataDdl businessObjectDataDdl = createBusinessObjectDataDdl(request);
         businessObjectDataDdl.setDdl(ddlGeneratorFactory.getDdlGenerator(request.getOutputFormat())
-            .generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity, storageNames, storageEntities, s3BucketNames));
+            .generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity, storageNames, requestedStorageEntities, cachedStorageEntities,
+                cachedS3BucketNames));
 
         return businessObjectDataDdl;
     }
@@ -1075,12 +1079,12 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * @param matchedAvailablePartitionFilters the list of "matched" partition filters
      * @param availablePartitions the list of already discovered "available" partitions, where each partition consists of primary and optional sub-partition
      * values
-     * @param storageNames the list of storage names
+     * @param storageEntities the list of storage entities
      */
     private void addNotAvailableBusinessObjectDataStatuses(List<BusinessObjectDataStatus> notAvailableStatuses,
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage, FileTypeEntity fileTypeEntity,
         Integer businessObjectFormatVersion, List<List<String>> matchedAvailablePartitionFilters, List<List<String>> availablePartitions,
-        List<String> storageNames)
+        List<StorageEntity> storageEntities)
     {
         // Now try to retrieve latest business object data per list of matched filters regardless of business object data and/or storage unit statuses.
         // This is done to include all registered sub-partitions in the response.
@@ -1088,7 +1092,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> matchedNotAvailableStorageUnitEntities = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
-                matchedAvailablePartitionFilters, null, null, storageNames, null, null, false);
+                matchedAvailablePartitionFilters, null, null, storageEntities, null, null, false);
 
         // Exclude all storage units with business object data having "DELETED" status.
         matchedNotAvailableStorageUnitEntities =
@@ -1142,15 +1146,18 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Make sure that specified business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
 
-        // Get the list of storage names from the request and validate that specified storage entities exist.
-        List<String> storageNames = getStorageNames(request);
-        storageDaoHelper.validateStorageExistence(storageNames);
+        // Validate that all storage names specified in the request exist and build a list of the requested storage entities.
+        List<StorageEntity> storageEntities = new ArrayList<>();
+        for (String storageName : getStorageNames(request))
+        {
+            storageEntities.add(storageDaoHelper.getStorageEntity(storageName));
+        }
 
         // Build partition filters based on the specified partition value filters.
         // Business object data availability works across all storage platform types, so the storage platform type is not specified in the call.
         List<List<String>> partitionFilters = businessObjectDataDaoHelper
             .buildPartitionFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), businessObjectFormatKey,
-                request.getBusinessObjectDataVersion(), storageNames, null, null, businessObjectFormatEntity);
+                request.getBusinessObjectDataVersion(), storageEntities, null, null, businessObjectFormatEntity);
 
         // Get business object data status entity for the VALID status.
         BusinessObjectDataStatusEntity validBusinessObjectDataStatusEntity =
@@ -1163,7 +1170,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         List<StorageUnitAvailabilityDto> availableStorageUnitAvailabilityDtos = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectFormatEntity.getBusinessObjectDefinition(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
                 businessObjectFormatEntity.getFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(), partitionFilters,
-                request.getBusinessObjectDataVersion(), validBusinessObjectDataStatusEntity, storageNames, null, null, true);
+                request.getBusinessObjectDataVersion(), validBusinessObjectDataStatusEntity, storageEntities, null, null, true);
 
         // Create business object data availability object instance and initialise it with request field values.
         BusinessObjectDataAvailability businessObjectDataAvailability = createBusinessObjectDataAvailability(request);
@@ -1186,8 +1193,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
             if (businessObjectDataToStorageUnitMap.containsKey(businessObjectDataKey))
             {
-                // If storage names are not specified, fail on a business object data registered in multiple storage. Otherwise, ignore that storage unit.
-                if (CollectionUtils.isEmpty(storageNames))
+                // If storage is not specified, fail on a business object data registered in multiple storage. Otherwise, ignore that storage unit.
+                if (CollectionUtils.isEmpty(storageEntities))
                 {
                     throw new IllegalArgumentException(String.format("Found business object data registered in more than one storage. " +
                             "Please specify storage(s) in the request to resolve this. Business object data {%s}",
@@ -1213,7 +1220,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         {
             addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, businessObjectFormatEntity.getBusinessObjectDefinition(),
                 businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatEntity.getFileType(),
-                businessObjectFormatKey.getBusinessObjectFormatVersion(), matchedAvailablePartitionFilters, availablePartitions, storageNames);
+                businessObjectFormatKey.getBusinessObjectFormatVersion(), matchedAvailablePartitionFilters, availablePartitions, storageEntities);
         }
 
         // Get a list of unmatched partition filters.
@@ -1227,7 +1234,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         List<StorageUnitAvailabilityDto> notAvailableStorageUnitAvailabilityDtos = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectFormatEntity.getBusinessObjectDefinition(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
                 businessObjectFormatEntity.getFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(), unmatchedPartitionFilters,
-                request.getBusinessObjectDataVersion(), null, storageNames, null, null, false);
+                request.getBusinessObjectDataVersion(), null, storageEntities, null, null, false);
 
         // Populate the not-available statuses list.
         addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, notAvailableStorageUnitAvailabilityDtos);
