@@ -65,6 +65,7 @@ import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 
 /**
@@ -781,6 +782,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_SESSION_TOKEN = null;
 
     public static final String NO_STORAGE_DIRECTORY_PATH = null;
+
+    public static final List<StorageEntity> NO_STORAGE_ENTITIES = null;
 
     public static final String NO_STORAGE_NAME = null;
 
