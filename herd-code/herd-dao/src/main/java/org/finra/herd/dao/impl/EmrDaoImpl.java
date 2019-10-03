@@ -273,15 +273,16 @@ public class EmrDaoImpl implements EmrDao
             // If the last delta update is null, or the last full reload is null, or the if the difference between the current time and the lastFullReload is
             // greater than FULL_RELOAD_CACHE_TIME_PERIOD_IN_MINUTES, then do a full reload.
             if (lastDeltaUpdate == null || lastFullReload == null ||
-                Duration.between(lastFullReload, LocalDateTime.now()).toMinutes() > FULL_RELOAD_CACHE_TIME_PERIOD_IN_MINUTES)
+                Duration.between(lastFullReload, LocalDateTime.now(ZoneId.systemDefault())).toMinutes() > FULL_RELOAD_CACHE_TIME_PERIOD_IN_MINUTES)
             {
                 // Set the new last full reload time to the current time.
-                newLastFullReload = LocalDateTime.now();
+                newLastFullReload = LocalDateTime.now(ZoneId.systemDefault());
 
                 // Clear the EMR cluster cache
                 emrClusterCache = new ConcurrentHashMap<>();
 
-                LOGGER.info("EMR cluster cache cleared. Starting a full reload of the EMR cluster cache.");
+                LOGGER.info("EMR cluster cache cleared. Starting a full reload of the EMR cluster cache. newLastFullReload=\"{}\" lastFullReload=\"{}\"",
+                    newLastFullReload, lastFullReload);
             }
             else
             {
@@ -291,11 +292,14 @@ public class EmrDaoImpl implements EmrDao
                 // Keep the last full reload the same.
                 newLastFullReload = lastFullReload;
 
-                LOGGER.info("Beginning a delta reload of the EMR cluster cache. lastDeltaUpdate=\"{}\"", lastDeltaUpdate);
+                LOGGER.info("Beginning a delta reload of the EMR cluster cache. lastFullReload=\"{}\" lastDeltaUpdate=\"{}\"", lastFullReload, lastDeltaUpdate);
             }
 
             // Set the new last delta update to the current time.
-            newLastDeltaUpdate = LocalDateTime.now();
+            newLastDeltaUpdate = LocalDateTime.now(ZoneId.systemDefault());
+
+            LOGGER
+                .info("The new last delta update is newLastDeltaUpdate=\"{}\" and the created after is createdAfter=\"{}\"", newLastDeltaUpdate, createdAfter);
 
             /**
              * Call AWSOperations for ListClusters API. Need to list all the active clusters that are in
@@ -342,6 +346,8 @@ public class EmrDaoImpl implements EmrDao
             emrClusterCacheTimestamps.setLastFullReload(newLastFullReload);
             emrClusterCacheTimestamps.setLastDeltaUpdate(newLastDeltaUpdate);
         }
+
+        LOGGER.info("Returning clusterSummary=\"{}\"", clusterSummary == null ? null : clusterSummary.toString());
 
         return clusterSummary;
     }
