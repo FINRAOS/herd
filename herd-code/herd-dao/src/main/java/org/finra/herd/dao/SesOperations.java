@@ -18,15 +18,13 @@ package org.finra.herd.dao;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.model.SendEmailRequest;
 
-import org.finra.herd.model.dto.EmailDto;
-
 /**
  * A service for Amazon SES operations
  */
 public interface SesOperations
 {
     /**
-     * Sends an email with all the options as specified in the provided {@link EmailDto}
+     * Sends an email with all the options as specified in the emailSendRequest
      *
      * @param sendEmailRequest the specified information on the email to send
      * @param simpleEmailService the specified ses service object

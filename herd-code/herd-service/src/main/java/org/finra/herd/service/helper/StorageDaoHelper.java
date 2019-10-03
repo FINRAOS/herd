@@ -15,8 +15,6 @@
 */
 package org.finra.herd.service.helper;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -65,20 +63,5 @@ public class StorageDaoHelper
         }
 
         return storageEntity;
-    }
-
-    /**
-     * Validates that specified storage names exist.
-     *
-     * @param storageNames the list of storage names
-     *
-     * @throws ObjectNotFoundException if one of the storage entities doesn't exist
-     */
-    public void validateStorageExistence(List<String> storageNames) throws ObjectNotFoundException
-    {
-        for (String storageName : storageNames)
-        {
-            getStorageEntity(storageName);
-        }
     }
 }

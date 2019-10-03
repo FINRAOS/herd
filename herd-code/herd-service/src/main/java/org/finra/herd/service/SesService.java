@@ -15,7 +15,7 @@
  */
 package org.finra.herd.service;
 
-import org.finra.herd.model.dto.EmailDto;
+import org.finra.herd.model.api.xml.EmailSendRequest;
 
 /**
  * The AWS SES service
@@ -23,9 +23,9 @@ import org.finra.herd.model.dto.EmailDto;
 public interface SesService
 {
     /**
-     * Sends an email with all SES actions as requested.
+     * Sends an email based on the information provided in the email send request
      *
-     * @param emailDto the specified email along with options
+     * @param emailSendRequest email send request with the information to send email
      */
-    void sendEmail(EmailDto emailDto);
+    void sendEmail(EmailSendRequest emailSendRequest);
 }
