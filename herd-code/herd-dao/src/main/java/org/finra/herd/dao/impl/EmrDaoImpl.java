@@ -210,7 +210,7 @@ public class EmrDaoImpl implements EmrDao
     }
 
     @Override
-    public ClusterSummary getActiveEmrClusterByNameAndAccountId(String clusterName, String accountId, AwsParamsDto awsParams)
+    public synchronized ClusterSummary getActiveEmrClusterByNameAndAccountId(String clusterName, String accountId, AwsParamsDto awsParams)
     {
         // Initialize a cluster summary to null for the case that the cluster is not found in the list.
         ClusterSummary clusterSummary = null;
