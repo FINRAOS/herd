@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
 import com.amazonaws.services.elasticmapreduce.model.AddJobFlowStepsRequest;
@@ -206,6 +205,9 @@ public class EmrDaoImpl implements EmrDao
         // Add the newly created cluster cache key and id pair to the cluster cache.
         emrClusterCache.put(emrClusterCacheKey, clusterId);
 
+        LOGGER.info("EMR cluster cache after creating a cluster and adding it to the existing cache. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
+            System.identityHashCode(emrClusterCache), emrClusterCache.toString());
+
         return clusterId;
     }
 
@@ -218,10 +220,15 @@ public class EmrDaoImpl implements EmrDao
         // Get the cluster cache using the accountId.
         Map<EmrClusterCacheKey, String> emrClusterCache = getEmrClusterCacheByAccountId(accountId);
 
+        LOGGER.info("EMR cluster cache retrieved. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
+            System.identityHashCode(emrClusterCache), emrClusterCache.toString());
+
         if (StringUtils.isNotBlank(clusterName))
         {
             // Build the EMR cluster cache key
             EmrClusterCacheKey emrClusterCacheKey = new EmrClusterCacheKey(clusterName.toUpperCase(), accountId);
+
+            LOGGER.info("EMR cluster cache key. emrClusterCacheKey=\"{}\"", emrClusterCacheKey.toString());
 
             // First check to see if this cluster id is stored locally in the EMR Cluster Cache.
             // If the EMR cluster cache does contain the cluster key use the id found in the EMR cluster cache.
@@ -281,8 +288,9 @@ public class EmrDaoImpl implements EmrDao
                 // Clear the EMR cluster cache
                 emrClusterCache = new ConcurrentHashMap<>();
 
-                LOGGER.info("EMR cluster cache cleared. Starting a full reload of the EMR cluster cache. newLastFullReload=\"{}\" lastFullReload=\"{}\"",
-                    newLastFullReload, lastFullReload);
+                LOGGER.info(
+                    "EMR cluster cache cleared. Starting a full reload of the EMR cluster cache. newLastFullReload=\"{}\" lastFullReload=\"{}\" emrClusterCache=\"{}\"",
+                    newLastFullReload, lastFullReload, System.identityHashCode(emrClusterCache));
             }
             else
             {
@@ -348,6 +356,9 @@ public class EmrDaoImpl implements EmrDao
         }
 
         LOGGER.info("Returning clusterSummary=\"{}\"", clusterSummary == null ? null : clusterSummary.toString());
+
+        LOGGER.info("State of cache after calling getActiveEmrClusterByNameAndAccountId. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
+            System.identityHashCode(emrClusterCache), emrClusterCache.toString());
 
         return clusterSummary;
     }
