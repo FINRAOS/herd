@@ -564,7 +564,7 @@ public class EmrDaoImpl implements EmrDao
     {
         // Get the cluster cache using the accountId as a key.
         Map<EmrClusterCacheKey, String> emrClusterCache =
-            emrClusterCacheMap.get(accountId == null ? EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY : accountId);
+            emrClusterCacheMap.get(StringUtils.isBlank(accountId) ? EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY : accountId);
 
         // If the cache is null we need to create a new cache for this account id.
         if (emrClusterCache == null)
@@ -572,7 +572,7 @@ public class EmrDaoImpl implements EmrDao
             emrClusterCache = new ConcurrentHashMap<>();
 
             // Add the new cache to the EMR cluster cache map
-            emrClusterCacheMap.put(accountId, emrClusterCache);
+            emrClusterCacheMap.put(StringUtils.isBlank(accountId) ? EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY : accountId, emrClusterCache);
 
             LOGGER.info("Adding a new EMR cluster cache for accountId=\"{}\"", accountId);
         }
@@ -593,7 +593,7 @@ public class EmrDaoImpl implements EmrDao
     {
         // Get the EMR cluster cache timeout values.
         EmrClusterCacheTimestamps emrClusterCacheTimestamps =
-            emrClusterCacheTimestampsMap.get(accountId == null ? EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY : accountId);
+            emrClusterCacheTimestampsMap.get(StringUtils.isBlank(accountId) ? EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY : accountId);
 
         // If the cache timestamps dto object is null we need to create a new cache timestamps dto object for this account id.
         if (emrClusterCacheTimestamps == null)
@@ -601,7 +601,7 @@ public class EmrDaoImpl implements EmrDao
             emrClusterCacheTimestamps = new EmrClusterCacheTimestamps(null, null);
 
             // Add the new cache timestamps dto object to the EMR cluster cache timestamps map.
-            emrClusterCacheTimestampsMap.put(accountId, emrClusterCacheTimestamps);
+            emrClusterCacheTimestampsMap.put(StringUtils.isBlank(accountId) ? EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY : accountId, emrClusterCacheTimestamps);
 
             LOGGER.info("Adding a new EMR cluster cache timestamps dto for accountId=\"{}\"", accountId);
         }
