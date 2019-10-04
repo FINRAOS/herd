@@ -286,7 +286,7 @@ public class EmrDaoImpl implements EmrDao
                 newLastFullReload = LocalDateTime.now(ZoneId.systemDefault());
 
                 // Clear the EMR cluster cache
-                emrClusterCache = new ConcurrentHashMap<>();
+                emrClusterCache.clear();
 
                 LOGGER.info(
                     "EMR cluster cache cleared. Starting a full reload of the EMR cluster cache. newLastFullReload=\"{}\" lastFullReload=\"{}\" emrClusterCache=\"{}\"",
