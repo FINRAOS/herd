@@ -17,6 +17,8 @@ package org.finra.herd.service.impl;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -50,6 +52,8 @@ import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
 @Service
 public class EmrHelperServiceImpl implements EmrHelperService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmrHelperServiceImpl.class);
+
     @Autowired
     private AwsServiceHelper awsServiceHelper;
 
@@ -169,28 +173,35 @@ public class EmrHelperServiceImpl implements EmrHelperService
                     emrClusterAlternateKeyDto.getEmrClusterName());
             try
             {
-                // Try to get an active EMR cluster by its name.
-                ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, accountId, awsParamsDto);
-
-                // If cluster does not already exist.
-                if (clusterSummary == null)
+                // Synchronizing this block of code to prevent duplicate cluster creation.
+                synchronized (this)
                 {
-                    clusterId = emrDao.createEmrCluster(clusterName, emrClusterDefinition, awsParamsDto);
-                    emrClusterCreated = true;
-                    emrClusterStatus = emrDao.getEmrClusterStatusById(clusterId, awsParamsDto);
+                    LOGGER.info("Entering synchronized block.");
 
+                    // Try to get an active EMR cluster by its name.
+                    ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, accountId, awsParamsDto);
+
+                    // If cluster does not already exist.
+                    if (clusterSummary == null)
+                    {
+                        clusterId = emrDao.createEmrCluster(clusterName, emrClusterDefinition, awsParamsDto);
+                        emrClusterCreated = true;
+                        emrClusterStatus = emrDao.getEmrClusterStatusById(clusterId, awsParamsDto);
+
+                    }
+                    // If the cluster already exists.
+                    else
+                    {
+                        clusterId = clusterSummary.getId();
+                        emrClusterCreated = false;
+                        emrClusterAlreadyExists = true;
+
+                        // If the cluster already exists use the status from the get active EMR cluster by name and account id method call.
+                        emrClusterStatus = clusterSummary.getStatus().getState();
+                    }
+
+                    LOGGER.info("Exiting synchronized block.");
                 }
-                // If the cluster already exists.
-                else
-                {
-                    clusterId = clusterSummary.getId();
-                    emrClusterCreated = false;
-                    emrClusterAlreadyExists = true;
-
-                    // If the cluster already exists use the status from the get active EMR cluster by name and account id method call.
-                    emrClusterStatus = clusterSummary.getStatus().getState();
-                }
-
             }
             catch (AmazonServiceException ex)
             {

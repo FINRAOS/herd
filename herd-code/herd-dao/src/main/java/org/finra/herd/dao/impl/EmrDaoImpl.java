@@ -214,6 +214,8 @@ public class EmrDaoImpl implements EmrDao
     @Override
     public synchronized ClusterSummary getActiveEmrClusterByNameAndAccountId(String clusterName, String accountId, AwsParamsDto awsParams)
     {
+        LOGGER.info("Entering synchronized block.");
+
         // Initialize a cluster summary to null for the case that the cluster is not found in the list.
         ClusterSummary clusterSummary = null;
 
@@ -250,6 +252,7 @@ public class EmrDaoImpl implements EmrDao
                 // Else remove the cluster from the EMR cluster cache and then move on to do a list cluster.
                 if (status != null && Arrays.asList(getActiveEmrClusterStates()).contains(status))
                 {
+                    LOGGER.info("Exiting synchronized block.");
                     return new ClusterSummary().withId(clusterId).withName(clusterName).withStatus(clusterStatus);
                 }
                 else
@@ -289,7 +292,8 @@ public class EmrDaoImpl implements EmrDao
                 emrClusterCache.clear();
 
                 LOGGER.info(
-                    "EMR cluster cache cleared. Starting a full reload of the EMR cluster cache. newLastFullReload=\"{}\" lastFullReload=\"{}\" emrClusterCache=\"{}\"",
+                    "EMR cluster cache cleared. Starting a full reload of the EMR cluster cache. " +
+                        "newLastFullReload=\"{}\" lastFullReload=\"{}\" emrClusterCache=\"{}\"",
                     newLastFullReload, lastFullReload, System.identityHashCode(emrClusterCache));
             }
             else
@@ -359,6 +363,8 @@ public class EmrDaoImpl implements EmrDao
 
         LOGGER.info("State of cache after calling getActiveEmrClusterByNameAndAccountId. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
             System.identityHashCode(emrClusterCache), emrClusterCache.toString());
+
+        LOGGER.info("Exiting synchronized block.");
 
         return clusterSummary;
     }
@@ -601,7 +607,8 @@ public class EmrDaoImpl implements EmrDao
             emrClusterCacheTimestamps = new EmrClusterCacheTimestamps(null, null);
 
             // Add the new cache timestamps dto object to the EMR cluster cache timestamps map.
-            emrClusterCacheTimestampsMap.put(StringUtils.isBlank(accountId) ? EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY : accountId, emrClusterCacheTimestamps);
+            emrClusterCacheTimestampsMap
+                .put(StringUtils.isBlank(accountId) ? EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY : accountId, emrClusterCacheTimestamps);
 
             LOGGER.info("Adding a new EMR cluster cache timestamps dto for accountId=\"{}\"", accountId);
         }
