@@ -78,9 +78,10 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
     private Storage storage = new Storage();
     private Attribute attribute = new Attribute();
     private Attribute bucketNameAttribute = new Attribute();
+    private static final int MAX_BYTE_DOWNLOAD = 200;
 
     // Create an AWS get object request.
-    private GetObjectRequest getObjectRequest = new GetObjectRequest(S3_BUCKET_NAME, S3_KEY);
+    private GetObjectRequest getObjectRequest = new GetObjectRequest(S3_BUCKET_NAME, S3_KEY).withRange(0, MAX_BYTE_DOWNLOAD);
 
     private S3Object s3Object = new S3Object();
 

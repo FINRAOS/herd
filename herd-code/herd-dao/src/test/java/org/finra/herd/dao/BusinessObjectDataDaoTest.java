@@ -257,21 +257,25 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.VALID);
         assertNotNull(validBusinessObjectDataStatusEntity);
 
+        // Get storage entity.
+        StorageEntity storageEntity = storageDao.getStorageByName(STORAGE_NAME);
+        assertNotNull(storageEntity);
+
         // Get the maximum available partition value.
         assertEquals(STORAGE_1_GREATEST_PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, DATA_VERSION,
-                validBusinessObjectDataStatusEntity, Collections.singletonList(STORAGE_NAME), null, null, null, null));
+                validBusinessObjectDataStatusEntity, Collections.singletonList(storageEntity), null, null, null, null));
 
         // Get the minimum available partition value.
         assertEquals(STORAGE_1_LEAST_PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, DATA_VERSION,
-                validBusinessObjectDataStatusEntity, Collections.singletonList(STORAGE_NAME), null, null));
+                validBusinessObjectDataStatusEntity, Collections.singletonList(storageEntity), null, null));
 
         // Get the maximum available partition value by not passing any of the optional parameters.
         assertEquals(STORAGE_1_GREATEST_PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
                 new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, null,
-                Collections.singletonList(STORAGE_NAME), null, null, null, null));
+                Collections.singletonList(storageEntity), null, null, null, null));
     }
 
     @Test
@@ -287,27 +291,31 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.VALID);
         assertNotNull(businessObjectDataStatusEntity);
 
+        // Get storage entity.
+        StorageEntity storageEntity = storageDao.getStorageByName(STORAGE_NAME);
+        assertNotNull(storageEntity);
+
         // Test retrieving the maximum available partition value using an upper bound partition value.
         assertNull(businessObjectDataDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, businessObjectDataStatusEntity,
-            Collections.singletonList(STORAGE_NAME), null, null, PARTITION_VALUE, null));
+            Collections.singletonList(storageEntity), null, null, PARTITION_VALUE, null));
         assertEquals(PARTITION_VALUE_2, businessObjectDataDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, businessObjectDataStatusEntity,
-            Collections.singletonList(STORAGE_NAME), null, null, PARTITION_VALUE_2, null));
+            Collections.singletonList(storageEntity), null, null, PARTITION_VALUE_2, null));
         assertEquals(PARTITION_VALUE_2, businessObjectDataDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, businessObjectDataStatusEntity,
-            Collections.singletonList(STORAGE_NAME), null, null, PARTITION_VALUE_3, null));
+            Collections.singletonList(storageEntity), null, null, PARTITION_VALUE_3, null));
 
         // Test retrieving the maximum available partition value using a lower bound partition value.
         assertEquals(PARTITION_VALUE_2, businessObjectDataDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, businessObjectDataStatusEntity,
-            Collections.singletonList(STORAGE_NAME), null, null, null, PARTITION_VALUE));
+            Collections.singletonList(storageEntity), null, null, null, PARTITION_VALUE));
         assertEquals(PARTITION_VALUE_2, businessObjectDataDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, businessObjectDataStatusEntity,
-            Collections.singletonList(STORAGE_NAME), null, null, null, PARTITION_VALUE_2));
+            Collections.singletonList(storageEntity), null, null, null, PARTITION_VALUE_2));
         assertNull(businessObjectDataDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, businessObjectDataStatusEntity,
-            Collections.singletonList(STORAGE_NAME), null, null, null, PARTITION_VALUE_3));
+            Collections.singletonList(storageEntity), null, null, null, PARTITION_VALUE_3));
     }
 
     /**
@@ -342,12 +350,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Get the maximum available partition value in the test storage without specifying business object data version.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, null,
-                testBusinessObjectDataStatusEntity, Collections.singletonList(STORAGE_NAME), null, null, null, null));
+                testBusinessObjectDataStatusEntity, Collections.singletonList(storageEntity), null, null, null, null));
 
         // Get the minimum available partition value in the test storage without specifying business object data version.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, null,
-                testBusinessObjectDataStatusEntity, Collections.singletonList(STORAGE_NAME), null, null));
+                testBusinessObjectDataStatusEntity, Collections.singletonList(storageEntity), null, null));
     }
 
     @Test
@@ -377,21 +385,25 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         BusinessObjectDataStatusEntity testTwoBusinessObjectDataStatusEntity = businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BDATA_STATUS_2);
         assertNotNull(testTwoBusinessObjectDataStatusEntity);
 
+        // Get storage entity.
+        StorageEntity storageEntity = storageDao.getStorageByName(STORAGE_NAME);
+        assertNotNull(storageEntity);
+
         // Get the maximum available partition value for the relative business object data status without specifying business object data version.
         assertEquals(PARTITION_VALUE_2, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, null,
-                testOneBusinessObjectDataStatusEntity, Collections.singletonList(STORAGE_NAME), null, null, null, null));
+                testOneBusinessObjectDataStatusEntity, Collections.singletonList(storageEntity), null, null, null, null));
         assertEquals(PARTITION_VALUE_3, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, null,
-                testTwoBusinessObjectDataStatusEntity, Collections.singletonList(STORAGE_NAME), null, null, null, null));
+                testTwoBusinessObjectDataStatusEntity, Collections.singletonList(storageEntity), null, null, null, null));
 
         // Get the minimum available partition value the relative business object data status without specifying business object data version.
         assertEquals(PARTITION_VALUE, businessObjectDataDao.getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), null,
-            testOneBusinessObjectDataStatusEntity, Collections.singletonList(STORAGE_NAME), null, null));
+            testOneBusinessObjectDataStatusEntity, Collections.singletonList(storageEntity), null, null));
         assertEquals(PARTITION_VALUE_2, businessObjectDataDao.getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), null,
-            testTwoBusinessObjectDataStatusEntity, Collections.singletonList(STORAGE_NAME), null, null));
+            testTwoBusinessObjectDataStatusEntity, Collections.singletonList(storageEntity), null, null));
     }
 
     @Test
@@ -411,10 +423,10 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Validate that we can retrieve maximum and minimum partition values without specifying storage.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, null, null, null, null));
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, null, null, null, null));
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, null, null));
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, null, null));
     }
 
     @Test
@@ -436,38 +448,38 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Validate that we can retrieve maximum and minimum partition values without specifying storage, storage platform, or excluded storage platform.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY, NO_UPPER_BOUND_PARTITION_VALUE,
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY, NO_UPPER_BOUND_PARTITION_VALUE,
                 NO_LOWER_BOUND_PARTITION_VALUE));
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY));
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY));
 
         // Validate that we can still retrieve maximum and minimum partition values when we specify correct storage platform.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, goodStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY, NO_UPPER_BOUND_PARTITION_VALUE,
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, goodStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY, NO_UPPER_BOUND_PARTITION_VALUE,
                 NO_LOWER_BOUND_PARTITION_VALUE));
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, goodStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY));
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, goodStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY));
 
         // Validate that we fail to retrieve maximum and minimum partition values when we specify an invalid storage platform.
         assertNull(businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, badStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY, NO_UPPER_BOUND_PARTITION_VALUE,
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, badStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY, NO_UPPER_BOUND_PARTITION_VALUE,
                 NO_LOWER_BOUND_PARTITION_VALUE));
         assertNull(businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, badStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY));
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, badStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY));
 
         // Validate that specifying storage forces to ignore an invalid storage platform.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), badStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
+                NO_BDATA_STATUS_ENTITY, Collections.singletonList(storageEntity), badStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 NO_UPPER_BOUND_PARTITION_VALUE, NO_LOWER_BOUND_PARTITION_VALUE));
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), badStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY));
+                NO_BDATA_STATUS_ENTITY, Collections.singletonList(storageEntity), badStoragePlatformEntity, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY));
     }
 
     @Test
@@ -489,47 +501,47 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Validate that we can retrieve maximum and minimum partition values without specifying storage, storage platform, or excluded storage platform.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY, NO_UPPER_BOUND_PARTITION_VALUE,
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY, NO_UPPER_BOUND_PARTITION_VALUE,
                 NO_LOWER_BOUND_PARTITION_VALUE));
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY));
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY));
 
         // Validate that we can still retrieve maximum and minimum partition values when we specify an invalid excluded storage platform.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, badStoragePlatformEntity, NO_UPPER_BOUND_PARTITION_VALUE,
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, NO_STORAGE_PLATFORM_ENTITY, badStoragePlatformEntity, NO_UPPER_BOUND_PARTITION_VALUE,
                 NO_LOWER_BOUND_PARTITION_VALUE));
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, badStoragePlatformEntity));
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, NO_STORAGE_PLATFORM_ENTITY, badStoragePlatformEntity));
 
         // Validate that we fail to retrieve maximum and minimum partition values when we specify correct storage platform as excluded.
         assertNull(businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, goodStoragePlatformEntity, NO_UPPER_BOUND_PARTITION_VALUE,
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, NO_STORAGE_PLATFORM_ENTITY, goodStoragePlatformEntity, NO_UPPER_BOUND_PARTITION_VALUE,
                 NO_LOWER_BOUND_PARTITION_VALUE));
         assertNull(businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, NO_STORAGE_PLATFORM_ENTITY, goodStoragePlatformEntity));
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, NO_STORAGE_PLATFORM_ENTITY, goodStoragePlatformEntity));
 
         // Validate that specifying storage forces to ignore the excluded storage platform.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), NO_STORAGE_PLATFORM_ENTITY, goodStoragePlatformEntity,
+                NO_BDATA_STATUS_ENTITY, Collections.singletonList(storageEntity), NO_STORAGE_PLATFORM_ENTITY, goodStoragePlatformEntity,
                 NO_UPPER_BOUND_PARTITION_VALUE, NO_LOWER_BOUND_PARTITION_VALUE));
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), NO_STORAGE_PLATFORM_ENTITY, goodStoragePlatformEntity));
+                NO_BDATA_STATUS_ENTITY, Collections.singletonList(storageEntity), NO_STORAGE_PLATFORM_ENTITY, goodStoragePlatformEntity));
 
         // Validate that specifying storage platform forces to ignore the excluded storage platform.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, goodStoragePlatformEntity, goodStoragePlatformEntity, NO_UPPER_BOUND_PARTITION_VALUE,
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, goodStoragePlatformEntity, goodStoragePlatformEntity, NO_UPPER_BOUND_PARTITION_VALUE,
                 NO_LOWER_BOUND_PARTITION_VALUE));
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, NO_STORAGE_NAMES, goodStoragePlatformEntity, goodStoragePlatformEntity));
+                NO_BDATA_STATUS_ENTITY, NO_STORAGE_ENTITIES, goodStoragePlatformEntity, goodStoragePlatformEntity));
     }
 
     @Test
@@ -545,6 +557,10 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, availableStorageUnitStatusEntity.getCode(),
                 NO_STORAGE_DIRECTORY_PATH);
 
+        // Get storage entity.
+        StorageEntity storageEntity = storageDao.getStorageByName(STORAGE_NAME);
+        assertNotNull(storageEntity);
+
         // Create a business object format key.
         BusinessObjectFormatKey businessObjectFormatKey =
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
@@ -552,10 +568,10 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Validate that we can retrieve maximum and minimum partition values.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), null, null, null, null));
+                NO_BDATA_STATUS_ENTITY, Collections.singletonList(storageEntity), null, null, null, null));
         assertEquals(PARTITION_VALUE, businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), null, null));
+                NO_BDATA_STATUS_ENTITY, Collections.singletonList(storageEntity), null, null));
 
         // Change the storage unit status to a "not available" status.
         storageUnitEntity.setStatus(notAvailableStorageUnitStatusEntity);
@@ -564,10 +580,10 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Validate that we now fail to retrieve maximum and minimum partition values.
         assertNull(businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), null, null, null, null));
+                NO_BDATA_STATUS_ENTITY, Collections.singletonList(storageEntity), null, null, null, null));
         assertNull(businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, NO_DATA_VERSION,
-                NO_BDATA_STATUS_ENTITY, Collections.singletonList(STORAGE_NAME), null, null));
+                NO_BDATA_STATUS_ENTITY, Collections.singletonList(storageEntity), null, null));
     }
 
     @Test
@@ -2340,6 +2356,10 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
+        // Get storage entity.
+        StorageEntity storageEntity = storageDao.getStorageByName(STORAGE_NAME);
+        assertNotNull(storageEntity);
+
         // Create a business object format key that does not exist
         BusinessObjectFormatKey businessObjectFormatKey =
             new BusinessObjectFormatKey("NAME_SPACE_VALUE_THAT_DOES_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
@@ -2351,11 +2371,11 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Get the maximum available partition value - should be null.
         assertNull(businessObjectDataDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, DATA_VERSION,
-                validBusinessObjectDataStatusEntity, Collections.singletonList(STORAGE_NAME), null, null, null, null));
+                validBusinessObjectDataStatusEntity, Collections.singletonList(storageEntity), null, null, null, null));
 
         // Get the minimum available partition value - should be null.
         assertNull(businessObjectDataDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, DATA_VERSION,
-                validBusinessObjectDataStatusEntity, Collections.singletonList(STORAGE_NAME), null, null));
+                validBusinessObjectDataStatusEntity, Collections.singletonList(storageEntity), null, null));
     }
 }

@@ -53,13 +53,15 @@ public abstract class DdlGenerator
      * @param businessObjectFormatEntity the business object format entity
      * @param customDdlEntity the optional custom DDL entity
      * @param storageNames the list of storage names, maybe empty
-     * @param storageEntities the map of storage names in upper case to the relative storage entities
-     * @param s3BucketNames the map of storage names in upper case to the relative S3 bucket names
+     * @param requestedStorageEntities the list of storage entities per storage names specified in the request
+     * @param cachedStorageEntities the map of storage names in upper case to the relative storage entities
+     * @param cachedS3BucketNames the map of storage names in upper case to the relative S3 bucket names
      *
      * @return the generated DDL
      */
     public abstract String generateCreateTableDdl(BusinessObjectDataDdlRequest request, BusinessObjectFormatEntity businessObjectFormatEntity,
-        CustomDdlEntity customDdlEntity, List<String> storageNames, Map<String, StorageEntity> storageEntities, Map<String, String> s3BucketNames);
+        CustomDdlEntity customDdlEntity, List<String> storageNames, List<StorageEntity> requestedStorageEntities,
+        Map<String, StorageEntity> cachedStorageEntities, Map<String, String> cachedS3BucketNames);
 
     public abstract String generateReplaceColumnsStatement(BusinessObjectFormatDdlRequest request, BusinessObjectFormatEntity businessObjectFormatEntity);
 
