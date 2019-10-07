@@ -77,17 +77,17 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * the specified business object data status will be used for each partition value.
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified
-     * @param storageNames the optional list of storage names (case-insensitive)
-     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
-     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
-     * empty or the storage platform entity is specified
+     * @param storageEntities the optional list of storage entities
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
+     * not empty or the storage platform entity is specified
      * @param upperBoundPartitionValue the optional inclusive upper bound for the maximum available partition value
      * @param lowerBoundPartitionValue the optional inclusive lower bound for the maximum available partition value
      *
      * @return the maximum available partition value
      */
     String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
         StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, String upperBoundPartitionValue,
         String lowerBoundPartitionValue);
 
@@ -101,15 +101,15 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * the specified business object data status will be used for each partition value.
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified
-     * @param storageNames the optional list of storage names (case-insensitive)
-     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
-     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
-     * empty or the storage platform entity is specified
+     * @param storageEntities the optional list of storage entities
+     * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
+     * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
+     * not empty or the storage platform entity is specified
      *
      * @return the maximum available partition value
      */
     String getBusinessObjectDataMinPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
         StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity);
 
     /**

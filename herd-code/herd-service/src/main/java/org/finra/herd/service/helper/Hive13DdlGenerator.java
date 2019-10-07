@@ -191,14 +191,16 @@ public class Hive13DdlGenerator extends DdlGenerator
      * @param businessObjectFormatEntity the business object format entity
      * @param customDdlEntity the optional custom DDL entity
      * @param storageNames the list of storage names
-     * @param storageEntities the map of storage names in upper case to the relative storage entities
-     * @param s3BucketNames the map of storage names in upper case to the relative S3 bucket names
+     * @param requestedStorageEntities the list of storage entities per storage names specified in the request
+     * @param cachedStorageEntities the map of storage names in upper case to the relative storage entities
+     * @param cachedS3BucketNames the map of storage names in upper case to the relative S3 bucket names
      *
      * @return the create table Hive DDL
      */
     @Override
     public String generateCreateTableDdl(BusinessObjectDataDdlRequest request, BusinessObjectFormatEntity businessObjectFormatEntity,
-        CustomDdlEntity customDdlEntity, List<String> storageNames, Map<String, StorageEntity> storageEntities, Map<String, String> s3BucketNames)
+        CustomDdlEntity customDdlEntity, List<String> storageNames, List<StorageEntity> requestedStorageEntities,
+        Map<String, StorageEntity> cachedStorageEntities, Map<String, String> cachedS3BucketNames)
     {
         // Get business object format key from the request.
         BusinessObjectFormatKey businessObjectFormatKey =
@@ -209,11 +211,11 @@ public class Hive13DdlGenerator extends DdlGenerator
         StoragePlatformEntity s3StoragePlatformEntity = storagePlatformHelper.getStoragePlatformEntity(StoragePlatformEntity.S3);
 
         // Build partition filters based on the specified partition value filters.
-        // We do validate that all specified storages are of "S3" storage platform type, so we specify S3 storage platform type in
-        // the call below, so we select storage units only from all S3 storages, when the specified list of storages is empty.
+        // We do validate that all specified storage entities are of "S3" storage platform type, so we specify S3 storage platform type in
+        // the call below, so we select storage units only from all S3 storage, when the specified list of storage entities is empty.
         List<List<String>> partitionFilters = businessObjectDataDaoHelper
             .buildPartitionFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), businessObjectFormatKey,
-                request.getBusinessObjectDataVersion(), storageNames, s3StoragePlatformEntity, null, businessObjectFormatEntity);
+                request.getBusinessObjectDataVersion(), requestedStorageEntities, s3StoragePlatformEntity, null, businessObjectFormatEntity);
 
         // If the partitionKey="partition" and partitionValue="none", then DDL should
         // return a DDL which treats business object data as a table, not a partition.
@@ -233,9 +235,10 @@ public class Hive13DdlGenerator extends DdlGenerator
         generateDdlRequest.includeIfNotExistsOption = request.isIncludeIfNotExistsOption();
         generateDdlRequest.isPartitioned = isPartitioned;
         generateDdlRequest.partitionFilters = partitionFilters;
-        generateDdlRequest.s3BucketNames = s3BucketNames;
-        generateDdlRequest.storageEntities = storageEntities;
+        generateDdlRequest.cachedS3BucketNames = cachedS3BucketNames;
+        generateDdlRequest.cachedStorageEntities = cachedStorageEntities;
         generateDdlRequest.storageNames = storageNames;
+        generateDdlRequest.requestedStorageEntities = requestedStorageEntities;
         generateDdlRequest.suppressScanForUnregisteredSubPartitions = request.isSuppressScanForUnregisteredSubPartitions();
         generateDdlRequest.combineMultiplePartitionsInSingleAlterTable = request.isCombineMultiplePartitionsInSingleAlterTable();
         generateDdlRequest.tableName = request.getTableName();
@@ -852,7 +855,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             .getStorageUnitsByPartitionFilters(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
                 businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
                 businessObjectFormatKey.getBusinessObjectFormatVersion(), generateDdlRequest.partitionFilters, generateDdlRequest.businessObjectDataVersion,
-                validBusinessObjectDataStatusEntity, generateDdlRequest.storageNames, s3StoragePlatformEntity, null, true);
+                validBusinessObjectDataStatusEntity, generateDdlRequest.requestedStorageEntities, s3StoragePlatformEntity, null, true);
 
         // Exclude duplicate business object data per specified list of storage names.
         // If storage names are not specified, the method fails on business object data instances registered with multiple storage.
@@ -877,7 +880,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             notAllowNonAvailableRegisteredSubPartitions(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
                 businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
                 businessObjectFormatKey.getBusinessObjectFormatVersion(), matchedAvailablePartitionFilters, availablePartitions,
-                generateDdlRequest.storageNames, s3StoragePlatformEntity);
+                generateDdlRequest.storageNames, generateDdlRequest.requestedStorageEntities, s3StoragePlatformEntity);
         }
 
         // Fail on any missing business object data unless the flag is set to allow missing business object data.
@@ -1037,7 +1040,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             String upperCaseStorageName = storageUnitAvailabilityDto.getStorageName().toUpperCase();
 
             // Get storage entity for this storage unit.
-            StorageEntity storageEntity = getStorageEntity(upperCaseStorageName, generateDdlRequest.storageEntities);
+            StorageEntity storageEntity = getStorageEntity(upperCaseStorageName, generateDdlRequest.cachedStorageEntities);
 
             // Get business object data key for this business object data.
             BusinessObjectDataKey businessObjectDataKey = storageUnitAvailabilityDto.getBusinessObjectDataKey();
@@ -1101,7 +1104,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             }
 
             // Retrieve the s3 bucket name.
-            String s3BucketName = getS3BucketName(upperCaseStorageName, storageEntity, generateDdlRequest.s3BucketNames);
+            String s3BucketName = getS3BucketName(upperCaseStorageName, storageEntity, generateDdlRequest.cachedS3BucketNames);
 
             // For partitioned table, add the relative partitions to the generated DDL.
             if (generateDdlRequest.isPartitioned)
@@ -1345,11 +1348,13 @@ public class Hive13DdlGenerator extends DdlGenerator
 
         private List<List<String>> partitionFilters;
 
-        private Map<String, String> s3BucketNames;
+        private Map<String, String> cachedS3BucketNames;
 
-        private Map<String, StorageEntity> storageEntities;
+        private Map<String, StorageEntity> cachedStorageEntities;
 
         private List<String> storageNames;
+
+        private List<StorageEntity> requestedStorageEntities;
 
         private Boolean suppressScanForUnregisteredSubPartitions;
 
@@ -1433,11 +1438,12 @@ public class Hive13DdlGenerator extends DdlGenerator
      * @param availablePartitions the list of already discovered "available" partitions, where each partition consists of primary and optional sub-partition
      * values
      * @param storageNames the list of storage names
+     * @param storageEntities the list of storage entities
      * @param s3StoragePlatformEntity the S3 storage platform entity
      */
     protected void notAllowNonAvailableRegisteredSubPartitions(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage,
         FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> matchedAvailablePartitionFilters,
-        List<List<String>> availablePartitions, List<String> storageNames, StoragePlatformEntity s3StoragePlatformEntity)
+        List<List<String>> availablePartitions, List<String> storageNames, List<StorageEntity> storageEntities, StoragePlatformEntity s3StoragePlatformEntity)
     {
         // Query all matched partition filters to discover any non-available registered sub-partitions. Retrieve latest business object data per list of
         // matched filters regardless of business object data and/or storage unit statuses. This is done to discover all registered sub-partitions regardless
@@ -1446,7 +1452,7 @@ public class Hive13DdlGenerator extends DdlGenerator
         // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> matchedNotAvailableStorageUnitAvailabilityDtos = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
-                matchedAvailablePartitionFilters, null, null, storageNames, s3StoragePlatformEntity, null, false);
+                matchedAvailablePartitionFilters, null, null, storageEntities, s3StoragePlatformEntity, null, false);
 
         // Exclude all storage units with business object data having "DELETED" status.
         matchedNotAvailableStorageUnitAvailabilityDtos =
