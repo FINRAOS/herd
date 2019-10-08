@@ -408,6 +408,10 @@ public class EmrHelperServiceImpl implements EmrHelperService
             {
                 emrClusterDefinition.setSlaveSecurityGroup(emrClusterDefinitionOverride.getSlaveSecurityGroup());
             }
+            if (emrClusterDefinitionOverride.getServiceAccessSecurityGroup() != null)
+            {
+                emrClusterDefinition.setServiceAccessSecurityGroup(emrClusterDefinitionOverride.getServiceAccessSecurityGroup());
+            }
             if (emrClusterDefinitionOverride.getScaleDownBehavior() != null)
             {
                 emrClusterDefinition.setScaleDownBehavior(emrClusterDefinitionOverride.getScaleDownBehavior());

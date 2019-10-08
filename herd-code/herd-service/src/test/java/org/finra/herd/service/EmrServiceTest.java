@@ -1328,9 +1328,10 @@ public class EmrServiceTest extends AbstractServiceTest
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
-        // Update the EMR cluster definition to use instance fleets instead of instance group definitions.
+        // Set the EMR cluster definition's security groups.
         emrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP);
         emrClusterDefinition.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP);
+        emrClusterDefinition.setServiceAccessSecurityGroup(EMR_SERVICE_ACCESS_SECURITY_GROUP);
 
         // Create an entity for the the updated EMR cluster definition.
         configXml = xmlHelper.objectToXml(emrClusterDefinition);
@@ -1342,9 +1343,10 @@ public class EmrServiceTest extends AbstractServiceTest
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);
-        assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
-        assertTrue(emrCluster.getEmrClusterDefinition().getMasterSecurityGroup().equals(EMR_MASTER_SECURITY_GROUP));
-        assertTrue(emrCluster.getEmrClusterDefinition().getSlaveSecurityGroup().equals(EMR_SLAVE_SECURITY_GROUP));
+        assertEquals(emrCluster.getNamespace(), request.getNamespace());
+        assertEquals(emrCluster.getEmrClusterDefinition().getMasterSecurityGroup(), EMR_MASTER_SECURITY_GROUP);
+        assertEquals(emrCluster.getEmrClusterDefinition().getSlaveSecurityGroup(), EMR_SLAVE_SECURITY_GROUP);
+        assertEquals(emrCluster.getEmrClusterDefinition().getServiceAccessSecurityGroup(), EMR_SERVICE_ACCESS_SECURITY_GROUP);
     }
 
     @Test
@@ -1357,6 +1359,7 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         expectedEmrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP + "override");
         expectedEmrClusterDefinition.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP + "override");
+        expectedEmrClusterDefinition.setServiceAccessSecurityGroup(EMR_SERVICE_ACCESS_SECURITY_GROUP + "override");
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
         // Create a new EMR cluster create request
@@ -1365,15 +1368,16 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
         emrClusterDefinitionOverride.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP + "override");
         emrClusterDefinitionOverride.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP + "override");
+        emrClusterDefinitionOverride.setServiceAccessSecurityGroup(EMR_SERVICE_ACCESS_SECURITY_GROUP + "override");
         request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
 
         EmrCluster emrCluster = emrService.createCluster(request);
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);
-        assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
-        assertTrue(emrCluster.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
-        assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
+        assertEquals(emrCluster.getNamespace(), request.getNamespace());
+        assertEquals(emrCluster.getEmrClusterDefinitionName(), request.getEmrClusterDefinitionName());
+        assertEquals(emrCluster.getEmrClusterName(), request.getEmrClusterName());
         assertNotNull(emrCluster.getId());
         assertNull(emrCluster.isDryRun());
         assertTrue(emrCluster.isEmrClusterCreated());
