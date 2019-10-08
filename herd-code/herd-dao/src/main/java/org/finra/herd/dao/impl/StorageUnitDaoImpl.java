@@ -18,7 +18,10 @@ package org.finra.herd.dao.impl;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -32,6 +35,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.SingularAttribute;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
@@ -540,47 +544,26 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
             businessObjectDataEntityJoin.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.status);
 
-        // Create the standard restrictions (i.e. the standard where clauses).
-
         // Create standard restriction based on the business object format alternate key values including business object format version, if it is specified.
         Predicate mainQueryRestriction =
             getQueryRestriction(builder, businessObjectFormatEntityJoin, businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity,
                 businessObjectFormatVersion);
 
-        // If format version was not specified, use the latest available for this set of partition values.
-        if (businessObjectFormatVersion == null)
-        {
-            // Get the latest available format version for this set of partition values and per other restrictions.
-            Subquery<Integer> subQuery =
-                getMaximumBusinessObjectFormatVersionSubQuery(builder, criteria, businessObjectDefinitionEntity, businessObjectFormatEntityJoin, fileTypeEntity,
-                    businessObjectDataEntityJoin, businessObjectDataVersion, businessObjectDataStatusEntity, storageEntities, storagePlatformEntity,
-                    excludedStoragePlatformEntity, selectOnlyAvailableStorageUnits);
-
-            mainQueryRestriction = builder.and(mainQueryRestriction,
-                builder.in(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)).value(subQuery));
-        }
-
         // Add restriction as per specified primary and/or sub-partition values.
         mainQueryRestriction = builder.and(mainQueryRestriction, getQueryRestrictionOnPartitionValues(builder, businessObjectDataEntityJoin,
             partitionFilters.subList(partitionFilterSubListFromIndex, partitionFilterSubListFromIndex + partitionFilterSubListSize)));
 
-        // If a data version was specified, use it. Otherwise, use the latest one as per specified business object data status.
+        // If specified, add restriction on business object data version.
         if (businessObjectDataVersion != null)
         {
             mainQueryRestriction = builder
                 .and(mainQueryRestriction, builder.equal(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.version), businessObjectDataVersion));
         }
-        else
+        // Otherwise, add restriction on business object data status, if specified.
+        else if (businessObjectDataStatusEntity != null)
         {
-            // Business object data version is not specified, so get the latest one as per specified business object data status, if any.
-            // Meaning, when both business object data version and business object data status are not specified, we just return
-            // the latest business object data version in the specified storage.
-            Subquery<Integer> subQuery =
-                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectFormatEntityJoin, businessObjectDataEntityJoin,
-                    businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, selectOnlyAvailableStorageUnits);
-
-            mainQueryRestriction =
-                builder.and(mainQueryRestriction, builder.in(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.version)).value(subQuery));
+            mainQueryRestriction = builder.and(mainQueryRestriction,
+                builder.equal(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.statusCode), businessObjectDataStatusEntity.getCode()));
         }
 
         // If specified, add restriction on storage.
@@ -626,7 +609,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         // Run the query to get a list of tuples back.
         List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
 
-        // Build a list of storage unit availability DTOs to return.
+        // Build a list of storage unit availability DTOs.
         List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos = new ArrayList<>();
         for (Tuple tuple : tuples)
         {
@@ -640,7 +623,87 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
                 tuple.get(storageUnitAvailableColumn)));
         }
 
+        // If at least one of the business object format and business object data versions was not specified,
+        // filter in only latest version for each set of partition values.
+        if (businessObjectFormatVersion == null || businessObjectDataVersion == null)
+        {
+            // Use linked hash map to filter entries and to preserve the original order of the entries returned by the database while doing it.
+            // Please note that each set of partition values might have multiple identical latest versions registered in different storage entities.
+            Map<List<String>, List<StorageUnitAvailabilityDto>> latestVersions = new LinkedHashMap<>();
+
+            // Process the list of storage unit availability DTOs to select the latest versions.
+            for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtos)
+            {
+                // Retrieve business object data key and a list of partition values for this storage unit availability DTO.
+                BusinessObjectDataKey businessObjectDataKey = storageUnitAvailabilityDto.getBusinessObjectDataKey();
+                List<String> partitionValues = getPartitionValues(businessObjectDataKey);
+
+                // If hash map already contains this set of partition values, check if this entry's business object format and business object data versions
+                // against the entities currently stored in the hash map.  Since all stored entities for a particular set of partition values can only
+                // have the same business object format and business object data versions, we always check only against the first stored entity.
+                if (latestVersions.containsKey(partitionValues))
+                {
+                    // Get stored storage unit availability DTO currently stored for this set of partition values.
+                    List<StorageUnitAvailabilityDto> partitionValuesLatestVersions = latestVersions.get(partitionValues);
+
+                    // Get business object key for the stored storage unit availability DTO currently stored for this set of partition values.
+                    // At least one DTO is expected to be present in the list, so we don't check for null here.
+                    BusinessObjectDataKey latestVersionKey = partitionValuesLatestVersions.get(0).getBusinessObjectDataKey();
+
+                    // If this entity has business object format version which is greater than the stored entity's version,
+                    // overwrite all entities stored for this set of partition values with this one.
+                    if (businessObjectDataKey.getBusinessObjectFormatVersion() > latestVersionKey.getBusinessObjectFormatVersion())
+                    {
+                        latestVersions.put(partitionValues, Lists.newArrayList(storageUnitAvailabilityDto));
+                    }
+                    // If this entity has business object format version which is equal to the stored entity's, then check business object data versions
+                    else if (Objects.equals(businessObjectDataKey.getBusinessObjectFormatVersion(), latestVersionKey.getBusinessObjectFormatVersion()))
+                    {
+                        // If this entity has business object data version which is greater than the stored entity's version,
+                        // overwrite all entities stored for this set of partition values with this one.
+                        if (businessObjectDataKey.getBusinessObjectDataVersion() > latestVersionKey.getBusinessObjectDataVersion())
+                        {
+                            latestVersions.put(partitionValues, Lists.newArrayList(storageUnitAvailabilityDto));
+                        }
+                        // If this entity has business object data version which is equal to the stored entity's version,
+                        // add this entity to the entities currently stored for this set of partition values.
+                        else if (Objects.equals(businessObjectDataKey.getBusinessObjectDataVersion(), latestVersionKey.getBusinessObjectDataVersion()))
+                        {
+                            partitionValuesLatestVersions.add(storageUnitAvailabilityDto);
+                        }
+                    }
+                }
+                // Otherwise, just insert that new set of partition values into the hash map.
+                else
+                {
+                    latestVersions.put(partitionValues, Lists.newArrayList(storageUnitAvailabilityDto));
+                }
+            }
+
+            // Update the list of  storage unit availability DTOs to be returned per filtering results.
+            storageUnitAvailabilityDtos.clear();
+            for (List<StorageUnitAvailabilityDto> partitionValuesLatestVersions : latestVersions.values())
+            {
+                storageUnitAvailabilityDtos.addAll(partitionValuesLatestVersions);
+            }
+        }
+
         return storageUnitAvailabilityDtos;
+    }
+
+    /**
+     * Returns all partition values from the specified business object data key as a list of strings.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the list of partition values
+     */
+    private List<String> getPartitionValues(BusinessObjectDataKey businessObjectDataKey)
+    {
+        List<String> partitionValues = new ArrayList<>();
+        partitionValues.add(businessObjectDataKey.getPartitionValue());
+        partitionValues.addAll(businessObjectDataKey.getSubPartitionValues());
+        return partitionValues;
     }
 
     /**
