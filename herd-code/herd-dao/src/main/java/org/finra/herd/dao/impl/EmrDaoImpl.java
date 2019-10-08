@@ -205,7 +205,7 @@ public class EmrDaoImpl implements EmrDao
         // Add the newly created cluster cache key and id pair to the cluster cache.
         emrClusterCache.put(emrClusterCacheKey, clusterId);
 
-        LOGGER.info("EMR cluster cache after creating a cluster and adding it to the existing cache. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
+        LOGGER.debug("EMR cluster cache after creating a cluster and adding it to the existing cache. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
             System.identityHashCode(emrClusterCache), emrClusterCache.toString());
 
         return clusterId;
@@ -214,7 +214,7 @@ public class EmrDaoImpl implements EmrDao
     @Override
     public synchronized ClusterSummary getActiveEmrClusterByNameAndAccountId(String clusterName, String accountId, AwsParamsDto awsParams)
     {
-        LOGGER.info("Entering synchronized block.");
+        LOGGER.info("Entering synchronized method.");
 
         // Initialize a cluster summary to null for the case that the cluster is not found in the list.
         ClusterSummary clusterSummary = null;
@@ -222,7 +222,7 @@ public class EmrDaoImpl implements EmrDao
         // Get the cluster cache using the accountId.
         Map<EmrClusterCacheKey, String> emrClusterCache = getEmrClusterCacheByAccountId(accountId);
 
-        LOGGER.info("EMR cluster cache retrieved. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
+        LOGGER.debug("EMR cluster cache retrieved. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
             System.identityHashCode(emrClusterCache), emrClusterCache.toString());
 
         if (StringUtils.isNotBlank(clusterName))
@@ -361,10 +361,10 @@ public class EmrDaoImpl implements EmrDao
 
         LOGGER.info("Returning clusterSummary=\"{}\"", clusterSummary == null ? null : clusterSummary.toString());
 
-        LOGGER.info("State of cache after calling getActiveEmrClusterByNameAndAccountId. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
+        LOGGER.debug("State of cache after calling getActiveEmrClusterByNameAndAccountId. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
             System.identityHashCode(emrClusterCache), emrClusterCache.toString());
 
-        LOGGER.info("Exiting synchronized block.");
+        LOGGER.info("Exiting synchronized method.");
 
         return clusterSummary;
     }
