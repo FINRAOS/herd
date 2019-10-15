@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.google.common.collect.Lists;
 import org.junit.Before;
@@ -131,14 +132,14 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         // Create a cluster summary object
         ClusterSummary clusterSummary = new ClusterSummary();
         clusterSummary.setId(EMR_CLUSTER_ID);
+        clusterSummary.setStatus(new ClusterStatus().withState(EMR_CLUSTER_STATUS));
 
         // Mock the external calls.
         when(emrHelper.getAwsParamsDtoByAccountId(emrClusterDefinition.getAccountId())).thenReturn(awsParamsDto);
         when(emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions())).thenReturn(false);
         when(emrHelper.buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName())).thenReturn(EMR_CLUSTER_NAME);
-        when(emrDao.getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto)).thenReturn(clusterSummary);
-        when(emrDao.getEmrClusterStatusById(EMR_CLUSTER_ID, awsParamsDto)).thenReturn(EMR_CLUSTER_STATUS);
+        when(emrDao.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto)).thenReturn(clusterSummary);
 
         // Call the method under test.
         emrHelperServiceImpl.emrCreateClusterAwsSpecificSteps(emrClusterCreateRequest, emrClusterDefinition, emrClusterAlternateKeyDto);
@@ -149,8 +150,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         verify(emrPricingHelper).updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
         verify(emrHelper).buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName());
-        verify(emrDao).getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto);
-        verify(emrDao).getEmrClusterStatusById(EMR_CLUSTER_ID, awsParamsDto);
+        verify(emrDao).getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -178,7 +178,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         when(emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions())).thenReturn(false);
         when(emrHelper.buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName())).thenReturn(EMR_CLUSTER_NAME);
-        when(emrDao.getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto)).thenReturn(null);
+        when(emrDao.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto)).thenReturn(null);
         when(emrDao.createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto)).thenReturn(EMR_CLUSTER_ID);
         when(emrDao.getEmrClusterStatusById(EMR_CLUSTER_ID, awsParamsDto)).thenReturn(EMR_CLUSTER_STATUS);
 
@@ -191,7 +191,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         verify(emrPricingHelper).updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
         verify(emrHelper).buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName());
-        verify(emrDao).getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto);
+        verify(emrDao).getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto);
         verify(emrDao).createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto);
         verify(emrDao).getEmrClusterStatusById(EMR_CLUSTER_ID, awsParamsDto);
         verifyNoMoreInteractionsHelper();
@@ -260,7 +260,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         when(emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions())).thenReturn(false);
         when(emrHelper.buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName())).thenReturn(EMR_CLUSTER_NAME);
-        when(emrDao.getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto)).thenReturn(null);
+        when(emrDao.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto)).thenReturn(null);
         when(emrDao.createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto)).thenThrow(amazonServiceException);
 
         // Call the method under test.
@@ -272,7 +272,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         verify(emrPricingHelper).updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
         verify(emrHelper).buildEmrClusterName(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
             emrClusterAlternateKeyDto.getEmrClusterName());
-        verify(emrDao).getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto);
+        verify(emrDao).getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, emrClusterDefinition.getAccountId(), awsParamsDto);
         verify(emrDao).createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto);
         verify(awsServiceHelper)
             .handleAmazonException(amazonServiceException, "An Amazon exception occurred while creating EMR cluster with name \"" + EMR_CLUSTER_NAME + "\".");
@@ -366,7 +366,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
                 Lists.newArrayList(new EmrClusterDefinitionApplication()), Lists.newArrayList(new EmrClusterDefinitionConfiguration()),
                 Lists.newArrayList(new Parameter()), Lists.newArrayList(new Byte("0")), Lists.newArrayList(new HadoopJarStep()),
                 Lists.newArrayList("additionalMasterSecurityGroups"), Lists.newArrayList("additionalSlaveSecurityGroups"), "securityConfiguration",
-                "masterSecurityGroup", "slaveSecurityGroup", "scaleDownBehavior", new EmrClusterDefinitionKerberosAttributes());
+                "masterSecurityGroup", "slaveSecurityGroup", "serviceAccessSecurityGroup","scaleDownBehavior", new EmrClusterDefinitionKerberosAttributes());
 
         EmrClusterDefinition emrClusterDefinitionOverride =
             new EmrClusterDefinition("sshKeyPairNameOverride", "subnetIdOverride", "logBucketOverride", false, false, false, false, "accountIdOverride",
@@ -381,7 +381,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
                 Lists.newArrayList(new HadoopJarStep(), new HadoopJarStep()),
                 Lists.newArrayList("additionalMasterSecurityGroupsOverride", "additionalMasterSecurityGroupsOverride"),
                 Lists.newArrayList("additionalSlaveSecurityGroupsOverride", "additionalSlaveSecurityGroupsOverride"), "securityConfigurationOverride",
-                "masterSecurityGroupOverride", "slaveSecurityGroupOverride", "scaleDownBehaviorOverride", new EmrClusterDefinitionKerberosAttributes());
+                "masterSecurityGroupOverride", "slaveSecurityGroupOverride", "serviceSecurityGroupOverride", "scaleDownBehaviorOverride", new EmrClusterDefinitionKerberosAttributes());
 
         // Call the method under test.
         emrHelperServiceImpl.overrideEmrClusterDefinition(emrClusterDefinition, emrClusterDefinitionOverride);
@@ -401,7 +401,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
                 Lists.newArrayList(new EmrClusterDefinitionApplication()), Lists.newArrayList(new EmrClusterDefinitionConfiguration()),
                 Lists.newArrayList(new Parameter()), Lists.newArrayList(new Byte("0")), Lists.newArrayList(new HadoopJarStep()),
                 Lists.newArrayList("additionalMasterSecurityGroups"), Lists.newArrayList("additionalSlaveSecurityGroups"), "securityConfiguration",
-                "masterSecurityGroup", "slaveSecurityGroup", "scaleDownBehavior", new EmrClusterDefinitionKerberosAttributes());
+                "masterSecurityGroup", "slaveSecurityGroup", "serviceAccessSecurityGroup","scaleDownBehavior", new EmrClusterDefinitionKerberosAttributes());
 
         EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
 
