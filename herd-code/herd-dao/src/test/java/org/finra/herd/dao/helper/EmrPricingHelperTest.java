@@ -213,6 +213,35 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     /**
+     * Test cases where user sets max search price and the the max search price is simplified as a pass through to spot price.
+     */
+    @Test
+    public void testMaxSearchPriceConvertedToSportPrice()
+    {
+        String subnetId = SUBNET_1;
+
+        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
+        masterInstanceDefinition.setInstanceCount(1);
+        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
+        masterInstanceDefinition.setInstanceMaxSearchPrice(ONE_POINT_ONE);
+
+        InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
+        coreInstanceDefinition.setInstanceCount(1);
+        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
+        coreInstanceDefinition.setInstanceMaxSearchPrice(ONE_POINT_ONE);
+
+        InstanceDefinition taskInstanceDefinition = null;
+
+        EmrClusterDefinition emrClusterDefinition =
+            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
+
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
+
+        assertEquals("master instance bid price", ONE_POINT_ONE, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
+        assertEquals("core instance bid price", ONE_POINT_ONE, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
+    }
+
+    /**
      * Tests algorithmic case when spot is explicitly requested and spot price is not available. The update method should throw an error indicating that no
      * subnets satisfied the given criteria.
      */
