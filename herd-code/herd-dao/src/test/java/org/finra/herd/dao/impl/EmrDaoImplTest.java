@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao.impl;
 
+import static org.finra.herd.dao.config.DaoSpringModuleConfig.EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -27,18 +28,25 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClientBuilder;
 import com.amazonaws.services.elasticmapreduce.model.BootstrapActionConfig;
+import com.amazonaws.services.elasticmapreduce.model.Cluster;
+import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.amazonaws.services.elasticmapreduce.model.Configuration;
+import com.amazonaws.services.elasticmapreduce.model.DescribeClusterRequest;
+import com.amazonaws.services.elasticmapreduce.model.DescribeClusterResult;
 import com.amazonaws.services.elasticmapreduce.model.EbsBlockDeviceConfig;
 import com.amazonaws.services.elasticmapreduce.model.EbsConfiguration;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleetConfig;
@@ -54,6 +62,7 @@ import com.amazonaws.services.elasticmapreduce.model.MarketType;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
+import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,12 +95,20 @@ import org.finra.herd.model.api.xml.MasterInstanceDefinition;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.EmrClusterCacheKey;
+import org.finra.herd.model.dto.EmrClusterCacheTimestamps;
 
 /**
  * This class tests functionality within the EMR DAO implementation.
  */
 public class EmrDaoImplTest extends AbstractDaoTest
 {
+    @Mock
+    private Map<String, Map<EmrClusterCacheKey, String>> emrClusterCacheMap;
+
+    @Mock
+    private Map<String, EmrClusterCacheTimestamps> emrClusterCacheTimestampsMap;
+
     @Mock
     private AwsClientFactory awsClientFactory;
 
@@ -240,13 +257,14 @@ public class EmrDaoImplTest extends AbstractDaoTest
         ListClustersRequest listClustersRequest = new ListClustersRequest().withClusterStates(EMR_VALID_STATE);
 
         // Create a list cluster result with a non-matching cluster and a marker.
-        ListClustersResult listClusterResultWithMarker = new ListClustersResult().withClusters(new ClusterSummary().withName(INVALID_VALUE)).withMarker(MARKER);
+        ListClustersResult listClusterResultWithMarker =
+            new ListClustersResult().withClusters(new ClusterSummary().withName(INVALID_VALUE).withId(EMR_CLUSTER_ID)).withMarker(MARKER);
 
         // Create a list cluster request with marker.
         ListClustersRequest listClustersRequestWithMarker = new ListClustersRequest().withClusterStates(EMR_VALID_STATE).withMarker(MARKER);
 
         // Create a cluster summary.
-        ClusterSummary clusterSummary = new ClusterSummary().withName(EMR_CLUSTER_NAME);
+        ClusterSummary clusterSummary = new ClusterSummary().withName(EMR_CLUSTER_NAME).withId(EMR_CLUSTER_ID);
 
         // Create a list cluster result with the matching cluster.
         ListClustersResult listClusterResult = new ListClustersResult().withClusters(clusterSummary);
@@ -260,7 +278,85 @@ public class EmrDaoImplTest extends AbstractDaoTest
         when(emrOperations.listEmrClusters(amazonElasticMapReduceClient, listClustersRequestWithMarker)).thenReturn(listClusterResult);
 
         // Call the method under test.
-        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByName(EMR_CLUSTER_NAME, awsParamsDto);
+        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, null, awsParamsDto);
+
+        // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.EMR_VALID_STATES);
+        verify(configurationHelper).getProperty(ConfigurationValue.FIELD_DATA_DELIMITER);
+        verify(awsClientFactory, times(2)).getEmrClient(awsParamsDto);
+        verify(emrOperations, times(2)).listEmrClusters(eq(amazonElasticMapReduceClient), any(ListClustersRequest.class));
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(clusterSummary, result);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameWithFullReload()
+    {
+        // Create an EMR cluster cache timestamps dto
+        LocalDateTime lastFullReload = LocalDateTime.now().minusMinutes(11);
+        LocalDateTime lastDeltaUpdate = LocalDateTime.now().minusMinutes(1);
+        EmrClusterCacheTimestamps emrClusterCacheTimestamps = new EmrClusterCacheTimestamps(lastFullReload, lastDeltaUpdate);
+
+        // Call test with timestamps
+        testGetActiveEmrClusterByNameWithTimestamps(emrClusterCacheTimestamps, null);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameWithDeltaReload()
+    {
+        // Create an EMR cluster cache timestamps dto
+        LocalDateTime lastFullReload = LocalDateTime.now().minusMinutes(9);
+        LocalDateTime lastDeltaUpdate = LocalDateTime.now().minusMinutes(1);
+        EmrClusterCacheTimestamps emrClusterCacheTimestamps = new EmrClusterCacheTimestamps(lastFullReload, lastDeltaUpdate);
+
+        // Create a created after date
+        Date createdAfter = Date.from(lastDeltaUpdate.minusMinutes(1).atZone(ZoneId.systemDefault()).toInstant());
+
+        // Call test with timestamps
+        testGetActiveEmrClusterByNameWithTimestamps(emrClusterCacheTimestamps, createdAfter);
+    }
+
+    private void testGetActiveEmrClusterByNameWithTimestamps(EmrClusterCacheTimestamps emrClusterCacheTimestamps, Date createdAfter)
+    {
+        // Create an AWS parameters DTO.
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                AWS_REGION_NAME_US_EAST_1);
+
+        // Create a mock AmazonElasticMapReduceClient.
+        AmazonElasticMapReduceClient amazonElasticMapReduceClient = mock(AmazonElasticMapReduceClient.class);
+
+        // Create a list cluster request.
+        ListClustersRequest listClustersRequest = new ListClustersRequest().withClusterStates(EMR_VALID_STATE).withCreatedAfter(createdAfter);
+
+        // Create a list cluster result with a non-matching cluster and a marker.
+        ListClustersResult listClusterResultWithMarker =
+            new ListClustersResult().withClusters(new ClusterSummary().withName(INVALID_VALUE).withId(EMR_CLUSTER_ID)).withMarker(MARKER);
+
+        // Create a list cluster request with marker.
+        ListClustersRequest listClustersRequestWithMarker =
+            new ListClustersRequest().withClusterStates(EMR_VALID_STATE).withMarker(MARKER).withCreatedAfter(createdAfter);
+
+        // Create a cluster summary.
+        ClusterSummary clusterSummary = new ClusterSummary().withName(EMR_CLUSTER_NAME).withId(EMR_CLUSTER_ID);
+
+        // Create a list cluster result with the matching cluster.
+        ListClustersResult listClusterResult = new ListClustersResult().withClusters(clusterSummary);
+
+
+        // Mock the external calls.
+        when(emrClusterCacheTimestampsMap.get(EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY)).thenReturn(emrClusterCacheTimestamps);
+        when(configurationHelper.getProperty(ConfigurationValue.EMR_VALID_STATES)).thenReturn(EMR_VALID_STATE);
+        when(configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER))
+            .thenReturn((String) ConfigurationValue.FIELD_DATA_DELIMITER.getDefaultValue());
+        when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduceClient);
+        when(emrOperations.listEmrClusters(amazonElasticMapReduceClient, listClustersRequest)).thenReturn(listClusterResultWithMarker);
+        when(emrOperations.listEmrClusters(amazonElasticMapReduceClient, listClustersRequestWithMarker)).thenReturn(listClusterResult);
+
+        // Call the method under test.
+        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, null, awsParamsDto);
 
         // Verify the external calls.
         verify(configurationHelper).getProperty(ConfigurationValue.EMR_VALID_STATES);
@@ -282,13 +378,147 @@ public class EmrDaoImplTest extends AbstractDaoTest
                 AWS_REGION_NAME_US_EAST_1);
 
         // Call the method under test.
-        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByName(BLANK_TEXT, awsParamsDto);
+        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByNameAndAccountId(BLANK_TEXT, null, awsParamsDto);
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertNull(result);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInCache()
+    {
+        // Create a cluster with a valid state.
+        Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState("STARTING"));
+
+        // Test the EMR Cluster Cache is used.
+        getActiveEmrClusterByNameAndAccountIdClusterNameIsInCache(cluster, AWS_ACCOUNT_ID);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInCacheWithNullAccountId()
+    {
+        // Create a cluster with a valid state.
+        Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState("STARTING"));
+
+        // Test the EMR Cluster Cache is used.
+        getActiveEmrClusterByNameAndAccountIdClusterNameIsInCache(cluster, null);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInCacheWithInvalidState()
+    {
+        // Create a cluster with an invalid state.
+        Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState(EMR_INVALID_STATE));
+
+        // Test that the EMR Cluster Cache is not used.
+        getActiveEmrClusterByNameAndAccountIdClusterNameIsInCache(cluster, AWS_ACCOUNT_ID);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInCacheWithInvalidStateWithNullAccountId()
+    {
+        // Create a cluster with an invalid state.
+        Cluster cluster = new Cluster().withStatus(new ClusterStatus().withState(EMR_INVALID_STATE));
+
+        // Test that the EMR Cluster Cache is not used.
+        getActiveEmrClusterByNameAndAccountIdClusterNameIsInCache(cluster, null);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInCacheWithNullCluster()
+    {
+        // Test that the EMR Cluster Cache is not used.
+        getActiveEmrClusterByNameAndAccountIdClusterNameIsInCache(null, AWS_ACCOUNT_ID);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByNameAndAccountIdWhenClusterNameIsInCacheWithNullClusterWithNullAccountId()
+    {
+        // Test that the EMR Cluster Cache is not used.
+        getActiveEmrClusterByNameAndAccountIdClusterNameIsInCache(null, null);
+    }
+
+    private void getActiveEmrClusterByNameAndAccountIdClusterNameIsInCache(Cluster cluster, String accountId)
+    {
+        // Create an AWS parameters DTO.
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                AWS_REGION_NAME_US_EAST_1);
+
+        // Create a mock AmazonElasticMapReduceClient.
+        AmazonElasticMapReduceClient amazonElasticMapReduceClient = mock(AmazonElasticMapReduceClient.class);
+
+        // Create a cluster summary.
+        ClusterSummary clusterSummary =
+            new ClusterSummary().withName(EMR_CLUSTER_NAME).withId(EMR_CLUSTER_ID).withStatus(cluster == null ? null : cluster.getStatus());
+
+        // Create a list cluster result with the matching cluster.
+        ListClustersResult listClusterResult = new ListClustersResult().withClusters(clusterSummary);
+
+        // Create a describe cluster result.
+        DescribeClusterResult describeClusterResult = new DescribeClusterResult().withCluster(cluster);
+
+        // Create a describe cluster request.
+        DescribeClusterRequest describeClusterRequest = new DescribeClusterRequest().withClusterId(EMR_CLUSTER_ID);
+
+        // Build the EMR cluster cache key
+        EmrClusterCacheKey emrClusterCacheKey = new EmrClusterCacheKey(EMR_CLUSTER_NAME.toUpperCase(), accountId);
+
+        // Build the EMR cluster cache
+        Map<EmrClusterCacheKey, String> emrClusterCache = new ConcurrentHashMap<>();
+        emrClusterCache.put(emrClusterCacheKey, EMR_CLUSTER_ID);
+
+        // Mock the external calls.
+        if (accountId == null)
+        {
+            when(emrClusterCacheMap.get(EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY)).thenReturn(emrClusterCache);
+        }
+        else
+        {
+            when(emrClusterCacheMap.get(accountId)).thenReturn(emrClusterCache);
+        }
+
+        when(emrOperations.describeClusterRequest(eq(amazonElasticMapReduceClient), any(DescribeClusterRequest.class))).thenReturn(describeClusterResult);
+        when(configurationHelper.getProperty(ConfigurationValue.EMR_VALID_STATES)).thenReturn(ConfigurationValue.EMR_VALID_STATES.getDefaultValue().toString());
+        when(configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER))
+            .thenReturn((String) ConfigurationValue.FIELD_DATA_DELIMITER.getDefaultValue());
+        when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduceClient);
+        when(emrOperations.listEmrClusters(any(AmazonElasticMapReduceClient.class), any(ListClustersRequest.class))).thenReturn(listClusterResult);
+
+        // Call the method under test.
+        ClusterSummary result = emrDaoImpl.getActiveEmrClusterByNameAndAccountId(EMR_CLUSTER_NAME, accountId, awsParamsDto);
+
+        // Verify the external calls.
+        verify(emrOperations).describeClusterRequest(eq(amazonElasticMapReduceClient), eq(describeClusterRequest));
+
+        if (cluster == null)
+        {
+            verify(configurationHelper).getProperty(ConfigurationValue.FIELD_DATA_DELIMITER);
+            verify(configurationHelper).getProperty(ConfigurationValue.EMR_VALID_STATES);
+            verify(awsClientFactory, times(2)).getEmrClient(awsParamsDto);
+            verify(emrOperations).listEmrClusters(eq(amazonElasticMapReduceClient), any(ListClustersRequest.class));
+        }
+        else if (cluster.getStatus().getState().equals(EMR_INVALID_STATE))
+        {
+            verify(configurationHelper, times(2)).getProperty(ConfigurationValue.FIELD_DATA_DELIMITER);
+            verify(configurationHelper, times(2)).getProperty(ConfigurationValue.EMR_VALID_STATES);
+            verify(awsClientFactory, times(2)).getEmrClient(awsParamsDto);
+            verify(emrOperations).listEmrClusters(eq(amazonElasticMapReduceClient), any(ListClustersRequest.class));
+        }
+        else
+        {
+            verify(configurationHelper).getProperty(ConfigurationValue.FIELD_DATA_DELIMITER);
+            verify(configurationHelper).getProperty(ConfigurationValue.EMR_VALID_STATES);
+            verify(awsClientFactory).getEmrClient(awsParamsDto);
+        }
+
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(clusterSummary, result);
     }
 
     @Test
@@ -302,14 +532,14 @@ public class EmrDaoImplTest extends AbstractDaoTest
             new EmrClusterDefinitionConfiguration(classification, emrClusterDefinitionConfigurations, properties);
 
         // Call the method under test.
-        List<Configuration> result = emrDaoImpl.getConfigurations(Arrays.asList(emrClusterDefinitionConfiguration));
+        List<Configuration> result = emrDaoImpl.getConfigurations(Lists.newArrayList(emrClusterDefinitionConfiguration));
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         final List<Configuration> expectedConfigurations = null;
-        assertEquals(Arrays.asList(new Configuration().withClassification(classification).withConfigurations(expectedConfigurations).withProperties(null)),
+        assertEquals(Lists.newArrayList(new Configuration().withClassification(classification).withConfigurations(expectedConfigurations).withProperties(null)),
             result);
     }
 
@@ -421,14 +651,14 @@ public class EmrDaoImplTest extends AbstractDaoTest
                 emrClusterDefinitionLaunchSpecifications);
 
         // Call the method under test.
-        List<InstanceFleetConfig> result = emrDaoImpl.getInstanceFleets(Arrays.asList(emrClusterDefinitionInstanceFleet));
+        List<InstanceFleetConfig> result = emrDaoImpl.getInstanceFleets(Lists.newArrayList(emrClusterDefinitionInstanceFleet));
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         final List<InstanceTypeConfig> expectedInstanceTypeConfigs = null;
-        assertEquals(Arrays.asList(
+        assertEquals(Lists.newArrayList(
             new InstanceFleetConfig().withName(name).withInstanceFleetType(instanceFleetType).withTargetOnDemandCapacity(targetOnDemandCapacity)
                 .withTargetSpotCapacity(targetSpotCapacity).withInstanceTypeConfigs(expectedInstanceTypeConfigs).withLaunchSpecifications(null)), result);
     }
@@ -451,7 +681,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetInstanceGroupConfig() throws Exception
+    public void testGetInstanceGroupConfig()
     {
         // Call the method under test.
         InstanceGroupConfig result = emrDaoImpl.getInstanceGroupConfig(InstanceRoleType.MASTER, EC2_INSTANCE_TYPE, INSTANCE_COUNT, BID_PRICE,
@@ -526,7 +756,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(Arrays.asList(new InstanceGroupConfig(InstanceRoleType.MASTER, null, instanceCount)), result);
+        assertEquals(Lists.newArrayList(new InstanceGroupConfig(InstanceRoleType.MASTER, null, instanceCount)), result);
     }
 
     @Test
@@ -564,14 +794,14 @@ public class EmrDaoImplTest extends AbstractDaoTest
                 emrClusterDefinitionEbsConfiguration, emrClusterDefinitionConfigurations);
 
         // Call the method under test.
-        List<InstanceTypeConfig> result = emrDaoImpl.getInstanceTypeConfigs(Arrays.asList(emrClusterDefinitionInstanceTypeConfig));
+        List<InstanceTypeConfig> result = emrDaoImpl.getInstanceTypeConfigs(Lists.newArrayList(emrClusterDefinitionInstanceTypeConfig));
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         final List<Configuration> expectedConfigurations = null;
-        assertEquals(Arrays.asList(new InstanceTypeConfig().withInstanceType(instanceType).withWeightedCapacity(weightedCapacity).withBidPrice(bidPrice)
+        assertEquals(Lists.newArrayList(new InstanceTypeConfig().withInstanceType(instanceType).withWeightedCapacity(weightedCapacity).withBidPrice(bidPrice)
             .withBidPriceAsPercentageOfOnDemandPrice(bidPriceAsPercentageOfOnDemandPrice).withEbsConfiguration(null)
             .withConfigurations(expectedConfigurations)), result);
     }
@@ -653,7 +883,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         final Parameter parameter = new Parameter(name, value);
 
         // Call the method under test.
-        Map<String, String> result = emrDaoImpl.getMap(Arrays.asList(parameter));
+        Map<String, String> result = emrDaoImpl.getMap(Lists.newArrayList(parameter));
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();

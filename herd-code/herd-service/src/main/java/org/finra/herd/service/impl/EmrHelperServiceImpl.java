@@ -17,6 +17,8 @@ package org.finra.herd.service.impl;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -50,6 +52,8 @@ import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
 @Service
 public class EmrHelperServiceImpl implements EmrHelperService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmrHelperServiceImpl.class);
+
     @Autowired
     private AwsServiceHelper awsServiceHelper;
 
@@ -133,7 +137,9 @@ public class EmrHelperServiceImpl implements EmrHelperService
     EmrClusterCreateDto emrCreateClusterAwsSpecificStepsImpl(EmrClusterCreateRequest request, EmrClusterDefinition emrClusterDefinition,
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto)
     {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(emrClusterDefinition.getAccountId());
+        String accountId = emrClusterDefinition.getAccountId();
+
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
 
         // If instance group definitions are specified, find best price and update definition.
         if (!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()))
@@ -167,24 +173,35 @@ public class EmrHelperServiceImpl implements EmrHelperService
                     emrClusterAlternateKeyDto.getEmrClusterName());
             try
             {
-                // Try to get an active EMR cluster by its name.
-                ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(clusterName, awsParamsDto);
-
-                // If cluster does not already exist.
-                if (clusterSummary == null)
+                // Synchronizing this block of code to prevent duplicate cluster creation.
+                synchronized (this)
                 {
-                    clusterId = emrDao.createEmrCluster(clusterName, emrClusterDefinition, awsParamsDto);
-                    emrClusterCreated = true;
-                }
-                // If the cluster already exists.
-                else
-                {
-                    clusterId = clusterSummary.getId();
-                    emrClusterCreated = false;
-                    emrClusterAlreadyExists = true;
-                }
+                    LOGGER.info("Entering synchronized block.");
 
-                emrClusterStatus = emrDao.getEmrClusterStatusById(clusterId, awsParamsDto);
+                    // Try to get an active EMR cluster by its name.
+                    ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, accountId, awsParamsDto);
+
+                    // If cluster does not already exist.
+                    if (clusterSummary == null)
+                    {
+                        clusterId = emrDao.createEmrCluster(clusterName, emrClusterDefinition, awsParamsDto);
+                        emrClusterCreated = true;
+                        emrClusterStatus = emrDao.getEmrClusterStatusById(clusterId, awsParamsDto);
+
+                    }
+                    // If the cluster already exists.
+                    else
+                    {
+                        clusterId = clusterSummary.getId();
+                        emrClusterCreated = false;
+                        emrClusterAlreadyExists = true;
+
+                        // If the cluster already exists use the status from the get active EMR cluster by name and account id method call.
+                        emrClusterStatus = clusterSummary.getStatus().getState();
+                    }
+
+                    LOGGER.info("Exiting synchronized block.");
+                }
             }
             catch (AmazonServiceException ex)
             {
@@ -407,6 +424,10 @@ public class EmrHelperServiceImpl implements EmrHelperService
             if (emrClusterDefinitionOverride.getSlaveSecurityGroup() != null)
             {
                 emrClusterDefinition.setSlaveSecurityGroup(emrClusterDefinitionOverride.getSlaveSecurityGroup());
+            }
+            if (emrClusterDefinitionOverride.getServiceAccessSecurityGroup() != null)
+            {
+                emrClusterDefinition.setServiceAccessSecurityGroup(emrClusterDefinitionOverride.getServiceAccessSecurityGroup());
             }
             if (emrClusterDefinitionOverride.getScaleDownBehavior() != null)
             {

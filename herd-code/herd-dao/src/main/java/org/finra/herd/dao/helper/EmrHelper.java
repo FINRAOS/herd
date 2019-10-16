@@ -173,7 +173,7 @@ public class EmrHelper extends AwsHelper
         else
         {
             String emrClusterNameTrimmed = emrClusterName.trim();
-            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(emrClusterNameTrimmed, awsParamsDto);
+            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(emrClusterNameTrimmed, accountId, awsParamsDto);
             Assert.notNull(clusterSummary, String.format("The cluster with name \"%s\" does not exist.", emrClusterNameTrimmed));
             return clusterSummary.getId();
         }
