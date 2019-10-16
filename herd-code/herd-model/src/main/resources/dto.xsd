@@ -247,6 +247,20 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="emrClusterCacheKey">
+      <xs:sequence>
+         <xs:element name="clusterName" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterCacheTimestamps">
+      <xs:sequence>
+         <xs:element name="lastFullReload" type="localDateTime" minOccurs="0"/>
+         <xs:element name="lastDeltaUpdate" type="localDateTime" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="emrClusterCreateDto">
       <xs:sequence>
          <xs:element name="clusterId" type="xs:string" minOccurs="0"/>
@@ -316,6 +330,14 @@
          <xs:element name="namespace" type="xs:string" minOccurs="0"/>
          <xs:element name="jobName" type="xs:string" minOccurs="0"/>
       </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="localDateTime">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="java.time.LocalDateTime"/>
+         </xs:appinfo>
+      </xs:annotation>
    </xs:complexType>
 
    <xs:complexType name="messageHeader">

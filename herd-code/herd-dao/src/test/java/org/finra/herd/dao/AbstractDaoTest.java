@@ -382,11 +382,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_MASTER_SECURITY_GROUP = "UT_EMR_MASTER_SECURITY_GROUP" + RANDOM_SUFFIX;
 
+    public static final String EMR_SERVICE_ACCESS_SECURITY_GROUP = "UT_EMR_SERVICE_ACCESS_SECURITY_GROUP" + RANDOM_SUFFIX;
+
     public static final String EMR_SLAVE_SECURITY_GROUP = "UT_EMR_SLAVE_SECURITY_GROUP" + RANDOM_SUFFIX;
 
     public static final String EMR_CONFIGURE_DAEMON = "UT_EMR_CONFIGURE_DAEMON_" + RANDOM_SUFFIX;
 
     public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
+
+    public static final String EMR_INVALID_STATE = "UT_EMR_InValidState_" + RANDOM_SUFFIX;
 
     public static final String EMR_NSCD_SCRIPT = "UT_EMR_NscdScript_" + RANDOM_SUFFIX;
 
