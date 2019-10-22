@@ -195,29 +195,71 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
   private def getFormatUsageAndFileType(
     api: HerdApi,
     params: HerdOptions,
-    schema: Option[StructType] = None,
+    data: Option[DataFrame] = None,
     registerIfNotPresent: Boolean = false
   ): (String, String, Int) = {
 
-    val formats = api.getBusinessObjectFormats(params.namespace, params.businessObjectName)
+    var formats: BusinessObjectFormatKeys = null
+    try {
+      formats = api.getBusinessObjectFormats(params.namespace, params.businessObjectName)
+    }
+    catch {
+      case ex: ApiException =>
+        if (ex.getCode == 404){
+          log.info(ex.getMessage)
+        } else {
+          throw ex
+        }
+      case ex: Exception  => throw ex
+    }
 
     val preferredTypes = params.fileTypes.map(_.toLowerCase).zipWithIndex.toMap
 
-    val result = formats.getBusinessObjectFormatKeys.asScala
-      .filter(i => i.getBusinessObjectFormatUsage.equalsIgnoreCase(params.formatUsage) &&
-        preferredTypes.contains(i.getBusinessObjectFormatFileType.toLowerCase))
-      .sortBy(f => preferredTypes(f.getBusinessObjectFormatFileType.toLowerCase))
-      .headOption
-      .map(i => (i.getBusinessObjectFormatUsage,
-        i.getBusinessObjectFormatFileType,
-        i.getBusinessObjectFormatVersion.intValue()))
-      .getOrElse(if (registerIfNotPresent && schema.nonEmpty) {
-        registerNewSchema(api, schema.get, params)
+    // if format doesn't exist, create new format
+      if (formats == null && registerIfNotPresent && data.nonEmpty){
+        return registerNewSchema(api, data.get.schema, params)
+      }
+      if (formats != null ) {
+        val result = formats.getBusinessObjectFormatKeys.asScala
+          .filter(i => i.getBusinessObjectFormatUsage.equalsIgnoreCase(params.formatUsage) &&
+            preferredTypes.contains(i.getBusinessObjectFormatFileType.toLowerCase))
+          .sortBy(f => preferredTypes(f.getBusinessObjectFormatFileType.toLowerCase))
+          .headOption
+          .map(i => (i.getBusinessObjectFormatUsage,
+            i.getBusinessObjectFormatFileType,
+            i.getBusinessObjectFormatVersion.intValue()))
+
+        if(result.nonEmpty){
+          val fmt = api.getBusinessObjectFormat(
+            params.namespace,
+            params.businessObjectName,
+            result.get._1,
+            result.get._2,
+            result.get._3
+          )
+          // if format exist but doesn't match existing data frame, create new format
+          if (registerIfNotPresent && data.nonEmpty && !doesDataFrameMatchBformat(fmt, data.get)) {
+            return registerNewSchema(api, data.get.schema, params)
+            // if format exist and matches existing data frame, return format
+          } else {
+            return result.get
+          }
+        } else {
+          sys.error("no suitable format usage and file type found")
+        }
       } else {
         sys.error("no suitable format usage and file type found")
-      })
+      }
+  }
 
-    result
+  private def doesDataFrameMatchBformat(fmt: BusinessObjectFormat, data: DataFrame): Boolean  ={
+    val partitionColumns = fmt.getSchema.getPartitions.asScala.map(_.getName)
+
+    val targetSchema = makeSparkSchema(fmt.getSchema.getColumns.asScala)
+
+    val rows = data.drop(partitionColumns : _*)
+
+    rows.schema.sql.equalsIgnoreCase(targetSchema.sql)
   }
 
   private def getPathPrefix(storage: Storage, storagePathPrefix: String): String = {
@@ -354,7 +396,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     val (formatUsage, formatFileType, formatVersion) = getFormatUsageAndFileType(
       api,
       params,
-      Some(data.schema),
+      Some(data),
       params.registerNewFormat
     )
 
@@ -369,17 +411,9 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     )
 
     val partitionColumns = fmt.getSchema.getPartitions.asScala.map(_.getName)
-
     log.info(s"Using PartitionKey ${fmt.getPartitionKey}, " +
       s"PartitionKeyGroup ${fmt.getSchema.getPartitionKeyGroup}, " +
       s"Partitions ${partitionColumns.mkString(",")}")
-
-    val targetSchema = makeSparkSchema(fmt.getSchema.getColumns.asScala)
-
-    val rows = data.drop(partitionColumns : _*).selectExpr(targetSchema.fieldNames : _*)
-
-    require(rows.schema.sql.equalsIgnoreCase(targetSchema.sql),
-      s"DataFrame schema and business object format schema don't match, expected ${targetSchema.sql}")
 
     val (dataSourceFormat, options) = toSparkDataSourceAndOptions(formatFileType, fmt.getSchema, parameters)
 
@@ -435,6 +469,10 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
       sparkSession.sessionState.listenerManager.register(queryExecutionListener)
 
+      val partitionColumns = fmt.getSchema.getPartitions.asScala.map(_.getName)
+      val targetSchema = makeSparkSchema(fmt.getSchema.getColumns.asScala)
+
+      val rows = data.drop(partitionColumns : _*)
       rows.write.format(dataSourceFormat).options(options).save(basePath)
 
       // this is to remove issues with schemes
