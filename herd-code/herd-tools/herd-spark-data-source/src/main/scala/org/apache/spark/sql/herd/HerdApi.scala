@@ -299,6 +299,7 @@ trait Retry {
         case Success(result) => result
         case Failure(ex: ApiException) =>
           if (ex.getCode >= 400 && ex.getCode < 500) {
+            log.error(s"Encountered fatal error from Herd, will not retry. Status code: ${ex.getCode}, error message: ${ex.toString}", ex)
             throw new ApiException(ex.getCode, s"Encountered fatal error from Herd, will not retry. Status code: ${ex.getCode}, error message: ${ex.toString}")
           }
           else if (tries < MAX_TRIES) {
