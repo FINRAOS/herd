@@ -505,8 +505,8 @@ public class EmrPricingHelper extends AwsHelper
     /**
      * Returns the pricing information selected based on the given instance definition's search criteria.
      * <p/>
-     * If the instance's spotBidPrice is set, returns spot price with spotBidPrice as the bid price. If the instance's maxSearchPrice is set, compares the given
-     * spot, on-demand prices, maxSearchPrice, and optionally, onDemandThreshold to return the best result. This may return null if neither spot or on-demand
+     * If the instance's spotBidPrice is set, returns spot price with spotBidPrice as the bid price. If the instance's maxSearchPrice is set returns spot price
+     * with maxSearchPrice as the bid price. The onDemandThreshold is ignored. This may return null if neither spot or on-demand
      * price matched the given criteria. If neither spotBidPrice or maxSearchPrice is set, returns the pricing as the on-demand price.
      *
      * @param spotPrice the current spot price for the instance type
@@ -531,85 +531,40 @@ public class EmrPricingHelper extends AwsHelper
         // spotBidPrice is set. User wants to explicitly use spot pricing
         if (spotBidPrice != null)
         {
-            // Check if spot price was actually discovered.
-            if (spotPrice != null)
-            {
-                bestPrice = new Ec2PriceDto();
-                bestPrice.setSpotPricing(true);
-                bestPrice.setInstancePrice(spotPrice);
-                bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
-                bestPrice.setBidPrice(spotBidPrice);
-            }
-            // If not, error out.
-            else
-            {
-                bestPrice = null;
-            }
+            bestPrice = setBestPriceToSpotPricing(spotPrice, spotBidPrice, instanceDefinition.getInstanceCount());
+        }
+        // maxSearchPrice is set. Use spot pricing
+        else if (maxSearchPrice != null)
+        {
+            bestPrice = setBestPriceToSpotPricing(spotPrice, maxSearchPrice, instanceDefinition.getInstanceCount());
         }
         // spotBidPrice and maxSearchPrice are not specified. User explicitly wants to use on-demand
-        else if (maxSearchPrice == null)
-        {
-            bestPrice = new Ec2PriceDto();
-            bestPrice.setSpotPricing(false);
-            bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
-            bestPrice.setInstancePrice(onDemandPrice);
-        }
-        // maxSearchPrice is set. User wants system to find best price
         else
         {
-            // Default to on-demand
             bestPrice = new Ec2PriceDto();
             bestPrice.setSpotPricing(false);
             bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
             bestPrice.setInstancePrice(onDemandPrice);
-
-            // If spot price is available, use it to compute the best price
-            if (spotPrice != null)
-            {
-                // No on-demand threshold is equivalent to $0.00 threshold
-                if (onDemandThreshold == null)
-                {
-                    onDemandThreshold = BigDecimal.ZERO;
-                }
-
-                BigDecimal onDemandThresholdAbsolute = spotPrice.add(onDemandThreshold);
-
-                // Pre-compute some flags for readability
-                boolean isSpotBelowMax = spotPrice.compareTo(maxSearchPrice) <= 0;
-                boolean isOnDemandBelowMax = onDemandPrice.compareTo(maxSearchPrice) <= 0;
-                boolean isSpotBelowOnDemand = spotPrice.compareTo(onDemandPrice) < 0;
-                boolean isThresholdBelowOnDemand = onDemandThresholdAbsolute.compareTo(onDemandPrice) < 0;
-
-                // Should I use spot?
-                if (isSpotBelowMax && isSpotBelowOnDemand && (isThresholdBelowOnDemand || !isOnDemandBelowMax))
-                {
-                    bestPrice.setSpotPricing(true);
-                    bestPrice.setInstancePrice(spotPrice);
-                    bestPrice.setBidPrice(maxSearchPrice);
-                }
-                // Is there an error?
-                else if (!isOnDemandBelowMax)
-                {
-                    bestPrice = null;
-                }
-                // Otherwise use on-demand
-            }
-            // Spot price is not available, so only validate that on-demand price is below max search price
-            else
-            {
-                // Pre-compute some flags for readability
-                boolean isOnDemandBelowMax = onDemandPrice.compareTo(maxSearchPrice) <= 0;
-
-                // Error out if on-demand price is below max search price
-                if (!isOnDemandBelowMax)
-                {
-                    bestPrice = null;
-                }
-                // Otherwise use on-demand
-            }
         }
 
         LOGGER.debug("End. instanceBestPrice={}", jsonHelper.objectToJson(bestPrice));
+        return bestPrice;
+    }
+
+    private Ec2PriceDto setBestPriceToSpotPricing(BigDecimal spotPrice, BigDecimal bidPrice, int instanceCount)
+    {
+        Ec2PriceDto bestPrice = null;
+
+        // Check if spot price was actually discovered.
+        if (spotPrice != null)
+        {
+            bestPrice = new Ec2PriceDto();
+            bestPrice.setSpotPricing(true);
+            bestPrice.setInstancePrice(spotPrice);
+            bestPrice.setInstanceCount(instanceCount);
+            bestPrice.setBidPrice(bidPrice);
+        }
+
         return bestPrice;
     }
 
