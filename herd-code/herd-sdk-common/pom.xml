@@ -202,6 +202,32 @@
                   <goals>
                      <goal>generate</goal>
                   </goals>
+                  <id>SCALA-Generation</id>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
+                     <output>${project.build.directory}/scala-client</output>
+                     <addCompileSourceRoot>false</addCompileSourceRoot>
+                     <generatorName>scala-httpclient</generatorName>
+                     <apiPackage>org.finra.herd.sdk.api</apiPackage>
+                     <modelPackage>org.finra.herd.sdk.model</modelPackage>
+                     <invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>
+                     <!--This generation can be refactored to generate its own tests and pom configuration-->
+                     <!--When that happens these should be set to true and other config options need to be set-->
+                     <configOptions>
+                        <!--these are the options specific to the java generation language-->
+                        <licenseName>Apache-2.0</licenseName>
+                        <licenseUrl>https://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+                        <library>jersey1</library>
+                        <dateLibrary>joda</dateLibrary>
+                     </configOptions>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
                   <id>Node-Generation</id>
                   <phase>prepare-package</phase>
                   <configuration>

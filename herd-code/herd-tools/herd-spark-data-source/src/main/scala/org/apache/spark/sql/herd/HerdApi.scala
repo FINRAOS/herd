@@ -21,7 +21,7 @@ import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 
 import org.finra.herd.sdk.api._
-import org.finra.herd.sdk.invoker.ApiClient
+import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
 import org.finra.herd.sdk.model.{PartitionValueFilter, _}
 
 /** A subset of business object data statuses used by the custom data source */
@@ -297,17 +297,19 @@ trait Retry {
     def runRecursively[S](block: => S): S = {
       Try(block) match {
         case Success(result) => result
-        case Failure(ex) =>
-          log.error("Error while call Herd API", ex)
-          if (ex.getMessage != null && ex.getMessage.contains("\"statusCode\":4")) {
-            throw ex
+        case Failure(ex: ApiException) =>
+          if (ex.getCode >= 400 && ex.getCode < 500) {
+            log.error(s"Encountered fatal error from Herd, will not retry. Status code: ${ex.getCode}, error message: ${ex.toString}", ex)
+            throw new ApiException(ex.getCode, s"Encountered fatal error from Herd, will not retry. Status code: ${ex.getCode}, error message: ${ex.toString}")
           }
           else if (tries < MAX_TRIES) {
+            log.error(s"Herd returned an error, will retry ${MAX_TRIES - tries} times. Status code: ${ex.getCode}, error message: ${ex.toString}", ex)
             tries += 1
             Thread.sleep(WAIT * tries)
             runRecursively(block)
           } else {
-            throw ex
+            log.error(s"Retried $MAX_TRIES times - aborting. Status code: ${ex.getCode}, error message: ${ex.toString}", ex)
+            throw new ApiException(ex.getCode, s"Retried 3 times. Aborting. Status code: ${ex.getCode}, error message: ${ex.toString}")
           }
       }
     }
