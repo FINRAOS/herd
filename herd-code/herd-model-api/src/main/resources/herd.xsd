@@ -8874,7 +8874,7 @@
          </xs:element>
          <xs:element name="configurationEntryValue" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The configuration entry value.</xs:documentation>
+               <xs:documentation>The configuration entry value</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="configurationEntryValueClob" type="xs:string" minOccurs="0">
