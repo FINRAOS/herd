@@ -27,8 +27,8 @@ import org.junit.Assert.assertEquals
 import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
 import scala.collection.JavaConverters._
 
-import org.finra.herd.sdk.model._
 import org.finra.herd.sdk.invoker.ApiException
+import org.finra.herd.sdk.model._
 
 private class BaseHerdApi(testCase: String, partitions: Map[(String, String), String]) extends HerdApi with Serializable {
   private val mapper = new ObjectMapper()
@@ -463,7 +463,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       ("2017-01-01", "") -> "businessObjectData1.json"
     )
 
-    val herdApi = new BaseHerdApi("test-case-6", parts){
+    val herdApi = new BaseHerdApi("test-case-6", parts) {
       override def getBusinessObjectFormats(namespace: String, businessObjectName: String,
                                             latestBusinessObjectFormatVersion: Boolean = true): BusinessObjectFormatKeys = {
         val formatKeysJson = Resources.toString(
@@ -494,7 +494,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       ("2017-01-01", "") -> "businessObjectData1.json"
     )
 
-    val herdApi = new BaseHerdApi("test-case-6", parts){
+    val herdApi = new BaseHerdApi("test-case-6", parts) {
       override def registerBusinessObjectFormat(namespace: String, businessObjectName: String, formatUsage: String,
                                                 formatFileType: String, partitionKey: String,
                                                 schema: Option[Schema]): Integer = {
@@ -554,33 +554,56 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     assertEquals("not Authorized to create bFormat", thrown.getMessage)
   }
 
-  // todo
   test("test GetFormatUsageAndFileType: create non-initial new bFormat happy path") {
-      FileUtils.deleteDirectory(new java.io.File("./test-output"))
+    FileUtils.deleteDirectory(new java.io.File("./test-output"))
 
-      val df = spark.createDataFrame(EXPECTED_COMPLEX_ROWS.asJava, EXPECTED_COMPLEX_SCHEMA).filter($"sdate" === "2017-01-01")
+    val newRows = EXPECTED_ROWS.map(f => Row.fromSeq(f.toSeq :+ 1)).asJava
+    val newSchema = EXPECTED_SCHEMA.add("EXTRACOL", IntegerType)
+    val df = spark.createDataFrame(newRows, newSchema).filter($"sdate" === "2017-01-01")
 
-      val params = defaultParams + ("partitionValue" -> "2017-01-01") + ("registerNewFormat" -> "true" )
-      val parts = Map(
-        ("2017-01-01", "") -> "businessObjectData1.json"
-      )
+    val params = defaultParams + ("partitionValue" -> "2017-01-01", "registerNewFormat" -> "true" )
 
-      val herdApi = new BaseHerdApi("test-case-6", parts){
+    val parts = Map(
+      ("2017-01-01", "") -> "businessObjectData1.json"
+    )
+
+    val herdApi = new BaseHerdApi("test-case-6", parts) {
         override def registerBusinessObjectFormat(namespace: String, businessObjectName: String, formatUsage: String,
                                                   formatFileType: String, partitionKey: String,
                                                   schema: Option[Schema]): Integer = {
-          throw new ApiException("failed to create format")
+          1
         }
       }
+    val sqlDataFrame = writeDataFrame(herdApi, params, df)
+    assertEquals(newSchema.sql, sqlDataFrame.schema.sql)
+  }
+
+  test("test GetFormatUsageAndFileType: failed to create non-initial new bFormat") {
+    FileUtils.deleteDirectory(new java.io.File("./test-output"))
+
+    val newRows = EXPECTED_ROWS.map(f => Row.fromSeq(f.toSeq :+ 1)).asJava
+    val newSchema = EXPECTED_SCHEMA.add("EXTRACOL", IntegerType)
+    val df = spark.createDataFrame(newRows, newSchema).filter($"sdate" === "2017-01-01")
+
+    val params = defaultParams + ("partitionValue" -> "2017-01-01", "registerNewFormat" -> "true" )
+
+    val parts = Map(
+      ("2017-01-01", "") -> "businessObjectData1.json"
+    )
+
+    val herdApi = new BaseHerdApi("test-case-6", parts) {
+      override def registerBusinessObjectFormat(namespace: String, businessObjectName: String, formatUsage: String,
+                                                formatFileType: String, partitionKey: String,
+                                                schema: Option[Schema]): Integer = {
+        throw new ApiException(400, "failed to create bFormat" )
+      }
+    }
 
     val thrown = intercept[ApiException]{
       writeDataFrame(herdApi, params, df)
     }
-    assert(thrown.getMessage == "failed to create format")
-  }
-
-  // todo
-  test("test GetFormatUsageAndFileType: failed to create non-initial new bFormat") {
+    assertEquals(400, thrown.getCode)
+    assertEquals("failed to create bFormat", thrown.getMessage)
   }
 
   test("conversion from Hive to Spark complex dataType") {

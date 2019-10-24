@@ -152,11 +152,9 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
   private def registerIfRequired(api: HerdApi, params: HerdOptions): Unit = {
     Try(api.getBusinessObjectByName(params.namespace, params.businessObjectName)) match {
       case Success(_) => Unit
-      case Failure(ex: ApiException) if ex.getCode() == 404 =>
+      case Failure(ex: ApiException) if ex.getCode == 404 =>
         log.info(s"Business object not found, registering it")
-
         api.registerBusinessObject(params.namespace, params.businessObjectName, params.dataProvider)
-
       case Failure(ex) => throw ex
     }
   }
@@ -205,19 +203,19 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     }
     catch {
       case ex: ApiException =>
-        if (ex.getCode == 404){
+        if (ex.getCode == 404) {
           log.info(ex.getMessage)
         } else {
           throw ex
         }
-      case ex: Exception  => throw ex
+      case ex: Exception => throw ex
     }
 
     val preferredTypes = params.fileTypes.map(_.toLowerCase).zipWithIndex.toMap
 
     // if format doesn't exist, create new format
-      if (formats == null && registerIfNotPresent && data.nonEmpty){
-        return registerNewSchema(api, data.get.schema, params)
+      if (formats == null && registerIfNotPresent && data.nonEmpty) {
+        registerNewSchema(api, data.get.schema, params)
       }
       if (formats != null ) {
         val result = formats.getBusinessObjectFormatKeys.asScala
@@ -229,7 +227,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
             i.getBusinessObjectFormatFileType,
             i.getBusinessObjectFormatVersion.intValue()))
 
-        if(result.nonEmpty){
+        if(result.nonEmpty) {
           val fmt = api.getBusinessObjectFormat(
             params.namespace,
             params.businessObjectName,
@@ -239,11 +237,14 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
           )
           // if format exist but doesn't match existing data frame, create new format
           if (registerIfNotPresent && data.nonEmpty && !doesDataFrameMatchBformat(fmt, data.get)) {
-            return registerNewSchema(api, data.get.schema, params)
-            // if format exist and matches existing data frame, return format
-          } else {
-            return result.get
+            registerNewSchema(api, data.get.schema, params)
+            // if format exist and matches existing data frame(save dataFrame), or data frame is none(load/get dataFrame, return format
+          } else if (data.isEmpty || data.nonEmpty && doesDataFrameMatchBformat(fmt, data.get)) {
+            result.get
           }
+          else {
+            sys.error("provided dataframe doesn't matach herd schema but failed to create new format," +
+              "either provided data frame is Invalid, or registerNewSchema is not enabled")          }
         } else {
           sys.error("no suitable format usage and file type found")
         }
@@ -252,7 +253,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       }
   }
 
-  private def doesDataFrameMatchBformat(fmt: BusinessObjectFormat, data: DataFrame): Boolean  ={
+  private def doesDataFrameMatchBformat(fmt: BusinessObjectFormat, data: DataFrame): Boolean = {
     val partitionColumns = fmt.getSchema.getPartitions.asScala.map(_.getName)
 
     val targetSchema = makeSparkSchema(fmt.getSchema.getColumns.asScala)
