@@ -183,5 +183,11 @@
       <jaxb:bindings node="//xs:complexType[@name='notificationMessageDefinition']//xs:element[@name='messageVelocityTemplate']">
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='configurationEntry']//xs:element[@name='configurationEntryValue']">
+         <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
+      </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='configurationEntry']//xs:element[@name='configurationEntryValueClob']">
+         <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
+      </jaxb:bindings>
    </jaxb:bindings>
 </jaxb:bindings>
