@@ -250,6 +250,19 @@ public class ConfigurationHelper
     }
 
     /**
+     * Will return all configuration value types as a string.
+     *
+     * @param configurationValue {@link ConfigurationValue}
+     *
+     * @return String value
+     */
+    public String getPropertyAsString(ConfigurationValue configurationValue)
+    {
+        return environment
+            .getProperty(configurationValue.getKey(), configurationValue.getDefaultValue() == null ? "" : configurationValue.getDefaultValue().toString());
+    }
+
+    /**
      * Gets a property value and validates that it is not blank or null.
      *
      * @param configurationValue {@link ConfigurationValue}

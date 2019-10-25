@@ -365,6 +365,35 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     }
 
     @Test
+    public void testGetPropertyAsString()
+    {
+        // String
+        ConfigurationValue configurationValue = ConfigurationValue.HERD_ENVIRONMENT;
+        String value = configurationHelper.getPropertyAsString(configurationValue);
+        assertEquals(configurationValue.getDefaultValue(), value);
+
+        // Null
+        configurationValue = ConfigurationValue.AWS_REGION_NAME;
+        value = configurationHelper.getPropertyAsString(configurationValue);
+        assertEquals("", value);
+
+        // Integer
+        configurationValue = ConfigurationValue.AWS_MAX_RETRY_ATTEMPT;
+        value = configurationHelper.getPropertyAsString(configurationValue);
+        assertEquals(configurationValue.getDefaultValue().toString(), value);
+
+        // Float
+        configurationValue = ConfigurationValue.ELASTICSEARCH_BDEF_SPOT_CHECK_PERCENTAGE;
+        value = configurationHelper.getPropertyAsString(configurationValue);
+        assertEquals(configurationValue.getDefaultValue().toString(), value);
+
+        // Boolean
+        configurationValue = ConfigurationValue.ACTIVITI_JOB_DEFINITION_ASSERT_ASYNC;
+        value = configurationHelper.getPropertyAsString(configurationValue);
+        assertEquals(configurationValue.getDefaultValue().toString(), value);
+    }
+
+    @Test
     public void testGetRequiredProperty()
     {
         ConfigurationValue configurationValue = ConfigurationValue.HERD_ENVIRONMENT;
