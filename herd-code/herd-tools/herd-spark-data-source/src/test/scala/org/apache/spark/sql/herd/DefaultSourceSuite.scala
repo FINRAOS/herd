@@ -16,6 +16,7 @@
 package org.apache.spark.sql.herd
 
 import java.text.SimpleDateFormat
+import java.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.Charsets
@@ -522,7 +523,9 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     val herdApi = new BaseHerdApi("test-case-6", parts) {
       override def getBusinessObjectFormats(namespace: String, businessObjectName: String,
                                             latestBusinessObjectFormatVersion: Boolean = true): BusinessObjectFormatKeys = {
-        throw new ApiException(404, "bFormat doesn't exist" )
+        var formatKeys = new BusinessObjectFormatKeys()
+        formatKeys.setBusinessObjectFormatKeys(new util.ArrayList())
+        formatKeys
       }
     }
     val sqlDataFrame = writeDataFrame(herdApi, params, df)

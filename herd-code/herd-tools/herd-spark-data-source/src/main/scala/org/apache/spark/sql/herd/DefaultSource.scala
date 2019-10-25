@@ -197,37 +197,25 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     registerIfNotPresent: Boolean = false
   ): (String, String, Int) = {
 
-    var formats: BusinessObjectFormatKeys = null
-    try {
-      formats = api.getBusinessObjectFormats(params.namespace, params.businessObjectName)
-    }
-    catch {
-      case ex: ApiException =>
-        if (ex.getCode == 404) {
-          log.info(ex.getMessage)
-        } else {
-          throw ex
-        }
-      case ex: Exception => throw ex
-    }
+    log.info("checking if herd format exist")
+    val formats = api.getBusinessObjectFormats(params.namespace, params.businessObjectName)
 
     val preferredTypes = params.fileTypes.map(_.toLowerCase).zipWithIndex.toMap
 
-    // if format doesn't exist, create new format
-      if (formats == null && registerIfNotPresent && data.nonEmpty) {
-        registerNewSchema(api, data.get.schema, params)
-      }
-      if (formats != null ) {
-        val result = formats.getBusinessObjectFormatKeys.asScala
-          .filter(i => i.getBusinessObjectFormatUsage.equalsIgnoreCase(params.formatUsage) &&
-            preferredTypes.contains(i.getBusinessObjectFormatFileType.toLowerCase))
-          .sortBy(f => preferredTypes(f.getBusinessObjectFormatFileType.toLowerCase))
-          .headOption
-          .map(i => (i.getBusinessObjectFormatUsage,
-            i.getBusinessObjectFormatFileType,
-            i.getBusinessObjectFormatVersion.intValue()))
+    val result = formats.getBusinessObjectFormatKeys.asScala
+      .filter(i => i.getBusinessObjectFormatUsage.equalsIgnoreCase(params.formatUsage) &&
+        preferredTypes.contains(i.getBusinessObjectFormatFileType.toLowerCase))
+      .sortBy(f => preferredTypes(f.getBusinessObjectFormatFileType.toLowerCase))
+      .headOption
+      .map(i => (i.getBusinessObjectFormatUsage,
+        i.getBusinessObjectFormatFileType,
+        i.getBusinessObjectFormatVersion.intValue()))
 
-        if(result.nonEmpty) {
+    // if format doesn't exist and dataFrame exists, create new format
+    if (result.isEmpty && registerIfNotPresent && data.nonEmpty) {
+      log.info("bformat doesn't exist and dataFrame exists, create new format")
+      registerNewSchema(api, data.get.schema, params)
+      } else if (result.nonEmpty) {
           val fmt = api.getBusinessObjectFormat(
             params.namespace,
             params.businessObjectName,
@@ -237,9 +225,11 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
           )
           // if format exist but doesn't match existing data frame, create new format
           if (registerIfNotPresent && data.nonEmpty && !doesDataFrameMatchBformat(fmt, data.get)) {
+            log.info("herd format exist but doesn't match provided data frame, so creating new herd format")
             registerNewSchema(api, data.get.schema, params)
             // if format exist and matches existing data frame(save dataFrame), or data frame is none(load/get dataFrame, return format
-          } else if (data.isEmpty || data.nonEmpty && doesDataFrameMatchBformat(fmt, data.get)) {
+          } else if (data.isEmpty || (data.nonEmpty && doesDataFrameMatchBformat(fmt, data.get))) {
+            log.info("herd format exist and match provided data frame, return existing herd format")
             result.get
           }
           else {
@@ -248,9 +238,6 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
         } else {
           sys.error("no suitable format usage and file type found")
         }
-      } else {
-        sys.error("no suitable format usage and file type found")
-      }
   }
 
   private def doesDataFrameMatchBformat(fmt: BusinessObjectFormat, data: DataFrame): Boolean = {
@@ -259,7 +246,6 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     val targetSchema = makeSparkSchema(fmt.getSchema.getColumns.asScala)
 
     val rows = data.drop(partitionColumns : _*)
-
     rows.schema.sql.equalsIgnoreCase(targetSchema.sql)
   }
 
