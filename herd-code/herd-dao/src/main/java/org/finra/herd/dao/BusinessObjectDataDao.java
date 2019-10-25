@@ -71,10 +71,10 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * Retrieves a maximum available partition value per specified parameters.
      *
      * @param partitionColumnPosition the partition column position (1-based numbering)
-     * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
-     * available format version for each partition value will be used.
-     * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
-     * the specified business object data status will be used for each partition value.
+     * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, business object
+     * data partition value is selected across all business object format versions
+     * @param businessObjectDataVersion the optional business object data version. If business object data version isn't specified, business object data
+     * partition value is selected from all available business object data as per specified business object data status entity
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified
      * @param storageEntities the optional list of storage entities
@@ -95,10 +95,10 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * Retrieves a minimum available partition value per specified parameters.
      *
      * @param partitionColumnPosition the partition column position (1-based numbering)
-     * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
-     * available format version for each partition value will be used.
-     * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
-     * the specified business object data status will be used for each partition value.
+     * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, business object
+     * data partition value is selected across all business object format versions
+     * @param businessObjectDataVersion the optional business object data version. If business object data version isn't specified, business object data
+     * partition value is selected from all available business object data as per specified business object data status entity
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified
      * @param storageEntities the optional list of storage entities

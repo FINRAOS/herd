@@ -494,13 +494,13 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     /**
      * Retrieves partition value per specified parameters that includes the aggregate function.
      * <p>
-     * Returns null if the business object format key does not exist.
+     * Returns null if specified business object format does not exist.
      *
      * @param partitionColumnPosition the partition column position (1-based numbering)
-     * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
-     * available format version for each partition value will be used.
-     * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
-     * the specified business object data status will be used for each partition value.
+     * @param businessObjectFormatKey the business object format key (case-insensitive). If business object format version isn't specified, business object data
+     * partition value is selected across all business object format versions
+     * @param businessObjectDataVersion the optional business object data version. If business object data version isn't specified, business object data
+     * partition value is selected from all available business object data as per specified business object data status entity
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified
      * @param storageEntities the optional list of storage entities
@@ -519,23 +519,23 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         String upperBoundPartitionValue, String lowerBoundPartitionValue)
     {
         // We cannot use businessObjectFormatKey passed in since it is case-insensitive. Case-insensitive values requires upper() function in the SQL query, and
-        // it has caused performance problems. So we need to extract case-sensitive business object format key from database so we can eliminate the upper()
-        // function.
+        // it has caused performance problems. We need to extract business object format entity from the database, so we can eliminate use of the upper()
+        // when using business object format's alternate keys (except for usage, which is still case-insensitive).
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
 
-        BusinessObjectFormatKey businessObjectFormatKeyCaseSensitive = (BusinessObjectFormatKey) businessObjectFormatKey.clone();
+        // Return null if specified business object format does not exist.
         if (businessObjectFormatEntity == null)
         {
-            // Returns null if business object format key does not exist.
             return null;
         }
-        else
-        {
-            // Sets the exact values for business object format key from the database. Note that usage type is still case-insensitive.
-            businessObjectFormatKeyCaseSensitive.setNamespace(businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode());
-            businessObjectFormatKeyCaseSensitive.setBusinessObjectDefinitionName(businessObjectFormatEntity.getBusinessObjectDefinition().getName());
-            businessObjectFormatKeyCaseSensitive.setBusinessObjectFormatFileType(businessObjectFormatEntity.getFileType().getCode());
-        }
+
+        // Get the relative entities from the business object format entity that are parts of the business object data alternate key.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectFormatEntity.getBusinessObjectDefinition();
+        FileTypeEntity fileTypeEntity = businessObjectFormatEntity.getFileType();
+
+        // Get the business object format usage (case-insensitive) and optional business object format version fro the business object format key.
+        String businessObjectFormatUsage = businessObjectFormatKey.getBusinessObjectFormatUsage();
+        Integer businessObjectFormatVersion = businessObjectFormatKey.getBusinessObjectFormatVersion();
 
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -547,88 +547,68 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
             businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
-        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntityJoin = businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.fileType);
-        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntityJoin =
-            businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.businessObjectDefinition);
-        Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntityJoin =
-            businessObjectDefinitionEntityJoin.join(BusinessObjectDefinitionEntity_.namespace);
         Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntityJoin = businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
         Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntityJoin = storageUnitEntityJoin.join(StorageUnitEntity_.status);
         Join<StorageUnitEntity, StorageEntity> storageEntityJoin = storageUnitEntityJoin.join(StorageUnitEntity_.storage);
 
         // Create the path.
-        Expression<String> partitionValue;
-        SingularAttribute<BusinessObjectDataEntity, String> singleValuedAttribute = BUSINESS_OBJECT_DATA_PARTITIONS.get(partitionColumnPosition - 1);
+        Expression<String> partitionValueExpression;
+        SingularAttribute<BusinessObjectDataEntity, String> partitionValueSingularAttribute = BUSINESS_OBJECT_DATA_PARTITIONS.get(partitionColumnPosition - 1);
         switch (aggregateFunction)
         {
             case GREATEST:
-                partitionValue = builder.greatest(businessObjectDataEntityRoot.get(singleValuedAttribute));
+                partitionValueExpression = builder.greatest(businessObjectDataEntityRoot.get(partitionValueSingularAttribute));
                 break;
             case LEAST:
-                partitionValue = builder.least(businessObjectDataEntityRoot.get(singleValuedAttribute));
+                partitionValueExpression = builder.least(businessObjectDataEntityRoot.get(partitionValueSingularAttribute));
                 break;
             default:
                 throw new IllegalArgumentException("Invalid aggregate function found: \"" + aggregateFunction + "\".");
         }
 
-        // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate mainQueryRestriction = builder.equal(namespaceEntityJoin.get(NamespaceEntity_.code), businessObjectFormatKeyCaseSensitive.getNamespace());
-        mainQueryRestriction = builder.and(mainQueryRestriction, builder.equal(businessObjectDefinitionEntityJoin.get(BusinessObjectDefinitionEntity_.name),
-            businessObjectFormatKeyCaseSensitive.getBusinessObjectDefinitionName()));
-        mainQueryRestriction = builder.and(mainQueryRestriction, builder
-            .equal(builder.upper(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage)),
-                businessObjectFormatKeyCaseSensitive.getBusinessObjectFormatUsage().toUpperCase()));
-        mainQueryRestriction = builder.and(mainQueryRestriction,
-            builder.equal(fileTypeEntityJoin.get(FileTypeEntity_.code), businessObjectFormatKeyCaseSensitive.getBusinessObjectFormatFileType()));
+        // Create standard restriction based on the business object format alternate key values including business object format version, if it is specified.
+        Predicate mainQueryRestriction =
+            getQueryRestriction(builder, businessObjectFormatEntityJoin, businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity,
+                businessObjectFormatVersion);
 
-        // If a business object format version was specified, use it.
-        if (businessObjectFormatKey.getBusinessObjectFormatVersion() != null)
-        {
-            mainQueryRestriction = builder.and(mainQueryRestriction, builder
-                .equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
-                    businessObjectFormatKey.getBusinessObjectFormatVersion()));
-        }
-
-        // If a data version was specified, use it.
+        // If specified, add restriction on business object data version.
         if (businessObjectDataVersion != null)
         {
             mainQueryRestriction = builder
                 .and(mainQueryRestriction, builder.equal(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version), businessObjectDataVersion));
         }
-        // Business object data version is not specified, so get the latest one as per specified business object data status in the specified storage.
-        else
+        // Otherwise, add restriction on business object data status, if specified.
+        else if (businessObjectDataStatusEntity != null)
         {
-            Subquery<Integer> subQuery =
-                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectFormatEntityJoin, businessObjectDataEntityRoot,
-                    businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, false);
-
-            mainQueryRestriction =
-                builder.and(mainQueryRestriction, builder.in(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version)).value(subQuery));
+            mainQueryRestriction = builder.and(mainQueryRestriction,
+                builder.equal(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.statusCode), businessObjectDataStatusEntity.getCode()));
         }
 
-        // Add an inclusive upper bound partition value restriction if specified.
+        // If specified, add an inclusive upper bound partition value restriction.
         if (upperBoundPartitionValue != null)
         {
-            mainQueryRestriction =
-                builder.and(mainQueryRestriction, builder.lessThanOrEqualTo(businessObjectDataEntityRoot.get(singleValuedAttribute), upperBoundPartitionValue));
+            mainQueryRestriction = builder.and(mainQueryRestriction,
+                builder.lessThanOrEqualTo(businessObjectDataEntityRoot.get(partitionValueSingularAttribute), upperBoundPartitionValue));
         }
 
-        // Add an inclusive lower bound partition value restriction if specified.
+        // If specified, add an inclusive lower bound partition value restriction.
         if (lowerBoundPartitionValue != null)
         {
-            mainQueryRestriction = builder
-                .and(mainQueryRestriction, builder.greaterThanOrEqualTo(businessObjectDataEntityRoot.get(singleValuedAttribute), lowerBoundPartitionValue));
+            mainQueryRestriction = builder.and(mainQueryRestriction,
+                builder.greaterThanOrEqualTo(businessObjectDataEntityRoot.get(partitionValueSingularAttribute), lowerBoundPartitionValue));
         }
 
         // If specified, add restriction on storage.
         mainQueryRestriction = builder.and(mainQueryRestriction,
             getQueryRestrictionOnStorage(builder, storageEntityJoin, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity));
 
-        // Search across only "available" storage units.
+        // Select across only "available" storage units.
         mainQueryRestriction = builder.and(mainQueryRestriction, builder.isTrue(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.available)));
 
-        criteria.select(partitionValue).where(mainQueryRestriction);
+        // Add all clauses to the query.
+        criteria.select(partitionValueExpression).where(mainQueryRestriction);
 
+        // Run the query and return the selected partition value.
         return entityManager.createQuery(criteria).getSingleResult();
     }
 
