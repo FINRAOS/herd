@@ -16,6 +16,7 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -71,7 +72,7 @@ public class ConfigurationEntryServiceImpl implements ConfigurationEntryService
                 isMatchingConfigurationValue = true;
 
                 // Get the configuration entry value.
-                String configurationEntryValue = configurationHelper.getProperty(configurationValue);
+                String configurationEntryValue = configurationHelper.getPropertyAsString(configurationValue);
 
                 // If the configuration entry value is not empty set the configuration value on the configuration entry.
                 if (StringUtils.isNotEmpty(configurationEntryValue))
@@ -110,6 +111,9 @@ public class ConfigurationEntryServiceImpl implements ConfigurationEntryService
         {
             configurationEntryKeysList.add(configurationValue.getKey());
         }
+
+        // Sort the list alphabetically before returning it.
+        Collections.sort(configurationEntryKeysList);
 
         return new ConfigurationEntryKeys(configurationEntryKeysList);
     }

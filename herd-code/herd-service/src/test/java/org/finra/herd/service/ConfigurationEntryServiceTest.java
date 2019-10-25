@@ -22,6 +22,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
@@ -73,7 +74,7 @@ public class ConfigurationEntryServiceTest extends AbstractServiceTest
 
         // Mock the external calls.
         when(alternateKeyHelper.validateStringParameter("Configuration entry key", configurationEntryKey)).thenReturn(configurationEntryKey);
-        when(configurationHelper.getProperty(configurationValue)).thenReturn(configurationEntryValue);
+        when(configurationHelper.getPropertyAsString(configurationValue)).thenReturn(configurationEntryValue);
         when(configurationDaoHelper.getClobProperty(configurationEntryKey)).thenReturn(configurationEntryValueClob);
 
         // Get a configuration entry.
@@ -81,7 +82,7 @@ public class ConfigurationEntryServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(alternateKeyHelper).validateStringParameter("Configuration entry key", configurationEntryKey);
-        verify(configurationHelper).getProperty(configurationValue);
+        verify(configurationHelper).getPropertyAsString(configurationValue);
         verify(configurationDaoHelper).getClobProperty(configurationEntryKey);
         verifyNoMoreInteractions(alternateKeyHelper, configurationDaoHelper, configurationHelper);
 
@@ -99,7 +100,7 @@ public class ConfigurationEntryServiceTest extends AbstractServiceTest
 
         // Mock the external calls.
         when(alternateKeyHelper.validateStringParameter("Configuration entry key", configurationEntryKey)).thenReturn(configurationEntryKey);
-        when(configurationHelper.getProperty(configurationValue)).thenReturn(null);
+        when(configurationHelper.getPropertyAsString(configurationValue)).thenReturn(null);
         when(configurationDaoHelper.getClobProperty(configurationEntryKey)).thenReturn(null);
 
         // Get a configuration entry.
@@ -107,7 +108,7 @@ public class ConfigurationEntryServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(alternateKeyHelper).validateStringParameter("Configuration entry key", configurationEntryKey);
-        verify(configurationHelper).getProperty(configurationValue);
+        verify(configurationHelper).getPropertyAsString(configurationValue);
         verify(configurationDaoHelper).getClobProperty(configurationEntryKey);
         verifyNoMoreInteractions(alternateKeyHelper, configurationDaoHelper, configurationHelper);
 
@@ -165,6 +166,8 @@ public class ConfigurationEntryServiceTest extends AbstractServiceTest
         {
             configurationEntryKeysList.add(configurationValue.getKey());
         }
+
+        Collections.sort(configurationEntryKeysList);
 
         return new ConfigurationEntryKeys(configurationEntryKeysList);
     }
