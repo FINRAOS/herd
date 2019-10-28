@@ -31,7 +31,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.mock.MockitoSugar
 
 import org.finra.herd.sdk.api._
-import org.finra.herd.sdk.invoker.ApiClient
+import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
 import org.finra.herd.sdk.model._
 
 /** unit tests for DefaultHerdApi */
@@ -82,13 +82,15 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     val includeUpdateHistoryCaptor = ArgumentCaptor.forClass((classOf[Boolean]))
     val businessObjectDefinition = new BusinessObjectDefinition
     when(mockBusinessObjectDefinitionApi.businessObjectDefinitionGetBusinessObjectDefinition(namespaceCaptor.capture(),
-      businessObjectDefinitionCaptor.capture(), includeUpdateHistoryCaptor.capture())).thenThrow(new RuntimeException("Boom!"))
+      businessObjectDefinitionCaptor.capture(), includeUpdateHistoryCaptor.capture())).thenThrow(new ApiException(500, "Boom!"))
     when(defaultHerdApi.getBusinessObjectDefinitionApi(mockApiClient)).thenReturn(mockBusinessObjectDefinitionApi)
 
-    val thrown = intercept[RuntimeException] {
+    val thrown = intercept[ApiException] {
       defaultHerdApi.getBusinessObjectByName(NAMESPACE, BUSINESS_OBJECT_DEFINITION)
     }
-    assert(thrown.getMessage === "Boom!")
+
+    assertEquals(500, thrown.getCode)
+    assert(thrown.getMessage.contains("Boom!"))
     // verify the method has been tried 4 times
     verify(mockBusinessObjectDefinitionApi, times(4)).businessObjectDefinitionGetBusinessObjectDefinition(anyString(), anyString(), anyBoolean())
     verify(defaultHerdApi).getBusinessObjectDefinitionApi(mockApiClient)
@@ -104,13 +106,15 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     val includeUpdateHistoryCaptor = ArgumentCaptor.forClass((classOf[Boolean]))
     val businessObjectDefinition = new BusinessObjectDefinition
     when(mockBusinessObjectDefinitionApi.businessObjectDefinitionGetBusinessObjectDefinition(namespaceCaptor.capture(),
-      businessObjectDefinitionCaptor.capture(), includeUpdateHistoryCaptor.capture())).thenThrow(new RuntimeException("\"statusCode\":4"))
+      businessObjectDefinitionCaptor.capture(), includeUpdateHistoryCaptor.capture())).thenThrow(new ApiException(400, "not retry 400"))
     when(defaultHerdApi.getBusinessObjectDefinitionApi(mockApiClient)).thenReturn(mockBusinessObjectDefinitionApi)
 
-    val thrown = intercept[RuntimeException] {
+    val thrown = intercept[ApiException] {
       defaultHerdApi.getBusinessObjectByName(NAMESPACE, BUSINESS_OBJECT_DEFINITION)
     }
-    assert(thrown.getMessage === "\"statusCode\":4")
+
+    assertEquals(400, thrown.getCode)
+    assert(thrown.getMessage.contains("not retry 400"))
     // verify the method has been tried once
     verify(mockBusinessObjectDefinitionApi, times(1)).businessObjectDefinitionGetBusinessObjectDefinition(anyString(), anyString(), anyBoolean())
     verify(defaultHerdApi).getBusinessObjectDefinitionApi(mockApiClient)
