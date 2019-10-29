@@ -135,6 +135,21 @@ public class BusinessObjectDataDaoTestHelper
         List<String> businessObjectDataSubPartitionValues, Integer businessObjectDataVersion, Boolean businessObjectDataLatestVersion,
         String businessObjectDataStatusCode)
     {
+        return createBusinessObjectDataEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+            businessObjectFormatVersion, AbstractDaoTest.LATEST_VERSION_FLAG_SET, businessObjectDataPartitionValue, businessObjectDataSubPartitionValues,
+            businessObjectDataVersion, businessObjectDataLatestVersion, businessObjectDataStatusCode);
+    }
+
+    /**
+     * Creates and persists a new business object data entity.
+     *
+     * @return the newly created business object data entity.
+     */
+    public BusinessObjectDataEntity createBusinessObjectDataEntity(String namespaceCode, String businessObjectDefinitionName, String businessObjectFormatUsage,
+        String businessObjectFormatFileType, Integer businessObjectFormatVersion, Boolean businessObjectFormatLatestVersion,
+        String businessObjectDataPartitionValue, List<String> businessObjectDataSubPartitionValues, Integer businessObjectDataVersion,
+        Boolean businessObjectDataLatestVersion, String businessObjectDataStatusCode)
+    {
         // Create a business object format entity if it does not exist.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
             new BusinessObjectFormatKey(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
@@ -144,7 +159,7 @@ public class BusinessObjectDataDaoTestHelper
             businessObjectFormatEntity = businessObjectFormatDaoTestHelper
                 .createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                     businessObjectFormatVersion, AbstractDaoTest.FORMAT_DESCRIPTION, AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA,
-                    AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA_URL, true, AbstractDaoTest.PARTITION_KEY);
+                    AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA_URL, businessObjectFormatLatestVersion, AbstractDaoTest.PARTITION_KEY);
         }
 
         // Create a business object data status entity if it does not exist.

@@ -46,10 +46,10 @@ public interface BusinessObjectDataDao extends BaseJpaDao
     /**
      * Retrieves business object data by it's key. If a format version isn't specified, the latest available format version (for this partition value) will be
      * used. If a business object data version isn't specified, the latest data version based on the specified business object data status is returned. When
-     * both business object data version and business object data status both are not specified, the latest data version for each set of partition values will
-     * be used regardless of the status.
+     * both business object data version and business object data status are not specified, the method returns the latest business object data version for the
+     * relative business object format version.
      *
-     * @param businessObjectDataKey the business object data key
+     * @param businessObjectDataKey the business object data key with the optional business object format and business object data versions
      * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
      * specified
      *
