@@ -326,7 +326,7 @@ public enum ConfigurationValue
     /**
      * EMR Jar file that executes a shell script. The default is the path to the EMR script runner JAR.
      */
-    EMR_SHELL_SCRIPT_JAR("emr.aws.shell.script.jar", "s3://elasticmapreduce/libs/script-runner/script-runner.jar"),
+    EMR_SHELL_SCRIPT_JAR_PATH("emr.aws.shell.script.jar.path", "s3://elasticmapreduce/libs/script-runner/script-runner.jar"),
 
     /**
      * The tokenized template of the EMR cluster name. The default is computed dynamically so it is not listed here.
