@@ -156,6 +156,6 @@ public class WarInitializer implements WebApplicationInitializer
         // The "default" Tomcat servlet will directly serve up URL matches for static assets so none of the other ones will (e.g. DispatcherServlet).
         // Activiti uses ".svg" resources.
         servletContext.getServletRegistration("default")
-            .addMapping("*.html", "*.jpg", "*.png", "*.gif", "*.css", "*.js", "*.svg", "*.map", "*.json", "*.yaml", "*.woff", "*.woff2", "*.ttf");
+            .addMapping("*.html", "*.jpg", "*.png", "*.gif", "*.css", "*.js", "*.svg", "*.map", "*.yaml", "*.woff", "*.woff2", "*.ttf");
     }
 }
