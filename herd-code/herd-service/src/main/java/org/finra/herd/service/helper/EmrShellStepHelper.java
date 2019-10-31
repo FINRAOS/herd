@@ -67,7 +67,7 @@ public class EmrShellStepHelper extends EmrStepHelper
         EmrShellStep emrShellStep = (EmrShellStep) step;
 
         // Hadoop Jar provided by Amazon for running Shell Scripts
-        String hadoopJarForShellScript = configurationHelper.getProperty(ConfigurationValue.EMR_SHELL_SCRIPT_JAR);
+        String hadoopJarForShellScript = configurationHelper.getProperty(ConfigurationValue.EMR_SHELL_SCRIPT_JAR_PATH);
 
         // Default ActionOnFailure is to cancel the execution and wait
         ActionOnFailure actionOnFailure = ActionOnFailure.CANCEL_AND_WAIT;
