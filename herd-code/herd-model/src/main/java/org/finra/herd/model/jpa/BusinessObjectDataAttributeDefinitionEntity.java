@@ -61,6 +61,10 @@ public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
     @Type(type = "yes_no")
     private Boolean publish;
 
+    @Column(name = "pblsh_for_fltr_fl")
+    @Type(type = "yes_no")
+    private Boolean publishForFilter;
+
     public Integer getId()
     {
         return id;
@@ -111,5 +115,15 @@ public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
     public void setPublish(Boolean publish)
     {
         this.publish = publish;
+    }
+
+    public Boolean getPublishForFilter()
+    {
+        return publishForFilter;
+    }
+
+    public void setPublishForFilter(Boolean publishForFilter)
+    {
+        this.publishForFilter = publishForFilter;
     }
 }

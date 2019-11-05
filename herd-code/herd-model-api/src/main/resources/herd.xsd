@@ -2635,6 +2635,13 @@
                <xs:documentation>If true, this business object data attribute will be published in notification messages</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="publishForFilter" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>If true, this business object data attribute will be published in notification message headers and can be used to filter
+                  messages
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
