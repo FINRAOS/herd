@@ -171,8 +171,6 @@ public abstract class AbstractNotificationMessageBuilder
                     }
                 }
 
-                //if (notificationMessageDefinition.get)
-
                 if (velocityContextMap.containsKey(FILTER_ATTRIBUTE_VALUE_KEY))
                 {
                     messageHeaders.add(new MessageHeader(FILTER_ATTRIBUTE_VALUE_KEY, velocityContextMap.get(FILTER_ATTRIBUTE_VALUE_KEY).toString()));

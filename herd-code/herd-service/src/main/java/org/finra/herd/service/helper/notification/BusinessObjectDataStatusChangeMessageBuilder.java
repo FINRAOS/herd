@@ -23,6 +23,7 @@ import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.BooleanUtils;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +35,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
+import org.springframework.util.Assert;
 
 /**
  * The builder that knows how to build Business Object Data Status Change notification messages
@@ -73,9 +75,11 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(event.getBusinessObjectDataKey());
         velocityContextMap.put("businessObjectDataId", businessObjectDataEntity.getId());
 
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectDataEntity.getBusinessObjectFormat();
+
         // Load all attribute definitions for this business object data in a map for easy access.
         Map<String, BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntityMap =
-            businessObjectFormatHelper.getAttributeDefinitionEntities(businessObjectDataEntity.getBusinessObjectFormat());
+            businessObjectFormatHelper.getAttributeDefinitionEntities(businessObjectFormatEntity);
 
         // Build an ordered map of business object data attributes that are flagged to be published in notification messages.
         Map<String, String> businessObjectDataAttributes = new LinkedHashMap<>();
@@ -99,6 +103,11 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
 
                     if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublishForFilter()))
                     {
+                        if (velocityContextMap.containsKey(FILTER_ATTRIBUTE_VALUE_KEY)) {
+                            throw new IllegalStateException(String.format("Multiple attributes are marked as publishForFilter for business object format {%s}.",
+                                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
+                        }
+
                         addStringPropertyToContext(velocityContextMap, FILTER_ATTRIBUTE_VALUE_KEY, attributeEntity.getValue());
                     }
                 }
