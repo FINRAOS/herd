@@ -740,7 +740,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
 
         List<MessageHeader> expectedMessageHeaders = getExpectedMessageHeaders(uuid);
-        expectedMessageHeaders.add(new MessageHeader(MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE, AbstractServiceTest.ATTRIBUTE_VALUE_2));
+        expectedMessageHeaders.add(new MessageHeader(ConfigurationValue.MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE.getDefaultValue().toString(), AbstractServiceTest.ATTRIBUTE_VALUE_2));
 
         businessObjectDataServiceTestHelper
                 .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
@@ -774,6 +774,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
                 new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
                         BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, getMessageHeaderDefinitions())))));
+
         configurationDao.saveAndRefresh(configurationEntity);
 
         // Build a notification message.
@@ -794,7 +795,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
                         attributes, expectedMessageHeaders, result.get(0));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testBuildBusinessObjectDataStatusChangeMessagesMoreThanOneFilterAttributeHeader() throws Exception
     {
         // Create a list of attributes.
@@ -822,9 +823,17 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
                         BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, getMessageHeaderDefinitions())))));
         configurationDao.saveAndRefresh(configurationEntity);
 
-        // Build a notification message.
-        businessObjectDataStatusChangeMessageBuilder
-                .buildNotificationMessages(new BusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2));
+        // Try to build a notification message.
+        try
+        {
+            // Build a notification message.
+            businessObjectDataStatusChangeMessageBuilder.buildNotificationMessages(new BusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2));
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("Multiple attributes are marked as publishForFilter for business object format "));
+        }
     }
 
     /**

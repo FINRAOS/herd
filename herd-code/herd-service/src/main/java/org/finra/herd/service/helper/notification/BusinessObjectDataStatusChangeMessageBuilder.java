@@ -23,7 +23,10 @@ import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.BooleanUtils;
+import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,6 +51,9 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
 
     @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     /**
      * Returns Velocity context map of additional keys and values to place in the velocity context.
@@ -103,12 +109,16 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
 
                     if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublishForFilter()))
                     {
-                        if (velocityContextMap.containsKey(FILTER_ATTRIBUTE_VALUE_KEY)) {
+
+                        // Get notification header key for filter attribute value
+                        String filterAttributeKey = configurationHelper.getRequiredProperty(ConfigurationValue.MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE);
+
+                        if (velocityContextMap.containsKey(filterAttributeKey)) {
                             throw new IllegalStateException(String.format("Multiple attributes are marked as publishForFilter for business object format {%s}.",
                                     businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
                         }
 
-                        addStringPropertyToContext(velocityContextMap, FILTER_ATTRIBUTE_VALUE_KEY, attributeEntity.getValue());
+                        addStringPropertyToContext(velocityContextMap, filterAttributeKey, attributeEntity.getValue());
                     }
                 }
             }

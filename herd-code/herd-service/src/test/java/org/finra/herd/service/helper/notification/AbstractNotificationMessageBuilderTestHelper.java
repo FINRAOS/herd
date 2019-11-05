@@ -51,7 +51,6 @@ public abstract class AbstractNotificationMessageBuilderTestHelper extends Abstr
         messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_MESSAGE_ID, "$uuid"));
         messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_USER_ID, "$username"));
         messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_NAMESPACE, "$namespace"));
-        //messageHeaderDefinitions.add(new MessageHeaderDefinition(MESSAGE_HEADER_KEY_FILTER, "$namespace"));
 
         return messageHeaderDefinitions;
     }

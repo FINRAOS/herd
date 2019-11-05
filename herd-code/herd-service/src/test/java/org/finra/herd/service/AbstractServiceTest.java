@@ -486,8 +486,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String MESSAGE_HEADER_KEY_USER_ID = "userId";
 
-    public static final String MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE = "filter_attribute_value";
-
     public static final String MESSAGE_TYPE_SNS = "SNS";
 
     public static final String MESSAGE_VERSION = "UT_MessageVersion" + RANDOM_SUFFIX;

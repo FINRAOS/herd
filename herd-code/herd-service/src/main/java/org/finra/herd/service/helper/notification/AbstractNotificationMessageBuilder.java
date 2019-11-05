@@ -56,8 +56,6 @@ public abstract class AbstractNotificationMessageBuilder
 
     private static final String WITH_XML_SNAKE_CASE = "_with_xml";
 
-    protected static final String FILTER_ATTRIBUTE_VALUE_KEY = "filter_attribute_value";
-
     @Autowired
     private ConfigurationHelper configurationHelper;
 
@@ -122,6 +120,9 @@ public abstract class AbstractNotificationMessageBuilder
         NotificationMessageDefinitions notificationMessageDefinitions =
             configurationDaoHelper.getXmlClobPropertyAndUnmarshallToObject(NotificationMessageDefinitions.class, getMessageDefinitionKey(notificationEvent));
 
+        // Get notification header key for filter attribute value
+        String filterAttributeKey = configurationHelper.getRequiredProperty(ConfigurationValue.MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE);
+
         // Continue processing if notification message definitions are configured.
         if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
         {
@@ -171,9 +172,10 @@ public abstract class AbstractNotificationMessageBuilder
                     }
                 }
 
-                if (velocityContextMap.containsKey(FILTER_ATTRIBUTE_VALUE_KEY))
+                // If filterAttribute added into context map - add it into notification headers
+                if (velocityContextMap.containsKey(filterAttributeKey))
                 {
-                    messageHeaders.add(new MessageHeader(FILTER_ATTRIBUTE_VALUE_KEY, velocityContextMap.get(FILTER_ATTRIBUTE_VALUE_KEY).toString()));
+                    messageHeaders.add(new MessageHeader(filterAttributeKey, velocityContextMap.get(filterAttributeKey).toString()));
                 }
 
                 // Create a notification message and add it to the result list.
