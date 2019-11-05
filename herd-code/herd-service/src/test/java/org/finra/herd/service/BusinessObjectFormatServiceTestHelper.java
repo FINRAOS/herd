@@ -569,9 +569,9 @@ public class BusinessObjectFormatServiceTestHelper
     {
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
 
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         return attributeDefinitions;
     }
@@ -585,9 +585,9 @@ public class BusinessObjectFormatServiceTestHelper
     {
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
 
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3, AbstractServiceTest.PUBLISH_ATTRIBUTE));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         return attributeDefinitions;
     }

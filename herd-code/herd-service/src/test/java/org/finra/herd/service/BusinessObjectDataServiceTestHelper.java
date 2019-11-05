@@ -930,7 +930,7 @@ public class BusinessObjectDataServiceTestHelper
             {
                 businessObjectFormatDaoTestHelper
                     .createBusinessObjectDataAttributeDefinitionEntity(businessObjectDataEntity.getBusinessObjectFormat(), attributeDefinition.getName(),
-                        attributeDefinition.isPublish());
+                        attributeDefinition.isPublish(), attributeDefinition.isPublishForFilter());
             }
         }
 

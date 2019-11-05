@@ -56,6 +56,8 @@ public abstract class AbstractNotificationMessageBuilder
 
     private static final String WITH_XML_SNAKE_CASE = "_with_xml";
 
+    protected static final String FILTER_ATTRIBUTE_VALUE_KEY = "filter_attribute_value";
+
     @Autowired
     private ConfigurationHelper configurationHelper;
 
@@ -167,6 +169,13 @@ public abstract class AbstractNotificationMessageBuilder
                             evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
                                 String.format("%s_messageHeader_%s", notificationEvent.getClass().getCanonicalName(), messageHeaderDefinition.getKey()))));
                     }
+                }
+
+                //if (notificationMessageDefinition.get)
+
+                if (velocityContextMap.containsKey(FILTER_ATTRIBUTE_VALUE_KEY))
+                {
+                    messageHeaders.add(new MessageHeader(FILTER_ATTRIBUTE_VALUE_KEY, velocityContextMap.get(FILTER_ATTRIBUTE_VALUE_KEY).toString()));
                 }
 
                 // Create a notification message and add it to the result list.

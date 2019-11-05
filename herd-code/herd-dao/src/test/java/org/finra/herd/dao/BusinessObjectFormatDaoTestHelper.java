@@ -88,7 +88,7 @@ public class BusinessObjectFormatDaoTestHelper
         }
 
         return createBusinessObjectDataAttributeDefinitionEntity(businessObjectFormatEntity, businessObjectDataAttributeName,
-            AbstractDaoTest.NO_PUBLISH_ATTRIBUTE);
+            AbstractDaoTest.NO_PUBLISH_ATTRIBUTE, AbstractDaoTest.NO_PUBLISH_FOR_FILTER);
     }
 
     /**
@@ -101,13 +101,14 @@ public class BusinessObjectFormatDaoTestHelper
      * @return the newly created business object data attribute definition entity.
      */
     public BusinessObjectDataAttributeDefinitionEntity createBusinessObjectDataAttributeDefinitionEntity(BusinessObjectFormatEntity businessObjectFormatEntity,
-        String businessObjectDataAttributeName, boolean publishBusinessObjectDataAttribute)
+        String businessObjectDataAttributeName, boolean publishBusinessObjectDataAttribute, boolean publishForFilterBusinessObjectDataAttribute)
     {
         // Create a new business object data attribute definition entity.
         BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity = new BusinessObjectDataAttributeDefinitionEntity();
         businessObjectDataAttributeDefinitionEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataAttributeDefinitionEntity.setName(businessObjectDataAttributeName);
         businessObjectDataAttributeDefinitionEntity.setPublish(publishBusinessObjectDataAttribute);
+        businessObjectDataAttributeDefinitionEntity.setPublishForFilter(publishForFilterBusinessObjectDataAttribute);
 
         // Update the parent entity.
         businessObjectFormatEntity.getAttributeDefinitions().add(businessObjectDataAttributeDefinitionEntity);

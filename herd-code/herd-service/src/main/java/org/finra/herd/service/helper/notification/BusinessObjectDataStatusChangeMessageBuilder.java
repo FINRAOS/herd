@@ -96,6 +96,11 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
                         businessObjectDataAttributesWithJson.put(escapeJson(attributeEntity.getName()), escapeJson(attributeEntity.getValue()));
                         businessObjectDataAttributesWithXml.put(escapeXml(attributeEntity.getName()), escapeXml(attributeEntity.getValue()));
                     }
+
+                    if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublishForFilter()))
+                    {
+                        addStringPropertyToContext(velocityContextMap, FILTER_ATTRIBUTE_VALUE_KEY, attributeEntity.getValue());
+                    }
                 }
             }
         }
