@@ -878,11 +878,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 }
 
                 // Ensure the attribute definitions do not have multiple publish for filters defined
-                if (attributeDefinition.isPublishForFilter() && !isPublishForFilterFound)
+                if (BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()) && !isPublishForFilterFound)
                 {
                     isPublishForFilterFound = true;
                 }
-                else if (attributeDefinition.isPublishForFilter() && isPublishForFilterFound)
+                else if (BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()) && isPublishForFilterFound)
                 {
                     throw new IllegalArgumentException("Only a single publish for filter attribute can be defined per business object format.");
                 }
@@ -1563,6 +1563,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 businessObjectDataAttributeDefinitionEntity.setBusinessObjectFormat(businessObjectFormatEntity);
                 businessObjectDataAttributeDefinitionEntity.setName(attributeDefinition.getName());
                 businessObjectDataAttributeDefinitionEntity.setPublish(BooleanUtils.isTrue(attributeDefinition.isPublish()));
+                businessObjectDataAttributeDefinitionEntity.setPublishForFilter(BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()));
 
                 // Add this entity to the list of the newly created business object definition attribute entities.
                 createdAttributeDefinitionEntities.add(businessObjectDataAttributeDefinitionEntity);
@@ -1601,11 +1602,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             }
 
             // Ensure the attribute definitions do not have multiple publish for filters defined
-            if (attributeDefinition.isPublishForFilter() && !isPublishForFilterFound)
+            if (BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()) && !isPublishForFilterFound)
             {
                 isPublishForFilterFound = true;
             }
-            else if (attributeDefinition.isPublishForFilter() && isPublishForFilterFound)
+            else if (BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()) && isPublishForFilterFound)
             {
                 throw new IllegalArgumentException("Only a single publish for filter attribute can be defined per business object format.");
             }
