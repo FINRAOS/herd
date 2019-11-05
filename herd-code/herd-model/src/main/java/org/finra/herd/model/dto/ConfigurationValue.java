@@ -1003,7 +1003,7 @@ public enum ConfigurationValue
     /**
     * Notification header key published for filtering along with BusinessObjectDataStatusChange notification
     */
-    MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE("message.header.key.filter.attribute.value", "filter_attribute_value");
+    MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE("message.header.key.filter.attribute.value", "filterAttributeValue");
 
     private Object defaultValue;
 
