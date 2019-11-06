@@ -126,7 +126,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME_STARTS_WITH_EQUALS_TO, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateCreateBusinessObjectFormatSchemaColumn(schema);
@@ -139,7 +139,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED,
                 NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateCreateBusinessObjectFormatSchemaColumn(schema);
@@ -152,7 +152,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_STARTS_WITH_EQUALS_TO, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateCreateBusinessObjectFormatSchemaColumn(schema);
@@ -165,7 +165,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateCreateBusinessObjectFormatSchemaColumn(schema);
@@ -177,7 +177,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         // Create a schema column size that starts with "-"
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, NEGATIVE_COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
-            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateCreateBusinessObjectFormatSchemaColumn(schema);
@@ -190,7 +190,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE_START_WITH_WHITESPACES_THEN_MINUS, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateCreateBusinessObjectFormatSchemaColumn(schema);
@@ -203,7 +203,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE_STARTS_WITH_EQUALS_TO,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateCreateBusinessObjectFormatSchemaColumn(schema);
@@ -216,7 +216,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateCreateBusinessObjectFormatSchemaColumn(schema);
@@ -228,7 +228,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         // Create a schema column description value that starts with "="
         Schema schema = new Schema(Arrays.asList(new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE,
             COLUMN_DESCRIPTION_STARTS_WITH_EQUALS_TO)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
         validateCreateBusinessObjectFormatSchemaColumn(schema);
     }
@@ -240,7 +240,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME_STARTS_WITH_EQUALS_TO, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         validateUpdateBusinessObjectFormatSchemaColumn(schema);
     }
@@ -252,7 +252,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED,
                 NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateUpdateBusinessObjectFormatSchemaColumn(schema);
@@ -265,7 +265,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_STARTS_WITH_EQUALS_TO, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateUpdateBusinessObjectFormatSchemaColumn(schema);
@@ -278,7 +278,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateUpdateBusinessObjectFormatSchemaColumn(schema);
@@ -290,7 +290,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         // Create a schema column size that starts with "-"
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, NEGATIVE_COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
-            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateUpdateBusinessObjectFormatSchemaColumn(schema);
@@ -303,7 +303,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE_START_WITH_WHITESPACES_THEN_MINUS, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateUpdateBusinessObjectFormatSchemaColumn(schema);
@@ -316,7 +316,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE_STARTS_WITH_EQUALS_TO,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateUpdateBusinessObjectFormatSchemaColumn(schema);
@@ -329,7 +329,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         Schema schema = new Schema(Arrays.asList(
             new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO,
                 COLUMN_DESCRIPTION)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            PARTITION_KEY_GROUP);
+            null, PARTITION_KEY_GROUP);
 
         // Specify the expected exception.
         validateUpdateBusinessObjectFormatSchemaColumn(schema);
@@ -341,7 +341,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         // Create a schema column description value that starts with "="
         Schema schema = new Schema(Arrays.asList(new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE,
             COLUMN_DESCRIPTION_STARTS_WITH_EQUALS_TO)), NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
         validateUpdateBusinessObjectFormatSchemaColumn(schema);
     }
