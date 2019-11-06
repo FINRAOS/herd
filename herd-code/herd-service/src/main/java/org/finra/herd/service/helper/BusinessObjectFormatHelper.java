@@ -130,6 +130,7 @@ public class BusinessObjectFormatHelper
             attributeDefinitions.add(attributeDefinition);
             attributeDefinition.setName(attributeDefinitionEntity.getName());
             attributeDefinition.setPublish(attributeDefinitionEntity.getPublish());
+            attributeDefinition.setPublishForFilter(attributeDefinitionEntity.getPublishForFilter());
         }
 
         // Only add schema information if this format has any schema columns defined.

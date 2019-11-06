@@ -765,6 +765,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
 
+    public static final Boolean NO_PUBLISH_FOR_FILTER_ATTRIBUTE = false;
+
     public static final RegistrationDateRangeFilter NO_REGISTRATION_DATE_RANGE_FILTER = null;
 
     public static final XMLGregorianCalendar NO_RESTORE_EXPIRATION_ON = null;
