@@ -934,6 +934,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_ESCAPE_CHARACTER_BACKSLASH = "\\";
 
+    public static final String SCHEMA_CUSTOM_ROW_FORMAT = "SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'";
+
+    public static final String SCHEMA_CUSTOM_ROW_FORMAT_WITH_SERDE_PROPS = "SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'\n" + "WITH SERDEPROPERTIES (\n" +
+        "   \"separatorChar\" = \"\\t\",\n" + "   \"quoteChar\"     = \"'\",\n" + "   \"escapeChar\"    = \"\\\\\"\n" + ") ";
+
     public static final String SCHEMA_ESCAPE_CHARACTER_TILDE = "~";
 
     public static final String SCHEMA_NULL_VALUE_BACKSLASH_N = "\\N";

@@ -2698,6 +2698,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="customRowFormat" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The customRowFormat is used for defining custom Hive format.
+                  This will override everything after "ROW FORMAT" in DDL including delimiter, escape value, null value statements.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="partitionKeyGroup" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The partition key group that this schema's partition or sub-partition key belongs to. This value will be used to identify the

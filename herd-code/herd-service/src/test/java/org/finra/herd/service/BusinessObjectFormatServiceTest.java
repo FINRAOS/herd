@@ -197,7 +197,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
                 FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
-                SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumnDaoTestHelper.getTestSchemaColumns(RANDOM_SUFFIX), null);
 
         // Create a second version of the business object format without partitioning columns.
@@ -520,12 +520,46 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         Schema initialSchema = new Schema(
             Arrays.asList(new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
             Arrays.asList(new SchemaColumn(COLUMN_NAME_2, COLUMN_DATA_TYPE_2, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION_2)),
-            SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+            SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
         // Create the updated format schema having modified column descriptions for both regular and partition columns.
         Schema updatedSchema = (Schema) initialSchema.clone();
         updatedSchema.getColumns().get(0).setDescription(COLUMN_DESCRIPTION_3);
         updatedSchema.getPartitions().get(0).setDescription(COLUMN_DESCRIPTION_4);
+
+        // Create an initial version of the business object format.
+        BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
+            new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
+
+        // Create a second version of the business object format with the schema columns having updated descriptions.
+        BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
+            new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
+
+        // Validate the returned object.
+        BusinessObjectFormat expectedBusinessObjectFormat = (BusinessObjectFormat) initialBusinessObjectFormat.clone();
+        expectedBusinessObjectFormat.setId(resultBusinessObjectFormat.getId());
+        expectedBusinessObjectFormat.setBusinessObjectFormatVersion(SECOND_FORMAT_VERSION);
+        expectedBusinessObjectFormat.setSchema(updatedSchema);
+        assertEquals(expectedBusinessObjectFormat, resultBusinessObjectFormat);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatInitialVersionExistsWithSchemaAdditiveSchemaChangesColumnRowFormatUpdated()
+    {
+        // Create relative database entities.
+        businessObjectFormatServiceTestHelper.createTestDatabaseEntitiesForBusinessObjectFormatTesting();
+
+        // Create an initial format schema.
+        Schema initialSchema = new Schema(
+            Arrays.asList(new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
+            Arrays.asList(new SchemaColumn(COLUMN_NAME_2, COLUMN_DATA_TYPE_2, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION_2)),
+            SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
+
+        // Create the updated format schema having modified custom row format.
+        Schema updatedSchema = (Schema) initialSchema.clone();
+        updatedSchema.setCustomRowFormat(SCHEMA_CUSTOM_ROW_FORMAT_WITH_SERDE_PROPS);
 
         // Create an initial version of the business object format.
         BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
@@ -558,7 +592,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             Schema initialSchema = new Schema(
                 Arrays.asList(new SchemaColumn(COLUMN_NAME, columnDataType, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
                 Arrays.asList(new SchemaColumn(COLUMN_NAME_2, columnDataType, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION_2)),
-                SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+                SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
             // Create the updated format schema having increased column sizes for both regular and partition columns.
             Schema updatedSchema = (Schema) initialSchema.clone();
@@ -638,6 +672,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         request.getSchema().setCollectionItemsDelimiter(null);
         request.getSchema().setMapKeysDelimiter(null);
         request.getSchema().setEscapeCharacter(null);
+        request.getSchema().setCustomRowFormat(null);
         businessObjectFormatService.createBusinessObjectFormat(request);
 
         // Get business object format entity.
@@ -659,6 +694,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         request.getSchema().setCollectionItemsDelimiter(null);
         request.getSchema().setMapKeysDelimiter(null);
         request.getSchema().setEscapeCharacter(null);
+        request.getSchema().setCustomRowFormat(null);
         resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request);
 
         // Validate the returned object.
@@ -669,6 +705,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         expectedSchema.setCollectionItemsDelimiter(null);
         expectedSchema.setMapKeysDelimiter(null);
         expectedSchema.setEscapeCharacter(null);
+        expectedSchema.setCustomRowFormat(null);
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(resultBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 SECOND_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
@@ -686,6 +723,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         request.getSchema().setCollectionItemsDelimiter(EMPTY_STRING);
         request.getSchema().setMapKeysDelimiter(EMPTY_STRING);
         request.getSchema().setEscapeCharacter(EMPTY_STRING);
+        request.getSchema().setCustomRowFormat(EMPTY_STRING);
         resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request);
 
         // Validate the returned object.
@@ -711,6 +749,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         request.getSchema().setCollectionItemsDelimiter(null);
         request.getSchema().setMapKeysDelimiter(null);
         request.getSchema().setEscapeCharacter(null);
+        request.getSchema().setCustomRowFormat(null);
         businessObjectFormatService.createBusinessObjectFormat(request);
 
         // Get business object format entity.
@@ -750,6 +789,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             newSchema.setCollectionItemsDelimiter(null);
             newSchema.setMapKeysDelimiter(null);
             newSchema.setEscapeCharacter(null);
+            newSchema.setCustomRowFormat(null);
             businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
                 .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
                     FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
@@ -771,6 +811,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             newSchema.setCollectionItemsDelimiter(null);
             newSchema.setMapKeysDelimiter(null);
             newSchema.setEscapeCharacter(SCHEMA_ESCAPE_CHARACTER_TILDE);
+            newSchema.setCustomRowFormat(null);
             businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
                 .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
                     FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
@@ -792,6 +833,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             newSchema.setCollectionItemsDelimiter(SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA);
             newSchema.setMapKeysDelimiter(null);
             newSchema.setEscapeCharacter(null);
+            newSchema.setCustomRowFormat(null);
             businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
                 .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
                     FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
@@ -814,6 +856,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             newSchema.setCollectionItemsDelimiter(null);
             newSchema.setMapKeysDelimiter(SCHEMA_MAP_KEYS_DELIMITER_HASH);
             newSchema.setEscapeCharacter(null);
+            newSchema.setCustomRowFormat(null);
             businessObjectFormatService.createBusinessObjectFormat(businessObjectFormatServiceTestHelper
                 .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
                     FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
@@ -1065,7 +1108,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial format schema.
         Schema initialSchema = new Schema(
             Arrays.asList(new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE_2, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
-            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
         // Create an initial version of the business object format.
         businessObjectFormatService.createBusinessObjectFormat(
@@ -1100,7 +1143,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial format schema.
         Schema initialSchema = new Schema(
             Arrays.asList(new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
-            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
         // Create an initial version of the business object format.
         businessObjectFormatService.createBusinessObjectFormat(
@@ -1139,7 +1182,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             // Create an initial format schema with a regular column size having not a positive integer value.
             Schema initialSchema = new Schema(Arrays.asList(
                 new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, originalColumnSize, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
-                NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+                NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
             // We need to specify a unique format usage for each data type being tested to avoid an already exists exception.
             String formatUsage = String.format("%s_%d", FORMAT_USAGE_CODE, i++);
@@ -1179,7 +1222,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial format schema with a positive integer regular column size.
         Schema initialSchema = new Schema(
             Arrays.asList(new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE_CHAR, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
-            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, PARTITION_KEY_GROUP);
+            NO_PARTITION_COLUMNS, SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, PARTITION_KEY_GROUP);
 
         // Create an initial version of the business object format.
         businessObjectFormatService.createBusinessObjectFormat(
@@ -2611,7 +2654,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Prepare test data without custom ddl.
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), CUSTOM_DDL_NAME);
 
         // Retrieve business object format ddl request without optional parameters.
@@ -2736,7 +2779,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, FORMAT_DESCRIPTION,
                     FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP,
                     businessObjectDefinitionServiceTestHelper.getNewAttributes(), SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
-                    SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                    SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                     schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
 
             for (String partitionValue : UNSORTED_PARTITION_VALUES)
@@ -2783,7 +2826,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         businessObjectFormatServiceTestHelper
-            .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, BACKSLASH, BACKSLASH, BACKSLASH, BACKSLASH,
+            .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, BACKSLASH, BACKSLASH, BACKSLASH, BACKSLASH, null,
                 BACKSLASH, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object format ddl.
@@ -2807,7 +2850,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         String partitionKey = partitionColumns.get(0).getName();
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SINGLE_QUOTE, SINGLE_QUOTE, SINGLE_QUOTE,
-                SINGLE_QUOTE, SINGLE_QUOTE, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
+                SINGLE_QUOTE, null, SINGLE_QUOTE, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object format ddl.
         BusinessObjectFormatDdlRequest request = businessObjectFormatServiceTestHelper.getTestBusinessObjectFormatDdlRequest(null);
@@ -2831,7 +2874,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         partitionColumns.get(0).setName(invalidPartitionColumnName);
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, PARTITION_KEY, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Try to retrieve business object format ddl for the format that uses unsupported schema column data type.
@@ -2859,7 +2902,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         String partitionKey = partitionColumns.get(0).getName();
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
-                SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object format ddl.
@@ -2882,7 +2925,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         String partitionKey = partitionColumns.get(0).getName();
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, null, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object format ddl.
@@ -2906,7 +2949,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         String partitionKey = partitionColumns.get(0).getName();
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, null,
                 schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object format ddl.
@@ -2928,7 +2971,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Prepare test data without custom ddl.
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY,
-                SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
                 SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, null);
 
         // Retrieve business object format ddl for a non-partitioned table and without specifying custom ddl name.
@@ -2949,7 +2992,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         String businessObjectFileType = "UNKNOWN";
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(businessObjectFileType, PARTITION_KEY, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), null);
 
         // Try to retrieve business object format ddl for the format without custom ddl and that uses unsupported file type.
@@ -2981,7 +3024,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         String partitionKey = schemaColumns.get(0).getName();
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumns, schemaColumnDaoTestHelper.getTestPartitionColumns(), null);
 
         // Try to retrieve business object format ddl for the format that uses unsupported schema column data type.
@@ -3012,7 +3055,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         schemaColumns.set(0, partitionColumns.get(0));
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumns, partitionColumns, null);
 
         // Retrieve business object format ddl without specifying custom ddl name.
@@ -3034,7 +3077,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         String partitionKey = partitionColumns.get(0).getName();
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object format ddl without specifying custom ddl name.
@@ -3058,7 +3101,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // schemaEscapeCharacter to char(10), and schemaNullValue to char(128).
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, String.valueOf((char) 1),
-                String.valueOf((char) 2), String.valueOf((char) 3), String.valueOf((char) 10), String.valueOf((char) 128),
+                String.valueOf((char) 2), String.valueOf((char) 3), String.valueOf((char) 10), null, String.valueOf((char) 128),
                 schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object format ddl request without business object format and data versions.
@@ -3082,7 +3125,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Prepare test data without custom ddl.
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), CUSTOM_DDL_NAME);
 
         // Retrieve business object format ddl request without drop table statement.
@@ -3104,7 +3147,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY,
                 SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, CUSTOM_DDL_NAME);
+                null, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, CUSTOM_DDL_NAME);
 
         // Retrieve business object format ddl for a non-partitioned table.
         BusinessObjectFormatDdlRequest request = businessObjectFormatServiceTestHelper.getTestBusinessObjectFormatDdlRequest(CUSTOM_DDL_NAME);
@@ -4043,7 +4086,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
                 FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), SCHEMA_DELIMITER_COMMA, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
-                SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_NULL_VALUE_BACKSLASH_N,
                 schemaColumnDaoTestHelper.getTestSchemaColumns(), null);
 
         // Create a new partition key group for the update request.

@@ -682,29 +682,39 @@ public class Hive13DdlGenerator extends DdlGenerator
             sb.append(")\n");
         }
 
-        // We output delimiter character, collection items delimiter, map keys delimiter, escape character, and null value only when they are defined
-        // in the business object format schema.
-        sb.append("ROW FORMAT DELIMITED");
-        if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getDelimiter()))
+        if (!StringUtils.isEmpty(businessObjectFormat.getSchema().getCustomRowFormat()))
         {
-            // Note that the escape character is only output when the delimiter is present.
-            sb.append(String.format(" FIELDS TERMINATED BY '%s'%s",
-                escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getDelimiter(), true)),
-                StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getEscapeCharacter()) ? "" : String.format(" ESCAPED BY '%s'",
-                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getEscapeCharacter(), true)))));
+            // Add custom row format defined in business object format.
+            // This will override everything after "ROW FORMAT" including delimiter, escape value, null value statements defined in the business object format
+            // schema.
+            sb.append(String.format("ROW FORMAT %s\n",businessObjectFormat.getSchema().getCustomRowFormat()));
         }
-        if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getCollectionItemsDelimiter()))
+        else
         {
-            sb.append(String.format(" COLLECTION ITEMS TERMINATED BY '%s'",
-                escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getCollectionItemsDelimiter(), true))));
+            // We output delimiter character, collection items delimiter, map keys delimiter, escape character, and null value only when they are defined
+            // in the business object format schema.
+            sb.append("ROW FORMAT DELIMITED");
+            if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getDelimiter()))
+            {
+                // Note that the escape character is only output when the delimiter is present.
+                sb.append(String.format(" FIELDS TERMINATED BY '%s'%s",
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getDelimiter(), true)),
+                    StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getEscapeCharacter()) ? "" : String.format(" ESCAPED BY '%s'",
+                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getEscapeCharacter(), true)))));
+            }
+            if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getCollectionItemsDelimiter()))
+            {
+                sb.append(String.format(" COLLECTION ITEMS TERMINATED BY '%s'",
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getCollectionItemsDelimiter(), true))));
+            }
+            if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getMapKeysDelimiter()))
+            {
+                sb.append(String.format(" MAP KEYS TERMINATED BY '%s'",
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getMapKeysDelimiter(), true))));
+            }
+            sb.append(String
+                .format(" NULL DEFINED AS '%s'\n", escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getNullValue()))));
         }
-        if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getMapKeysDelimiter()))
-        {
-            sb.append(String.format(" MAP KEYS TERMINATED BY '%s'",
-                escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getMapKeysDelimiter(), true))));
-        }
-        sb.append(
-            String.format(" NULL DEFINED AS '%s'\n", escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getNullValue()))));
 
         // If this table is not partitioned, then STORED AS clause will be followed by LOCATION. Otherwise, the CREATE TABLE is complete.
         sb.append(

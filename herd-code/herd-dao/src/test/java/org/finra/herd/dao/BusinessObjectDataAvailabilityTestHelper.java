@@ -113,7 +113,8 @@ public class BusinessObjectDataAvailabilityTestHelper
                     AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA, AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractDaoTest.LATEST_VERSION_FLAG_SET, partitionKey,
                     partitionKeyGroupName, AbstractDaoTest.NO_ATTRIBUTES, AbstractDaoTest.SCHEMA_DELIMITER_PIPE,
                     AbstractDaoTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractDaoTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
-                    AbstractDaoTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractDaoTest.SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
+                    AbstractDaoTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, AbstractDaoTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
+                    columns, partitionColumns);
         }
 
         // Create storage entities if they do not exist.
