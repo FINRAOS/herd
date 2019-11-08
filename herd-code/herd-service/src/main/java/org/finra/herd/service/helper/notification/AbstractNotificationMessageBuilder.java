@@ -120,6 +120,9 @@ public abstract class AbstractNotificationMessageBuilder
         NotificationMessageDefinitions notificationMessageDefinitions =
             configurationDaoHelper.getXmlClobPropertyAndUnmarshallToObject(NotificationMessageDefinitions.class, getMessageDefinitionKey(notificationEvent));
 
+        // Get notification header key for filter attribute value
+        String filterAttributeKey = configurationHelper.getRequiredProperty(ConfigurationValue.MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE);
+
         // Continue processing if notification message definitions are configured.
         if (notificationMessageDefinitions != null && CollectionUtils.isNotEmpty(notificationMessageDefinitions.getNotificationMessageDefinitions()))
         {
@@ -167,6 +170,12 @@ public abstract class AbstractNotificationMessageBuilder
                             evaluateVelocityTemplate(messageHeaderDefinition.getValueVelocityTemplate(), velocityContextMap,
                                 String.format("%s_messageHeader_%s", notificationEvent.getClass().getCanonicalName(), messageHeaderDefinition.getKey()))));
                     }
+                }
+
+                // If filterAttribute added into context map - add it into notification headers
+                if (velocityContextMap.containsKey(filterAttributeKey))
+                {
+                    messageHeaders.add(new MessageHeader(filterAttributeKey, velocityContextMap.get(filterAttributeKey).toString()));
                 }
 
                 // Create a notification message and add it to the result list.

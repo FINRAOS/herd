@@ -856,7 +856,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean PUBLISH_ATTRIBUTE = true;
 
-    public static final Boolean PUBLISH_FOR_FILTER_ATTRIBUTE = true;
+    public static final Boolean PUBLISH_FOR_FILTER = true;
+
+    public static final Boolean NO_PUBLISH_FOR_FILTER = false;
 
     public static final Integer READ_TIMEOUT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
