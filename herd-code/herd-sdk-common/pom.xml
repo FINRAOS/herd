@@ -36,9 +36,6 @@
       </swagger.spec.path>
       <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
 
-      <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <herdsdk.version>0.90.0</herdsdk.version>
-
    </properties>
 
    <name>herd sdk common</name>
@@ -280,7 +277,7 @@
                      <configOptions>
                         <packageName>herdsdk</packageName>
                         <projectName>herdsdk</projectName>
-                        <packageVersion>${herdsdk.version}</packageVersion>
+                        <packageVersion>${herdpython.version}</packageVersion>
                      </configOptions>
                   </configuration>
                </execution>
