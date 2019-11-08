@@ -20,7 +20,7 @@ import tkinter as tk
 from tkinter import font, ttk, scrolledtext, filedialog
 
 # Local imports
-from . import logger, otags
+from herdcl import logger, otags
 
 LOGGER = logger.get_logger(__name__)
 ALL = tk.N + tk.S + tk.E + tk.W

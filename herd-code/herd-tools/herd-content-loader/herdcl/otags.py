@@ -18,7 +18,7 @@ import herdsdk
 from herdsdk.rest import ApiException
 
 # Local imports
-from . import logger
+from herdcl import logger
 
 LOGGER = logger.get_logger(__name__)
 
