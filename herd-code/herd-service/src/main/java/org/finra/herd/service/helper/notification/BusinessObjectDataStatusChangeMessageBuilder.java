@@ -112,8 +112,8 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
 
                         // Get notification header key for filter attribute value
                         String filterAttributeKey = configurationHelper.getRequiredProperty(ConfigurationValue.MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE);
-
-                        if (velocityContextMap.containsKey(filterAttributeKey)) {
+                        if (velocityContextMap.containsKey(filterAttributeKey))
+                        {
                             throw new IllegalStateException(String.format("Multiple attributes are marked as publishForFilter for business object format {%s}.",
                                     businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
                         }
