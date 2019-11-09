@@ -344,7 +344,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create a list of attribute definitions including one with publish for filter attribute.
         List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions();
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_4_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.PUBLISH_FOR_FILTER_ATTRIBUTE));
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
 
         // Create the business object format with publish for filter attribute definition.
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
@@ -369,11 +369,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create a list of attribute definitions including one with publish for filter attribute.
         List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions();
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_4_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.PUBLISH_FOR_FILTER_ATTRIBUTE));
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
 
         // Add a second publish for filter attribute in the same format.
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME, AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.PUBLISH_FOR_FILTER_ATTRIBUTE));
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
 
         // Create the business object format with publish for filter attribute definition.
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
@@ -5183,11 +5183,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
 
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.PUBLISH_FOR_FILTER_ATTRIBUTE));
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.PUBLISH_FOR_FILTER_ATTRIBUTE));
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER_ATTRIBUTE));
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
@@ -5211,11 +5211,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
 
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.PUBLISH_FOR_FILTER_ATTRIBUTE));
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER_ATTRIBUTE));
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER_ATTRIBUTE));
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
