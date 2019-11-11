@@ -258,6 +258,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     val s = new Schema
     s.setDelimiter("|")
     s.setEscapeCharacter("\\")
+    s.setNullValue("\\N")
     val schemaColumn = new SchemaColumn
     schemaColumn.setName("name")
     schemaColumn.setType("String")
@@ -333,6 +334,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     val s = new Schema
     s.setDelimiter("|")
     s.setEscapeCharacter("\\")
+    s.setNullValue("\\N")
     val schemaColumn = new SchemaColumn
     schemaColumn.setName("name")
     schemaColumn.setType("String")
@@ -705,6 +707,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     s.addPartitionsItem(partitionColumn)
     s.setDelimiter(",")
     s.setEscapeCharacter("\\")
+    s.setNullValue("\\N")
     businessObjectFormat.setSchema(s)
 
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
@@ -716,7 +719,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
   }
 
-  test("getParseOptions should return map of parse options with user defined delimiter and escape character of the given object")
+  test("getParseOptions should return map of parse options with user defined delimiter, escape, and null value characters of the given object")
   {
     var businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
     businessObjectFormat.setNamespace(namespace)
@@ -736,6 +739,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     s.addPartitionsItem(partitionColumn)
     s.setDelimiter("a")
     s.setEscapeCharacter("b")
+    s.setNullValue("c")
     businessObjectFormat.setSchema(s)
 
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
@@ -743,7 +747,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
     val parseOutput = dataCatalog.getParseOptions(namespace, objectName, formatUsage, formatType, formatVersion)
 
-    assertEquals("Map(nullValue -> \\N, escape -> b, dateFormat -> yyyy-MM-dd, mode -> PERMISSIVE, delimiter -> a)", parseOutput.toString())
+    assertEquals("Map(nullValue -> c, escape -> b, dateFormat -> yyyy-MM-dd, mode -> PERMISSIVE, delimiter -> a)", parseOutput.toString())
 
   }
 
@@ -789,6 +793,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     s.addPartitionsItem(partitionColumn)
     s.setDelimiter(",")
     s.setEscapeCharacter("\\")
+    s.setNullValue("\\N")
     businessObjectFormat.setSchema(s)
 
     val storageUnit = new StorageUnit
@@ -858,6 +863,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
     s.setDelimiter("|")
     s.setEscapeCharacter("\\")
+    s.setNullValue("\\N")
     s.addPartitionsItem(partitionColumn)
 
     val schemaColumn = new SchemaColumn
