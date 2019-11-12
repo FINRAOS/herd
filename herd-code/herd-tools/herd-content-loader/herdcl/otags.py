@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import os, sys, configparser
+import os, sys, configparser, json
 
 # Herd imports
 import herdsdk
@@ -60,7 +60,7 @@ class Controller:
             path = '/'.join(sys.argv[0].split('/')[:-1])
         else:
             path = os.getcwd()
-        LOGGER.debug('Current working directory: {}'.format(path))
+        LOGGER.info('Current working directory: {}'.format(path))
 
         # Get config file
         config_file = path + "/loader.cfg"
@@ -107,8 +107,8 @@ class Controller:
 
         try:
             # Gets the build information
-            api_response = api_instance.application_get_build_info()
-            return api_response
+            api_instance.application_get_build_info()
+            return self.get_response(api_instance)
         except ApiException as e:
             print("Exception when calling ApplicationApi->application_get_build_info: %s\n" % e)
 
@@ -127,3 +127,11 @@ class Controller:
         except ApiException as e:
             print(
                 "Exception when calling BusinessObjectDefinitionSubjectMatterExpertApi->business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition: %s\n" % e)
+
+    ############################################################################
+    def get_response(self, instance):
+        response = {
+            'status': instance.api_client.last_response.status,
+            'data': json.loads(instance.api_client.last_response.data)
+        }
+        return response

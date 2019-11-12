@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import argparse, base64
+import argparse, base64, json
 
 # Local imports
 from herdcl import logger, otags
@@ -45,8 +45,9 @@ class Application:
         }
         self.controller.setup_config(creds)
 
+        LOGGER.info("Running {}".format(self.controller.acts[str.lower(self.action)].__name__))
         resp = self.controller.run_action(str.lower(self.action))
-        LOGGER.info(resp)
+        LOGGER.info(json.dumps(resp, indent=4))
 
         LOGGER.info("\n-- RUN COMPLETED ---")
 
@@ -67,7 +68,7 @@ def main():
         import gui
         app = gui.MainUI()
         LOGGER.info('Starting App')
-        app.master.title('Herd Content Loader  v.20191029')
+        app.master.title('Herd Content Loader  v.20191112')
         app.mainloop()
 
 

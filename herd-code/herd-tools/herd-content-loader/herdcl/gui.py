@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import traceback
+import traceback, json
 
 import tkinter as tk
 from tkinter import font, ttk, scrolledtext, filedialog
@@ -169,6 +169,10 @@ class MainUI(tk.Frame):
         """
         self.textPad.delete('1.0', tk.END)
 
+        if not self.username.get():
+            self.line("Enter credentials")
+            return
+
         creds = {
             'url': self.config.get('url', self.env_name),
             'userName': self.username.get(),
@@ -177,8 +181,9 @@ class MainUI(tk.Frame):
         self.controller.setup_config(creds)
 
         try:
+            self.display("Running {}".format(self.controller.acts[str.lower(self.action)].__name__))
             resp = self.controller.run_action(str.lower(self.action))
-            self.display(resp)
+            self.display(json.dumps(resp, indent=4))
         except Exception:
             print(traceback.format_exc())
 
