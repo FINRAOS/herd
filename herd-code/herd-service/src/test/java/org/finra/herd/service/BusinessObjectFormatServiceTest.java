@@ -5044,23 +5044,24 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
         BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
 
-        // Passing null as optional parameter
+        // Passing null publish and null publish for filter as optional parameters
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, null, NO_PUBLISH_FOR_FILTER));
-        // Perform an update by changing the attribute definition with an empty list.
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, null, null));
+
+        // Perform an update by changing the attribute definition with a null optional publish and publish for filter parameters.
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
-        try
-        {
-            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
-                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
-            fail("Should throw an IllegalArgumentException.");
-        }
-        catch (NullPointerException ex)
-        {
-            assertEquals(null, ex.getMessage());
-        }
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
 
+        // Validate the returned object.
+        List<AttributeDefinition> validateAttributeDefinitions = new ArrayList<>();
+        validateAttributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
+                attributes, validateAttributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
     }
 
     @Test
