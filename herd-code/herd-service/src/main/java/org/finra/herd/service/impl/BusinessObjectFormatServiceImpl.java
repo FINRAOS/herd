@@ -1543,16 +1543,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 // Check if the attribute definition value needs to be updated.
                 BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity =
                     existingAttributeDefinitionEntities.get(lowercaseAttributeName);
-                if (!attributeDefinition.isPublish().equals(businessObjectDataAttributeDefinitionEntity.getPublish()))
-                {
-                    // Update the business object attribute entity.
-                    businessObjectDataAttributeDefinitionEntity.setPublish(attributeDefinition.isPublish());
-                }
-                if (!attributeDefinition.isPublishForFilter().equals(businessObjectDataAttributeDefinitionEntity.getPublishForFilter()))
-                {
-                    // Update the business object attribute entity.
-                    businessObjectDataAttributeDefinitionEntity.setPublishForFilter(attributeDefinition.isPublishForFilter());
-                }
+                businessObjectDataAttributeDefinitionEntity.setPublish(BooleanUtils.isTrue(attributeDefinition.isPublish()));
+                businessObjectDataAttributeDefinitionEntity.setPublishForFilter(BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()));
 
                 // Add this entity to the list of business object definition attribute entities to be retained.
                 retainedAttributeDefinitionEntities.add(businessObjectDataAttributeDefinitionEntity);
