@@ -185,7 +185,7 @@ class MainUI(tk.Frame):
             resp = self.controller.run_action(str.lower(self.action))
             self.display(json.dumps(resp, indent=4))
         except Exception:
-            print(traceback.format_exc())
+            LOGGER.error(traceback.format_exc())
 
         # TODO Run Summary
         self.display("\n-- RUN COMPLETED ---")

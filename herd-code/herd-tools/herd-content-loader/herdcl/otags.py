@@ -41,7 +41,7 @@ class Controller:
             'bdef description': self.get_build_info,
         }
         self.actions = ['Tags', 'Objects', 'Columns', 'Samples', 'BDef Description']
-        self.envs = ['DEV', 'DEV-INT', 'QA', 'QA-INT', 'QA-STRESS', 'PROD', 'PROD-CT']
+        self.envs = ['DEV', 'DEV-INT', 'QA', 'QA-INT', 'QA-STRESS', 'CT', 'PROD', 'PROD-CT']
 
         # Configure HTTP basic authorization: basicAuthentication
         self.configuration = herdsdk.Configuration()
@@ -110,7 +110,7 @@ class Controller:
             api_instance.application_get_build_info()
             return self.get_response(api_instance)
         except ApiException as e:
-            print("Exception when calling ApplicationApi->application_get_build_info: %s\n" % e)
+            LOGGER.error("Exception when calling ApplicationApi->application_get_build_info: %s\n" % e)
 
     ############################################################################
     def test_method(self):
@@ -125,7 +125,7 @@ class Controller:
                 namespace, business_object_definition_name)
             return api_response.business_object_definition_subject_matter_expert_keys
         except ApiException as e:
-            print(
+            LOGGER.error(
                 "Exception when calling BusinessObjectDefinitionSubjectMatterExpertApi->business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition: %s\n" % e)
 
     ############################################################################
