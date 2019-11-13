@@ -17,7 +17,10 @@
 import argparse, base64, json
 
 # Local imports
-from herdcl import logger, otags
+try:
+    import logger, otags
+except ImportError:
+    from herdcl import logger, otags
 
 LOGGER = logger.get_logger(__name__)
 
