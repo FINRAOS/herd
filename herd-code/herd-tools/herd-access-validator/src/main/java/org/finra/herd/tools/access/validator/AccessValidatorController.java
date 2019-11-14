@@ -146,7 +146,7 @@ class AccessValidatorController
             AmazonS3ClientBuilder.standard().withCredentials(awsCredentialsProvider).withClientConfiguration(clientConfiguration).withRegion(awsRegion).build();
 
         // Create AWS SQS client using the assumed role.
-        LOGGER.info("Creating AWS SQS client using role: \"{}\".", awsCredentialsProvider);
+        LOGGER.info("Creating AWS SQS client using role: \"{}\".", awsRoleArn);
 
         AmazonSQS amazonSQS =
             AmazonSQSClientBuilder.standard().withCredentials(awsCredentialsProvider).withClientConfiguration(clientConfiguration).withRegion(awsRegion)
