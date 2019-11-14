@@ -25,17 +25,10 @@
       <version>0.109.0-SNAPSHOT</version>
    </parent>
 
-   <name>herd pandas python library</name>
+   <name>herd content loader</name>
 
    <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
-   <artifactId>herd-pandas</artifactId>
-
-   <properties>
-
-      <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <herdpandas.version>0.109.0</herdpandas.version>
-
-   </properties>
+   <artifactId>herd-content-loader</artifactId>
 
    <build>
       <plugins>
@@ -76,7 +69,7 @@
             <configuration>
                <file>${project.build.directory}/resources/setup.py</file>
                <token>@@Version@@</token>
-               <value>"${herdpandas.version}"</value>
+               <value>${herdpython.version}</value>
             </configuration>
          </plugin>
          <plugin>

@@ -233,7 +233,7 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
     {
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, null,
-                null, null, LATEST_VERSION_FLAG_SET, businessObjectFormatPartitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, null, null, null, null, null,
+                null, null, LATEST_VERSION_FLAG_SET, businessObjectFormatPartitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, null, null, null, null, null, null,
                 schemaColumns, partitionColumns);
         BusinessObjectDataKey businessObjectDataKey =
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, partitionValue,

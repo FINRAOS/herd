@@ -1,0 +1,3 @@
+herdsdk
+herdcl
+pyinstaller

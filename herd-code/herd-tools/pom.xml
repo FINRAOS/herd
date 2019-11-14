@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.108.0-SNAPSHOT</version>
+      <version>0.109.0-SNAPSHOT</version>
    </parent>
 
    <name>herd tools</name>
@@ -44,6 +44,7 @@
             <module>herd-retention-expiration-destroyer</module>
             <module>herd-pandas</module>
             <module>herd-access-validator</module>
+            <module>herd-content-loader</module>
          </modules>
       </profile>
       <profile>
@@ -52,6 +53,13 @@
             <module>herd-spark-data-source</module>
             <module>herd-spark-data-catalog</module>
             <module>herd-spark-2.2-data-source</module>
+         </modules>
+      </profile>
+      <profile>
+         <id>tools-python</id>
+         <modules>
+            <module>herd-pandas</module>
+            <module>herd-content-loader</module>
          </modules>
       </profile>
       <profile>
@@ -70,6 +78,7 @@
             <module>herd-spark-2.2-data-source</module>
             <module>herd-pandas</module>
             <module>herd-access-validator</module>
+            <module>herd-content-loader</module>
          </modules>
       </profile>
    </profiles>

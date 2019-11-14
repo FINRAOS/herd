@@ -118,6 +118,9 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Column(name = "escp_char_tx")
     private String escapeCharacter;
 
+    @Column(name = "cstm_row_frmt_tx")
+    private String customRowFormat;
+
     @ManyToOne
     @JoinColumn(name = "prtn_key_group_tx", referencedColumnName = "prtn_key_group_tx")
     private PartitionKeyGroupEntity partitionKeyGroup;
@@ -443,5 +446,15 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setDocumentSchemaUrl(String documentSchemaUrl)
     {
         this.documentSchemaUrl = documentSchemaUrl;
+    }
+
+    public String getCustomRowFormat()
+    {
+        return customRowFormat;
+    }
+
+    public void setCustomRowFormat(String customRowFormat)
+    {
+        this.customRowFormat = customRowFormat;
     }
 }

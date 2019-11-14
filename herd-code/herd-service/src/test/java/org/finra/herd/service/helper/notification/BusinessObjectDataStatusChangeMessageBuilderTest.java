@@ -179,8 +179,8 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
 
         // Create a list of attribute definitions.
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
@@ -619,7 +619,7 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
         for (Attribute attribute : attributes)
         {
             businessObjectFormatDaoTestHelper
-                .createBusinessObjectDataAttributeDefinitionEntity(businessObjectDataEntity.getBusinessObjectFormat(), attribute.getName(), PUBLISH_ATTRIBUTE);
+                .createBusinessObjectDataAttributeDefinitionEntity(businessObjectDataEntity.getBusinessObjectFormat(), attribute.getName(), PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER);
         }
 
         // Call the method under test.
@@ -699,6 +699,141 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
             map.get(StorageUnitStatusChangeNotificationEvent.class));
         assertEquals(ConfigurationValue.HERD_NOTIFICATION_USER_NAMESPACE_AUTHORIZATION_CHANGE_MESSAGE_DEFINITIONS,
             map.get(UserNamespaceAuthorizationChangeNotificationEvent.class));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesFilterAttributeHeader() throws Exception
+    {
+        // Create a list of attributes.
+        List<Attribute> attributes = new ArrayList<>();
+        attributes.add(new Attribute(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.ATTRIBUTE_VALUE_1));
+        attributes.add(new Attribute(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.ATTRIBUTE_VALUE_2));
+
+        // Create a list of attribute definitions.
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.PUBLISH_FOR_FILTER));
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+                businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, attributeDefinitions, attributes);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+                new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                        BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, getMessageHeaderDefinitions())))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result = businessObjectDataStatusChangeMessageBuilder
+                .buildNotificationMessages(new BusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2));
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        assertEquals(8, CollectionUtils.size(result.get(0).getMessageHeaders()));
+        String uuid = result.get(0).getMessageHeaders().get(4).getValue();
+        assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
+
+        List<MessageHeader> expectedMessageHeaders = getExpectedMessageHeaders(uuid);
+        expectedMessageHeaders.add(new MessageHeader(ConfigurationValue.MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE.getDefaultValue().toString(), AbstractServiceTest.ATTRIBUTE_VALUE_2));
+
+        businessObjectDataServiceTestHelper
+                .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
+                        businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BDATA_STATUS, BDATA_STATUS_2,
+                        attributes, expectedMessageHeaders, result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesNoFilterAttributeHeader() throws Exception
+    {
+        // Create a list of attributes.
+        List<Attribute> attributes = new ArrayList<>();
+        attributes.add(new Attribute(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.ATTRIBUTE_VALUE_1));
+        attributes.add(new Attribute(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.ATTRIBUTE_VALUE_2));
+
+        // Create a list of attribute definitions.
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+                businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, attributeDefinitions, attributes);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+                new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                        BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, getMessageHeaderDefinitions())))));
+
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Build a notification message.
+        List<NotificationMessage> result = businessObjectDataStatusChangeMessageBuilder
+                .buildNotificationMessages(new BusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2));
+
+        // Validate the results.
+        assertEquals(1, CollectionUtils.size(result));
+        assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
+        String uuid = result.get(0).getMessageHeaders().get(4).getValue();
+        assertEquals(UUID.randomUUID().toString().length(), StringUtils.length(uuid));
+
+        List<MessageHeader> expectedMessageHeaders = getExpectedMessageHeaders(uuid);
+
+        businessObjectDataServiceTestHelper
+                .validateBusinessObjectDataStatusChangeMessageWithXmlPayload(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION, businessObjectDataKey,
+                        businessObjectDataEntity.getId(), HerdDaoSecurityHelper.SYSTEM_USER, BDATA_STATUS, BDATA_STATUS_2,
+                        attributes, expectedMessageHeaders, result.get(0));
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataStatusChangeMessagesMoreThanOneFilterAttributeHeader() throws Exception
+    {
+        // Create a list of attributes.
+        List<Attribute> attributes = new ArrayList<>();
+        attributes.add(new Attribute(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.ATTRIBUTE_VALUE_1));
+        attributes.add(new Attribute(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.ATTRIBUTE_VALUE_2));
+
+        // Create a list of attribute definitions.
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.PUBLISH_FOR_FILTER));
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+                businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, attributeDefinitions, attributes);
+
+        // Get a business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Override configuration.
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS.getKey());
+        configurationEntity.setValueClob(xmlHelper.objectToXml(new NotificationMessageDefinitions(Collections.singletonList(
+                new NotificationMessageDefinition(MESSAGE_TYPE_SNS, MESSAGE_DESTINATION,
+                        BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML, getMessageHeaderDefinitions())))));
+        configurationDao.saveAndRefresh(configurationEntity);
+
+        // Try to build a notification message.
+        try
+        {
+            // Build a notification message.
+            businessObjectDataStatusChangeMessageBuilder.buildNotificationMessages(new BusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BDATA_STATUS, BDATA_STATUS_2));
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("Multiple attributes are marked as publishForFilter for business object format "));
+        }
     }
 
     /**
