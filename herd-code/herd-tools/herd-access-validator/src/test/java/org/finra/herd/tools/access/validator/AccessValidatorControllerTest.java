@@ -46,10 +46,13 @@ import java.io.File;
 import java.util.Collections;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -96,6 +99,9 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
 
     @Mock
     private S3Operations s3Operations;
+
+    @Mock
+    private AmazonS3 amazonS3;
 
     @Before
     public void before()
@@ -159,7 +165,12 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
                 eq(businessObjectFormatVersion), eq(businessObjectDataVersion), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
+
         when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
+
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setContentLength(RandomUtils.nextLong());
+        when(s3Operations.getObjectMetadata(any(), any(), any())).thenReturn(objectMetadata);
 
         if (messageFlag)
         {
@@ -193,6 +204,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
         verify(propertiesHelper).getProperty(AWS_ROLE_ARN_PROPERTY);
         verify(s3Operations).getS3Object(eq(getObjectRequest), any(AmazonS3.class));
+        verify(s3Operations).getObjectMetadata(any(), any(), any());
 
         if (messageFlag)
         {
