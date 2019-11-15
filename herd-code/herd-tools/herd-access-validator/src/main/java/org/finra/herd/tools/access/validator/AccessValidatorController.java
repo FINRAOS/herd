@@ -37,9 +37,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.UUID;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
@@ -237,14 +235,6 @@ class AccessValidatorController
 
                     validated = true;
                     break;
-                }
-                catch (AmazonServiceException e)
-                {
-                    LOGGER.error("{}Could not read file from S3.", LINE_FEED, e);
-                }
-                catch (SdkClientException e)
-                {
-                    LOGGER.error("{}Access validator client setup incorrectly.", LINE_FEED, e);
                 }
             }
             else
