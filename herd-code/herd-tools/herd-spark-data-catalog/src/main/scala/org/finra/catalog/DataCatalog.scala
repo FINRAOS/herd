@@ -792,13 +792,12 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return Map of parse options
    */
   private def parseParseOptions(businessObjectFormat : org.finra.herd.sdk.model.BusinessObjectFormat, csvBug: Boolean): Map[String, String] = {
-    //    val nullValue = boFormats \\ "businessObjectFormat" \\ "schema" \\ "nullValue" text
-    val nullValue = "\\N"
+    var nullValue = businessObjectFormat.getSchema.getNullValue
     var delimiter = businessObjectFormat.getSchema.getDelimiter
     var escapeCharacter = businessObjectFormat.getSchema.getEscapeCharacter
-    //    val partitionKeyGroup = boFormats \\ "businessObjectFormat" \\ "schema" \\ "partitionKeyGroup" text
 
     // ugly but gets the job done, having text that needs to recognise octal and unicode
+    if (nullValue.equalsIgnoreCase("\\\\")) nullValue = "\\"
     if (delimiter.equalsIgnoreCase("\\\\")) delimiter = "\\"
     if (escapeCharacter.equalsIgnoreCase("\\\\")) escapeCharacter = "\\"
 
@@ -823,7 +822,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     if (csvBug == false) {
       parseOptions += (
-        //        "nullValue" -> nullValue,
+        "nullValue" -> nullValue,
         "dateFormat" -> dateFormat
         )
     }
@@ -1546,7 +1545,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                     usage: String = "PRC",
                     fileFormat: String = "PARQUET",
                     delimiter: String = null,
-                    escapeChar: String = null): Unit = {
+                    escapeChar: String = null,
+                    nullValue: String = null): Unit = {
 
     var baseWriteOptions = df.write.format("herd")
       .option("url", baseRestUrl)
@@ -1563,7 +1563,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
 
     val options = Map("delimiter" -> Option(delimiter),
-      "escape" -> Option(escapeChar)
+      "escape" -> Option(escapeChar),
+      "nullValue" -> Option(nullValue)
     ).filter(opt => opt._2.nonEmpty)
 
     // add optional parameters if specified by user

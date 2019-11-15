@@ -34,7 +34,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -84,6 +86,9 @@ import org.finra.herd.service.impl.BusinessObjectFormatServiceImpl;
 
 public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 {
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
     @Autowired
     @Qualifier(value = "businessObjectFormatServiceImpl")
     private BusinessObjectFormatServiceImpl businessObjectFormatServiceImpl;
@@ -328,6 +333,60 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             String expectedErrorMessage = String.format("Duplicate schema column name \"DUPLICATE_COLUMN_NAME\" found.");
             assertEquals(expectedErrorMessage, e.getMessage());
         }
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatWithPublishForFilterAttributeDefinition()
+    {
+        // Create an initial version of a business object format.
+        businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat();
+
+        // Create a list of attribute definitions including one with publish for filter attribute.
+        List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions();
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_4_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
+
+        // Create the business object format with publish for filter attribute definition.
+        BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema());
+
+        // Call the method under test.
+        BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request);
+
+        // Validate the returned object.
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
+                PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), attributeDefinitions,
+                businessObjectFormatServiceTestHelper.getTestSchema(), resultBusinessObjectFormat);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatWithTwoPublishForFilterAttributeDefinition()
+    {
+        // Create a list of attribute definitions including one with publish for filter attribute.
+        List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions();
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_4_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
+
+        // Add a second publish for filter attribute in the same format.
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME, AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
+
+        // Create the business object format with publish for filter attribute definition.
+        BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema());
+
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage("Only a single publish for filter attribute can be defined per business object format.");
+
+        // Call the method under test.
+        businessObjectFormatService.createBusinessObjectFormat(request);
     }
 
     @Test
@@ -1556,7 +1615,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
                 NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                Arrays.asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, null, null)), NO_SCHEMA);
+                Arrays.asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, null, NO_PUBLISH_FOR_FILTER)), NO_SCHEMA);
         BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request);
 
         // Validate the returned object. The publish option is expected to default to "false".
@@ -1564,7 +1623,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY, NO_FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                Arrays.asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, NO_PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER_ATTRIBUTE)), NO_SCHEMA,
+                Arrays.asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, NO_PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER)), NO_SCHEMA,
                 resultBusinessObjectFormat);
     }
 
@@ -4924,7 +4983,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Null as required parameter
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
-        attributeDefinitions.add(new AttributeDefinition(null, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, null));
+        attributeDefinitions.add(new AttributeDefinition(null, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER));
         // Perform an update by changing the attribute definition to null.
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
@@ -4941,7 +5000,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Blank string as required parameter
         attributeDefinitions = new ArrayList<>();
-        attributeDefinitions.add(new AttributeDefinition("", AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, null));
+        attributeDefinitions.add(new AttributeDefinition("", AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER));
         // Perform an update by changing the attribute definition to null.
         request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
@@ -4985,23 +5044,24 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
         BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
 
-        // Passing null as optional parameter
+        // Passing null publish and null publish for filter as optional parameters
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, null, null));
-        // Perform an update by changing the attribute definition with an empty list.
+
+        // Perform an update by changing the attribute definition with a null optional publish and publish for filter parameters.
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
-        try
-        {
-            businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
-                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
-            fail("Should throw an IllegalArgumentException.");
-        }
-        catch (NullPointerException ex)
-        {
-            assertEquals(null, ex.getMessage());
-        }
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
 
+        // Validate the returned object.
+        List<AttributeDefinition> validateAttributeDefinitions = new ArrayList<>();
+        validateAttributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
+                attributes, validateAttributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
     }
 
     @Test
@@ -5013,10 +5073,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Trim should work on required parameter
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
         List<AttributeDefinition> validateAttributeDefinitions = new ArrayList<>();
-        validateAttributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(" " + AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE + " ", AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER_ATTRIBUTE));
+        validateAttributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(" " + AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE + " ", AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         // Perform an update by changing the attribute definition to null.
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
@@ -5040,10 +5098,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Upper case and lower case
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
         List<AttributeDefinition> validateAttributeDefinitions = new ArrayList<>();
-        validateAttributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(" " + AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE + " ", AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER_ATTRIBUTE));
+        validateAttributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(" " + AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE + " ", AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
         // Perform an update by changing the attribute definition to null.
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
@@ -5059,10 +5115,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // upper case and lower case
         attributeDefinitions = new ArrayList<>();
         // List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2();
-        attributeDefinitions
-            .add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), AbstractServiceTest.PUBLISH_ATTRIBUTE, null));
-        attributeDefinitions
-            .add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), AbstractServiceTest.PUBLISH_ATTRIBUTE, null));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
         // Perform an update by changing the attribute definition with an empty list.
         request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
@@ -5086,7 +5140,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2();
         // Check for the duplicate attribute definition.
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, null));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
         try
         {
@@ -5117,6 +5171,64 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 "Business object format with namespace \"%s\", business object definition name \"%s\", format usage \"%s\", format file type \"%s\", and format version \"%s\" doesn't exist.",
                 NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), ex.getMessage());
         }
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitionsWithTwoPublishForFilterAttributeDefinition()
+    {
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+
+        // Create an initial version of a business object format
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+
+        // Specify the expected exception.
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage("Only a single publish for filter attribute can be defined per business object format.");
+
+        // Call the method under test.
+        businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectFormatAttributeDefinitionsWithPublishForFilterAttributeDefinition()
+    {
+        List<Attribute> attributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
+
+        // Create an initial version of a business object format
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(attributes);
+
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+
+        // Perform an update.
+        BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION), request);
+
+        // Validate the returned object.
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
+                attributes, attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
     }
 
     @Test

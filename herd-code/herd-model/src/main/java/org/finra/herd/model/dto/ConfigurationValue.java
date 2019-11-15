@@ -998,7 +998,12 @@ public enum ConfigurationValue
     /**
      * Email address to use in the 'bcc' field when sending emails thru SES as a means of records collection.
      */
-    SES_RECORDS_COLLECTOR_ADDRESS("ses.records.collector.address", null);
+    SES_RECORDS_COLLECTOR_ADDRESS("ses.records.collector.address", null),
+
+    /**
+    * Notification header key published for filtering along with BusinessObjectDataStatusChange notification
+    */
+    MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE("message.header.key.filter.attribute.value", "filterAttributeValue");
 
     private Object defaultValue;
 
