@@ -136,6 +136,7 @@
       <mockito.version>2.10.0</mockito.version>
       <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
       <jsoup.version>1.11.3</jsoup.version>
+      <bcprov-jdk15on.version>1.60</bcprov-jdk15on.version>
       <hive-serde.version>2.3.4</hive-serde.version>
 
       <!-- Compiler Information -->
@@ -883,7 +884,7 @@
          <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.60</version>
+            <version>${bcprov-jdk15on.version}</version>
          </dependency>
          <dependency>
             <groupId>io.searchbox</groupId>
