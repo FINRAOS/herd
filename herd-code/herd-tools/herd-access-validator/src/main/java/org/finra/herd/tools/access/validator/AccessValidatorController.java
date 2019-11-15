@@ -43,11 +43,13 @@ import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -78,7 +80,9 @@ class AccessValidatorController
     static final String S3_BUCKET_NAME_ATTRIBUTE = "bucket.name";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessValidatorController.class);
-    private static final int MAX_BYTE_DOWNLOAD = 200;
+    private static final long MAX_BYTES_TO_READ = 200;
+
+    private static final String LINE_FEED = "\n\n\n";
 
     @Autowired
     private HerdApiClientOperations herdApiClientOperations;
@@ -138,13 +142,13 @@ class AccessValidatorController
             .withStsClient(AWSSecurityTokenServiceClientBuilder.standard().withClientConfiguration(clientConfiguration).withRegion(awsRegion).build()).build();
 
         // Create AWS S3 client using the assumed role.
-        LOGGER.info("Creating AWS S3 client...", awsRoleArn);
+        LOGGER.info("Creating AWS S3 client using role: \"{}\".", awsRoleArn);
 
         AmazonS3 amazonS3 =
             AmazonS3ClientBuilder.standard().withCredentials(awsCredentialsProvider).withClientConfiguration(clientConfiguration).withRegion(awsRegion).build();
 
         // Create AWS SQS client using the assumed role.
-        LOGGER.info("Creating AWS SQS client...", awsRoleArn);
+        LOGGER.info("Creating AWS SQS client using role: \"{}\".", awsRoleArn);
 
         AmazonSQS amazonSQS =
             AmazonSQSClientBuilder.standard().withCredentials(awsCredentialsProvider).withClientConfiguration(clientConfiguration).withRegion(awsRegion)
@@ -158,14 +162,13 @@ class AccessValidatorController
             String sqsQueueUrl = propertiesHelper.getProperty(AWS_SQS_QUEUE_URL_PROPERTY);
             LOGGER.info("Getting message from SQS queue: {}", sqsQueueUrl);
             bdataKey = herdApiClientOperations.getBdataKeySqs(amazonSQS, sqsQueueUrl);
-
         }
         else
         {
             LOGGER.info("Creating BusinessObjectDataKey from properties file");
             bdataKey = getBdataKeyPropertiesFile();
         }
-        LOGGER.info("{}", bdataKey);
+        LOGGER.info("Using business object data key: {}", bdataKey);
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(apiClient);
 
@@ -176,7 +179,12 @@ class AccessValidatorController
                 bdataKey.getBusinessObjectFormatUsage(), bdataKey.getBusinessObjectFormatFileType(), null, bdataKey.getPartitionValue(),
                 StringUtils.join(bdataKey.getSubPartitionValues(), "|"), bdataKey.getBusinessObjectFormatVersion(), bdataKey.getBusinessObjectDataVersion(),
                 null, false, false);
-        LOGGER.info("{}", businessObjectData);
+
+        // pretty-print
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String bDataString = gson.toJson(businessObjectData);
+
+        LOGGER.info("{}", bDataString);
 
         // Check if retrieved business object data has storage unit registered with it.
         Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits()), "Business object data has no storage unit registered with it.");
@@ -197,21 +205,48 @@ class AccessValidatorController
         }
         Assert.isTrue(StringUtils.isNotBlank(bucketName), "S3 bucket name is not configured for the storage.");
 
-        // Download S3 files registered with the business object data.
+        // Validate that S3 files registered with the business object data under can be streamed to disk.
         // Only getting the first 200 bytes to prevent downloading massive files
-        LOGGER.info("Downloading S3 files registered with the business object data...");
+        LOGGER.info("Validating that S3 files registered with the business object data are downloadable.");
+
+        boolean validated = false;
+
+        // loop thru the list of storage files and attempt to read at least one file which has valid content
         for (StorageFile storageFile : businessObjectData.getStorageUnits().get(0).getStorageFiles())
         {
-            LOGGER.info("Downloading \"{}/{}\" S3 file...", bucketName, storageFile.getFilePath());
-            GetObjectRequest getObjectRequest = new GetObjectRequest(bucketName, storageFile.getFilePath()).withRange(0, MAX_BYTE_DOWNLOAD);
-            S3Object s3Object = s3Operations.getS3Object(getObjectRequest, amazonS3);
-            StringWriter stringWriter = new StringWriter();
-            IOUtils.copy(s3Object.getObjectContent(), stringWriter, Charset.defaultCharset());
-            LOGGER.info("Downloaded S3 file content:{}{}", System.lineSeparator(), stringWriter.toString());
-        }
+            LOGGER.info("Attempting to read \"{}/{}\" S3 file...", bucketName, storageFile.getFilePath());
 
-        // Log a success message at the end.
-        LOGGER.info("Finished: SUCCESS");
+            // Get S3 Object's metadata
+            ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(bucketName, storageFile.getFilePath(), amazonS3);
+
+            // Use object's metadata to determine if it has readable content (and that it's not just a zero-byte file)
+            if (objectMetadata.getContentLength() > 0)
+            {
+                // read contents of the file
+                GetObjectRequest getObjectRequest =
+                    new GetObjectRequest(bucketName, storageFile.getFilePath()).withRange(0, Math.min(objectMetadata.getContentLength(), MAX_BYTES_TO_READ));
+
+                // Attempt to GET object from S3
+                try (S3Object s3Object = s3Operations.getS3Object(getObjectRequest, amazonS3))
+                {
+                    StringWriter stringWriter = new StringWriter();
+                    IOUtils.copy(s3Object.getObjectContent(), stringWriter, Charset.defaultCharset());
+                    LOGGER.info("{}Finished: SUCCESS", LINE_FEED);
+
+                    validated = true;
+                    break;
+                }
+            }
+            else
+            {
+                LOGGER.warn("Encountered empty file: \"{}/{}\". Skipping.", bucketName, storageFile.getFilePath());
+            }
+        }
+        // need this block in case only empty files are found
+        if (!validated)
+        {
+            LOGGER.error("{}Could not read valid content from any file: FAILURE", LINE_FEED);
+        }
     }
 
     /**
