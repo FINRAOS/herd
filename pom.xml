@@ -873,6 +873,17 @@
             <groupId>co.wrisk.jcredstash</groupId>
             <artifactId>jcredstash</artifactId>
             <version>${jcredstash.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>org.bouncycastle</groupId>
+                  <artifactId>bcprov-jdk15on</artifactId>
+               </exclusion>
+            </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.60</version>
          </dependency>
          <dependency>
             <groupId>io.searchbox</groupId>
