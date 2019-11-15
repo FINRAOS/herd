@@ -50,6 +50,8 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -81,6 +83,8 @@ class AccessValidatorController
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessValidatorController.class);
     private static final long MAX_BYTES_TO_READ = 200;
+
+    private static final String LINE_FEED = "\n\n\n";
 
     @Autowired
     private HerdApiClientOperations herdApiClientOperations;
@@ -177,7 +181,12 @@ class AccessValidatorController
                 bdataKey.getBusinessObjectFormatUsage(), bdataKey.getBusinessObjectFormatFileType(), null, bdataKey.getPartitionValue(),
                 StringUtils.join(bdataKey.getSubPartitionValues(), "|"), bdataKey.getBusinessObjectFormatVersion(), bdataKey.getBusinessObjectDataVersion(),
                 null, false, false);
-        LOGGER.info("{}", businessObjectData);
+
+        // pretty-print
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String bDataString = gson.toJson(businessObjectData);
+
+        LOGGER.info("{}", bDataString);
 
         // Check if retrieved business object data has storage unit registered with it.
         Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits()), "Business object data has no storage unit registered with it.");
@@ -224,18 +233,18 @@ class AccessValidatorController
                 {
                     StringWriter stringWriter = new StringWriter();
                     IOUtils.copy(s3Object.getObjectContent(), stringWriter, Charset.defaultCharset());
-                    LOGGER.info("Finished: SUCCESS");
+                    LOGGER.info("{}Finished: SUCCESS", LINE_FEED);
 
                     validated = true;
                     break;
                 }
                 catch (AmazonServiceException e)
                 {
-                    LOGGER.error("Could not read file from S3.", e);
+                    LOGGER.error("{}Could not read file from S3.", LINE_FEED, e);
                 }
                 catch (SdkClientException e)
                 {
-                    LOGGER.error("Access validator client setup incorrectly.", e);
+                    LOGGER.error("{}Access validator client setup incorrectly.", LINE_FEED, e);
                 }
             }
             else
@@ -246,7 +255,7 @@ class AccessValidatorController
         // need this block in case only empty files are found
         if (!validated)
         {
-            LOGGER.error("Could not read valid content from any file: FAILURE");
+            LOGGER.error("{}Could not read valid content from any file: FAILURE", LINE_FEED);
         }
     }
 
