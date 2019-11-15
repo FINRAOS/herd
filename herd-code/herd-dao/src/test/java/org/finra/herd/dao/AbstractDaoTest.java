@@ -422,6 +422,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer FIFTH_FORMAT_VERSION = 4;
 
+    public static final Boolean FILTER_ON_LATEST_VALID_VERSION = true;
+
     public static final Boolean FILTER_ON_RETENTION_EXPIRATION = true;
 
     public static final String FIRST_COLUMN_DATA_TYPE = "TINYINT";
@@ -683,7 +685,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final StoragePlatformEntity NO_EXCLUDED_STORAGE_PLATFORM_ENTITY = null;
 
-    public static final String NO_EXCLUDED_STORAGE_PLATFORM_TYPE  = null;
+    public static final String NO_EXCLUDED_STORAGE_PLATFORM_TYPE = null;
 
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
 
@@ -936,8 +938,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_CUSTOM_ROW_FORMAT = "SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'";
 
-    public static final String SCHEMA_CUSTOM_ROW_FORMAT_WITH_SERDE_PROPS = "SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'\n" + "WITH SERDEPROPERTIES (\n" +
-        "   \"separatorChar\" = \"\\t\",\n" + "   \"quoteChar\"     = \"'\",\n" + "   \"escapeChar\"    = \"\\\\\"\n" + ") ";
+    public static final String SCHEMA_CUSTOM_ROW_FORMAT_WITH_SERDE_PROPS =
+        "SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'\n" + "WITH SERDEPROPERTIES (\n" + "   \"separatorChar\" = \"\\t\",\n" +
+            "   \"quoteChar\"     = \"'\",\n" + "   \"escapeChar\"    = \"\\\\\"\n" + ") ";
 
     public static final String SCHEMA_ESCAPE_CHARACTER_TILDE = "~";
 
