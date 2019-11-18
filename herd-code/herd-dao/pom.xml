@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.108.0-SNAPSHOT</version>
+      <version>0.109.0-SNAPSHOT</version>
    </parent>
 
    <name>herd dao</name>
@@ -206,6 +206,17 @@
       <dependency>
          <groupId>co.wrisk.jcredstash</groupId>
          <artifactId>jcredstash</artifactId>
+         <exclusions>
+            <exclusion>
+               <groupId>org.bouncycastle</groupId>
+               <artifactId>bcprov-jdk15on</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>org.bouncycastle</groupId>
+         <artifactId>bcprov-jdk15on</artifactId>
+         <version>${bcprov-jdk15on.version}</version>
       </dependency>
       <dependency>
          <groupId>vc.inreach.aws</groupId>

@@ -2635,6 +2635,13 @@
                <xs:documentation>If true, this business object data attribute will be published in notification messages</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="publishForFilter" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>If true, this business object data attribute will be published in notification message headers and can be used to filter
+                  messages
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -2688,6 +2695,13 @@
             <xs:annotation>
                <xs:documentation>The escape character (e.g. "\\\\").
                   XML escaping should be used when specifying non-ASCII characters.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="customRowFormat" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The customRowFormat is used for defining custom Hive format.
+                  This will override everything after "ROW FORMAT" in DDL including delimiter, escape value, null value statements.
                </xs:documentation>
             </xs:annotation>
          </xs:element>

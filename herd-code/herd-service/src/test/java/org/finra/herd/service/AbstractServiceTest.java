@@ -671,6 +671,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String ROW_FORMAT = "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' COLLECTION ITEMS TERMINATED BY ',' " +
         "MAP KEYS TERMINATED BY '#' NULL DEFINED AS '\\N'";
 
+    public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
+
     public static final String S3_ARCHIVE_TO_GLACIER_TAG_KEY = "UT_S3_Archive_To_Glacier_Tag_Key_" + RANDOM_SUFFIX;
 
     public static final String S3_ARCHIVE_TO_GLACIER_TAG_VALUE = "UT_S3_Archive_To_Glacier_Tag_Value_" + RANDOM_SUFFIX;

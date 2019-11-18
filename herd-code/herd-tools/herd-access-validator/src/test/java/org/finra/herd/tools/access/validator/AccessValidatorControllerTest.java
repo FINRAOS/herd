@@ -47,9 +47,11 @@ import java.util.Collections;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -97,6 +99,9 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
     @Mock
     private S3Operations s3Operations;
 
+    @Mock
+    private AmazonS3 amazonS3;
+
     @Before
     public void before()
     {
@@ -106,38 +111,44 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
     @Test
     public void testValidateAccessPropertiesFile() throws Exception
     {
-        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, SUB_PARTITION_VALUES, false);
+        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, SUB_PARTITION_VALUES, false, false);
     }
 
     @Test
     public void testValidateAccessMissingOptionalProperties() throws Exception
     {
-        testValidateAccessHelper(null, null, null, false);
+        testValidateAccessHelper(null, null, null, false, false);
     }
 
     @Test
     public void testValidateAccessSqsMessage() throws Exception
     {
-        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, SUB_PARTITION_VALUES, true);
+        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, SUB_PARTITION_VALUES, true, false);
     }
 
     @Test
     public void testValidateAccessSqsMessageMissingOptionalProperties() throws Exception
     {
-        testValidateAccessHelper(null, null, null, true);
+        testValidateAccessHelper(null, null, null, true, false);
     }
 
     @Test
     public void testValidateAccessMultipleSubPartition() throws Exception
     {
         String subpartition = "One|Two|Three";
-        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, subpartition, false);
+        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, subpartition, false, false);
+    }
+
+    @Test
+    public void testValidateAccessZeroByteFile() throws Exception
+    {
+        testValidateAccessHelper(BUSINESS_OBJECT_FORMAT_VERSION, BUSINESS_OBJECT_DATA_VERSION, SUB_PARTITION_VALUES, false, true);
     }
 
     private void testValidateAccessHelper(Integer businessObjectFormatVersion, Integer businessObjectDataVersion, String subPartitionValues,
-        Boolean messageFlag) throws Exception
+        Boolean messageFlag, boolean emptyFile) throws Exception
     {
-        setupBusinessDataObject();
+        setupBusinessDataObject(emptyFile);
 
         // Mock the external calls.
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
@@ -159,7 +170,22 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
                 eq(businessObjectFormatVersion), eq(businessObjectDataVersion), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
-        when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
+
+        if (!emptyFile)
+        {
+            when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
+        }
+
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        if (emptyFile)
+        {
+            objectMetadata.setContentLength(0);
+        }
+        else
+        {
+            objectMetadata.setContentLength(MAX_BYTE_DOWNLOAD);
+        }
+        when(s3Operations.getObjectMetadata(any(), any(), any())).thenReturn(objectMetadata);
 
         if (messageFlag)
         {
@@ -192,7 +218,12 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
                 eq(businessObjectFormatVersion), eq(businessObjectDataVersion), eq(null), eq(false), eq(false));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
         verify(propertiesHelper).getProperty(AWS_ROLE_ARN_PROPERTY);
-        verify(s3Operations).getS3Object(eq(getObjectRequest), any(AmazonS3.class));
+
+        if (!emptyFile)
+        {
+            verify(s3Operations).getS3Object(eq(getObjectRequest), any(AmazonS3.class));
+        }
+        verify(s3Operations).getObjectMetadata(any(), any(), any());
 
         if (messageFlag)
         {
@@ -202,7 +233,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verifyNoMoreInteractionsHelper();
     }
 
-    private void setupBusinessDataObject()
+    private void setupBusinessDataObject(boolean emptyFile)
     {
         // Create a business object data herd sdk model object.
         businessObjectData.setStorageUnits(Collections.singletonList(storageUnit));
@@ -214,8 +245,15 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         attribute.setName(ATTRIBUTE_NAME);
         storage.setAttributes(Lists.newArrayList(attribute, bucketNameAttribute));
 
-        // Create an S3 object with an empty content.
-        s3Object.setObjectContent(new ByteArrayInputStream(new byte[] {0}));
+        if (emptyFile)
+        {
+            // Create an S3 object with an empty content.
+            s3Object.setObjectContent(new ByteArrayInputStream(new byte[] {0}));
+        }
+        else
+        {
+            s3Object.setObjectContent(new ByteArrayInputStream(RandomStringUtils.randomAlphabetic(MAX_BYTE_DOWNLOAD).getBytes()));
+        }
     }
 
     private void setupSqsTest() throws Exception

@@ -130,6 +130,7 @@ public class BusinessObjectFormatHelper
             attributeDefinitions.add(attributeDefinition);
             attributeDefinition.setName(attributeDefinitionEntity.getName());
             attributeDefinition.setPublish(attributeDefinitionEntity.getPublish());
+            attributeDefinition.setPublishForFilter(attributeDefinitionEntity.getPublishForFilter());
         }
 
         // Only add schema information if this format has any schema columns defined.
@@ -142,6 +143,7 @@ public class BusinessObjectFormatHelper
             schema.setCollectionItemsDelimiter(businessObjectFormatEntity.getCollectionItemsDelimiter());
             schema.setMapKeysDelimiter(businessObjectFormatEntity.getMapKeysDelimiter());
             schema.setEscapeCharacter(businessObjectFormatEntity.getEscapeCharacter());
+            schema.setCustomRowFormat(businessObjectFormatEntity.getCustomRowFormat());
             schema.setPartitionKeyGroup(
                 businessObjectFormatEntity.getPartitionKeyGroup() != null ? businessObjectFormatEntity.getPartitionKeyGroup().getPartitionKeyGroupName() :
                     null);

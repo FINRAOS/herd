@@ -250,7 +250,7 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(), NO_PARTITION_KEY_GROUP,
                 NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
-                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         // Create one more namespace.
         namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
@@ -442,34 +442,50 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetBusinessObjectFormatEntitiesByBusinessObjectDefinition()
+    public void testGetLatestVersionBusinessObjectFormatsByBusinessObjectDefinition()
     {
-        // Create relative database entities.
-        businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION);
-        fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE.toLowerCase(), "Description of " + FORMAT_FILE_TYPE_CODE);
+        // Create two business object definitions.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Arrays
+            .asList(businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION),
+                businessObjectDefinitionDaoTestHelper
+                    .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION));
 
-        businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE_2.toLowerCase(), BDEF_NAME_2.toLowerCase(), DATA_PROVIDER_NAME_2.toLowerCase(), BDEF_DESCRIPTION_2);
+        // Create multiple formats in reverse order of business object format usage and file types for the first business object definition including several
+        // latest version business object formats that we expect to be selected by the method under test.
+        List<BusinessObjectFormatEntity> businessObjectFormatEntities = Arrays.asList(businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION,
+                    FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY),
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, SECOND_FORMAT_VERSION,
+                    FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY),
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, THIRD_FORMAT_VERSION,
+                    FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY),
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+                    FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY),
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION,
+                    FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY),
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION,
+                    FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY),
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE_2, SECOND_FORMAT_VERSION,
+                    FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY),
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+                    FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY));
 
-        businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE_2, BDEF_NAME_2.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
-                INITIAL_FORMAT_VERSION, "Test format 0", "Document Schema 0", "Document Schema Url 0", Boolean.FALSE, PARTITION_KEY);
+        // Create a list of expected latest business object format versions to be returned by the method under test.
+        List<BusinessObjectFormatEntity> expectedBusinessObjectFormatEntities =
+            Arrays.asList(businessObjectFormatEntities.get(5), businessObjectFormatEntities.get(4), businessObjectFormatEntities.get(2));
 
-        businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
-                INITIAL_FORMAT_VERSION, "Test format 0", "Document Schema 0", "Document Schema Url 0", Boolean.FALSE, PARTITION_KEY);
+        // Retrieve latest version business object format entities.
+        assertEquals(expectedBusinessObjectFormatEntities,
+            businessObjectFormatDao.getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0)));
 
-        BusinessObjectFormatEntity businessObjectFormatEntityV1 = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
-                SECOND_FORMAT_VERSION, "Test format 0", "Document Schema 0", "Document Schema Url 0", Boolean.TRUE, PARTITION_KEY);
-
-        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-
-        // Retrieve business object format entity by specifying values for all text alternate key fields in upper case.
-        List<BusinessObjectFormatEntity> businessObjectFormatList =
-            businessObjectFormatDao.getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(businessObjectDefinitionKey);
-        assertEquals(businessObjectFormatList.size(), 1);
-        assertEquals(businessObjectFormatList.get(0), businessObjectFormatEntityV1);
+        // Try to retrieve a list of latest version business object format entities by specifying the second business object definition.
+        assertTrue(businessObjectFormatDao.getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1)).isEmpty());
     }
 }

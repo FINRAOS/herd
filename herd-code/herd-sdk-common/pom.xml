@@ -26,7 +26,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.108.0-SNAPSHOT</version>
+      <version>0.109.0-SNAPSHOT</version>
    </parent>
 
    <properties>
@@ -35,9 +35,6 @@
          ${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/${swagger.spec.name}
       </swagger.spec.path>
       <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
-
-      <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <herdsdk.version>0.90.0</herdsdk.version>
 
    </properties>
 
@@ -280,7 +277,7 @@
                      <configOptions>
                         <packageName>herdsdk</packageName>
                         <projectName>herdsdk</projectName>
-                        <packageVersion>${herdsdk.version}</packageVersion>
+                        <packageVersion>${herdpython.version}</packageVersion>
                      </configOptions>
                   </configuration>
                </execution>

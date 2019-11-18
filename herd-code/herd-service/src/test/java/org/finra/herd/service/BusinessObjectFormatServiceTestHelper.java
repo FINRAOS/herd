@@ -211,7 +211,7 @@ public class BusinessObjectFormatServiceTestHelper
      * @return the created business object format create request
      */
     public BusinessObjectFormatUpdateRequest createBusinessObjectFormatUpdateRequest(String description, String documentSchema,
-                                                                                     String documentSchemaUrl, List<Attribute> attributes, Schema schema)
+        String documentSchemaUrl, List<Attribute> attributes, Schema schema)
     {
         BusinessObjectFormatUpdateRequest businessObjectFormatUpdateRequest = new BusinessObjectFormatUpdateRequest();
 
@@ -247,7 +247,7 @@ public class BusinessObjectFormatServiceTestHelper
                 AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
                 AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES,
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
-                AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
                 AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
     }
 
@@ -258,7 +258,7 @@ public class BusinessObjectFormatServiceTestHelper
     {
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
             AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
-            AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
             AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
             schemaColumnDaoTestHelper.getTestPartitionColumns(), AbstractServiceTest.CUSTOM_DDL_NAME);
     }
@@ -267,7 +267,7 @@ public class BusinessObjectFormatServiceTestHelper
      * Creates relative database entities required for the unit tests.
      */
     public void createDatabaseEntitiesForBusinessObjectFormatDdlTesting(String businessObjectFormatFileType, String partitionKey, String schemaDelimiter,
-        String schemaCollectionItemsDelimiter, String mapKeysDelimiter, String schemaEscapeCharacter, String schemaNullValue, List<SchemaColumn> schemaColumns,
+        String schemaCollectionItemsDelimiter, String mapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat, String schemaNullValue, List<SchemaColumn> schemaColumns,
         List<SchemaColumn> partitionColumns, String customDdlName)
     {
         // Create a business object format entity if it does not exist.
@@ -281,7 +281,7 @@ public class BusinessObjectFormatServiceTestHelper
                     businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.FORMAT_DESCRIPTION,
                     AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
                     partitionKey, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES, schemaDelimiter,
-                    schemaCollectionItemsDelimiter, mapKeysDelimiter, schemaEscapeCharacter, schemaNullValue, schemaColumns, partitionColumns);
+                    schemaCollectionItemsDelimiter, mapKeysDelimiter, schemaEscapeCharacter, null, schemaNullValue, schemaColumns, partitionColumns);
         }
 
         if (StringUtils.isNotBlank(customDdlName))
@@ -317,7 +317,8 @@ public class BusinessObjectFormatServiceTestHelper
         BusinessObjectFormatCreateRequest request =
             createBusinessObjectFormatCreateRequest(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                 AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.PARTITION_KEY, AbstractServiceTest.FORMAT_DESCRIPTION,
-                AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, attributes, getTestAttributeDefinitions(), getTestSchema());
+                AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, attributes, getTestAttributeDefinitions(),
+                getTestSchema());
 
         return businessObjectFormatService.createBusinessObjectFormat(request);
     }
@@ -569,9 +570,12 @@ public class BusinessObjectFormatServiceTestHelper
     {
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
 
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         return attributeDefinitions;
     }
@@ -585,9 +589,12 @@ public class BusinessObjectFormatServiceTestHelper
     {
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
 
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3, AbstractServiceTest.PUBLISH_ATTRIBUTE));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3, AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         return attributeDefinitions;
     }
