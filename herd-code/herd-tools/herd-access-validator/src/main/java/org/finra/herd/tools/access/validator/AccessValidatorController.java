@@ -180,11 +180,9 @@ class AccessValidatorController
                 StringUtils.join(bdataKey.getSubPartitionValues(), "|"), bdataKey.getBusinessObjectFormatVersion(), bdataKey.getBusinessObjectDataVersion(),
                 null, false, false);
 
-        // pretty-print
+        // Log business object data information returned by the registration server.
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String bDataString = gson.toJson(businessObjectData);
-
-        LOGGER.info("{}", bDataString);
+        LOGGER.info("{}", gson.toJson(businessObjectData));
 
         // Check if retrieved business object data has storage unit registered with it.
         Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits()), "Business object data has no storage unit registered with it.");
