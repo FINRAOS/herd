@@ -564,6 +564,30 @@
       </xs:annotation>
    </xs:complexType>
 
+   <xs:complexType name="createBusinessObjectDataStorageFilesDto">
+      <xs:sequence>
+         <xs:element name="businessObjectDataEntity" type="businessObjectDataEntity" minOccurs="0"/>
+         <xs:element name="storageFiles" type="storageFile" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="storageUnitEntity" type="storageUnitEntity" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataEntity">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.jpa.BusinessObjectDataEntity"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnitEntity">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.jpa.StorageUnitEntity"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
    <xs:complexType name="tagIndexSearchResponseDto">
       <xs:sequence>
          <xs:element name="tagCode" type="xs:string" minOccurs="0"/>

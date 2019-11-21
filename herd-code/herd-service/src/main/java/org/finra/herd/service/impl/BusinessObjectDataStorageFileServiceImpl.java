@@ -39,6 +39,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.CreateBusinessObjectDataStorageFilesDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -101,7 +102,6 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
      */
     @NamespacePermission(fields = "#businessObjectDataStorageFilesCreateRequest.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDataStorageFilesCreateResponse createBusinessObjectDataStorageFiles(
         BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest)
     {
@@ -109,13 +109,32 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
     }
 
     /**
-     * Adds files to Business object data storage.
+     *  The implementation of create business object data storage files.
+     *  Splits the functionality into read only transaction and a JDBC batch save files transaction.
      *
      * @param businessObjectDataStorageFilesCreateRequest the business object data storage files create request
      *
      * @return BusinessObjectDataStorageFilesCreateResponse
      */
     protected BusinessObjectDataStorageFilesCreateResponse createBusinessObjectDataStorageFilesImpl(
+        BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest)
+    {
+        // The read only transaction portion of the create business data storage files.
+        CreateBusinessObjectDataStorageFilesDto createBusinessObjectDataStorageFilesDto = createBusinessObjectDataStorageFilesDto(businessObjectDataStorageFilesCreateRequest);
+
+        // The JDBC save storage files implementation.
+        return addBusinessObjectDataStorageFiles(createBusinessObjectDataStorageFilesDto);
+    }
+
+    /**
+     * Creates the business object data storage files data transfer object.
+     *
+     * @param businessObjectDataStorageFilesCreateRequest the business object data storage files create request
+     *
+     * @return CreateBusinessObjectDataStorageFilesDto
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    protected CreateBusinessObjectDataStorageFilesDto createBusinessObjectDataStorageFilesDto(
         BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest)
     {
         // validate request
@@ -175,11 +194,28 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
             validateStorageFiles(storageFiles, storageUnitEntity, validatePathPrefix, validateFileExistence, validateFileSize);
         }
 
+        return new CreateBusinessObjectDataStorageFilesDto(businessObjectDataEntity, storageFiles, storageUnitEntity);
+    }
+
+    /**
+     * Adds files to Business object data storage.
+     *
+     * @param createBusinessObjectDataStorageFilesDto the create business object data storage files data transfer object
+     *
+     * @return BusinessObjectDataStorageFilesCreateResponse
+     */
+    private BusinessObjectDataStorageFilesCreateResponse addBusinessObjectDataStorageFiles(
+        CreateBusinessObjectDataStorageFilesDto createBusinessObjectDataStorageFilesDto)
+    {
+        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectDataStorageFilesDto.getBusinessObjectDataEntity();
+        StorageUnitEntity storageUnitEntity = createBusinessObjectDataStorageFilesDto.getStorageUnitEntity();
+        List<StorageFile> storageFiles = createBusinessObjectDataStorageFilesDto.getStorageFiles();
+
         // Add new storage files to the storage unit.
         storageFileDaoHelper.createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles);
 
         // Construct and return the response.
-        return createBusinessObjectDataStorageFilesCreateResponse(storageEntity, businessObjectDataEntity, storageFiles);
+        return createBusinessObjectDataStorageFilesCreateResponse(storageUnitEntity.getStorage(), businessObjectDataEntity, storageFiles);
     }
 
     /**

@@ -15,9 +15,15 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.sql.BatchUpdateException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import javax.persistence.PersistenceException;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -27,10 +33,15 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.sql.DataSource;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.StorageFileDao;
@@ -45,6 +56,11 @@ import org.finra.herd.model.jpa.StorageUnitEntity_;
 @Repository
 public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDao
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StorageFileDaoImpl.class);
+
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
     @Override
     public StorageFileEntity getStorageFileByStorageNameAndFilePath(String storageName, String filePath)
     {
@@ -230,5 +246,75 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
         }
 
         return storageFilePaths;
+    }
+
+    @Override
+    public void saveStorageFiles(final List<StorageFileEntity> storageFileEntities)
+    {
+        // Create the insert into storage file table sql.
+        final String INSERT_INTO_STORAGE_FILE_TABLE_SQL = "INSERT INTO strge_file " +
+            "(strge_file_id, fully_qlfd_file_nm, file_size_in_bytes_nb, row_ct, strge_unit_id) " +
+            "VALUES (nextval('strge_file_seq'), ?, ?, ?, ?)";
+
+        // Obtain the datasource.
+        final DataSource dataSource = jdbcTemplate.getDataSource();
+
+        // Both Connection and PreparedStatement classes extend AutoCloseable so use try with resources.
+        try (final Connection connection = dataSource.getConnection();
+             final PreparedStatement preparedStatement = connection.prepareStatement(INSERT_INTO_STORAGE_FILE_TABLE_SQL))
+        {
+            // Set auto commit to false to perform a batch insert.
+            connection.setAutoCommit(false);
+
+            // Retrieve the JDBC batch size configured in the system.
+            final int batchSize = configurationHelper.getProperty(ConfigurationValue.JDBC_BATCH_SIZE, Integer.class);
+
+            // Keep a count of prepared statements.
+            int preparedStatementCount = 0;
+
+            // For each storage file entry add to a prepared statement batch and execute.
+            for (final StorageFileEntity storageFileEntity : storageFileEntities)
+            {
+                preparedStatement.setString(1, storageFileEntity.getPath());
+                preparedStatement.setLong(2, storageFileEntity.getFileSizeBytes());
+                preparedStatement.setLong(3, storageFileEntity.getRowCount());
+                preparedStatement.setInt(4, storageFileEntity.getStorageUnit().getId());
+                preparedStatement.addBatch();
+
+                LOGGER.debug("Preparing to execute statement: " + preparedStatement.toString());
+
+                // Increase the count of prepared statements added to the batch.
+                preparedStatementCount++;
+
+                // If the prepared statement count is a modulo of the batch size or if the prepared statement count reaches the size of the storageFileEntities
+                // then execute the batch of prepared statements.
+                if (preparedStatementCount % batchSize == 0 || preparedStatementCount == storageFileEntities.size())
+                {
+                    LOGGER.info("Executing batch of batchSize={}", batchSize);
+                    int[] updateCounts = preparedStatement.executeBatch();
+                    preparedStatement.clearBatch();
+                    LOGGER.info("Batch update complete updateCounts={}", Arrays.toString(updateCounts));
+                }
+            }
+
+            // Commit the updates.
+            connection.commit();
+
+            // Return auto commit to false.
+            connection.setAutoCommit(false);
+        }
+        catch (final BatchUpdateException batchUpdateException)
+        {
+            LOGGER.error("Caught batch update exception. SQLState=\"{}\", Message=\"{}\", ErrorCode=\"{}\", updateCounts={}",
+                batchUpdateException.getSQLState(), batchUpdateException.getMessage(), batchUpdateException.getErrorCode(),
+                Arrays.toString(batchUpdateException.getUpdateCounts()));
+            throw new PersistenceException(batchUpdateException);
+        }
+        catch (final SQLException sqlException)
+        {
+            LOGGER.error("Caught SQL exception. SQLState=\"{}\", Message=\"{}\", ErrorCode=\"{}\"",
+                sqlException.getSQLState(), sqlException.getMessage(), sqlException.getErrorCode());
+            throw new PersistenceException(sqlException);
+        }
     }
 }

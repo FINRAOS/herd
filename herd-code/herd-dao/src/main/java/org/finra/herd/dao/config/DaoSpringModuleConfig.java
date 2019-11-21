@@ -44,6 +44,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -259,6 +260,12 @@ public class DaoSpringModuleConfig implements CachingConfigurer
         }
 
         return properties;
+    }
+
+    @Bean
+    public JdbcTemplate jdbcTemplate()
+    {
+        return new JdbcTemplate(getHerdDataSource());
     }
 
     /**
