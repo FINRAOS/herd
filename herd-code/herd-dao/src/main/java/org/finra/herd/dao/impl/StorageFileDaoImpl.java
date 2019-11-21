@@ -42,10 +42,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.StorageFileDao;
+import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageEntity_;
 import org.finra.herd.model.jpa.StorageFileEntity;
@@ -251,10 +255,22 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
     @Override
     public void saveStorageFiles(final List<StorageFileEntity> storageFileEntities)
     {
+        // Get the current application user id.
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        String currentUserId = "";
+
+        if (authentication != null)
+        {
+            SecurityUserWrapper securityUserWrapper = (SecurityUserWrapper) authentication.getPrincipal();
+            ApplicationUser applicationUser = securityUserWrapper.getApplicationUser();
+            currentUserId = applicationUser.getUserId();
+        }
+
         // Create the insert into storage file table sql.
         final String INSERT_INTO_STORAGE_FILE_TABLE_SQL = "INSERT INTO strge_file " +
-            "(strge_file_id, fully_qlfd_file_nm, file_size_in_bytes_nb, row_ct, strge_unit_id) " +
-            "VALUES (nextval('strge_file_seq'), ?, ?, ?, ?)";
+            "(strge_file_id, fully_qlfd_file_nm, file_size_in_bytes_nb, row_ct, strge_unit_id, creat_ts, creat_user_id) " +
+            "VALUES (nextval('strge_file_seq'), ?, ?, ?, ?, current_timestamp, '" + currentUserId + "')";
 
         // Obtain the datasource.
         final DataSource dataSource = jdbcTemplate.getDataSource();
