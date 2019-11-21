@@ -38,7 +38,7 @@ setup(
     url="https://github.com/FINRAOS/herd",
     keywords=["herd", "dm"],
     install_requires=[
-        "herdsdk"
+        "herdsdk", "pandas >= 0.24.0"
     ],
     packages=find_packages(),
     include_package_data=True,

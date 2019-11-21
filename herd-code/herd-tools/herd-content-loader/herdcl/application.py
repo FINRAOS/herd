@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import argparse, base64, json
+import argparse, json, traceback
 
 # Local imports
 try:
@@ -24,35 +24,36 @@ except ImportError:
 
 LOGGER = logger.get_logger(__name__)
 
+
 ################################################################################
 class Application:
     """
      The application class. Main class
     """
+
     def __init__(self):
-        self.gui_enabled = False
         self.controller = otags.Controller()
-        self.path, self.config = self.controller.load_config()
-        self.env = self.config.get('console', 'env')
-        self.action = self.config.get('console', 'action')
+        self.controller.load_config()
 
     ############################################################################
     def run(self):
         """
         Runs program by loading credentials and making call to controller
         """
-        creds = {
-            'url': self.config.get('url', self.env),
-            'userName': self.config.get('credentials', 'userName'),
-            'userPwd': base64.b64decode(self.config.get('credentials', 'userPwd')).decode('utf-8')
+        config = {
+            'gui_enabled': False
         }
-        self.controller.setup_config(creds)
+        try:
+            self.controller.setup_run(config)
+            method = self.controller.get_action()
+            resp = method()
+            LOGGER.info(json.dumps(resp, indent=4))
+            LOGGER.info("\n-- RUN COMPLETED ---")
+        except Exception:
+            LOGGER.error(traceback.print_exc())
+            LOGGER.info("\n-- RUN FAILURES ---")
+            return
 
-        LOGGER.info("Running {}".format(self.controller.acts[str.lower(self.action)].__name__))
-        resp = self.controller.run_action(str.lower(self.action))
-        LOGGER.info(json.dumps(resp, indent=4))
-
-        LOGGER.info("\n-- RUN COMPLETED ---")
 
 ############################################################################
 def main():
@@ -67,7 +68,7 @@ def main():
         LOGGER.info('Command Line Mode')
         main_app.run()
     else:
-        main_app.gui_enabled = True
+        main_app.controller.gui_enabled = True
         import gui
         app = gui.MainUI()
         LOGGER.info('Starting App')

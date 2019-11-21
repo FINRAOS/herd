@@ -2,3 +2,6 @@ certifi >= 14.05.14
 python-dateutil >= 2.5.3
 six >= 1.10
 urllib3 >= 1.15.1
+pytest >= 5.0.1
+pandas >= 0.24.0
+xlrd >= 1.1.0

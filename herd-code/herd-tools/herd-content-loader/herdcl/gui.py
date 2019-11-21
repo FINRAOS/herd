@@ -39,9 +39,9 @@ class MainUI(tk.Frame):
     fileName = ""
     env = None
     textPad = None
-    wb = None
     gui_enabled = True
     controller = otags.Controller()
+    controller.load_config()
 
     def __init__(self, master=None):
         """
@@ -59,11 +59,14 @@ class MainUI(tk.Frame):
         self.username = tk.StringVar()
         self.userpwd = tk.StringVar()
         self.delete = tk.BooleanVar()
+        self.sample_dir = tk.StringVar(value=self.controller.path)
+        self.getfile = tk.StringVar()
+        self.getfile.set("Click to select file...")
+        self.progressbar = None
         self.grid(sticky=ALL)
 
         self.env_name = self.controller.envs[0]
         self.action = self.controller.actions[0]
-        self.path, self.config = self.controller.load_config()
         self.create_widgets()
 
     ############################################################################
@@ -89,6 +92,17 @@ class MainUI(tk.Frame):
         userpwd_entry = tk.ttk.Entry(user_frame, width=22, show="*", textvariable=self.userpwd)
         userpwd_entry.grid(row=0, column=1, pady=5, padx=5, sticky=ALL)
 
+        sample_frame = tk.ttk.Labelframe(self, text='Samples Directory')
+        sample_frame.grid(row=0, column=2, sticky=ALL)
+        sample_entry = tk.ttk.Entry(sample_frame, width=42, textvariable=self.sample_dir)
+        sample_entry.grid(row=0, pady=5, padx=5, sticky=ALL)
+        sample_entry.bind("<Button-1>", self.select_dir)
+
+        progress = tk.ttk.Labelframe(self, text='Progress')
+        progress.grid(row=0, column=3, sticky=ALL)
+        self.progressbar = ttk.Progressbar(progress, mode="determinate", orient="horizontal", value=0)
+        self.progressbar.grid(row=0, pady=5, padx=5, sticky=ALL)
+
         ######## row 1
 
         env = tk.ttk.Labelframe(self, text='Environment')
@@ -105,15 +119,20 @@ class MainUI(tk.Frame):
         self.names.grid(row=0, pady=5, padx=5, sticky=ALL)
         names.grid(row=1, column=1, sticky=ALL)
 
+        files = tk.ttk.Labelframe(self, text='Excel File')
+        getdate_entry = tk.ttk.Entry(files, width=42, textvariable=self.getfile)
+        getdate_entry.grid(row=0, pady=5, padx=5, sticky=ALL)
+        files.grid(row=1, column=2, sticky=ALL)
+        getdate_entry.bind("<Button-1>", self.select_file)
+
         runs = tk.ttk.Labelframe(self, text='Go')
         lb = tk.ttk.Button(runs, text="Run", command=self.run)
         lb.grid(row=0, pady=5, padx=5, sticky=ALL)
-        runs.grid(row=1, column=3)  # , sticky=S)
+        runs.grid(row=1, column=3)
 
         ######## row 2
 
-        self.textPad = tk.scrolledtext.ScrolledText(self,
-                                                    inactiveselectbackground="grey")
+        self.textPad = tk.scrolledtext.ScrolledText(self, inactiveselectbackground="grey")
         self.textPad.grid(row=2, column=0, columnspan=4, sticky=ALL)
         self.textPad.tag_configure("search", background="green")
         self.textPad.tag_configure("error", foreground="red")
@@ -166,6 +185,22 @@ class MainUI(tk.Frame):
         self.action = str(self.names.get())
 
     ############################################################################
+    def select_file(self, *args):
+
+        self.fileName = tk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ('all files', '.*')])
+        if not self.fileName:
+            return
+        self.getfile.set(str(self.fileName.split('/')[-1]))
+
+    ############################################################################
+    def select_dir(self, *args):
+
+        directory = tk.filedialog.askdirectory(initialdir=self.sample_dir.get())
+        if not directory:
+            return
+        self.sample_dir.set(directory)
+
+    ############################################################################
     def run(self):
         """
         Runs program when user clicks Run button
@@ -176,22 +211,32 @@ class MainUI(tk.Frame):
             self.line("Enter credentials")
             return
 
-        creds = {
-            'url': self.config.get('url', self.env_name),
+        if self.action == 'objects':
+            if not self.getfile.get():
+                self.line("Please select a file first.")
+                return
+
+        config = {
+            'gui_enabled': True,
+            'env': self.env_name,
+            'action': self.action,
+            'excel_file': self.getfile.get(),
             'userName': self.username.get(),
             'userPwd': self.userpwd.get()
         }
-        self.controller.setup_config(creds)
 
         try:
-            self.display("Running {}".format(self.controller.acts[str.lower(self.action)].__name__))
-            resp = self.controller.run_action(str.lower(self.action))
+            self.controller.setup_run(config)
+            method = self.controller.get_action()
+            resp = method()
             self.display(json.dumps(resp, indent=4))
-        except Exception:
-            LOGGER.error(traceback.format_exc())
 
-        # TODO Run Summary
-        self.display("\n-- RUN COMPLETED ---")
+            # TODO Run Summary
+            self.display("\n-- RUN COMPLETED ---")
+        except Exception as e:
+            LOGGER.error(traceback.print_exc())
+            self.display("\n-- RUN FAILURES ---")
+            return
 
     ############################################################################
     def display(self, resp):
