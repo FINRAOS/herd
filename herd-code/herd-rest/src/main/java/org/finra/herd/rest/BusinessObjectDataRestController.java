@@ -50,6 +50,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResp
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDataParentsUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataPartitions;
+import org.finra.herd.model.api.xml.BusinessObjectDataPartitionsRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
@@ -399,6 +401,22 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestBody BusinessObjectDataDdlCollectionRequest businessObjectDataDdlCollectionRequest)
     {
         return businessObjectDataService.generateBusinessObjectDataDdlCollection(businessObjectDataDdlCollectionRequest);
+    }
+
+    /**
+     * Generate the partitions information for a range of requested business object data in the specified storage. <p> Requires READ permission on namespace
+     * </p>
+     *
+     * @param businessObjectDataPartitionsRequest the business object data partitions request
+     *
+     * @return the business object data partitions information
+     */
+    @RequestMapping(value = "/businessObjectData/generatePartitions", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_GENERATE_PARTITIONS_POST)
+    public BusinessObjectDataPartitions generateBusinessObjectDataPartitions(
+        @RequestBody BusinessObjectDataPartitionsRequest businessObjectDataPartitionsRequest)
+    {
+        return businessObjectDataService.generateBusinessObjectDataPartitions(businessObjectDataPartitionsRequest);
     }
 
     /**

@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -66,6 +67,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlOutputFormatEnum;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataPartitionsRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
@@ -1927,6 +1929,50 @@ public class BusinessObjectDataServiceTestHelper
         request.setCustomDdlName(customDdlName);
         request.setIncludeDropTableStatement(true);
         request.setIncludeIfNotExistsOption(true);
+        request.setAllowMissingData(true);
+        request.setIncludeAllRegisteredSubPartitions(AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+
+        return request;
+    }
+
+    /**
+     * Creates and returns a business object data partitions request using passed parameters along with some hard-coded test values.
+     *
+     * @param startPartitionValue the start partition value for the partition value range
+     * @param endPartitionValue the end partition value for the partition value range
+     * @param partitionValues the list of partition values
+     *
+     * @return the newly created business object data partitions request
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public BusinessObjectDataPartitionsRequest getTestBusinessObjectDataPartitionsRequest(String startPartitionValue, String endPartitionValue, List<String> partitionValues)
+    {
+        BusinessObjectDataPartitionsRequest request = new BusinessObjectDataPartitionsRequest();
+
+        request.setNamespace(AbstractServiceTest.NAMESPACE);
+        request.setBusinessObjectDefinitionName(AbstractServiceTest.BDEF_NAME);
+        request.setBusinessObjectFormatUsage(AbstractServiceTest.FORMAT_USAGE_CODE);
+        request.setBusinessObjectFormatFileType(FileTypeEntity.TXT_FILE_TYPE);
+        request.setBusinessObjectFormatVersion(AbstractServiceTest.FORMAT_VERSION);
+
+        PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
+        request.setPartitionValueFilters(Collections.singletonList(partitionValueFilter));
+        partitionValueFilter.setPartitionKey(AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME);
+
+        if (startPartitionValue != null || endPartitionValue != null)
+        {
+            PartitionValueRange partitionValueRange = new PartitionValueRange();
+            partitionValueFilter.setPartitionValueRange(partitionValueRange);
+            partitionValueRange.setStartPartitionValue(startPartitionValue);
+            partitionValueRange.setEndPartitionValue(endPartitionValue);
+        }
+
+        if (partitionValues != null)
+        {
+            partitionValueFilter.setPartitionValues(new ArrayList(partitionValues));
+        }
+
+        request.setBusinessObjectDataVersion(AbstractServiceTest.DATA_VERSION);
         request.setAllowMissingData(true);
         request.setIncludeAllRegisteredSubPartitions(AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
 

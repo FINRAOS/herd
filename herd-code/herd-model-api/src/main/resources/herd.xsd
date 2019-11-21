@@ -4443,6 +4443,7 @@
                   object data registration information to extract primary and sub-partition (if any) values required to identify Hive table partitions. Default
                   value is false. If true, the call would fail with a "Bad Request" (status code 400) error when number of partitions in any of the discovered
                   business object data instances does not match to the number of partition columns in the business object format being used to generate the DDL
+                  or retrieve business object partitions
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4511,6 +4512,106 @@
       </xs:sequence>
    </xs:complexType>
 
+
+   <!-- ***** Business Object Data Partitions ***** -->
+
+   <xs:element name="businessObjectDataPartitionsRequest" type="businessObjectDataPartitionsRequest"/>
+   <xs:complexType name="businessObjectDataPartitionsRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
+         <xs:element name="allowMissingData" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="includeAllRegisteredSubPartitions" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies to perform an exhaustive search to return availability for ALL registered sub-partitions (registered as individual
+                  business object data instances) except for the ones with "DELETED" status. This parameter has no impact when business object data version is
+                  specified. Default value is false, which means that this endpoint ignores any "not available" registered sub-partitions when it finds at least
+                  one "VALID" registered sub-partition for a requested business object data partition value.
+                  If true, the call would fail with a "Not Found" (status code 404) error when it finds at least one "not available" (except for "DELETED")
+                  registered sub-partition for a requested business object data partition value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="suppressScanForUnregisteredSubPartitions" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies to suppress scanning of registered storage files to discover sub-partitions and instead of that relies on business
+                  object data registration information to extract primary and sub-partition (if any) values required to identify Hive table partitions. Default
+                  value is false. If true, the call would fail with a "Bad Request" (status code 400) error when number of partitions in any of the discovered
+                  business object data instances does not match to the number of partition columns in the business object format being used to generate the DDL
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataPartitions" type="businessObjectDataPartitions"/>
+   <xs:complexType name="businessObjectDataPartitions">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
+         <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
+         <xs:element name="partitions" type="partitions" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+   <xs:complexType name="partitions">
+      <xs:sequence>
+         <xs:element name="partition" type="partition" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A wrapper for partition information including: partition columns, partitionLocation
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="partition">
+      <xs:sequence>
+         <xs:element name="partitionColumns" type="partitionColumns" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container for partition columns list
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="partitionLocation" type="xs:string"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="partitionColumns">
+      <xs:sequence>
+         <xs:element name="partitionColumn" type="partitionColumn" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A wrapper of partition column name and partition column value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="partitionColumn">
+      <xs:sequence>
+         <xs:element name="partitionColumnName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>A partition column name of the business object format
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="partitionColumnValue" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The partition column value that the business object data is associated with
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
    <!-- ***** Business Object Data Notification  ***** -->
 
    <xs:element name="businessObjectDataNotificationRegistrationCreateRequest" type="businessObjectDataNotificationRegistrationCreateRequest"/>

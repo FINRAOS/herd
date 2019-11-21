@@ -31,6 +31,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResp
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDataParentsUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataPartitions;
+import org.finra.herd.model.api.xml.BusinessObjectDataPartitionsRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
@@ -116,6 +118,15 @@ public interface BusinessObjectDataService
      */
     BusinessObjectDataDdlCollectionResponse generateBusinessObjectDataDdlCollection(
         BusinessObjectDataDdlCollectionRequest businessObjectDataDdlCollectionRequest);
+
+    /**
+     * Generate the partitions information for a range of requested business object data in the specified storage. This method starts a new transaction.
+     *
+     * @param businessObjectDataPartitionsRequest the business object data partitions request
+     *
+     * @return the business object data partitions information
+     */
+    BusinessObjectDataPartitions generateBusinessObjectDataPartitions(BusinessObjectDataPartitionsRequest businessObjectDataPartitionsRequest);
 
     /**
      * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object definition.
