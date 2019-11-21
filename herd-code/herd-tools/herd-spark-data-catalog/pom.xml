@@ -7,7 +7,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-tools</artifactId>
-      <version>0.109.0-SNAPSHOT</version>
+      <version>0.110.0-SNAPSHOT</version>
    </parent>
 
    <name>herd spark data catalog</name>
@@ -77,6 +77,17 @@
       <dependency>
          <groupId>co.wrisk.jcredstash</groupId>
          <artifactId>jcredstash</artifactId>
+         <exclusions>
+            <exclusion>
+               <groupId>org.bouncycastle</groupId>
+               <artifactId>bcprov-jdk15on</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>org.bouncycastle</groupId>
+         <artifactId>bcprov-jdk15on</artifactId>
+         <version>${bcprov-jdk15on.version}</version>
       </dependency>
 
       <!-- Spark bits, scoped for uber jar creation (provided) -->
