@@ -22,15 +22,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.sql.DataSource;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -229,48 +225,6 @@ public class StorageFileDaoTest extends AbstractDaoTest
     public void testGetStorageFilePathsByStorageUnitIdsSingleChunkAndSinglePage() throws Exception
     {
         validateGetStoragePathsByStorageUnitIds(LOCAL_FILES.size() * LOCAL_FILES.size(), LOCAL_FILES.size() * LOCAL_FILES.size());
-    }
-
-    @Test
-    public void testSaveStorageFiles() throws Exception
-    {
-        // Turn off referential integrity because the storage unit entity is created in separate JUNIT test transaction in the H2 in-memory database.
-        DataSource dataSource = jdbcTemplate.getDataSource();
-        Connection connection = dataSource.getConnection();
-        CallableStatement callableStatement = connection.prepareCall("SET REFERENTIAL_INTEGRITY TO FALSE");
-        callableStatement.execute();
-
-        // Create relative database entities.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-
-        List<StorageFileEntity> storageFileEntities = new ArrayList<>();
-        for (String file : LOCAL_FILES)
-        {
-            StorageFileEntity storageFileEntity = new StorageFileEntity();
-            storageFileEntity.setStorageUnit(storageUnitEntity);
-            storageFileEntity.setPath(file);
-            storageFileEntity.setFileSizeBytes(FILE_SIZE_1_KB);
-            storageFileEntity.setRowCount(ROW_COUNT_1000);
-            storageFileEntities.add(storageFileEntity);
-        }
-
-        // Batch save the storage files list.
-        storageFileDao.saveStorageFiles(storageFileEntities);
-
-        // Retrieve the relative storage file entities and validate the results.
-        for (String file : LOCAL_FILES)
-        {
-            StorageFileEntity storageFileEntity = storageFileDao.getStorageFileByStorageNameAndFilePath(StorageEntity.MANAGED_STORAGE, file);
-            assertTrue(storageFileEntity.getPath().compareTo(file) == 0);
-            assertTrue(storageFileEntity.getFileSizeBytes().compareTo(FILE_SIZE_1_KB) == 0);
-            assertTrue(storageFileEntity.getRowCount().compareTo(ROW_COUNT_1000) == 0);
-        }
-
-        // Confirm negative results when using wrong input parameters.
-        assertNull(storageFileDao.getStorageFileByStorageNameAndFilePath("I_DO_NOT_EXIST", LOCAL_FILES.get(0)));
-        assertNull(storageFileDao.getStorageFileByStorageNameAndFilePath(StorageEntity.MANAGED_STORAGE, "I_DO_NOT_EXIST"));
     }
 
     private void validateGetStoragePathsByStorageUnitIds(Integer chunkSize, Integer pageSize) throws Exception

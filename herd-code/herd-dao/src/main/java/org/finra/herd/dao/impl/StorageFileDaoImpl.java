@@ -19,6 +19,7 @@ import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 
@@ -256,7 +258,8 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
     public void saveStorageFiles(final List<StorageFileEntity> storageFileEntities)
     {
         // Get the current application user id.
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        Authentication authentication = securityContext.getAuthentication();
 
         String currentUserId = "";
 
@@ -291,9 +294,36 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
             // For each storage file entry add to a prepared statement batch and execute.
             for (final StorageFileEntity storageFileEntity : storageFileEntities)
             {
-                preparedStatement.setString(1, storageFileEntity.getPath());
-                preparedStatement.setLong(2, storageFileEntity.getFileSizeBytes());
-                preparedStatement.setLong(3, storageFileEntity.getRowCount());
+                // Set the path value in the prepared statement as parameter 1.
+                if (storageFileEntity.getPath() == null)
+                {
+                    preparedStatement.setNull(1, Types.VARCHAR);
+                }
+                else
+                {
+                    preparedStatement.setString(1, storageFileEntity.getPath());
+                }
+
+                // Set the file size bytes in the prepared statement as parameter 2.
+                if (storageFileEntity.getFileSizeBytes() == null)
+                {
+                    preparedStatement.setNull(2, Types.LONGNVARCHAR);
+                }
+                else
+                {
+                    preparedStatement.setLong(2, storageFileEntity.getFileSizeBytes());
+                }
+
+                // Set the row count in the prepared statement as parameter 3.
+                if (storageFileEntity.getRowCount() == null)
+                {
+                    preparedStatement.setNull(3, Types.LONGNVARCHAR);
+                }
+                else
+                {
+                    preparedStatement.setLong(3, storageFileEntity.getRowCount());
+                }
+
                 preparedStatement.setInt(4, storageFileEntity.getStorageUnit().getId());
                 preparedStatement.addBatch();
 
