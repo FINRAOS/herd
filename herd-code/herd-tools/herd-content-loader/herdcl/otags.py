@@ -34,11 +34,17 @@ class Controller:
     """
      The controller class. Makes calls to herdsdk
     """
-    file_name = ''
+    action = None
+    excel_file = ''
+    data_frame = ''
+    path = ''
+    config = None
+    tag_types = {
+        'columns': []
+    }
 
     def __init__(self):
         # TODO attach methods
-        self.action = None
         self.acts = {
             'tags': self.get_build_info,
             'objects': self.load_object,
@@ -48,10 +54,6 @@ class Controller:
         }
         self.actions = ['Objects', 'Columns', 'Samples', 'Tags', 'Export BDef']
         self.envs = ['DEV-INT', 'QA-INT', 'CT', 'PROD', 'PROD-CT']
-        self.excel_file = ''
-
-        self.path = ''
-        self.config = None
 
         # Configure HTTP basic authorization: basicAuthentication
         self.configuration = herdsdk.Configuration()
@@ -117,7 +119,7 @@ class Controller:
 
         """
         method = self.acts[self.action]
-        LOGGER.info("Running {}".format(method.__name__))
+        LOGGER.info('Running {}'.format(method.__name__))
         return method
 
     ############################################################################
@@ -125,34 +127,21 @@ class Controller:
         """
         One of the controller actions. Loads business object definitions
 
-        :return:
+        :return: Run Summary
 
         """
-        excel = self.load_worksheet('Bus Obj Definition')
+        self.data_frame = self.load_worksheet('Bus Obj Definition')
+        self.load_tag_types()
 
-        for index, row in excel.iterrows():
-            try:
-                # Update business object definition descriptive information
-                # self.update_bdef_descriptive_info(row)
-                self.update_sme(row)
-            except ApiException as e:
-                LOGGER.error(e)
-            except:
-                LOGGER.error(traceback.format_exc())
+        run_steps = [
+            self.update_bdef_descriptive_info,
+            self.update_sme,
+            self.update_bdef_tags
+        ]
+
+        return self.get_run_summary(run_steps)
 
         # json_data = json.dumps(team.__dict__, lambda o: o.__dict__, indent=4)
-
-        # tag_keys = self.get_tag_types().tag_type_keys
-
-        # Get list of all tag types
-        tag_types = {}
-
-        # # Get details of each tag type
-        # for tag in tag_keys:
-        #     code = tag.tag_type_code
-        #     tag_types[code] = self.get_tag_type_code(code).display_name
-
-        return tag_types
 
     ############################################################################
     def load_worksheet(self, sheet):
@@ -163,7 +152,51 @@ class Controller:
         :return: Pandas DataFrame
 
         """
+        LOGGER.info('Loading worksheet name: {}'.format(sheet))
         return pd.read_excel(self.excel_file, sheet_name=sheet).fillna('')
+
+    ############################################################################
+    def get_run_summary(self, run_steps):
+        """
+        Loads Excel worksheet to Pandas DataFrame
+
+        :param: run_steps: Steps to run
+        :return: Run Summary
+
+        """
+        run_summary = {
+            'total_rows': len(self.data_frame.index),
+            'success_rows': 0,
+            'fail_rows': 0,
+            'fail_index': [],
+            'errors': []
+        }
+
+        for index, row in self.data_frame.iterrows():
+            try:
+                for step in run_steps:
+                    step(row)
+                run_summary['success_rows'] += 1
+            except ApiException as e:
+                LOGGER.error(e)
+                run_summary['fail_rows'] += 1
+                run_summary['fail_index'].append(index + 1)
+                error = {
+                    'index': index + 1,
+                    'message': e
+                }
+                run_summary['errors'].append(error)
+            except:
+                LOGGER.error(traceback.format_exc())
+                run_summary['fail_rows'] += 1
+                run_summary['fail_index'].append(index + 1)
+                error = {
+                    'index': index + 1,
+                    'message': traceback.format_exc()
+                }
+                run_summary['errors'].append(error)
+
+        return run_summary
 
     ############################################################################
     def update_bdef_descriptive_info(self, row):
@@ -179,15 +212,16 @@ class Controller:
         LOGGER.info('Success')
         LOGGER.info(resp)
 
+        # See if description, display name, usage, or file type in excel differs from UDC
         if (resp.description != description or
                     resp.display_name != logical_name or
                     resp.descriptive_business_object_format.business_object_format_usage != usage or
                     resp.descriptive_business_object_format.business_object_format_file_type != file_type):
             json = {
-                "description": description,
-                "displayName": logical_name,
-                "formatUsage": usage,
-                "fileType": file_type
+                'description': description,
+                'displayName': logical_name,
+                'formatUsage': usage,
+                'fileType': file_type
             }
             LOGGER.info('Updating BDef Descriptive Info')
             resp = self.update_business_object_definition_descriptive_info(namespace=namespace,
@@ -215,6 +249,7 @@ class Controller:
         if user:
             user = set([u.strip(" ,\t") for u in user.strip().split(',')])
 
+        # Get list of SMEs to create and remove
         current_smes = []
         remove_sme_list = []
         for entry in resp.business_object_definition_subject_matter_expert_keys:
@@ -231,18 +266,75 @@ class Controller:
 
         for sme in remove_sme_list:
             user_id = '{}{}{}rp.{}.{}sd.{}'.format(sme, chr(64), 'co', 'root', 'na', 'com')
-            LOGGER.info('Deleting SMEs')
+            LOGGER.info('Deleting SME: {}'.format(sme))
             self.delete_subject_matter_expert(namespace, bdef_name, user_id)
-            LOGGER.info('SME {} deleted'.format(sme))
+            LOGGER.info('SME deleted')
 
         if user:
             for user_id in user:
                 if not '@' in user_id:
                     user_id = '{}{}{}rp.{}.{}sd.{}'.format(user_id, chr(64), 'co', 'root', 'na', 'com')
-                LOGGER.info('Adding SMEs')
+                LOGGER.info('Adding SME: {}'.format(user_id))
                 self.create_subject_matter_expert(namespace, bdef_name, user_id)
-                LOGGER.info('SME {} Added'.format(user_id))
+                LOGGER.info('SME Added')
 
+    ############################################################################
+    def load_tag_types(self):
+        LOGGER.info('Getting list of all tag types')
+        resp = self.get_tag_types().tag_type_keys
+        LOGGER.info('Success')
+        LOGGER.info(resp)
+
+        for tag in resp:
+            code = tag.tag_type_code
+            LOGGER.info('Getting display name of tag type code: {}'.format(code))
+            display_name = self.get_tag_type_code(code).display_name.strip()
+            LOGGER.info('Display name found: {}'.format(display_name))
+            self.tag_types[code] = display_name
+            LOGGER.info('Checking if \'{}\' is a column in worksheet'.format(display_name))
+            if display_name in list(self.data_frame):
+                self.tag_types['columns'].append(code)
+                LOGGER.info('Column \'{}\' added'.format(display_name))
+
+    ############################################################################
+    def update_bdef_tags(self, row):
+        """
+        Updates existing business object definition subject matter experts for a specific business object definition
+
+        :param: row: A row inside the Pandas DataFrame
+
+        """
+        namespace, _, _, bdef_name = row[:4]
+
+        LOGGER.info('Checking worksheet for BDef tags to add')
+        tags_to_add = {}
+        for code in self.tag_types['columns']:
+            row_entry = []
+            display_name = self.tag_types[code]
+            if row[display_name]:
+                LOGGER.info('Tag data found in column \'{}\''.format(display_name))
+                row_entry = [x.strip() for x in row[display_name].split(',')]
+            tags_to_add[code] = row_entry
+
+        LOGGER.info('Tags in worksheet: {}'.format(tags_to_add))
+        LOGGER.info('Getting Current Bdef Tags')
+        resp = self.get_bdef_tags(namespace, bdef_name)
+        for bdef_tag in resp.business_object_definition_tag_keys:
+            tag_key = bdef_tag.tag_key
+            LOGGER.info('Found Tag Key: {}'.format(tag_key))
+            tag_type_code, tag_code = tag_key.tag_type_code, tag_key.tag_code
+            if tag_type_code in tags_to_add and tag_code in tags_to_add[tag_type_code]:
+                tags_to_add[tag_type_code].remove(tag_code)
+            else:
+                LOGGER.info('Deleting Tag Key: {}'.format(tag_key))
+                self.delete_bdef_tags(namespace, bdef_name, tag_type_code, tag_code)
+                LOGGER.info('Deleted')
+
+        for tag_type_code, row_entry in tags_to_add.items():
+            for tag_code in row_entry:
+                LOGGER.info('Adding {}'.format(tag_code))
+                self.create_bdef_tags(namespace, bdef_name, tag_type_code, tag_code)
+                LOGGER.info('Added')
 
     ############################################################################
     def get_build_info(self):
@@ -260,24 +352,9 @@ class Controller:
         return api_response
 
     ############################################################################
-    def get_tag_types(self):
-        api_instance = herdsdk.TagTypeApi(herdsdk.ApiClient(self.configuration))
-
-        LOGGER.info('GET /tagTypes')
-        api_response = api_instance.tag_type_get_tag_types()
-        return api_response
-
-    ############################################################################
-    def get_tag_type_code(self, tag):
-        api_instance = herdsdk.TagTypeApi(herdsdk.ApiClient(self.configuration))
-
-        LOGGER.info('GET /tagTypes/{}'.format(tag))
-        api_response = api_instance.tag_type_get_tag_type(tag)
-        return api_response
-
-    ############################################################################
     def get_business_object_definition(self, namespace, business_object_definition_name):
-        api_instance = herdsdk.BusinessObjectDefinitionApi(herdsdk.ApiClient(self.configuration))
+        api_client = ApiClientOverwrite(self.configuration)
+        api_instance = herdsdk.BusinessObjectDefinitionApi(api_client)
 
         LOGGER.info(
             'GET /businessObjectDefinitions/namespaces/{}/businessObjectDefinitionNames/{}'.format(
@@ -290,7 +367,8 @@ class Controller:
     ############################################################################
     def update_business_object_definition_descriptive_info(self, namespace, business_object_definition_name,
                                                            update_request):
-        api_instance = herdsdk.BusinessObjectDefinitionApi(herdsdk.ApiClient(self.configuration))
+        api_client = ApiClientOverwrite(self.configuration)
+        api_instance = herdsdk.BusinessObjectDefinitionApi(api_client)
 
         descriptive_business_object_format = herdsdk.DescriptiveBusinessObjectFormatUpdateRequest(
             business_object_format_usage=update_request['formatUsage'],
@@ -320,7 +398,8 @@ class Controller:
                 business_object_definition_name))
         api_response = api_instance. \
             business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition(
-            namespace, business_object_definition_name)
+            namespace,
+            business_object_definition_name)
         return api_response
 
     ############################################################################
@@ -333,7 +412,9 @@ class Controller:
                 business_object_definition_name,
                 user_id))
         api_response = api_instance.business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert(
-            namespace, business_object_definition_name, user_id)
+            namespace,
+            business_object_definition_name,
+            user_id)
         return api_response
 
     ############################################################################
@@ -348,11 +429,110 @@ class Controller:
             business_object_definition_subject_matter_expert_key=business_object_definition_subject_matter_expert_key
         )
 
-        LOGGER.info(
-            'POST /businessObjectDefinitionSubjectMatterExperts'.format(
-                namespace,
-                business_object_definition_name,
-                user_id))
+        LOGGER.info('POST /businessObjectDefinitionSubjectMatterExperts')
         api_response = api_instance.business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert(
             business_object_definition_subject_matter_expert_create_request)
         return api_response
+
+    ############################################################################
+    def get_tag_types(self):
+        api_instance = herdsdk.TagTypeApi(herdsdk.ApiClient(self.configuration))
+
+        LOGGER.info('GET /tagTypes')
+        api_response = api_instance.tag_type_get_tag_types()
+        return api_response
+
+    ############################################################################
+    def get_tag_type_code(self, tag):
+        api_instance = herdsdk.TagTypeApi(herdsdk.ApiClient(self.configuration))
+
+        LOGGER.info('GET /tagTypes/{}'.format(tag))
+        api_response = api_instance.tag_type_get_tag_type(tag)
+        return api_response
+
+    ############################################################################
+    def get_bdef_tags(self, namespace, business_object_definition_name):
+        api_instance = herdsdk.BusinessObjectDefinitionTagApi(herdsdk.ApiClient(self.configuration))
+
+        LOGGER.info(
+            'GET /businessObjectDefinitionTags/namespaces/{}/businessObjectDefinitionNames/{}'.format(
+                namespace,
+                business_object_definition_name))
+        api_response = api_instance.business_object_definition_tag_get_business_object_definition_tags_by_business_object_definition(
+            namespace,
+            business_object_definition_name)
+        return api_response
+
+    ############################################################################
+    def delete_bdef_tags(self, namespace, business_object_definition_name, tag_type_code, tag_code):
+        api_instance = herdsdk.BusinessObjectDefinitionTagApi(herdsdk.ApiClient(self.configuration))
+
+        LOGGER.info(
+            'DELETE /businessObjectDefinitionTags/namespaces/{}/businessObjectDefinitionNames/{}/tagTypes/{}/tagCodes/{}'.format(
+                namespace,
+                business_object_definition_name,
+                tag_type_code,
+                tag_code))
+        api_response = api_instance.business_object_definition_tag_delete_business_object_definition_tag(
+            namespace,
+            business_object_definition_name,
+            tag_type_code,
+            tag_code)
+        return api_response
+
+    ############################################################################
+    def create_bdef_tags(self, namespace, business_object_definition_name, tag_type_code, tag_code):
+        api_instance = herdsdk.BusinessObjectDefinitionTagApi(herdsdk.ApiClient(self.configuration))
+
+        business_object_definition_key = herdsdk.BusinessObjectDefinitionKey(
+            namespace=namespace,
+            business_object_definition_name=business_object_definition_name
+        )
+        tag_key = herdsdk.TagKey(
+            tag_type_code=tag_type_code,
+            tag_code=tag_code
+        )
+        business_object_definition_tag_key = herdsdk.BusinessObjectDefinitionTagKey(
+            business_object_definition_key=business_object_definition_key,
+            tag_key=tag_key
+        )
+        business_object_definition_tag_create_request = herdsdk.BusinessObjectDefinitionTagCreateRequest(
+            business_object_definition_tag_key=business_object_definition_tag_key
+        )
+
+        LOGGER.info('POST /businessObjectDefinitionTags')
+        api_response = api_instance.business_object_definition_tag_create_business_object_definition_tag(
+            business_object_definition_tag_create_request)
+        return api_response
+
+
+class ApiClientOverwrite(herdsdk.ApiClient):
+    def deserialize(self, response, response_type):
+        """Deserializes response into an object.
+
+        :param response: RESTResponse object to be deserialized.
+        :param response_type: class literal for
+            deserialized object, or string of class name.
+
+        :return: deserialized object.
+        """
+        # handle file downloading
+        # save response body into a tmp file and return the instance
+        if response_type == "file":
+            return self._ApiClient__deserialize_file(response)
+
+        # fetch data from response object
+        try:
+            import json
+            data = json.loads(response.data)
+        except ValueError:
+            data = response.data
+
+        '''
+        NOTE: Due to datetime parser issue, converting data
+        '''
+        if 'lastUpdatedOn' in data.keys():
+            import time
+            data['lastUpdatedOn'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(data['lastUpdatedOn'] / 1000))
+
+        return self._ApiClient__deserialize(data, response_type)

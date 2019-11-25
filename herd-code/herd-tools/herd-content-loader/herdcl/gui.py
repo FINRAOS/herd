@@ -61,8 +61,6 @@ class MainUI(tk.Frame):
         self.delete = tk.BooleanVar()
         self.sample_dir = tk.StringVar(value=self.controller.path)
         self.getfile = tk.StringVar()
-        self.getfile.set("Click to select file...")
-        self.progressbar = None
         self.grid(sticky=ALL)
 
         self.env_name = self.controller.envs[0]
@@ -98,11 +96,6 @@ class MainUI(tk.Frame):
         sample_entry.grid(row=0, pady=5, padx=5, sticky=ALL)
         sample_entry.bind("<Button-1>", self.select_dir)
 
-        progress = tk.ttk.Labelframe(self, text='Progress')
-        progress.grid(row=0, column=3, sticky=ALL)
-        self.progressbar = ttk.Progressbar(progress, mode="determinate", orient="horizontal", value=0)
-        self.progressbar.grid(row=0, pady=5, padx=5, sticky=ALL)
-
         ######## row 1
 
         env = tk.ttk.Labelframe(self, text='Environment')
@@ -120,10 +113,10 @@ class MainUI(tk.Frame):
         names.grid(row=1, column=1, sticky=ALL)
 
         files = tk.ttk.Labelframe(self, text='Excel File')
-        getdate_entry = tk.ttk.Entry(files, width=42, textvariable=self.getfile)
-        getdate_entry.grid(row=0, pady=5, padx=5, sticky=ALL)
+        get_file_entry = tk.ttk.Entry(files, width=42, textvariable=self.getfile)
+        get_file_entry.grid(row=0, pady=5, padx=5, sticky=ALL)
         files.grid(row=1, column=2, sticky=ALL)
-        getdate_entry.bind("<Button-1>", self.select_file)
+        get_file_entry.bind("<Button-1>", self.select_file)
 
         runs = tk.ttk.Labelframe(self, text='Go')
         lb = tk.ttk.Button(runs, text="Run", command=self.run)
@@ -190,7 +183,7 @@ class MainUI(tk.Frame):
         self.fileName = tk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ('all files', '.*')])
         if not self.fileName:
             return
-        self.getfile.set(str(self.fileName.split('/')[-1]))
+        self.getfile.set(str(self.fileName))
 
     ############################################################################
     def select_dir(self, *args):
@@ -211,7 +204,7 @@ class MainUI(tk.Frame):
             self.line("Enter credentials")
             return
 
-        if self.action == 'objects':
+        if self.action == 'Objects':
             if not self.getfile.get():
                 self.line("Please select a file first.")
                 return
@@ -228,17 +221,26 @@ class MainUI(tk.Frame):
         try:
             self.controller.setup_run(config)
             method = self.controller.get_action()
-            resp = method()
-            self.display(json.dumps(resp, indent=4))
+            run_summary = method()
 
-            # TODO Run Summary
-            self.display("\n-- RUN COMPLETED ---")
-        except Exception as e:
-            LOGGER.error(traceback.print_exc())
-            self.display("\n-- RUN FAILURES ---")
-            return
+            if run_summary['fail_rows'] == 0:
+                self.display('\n-- RUN COMPLETED ---')
+            else:
+                self.display('Number of rows failed: {}'.format(run_summary['fail_rows']), error_flag=True)
+                self.display('Please check rows: {}'.format(run_summary['fail_index']), error_flag=True)
+                for e in run_summary['errors']:
+                    self.display('Row: {}\nMessage:{}'.format(e['index'], e['message']), error_flag=True)
+                self.display('\n-- RUN FAILURES ---', error_flag=True)
+        except Exception:
+            self.display(traceback.print_exc(), error_flag=True)
+            self.display('\n-- RUN FAILURES ---', error_flag=True)
+
+        return
 
     ############################################################################
-    def display(self, resp):
-        LOGGER.info(resp)
+    def display(self, resp, error_flag=False):
+        if error_flag:
+            LOGGER.error(resp)
+        else:
+            LOGGER.info(resp)
         self.line(resp)

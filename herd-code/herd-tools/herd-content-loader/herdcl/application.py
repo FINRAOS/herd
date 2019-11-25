@@ -43,16 +43,23 @@ class Application:
         config = {
             'gui_enabled': False
         }
+
         try:
             self.controller.setup_run(config)
             method = self.controller.get_action()
-            resp = method()
-            LOGGER.info(json.dumps(resp, indent=4))
-            LOGGER.info("\n-- RUN COMPLETED ---")
+            run_summary = method()
+
+            if run_summary['fail_rows'] == 0:
+                LOGGER.info('\n-- RUN COMPLETED ---')
+            else:
+                LOGGER.error('Number of rows failed: {}'.format(run_summary['fail_rows']))
+                LOGGER.error('Please check rows: {}'.format(run_summary['fail_index']))
+                for e in run_summary['errors']:
+                    LOGGER.error('Row: {}\nMessage:{}'.format(e['index'], e['message']))
+                    LOGGER.error('\n-- RUN FAILURES ---')
         except Exception:
             LOGGER.error(traceback.print_exc())
-            LOGGER.info("\n-- RUN FAILURES ---")
-            return
+            LOGGER.error('\n-- RUN FAILURES ---')
 
 
 ############################################################################

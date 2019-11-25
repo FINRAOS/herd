@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import configparser
+import configparser, string, random
 import unittest
 from unittest import mock
 
@@ -23,7 +23,7 @@ import xlrd
 import pandas as pd
 
 # Herd imports
-import herdsdk
+from herdsdk import rest
 
 # Local imports
 try:
@@ -32,9 +32,18 @@ except ImportError:
     from herdcl import otags
 
 
-class TestController(unittest.TestCase):
+def string_generator(string_length=10):
+    """Generate a random string of letters, digits and special characters """
+
+    password_characters = string.ascii_letters + string.digits + string.punctuation.replace(',', '').replace('@', '')
+    new_string = ''.join(random.choice(password_characters) for _ in range(string_length))
+    rand = random.randint(161, 563)
+    return new_string + chr(rand)
+
+
+class TestUtilityMethods(unittest.TestCase):
     """
-    The unit test class used to the Application class.
+    Test Suite for Utility Methods
     """
 
     def setUp(self):
@@ -42,12 +51,6 @@ class TestController(unittest.TestCase):
         The setup method that will be called before each test.
         """
         self.controller = otags.Controller()
-
-    def tearDown(self):
-        """
-        The setup method that will be called after each test.
-        """
-        self.controller = None
 
     @mock.patch('os.path')
     @mock.patch('configparser.ConfigParser')
@@ -185,6 +188,106 @@ class TestController(unittest.TestCase):
         with self.assertRaises(xlrd.biffh.XLRDError):
             self.controller.load_worksheet('Sheet')
 
+    def test_get_run_summary(self):
+        """
+        Test of the running steps and getting run summary
+
+        """
+        self.controller.data_frame = pd.DataFrame(data=[['item1'], ['item2']], columns=['column1'])
+
+        mock_step = mock.Mock()
+        run_summary = self.controller.get_run_summary([mock_step])
+        self.assertEqual(mock_step.call_count, 2)
+        self.assertEqual(run_summary['total_rows'], 2)
+        self.assertEqual(run_summary['success_rows'], 2)
+        self.assertEqual(run_summary['fail_rows'], 0)
+
+    def test_get_run_summary_apiexception(self):
+        """
+        Test of the running steps and getting run summary with ApiException
+
+        """
+        self.controller.data_frame = pd.DataFrame(data=[['item1'], ['item2']], columns=['column1'])
+
+        mock_step = mock.Mock()
+        mock_step.side_effect = ['Pass', rest.ApiException(reason='Error')]
+        run_summary = self.controller.get_run_summary([mock_step])
+        self.assertEqual(mock_step.call_count, 2)
+        self.assertEqual(run_summary['total_rows'], 2)
+        self.assertEqual(run_summary['success_rows'], 1)
+        self.assertEqual(run_summary['fail_rows'], 1)
+        self.assertEqual(run_summary['fail_index'], [2])
+        self.assertEqual(len(run_summary['errors']), 1)
+        self.assertEqual(run_summary['errors'][0]['index'], 2)
+        self.assertEqual(run_summary['errors'][0]['message'].reason, 'Error')
+
+    def test_get_run_summary_exception(self):
+        """
+        Test of the running steps and getting run summary with traceback
+
+        """
+        self.controller.data_frame = pd.DataFrame(data=[['item1'], ['item2']], columns=['column1'])
+
+        mock_step = mock.Mock()
+        mock_step.side_effect = ['Pass', Exception('Exception Thrown')]
+        run_summary = self.controller.get_run_summary([mock_step])
+        self.assertEqual(mock_step.call_count, 2)
+        self.assertEqual(run_summary['total_rows'], 2)
+        self.assertEqual(run_summary['success_rows'], 1)
+        self.assertEqual(run_summary['fail_rows'], 1)
+        self.assertEqual(run_summary['fail_index'], [2])
+        self.assertEqual(len(run_summary['errors']), 1)
+        self.assertEqual(run_summary['errors'][0]['index'], 2)
+        self.assertTrue('Exception Thrown' in run_summary['errors'][0]['message'])
+
+
+class TestObjectAction(unittest.TestCase):
+    """
+    Test Suite for Action Objects
+    """
+
+    def setUp(self):
+        """
+        The setup method that will be called before each test.
+        """
+        self.controller = otags.Controller()
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
+    def test_load_tag_types(self, mock_tag_api, mock_tag_types_api):
+        """
+        Test of loading tag types
+
+        """
+        code_1 = string_generator()
+        code_2 = string_generator()
+
+        column_1 = string_generator()
+        column_2 = string_generator() + 'A'
+
+        mock_tag_types_api.return_value = mock.Mock(
+            tag_type_keys=[
+                mock.Mock(tag_type_code=code_1),
+                mock.Mock(tag_type_code=code_2)
+            ]
+        )
+
+        # Also checking that leading and trailing characters are removed
+        # Currently case-sensitive
+        mock_tag_api.side_effect = [
+            mock.Mock(display_name='  ' + column_1 + '   '),
+            mock.Mock(display_name=column_2)
+        ]
+
+        self.controller.data_frame = pd.DataFrame(data=[['item1', 'item2']],
+                                                  columns=[column_1, str.lower(column_2)])
+
+        # Run scenario and check values
+        self.controller.load_tag_types()
+        mock_tag_types_api.assert_called_once()
+        self.assertEqual(mock_tag_api.call_count, 2)
+        self.assertEqual(self.controller.tag_types['columns'], [code_1])
+
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.business_object_definition_get_business_object_definition')
     @mock.patch(
         'herdsdk.BusinessObjectDefinitionApi.business_object_definition_update_business_object_definition_descriptive_information')
@@ -194,15 +297,14 @@ class TestController(unittest.TestCase):
 
         """
         mock_bdef.return_value = mock.Mock(
-            description='description',
+            description=string_generator(string_length=10),
             descriptive_business_object_format=mock.Mock(
-                business_object_format_file_type='different_file_type',
-                business_object_format_usage='usage'
+                business_object_format_file_type=string_generator(string_length=11),
+                business_object_format_usage=string_generator(string_length=12)
             ),
-            display_name='logical_name',
-            namespace='namespace'
+            display_name=string_generator(string_length=13)
         )
-        row = ['namespace', 'usage', 'file_type', 'bdef_name', 'logical_name', 'description']
+        row = ['namespace', string_generator(), string_generator(), 'bdef_name', string_generator(), string_generator()]
 
         # Run scenario and check values
         self.controller.update_bdef_descriptive_info(row)
@@ -249,11 +351,11 @@ class TestController(unittest.TestCase):
         """
         mock_get_sme.return_value = mock.Mock(
             business_object_definition_subject_matter_expert_keys=[
-                mock.Mock(user_id='user_deleted')
+                mock.Mock(user_id=string_generator(string_length=9))
             ]
         )
 
-        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'user_created']],
+        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', string_generator()]],
                           columns=['column1', 'column2', 'column3', 'column4', 'Bus Obj Def SME User ID'])
         row = df.iloc[0]
 
@@ -283,7 +385,7 @@ class TestController(unittest.TestCase):
             ]
         )
 
-        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'user, user_created']],
+        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'user, ' + string_generator()]],
                           columns=['column1', 'column2', 'column3', 'column4', 'Bus Obj Def SME User ID'])
         row = df.iloc[0]
 
@@ -309,7 +411,7 @@ class TestController(unittest.TestCase):
         """
         mock_get_sme.return_value = mock.Mock(
             business_object_definition_subject_matter_expert_keys=[
-                mock.Mock(user_id='user_deleted')
+                mock.Mock(user_id=string_generator())
             ]
         )
 
@@ -337,6 +439,7 @@ class TestController(unittest.TestCase):
         Test of no update to business object definition subject matter expert
 
         """
+
         mock_get_sme.return_value = mock.Mock(
             business_object_definition_subject_matter_expert_keys=[
                 mock.Mock(user_id='user')
@@ -373,7 +476,7 @@ class TestController(unittest.TestCase):
             ]
         )
 
-        users = ', '.join(['‘–’', u'\xa0', u'\u2026', u'\u2014'])
+        users = ', '.join([string_generator(), string_generator(), '‘–’', u'\xa0', u'\u2026', u'\u2014'])
         df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', users]],
                           columns=['column1', 'column2', 'column3', 'column4', 'Bus Obj Def SME User ID'])
         row = df.iloc[0]
@@ -382,30 +485,134 @@ class TestController(unittest.TestCase):
         self.controller.update_sme(row)
         mock_get_sme.assert_called_once()
         mock_delete_sme.assert_called_once()
-        self.assertEqual(mock_create_sme.call_count, 4)
+        self.assertEqual(mock_create_sme.call_count, 6)
 
-    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
-    def test_get_tag_types(self, mock_tag_types_api):
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_get_business_object_definition_tags_by_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_delete_business_object_definition_tag')
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_create_business_object_definition_tag')
+    def test_update_bdef_tags(self, mock_create_tag, mock_delete_tag, mock_get_bdef_tag):
         """
-        Test of TagTypeApi tag_type_get_tag_types
+        Test of updating business object definition tags
 
         """
-        mock_tag_types_api.return_value = 'testresponse'
+        tag_type_code_1 = string_generator()
+        tag_type_code_2 = string_generator()
+
+        tag_code_1 = string_generator()
+        mock_get_bdef_tag.return_value = mock.Mock(
+            business_object_definition_tag_keys=[
+                mock.Mock(tag_key=mock.Mock(
+                    tag_type_code=tag_type_code_1,
+                    tag_code='tag1'
+                )),
+                mock.Mock(tag_key=mock.Mock(
+                    tag_type_code=tag_type_code_2,
+                    tag_code=tag_code_1
+                ))
+            ]
+        )
+
+        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'tag1, tag2 ']],
+                          columns=['Column1', 'column2', 'column3', 'column4', 'Display Name 1'])
+        row = df.iloc[0]
+
+        # Tag Type Code has a corresponding Excel Worksheel Display Column Name
+        # Inside the column are comma separated tag codes
+        self.controller.tag_types['columns'] = [tag_type_code_1]
+        self.controller.tag_types[tag_type_code_1] = 'Display Name 1'
 
         # Run scenario and check values
-        resp = self.controller.get_tag_types()
-        mock_tag_types_api.assert_called_once()
-        self.assertEqual(resp, 'testresponse')
+        self.controller.update_bdef_tags(row)
+        mock_get_bdef_tag.assert_called_once()
+        mock_delete_tag.assert_called_once()
+        mock_create_tag.assert_called_once()
 
-    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
-    def test_get_tag_type_code(self, mock_tag_types_api):
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_get_business_object_definition_tags_by_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_delete_business_object_definition_tag')
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_create_business_object_definition_tag')
+    def test_update_bdef_tags_no_delete(self, mock_create_tag, mock_delete_tag, mock_get_bdef_tag):
         """
-        Test of the setup config function
+        Test of updating business object definition tags. Tag will be created but no deletion
 
         """
-        mock_tag_types_api.return_value = 'testresponse'
+        tag_type_code_1 = string_generator()
+        tag_type_code_2 = string_generator()
+
+        tag_code_1 = string_generator()
+        mock_get_bdef_tag.return_value = mock.Mock(
+            business_object_definition_tag_keys=[
+                mock.Mock(tag_key=mock.Mock(
+                    tag_type_code=tag_type_code_2,
+                    tag_code=tag_code_1
+                ))
+            ]
+        )
+
+        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'tag1, tag2 ', tag_code_1]],
+                          columns=['Column1', 'column2', 'column3', 'column4', 'Display Name 1', 'Display Name 2'])
+        row = df.iloc[0]
+
+        # Tag Type Code has a corresponding Excel Worksheel Display Column Name
+        # Inside the column are comma separated tag codes
+        self.controller.tag_types['columns'] = [tag_type_code_1, tag_type_code_2]
+        self.controller.tag_types[tag_type_code_1] = 'Display Name 1'
+        self.controller.tag_types[tag_type_code_2] = 'Display Name 2'
 
         # Run scenario and check values
-        resp = self.controller.get_tag_type_code('testcode')
-        mock_tag_types_api.assert_called_once()
-        self.assertEqual(resp, 'testresponse')
+        self.controller.update_bdef_tags(row)
+        mock_get_bdef_tag.assert_called_once()
+        self.assertEqual(mock_delete_tag.call_count, 0)
+        self.assertEqual(mock_create_tag.call_count, 2)
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_get_business_object_definition_tags_by_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_delete_business_object_definition_tag')
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_create_business_object_definition_tag')
+    def test_update_bdef_tags_no_create(self, mock_create_tag, mock_delete_tag, mock_get_bdef_tag):
+        """
+        Test of updating business object definition tags. Tag will be deleted but no creation
+
+        """
+        tag_type_code_1 = string_generator()
+        tag_type_code_2 = string_generator()
+
+        tag_code_1 = string_generator()
+        mock_get_bdef_tag.return_value = mock.Mock(
+            business_object_definition_tag_keys=[
+                mock.Mock(tag_key=mock.Mock(
+                    tag_type_code=tag_type_code_1,
+                    tag_code='tag1'
+                )),
+                mock.Mock(tag_key=mock.Mock(
+                    tag_type_code=tag_type_code_1,
+                    tag_code='tag2'
+                )),
+                mock.Mock(tag_key=mock.Mock(
+                    tag_type_code=tag_type_code_2,
+                    tag_code=tag_code_1
+                ))
+            ]
+        )
+
+        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'tag1, tag2 ']],
+                          columns=['Column1', 'column2', 'column3', 'column4', 'Display Name 1'])
+        row = df.iloc[0]
+
+        # Tag Type Code has a corresponding Excel Worksheel Display Column Name
+        # Inside the column are comma separated tag codes
+        self.controller.tag_types['columns'] = [tag_type_code_1]
+        self.controller.tag_types[tag_type_code_1] = 'Display Name 1'
+
+        # Run scenario and check values
+        self.controller.update_bdef_tags(row)
+        mock_get_bdef_tag.assert_called_once()
+        mock_delete_tag.assert_called_once()
+        self.assertEqual(mock_create_tag.call_count, 0)
