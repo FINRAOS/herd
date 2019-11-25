@@ -2295,7 +2295,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Number of subpartition values specified for the business object data is greater than or equal to " +
-                    "the number of partition columns defined in the schema of the business object format selected for DDL generation. " +
+                    "the number of partition columns defined in the schema of the business object format selected for DDL/Partitions generation. " +
                     "Business object data: {%s},  business object format: {%s}", businessObjectDataServiceTestHelper
                     .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION,
                         PARTITION_VALUE, subPartitionValues, DATA_VERSION), businessObjectFormatServiceTestHelper
@@ -2721,7 +2721,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Number of primary and sub-partition values (2) specified for the business object data is not equal to " +
-                    "the number of partition columns (1) defined in the schema of the business object format selected for DDL generation. " +
+                    "the number of partition columns (1) defined in the schema of the business object format selected for DDL/Partitions generation. " +
                     "Business object data: {%s},  business object format: {%s}", businessObjectDataServiceTestHelper
                     .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION,
                         PARTITION_VALUE, subPartitionValues, DATA_VERSION), businessObjectFormatServiceTestHelper

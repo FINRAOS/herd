@@ -1749,14 +1749,14 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Validate the partition value filters. Do not allow partition value tokens to be specified.
         businessObjectDataHelper.validatePartitionValueFilters(request.getPartitionValueFilters(), null, false);
 
-        // Make sure that request does not contain both a list of storage names and a standalone storage name.
-        Assert.notNull(request.getStorageNames(), "A list of storage names must be specified.");
-
         // Validate and trim the list of storage names.
-        for (int i = 0; i < request.getStorageNames().size(); i++)
+        if (!CollectionUtils.isEmpty(request.getStorageNames()))
         {
-            Assert.hasText(request.getStorageNames().get(i), "A storage name must be specified.");
-            request.getStorageNames().set(i, request.getStorageNames().get(i).trim());
+            for (int i = 0; i < request.getStorageNames().size(); i++)
+            {
+                Assert.hasText(request.getStorageNames().get(i), "A storage name must be specified.");
+                request.getStorageNames().set(i, request.getStorageNames().get(i).trim());
+            }
         }
     }
 }

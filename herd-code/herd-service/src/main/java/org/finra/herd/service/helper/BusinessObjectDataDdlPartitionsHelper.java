@@ -472,27 +472,27 @@ public class BusinessObjectDataDdlPartitionsHelper
             if (generateDdlRequest.isPartitioned)
             {
                 // If flag is set to suppress scan for unregistered sub-partitions, validate that the number of primary and sub-partition values specified for
-                // the business object data equals to the number of partition columns defined in schema for the format selected for DDL generation.
+                // the business object data equals to the number of partition columns defined in schema for the format selected for DDL/Partitions generation.
                 if (BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions))
                 {
                     int businessObjectDataRegisteredPartitions = 1 + CollectionUtils.size(businessObjectDataKey.getSubPartitionValues());
                     Assert.isTrue(businessObjectFormatForSchema.getSchema().getPartitions().size() == businessObjectDataRegisteredPartitions, String.format(
                         "Number of primary and sub-partition values (%d) specified for the business object data is not equal to " +
-                            "the number of partition columns (%d) defined in the schema of the business object format selected for DDL generation. " +
+                            "the number of partition columns (%d) defined in the schema of the business object format selected for DDL/Partitions generation. " +
                             "Business object data: {%s},  business object format: {%s}", businessObjectDataRegisteredPartitions,
                         businessObjectFormatForSchema.getSchema().getPartitions().size(),
                         businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), businessObjectFormatHelper
                             .businessObjectFormatKeyToString(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatForSchema))));
                 }
-                // Otherwise, since the format version selected for DDL generation might not match the relative business object format version that business
+                // Otherwise, since the format version selected for DDL/Partitions generation might not match the relative business object format version that business
                 // object data is registered against, validate that the number of sub-partition values specified for the business object data is less than
-                // the number of partition columns defined in schema for the format selected for DDL generation.
+                // the number of partition columns defined in schema for the format selected for DDL/Partitions generation.
                 else
                 {
                     Assert.isTrue(
                         businessObjectFormatForSchema.getSchema().getPartitions().size() > CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()),
                         String.format("Number of subpartition values specified for the business object data is greater than or equal to " +
-                                "the number of partition columns defined in the schema of the business object format selected for DDL generation. " +
+                                "the number of partition columns defined in the schema of the business object format selected for DDL/Partitions generation. " +
                                 "Business object data: {%s},  business object format: {%s}",
                             businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), businessObjectFormatHelper
                                 .businessObjectFormatKeyToString(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatForSchema))));
