@@ -18,10 +18,17 @@ package org.finra.herd.dao;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.transaction.AfterTransaction;
 
@@ -34,6 +41,9 @@ public class StorageFileJdbcDaoTest extends AbstractDaoTest
 {
     private StorageUnitEntity storageUnitEntity;
 
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
     @Test
     @Rollback(false)
     public void testSaveStorageFiles()
@@ -43,11 +53,11 @@ public class StorageFileJdbcDaoTest extends AbstractDaoTest
             .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
-        // Use the after transaction methods to validate the save storage files functionality.
+        // Use the after transaction method to validate the save storage files functionality.
     }
 
     @AfterTransaction
-    private void validateSaveStorageFiles()
+    private void validateSaveStorageFiles() throws SQLException
     {
         List<StorageFileEntity> storageFileEntities = new ArrayList<>();
         for (String file : LOCAL_FILES)
@@ -76,12 +86,8 @@ public class StorageFileJdbcDaoTest extends AbstractDaoTest
         assertNull(storageFileDao.getStorageFileByStorageNameAndFilePath("I_DO_NOT_EXIST", LOCAL_FILES.get(0)));
         assertNull(storageFileDao.getStorageFileByStorageNameAndFilePath(StorageEntity.MANAGED_STORAGE, "I_DO_NOT_EXIST"));
 
-    }
-
-    @AfterTransaction
-    private void validateSaveStorageFilesNullValues()
-    {
-        List<StorageFileEntity> storageFileEntities = new ArrayList<>();
+        // Validate null values.
+        storageFileEntities = new ArrayList<>();
         for (String file : LOCAL_FILES_2)
         {
             StorageFileEntity storageFileEntity = new StorageFileEntity();
@@ -118,5 +124,14 @@ public class StorageFileJdbcDaoTest extends AbstractDaoTest
 
         // Batch save the storage files list.
         storageFileDao.saveStorageFiles(storageFileEntities);
+
+        // Manually cleanup.
+        DataSource dataSource = jdbcTemplate.getDataSource();
+        Connection connection = dataSource.getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(" DELETE FROM strge_file; " + " DELETE FROM strge_unit; " +
+            " DELETE FROM bus_objct_data_stts_hs; " + " DELETE FROM bus_objct_data; " +
+            " DELETE FROM bus_objct_data_stts_cd_lk WHERE bus_objct_data_stts_cd LIKE 'UT%'; " + " DELETE FROM bus_objct_frmt; " +
+            " DELETE FROM bus_objct_dfntn; " + " DELETE FROM name_space; " + " DELETE FROM file_type_cd_lk; " );
+        preparedStatement.execute();
     }
 }
