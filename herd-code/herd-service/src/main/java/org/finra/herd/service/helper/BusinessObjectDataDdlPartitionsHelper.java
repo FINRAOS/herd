@@ -210,7 +210,7 @@ public class BusinessObjectDataDdlPartitionsHelper
         generateDdlRequest.combineMultiplePartitionsInSingleAlterTable = request.isCombineMultiplePartitionsInSingleAlterTable();
         generateDdlRequest.tableName = request.getTableName();
 
-        // tableName == null, means it's used in generatePartitions request since tableName must not be null for generateDDL request
+        // getOutputFormat == null, means it's used in generatePartitions request since getOutputFormat must not be null for generateDDL request
         if (request.getOutputFormat() == null)
         {
             generateDdlRequest.isGeneratePartitionsRequest = true;

@@ -4559,7 +4559,6 @@
          <xs:element name="businessObjectFormatFileType" type="xs:string"/>
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
-         <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="partitions" type="partitions" minOccurs="0"/>
