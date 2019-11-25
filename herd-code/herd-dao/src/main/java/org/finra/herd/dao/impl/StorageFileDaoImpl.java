@@ -43,15 +43,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.StorageFileDao;
-import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageEntity_;
 import org.finra.herd.model.jpa.StorageFileEntity;
@@ -63,6 +59,9 @@ import org.finra.herd.model.jpa.StorageUnitEntity_;
 public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDao
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageFileDaoImpl.class);
+
+    @Autowired
+    HerdDaoSecurityHelper herdDaoSecurityHelper;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -257,18 +256,8 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
     @Override
     public void saveStorageFiles(final List<StorageFileEntity> storageFileEntities)
     {
-        // Get the current application user id.
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-        Authentication authentication = securityContext.getAuthentication();
-
-        String currentUserId = "";
-
-        if (authentication != null)
-        {
-            SecurityUserWrapper securityUserWrapper = (SecurityUserWrapper) authentication.getPrincipal();
-            ApplicationUser applicationUser = securityUserWrapper.getApplicationUser();
-            currentUserId = applicationUser.getUserId();
-        }
+        // Get the current user id.
+        String currentUserId = herdDaoSecurityHelper.getCurrentUsername();
 
         // Create the insert into storage file table sql.
         final String INSERT_INTO_STORAGE_FILE_TABLE_SQL = "INSERT INTO strge_file " +
@@ -307,7 +296,7 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
                 // Set the file size bytes in the prepared statement as parameter 2.
                 if (storageFileEntity.getFileSizeBytes() == null)
                 {
-                    preparedStatement.setNull(2, Types.LONGNVARCHAR);
+                    preparedStatement.setNull(2, Types.BIGINT);
                 }
                 else
                 {
@@ -317,7 +306,7 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
                 // Set the row count in the prepared statement as parameter 3.
                 if (storageFileEntity.getRowCount() == null)
                 {
-                    preparedStatement.setNull(3, Types.LONGNVARCHAR);
+                    preparedStatement.setNull(3, Types.BIGINT);
                 }
                 else
                 {
