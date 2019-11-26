@@ -914,7 +914,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     }
 
     /**
-     * Generate the partitions information for a range of requested business object data in the specified storage.
+     * Generates the partitions information for a range of requested business object data in the specified storage.
      *
      * @param request the business object data retrieve partitions request
      * @param skipRequestValidation specifies whether to skip the request validation and trimming
@@ -1000,17 +1000,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             cachedS3BucketNames.put(upperCaseStorageName, s3BucketName);
         }
 
-        if (!isGeneratePartitions)
-        {
-            // Create and initialize a business object data DDL object instance.
-            BusinessObjectDataDdl businessObjectDataDdl = createBusinessObjectDataDdl(request);
-            businessObjectDataDdl.setDdl(ddlGeneratorFactory.getDdlGenerator(request.getOutputFormat())
-                .generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity, storageNames, requestedStorageEntities, cachedStorageEntities,
-                    cachedS3BucketNames));
-
-            return (T) businessObjectDataDdl;
-        }
-        else
+        if (isGeneratePartitions)
         {
             // Create and initialize a business object data partitions object instance.
             BusinessObjectDataPartitions businessObjectDataPartitions = createBusinessObjectDataPartitions(request);
@@ -1019,6 +1009,16 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                     cachedS3BucketNames));
 
             return (T) businessObjectDataPartitions;
+        }
+        else
+        {
+            // Create and initialize a business object data DDL object instance.
+            BusinessObjectDataDdl businessObjectDataDdl = createBusinessObjectDataDdl(request);
+            businessObjectDataDdl.setDdl(ddlGeneratorFactory.getDdlGenerator(request.getOutputFormat())
+                .generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity, storageNames, requestedStorageEntities, cachedStorageEntities,
+                    cachedS3BucketNames));
+
+            return (T) businessObjectDataDdl;
         }
     }
 
@@ -1750,7 +1750,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         businessObjectDataHelper.validatePartitionValueFilters(request.getPartitionValueFilters(), null, false);
 
         // Validate and trim the list of storage names.
-        if (!CollectionUtils.isEmpty(request.getStorageNames()))
+        if (CollectionUtils.isNotEmpty(request.getStorageNames()))
         {
             for (int i = 0; i < request.getStorageNames().size(); i++)
             {

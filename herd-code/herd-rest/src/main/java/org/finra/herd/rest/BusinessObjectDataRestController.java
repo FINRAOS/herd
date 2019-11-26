@@ -404,7 +404,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Generate the partitions information for a range of requested business object data in the specified storage. <p> Requires READ permission on namespace
+     * Generates the partitions information for a range of requested business object data in the specified storage. <p> Requires READ permission on namespace
      * </p>
      *
      * @param businessObjectDataPartitionsRequest the business object data partitions request

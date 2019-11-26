@@ -214,7 +214,7 @@ public class BusinessObjectDataDdlPartitionsHelper
         if (request.getOutputFormat() == null)
         {
             generateDdlRequest.isGeneratePartitionsRequest = true;
-            Assert.isTrue(isPartitioned, "Singleton Object is NOT Supported for Generating Partitions.");
+            Assert.isTrue(isPartitioned, "Generate-partitions request does not support singleton partitions.");
         }
         else
         {
@@ -477,16 +477,16 @@ public class BusinessObjectDataDdlPartitionsHelper
                 {
                     int businessObjectDataRegisteredPartitions = 1 + CollectionUtils.size(businessObjectDataKey.getSubPartitionValues());
                     Assert.isTrue(businessObjectFormatForSchema.getSchema().getPartitions().size() == businessObjectDataRegisteredPartitions, String.format(
-                        "Number of primary and sub-partition values (%d) specified for the business object data is not equal to " +
-                            "the number of partition columns (%d) defined in the schema of the business object format selected for DDL/Partitions generation. " +
+                        "Number of primary and sub-partition values (%d) specified for the business object data is not equal to the number of partition columns"
+                            + " (%d) defined in the schema of the business object format selected for DDL/Partitions generation. " +
                             "Business object data: {%s},  business object format: {%s}", businessObjectDataRegisteredPartitions,
                         businessObjectFormatForSchema.getSchema().getPartitions().size(),
                         businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), businessObjectFormatHelper
                             .businessObjectFormatKeyToString(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatForSchema))));
                 }
-                // Otherwise, since the format version selected for DDL/Partitions generation might not match the relative business object format version that business
-                // object data is registered against, validate that the number of sub-partition values specified for the business object data is less than
-                // the number of partition columns defined in schema for the format selected for DDL/Partitions generation.
+                // Otherwise, since the format version selected for DDL/Partitions generation might not match the relative business object format version that
+                // business bject data is registered against, validate that the number of sub-partition values specified for the business object data is less
+                // than the number of partition columns defined in schema for the format selected for DDL/Partitions generation.
                 else
                 {
                     Assert.isTrue(
@@ -610,14 +610,8 @@ public class BusinessObjectDataDdlPartitionsHelper
         List<String> storageNames) throws IllegalArgumentException
     {
         // Convert the list of storage names to upper case.
-        List<String> upperCaseStorageNames = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(storageNames))
-        {
-            for (String storageName : storageNames)
-            {
-                upperCaseStorageNames.add(storageName.toUpperCase());
-            }
-        }
+        List<String> upperCaseStorageNames = new ArrayList(storageNames);
+        upperCaseStorageNames.replaceAll(String::toUpperCase);
 
         // If storage names are not specified, fail on business object data instance registered with multiple storage.
         // Otherwise, in a case when the same business object data is registered with multiple storage,
@@ -873,7 +867,7 @@ public class BusinessObjectDataDdlPartitionsHelper
         String s3KeyPrefix, Collection<String> storageFiles, String storageName)
     {
         // We are using linked hash map to preserve the order of the discovered partitions.
-        LinkedHashMap<List<String>, HivePartitionDto> linkedHashMap = new LinkedHashMap<>();
+        Map<List<String>, HivePartitionDto> linkedHashMap = new LinkedHashMap<>();
 
         Pattern pattern = getHivePathPattern(autoDiscoverableSubPartitionColumns);
         for (String storageFile : storageFiles)

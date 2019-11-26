@@ -120,7 +120,7 @@ public interface BusinessObjectDataService
         BusinessObjectDataDdlCollectionRequest businessObjectDataDdlCollectionRequest);
 
     /**
-     * Generate the partitions information for a range of requested business object data in the specified storage. This method starts a new transaction.
+     * Generates the partitions information for a range of requested business object data in the specified storage. This method starts a new transaction.
      *
      * @param businessObjectDataPartitionsRequest the business object data partitions request
      *

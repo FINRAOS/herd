@@ -1158,41 +1158,6 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
     }
 
     @Test
-    @Ignore
-    //TODO: business object format column has an unsupported file type
-    public void testGenerateBusinessObjectDataPartitionsNotSupportedSchemaColumnDataType()
-    {
-        // Prepare test data.
-        List<SchemaColumn> schemaColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
-        SchemaColumn schemaColumn = new SchemaColumn();
-        schemaColumns.add(schemaColumn);
-        schemaColumn.setName("COLUMN");
-        schemaColumn.setType("UNKNOWN");
-        String partitionKey = schemaColumns.get(0).getName();
-        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
-            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
-            schemaColumns, schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
-
-        // Try to retrieve business object data partitions for the format that uses unsupported schema column data type.
-        BusinessObjectDataPartitionsRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataPartitionsRequest(UNSORTED_PARTITION_VALUES);
-        try
-        {
-            businessObjectDataService.generateBusinessObjectDataPartitions(request);
-            fail("Should throw an IllegalArgumentException when business object format has a column with an unsupported data type.");
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(String.format("Column \"%s\" has an unsupported data type \"%s\" in the schema for business object format " +
-                    "{namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}. Exception : \"%s\"", schemaColumn.getName(), schemaColumn.getType(),
-                request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
-                request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion(), "Internal error parsing position 0 of 'unknown'"),
-                e.getMessage());
-        }
-    }
-
-    @Test
     public void testGenerateBusinessObjectDataPartitionsAllKnownFileTypes()
     {
         // Create an S3 storage entity with the relative attributes.
@@ -1255,37 +1220,6 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
             businessObjectDataServiceTestHelper.validateBusinessObjectDataPartitions(request, expectedPartitions, resultPartitions);
         }
     }
-
-    @Test
-    @Ignore
-    //TODO: business object format has an unsupported file type
-    public void testGenerateBusinessObjectDataPartitionsNotSupportedFileType()
-    {
-        // Prepare test data.
-        String businessObjectFileType = "UNKNOWN";
-        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(businessObjectFileType, PARTITION_KEY, null,
-            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
-            schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
-
-        // Try to retrieve business object data partitions for the format that uses unsupported file type.
-        BusinessObjectDataPartitionsRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataPartitionsRequest(UNSORTED_PARTITION_VALUES);
-        request.setBusinessObjectFormatFileType(businessObjectFileType);
-        try
-        {
-            businessObjectDataService.generateBusinessObjectDataPartitions(request);
-            fail("Should throw an IllegalArgumentException when business object format has an unsupported file type.");
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(String.format("Unsupported format file type for business object format {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
-                    "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d}.", request.getNamespace(),
-                request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
-                request.getBusinessObjectFormatVersion()), e.getMessage());
-        }
-    }
-
 
     @Test
     public void testGenerateBusinessObjectDataPartitionsFilterOnSubPartitionValues()
@@ -2318,7 +2252,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Singleton Object is NOT Supported for Generating Partitions.", e.getMessage());
+            assertEquals("Generate-partitions request does not support singleton partitions.", e.getMessage());
         }
     }
 
