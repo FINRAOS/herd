@@ -24,9 +24,12 @@ import static org.mockito.Mockito.when;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -875,6 +878,10 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         // Create a local temp directory.
         Path localTempPath = Files.createTempDirectory(null);
 
+        // Create actual S3 keys.
+        Map<String, StorageFile> actualS3Keys = new HashMap<>();
+        actualS3Keys.put(testS3KeyPrefix + "/" + FILE_PATH_2, new StorageFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000));
+
         businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         // Setup the mock calls
@@ -882,6 +889,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         when(storageUnitDaoHelper.getStorageUnitEntity(StorageEntity.MANAGED_STORAGE, businessObjectDataEntity)).thenReturn(storageUnitEntity);
         when(businessObjectDataHelper.getSubPartitionValues(businessObjectDataEntity)).thenReturn(NO_SUBPARTITION_VALUES);
         when(storageHelper.getS3BucketAccessParams(storageUnitEntity.getStorage())).thenReturn(params);
+        when(storageFileHelper.getStorageFilesMapFromS3ObjectSummaries(s3Service.listDirectory(params, true))).thenReturn(actualS3Keys);
 
         // Discover storage files in S3 managed storage.
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
@@ -892,17 +900,14 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         assertEquals(
             new BusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                Lists.newArrayList(new StorageFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, NO_ROW_COUNT))), response);
+                Lists.newArrayList(new StorageFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))), response);
 
         // Verify the mock calls.
         verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
         verify(storageUnitDaoHelper).getStorageUnitEntity(StorageEntity.MANAGED_STORAGE, businessObjectDataEntity);
         verify(businessObjectDataHelper).getSubPartitionValues(businessObjectDataEntity);
         verify(businessObjectDataHelper, times(2)).businessObjectDataEntityAltKeyToString(businessObjectDataEntity);
-        verify(storageFileDao).getStorageFileByStorageNameAndFilePath(storageUnitEntity.getStorage().getName(), TEST_S3_STORAGE_FILES.get(0).getFilePath());
         verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, TEST_S3_STORAGE_FILES);
-        verify(storageFileHelper).validateCreateRequestStorageFiles(TEST_S3_STORAGE_FILES);
-        verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verify(storageHelper, times(3))
             .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), storageEntity,
                 false, true);
@@ -915,6 +920,11 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX);
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE);
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE);
+        verify(storageFileHelper).getStorageFilesMapFromS3ObjectSummaries(s3Service.listDirectory(params, true));
+        verify(s3Service, times(3)).listDirectory(params, true);
+        verify(storageFileDao).getStorageFilesByStorageAndFilePathPrefix(storageUnitEntity.getStorage().getName(), StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/"));
+        verify(storageHelper).getS3BucketAccessParams(storageUnitEntity.getStorage());
+        verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verifyNoMoreInteractions(businessObjectDataDao, businessObjectDataHelper, businessObjectDataDaoHelper, configurationHelper, s3Service, storageDao,
             storageFileDao, storageHelper, storageUnitDaoHelper, storageFileDaoHelper, storageFileHelper);
     }
