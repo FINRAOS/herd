@@ -337,9 +337,6 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
 
             // Commit the updates.
             connection.commit();
-
-            // Return auto commit to false.
-            connection.setAutoCommit(false);
         }
         catch (final BatchUpdateException batchUpdateException)
         {
