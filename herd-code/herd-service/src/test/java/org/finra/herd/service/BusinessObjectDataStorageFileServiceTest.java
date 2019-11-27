@@ -291,85 +291,6 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void testCreateBusinessObjectDataStorageFilesMissingOptionalParameters()
-    {
-        // Create and persist a business object definition.
-        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
-
-        createData(null, false);
-
-        // Create business object data storage files without passing any of the optional parameters.
-        BusinessObjectDataStorageFilesCreateRequest request =
-            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, null)), NO_DISCOVER_STORAGE_FILES);
-
-        BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
-
-        // Validate the returned object.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
-    }
-
-    @Test
-    public void testCreateBusinessObjectDataStorageFilesTrimParameters()
-    {
-        createDataWithSubPartitions();
-
-        // Create business object data storage files by passing all input parameters with leading and trailing empty spaces.
-        BusinessObjectDataStorageFilesCreateRequest request =
-            new BusinessObjectDataStorageFilesCreateRequest(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
-                addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(PARTITION_VALUE), addWhitespace(SUB_PARTITION_VALUES), DATA_VERSION,
-                addWhitespace(STORAGE_NAME), Arrays.asList(createFile(addWhitespace(FILE_PATH_2), FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
-
-        BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
-
-        // Validate the returned object.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
-                response);
-    }
-
-    @Test
-    public void testCreateBusinessObjectDataStorageFilesUpperCaseParameters()
-    {
-        createDataWithSubPartitions();
-
-        // Create business object data storage files using upper case input parameters (except for case-sensitive partition values and storage file paths).
-        BusinessObjectDataStorageFilesCreateRequest request =
-            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
-                FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME.toUpperCase(),
-                Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
-
-        BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
-
-        // Validate the returned object.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
-    }
-
-    @Test
-    public void testCreateBusinessObjectDataStorageFilesLowerCaseParameters()
-    {
-        createDataWithSubPartitions();
-
-        // Create business object data storage files using lower case input parameters (except for case-sensitive partition values and storage file paths).
-        BusinessObjectDataStorageFilesCreateRequest request =
-            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
-                FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME.toLowerCase(),
-                Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
-
-        BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
-
-        // Validate the returned object.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
-    }
-
-    @Test
     public void testCreateBusinessObjectDataStorageFilesInvalidParameters()
     {
         // Try to add business object data storage files specifying too many sub-partition values.
@@ -413,23 +334,6 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         {
             assertEquals(String.format("Duplicate storage file found: %s", FILE_PATH_2), e.getMessage());
         }
-    }
-
-    @Test
-    public void testCreateBusinessObjectDataStorageFilesWithStorageDirectory()
-    {
-        // Add a storage file to a storage unit with a storage directory path.
-        createData("some/path", false);
-        BusinessObjectDataStorageFilesCreateRequest request =
-            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile("some/path/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
-                NO_DISCOVER_STORAGE_FILES);
-        BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
-
-        // Validate the returned object.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
     }
 
     @Test
@@ -556,44 +460,6 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void testCreateBusinessObjectDataStorageFilesPreviouslyRegisteredS3FileSizeMismatchIgnoredDueToDisabledFileSizeValidation() throws Exception
-    {
-        // Create an S3 storage with file existence validation enabled, but without path prefix validation and file size validation.
-        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays.asList(
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageDaoTestHelper.getS3ManagedBucketName()),
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE),
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.toString(false)),
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), Boolean.toString(true)),
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE), Boolean.toString(false))));
-
-        // Create and persist a storage unit entity without a storage directory path.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING, StorageUnitStatusEntity.ENABLED,
-                NO_STORAGE_DIRECTORY_PATH);
-
-        // Create and persist a storage file with file size that would not match S3 reported size.
-        StorageFileEntity storageFileEntity =
-            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_1, FILE_SIZE_2_KB, ROW_COUNT_1000);
-        storageUnitEntity.getStorageFiles().add(storageFileEntity);
-
-        // Create and upload to S3 managed storage two test files with 1 KB file size.
-        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
-
-        // Add a second storage file to this business object data.
-        BusinessObjectDataStorageFilesCreateRequest request =
-            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
-                NO_DISCOVER_STORAGE_FILES);
-        BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
-
-        // Validate the returned object.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
-    }
-
-    @Test
     public void testCreateBusinessObjectDataStorageFilesStorageFilePreviouslyRegistered()
     {
         createData(null, false);
@@ -613,65 +479,6 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
                     .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                         NO_SUBPARTITION_VALUES, DATA_VERSION)), e.getMessage());
         }
-    }
-
-    @Test
-    public void testCreateBusinessObjectDataStorageFilesS3Managed() throws Exception
-    {
-        createData(null, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
-        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
-
-        BusinessObjectDataStorageFilesCreateRequest request =
-            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
-        BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
-
-        // Validate the returned object.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE, request.getStorageFiles(), response);
-    }
-
-    @Test
-    public void testCreateBusinessObjectDataStorageFilesS3ManagedStorageUnitHasStorageDirectoryPathSet() throws Exception
-    {
-        // Prepare test data with a storage unit registered with a storage directory path.
-        createData(testS3KeyPrefix, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
-        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
-
-        BusinessObjectDataStorageFilesCreateRequest request =
-            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
-        BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
-
-        // Validate the returned object.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE, request.getStorageFiles(), response);
-    }
-
-    @Test
-    public void testCreateBusinessObjectDataStorageFilesS3ManagedExtraFilesInS3() throws Exception
-    {
-        // Create test data.
-        createData(null, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
-
-        // Create and upload to S3 managed storage a set of test files including an extra
-        // file not to be listed in the create business object data create request.
-        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2, FILE_PATH_3));
-
-        BusinessObjectDataStorageFilesCreateRequest request =
-            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
-        BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
-
-        // Validate the returned object.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE, request.getStorageFiles(), response);
     }
 
     @Test
