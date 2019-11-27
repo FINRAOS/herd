@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -73,6 +75,9 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
     private ConfigurationHelper configurationHelper;
 
     @Mock
+    private S3Service s3Service;
+
+    @Mock
     private StorageDao storageDao;
 
     @Mock
@@ -103,16 +108,6 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
 
     private static final String FILE_PATH_2 = "file2";
 
-    private static final String FILE_PATH_3 = "file3";
-
-    private static final String PARTITION_KEY_2 = "pk2_" + Math.random();
-
-    private static final String PARTITION_KEY_3 = "pk3_" + Math.random();
-
-    private static final String PARTITION_KEY_4 = "pk4_" + Math.random();
-
-    private static final String PARTITION_KEY_5 = "pk5_" + Math.random();
-
     private static final String PARTITION_VALUE_2 = "pv2_" + Math.random();
 
     private static final String PARTITION_VALUE_3 = "pv3_" + Math.random();
@@ -134,8 +129,6 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
             PARTITION_VALUE, null, null, DATA_VERSION);
 
     private static final List<StorageFile> TEST_S3_STORAGE_FILES = Lists.newArrayList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000));
-
-    private Path localTempPath;
 
     @Test
     public void testCreateBusinessObjectDataStorageFiles()
@@ -838,7 +831,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
     {
         BusinessObjectDataKey businessObjectDataKey =
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION);
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity = new BusinessObjectDataStatusEntity();
         businessObjectDataStatusEntity.setCode(BusinessObjectDataStatusEntity.VALID);
@@ -875,11 +868,20 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
         storageUnitEntity.setStatus(storageUnitStatusEntity);
         storageUnitEntity.setStorage(storageEntity);
+        storageUnitEntity.setDirectoryPath(testS3KeyPrefix);
+
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+
+        // Create a local temp directory.
+        Path localTempPath = Files.createTempDirectory(null);
+
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         // Setup the mock calls
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
         when(storageUnitDaoHelper.getStorageUnitEntity(StorageEntity.MANAGED_STORAGE, businessObjectDataEntity)).thenReturn(storageUnitEntity);
         when(businessObjectDataHelper.getSubPartitionValues(businessObjectDataEntity)).thenReturn(NO_SUBPARTITION_VALUES);
+        when(storageHelper.getS3BucketAccessParams(storageUnitEntity.getStorage())).thenReturn(params);
 
         // Discover storage files in S3 managed storage.
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
@@ -890,7 +892,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         assertEquals(
             new BusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                Arrays.asList(new StorageFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, NO_ROW_COUNT))), response);
+                Lists.newArrayList(new StorageFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, NO_ROW_COUNT))), response);
 
         // Verify the mock calls.
         verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
@@ -913,8 +915,8 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX);
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE);
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE);
-        verifyNoMoreInteractions(businessObjectDataDao, businessObjectDataHelper, businessObjectDataDaoHelper, configurationHelper, storageDao, storageFileDao,
-            storageHelper, storageUnitDaoHelper, storageFileDaoHelper, storageFileHelper);
+        verifyNoMoreInteractions(businessObjectDataDao, businessObjectDataHelper, businessObjectDataDaoHelper, configurationHelper, s3Service, storageDao,
+            storageFileDao, storageHelper, storageUnitDaoHelper, storageFileDaoHelper, storageFileHelper);
     }
 
     private static StorageFile createFile(String filePath, Long size, Long rowCount)
