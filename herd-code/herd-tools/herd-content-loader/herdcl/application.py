@@ -47,19 +47,27 @@ class Application:
         try:
             self.controller.setup_run(config)
             method = self.controller.get_action()
+            resp = self.controller.get_build_info()
+            LOGGER.info(resp)
             run_summary = method()
 
+            LOGGER.info('\n\n--- RUN SUMMARY ---')
+            LOGGER.info('Processed {} rows'.format(run_summary['total_rows']))
+            LOGGER.info('Number of rows succeeded: {}'.format(run_summary['success_rows']))
+            LOGGER.info('\n--- RUN WARNINGS ---')
+            for e in run_summary['warnings']:
+                LOGGER.warning('Row: {}\nMessage: {}'.format(e['index'], e['message']))
             if run_summary['fail_rows'] == 0:
-                LOGGER.info('\n-- RUN COMPLETED ---')
+                LOGGER.info('\n--- RUN COMPLETED ---')
             else:
                 LOGGER.error('Number of rows failed: {}'.format(run_summary['fail_rows']))
-                LOGGER.error('Please check rows: {}'.format(run_summary['fail_index']))
+                LOGGER.error('Please check rows: {}\n'.format(run_summary['fail_index']))
                 for e in run_summary['errors']:
-                    LOGGER.error('Row: {}\nMessage:{}'.format(e['index'], e['message']))
-                    LOGGER.error('\n-- RUN FAILURES ---')
+                    LOGGER.error('Row: {}\nMessage: {}'.format(e['index'], e['message']))
+                LOGGER.error('\n--- RUN FAILURES ---')
         except Exception:
             LOGGER.error(traceback.print_exc())
-            LOGGER.error('\n-- RUN FAILURES ---')
+            LOGGER.error('\n--- RUN FAILURES ---')
 
 
 ############################################################################

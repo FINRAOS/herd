@@ -204,7 +204,7 @@ class MainUI(tk.Frame):
             self.line("Enter credentials")
             return
 
-        if self.action == 'Objects':
+        if self.action in ['Objects', 'Columns']:
             if not self.getfile.get():
                 self.line("Please select a file first.")
                 return
@@ -221,26 +221,35 @@ class MainUI(tk.Frame):
         try:
             self.controller.setup_run(config)
             method = self.controller.get_action()
+            resp = self.controller.get_build_info()
+            LOGGER.info(resp)
+            self.display('Starting Run')
             run_summary = method()
 
+            self.display('\n\n--- RUN SUMMARY ---')
+            self.display('Processed {} rows'.format(run_summary['total_rows']))
+            self.display('Number of rows succeeded: {}'.format(run_summary['success_rows']))
+            self.display('\n--- RUN WARNINGS ---', log=LOGGER.warning)
+            for e in run_summary['warnings']:
+                self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.warning)
             if run_summary['fail_rows'] == 0:
-                self.display('\n-- RUN COMPLETED ---')
+                self.display('\n--- RUN COMPLETED ---')
             else:
-                self.display('Number of rows failed: {}'.format(run_summary['fail_rows']), error_flag=True)
-                self.display('Please check rows: {}'.format(run_summary['fail_index']), error_flag=True)
+                self.display('Number of rows failed: {}'.format(run_summary['fail_rows']), log=LOGGER.error)
+                self.display('Please check rows: {}\n'.format(run_summary['fail_index']), log=LOGGER.error)
                 for e in run_summary['errors']:
-                    self.display('Row: {}\nMessage:{}'.format(e['index'], e['message']), error_flag=True)
-                self.display('\n-- RUN FAILURES ---', error_flag=True)
+                    self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.error)
+                self.display('\n--- RUN FAILURES ---', log=LOGGER.error)
         except Exception:
-            self.display(traceback.print_exc(), error_flag=True)
-            self.display('\n-- RUN FAILURES ---', error_flag=True)
+            self.display(traceback.print_exc(), log=LOGGER.error)
+            self.display('\n--- RUN FAILURES ---', log=LOGGER.error)
 
         return
 
     ############################################################################
-    def display(self, resp, error_flag=False):
-        if error_flag:
-            LOGGER.error(resp)
+    def display(self, resp, log=None):
+        if log:
+            log(resp)
         else:
             LOGGER.info(resp)
         self.line(resp)
