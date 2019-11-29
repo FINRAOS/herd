@@ -131,7 +131,7 @@ public class StorageFileJdbcDaoTest extends AbstractDaoTest
         PreparedStatement preparedStatement = connection.prepareStatement(" DELETE FROM strge_file; " + " DELETE FROM strge_unit; " +
             " DELETE FROM bus_objct_data_stts_hs; " + " DELETE FROM bus_objct_data; " +
             " DELETE FROM bus_objct_data_stts_cd_lk WHERE bus_objct_data_stts_cd LIKE 'UT%'; " + " DELETE FROM bus_objct_frmt; " +
-            " DELETE FROM bus_objct_dfntn; " + " DELETE FROM name_space; " + " DELETE FROM file_type_cd_lk; " );
+            " DELETE FROM bus_objct_dfntn; " + " DELETE FROM name_space; " + " DELETE FROM file_type_cd_lk; " + " DELETE FROM data_prvdr; ");
         preparedStatement.execute();
     }
 }

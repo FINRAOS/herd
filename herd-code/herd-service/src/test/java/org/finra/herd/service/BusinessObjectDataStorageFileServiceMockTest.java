@@ -1,18 +1,18 @@
 /*
- * Copyright 2015 herd contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -63,6 +63,9 @@ import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitDaoHelper;
 import org.finra.herd.service.impl.BusinessObjectDataStorageFileServiceImpl;
 
+/**
+ * This class tests various functionality within the business object data storage file service.
+ */
 public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServiceTest
 {
     @Mock
@@ -131,7 +134,8 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
             PARTITION_VALUE, null, null, DATA_VERSION);
 
-    private static final List<StorageFile> TEST_S3_STORAGE_FILES = Lists.newArrayList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000));
+    private static final List<StorageFile> TEST_S3_STORAGE_FILES =
+        Lists.newArrayList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000));
 
     @Test
     public void testCreateBusinessObjectDataStorageFiles()
@@ -224,7 +228,8 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
     public void testCreateBusinessObjectDataStorageFilesUpperCaseParameters()
     {
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
+                FORMAT_VERSION, PARTITION_VALUE,
                 SUB_PARTITION_VALUES, DATA_VERSION);
 
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity = new BusinessObjectDataStatusEntity();
@@ -311,7 +316,8 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
     public void testCreateBusinessObjectDataStorageFilesLowerCaseParameters()
     {
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
+                FORMAT_VERSION, PARTITION_VALUE,
                 SUB_PARTITION_VALUES, DATA_VERSION);
 
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity = new BusinessObjectDataStatusEntity();
@@ -548,7 +554,8 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         verify(businessObjectDataHelper).getSubPartitionValues(businessObjectDataEntity);
         verify(businessObjectDataHelper, times(2)).businessObjectDataEntityAltKeyToString(businessObjectDataEntity);
-        verify(storageFileDao).getStorageFileByStorageNameAndFilePath(storageUnitEntity.getStorage().getName(), STORAGE_FILES_WITH_NULL_ROW_COUNT.get(0).getFilePath());
+        verify(storageFileDao)
+            .getStorageFileByStorageNameAndFilePath(storageUnitEntity.getStorage().getName(), STORAGE_FILES_WITH_NULL_ROW_COUNT.get(0).getFilePath());
         verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES_WITH_NULL_ROW_COUNT);
         verify(storageFileHelper).validateCreateRequestStorageFiles(STORAGE_FILES_WITH_NULL_ROW_COUNT);
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
@@ -922,7 +929,8 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE);
         verify(storageFileHelper).getStorageFilesMapFromS3ObjectSummaries(s3Service.listDirectory(params, true));
         verify(s3Service, times(3)).listDirectory(params, true);
-        verify(storageFileDao).getStorageFilesByStorageAndFilePathPrefix(storageUnitEntity.getStorage().getName(), StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/"));
+        verify(storageFileDao).getStorageFilesByStorageAndFilePathPrefix(storageUnitEntity.getStorage().getName(),
+            StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/"));
         verify(storageHelper).getS3BucketAccessParams(storageUnitEntity.getStorage());
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verifyNoMoreInteractions(businessObjectDataDao, businessObjectDataHelper, businessObjectDataDaoHelper, configurationHelper, s3Service, storageDao,
