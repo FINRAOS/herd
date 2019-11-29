@@ -56,6 +56,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResp
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDataParentsUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataPartitions;
+import org.finra.herd.model.api.xml.BusinessObjectDataPartitionsRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
@@ -287,6 +289,29 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
 
         // Validate the results.
         assertEquals(businessObjectDataDdl, result);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataPartitions()
+    {
+        // Create a business object data partitions request.
+        BusinessObjectDataPartitionsRequest businessObjectDataPartitionsRequest = new BusinessObjectDataPartitionsRequest();
+
+        // Create a business object data partitions response.
+        BusinessObjectDataPartitions businessObjectDataPartitions = new BusinessObjectDataPartitions();
+
+        // Mock the external calls.
+        when(businessObjectDataService.generateBusinessObjectDataPartitions(businessObjectDataPartitionsRequest)).thenReturn(businessObjectDataPartitions);
+
+        // Call the method under test.
+        BusinessObjectDataPartitions result = businessObjectDataRestController.generateBusinessObjectDataPartitions(businessObjectDataPartitionsRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataService).generateBusinessObjectDataPartitions(businessObjectDataPartitionsRequest);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectDataPartitions, result);
     }
 
     @Test

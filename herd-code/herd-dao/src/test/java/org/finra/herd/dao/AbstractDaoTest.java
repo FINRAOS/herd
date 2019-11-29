@@ -1036,6 +1036,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String STORAGE_NAME = "UT_Storage_1_" + RANDOM_SUFFIX;
 
+    public static final List<String> SINGLE_STORAGE_NAMES = Arrays.asList("UT_Storage_1_" + RANDOM_SUFFIX);
+
     public static final List<String> STORAGE_NAMES = Arrays.asList("UT_Storage_1_" + RANDOM_SUFFIX, "UT_Storage_2_" + RANDOM_SUFFIX);
 
     public static final String STORAGE_NAME_2 = "UT_Storage_2_" + RANDOM_SUFFIX;

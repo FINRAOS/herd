@@ -59,6 +59,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResp
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDataParentsUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataPartitions;
+import org.finra.herd.model.api.xml.BusinessObjectDataPartitionsRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
@@ -98,8 +100,10 @@ import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.AttributeDaoHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDataDdlPartitionsHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
+import org.finra.herd.service.helper.BusinessObjectDataPartitionsHelper;
 import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
 import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDataStatusDaoHelper;
@@ -154,6 +158,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
+    private BusinessObjectDataDdlPartitionsHelper businessObjectDataDdlPartitionsHelper;
+
+    @Autowired
     private BusinessObjectDataInitiateDestroyHelperService businessObjectDataInitiateDestroyHelperService;
 
     @Autowired
@@ -185,6 +192,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
     @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
+
+    @Autowired
+    private BusinessObjectDataPartitionsHelper businessObjectDataPartitionsHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -523,6 +533,14 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption)
     {
         return restoreBusinessObjectDataImpl(businessObjectDataKey, expirationInDays, archiveRetrievalOption);
+    }
+
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public BusinessObjectDataPartitions generateBusinessObjectDataPartitions(BusinessObjectDataPartitionsRequest request)
+    {
+        return generateBusinessObjectDataPartitionsImpl(request, false);
     }
 
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
@@ -892,6 +910,37 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             validateBusinessObjectDataDdlRequest(request);
         }
 
+        return generateDdlOrPartitions(request, false);
+    }
+
+    /**
+     * Generates the partitions information for a range of requested business object data in the specified storage.
+     *
+     * @param request the business object data retrieve partitions request
+     * @param skipRequestValidation specifies whether to skip the request validation and trimming
+     *
+     * @return the business object data partitions information
+     */
+    BusinessObjectDataPartitions generateBusinessObjectDataPartitionsImpl(BusinessObjectDataPartitionsRequest request, boolean skipRequestValidation)
+    {
+        // Perform the validation.
+        if (!skipRequestValidation)
+        {
+            validateBusinessObjectDataPartitionsRequest(request);
+        }
+
+        return generateDdlOrPartitions(businessObjectDataDdlPartitionsHelper.buildBusinessObjectDataDdlRequest(request), true);
+    }
+
+    /**
+     * @param request business object data DDL request
+     * @param isGeneratePartitions flag to indicate if this is a generateDDL or generatePartitions request
+     * @param <T>
+     *
+     * @return business object data DDL object instance if isGenerateDdl = true, otherwise, return business Object Data partitions object instance
+     */
+    private <T> T generateDdlOrPartitions(BusinessObjectDataDdlRequest request, boolean isGeneratePartitions)
+    {
         // Get the business object format entity for the specified parameters and make sure it exists.
         // Please note that when format version is not specified, we should get back the latest format version.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(
@@ -939,7 +988,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
             // Only S3 storage platform is currently supported.
             Assert.isTrue(storageEntity.getStoragePlatform().getName().equals(StoragePlatformEntity.S3),
-                String.format("Cannot generate DDL for \"%s\" storage platform.", storageEntity.getStoragePlatform().getName()));
+                String.format("Cannot generate DDL/Partitions for \"%s\" storage platform.", storageEntity.getStoragePlatform().getName()));
 
             // Validate that storage have S3 bucket name configured. Please note that since S3 bucket name attribute value is required we pass a "true" flag.
             String s3BucketName = storageHelper
@@ -951,13 +1000,26 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             cachedS3BucketNames.put(upperCaseStorageName, s3BucketName);
         }
 
-        // Create and initialize a business object data DDL object instance.
-        BusinessObjectDataDdl businessObjectDataDdl = createBusinessObjectDataDdl(request);
-        businessObjectDataDdl.setDdl(ddlGeneratorFactory.getDdlGenerator(request.getOutputFormat())
-            .generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity, storageNames, requestedStorageEntities, cachedStorageEntities,
-                cachedS3BucketNames));
+        if (isGeneratePartitions)
+        {
+            // Create and initialize a business object data partitions object instance.
+            BusinessObjectDataPartitions businessObjectDataPartitions = createBusinessObjectDataPartitions(request);
+            businessObjectDataPartitions.setPartitions(businessObjectDataPartitionsHelper
+                .generatePartitions(request, businessObjectFormatEntity, storageNames, requestedStorageEntities, cachedStorageEntities,
+                    cachedS3BucketNames));
 
-        return businessObjectDataDdl;
+            return (T) businessObjectDataPartitions;
+        }
+        else
+        {
+            // Create and initialize a business object data DDL object instance.
+            BusinessObjectDataDdl businessObjectDataDdl = createBusinessObjectDataDdl(request);
+            businessObjectDataDdl.setDdl(ddlGeneratorFactory.getDdlGenerator(request.getOutputFormat())
+                .generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity, storageNames, requestedStorageEntities, cachedStorageEntities,
+                    cachedS3BucketNames));
+
+            return (T) businessObjectDataDdl;
+        }
     }
 
     /**
@@ -1336,6 +1398,32 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     }
 
     /**
+     * Creates business object data partitions object instance and initialise it with the business object data partitions request field values.
+     *
+     * @param request the business object data ddl request
+     *
+     * @return the newly created BusinessObjectDataPartitions object instance
+     */
+    private BusinessObjectDataPartitions createBusinessObjectDataPartitions(BusinessObjectDataDdlRequest request)
+    {
+        BusinessObjectDataPartitions businessObjectDataPartitions = new BusinessObjectDataPartitions();
+
+        businessObjectDataPartitions.setNamespace(request.getNamespace());
+        businessObjectDataPartitions.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName());
+        businessObjectDataPartitions.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage());
+        businessObjectDataPartitions.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType());
+        businessObjectDataPartitions.setBusinessObjectFormatVersion(request.getBusinessObjectFormatVersion());
+
+        businessObjectDataPartitions.setPartitionValueFilters(request.getPartitionValueFilters());
+
+        businessObjectDataPartitions.setBusinessObjectDataVersion(request.getBusinessObjectDataVersion());
+
+        businessObjectDataPartitions.setStorageNames(request.getStorageNames());
+
+        return businessObjectDataPartitions;
+    }
+
+    /**
      * Creates a business object data status instance from the storage unit availability DTO.
      *
      * @param storageUnitAvailabilityDto the storage unit availability DTO
@@ -1631,6 +1719,44 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         if (StringUtils.isNotBlank(request.getCustomDdlName()))
         {
             request.setCustomDdlName(request.getCustomDdlName().trim());
+        }
+    }
+
+    /**
+     * Validates the business object data partitions request. This method also trims appropriate request parameters.
+     *
+     * @param request the request
+     *
+     * @throws IllegalArgumentException if any validation errors were found
+     */
+    private void validateBusinessObjectDataPartitionsRequest(BusinessObjectDataPartitionsRequest request)
+    {
+        Assert.notNull(request, "A business object data partitions request must be specified.");
+
+        // Validate and trim the request parameters.
+        Assert.hasText(request.getNamespace(), "A namespace must be specified.");
+        request.setNamespace(request.getNamespace().trim());
+
+        Assert.hasText(request.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
+        request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().trim());
+
+        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
+        request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().trim());
+
+        Assert.hasText(request.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
+        request.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType().trim());
+
+        // Validate the partition value filters. Do not allow partition value tokens to be specified.
+        businessObjectDataHelper.validatePartitionValueFilters(request.getPartitionValueFilters(), null, false);
+
+        // Validate and trim the list of storage names.
+        if (CollectionUtils.isNotEmpty(request.getStorageNames()))
+        {
+            for (int i = 0; i < request.getStorageNames().size(); i++)
+            {
+                Assert.hasText(request.getStorageNames().get(i), "A storage name must be specified.");
+                request.getStorageNames().set(i, request.getStorageNames().get(i).trim());
+            }
         }
     }
 }
