@@ -28,8 +28,6 @@ import java.util.regex.Pattern;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -39,28 +37,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.StorageFileDao;
-import org.finra.herd.dao.StorageUnitDao;
-import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlOutputFormatEnum;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
-import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.SchemaColumn;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.HivePartitionDto;
 import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
-import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.model.jpa.StoragePlatformEntity;
 
 /**
  * The DDL generator for Hive 13.
@@ -106,61 +94,19 @@ public class Hive13DdlGenerator extends DdlGenerator
     public static final String REGEX_S3_EMPTY_PARTITION = "_\\$folder\\$";
 
     /**
-     * An empty partition in S3, this is because hadoop file system implements directory support in S3 by creating empty files with the "directoryname_$folder$"
-     * suffix.
-     */
-    public static final String S3_EMPTY_PARTITION = "_$folder$";
-
-    /**
      * Hive complex data types list.
      */
     private static final List<String> HIVE_COMPLEX_DATA_TYPES =
         Arrays.asList(Category.LIST.toString(), Category.MAP.toString(), Category.UNION.toString(), Category.STRUCT.toString());
 
     @Autowired
-    private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
+    private BusinessObjectDataDdlPartitionsHelper businessObjectDataDdlPartitionsHelper;
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
-    private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
-
-    @Autowired
-    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
-
-    @Autowired
-    private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
-
-    @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
-
-    @Autowired
-    private ConfigurationHelper configurationHelper;
-
-    @Autowired
-    private S3KeyPrefixHelper s3KeyPrefixHelper;
-
-    @Autowired
-    private StorageDaoHelper storageDaoHelper;
-
-    @Autowired
-    private StorageFileDao storageFileDao;
-
-    @Autowired
-    private StorageFileHelper storageFileHelper;
-
-    @Autowired
-    private StorageHelper storageHelper;
-
-    @Autowired
-    private StoragePlatformHelper storagePlatformHelper;
-
-    @Autowired
-    private StorageUnitDao storageUnitDao;
-
-    @Autowired
-    private StorageUnitHelper storageUnitHelper;
 
     /**
      * Escapes single quote characters, if not already escaped, with an extra backslash.
@@ -202,47 +148,10 @@ public class Hive13DdlGenerator extends DdlGenerator
         CustomDdlEntity customDdlEntity, List<String> storageNames, List<StorageEntity> requestedStorageEntities,
         Map<String, StorageEntity> cachedStorageEntities, Map<String, String> cachedS3BucketNames)
     {
-        // Get business object format key from the request.
-        BusinessObjectFormatKey businessObjectFormatKey =
-            new BusinessObjectFormatKey(request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
-                request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion());
-
-        // Get storage platform entity for S3 storage platform type.
-        StoragePlatformEntity s3StoragePlatformEntity = storagePlatformHelper.getStoragePlatformEntity(StoragePlatformEntity.S3);
-
-        // Build partition filters based on the specified partition value filters.
-        // We do validate that all specified storage entities are of "S3" storage platform type, so we specify S3 storage platform type in
-        // the call below, so we select storage units only from all S3 storage, when the specified list of storage entities is empty.
-        List<List<String>> partitionFilters = businessObjectDataDaoHelper
-            .buildPartitionFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), businessObjectFormatKey,
-                request.getBusinessObjectDataVersion(), requestedStorageEntities, s3StoragePlatformEntity, null, businessObjectFormatEntity);
-
-        // If the partitionKey="partition" and partitionValue="none", then DDL should
-        // return a DDL which treats business object data as a table, not a partition.
-        boolean isPartitioned = !businessObjectFormatEntity.getPartitionKey().equalsIgnoreCase(NO_PARTITIONING_PARTITION_KEY) || partitionFilters.size() != 1 ||
-            !partitionFilters.get(0).get(0).equalsIgnoreCase(NO_PARTITIONING_PARTITION_VALUE);
-
-        // Generate the create table Hive 13 DDL.
-        GenerateDdlRequest generateDdlRequest = new GenerateDdlRequest();
-        generateDdlRequest.allowMissingData = request.isAllowMissingData();
-        generateDdlRequest.businessObjectDataVersion = request.getBusinessObjectDataVersion();
-        generateDdlRequest.businessObjectFormatEntity = businessObjectFormatEntity;
-        generateDdlRequest.businessObjectFormatVersion = request.getBusinessObjectFormatVersion();
-        generateDdlRequest.customDdlEntity = customDdlEntity;
-        generateDdlRequest.includeAllRegisteredSubPartitions = request.isIncludeAllRegisteredSubPartitions();
-        generateDdlRequest.includeDropPartitions = request.isIncludeDropPartitions();
-        generateDdlRequest.includeDropTableStatement = request.isIncludeDropTableStatement();
-        generateDdlRequest.includeIfNotExistsOption = request.isIncludeIfNotExistsOption();
-        generateDdlRequest.isPartitioned = isPartitioned;
-        generateDdlRequest.partitionFilters = partitionFilters;
-        generateDdlRequest.cachedS3BucketNames = cachedS3BucketNames;
-        generateDdlRequest.cachedStorageEntities = cachedStorageEntities;
-        generateDdlRequest.storageNames = storageNames;
-        generateDdlRequest.requestedStorageEntities = requestedStorageEntities;
-        generateDdlRequest.suppressScanForUnregisteredSubPartitions = request.isSuppressScanForUnregisteredSubPartitions();
-        generateDdlRequest.combineMultiplePartitionsInSingleAlterTable = request.isCombineMultiplePartitionsInSingleAlterTable();
-        generateDdlRequest.tableName = request.getTableName();
-        return generateCreateTableDdlHelper(generateDdlRequest);
+        BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequestWrapper = businessObjectDataDdlPartitionsHelper
+            .buildGenerateDdlPartitionsWrapper(request, businessObjectFormatEntity, customDdlEntity, storageNames, requestedStorageEntities,
+                cachedStorageEntities, cachedS3BucketNames);
+        return generateCreateTableDdlHelper(generateDdlRequestWrapper);
     }
 
     /**
@@ -262,14 +171,16 @@ public class Hive13DdlGenerator extends DdlGenerator
         Boolean isPartitioned = !businessObjectFormatEntity.getPartitionKey().equalsIgnoreCase(NO_PARTITIONING_PARTITION_KEY);
 
         // Generate the create table Hive 13 DDL.
-        GenerateDdlRequest generateDdlRequest = new GenerateDdlRequest();
-        generateDdlRequest.businessObjectFormatEntity = businessObjectFormatEntity;
-        generateDdlRequest.customDdlEntity = customDdlEntity;
-        generateDdlRequest.isPartitioned = isPartitioned;
-        generateDdlRequest.tableName = request.getTableName();
-        generateDdlRequest.includeDropTableStatement = request.isIncludeDropTableStatement();
-        generateDdlRequest.includeIfNotExistsOption = request.isIncludeIfNotExistsOption();
-        return generateCreateTableDdlHelper(generateDdlRequest);
+        BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequestWrapper =
+            businessObjectDataDdlPartitionsHelper.getGenerateDdlRequestWrapperInstance();
+        generateDdlRequestWrapper.setBusinessObjectFormatEntity(businessObjectFormatEntity);
+        generateDdlRequestWrapper.setCustomDdlEntity(customDdlEntity);
+        generateDdlRequestWrapper.setPartitioned(isPartitioned);
+        generateDdlRequestWrapper.setTableName(request.getTableName());
+        generateDdlRequestWrapper.setIncludeDropTableStatement(request.isIncludeDropTableStatement());
+        generateDdlRequestWrapper.setIncludeIfNotExistsOption(request.isIncludeIfNotExistsOption());
+        generateDdlRequestWrapper.setGeneratePartitionsRequest(false);
+        return generateCreateTableDdlHelper(generateDdlRequestWrapper);
     }
 
     @Override
@@ -517,7 +428,7 @@ public class Hive13DdlGenerator extends DdlGenerator
     /**
      * Generates and append to the string builder the create table Hive 13 DDL as per specified parameters.
      */
-    private String generateCreateTableDdlHelper(GenerateDdlRequest generateDdlRequest)
+    private String generateCreateTableDdlHelper(BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequest)
     {
         // TODO: We might want to consider using a template engine such as Velocity to generate this DDL so we don't wind up just doing string manipulation.
 
@@ -526,71 +437,38 @@ public class Hive13DdlGenerator extends DdlGenerator
         // For custom DDL, we would need to substitute the custom DDL tokens with their relative values.
         HashMap<String, String> replacements = new HashMap<>();
 
-        // Validate that partition values passed in the list of partition filters do not contain '/' character.
-        if (generateDdlRequest.isPartitioned && !CollectionUtils.isEmpty(generateDdlRequest.partitionFilters))
-        {
-            // Validate that partition values do not contain '/' characters.
-            for (List<String> partitionFilter : generateDdlRequest.partitionFilters)
-            {
-                for (String partitionValue : partitionFilter)
-                {
-                    Assert.doesNotContain(partitionValue, "/", String.format("Partition value \"%s\" can not contain a '/' character.", partitionValue));
-                }
-            }
-        }
-
-        // Get business object format model object to directly access schema columns and partitions.
-        BusinessObjectFormat businessObjectFormat =
-            businessObjectFormatHelper.createBusinessObjectFormatFromEntity(generateDdlRequest.businessObjectFormatEntity);
-
-        // Validate that we have at least one column specified in the business object format schema.
-        assertSchemaColumnsNotEmpty(businessObjectFormat, generateDdlRequest.businessObjectFormatEntity);
-
-        if (generateDdlRequest.isPartitioned)
-        {
-            // Validate that we have at least one partition column specified in the business object format schema.
-            Assert.notEmpty(businessObjectFormat.getSchema().getPartitions(), String.format("No schema partitions specified for business object format {%s}.",
-                businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(generateDdlRequest.businessObjectFormatEntity)));
-
-            // Validate that partition column names do not contain '/' characters.
-            for (SchemaColumn partitionColumn : businessObjectFormat.getSchema().getPartitions())
-            {
-                Assert.doesNotContain(partitionColumn.getName(), "/", String
-                    .format("Partition column name \"%s\" can not contain a '/' character. Business object format: {%s}", partitionColumn.getName(),
-                        businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(generateDdlRequest.businessObjectFormatEntity)));
-            }
-        }
+        BusinessObjectFormat businessObjectFormat = businessObjectDataDdlPartitionsHelper.validatePartitionFiltersAndFormat(generateDdlRequest);
 
         // Add drop table if requested.
-        if (BooleanUtils.isTrue(generateDdlRequest.includeDropTableStatement))
+        if (BooleanUtils.isTrue(generateDdlRequest.getIncludeDropTableStatement()))
         {
-            sb.append(String.format("DROP TABLE IF EXISTS `%s`;\n\n", generateDdlRequest.tableName));
+            sb.append(String.format("DROP TABLE IF EXISTS `%s`;\n\n", generateDdlRequest.getTableName()));
         }
 
         // Depending on the flag, prepare "if not exists" option text or leave it an empty string.
-        String ifNotExistsOption = BooleanUtils.isTrue(generateDdlRequest.includeIfNotExistsOption) ? "IF NOT EXISTS " : "";
+        String ifNotExistsOption = BooleanUtils.isTrue(generateDdlRequest.getIncludeIfNotExistsOption()) ? "IF NOT EXISTS " : "";
 
         // Only generate the create table DDL statement, if custom DDL was not specified.
-        if (generateDdlRequest.customDdlEntity == null)
+        if (generateDdlRequest.getCustomDdlEntity() == null)
         {
             generateStandardBaseDdl(generateDdlRequest, sb, businessObjectFormat, ifNotExistsOption);
         }
         else
         {
             // Use the custom DDL in place of the create table statement.
-            sb.append(String.format("%s\n\n", generateDdlRequest.customDdlEntity.getDdl()));
+            sb.append(String.format("%s\n\n", generateDdlRequest.getCustomDdlEntity().getDdl()));
 
             // We need to substitute the relative custom DDL token with an actual table name.
-            replacements.put(TABLE_NAME_CUSTOM_DDL_TOKEN, generateDdlRequest.tableName);
+            replacements.put(TABLE_NAME_CUSTOM_DDL_TOKEN, generateDdlRequest.getTableName());
         }
 
         // Add alter table statements only if the list of partition filters is not empty - this is applicable to generating DDL for business object data only.
-        if (!CollectionUtils.isEmpty(generateDdlRequest.partitionFilters))
+        if (!CollectionUtils.isEmpty(generateDdlRequest.getPartitionFilters()))
         {
             processPartitionFiltersForGenerateDdl(generateDdlRequest, sb, replacements, businessObjectFormat, ifNotExistsOption);
         }
         // Add a location statement with a token if this is format dll that does not use custom ddl.
-        else if (!generateDdlRequest.isPartitioned && generateDdlRequest.customDdlEntity == null)
+        else if (!generateDdlRequest.getPartitioned() && generateDdlRequest.getCustomDdlEntity() == null)
         {
             // Since custom DDL is not specified, there are no partition values, and this table is not partitioned, add a LOCATION clause with a token.
             sb.append(String.format("LOCATION '%s';", NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN));
@@ -600,7 +478,7 @@ public class Hive13DdlGenerator extends DdlGenerator
         String resultDdl = sb.toString().trim();
 
         // For custom DDL, substitute the relative custom DDL tokens with their values.
-        if (generateDdlRequest.customDdlEntity != null)
+        if (generateDdlRequest.getCustomDdlEntity() != null)
         {
             for (Map.Entry<String, String> entry : replacements.entrySet())
             {
@@ -658,16 +536,16 @@ public class Hive13DdlGenerator extends DdlGenerator
         return sb.toString();
     }
 
-    private void generateStandardBaseDdl(GenerateDdlRequest generateDdlRequest, StringBuilder sb, BusinessObjectFormat businessObjectFormat,
-        String ifNotExistsOption)
+    private void generateStandardBaseDdl(BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequest, StringBuilder sb,
+        BusinessObjectFormat businessObjectFormat, String ifNotExistsOption)
     {
         // Please note that we escape table name and all column names to avoid Hive reserved words in DDL statement generation.
-        sb.append(String.format("CREATE EXTERNAL TABLE %s`%s` (\n", ifNotExistsOption, generateDdlRequest.tableName));
+        sb.append(String.format("CREATE EXTERNAL TABLE %s`%s` (\n", ifNotExistsOption, generateDdlRequest.getTableName()));
 
         // Add schema columns.
-        sb.append(generateDdlColumns(generateDdlRequest.businessObjectFormatEntity, businessObjectFormat));
+        sb.append(generateDdlColumns(generateDdlRequest.getBusinessObjectFormatEntity(), businessObjectFormat));
 
-        if (generateDdlRequest.isPartitioned)
+        if (generateDdlRequest.getPartitioned())
         {
             // Add a partitioned by clause.
             sb.append("PARTITIONED BY (");
@@ -675,8 +553,8 @@ public class Hive13DdlGenerator extends DdlGenerator
             List<String> partitionColumnDeclarations = new ArrayList<>();
             for (SchemaColumn partitionColumn : businessObjectFormat.getSchema().getPartitions())
             {
-                partitionColumnDeclarations
-                    .add(String.format("`%s` %s", partitionColumn.getName(), getHiveDataType(partitionColumn, generateDdlRequest.businessObjectFormatEntity)));
+                partitionColumnDeclarations.add(
+                    String.format("`%s` %s", partitionColumn.getName(), getHiveDataType(partitionColumn, generateDdlRequest.getBusinessObjectFormatEntity())));
             }
             sb.append(StringUtils.join(partitionColumnDeclarations, ", "));
             sb.append(")\n");
@@ -687,38 +565,38 @@ public class Hive13DdlGenerator extends DdlGenerator
             // Add custom row format defined in business object format.
             // This will override everything after "ROW FORMAT" including delimiter, escape value, null value statements defined in the business object format
             // schema.
-            sb.append(String.format("ROW FORMAT %s\n",businessObjectFormat.getSchema().getCustomRowFormat()));
+            sb.append(String.format("ROW FORMAT %s\n", businessObjectFormat.getSchema().getCustomRowFormat()));
         }
         else
         {
             // We output delimiter character, collection items delimiter, map keys delimiter, escape character, and null value only when they are defined
             // in the business object format schema.
             sb.append("ROW FORMAT DELIMITED");
-            if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getDelimiter()))
+            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter()))
             {
                 // Note that the escape character is only output when the delimiter is present.
                 sb.append(String.format(" FIELDS TERMINATED BY '%s'%s",
-                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getDelimiter(), true)),
-                    StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getEscapeCharacter()) ? "" : String.format(" ESCAPED BY '%s'",
-                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getEscapeCharacter(), true)))));
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter(), true)),
+                    StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter()) ? "" : String.format(" ESCAPED BY '%s'",
+                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter(), true)))));
             }
-            if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getCollectionItemsDelimiter()))
+            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter()))
             {
                 sb.append(String.format(" COLLECTION ITEMS TERMINATED BY '%s'",
-                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getCollectionItemsDelimiter(), true))));
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter(), true))));
             }
-            if (!StringUtils.isEmpty(generateDdlRequest.businessObjectFormatEntity.getMapKeysDelimiter()))
+            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getMapKeysDelimiter()))
             {
                 sb.append(String.format(" MAP KEYS TERMINATED BY '%s'",
-                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getMapKeysDelimiter(), true))));
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getMapKeysDelimiter(), true))));
             }
-            sb.append(String
-                .format(" NULL DEFINED AS '%s'\n", escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.businessObjectFormatEntity.getNullValue()))));
+            sb.append(String.format(" NULL DEFINED AS '%s'\n",
+                escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getNullValue()))));
         }
 
         // If this table is not partitioned, then STORED AS clause will be followed by LOCATION. Otherwise, the CREATE TABLE is complete.
-        sb.append(
-            String.format("STORED AS %s%s\n", getHiveFileFormat(generateDdlRequest.businessObjectFormatEntity), generateDdlRequest.isPartitioned ? ";\n" : ""));
+        sb.append(String.format("STORED AS %s%s\n", getHiveFileFormat(generateDdlRequest.getBusinessObjectFormatEntity()),
+            generateDdlRequest.getPartitioned() ? ";\n" : ""));
     }
 
     /**
@@ -840,86 +718,15 @@ public class Hive13DdlGenerator extends DdlGenerator
      * @param businessObjectFormat the business object format
      * @param ifNotExistsOption specifies if generated DDL contains "if not exists" option
      */
-    private void processPartitionFiltersForGenerateDdl(GenerateDdlRequest generateDdlRequest, StringBuilder sb, HashMap<String, String> replacements,
-        BusinessObjectFormat businessObjectFormat, String ifNotExistsOption)
+    private void processPartitionFiltersForGenerateDdl(BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequest, StringBuilder sb,
+        HashMap<String, String> replacements, BusinessObjectFormat businessObjectFormat, String ifNotExistsOption)
     {
-        // Get the business object format key from the entity.
-        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(generateDdlRequest.businessObjectFormatEntity);
-
-        // Override the business object format version with the original (optional) value from the request.
-        businessObjectFormatKey.setBusinessObjectFormatVersion(generateDdlRequest.businessObjectFormatVersion);
-
-        // Get business object data status entity for the VALID status.
-        BusinessObjectDataStatusEntity validBusinessObjectDataStatusEntity =
-            businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
-
-        // Get storage platform entity for S3 storage platform type.
-        StoragePlatformEntity s3StoragePlatformEntity = storagePlatformHelper.getStoragePlatformEntity(StoragePlatformEntity.S3);
-
-        // Retrieve a list of storage unit availability DTOs for the specified list of partition filters. The list will be sorted by partition values and
-        // storage names. For a non-partitioned table, there should only exist a single business object data entity (with partitionValue equals to "none").
-        // We do validate that all specified storage entities are of "S3" storage platform type, so we specify S3 storage platform type in the herdDao call
-        // below, so we select storage units only from all S3 storage entities, when the specified list of storage names is empty. We also specify to select
-        // only "available" storage units.
-        List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos = storageUnitDao
-            .getStorageUnitsByPartitionFilters(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
-                businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
-                businessObjectFormatKey.getBusinessObjectFormatVersion(), generateDdlRequest.partitionFilters, generateDdlRequest.businessObjectDataVersion,
-                validBusinessObjectDataStatusEntity, generateDdlRequest.requestedStorageEntities, s3StoragePlatformEntity, null, true);
-
-        // Exclude duplicate business object data per specified list of storage names.
-        // If storage names are not specified, the method fails on business object data instances registered with multiple storage.
-        storageUnitAvailabilityDtos = excludeDuplicateBusinessObjectData(storageUnitAvailabilityDtos, generateDdlRequest.storageNames);
-
-        // Build a list of matched partition filters. Please note that each request partition
-        // filter might result in multiple available business object data entities.
-        List<List<String>> matchedAvailablePartitionFilters = new ArrayList<>();
-        List<List<String>> availablePartitions = new ArrayList<>();
-        for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtos)
-        {
-            BusinessObjectDataKey businessObjectDataKey = storageUnitAvailabilityDto.getBusinessObjectDataKey();
-            matchedAvailablePartitionFilters
-                .add(businessObjectDataHelper.getPartitionFilter(businessObjectDataKey, generateDdlRequest.partitionFilters.get(0)));
-            availablePartitions.add(businessObjectDataHelper.getPrimaryAndSubPartitionValues(businessObjectDataKey));
-        }
-
-        // If request specifies to include all registered sub-partitions, fail if any of "non-available" registered sub-partitions are found.
-        if (generateDdlRequest.businessObjectDataVersion == null && BooleanUtils.isTrue(generateDdlRequest.includeAllRegisteredSubPartitions) &&
-            !CollectionUtils.isEmpty(matchedAvailablePartitionFilters))
-        {
-            notAllowNonAvailableRegisteredSubPartitions(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
-                businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
-                businessObjectFormatKey.getBusinessObjectFormatVersion(), matchedAvailablePartitionFilters, availablePartitions,
-                generateDdlRequest.storageNames, generateDdlRequest.requestedStorageEntities, s3StoragePlatformEntity);
-        }
-
-        // Fail on any missing business object data unless the flag is set to allow missing business object data.
-        if (!BooleanUtils.isTrue(generateDdlRequest.allowMissingData))
-        {
-            // Get a list of unmatched partition filters.
-            List<List<String>> unmatchedPartitionFilters = new ArrayList<>(generateDdlRequest.partitionFilters);
-            unmatchedPartitionFilters.removeAll(matchedAvailablePartitionFilters);
-
-            // Throw an exception if we have any unmatched partition filters.
-            if (!unmatchedPartitionFilters.isEmpty())
-            {
-                // Get the first unmatched partition filter and throw exception.
-                List<String> unmatchedPartitionFilter = getFirstUnmatchedPartitionFilter(unmatchedPartitionFilters);
-                throw new ObjectNotFoundException(String.format(
-                    "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                        "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
-                        "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).",
-                    businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
-                    businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
-                    businessObjectFormatKey.getBusinessObjectFormatVersion(), unmatchedPartitionFilter.get(0),
-                    StringUtils.join(unmatchedPartitionFilter.subList(1, unmatchedPartitionFilter.size()), ","), generateDdlRequest.businessObjectDataVersion,
-                    StringUtils.join(generateDdlRequest.storageNames, ",")));
-            }
-        }
+        List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos =
+            businessObjectDataDdlPartitionsHelper.processPartitionFiltersForGenerateDdlPartitions(generateDdlRequest);
 
         // We still need to close/complete the create table statement when there is no custom DDL,
         // the table is non-partitioned, and there is no business object data found.
-        if (generateDdlRequest.customDdlEntity == null && !generateDdlRequest.isPartitioned && CollectionUtils.isEmpty(storageUnitAvailabilityDtos))
+        if (generateDdlRequest.getCustomDdlEntity() == null && !generateDdlRequest.getPartitioned() && CollectionUtils.isEmpty(storageUnitAvailabilityDtos))
         {
             // Add a LOCATION clause with a token.
             sb.append(String.format("LOCATION '%s';", NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN));
@@ -928,19 +735,19 @@ public class Hive13DdlGenerator extends DdlGenerator
         else
         {
             // If drop partitions flag is set and the table is partitioned, drop partitions specified by the partition filters.
-            if (generateDdlRequest.isPartitioned && BooleanUtils.isTrue(generateDdlRequest.includeDropPartitions))
+            if (generateDdlRequest.getPartitioned() && BooleanUtils.isTrue(generateDdlRequest.getIncludeDropPartitions()))
             {
                 // Generate the beginning of the alter table statement.
-                String alterTableFirstToken = String.format("ALTER TABLE `%s` DROP IF EXISTS", generateDdlRequest.tableName);
+                String alterTableFirstToken = String.format("ALTER TABLE `%s` DROP IF EXISTS", generateDdlRequest.getTableName());
 
                 // Create a drop partition statement for each partition filter entry.
                 List<String> dropPartitionStatements = new ArrayList<>();
-                for (List<String> partitionFilter : generateDdlRequest.partitionFilters)
+                for (List<String> partitionFilter : generateDdlRequest.getPartitionFilters())
                 {
                     // Start building a drop partition statement for this partition filter.
                     StringBuilder dropPartitionStatement = new StringBuilder();
                     dropPartitionStatement.append(String.format("%s PARTITION (",
-                        BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? "   " : alterTableFirstToken));
+                        BooleanUtils.isTrue(generateDdlRequest.getCombineMultiplePartitionsInSingleAlterTable()) ? "   " : alterTableFirstToken));
 
                     // Specify all partition column values as per this partition filter.
                     List<String> partitionKeyValuePairs = new ArrayList<>();
@@ -966,527 +773,23 @@ public class Hive13DdlGenerator extends DdlGenerator
                 if (CollectionUtils.isNotEmpty(dropPartitionStatements))
                 {
                     // If specified, combine dropping multiple partitions in a single ALTER TABLE statement.
-                    if (BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable))
+                    if (BooleanUtils.isTrue(generateDdlRequest.getCombineMultiplePartitionsInSingleAlterTable()))
                     {
                         sb.append(alterTableFirstToken).append('\n');
                     }
 
-                    sb.append(StringUtils
-                        .join(dropPartitionStatements, BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? ",\n" : ";\n"))
-                        .append(";\n\n");
+                    sb.append(StringUtils.join(dropPartitionStatements,
+                        BooleanUtils.isTrue(generateDdlRequest.getCombineMultiplePartitionsInSingleAlterTable()) ? ",\n" : ";\n")).append(";\n\n");
                 }
             }
 
             // Process storage unit entities.
             if (!CollectionUtils.isEmpty(storageUnitAvailabilityDtos))
             {
-                processStorageUnitsForGenerateDdl(generateDdlRequest, sb, replacements, businessObjectFormat, ifNotExistsOption, storageUnitAvailabilityDtos);
+                businessObjectDataDdlPartitionsHelper
+                    .processStorageUnitsForGenerateDdlPartitions(generateDdlRequest, sb, new ArrayList(), replacements, businessObjectFormat, ifNotExistsOption,
+                        storageUnitAvailabilityDtos);
             }
-        }
-    }
-
-    /**
-     * Gets a first unmatched partition filter from the list of unmatched filters.
-     *
-     * @param unmatchedPartitionFilters the list of unmatchedPartitionFilters
-     *
-     * @return the first unmatched partition filter
-     */
-    private List<String> getFirstUnmatchedPartitionFilter(List<List<String>> unmatchedPartitionFilters)
-    {
-        // Get the first unmatched partition filter from the list.
-        List<String> unmatchedPartitionFilter = unmatchedPartitionFilters.get(0);
-
-        // Replace all null partition values with an empty string.
-        for (int i = 0; i < unmatchedPartitionFilter.size(); i++)
-        {
-            if (unmatchedPartitionFilter.get(i) == null)
-            {
-                unmatchedPartitionFilter.set(i, "");
-            }
-        }
-
-        return unmatchedPartitionFilter;
-    }
-
-    /**
-     * Adds the relative "alter table add partition" statements for each storage unit entity. Please note that each request partition value might result in
-     * multiple available storage unit entities (subpartitions).
-     *
-     * @param sb the string builder to be updated with the "alter table add partition" statements
-     * @param replacements the hash map of string values to be used to substitute the custom DDL tokens with their actual values
-     * @param businessObjectFormatForSchema the business object format to be used for schema
-     * @param ifNotExistsOption specifies if generated DDL contains "if not exists" option
-     * @param storageUnitAvailabilityDtos the list of storage unit availability DTOs
-     */
-    private void processStorageUnitsForGenerateDdl(GenerateDdlRequest generateDdlRequest, StringBuilder sb, HashMap<String, String> replacements,
-        BusinessObjectFormat businessObjectFormatForSchema, String ifNotExistsOption, List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos)
-    {
-        // If flag is not set to suppress scan for unregistered sub-partitions, retrieve all storage
-        // file paths for the relative storage units loaded in a multi-valued map for easy access.
-        MultiValuedMap<Integer, String> storageUnitIdToStorageFilePathsMap =
-            BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions) ? new ArrayListValuedHashMap<>() :
-                storageFileDao.getStorageFilePathsByStorageUnitIds(storageUnitHelper.getStorageUnitIds(storageUnitAvailabilityDtos));
-
-        // Crete a map of storage names in upper case to their relative S3 key prefix velocity templates.
-        Map<String, String> s3KeyPrefixVelocityTemplates = new HashMap<>();
-
-        // Crete a map of business object format keys to their relative business object format instances.
-        Map<BusinessObjectFormatKey, BusinessObjectFormat> businessObjectFormats = new HashMap<>();
-
-        // Get data provider for the business object definition.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(
-            new BusinessObjectDefinitionKey(businessObjectFormatForSchema.getNamespace(), businessObjectFormatForSchema.getBusinessObjectDefinitionName()));
-        String dataProviderName = businessObjectDefinitionEntity.getDataProvider().getName();
-
-        // Generate the beginning of the alter table statement.
-        String alterTableFirstToken = String.format("ALTER TABLE `%s` ADD %s", generateDdlRequest.tableName, ifNotExistsOption).trim();
-
-        // Process all available business object data instances.
-        List<String> addPartitionStatements = new ArrayList<>();
-        for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtos)
-        {
-            // Get storage name in upper case for this storage unit.
-            String upperCaseStorageName = storageUnitAvailabilityDto.getStorageName().toUpperCase();
-
-            // Get storage entity for this storage unit.
-            StorageEntity storageEntity = getStorageEntity(upperCaseStorageName, generateDdlRequest.cachedStorageEntities);
-
-            // Get business object data key for this business object data.
-            BusinessObjectDataKey businessObjectDataKey = storageUnitAvailabilityDto.getBusinessObjectDataKey();
-
-            // Get business object format key for this business object data.
-            BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectDataKey);
-
-            // Retrieve s3 key prefix velocity template for this storage.
-            String s3KeyPrefixVelocityTemplate = getS3KeyPrefixVelocityTemplate(upperCaseStorageName, storageEntity, s3KeyPrefixVelocityTemplates);
-
-            // Retrieve business object format for this business object data.
-            BusinessObjectFormat businessObjectFormat = getBusinessObjectFormat(businessObjectFormatKey, businessObjectFormats);
-
-            // Build the expected S3 key prefix for this storage unit.
-            String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(s3KeyPrefixVelocityTemplate, dataProviderName, businessObjectFormat, businessObjectDataKey,
-                storageUnitAvailabilityDto.getStorageName());
-
-            // If flag is set to suppress scan for unregistered sub-partitions, use the directory path or the S3 key prefix
-            // as the partition's location, otherwise, use storage files to discover all unregistered sub-partitions.
-            Collection<String> storageFilePaths = new ArrayList<>();
-            if (BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions))
-            {
-                // Validate the directory path value if it is present.
-                if (storageUnitAvailabilityDto.getStorageUnitDirectoryPath() != null)
-                {
-                    Assert.isTrue(storageUnitAvailabilityDto.getStorageUnitDirectoryPath().equals(s3KeyPrefix), String.format(
-                        "Storage directory path \"%s\" registered with business object data {%s} " +
-                            "in \"%s\" storage does not match the expected S3 key prefix \"%s\".", storageUnitAvailabilityDto.getStorageUnitDirectoryPath(),
-                        businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), storageUnitAvailabilityDto.getStorageName(),
-                        s3KeyPrefix));
-                }
-
-                // Add the S3 key prefix to the list of storage files.
-                // We add a trailing '/' character to the prefix, since it represents a directory.
-                storageFilePaths.add(StringUtils.appendIfMissing(s3KeyPrefix, "/"));
-            }
-            else
-            {
-                // Retrieve storage file paths registered with this business object data in the specified storage.
-                storageFilePaths = storageUnitIdToStorageFilePathsMap.containsKey(storageUnitAvailabilityDto.getStorageUnitId()) ?
-                    storageUnitIdToStorageFilePathsMap.get(storageUnitAvailabilityDto.getStorageUnitId()) : new ArrayList<>();
-
-                // Validate storage file paths registered with this business object data in the specified storage.
-                // The validation check below is required even if we have no storage files registered.
-                storageFileHelper.validateStorageFilePaths(storageFilePaths, s3KeyPrefix, businessObjectDataKey, storageUnitAvailabilityDto.getStorageName());
-
-                // If there are no storage files registered for this storage unit, we should use the storage directory path value.
-                if (storageFilePaths.isEmpty())
-                {
-                    // Validate that directory path value is present and it matches the S3 key prefix.
-                    Assert.isTrue(storageUnitAvailabilityDto.getStorageUnitDirectoryPath() != null &&
-                        storageUnitAvailabilityDto.getStorageUnitDirectoryPath().startsWith(s3KeyPrefix), String.format(
-                        "Storage directory path \"%s\" registered with business object data {%s} " +
-                            "in \"%s\" storage does not match the expected S3 key prefix \"%s\".", storageUnitAvailabilityDto.getStorageUnitDirectoryPath(),
-                        businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), storageUnitAvailabilityDto.getStorageName(),
-                        s3KeyPrefix));
-                    // Add storage directory path the empty storage files list.
-                    // We add a trailing '/' character to the path, since it represents a directory.
-                    storageFilePaths.add(storageUnitAvailabilityDto.getStorageUnitDirectoryPath() + "/");
-                }
-            }
-
-            // Retrieve the s3 bucket name.
-            String s3BucketName = getS3BucketName(upperCaseStorageName, storageEntity, generateDdlRequest.cachedS3BucketNames);
-
-            // For partitioned table, add the relative partitions to the generated DDL.
-            if (generateDdlRequest.isPartitioned)
-            {
-                // If flag is set to suppress scan for unregistered sub-partitions, validate that the number of primary and sub-partition values specified for
-                // the business object data equals to the number of partition columns defined in schema for the format selected for DDL generation.
-                if (BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions))
-                {
-                    int businessObjectDataRegisteredPartitions = 1 + CollectionUtils.size(businessObjectDataKey.getSubPartitionValues());
-                    Assert.isTrue(businessObjectFormatForSchema.getSchema().getPartitions().size() == businessObjectDataRegisteredPartitions, String.format(
-                        "Number of primary and sub-partition values (%d) specified for the business object data is not equal to " +
-                            "the number of partition columns (%d) defined in the schema of the business object format selected for DDL generation. " +
-                            "Business object data: {%s},  business object format: {%s}", businessObjectDataRegisteredPartitions,
-                        businessObjectFormatForSchema.getSchema().getPartitions().size(),
-                        businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), businessObjectFormatHelper
-                            .businessObjectFormatKeyToString(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatForSchema))));
-                }
-                // Otherwise, since the format version selected for DDL generation might not match the relative business object format version that business
-                // object data is registered against, validate that the number of sub-partition values specified for the business object data is less than
-                // the number of partition columns defined in schema for the format selected for DDL generation.
-                else
-                {
-                    Assert.isTrue(
-                        businessObjectFormatForSchema.getSchema().getPartitions().size() > CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()),
-                        String.format("Number of subpartition values specified for the business object data is greater than or equal to " +
-                                "the number of partition columns defined in the schema of the business object format selected for DDL generation. " +
-                                "Business object data: {%s},  business object format: {%s}",
-                            businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), businessObjectFormatHelper
-                                .businessObjectFormatKeyToString(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatForSchema))));
-                }
-
-                // Get partition information. For multiple level partitioning, auto-discover subpartitions (subdirectories) not already included into the S3 key
-                // prefix. Each discovered partition requires a standalone "add partition" clause. Please note that due to the above validation check, there
-                // should be no auto discoverable sub-partition columns, when flag is set to suppress scan for unregistered sub-partitions.
-                List<SchemaColumn> autoDiscoverableSubPartitionColumns = businessObjectFormatForSchema.getSchema().getPartitions()
-                    .subList(1 + CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()),
-                        businessObjectFormatForSchema.getSchema().getPartitions().size());
-
-                // Get and process Hive partitions.
-                for (HivePartitionDto hivePartition : getHivePartitions(businessObjectDataKey, autoDiscoverableSubPartitionColumns, s3KeyPrefix,
-                    storageFilePaths, storageUnitAvailabilityDto.getStorageName()))
-                {
-                    // Build an add partition statement for this hive partition.
-                    StringBuilder addPartitionStatement = new StringBuilder();
-                    addPartitionStatement.append(String.format("%s PARTITION (",
-                        BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? "   " : alterTableFirstToken));
-                    // Specify all partition column values.
-                    List<String> partitionKeyValuePairs = new ArrayList<>();
-                    for (int i = 0; i < businessObjectFormatForSchema.getSchema().getPartitions().size(); i++)
-                    {
-                        String partitionColumnName = businessObjectFormatForSchema.getSchema().getPartitions().get(i).getName();
-                        String partitionValue = hivePartition.getPartitionValues().get(i);
-                        partitionKeyValuePairs.add(String.format("`%s`='%s'", partitionColumnName, partitionValue));
-                    }
-                    addPartitionStatement.append(StringUtils.join(partitionKeyValuePairs, ", "));
-                    addPartitionStatement.append(String.format(") LOCATION 's3n://%s/%s%s'", s3BucketName, s3KeyPrefix,
-                        StringUtils.isNotBlank(hivePartition.getPath()) ? hivePartition.getPath() : ""));
-
-                    // Add this add partition statement to the list.
-                    addPartitionStatements.add(addPartitionStatement.toString());
-                }
-            }
-            else // This is a non-partitioned table.
-            {
-                // Get location for this non-partitioned table.
-                String tableLocation = String.format("s3n://%s/%s", s3BucketName, s3KeyPrefix);
-
-                if (generateDdlRequest.customDdlEntity == null)
-                {
-                    // Since custom DDL was not specified and this table is not partitioned, add a LOCATION clause.
-                    // This is the last line in the non-partitioned table DDL.
-                    sb.append(String.format("LOCATION '%s';", tableLocation));
-                }
-                else
-                {
-                    // Since custom DDL was used for a non-partitioned table, substitute the relative custom DDL token with the actual table location.
-                    replacements.put(NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, tableLocation);
-                }
-            }
-        }
-
-        // Add all add partition statements to the main string builder.
-        if (CollectionUtils.isNotEmpty(addPartitionStatements))
-        {
-            // If specified, combine adding multiple partitions in a single ALTER TABLE statement.
-            if (BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable))
-            {
-                sb.append(alterTableFirstToken).append('\n');
-            }
-
-            sb.append(
-                StringUtils.join(addPartitionStatements, BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? ",\n" : ";\n"))
-                .append(";\n");
-        }
-    }
-
-    /**
-     * Gets a business object format for the specified business  object format key. The method memorizes the responses for performance reasons.
-     *
-     * @param businessObjectFormatKey the business object format key
-     * @param businessObjectFormats the map of business object keys to their relative business object format instances
-     *
-     * @return the business object format
-     */
-    private BusinessObjectFormat getBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey,
-        Map<BusinessObjectFormatKey, BusinessObjectFormat> businessObjectFormats)
-    {
-        BusinessObjectFormat businessObjectFormat;
-
-        // If business object format was already retrieved, use it. Otherwise, retrieve and store it in the map.
-        if (businessObjectFormats.containsKey(businessObjectFormatKey))
-        {
-            businessObjectFormat = businessObjectFormats.get(businessObjectFormatKey);
-        }
-        else
-        {
-            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
-            businessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
-            businessObjectFormats.put(businessObjectFormatKey, businessObjectFormat);
-        }
-
-        return businessObjectFormat;
-    }
-
-    /**
-     * Gets an S3 bucket name for the specified storage entity. The method memorizes the responses for performance reasons.
-     *
-     * @param upperCaseStorageName the storage name in upper case
-     * @param storageEntity the storage entity
-     * @param s3BucketNames the map of storage names in upper case to their relative S3 bucket names
-     *
-     * @return the S3 bucket name
-     */
-    private String getS3BucketName(String upperCaseStorageName, StorageEntity storageEntity, Map<String, String> s3BucketNames)
-    {
-        String s3BucketName;
-
-        // If bucket name was already retrieved for this storage, use it.
-        if (s3BucketNames.containsKey(upperCaseStorageName))
-        {
-            s3BucketName = s3BucketNames.get(upperCaseStorageName);
-        }
-        // Otherwise, retrieve the S3 bucket name attribute value and store it in memory. Please note that it is required, so we pass in a "true" flag.
-        else
-        {
-            s3BucketName = storageHelper
-                .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
-            s3BucketNames.put(upperCaseStorageName, s3BucketName);
-        }
-
-        return s3BucketName;
-    }
-
-    /**
-     * Gets S3 key prefix velocity template for the specified storage entity. The method memorizes the responses for performance reasons.
-     *
-     * @param upperCaseStorageName the storage name in upper case
-     * @param storageEntity the storage entity
-     * @param s3KeyPrefixVelocityTemplates the map of storage names in upper case to their relative S3 key prefix velocity templates
-     *
-     * @return the S3 key prefix velocity template
-     */
-    private String getS3KeyPrefixVelocityTemplate(String upperCaseStorageName, StorageEntity storageEntity, Map<String, String> s3KeyPrefixVelocityTemplates)
-    {
-        String s3KeyPrefixVelocityTemplate;
-
-        // If S3 key prefix velocity template was already retrieved for this storage, use it.
-        if (s3KeyPrefixVelocityTemplates.containsKey(upperCaseStorageName))
-        {
-            s3KeyPrefixVelocityTemplate = s3KeyPrefixVelocityTemplates.get(upperCaseStorageName);
-        }
-        // Otherwise, retrieve the S3 3 key prefix velocity template attribute value and store it in memory.
-        else
-        {
-            // Retrieve S3 key prefix velocity template storage attribute value and store it in memory.
-            s3KeyPrefixVelocityTemplate = storageHelper
-                .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
-                    storageEntity, false);
-
-            // Validate that S3 key prefix velocity template is configured.
-            Assert.isTrue(StringUtils.isNotBlank(s3KeyPrefixVelocityTemplate),
-                String.format("Storage \"%s\" has no S3 key prefix velocity template configured.", storageEntity.getName()));
-
-            // Store the retrieved value in memory.
-            s3KeyPrefixVelocityTemplates.put(upperCaseStorageName, s3KeyPrefixVelocityTemplate);
-        }
-
-        return s3KeyPrefixVelocityTemplate;
-    }
-
-    /**
-     * Gets a storage entity per specified storage name. The method memorizes the responses for performance reasons.
-     *
-     * @param upperCaseStorageName the storage name in upper case
-     * @param storageEntities the map of storage names in upper case to their relative storage entities
-     *
-     * @return the storage entity
-     */
-    private StorageEntity getStorageEntity(String upperCaseStorageName, Map<String, StorageEntity> storageEntities)
-    {
-        StorageEntity storageEntity;
-
-        // If storage entity was already retrieved, use it. Otherwise, retrieve and store it in the map.
-        if (storageEntities.containsKey(upperCaseStorageName))
-        {
-            storageEntity = storageEntities.get(upperCaseStorageName);
-        }
-        else
-        {
-            storageEntity = storageDaoHelper.getStorageEntity(upperCaseStorageName);
-            storageEntities.put(upperCaseStorageName, storageEntity);
-        }
-
-        return storageEntity;
-    }
-
-    /**
-     * Parameters grouping for {@link Hive13DdlGenerator#generateCreateTableDdlHelper(GenerateDdlRequest)}
-     */
-    private static class GenerateDdlRequest
-    {
-        private Boolean allowMissingData;
-
-        private Integer businessObjectDataVersion;
-
-        private BusinessObjectFormatEntity businessObjectFormatEntity;
-
-        private Integer businessObjectFormatVersion;
-
-        private CustomDdlEntity customDdlEntity;
-
-        private Boolean includeAllRegisteredSubPartitions;
-
-        private Boolean includeDropPartitions;
-
-        private Boolean includeDropTableStatement;
-
-        private Boolean includeIfNotExistsOption;
-
-        private Boolean isPartitioned;
-
-        private List<List<String>> partitionFilters;
-
-        private Map<String, String> cachedS3BucketNames;
-
-        private Map<String, StorageEntity> cachedStorageEntities;
-
-        private List<String> storageNames;
-
-        private List<StorageEntity> requestedStorageEntities;
-
-        private Boolean suppressScanForUnregisteredSubPartitions;
-
-        private Boolean combineMultiplePartitionsInSingleAlterTable;
-
-        private String tableName;
-    }
-
-    /**
-     * Eliminate storage units that belong to the same business object data by picking storage unit registered in a storage listed earlier in the list of
-     * storage names specified in the request. If storage names are not specified, simply fail on business object data instances registered with multiple
-     * storage.
-     *
-     * @param storageUnitAvailabilityDtos the list of storage unit availability DTOs
-     * @param storageNames the list of storage names
-     *
-     * @return the updated list of storage unit availability DTOs
-     * @throws IllegalArgumentException on business object data being registered in multiple storage and storage names are not specified to resolve this
-     */
-    protected List<StorageUnitAvailabilityDto> excludeDuplicateBusinessObjectData(List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos,
-        List<String> storageNames) throws IllegalArgumentException
-    {
-        // Convert the list of storage names to upper case.
-        List<String> upperCaseStorageNames = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(storageNames))
-        {
-            for (String storageName : storageNames)
-            {
-                upperCaseStorageNames.add(storageName.toUpperCase());
-            }
-        }
-
-        // If storage names are not specified, fail on business object data instance registered with multiple storage.
-        // Otherwise, in a case when the same business object data is registered with multiple storage,
-        // pick storage unit registered in a storage listed earlier in the list of storage names specified in the request.
-        Map<BusinessObjectDataKey, StorageUnitAvailabilityDto> businessObjectDataToStorageUnitMap = new LinkedHashMap<>();
-        for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtos)
-        {
-            BusinessObjectDataKey businessObjectDataKey = storageUnitAvailabilityDto.getBusinessObjectDataKey();
-
-            if (businessObjectDataToStorageUnitMap.containsKey(businessObjectDataKey))
-            {
-                // Duplicate business object data is found, so check if storage names are specified.
-                if (CollectionUtils.isEmpty(upperCaseStorageNames))
-                {
-                    // Fail on business object data registered in multiple storage.
-                    throw new IllegalArgumentException(String.format("Found business object data registered in more than one storage. " +
-                            "Please specify storage(s) in the request to resolve this. Business object data {%s}",
-                        businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-                }
-                else
-                {
-                    // Replace the storage unit entity if it belongs to a "higher priority" storage.
-                    String currentUpperCaseStorageName = businessObjectDataToStorageUnitMap.get(businessObjectDataKey).getStorageName().toUpperCase();
-                    int currentStorageIndex = upperCaseStorageNames.indexOf(currentUpperCaseStorageName);
-                    int newStorageIndex = upperCaseStorageNames.indexOf(storageUnitAvailabilityDto.getStorageName().toUpperCase());
-                    if (newStorageIndex < currentStorageIndex)
-                    {
-                        businessObjectDataToStorageUnitMap.put(businessObjectDataKey, storageUnitAvailabilityDto);
-                    }
-                }
-            }
-            else
-            {
-                businessObjectDataToStorageUnitMap.put(businessObjectDataKey, storageUnitAvailabilityDto);
-            }
-        }
-
-        return new ArrayList<>(businessObjectDataToStorageUnitMap.values());
-    }
-
-    /**
-     * Searches for and fails on any of "non-available" registered sub-partitions as per list of "matched" partition filters.
-     *
-     * @param businessObjectDefinitionEntity the business object definition entity
-     * @param businessObjectFormatUsage the business object format usage (case-insensitive)
-     * @param fileTypeEntity the file type entity
-     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest available
-     * format version for each partition value will be used
-     * @param matchedAvailablePartitionFilters the list of "matched" partition filters
-     * @param availablePartitions the list of already discovered "available" partitions, where each partition consists of primary and optional sub-partition
-     * values
-     * @param storageNames the list of storage names
-     * @param storageEntities the list of storage entities
-     * @param s3StoragePlatformEntity the S3 storage platform entity
-     */
-    protected void notAllowNonAvailableRegisteredSubPartitions(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage,
-        FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> matchedAvailablePartitionFilters,
-        List<List<String>> availablePartitions, List<String> storageNames, List<StorageEntity> storageEntities, StoragePlatformEntity s3StoragePlatformEntity)
-    {
-        // Query all matched partition filters to discover any non-available registered sub-partitions. Retrieve latest business object data per list of
-        // matched filters regardless of business object data and/or storage unit statuses. This is done to discover all registered sub-partitions regardless
-        // of business object data or storage unit statuses. We do validate that all specified storage entities are of "S3" storage platform type, so we
-        // specify S3 storage platform in the herdDao call below to select storage units only from S3 storage (when the list of storage names is empty).
-        // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
-        List<StorageUnitAvailabilityDto> matchedNotAvailableStorageUnitAvailabilityDtos = storageUnitDao
-            .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
-                matchedAvailablePartitionFilters, null, null, storageEntities, s3StoragePlatformEntity, null, false);
-
-        // Exclude all storage units with business object data having "DELETED" status.
-        matchedNotAvailableStorageUnitAvailabilityDtos =
-            storageUnitHelper.excludeBusinessObjectDataStatus(matchedNotAvailableStorageUnitAvailabilityDtos, BusinessObjectDataStatusEntity.DELETED);
-
-        // Exclude all already discovered "available" partitions. Please note that, since we got here, the list of matched partitions can not be empty.
-        matchedNotAvailableStorageUnitAvailabilityDtos =
-            storageUnitHelper.excludePartitions(matchedNotAvailableStorageUnitAvailabilityDtos, availablePartitions);
-
-        // Fail on any "non-available" registered sub-partitions.
-        if (!CollectionUtils.isEmpty(matchedNotAvailableStorageUnitAvailabilityDtos))
-        {
-            // Get the business object data key for the first "non-available" registered sub-partition.
-            BusinessObjectDataKey businessObjectDataKey = matchedNotAvailableStorageUnitAvailabilityDtos.get(0).getBusinessObjectDataKey();
-
-            // Throw an exception.
-            throw new ObjectNotFoundException(String.format(
-                "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
-                    "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).",
-                businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(), businessObjectFormatUsage,
-                fileTypeEntity.getCode(), businessObjectFormatVersion, businessObjectDataKey.getPartitionValue(),
-                StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","), businessObjectDataKey.getBusinessObjectDataVersion(),
-                StringUtils.join(storageNames, ",")));
         }
     }
 }
