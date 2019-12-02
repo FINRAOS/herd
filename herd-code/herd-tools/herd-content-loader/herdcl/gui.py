@@ -194,13 +194,21 @@ class MainUI(tk.Frame):
         self.sample_dir.set(directory)
 
     ############################################################################
+    def display(self, resp, log=None):
+        if log:
+            log(resp)
+        else:
+            LOGGER.info(resp)
+        self.line(resp)
+
+    ############################################################################
     def run(self):
         """
         Runs program when user clicks Run button
         """
         self.textPad.delete('1.0', tk.END)
 
-        if not self.username.get():
+        if not (self.username.get() and self.userpwd.get()):
             self.line("Enter credentials")
             return
 
@@ -229,27 +237,19 @@ class MainUI(tk.Frame):
             self.display('\n\n--- RUN SUMMARY ---')
             self.display('Processed {} rows'.format(run_summary['total_rows']))
             self.display('Number of rows succeeded: {}'.format(run_summary['success_rows']))
-            self.display('\n--- RUN WARNINGS ---', log=LOGGER.warning)
-            for e in run_summary['warnings']:
-                self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.warning)
+            if len(run_summary['warnings']) > 0:
+                self.display('\n--- RUN WARNINGS ---', log=LOGGER.warning)
+                for e in run_summary['warnings']:
+                    self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.warning)
             if run_summary['fail_rows'] == 0:
                 self.display('\n--- RUN COMPLETED ---')
             else:
+                self.display('\n--- RUN FAILURES ---', log=LOGGER.error)
                 self.display('Number of rows failed: {}'.format(run_summary['fail_rows']), log=LOGGER.error)
                 self.display('Please check rows: {}\n'.format(run_summary['fail_index']), log=LOGGER.error)
                 for e in run_summary['errors']:
                     self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.error)
-                self.display('\n--- RUN FAILURES ---', log=LOGGER.error)
+                self.display('\n--- RUN COMPLETED WITH FAILURES ---', log=LOGGER.error)
         except Exception:
             self.display(traceback.print_exc(), log=LOGGER.error)
-            self.display('\n--- RUN FAILURES ---', log=LOGGER.error)
-
-        return
-
-    ############################################################################
-    def display(self, resp, log=None):
-        if log:
-            log(resp)
-        else:
-            LOGGER.info(resp)
-        self.line(resp)
+            self.display('\n--- RUN COMPLETED WITH FAILURES ---', log=LOGGER.error)

@@ -40,40 +40,44 @@ class Controller:
     """
      The controller class. Makes calls to herdsdk
     """
+    # Class variables
     action = None
     excel_file = ''
     data_frame = ''
     path = ''
     config = None
-    run_steps = []
-    tag_types = {
-        'columns': []
-    }
-    format_columns = {}
 
-    run_summary = {
-        'total_rows': 0,
-        'success_rows': 0,
-        'fail_rows': 0,
-        'fail_index': [],
-        'warnings': [],
-        'errors': []
-    }
+    # Configure HTTP basic authorization: basicAuthentication
+    configuration = herdsdk.Configuration()
+
+    # actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.SAMPLES.value, Menu.TAGS.value, Menu.EXPORT.value]
+    actions = [Menu.OBJECTS.value, Menu.COLUMNS.value]
+    envs = Menu.ENVS.value
 
     def __init__(self):
+        # Instance variables
+        self.run_steps = []
+        self.tag_types = {
+            'columns': []
+        }
+        self.format_columns = {}
+        self.run_summary = {
+            'total_rows': 0,
+            'success_rows': 0,
+            'fail_rows': 0,
+            'fail_index': [],
+            'warnings': [],
+            'errors': []
+        }
+
         # TODO attach methods
         self.acts = {
             str.lower(Menu.OBJECTS.value): self.load_object,
-            str.lower(Menu.COLUMNS.value): self.load_columns,
-            str.lower(Menu.SAMPLES.value): self.get_build_info,
-            str.lower(Menu.TAGS.value): self.get_build_info,
-            str.lower(Menu.EXPORT.value): self.get_build_info,
+            str.lower(Menu.COLUMNS.value): self.load_columns
+            # str.lower(Menu.SAMPLES.value): self.get_build_info,
+            # str.lower(Menu.TAGS.value): self.get_build_info,
+            # str.lower(Menu.EXPORT.value): self.get_build_info,
         }
-        self.actions = [Menu.OBJECTS, Menu.COLUMNS, Menu.SAMPLES, Menu.TAGS, Menu.EXPORT]
-        self.envs = Menu.ENVS
-
-        # Configure HTTP basic authorization: basicAuthentication
-        self.configuration = herdsdk.Configuration()
 
     ############################################################################
     def load_config(self):
@@ -137,6 +141,7 @@ class Controller:
         :return: reference to function
 
         """
+        self.reset_run()
         method = self.acts[self.action]
         LOGGER.info('Running {}'.format(method.__name__))
         return method
@@ -185,6 +190,7 @@ class Controller:
 
         """
         self.data_frame = self.load_worksheet(Objects.WORKSHEET.value)
+        self.run_summary['total_rows'] = len(self.data_frame.index)
         self.load_worksheet_tag_types()
 
         self.run_steps = [
@@ -194,16 +200,22 @@ class Controller:
         ]
 
         for index, row in self.data_frame.iterrows():
+            row_pass = True
             for step in self.run_steps:
-                try:
-                    step(row)
-                    self.run_summary['success_rows'] += 1
-                except ApiException as e:
-                    LOGGER.error(e)
-                    self.update_run_summary_batch_errors([index], e)
-                except Exception:
-                    LOGGER.error(traceback.format_exc())
-                    self.update_run_summary_batch_errors([index], traceback.format_exc())
+                if row_pass:
+                    try:
+                        step(row)
+                    except ApiException as e:
+                        LOGGER.error(e)
+                        self.update_run_summary_batch_errors([index], e)
+                        row_pass = False
+                    except Exception:
+                        LOGGER.error(traceback.format_exc())
+                        self.update_run_summary_batch_errors([index], traceback.format_exc())
+                        row_pass = False
+
+            if row_pass:
+                self.run_summary['success_rows'] += 1
 
         return self.run_summary
 
@@ -233,6 +245,22 @@ class Controller:
                 step(key, list(index_array.values))
 
         return self.run_summary
+
+    ############################################################################
+    def reset_run(self):
+        self.run_steps = []
+        self.tag_types = {
+            'columns': []
+        }
+        self.format_columns = {}
+        self.run_summary = {
+            'total_rows': 0,
+            'success_rows': 0,
+            'fail_rows': 0,
+            'fail_index': [],
+            'warnings': [],
+            'errors': []
+        }
 
     ############################################################################
     def update_run_summary_batch_errors(self, index_array, message):
@@ -387,8 +415,6 @@ class Controller:
 
         self.data_frame = good_df
 
-        pass
-
     ############################################################################
     def get_bdef_columns(self, key, index_array):
         """
@@ -435,11 +461,11 @@ class Controller:
                         self.format_columns[key] = schema_df
                 else:
                     message = 'No Schema Columns found for {}'.format(key)
-                    LOGGER.warning(message)
+                    LOGGER.error(message)
                     self.update_run_summary_batch_errors(index_array, message)
             else:
                 message = 'No Descriptive Format defined for {}'.format(key)
-                LOGGER.warning(message)
+                LOGGER.error(message)
                 self.update_run_summary_batch_errors(index_array, message)
 
         except ApiException as e:
@@ -475,10 +501,19 @@ class Controller:
                     LOGGER.warning('Success')
                 except ApiException as e:
                     LOGGER.error(e)
-                    self.update_run_summary_batch_errors([ERROR_CODE + 2], e)
+                    self.update_run_summary_batch_errors([ERROR_CODE - 2], e)
                 except Exception:
                     LOGGER.error(traceback.format_exc())
-                    self.update_run_summary_batch_errors([ERROR_CODE + 2], traceback.format_exc())
+                    self.update_run_summary_batch_errors([ERROR_CODE - 2], traceback.format_exc())
+            empty_schema_list = empty_schema_df[Columns.COLUMN_NAME.value].tolist()
+            if len(empty_schema_list) > 0:
+                message = 'Could not find a schema name for the following columns:\n{}'.format(
+                    pprint.pformat(empty_schema_list, width=120, compact=True))
+                warning = {
+                    'index': ERROR_CODE,
+                    'message': message
+                }
+                self.run_summary['warnings'].append(warning)
 
             # Compare excel data to UDC data
             LOGGER.info('Comparing Excel worksheet with UDC data')
@@ -506,7 +541,8 @@ class Controller:
                         elif column_name != xls_column_name or description != xls_description:
                             LOGGER.info('Changing bdef column name: {}'.format(xls_column_name))
                             self.delete_bdef_column(namespace, bdef_name, row[Columns.COLUMN_NAME.value])
-                            self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name, xls_description)
+                            self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name,
+                                                    xls_description)
                             LOGGER.info('Success')
                         else:
                             LOGGER.info('No changes made')
