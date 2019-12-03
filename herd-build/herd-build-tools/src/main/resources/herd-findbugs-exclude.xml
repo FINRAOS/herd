@@ -57,6 +57,7 @@
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent\$Builder"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDataStorageFilesDto"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent\$Builder"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto"/>
@@ -64,7 +65,6 @@
          <Class name="~org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent\$Builder"/>
          <Class name="~org.finra.herd.model.dto.CompleteUploadSingleParamsDto"/>
-         <Class name="~org.finra.herd.model.dto.CreateBusinessObjectDataStorageFilesDto"/>
          <Class name="~org.finra.herd.model.dto.DataProvider"/>
          <Class name="~org.finra.herd.model.dto.DateRangeDto"/>
          <Class name="~org.finra.herd.model.dto.Ec2OnDemandPricing"/>

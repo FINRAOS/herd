@@ -564,7 +564,7 @@
       </xs:annotation>
    </xs:complexType>
 
-   <xs:complexType name="createBusinessObjectDataStorageFilesDto">
+   <xs:complexType name="businessObjectDataStorageFilesDto">
       <xs:sequence>
          <xs:element name="businessObjectDataEntity" type="businessObjectDataEntity" minOccurs="0"/>
          <xs:element name="storageFiles" type="storageFile" minOccurs="0" maxOccurs="unbounded"/>
