@@ -31,6 +31,8 @@ import java.util.Map;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -41,6 +43,9 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 
 public class StorageFileDaoTest extends AbstractDaoTest
 {
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
     @Test
     public void testGetStorageFileByStorageNameAndFilePath()
     {

@@ -36,7 +36,6 @@ import static org.finra.herd.service.AbstractServiceTest.ROW_COUNT_2;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -47,6 +46,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -61,6 +62,9 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 
 public class StorageFileDaoHelperTest
 {
+    @Captor
+    private ArgumentCaptor<List<StorageFileEntity>> argumentCaptor;
+
     @Mock
     private BusinessObjectDataHelper businessObjectDataHelper;
 
@@ -97,7 +101,7 @@ public class StorageFileDaoHelperTest
         assertThat("Row count not equal.", result.get(1).getRowCount(), is(ROW_COUNT_2));
 
         // Verify the external calls.
-        verify(storageFileDao, times(2)).saveAndRefresh(any(StorageFileEntity.class));
+        verify(storageFileDao).saveStorageFiles(argumentCaptor.capture());
         verifyNoMoreInteractionsHelper();
     }
 
