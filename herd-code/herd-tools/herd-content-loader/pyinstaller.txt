@@ -1,6 +1,6 @@
 pandas >= 0.24.0
+boto3 >= 1.9.50
 xlrd >= 1.1.0
 herdsdk
-herdcl
 pyinstaller
 pypiwin32
