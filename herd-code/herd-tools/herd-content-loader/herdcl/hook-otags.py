@@ -1,7 +1,10 @@
 hiddenimports = [
     'numpy',
-    'pandas._libs.tslibs.timedeltas',
-    'pandas._libs.tslibs.nattype',
-    'pandas._libs.tslibs.np_datetime',
-    'pandas._libs.skiplist'
+    'pandas',
+    'boto3',
+    'boto3.exceptions',
+    'herdsdk',
+    'herdsdk.rest',
+    'xlrd',
+    'urllib3'
 ]

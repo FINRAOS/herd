@@ -30,7 +30,7 @@ from setuptools import setup, find_packages
 # http://pypi.python.org/pypi/setuptools
 setup(
     name="herdcl",
-    version="@@Version@@",
+    version="0.110.1",
     description="herd data management",
     maintainer="FINRA",
     maintainer_email="herd@finra.org",
@@ -38,7 +38,7 @@ setup(
     url="https://github.com/FINRAOS/herd",
     keywords=["herd", "dm"],
     install_requires=[
-        "herdsdk", "pandas >= 0.24.0"
+        "herdsdk", "numpy >= 1.17.0", "pandas >= 0.24.0", "boto3 >= 1.9.50", "xlrd >= 1.1.0"
     ],
     packages=find_packages(),
     include_package_data=True,
