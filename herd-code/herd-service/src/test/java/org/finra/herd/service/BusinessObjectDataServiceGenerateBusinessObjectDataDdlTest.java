@@ -2629,7 +2629,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
 
         // Save the original S3 key prefix (directory path) and update the storage unit with a directory path that does not match the S3 key prefix.
         String originalS3KeyPrefix = storageUnitEntities.get(0).getDirectoryPath();
-        storageUnitEntities.get(0).setDirectoryPath(BLANK_TEXT);
+        storageUnitEntities.get(0).setDirectoryPath(INVALID_VALUE);
 
         // Try to retrieve business object data DDL with flag set to suppress scan for unregistered
         // sub-partitions when its storage unit directory path does not match the expected S3 key prefix.
@@ -2648,7 +2648,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Storage directory path \"%s\" registered with business object data {%s} in \"%s\" storage does not match " +
-                "the expected S3 key prefix \"%s\".", BLANK_TEXT, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(
+                "the expected S3 key prefix \"%s\".", INVALID_VALUE, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION)), STORAGE_NAME, originalS3KeyPrefix), e.getMessage());
         }
