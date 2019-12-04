@@ -426,7 +426,7 @@ public class BusinessObjectDataDdlPartitionsHelper
             if (BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions))
             {
                 // Validate the directory path value if it is present.
-                if (storageUnitAvailabilityDto.getStorageUnitDirectoryPath() != null)
+                if (StringUtils.isNotBlank(storageUnitAvailabilityDto.getStorageUnitDirectoryPath()))
                 {
                     Assert.isTrue(storageUnitAvailabilityDto.getStorageUnitDirectoryPath().equals(s3KeyPrefix), String.format(
                         "Storage directory path \"%s\" registered with business object data {%s} " +
