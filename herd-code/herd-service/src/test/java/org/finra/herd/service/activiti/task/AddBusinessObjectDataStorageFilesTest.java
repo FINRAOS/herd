@@ -15,14 +15,19 @@
 */
 package org.finra.herd.service.activiti.task;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.activiti.bpmn.model.FieldExtension;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.herd.model.api.xml.Parameter;
@@ -33,13 +38,18 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
  */
 public class AddBusinessObjectDataStorageFilesTest extends HerdActivitiServiceTaskTest
 {
+    @Autowired
+    JdbcTemplate jdbcTemplate;
 
-    // TODO: Test case fails because the add storage file requires separate transactions now that we use JDBC for performance improvements.
-    // This test will need to be mocked with mockito in the future.
-    @Ignore
     @Test
     public void testAddBusinessObjectDataStorageFilesXml() throws Exception
     {
+        // Turn off referential integrity because the storage unit entity is created in separate JUNIT test transaction in the H2 in-memory database.
+        DataSource dataSource = jdbcTemplate.getDataSource();
+        Connection connection = dataSource.getConnection();
+        CallableStatement callableStatement = connection.prepareCall("SET REFERENTIAL_INTEGRITY TO FALSE");
+        callableStatement.execute();
+
         BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest =
             businessObjectDataServiceTestHelper.getNewBusinessObjectDataStorageFilesCreateRequest();
 
@@ -59,12 +69,15 @@ public class AddBusinessObjectDataStorageFilesTest extends HerdActivitiServiceTa
         testActivitiServiceTaskSuccess(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
 
-    // TODO: Test case fails because the add storage file requires separate transactions now that we use JDBC for performance improvements.
-    // This test will need to be mocked with mockito in the future.
-    @Ignore
     @Test
     public void testAddBusinessObjectDataStorageFilesJson() throws Exception
     {
+        // Turn off referential integrity because the storage unit entity is created in separate JUNIT test transaction in the H2 in-memory database.
+        DataSource dataSource = jdbcTemplate.getDataSource();
+        Connection connection = dataSource.getConnection();
+        CallableStatement callableStatement = connection.prepareCall("SET REFERENTIAL_INTEGRITY TO FALSE");
+        callableStatement.execute();
+
         BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest =
             businessObjectDataServiceTestHelper.getNewBusinessObjectDataStorageFilesCreateRequest();
 
