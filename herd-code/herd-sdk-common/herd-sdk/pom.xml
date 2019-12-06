@@ -5,7 +5,7 @@
     <parent>
         <artifactId>herd-sdk-common</artifactId>
         <groupId>org.finra.herd</groupId>
-        <version>0.108.0-SNAPSHOT</version>
+        <version>0.110.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

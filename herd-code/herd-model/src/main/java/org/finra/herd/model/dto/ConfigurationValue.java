@@ -47,6 +47,12 @@ public enum ConfigurationValue
     HIBERNATE_BATCH_SIZE("hibernate.batch_size", "30"),
 
     /**
+     * Controls the maximum number of statements JDBC will batch together before asking the driver to execute the batch. Zero or a negative number disables
+     * this feature.
+     */
+    JDBC_BATCH_SIZE("jdbc.batch_size", 10_000),
+
+    /**
      * The optional herd data source JNDI name. The default is herdDB.
      */
     HERD_DATA_SOURCE_JNDI_NAME("herd.data.source.jndi.name", "java:comp/env/jdbc/herdDB"),
@@ -998,7 +1004,12 @@ public enum ConfigurationValue
     /**
      * Email address to use in the 'bcc' field when sending emails thru SES as a means of records collection.
      */
-    SES_RECORDS_COLLECTOR_ADDRESS("ses.records.collector.address", null);
+    SES_RECORDS_COLLECTOR_ADDRESS("ses.records.collector.address", null),
+
+    /**
+    * Notification header key published for filtering along with BusinessObjectDataStatusChange notification
+    */
+    MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE("message.header.key.filter.attribute.value", "filterAttributeValue");
 
     private Object defaultValue;
 

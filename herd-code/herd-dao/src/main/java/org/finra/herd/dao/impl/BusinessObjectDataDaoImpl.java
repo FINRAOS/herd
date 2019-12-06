@@ -32,7 +32,6 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
@@ -53,9 +52,9 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.BusinessObjectDataDao;
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.FileTypeDao;
-import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -72,7 +71,6 @@ import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity_;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -99,13 +97,13 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements BusinessObjectDataDao
 {
     @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
     private BusinessObjectFormatDao businessObjectFormatDao;
 
     @Autowired
     private FileTypeDao fileTypeDao;
-
-    @Autowired
-    private NamespaceDao namespaceDao;
 
     @Override
     public BusinessObjectDataEntity getBusinessObjectDataByAltKey(BusinessObjectDataKey businessObjectDataKey)
@@ -653,100 +651,171 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     /**
-     * Create search restrictions.
+     * Create search restrictions per specified business object data search key.
      *
      * @param builder the criteria builder
      * @param criteria the criteria
-     * @param businessObjectDataEntity the root business object data entity
+     * @param businessObjectDataEntityRoot the root business object data entity
      * @param businessObjectDataSearchKey the business object data search key
-     * @param namespaceEntity the namespace entity
+     * @param businessObjectDefinitionEntity the business object definition entity
      * @param fileTypeEntity the file type entity
      * @param isCountQuery specifies if this is a count query
      *
      * @return the search restrictions
      */
-    private Predicate getPredict(CriteriaBuilder builder, CriteriaQuery<?> criteria, Root<BusinessObjectDataEntity> businessObjectDataEntity,
-        BusinessObjectDataSearchKey businessObjectDataSearchKey, NamespaceEntity namespaceEntity, FileTypeEntity fileTypeEntity, boolean isCountQuery)
+    private Predicate getQueryPredicateBySearchKey(CriteriaBuilder builder, CriteriaQuery<?> criteria,
+        Root<BusinessObjectDataEntity> businessObjectDataEntityRoot, BusinessObjectDataSearchKey businessObjectDataSearchKey,
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity, FileTypeEntity fileTypeEntity, boolean isCountQuery)
     {
         // Join to the other tables we can filter on.
-        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
-        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
+            businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
 
+        // If this is not a count query, add an order by clause.
         if (!isCountQuery)
         {
             List<Order> orderList = new ArrayList<>();
-            orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
-            orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)));
-            orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
-            orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType)));
-            orderList.add(builder.desc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
-            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
-            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2)));
-            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3)));
-            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4)));
-            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5)));
-            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)));
+            orderList.add(builder.asc(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage)));
+            orderList.add(builder.asc(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.fileType)));
+            orderList.add(builder.desc(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
+            orderList.add(builder.desc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.partitionValue)));
+            orderList.add(builder.desc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.partitionValue2)));
+            orderList.add(builder.desc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.partitionValue3)));
+            orderList.add(builder.desc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.partitionValue4)));
+            orderList.add(builder.desc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.partitionValue5)));
+            orderList.add(builder.desc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version)));
             criteria.orderBy(orderList);
         }
 
-        // Create the standard restrictions based on the business object search key values (i.e. the standard where clauses).
+        // Create restriction on business object definition.
+        Predicate predicate =
+            builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectDefinitionId), businessObjectDefinitionEntity.getId());
 
-        // Create a restriction on namespace code.
-        Predicate predicate = builder.equal(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace), namespaceEntity);
-
-        // Create and append a restriction on business object definition name.
-        predicate = builder.and(predicate, builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
-            businessObjectDataSearchKey.getBusinessObjectDefinitionName().toUpperCase()));
-
-        // Create and append a restriction on business object format usage.
+        // If specified, add restriction on business object format usage.
         if (!StringUtils.isEmpty(businessObjectDataSearchKey.getBusinessObjectFormatUsage()))
         {
-            predicate = builder.and(predicate, builder.equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
+            predicate = builder.and(predicate, builder.equal(builder.upper(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage)),
                 businessObjectDataSearchKey.getBusinessObjectFormatUsage().toUpperCase()));
         }
 
-        // If specified, create and append a restriction on business object format file type.
+        // If specified, add restriction on business object format file type.
         if (fileTypeEntity != null)
         {
-            predicate = builder.and(predicate, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType), fileTypeEntity));
+            predicate = builder.and(predicate, builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.fileType), fileTypeEntity));
         }
 
-        // If specified, create and append a restriction on business object format version.
+        // If specified, add restriction on business object format version.
         if (businessObjectDataSearchKey.getBusinessObjectFormatVersion() != null)
         {
-            predicate = builder.and(predicate, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
+            predicate = builder.and(predicate, builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
                 businessObjectDataSearchKey.getBusinessObjectFormatVersion()));
         }
-
-        predicate = createPartitionValueFilters(businessObjectDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
-
-        List<AttributeValueFilter> attributeValueFilters = businessObjectDataSearchKey.getAttributeValueFilters();
-
-        if (attributeValueFilters != null && !attributeValueFilters.isEmpty())
+        // Otherwise, if latest valid filter is specified, add restriction on business object format version per sub-query that selects the latest business
+        // object format version having any valid business object data versions.
+        else if (BooleanUtils.isTrue(businessObjectDataSearchKey.isFilterOnLatestValidVersion()))
         {
-            predicate = applyAttributeValueFilters(businessObjectDataSearchKey, businessObjectDataEntity, builder, predicate);
+            // Create a sub query for the business object format version.
+            Subquery<Integer> subQuery = criteria.subquery(Integer.class);
+
+            // The criteria root is the business object data.
+            Root<BusinessObjectDataEntity> subBusinessObjectDataEntityRoot = subQuery.from(BusinessObjectDataEntity.class);
+
+            // Join to other tables we can filter on.
+            Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntityJoin =
+                subBusinessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
+
+            // Create restriction on business object definition.
+            Predicate subQueryRestriction = builder
+                .equal(subBusinessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectDefinitionId), businessObjectDefinitionEntity.getId());
+
+            // If specified, add restriction on business object format usage.
+            if (!StringUtils.isEmpty(businessObjectDataSearchKey.getBusinessObjectFormatUsage()))
+            {
+                subQueryRestriction = builder.and(subQueryRestriction, builder
+                    .equal(builder.upper(subBusinessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage)),
+                        businessObjectDataSearchKey.getBusinessObjectFormatUsage().toUpperCase()));
+            }
+
+            // If specified, add restriction on business object format file type.
+            if (fileTypeEntity != null)
+            {
+                subQueryRestriction = builder
+                    .and(subQueryRestriction, builder.equal(subBusinessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.fileType), fileTypeEntity));
+            }
+
+            // Create and add standard restrictions on primary and sub-partition values.
+            subQueryRestriction =
+                builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntityRoot, businessObjectDataEntityRoot));
+
+            // Add restriction on business object data status.
+            subQueryRestriction = builder.and(subQueryRestriction,
+                builder.equal(subBusinessObjectDataEntityRoot.get(BusinessObjectDataEntity_.statusCode), BusinessObjectDataStatusEntity.VALID));
+
+            // Add all clauses to the sub-query.
+            subQuery.select(builder.max(subBusinessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)))
+                .where(subQueryRestriction);
+
+            // Add restriction on business object format version per the sub-query.
+            predicate =
+                builder.and(predicate, builder.in(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)).value(subQuery));
         }
 
-        // Apply registration date range filter, if specified.
+        // If specified, add restrictions per partition value filters.
+        if (CollectionUtils.isNotEmpty(businessObjectDataSearchKey.getPartitionValueFilters()))
+        {
+            predicate = addPartitionValueFiltersToPredicate(businessObjectDataSearchKey.getPartitionValueFilters(), businessObjectDataEntityRoot,
+                businessObjectFormatEntityJoin, builder, predicate);
+        }
+
+        // If specified, add restrictions per attribute value filters.
+        if (CollectionUtils.isNotEmpty(businessObjectDataSearchKey.getAttributeValueFilters()))
+        {
+            predicate =
+                addAttributeValueFiltersToPredicate(businessObjectDataSearchKey.getAttributeValueFilters(), businessObjectDataEntityRoot, builder, predicate);
+        }
+
+        // If specified, add restrictions per registration date range filter.
         if (businessObjectDataSearchKey.getRegistrationDateRangeFilter() != null)
         {
             predicate =
-                applyRegistrationDateRangeFilter(businessObjectDataSearchKey.getRegistrationDateRangeFilter(), businessObjectDataEntity, builder, predicate);
+                addRegistrationDateRangeFilterToPredicate(businessObjectDataSearchKey.getRegistrationDateRangeFilter(), businessObjectDataEntityRoot, builder,
+                    predicate);
         }
 
+        // If specified, add restrictions per latest valid filter.
         if (BooleanUtils.isTrue(businessObjectDataSearchKey.isFilterOnLatestValidVersion()))
         {
-            String validStatus = BusinessObjectDataStatusEntity.VALID;
-            Subquery<Integer> subQuery =
-                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity, validStatus);
-            predicate = builder.and(predicate, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
+            // Create a sub query for the business object data version.
+            Subquery<Integer> subQuery = criteria.subquery(Integer.class);
+
+            // The criteria root for the sub-query is the business object data.
+            Root<BusinessObjectDataEntity> subBusinessObjectDataEntityRoot = subQuery.from(BusinessObjectDataEntity.class);
+
+            // Add restriction on business object format.
+            Predicate subQueryRestriction = builder.equal(subBusinessObjectDataEntityRoot.get(BusinessObjectDataEntity_.businessObjectFormatId),
+                businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.id));
+
+            // Add restrictions on primary and sub-partition values.
+            subQueryRestriction =
+                builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntityRoot, businessObjectDataEntityRoot));
+
+            // Add restriction on business object data status.
+            subQueryRestriction = builder.and(subQueryRestriction,
+                builder.equal(subBusinessObjectDataEntityRoot.get(BusinessObjectDataEntity_.statusCode), BusinessObjectDataStatusEntity.VALID));
+
+            // Add all clauses to the sub-query.
+            subQuery.select(builder.max(subBusinessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version))).where(subQueryRestriction);
+
+            // Add restriction on business object data version per the sub-query.
+            predicate = builder.and(predicate, builder.in(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version)).value(subQuery));
         }
 
+        // If specified, add restrictions per retention expiration filter.
         if (BooleanUtils.isTrue(businessObjectDataSearchKey.isFilterOnRetentionExpiration()))
         {
-            predicate = applyRetentionExpirationFilter(businessObjectDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
+            predicate =
+                addRetentionExpirationFilterToPredicate(builder, businessObjectDataEntityRoot, businessObjectFormatEntityJoin, businessObjectDefinitionEntity,
+                    predicate);
         }
 
         return predicate;
@@ -765,11 +834,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // Create path. We use business object data id column here, since this is enough to check the record count.
         Path<Integer> businessObjectDataIdColumn = businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.id);
 
-        // Namespace is a required parameter, so fetch the relative entity to optimize the main query.
-        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(businessObjectDataSearchKey.getNamespace());
+        // Namespace and business object definition are required parameters, so fetch the relative business object definition entity to optimize the main query.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(
+            new BusinessObjectDefinitionKey(businessObjectDataSearchKey.getNamespace(), businessObjectDataSearchKey.getBusinessObjectDefinitionName()));
 
-        // If specified namespace does not exist, then return a zero record count.
-        if (namespaceEntity == null)
+        // If specified business object definition does not exist, then return a zero record count.
+        if (businessObjectDefinitionEntity == null)
         {
             return 0;
         }
@@ -791,7 +861,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         Predicate predicate;
         try
         {
-            predicate = getPredict(builder, criteria, businessObjectDataEntityRoot, businessObjectDataSearchKey, namespaceEntity, fileTypeEntity, true);
+            predicate =
+                getQueryPredicateBySearchKey(builder, criteria, businessObjectDataEntityRoot, businessObjectDataSearchKey, businessObjectDefinitionEntity,
+                    fileTypeEntity, true);
         }
         catch (IllegalArgumentException ex)
         {
@@ -819,11 +891,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // The criteria root is the business object data.
         Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
 
-        // Namespace is a required parameter, so fetch the relative entity to optimize the main query.
-        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(businessObjectDataSearchKey.getNamespace());
+        // Namespace and business object definition are required parameters, so fetch the relative business object definition entity to optimize the main query.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(
+            new BusinessObjectDefinitionKey(businessObjectDataSearchKey.getNamespace(), businessObjectDataSearchKey.getBusinessObjectDefinitionName()));
 
-        // If specified namespace does not exist, then return an empty result list.
-        if (namespaceEntity == null)
+        // If specified business object definition does not exist, then return an empty result list.
+        if (businessObjectDefinitionEntity == null)
         {
             return Collections.emptyList();
         }
@@ -845,7 +918,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         Predicate predicate;
         try
         {
-            predicate = getPredict(builder, criteria, businessObjectDataEntityRoot, businessObjectDataSearchKey, namespaceEntity, fileTypeEntity, false);
+            predicate =
+                getQueryPredicateBySearchKey(builder, criteria, businessObjectDataEntityRoot, businessObjectDataSearchKey, businessObjectDefinitionEntity,
+                    fileTypeEntity, false);
         }
         catch (IllegalArgumentException ex)
         {
@@ -856,77 +931,73 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // Add all clauses for the query.
         criteria.select(businessObjectDataEntityRoot).where(predicate);
 
-        // Execute the query.
-        List<BusinessObjectDataEntity> entityArray =
+        // Run the query to get a list of business object data entities.
+        List<BusinessObjectDataEntity> businessObjectDataEntities =
             entityManager.createQuery(criteria).setFirstResult(pageSize * (pageNum - 1)).setMaxResults(pageSize).getResultList();
 
         // Crete the result list of business object data.
-        return getQueryResultListFromEntityList(entityArray, businessObjectDataSearchKey.getAttributeValueFilters());
+        return getQueryResultListFromEntityList(businessObjectDataEntities, businessObjectDataSearchKey.getAttributeValueFilters());
     }
 
     /**
-     * Creates a predicate for partition value filters.
+     * Adds partition value filters to the query predicate.
      *
-     * @param businessDataSearchKey businessDataSearchKey
-     * @param businessObjectDataEntity businessObjectDataEntity
-     * @param businessObjectFormatEntity businessObjectFormatEntity
-     * @param builder builder
-     * @param predicatePram predicate parameter
+     * @param partitionValueFilters the list of partition value filters, not empty
+     * @param businessObjectDataEntity the business object data entity
+     * @param businessObjectFormatEntity the business object format entity
+     * @param builder the builder
+     * @param predicate the query predicate to be updated, not null
      *
-     * @return the predicate
+     * @return the updated query predicate
      */
-    private Predicate createPartitionValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
-        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity, CriteriaBuilder builder, Predicate predicatePram)
+    private Predicate addPartitionValueFiltersToPredicate(List<PartitionValueFilter> partitionValueFilters,
+        Root<BusinessObjectDataEntity> businessObjectDataEntity, Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity,
+        CriteriaBuilder builder, Predicate predicate)
     {
-        Predicate predicate = predicatePram;
-
-        if (businessDataSearchKey.getPartitionValueFilters() != null && !businessDataSearchKey.getPartitionValueFilters().isEmpty())
+        for (PartitionValueFilter partitionValueFilter : partitionValueFilters)
         {
-            for (PartitionValueFilter partitionFilter : businessDataSearchKey.getPartitionValueFilters())
+            Join<BusinessObjectFormatEntity, SchemaColumnEntity> schemaEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.schemaColumns);
+
+            List<String> partitionValues = partitionValueFilter.getPartitionValues();
+
+            predicate = builder
+                .and(predicate, builder.equal(builder.upper(schemaEntity.get(SchemaColumnEntity_.name)), partitionValueFilter.getPartitionKey().toUpperCase()));
+            predicate = builder.and(predicate, builder.isNotNull(schemaEntity.get(SchemaColumnEntity_.partitionLevel)));
+
+            if (partitionValues != null && !partitionValues.isEmpty())
             {
-                Join<BusinessObjectFormatEntity, SchemaColumnEntity> schemaEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.schemaColumns);
+                predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
+                    businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue).in(partitionValues)), builder
+                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
+                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2).in(partitionValues)), builder
+                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
+                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3).in(partitionValues)), builder
+                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
+                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4).in(partitionValues)), builder
+                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
+                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5).in(partitionValues))));
+            }
+            else if (partitionValueFilter.getPartitionValueRange() != null)
+            {
+                PartitionValueRange partitionRange = partitionValueFilter.getPartitionValueRange();
+                String startPartitionValue = partitionRange.getStartPartitionValue();
+                String endPartitionValue = partitionRange.getEndPartitionValue();
 
-                List<String> partitionValues = partitionFilter.getPartitionValues();
-
-                predicate = builder
-                    .and(predicate, builder.equal(builder.upper(schemaEntity.get(SchemaColumnEntity_.name)), partitionFilter.getPartitionKey().toUpperCase()));
-                predicate = builder.and(predicate, builder.isNotNull(schemaEntity.get(SchemaColumnEntity_.partitionLevel)));
-
-                if (partitionValues != null && !partitionValues.isEmpty())
-                {
-                    predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
-                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue).in(partitionValues)), builder
-                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
-                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2).in(partitionValues)), builder
-                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
-                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3).in(partitionValues)), builder
-                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
-                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4).in(partitionValues)), builder
-                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
-                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5).in(partitionValues))));
-                }
-                else if (partitionFilter.getPartitionValueRange() != null)
-                {
-                    PartitionValueRange partitionRange = partitionFilter.getPartitionValueRange();
-                    String startPartitionValue = partitionRange.getStartPartitionValue();
-                    String endPartitionValue = partitionRange.getEndPartitionValue();
-
-                    predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
-                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), startPartitionValue),
-                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), endPartitionValue)), builder
-                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
-                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), startPartitionValue),
-                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), endPartitionValue)), builder
-                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
-                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), startPartitionValue),
-                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), endPartitionValue)), builder
-                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
-                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), startPartitionValue),
-                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), endPartitionValue)), builder
-                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
-                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), startPartitionValue),
-                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), endPartitionValue))));
-                }
+                predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
+                    builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), startPartitionValue),
+                    builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), endPartitionValue)), builder
+                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
+                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), startPartitionValue),
+                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), endPartitionValue)), builder
+                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
+                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), startPartitionValue),
+                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), endPartitionValue)), builder
+                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
+                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), startPartitionValue),
+                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), endPartitionValue)), builder
+                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
+                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), startPartitionValue),
+                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), endPartitionValue))));
             }
         }
 
@@ -934,27 +1005,23 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     /**
-     * Apply retention expiration filter to the main query predicate.
+     * Adds retention expiration filter to the query predicate.
      *
-     * @param businessObjectDataSearchKey the business object data search key
-     * @param businessObjectDataEntityRoot the criteria root which is a business object data entity
-     * @param businessObjectFormatEntityJoin the join with the business object format table
      * @param builder the criteria builder
-     * @param mainQueryPredicate the main query predicate to be updated
+     * @param businessObjectDataEntityRoot the root business object data entity
+     * @param businessObjectFormatEntityJoin the join with the business object format table
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param predicate the query predicate to be updated, not null
      *
-     * @return the updated main query predicate
+     * @return the updated query predicate
      */
-    private Predicate applyRetentionExpirationFilter(BusinessObjectDataSearchKey businessObjectDataSearchKey,
-        Root<BusinessObjectDataEntity> businessObjectDataEntityRoot, Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin,
-        CriteriaBuilder builder, Predicate mainQueryPredicate)
+    private Predicate addRetentionExpirationFilterToPredicate(CriteriaBuilder builder, Root<BusinessObjectDataEntity> businessObjectDataEntityRoot,
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin,
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity, Predicate predicate)
     {
-        // Create a business object definition key per specified search key.
-        BusinessObjectDefinitionKey businessObjectDefinitionKey =
-            new BusinessObjectDefinitionKey(businessObjectDataSearchKey.getNamespace(), businessObjectDataSearchKey.getBusinessObjectDefinitionName());
-
         // Get latest versions of all business object formats that registered with the business object definition.
         List<BusinessObjectFormatEntity> businessObjectFormatEntities =
-            businessObjectFormatDao.getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(businessObjectDefinitionKey);
+            businessObjectFormatDao.getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(businessObjectDefinitionEntity);
 
         // Create a result predicate to join all retention expiration predicates created per selected business object formats.
         Predicate businessObjectDefinitionRetentionExpirationPredicate = null;
@@ -1016,60 +1083,57 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // Fail if no retention expiration predicates got created per specified business objject definition.
         Assert.notNull(businessObjectDefinitionRetentionExpirationPredicate, String
             .format("Business object definition with name \"%s\" and namespace \"%s\" has no business object formats with supported retention type.",
-                businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace()));
+                businessObjectDefinitionEntity.getName(), businessObjectDefinitionEntity.getNamespace().getCode()));
 
-        // Add created business object definition retention expiration predicate to the main query predicate passed to this method and return the result.
-        return builder.and(mainQueryPredicate, businessObjectDefinitionRetentionExpirationPredicate);
+        // Add created business object definition retention expiration predicate to the query predicate passed to this method and return the result.
+        return builder.and(predicate, businessObjectDefinitionRetentionExpirationPredicate);
     }
 
     /**
-     * Apply attribute value filters to the main query predicate.
+     * Adds attribute value filters to the query predicate.
      *
-     * @param businessDataSearchKey the business object data search key
+     * @param attributeValueFilters the list of attribute value filters, not empty
      * @param businessObjectDataEntityRoot the criteria root which is a business object data entity
      * @param builder the criteria builder
-     * @param mainQueryPredicate the main query predicate to be updated
+     * @param predicate the query predicate to be updated, not null
      *
-     * @return the updated main query predicate
+     * @return the updated query predicate
      */
-    private Predicate applyAttributeValueFilters(final BusinessObjectDataSearchKey businessDataSearchKey,
-        final Root<BusinessObjectDataEntity> businessObjectDataEntityRoot, final CriteriaBuilder builder, Predicate mainQueryPredicate)
+    private Predicate addAttributeValueFiltersToPredicate(final List<AttributeValueFilter> attributeValueFilters,
+        final Root<BusinessObjectDataEntity> businessObjectDataEntityRoot, final CriteriaBuilder builder, Predicate predicate)
     {
-        if (!CollectionUtils.isEmpty(businessDataSearchKey.getAttributeValueFilters()))
+        for (AttributeValueFilter attributeValueFilter : attributeValueFilters)
         {
-            for (AttributeValueFilter attributeValueFilter : businessDataSearchKey.getAttributeValueFilters())
+            Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity =
+                businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.attributes);
+
+            if (!StringUtils.isEmpty(attributeValueFilter.getAttributeName()))
             {
-                Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity =
-                    businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.attributes);
+                predicate = builder
+                    .and(predicate, builder.equal(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.name), attributeValueFilter.getAttributeName()));
+            }
 
-                if (!StringUtils.isEmpty(attributeValueFilter.getAttributeName()))
-                {
-                    mainQueryPredicate = builder.and(mainQueryPredicate,
-                        builder.equal(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.name), attributeValueFilter.getAttributeName()));
-                }
-
-                if (!StringUtils.isEmpty(attributeValueFilter.getAttributeValue()))
-                {
-                    mainQueryPredicate = builder.and(mainQueryPredicate,
-                        builder.equal(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.value), attributeValueFilter.getAttributeValue()));
-                }
+            if (!StringUtils.isEmpty(attributeValueFilter.getAttributeValue()))
+            {
+                predicate = builder
+                    .and(predicate, builder.equal(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.value), attributeValueFilter.getAttributeValue()));
             }
         }
 
-        return mainQueryPredicate;
+        return predicate;
     }
 
     /**
-     * Apply a predicate for registration date range filter.
+     * Adds registration date range filter to the query predicate.
      *
      * @param registrationDateRangeFilter the registration date range filter, not null
      * @param businessObjectDataEntity the business object data entity
      * @param builder the query builder
-     * @param predicate the predicate to be updated
+     * @param predicate the query predicate to be updated, not null
      *
-     * @return the predicate with added registration date range filter
+     * @return the updated query predicate
      */
-    private Predicate applyRegistrationDateRangeFilter(RegistrationDateRangeFilter registrationDateRangeFilter,
+    private Predicate addRegistrationDateRangeFilterToPredicate(RegistrationDateRangeFilter registrationDateRangeFilter,
         Root<BusinessObjectDataEntity> businessObjectDataEntity, CriteriaBuilder builder, Predicate predicate)
     {
         // Apply predicate for registration start date and removed the time portion of the date.
@@ -1215,54 +1279,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         return false;
-    }
-
-    /**
-     * Creates a sub query for the maximum business object data version.
-     *
-     * @param builder criteria builder
-     * @param criteria criteria query
-     * @param businessObjectDataEntity business object data entity
-     * @param businessObjectFormatEntity business object format entity
-     * @param businessObjectDataStatus business object status, case insensitive
-     *
-     * @return the sub query to select the maximum business object data version
-     */
-    private Subquery<Integer> getMaximumBusinessObjectDataVersionSubQuery(CriteriaBuilder builder, CriteriaQuery<?> criteria,
-        From<?, BusinessObjectDataEntity> businessObjectDataEntity, From<?, BusinessObjectFormatEntity> businessObjectFormatEntity,
-        String businessObjectDataStatus)
-    {
-        // Create a sub query for the business object data version.
-        Subquery<Integer> subQuery = criteria.subquery(Integer.class);
-
-        // The criteria root is the business object data.
-        Root<BusinessObjectDataEntity> subBusinessObjectDataEntity = subQuery.from(BusinessObjectDataEntity.class);
-
-        // Join to the other tables we can filter on.
-        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntity =
-            subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
-
-        // Add a standard restriction on business object format.
-        Predicate subQueryRestriction = builder.equal(subBusinessObjectFormatEntity, businessObjectFormatEntity);
-
-        // Create and add standard restrictions on primary and sub-partition values.
-        subQueryRestriction =
-            builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
-
-        // If specified, create and add a standard restriction on business object data status.
-        if (businessObjectDataStatus != null)
-        {
-            Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
-                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
-
-            subQueryRestriction = builder.and(subQueryRestriction, builder
-                .equal(builder.upper(subBusinessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code)), businessObjectDataStatus.toUpperCase()));
-        }
-
-        // Add all clauses to the sub query.
-        subQuery.select(builder.max(subBusinessObjectDataEntity.get(BusinessObjectDataEntity_.version))).where(subQueryRestriction);
-
-        return subQuery;
     }
 
     @Override

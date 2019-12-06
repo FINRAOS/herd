@@ -94,8 +94,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
     {
         // Create a business object data entity with a publishable attributes that have relative attribute definitions in upper and lower cases.
         List<AttributeDefinition> testAttributeDefinitions = Arrays
-            .asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), PUBLISH_ATTRIBUTE),
-                new AttributeDefinition(ATTRIBUTE_NAME_2_MIXED_CASE.toLowerCase(), PUBLISH_ATTRIBUTE));
+            .asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER),
+                new AttributeDefinition(ATTRIBUTE_NAME_2_MIXED_CASE.toLowerCase(), PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER));
         List<Attribute> testAttributes = Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_NAME_1_MIXED_CASE),
             new Attribute(ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_NAME_2_MIXED_CASE));
         BusinessObjectDataEntity businessObjectDataEntity =
@@ -130,7 +130,7 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
     {
         // Create a business object data entity with a publishable attributes that has a null value.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES,
-            Collections.singletonList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, PUBLISH_ATTRIBUTE)),
+            Collections.singletonList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER)),
             Collections.singletonList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)));
 
         // Get a business object data key.
@@ -165,8 +165,8 @@ public class MessageNotificationEventServiceTest extends AbstractServiceTest
         List<Attribute> testAttributes =
             Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT), new Attribute(ATTRIBUTE_NAME_2_MIXED_CASE, EMPTY_STRING));
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(SUBPARTITION_VALUES, Arrays
-            .asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, PUBLISH_ATTRIBUTE),
-                new AttributeDefinition(ATTRIBUTE_NAME_2_MIXED_CASE, PUBLISH_ATTRIBUTE)), testAttributes);
+            .asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER),
+                new AttributeDefinition(ATTRIBUTE_NAME_2_MIXED_CASE, PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER)), testAttributes);
 
         // Get a business object data key.
         BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);

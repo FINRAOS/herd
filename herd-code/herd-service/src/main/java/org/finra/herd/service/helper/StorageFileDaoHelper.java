@@ -61,8 +61,9 @@ public class StorageFileDaoHelper
             storageFileEntity.setPath(storageFile.getFilePath());
             storageFileEntity.setFileSizeBytes(storageFile.getFileSizeBytes());
             storageFileEntity.setRowCount(storageFile.getRowCount());
-            storageFileDao.saveAndRefresh(storageFileEntity);
         }
+
+        storageFileDao.saveStorageFiles(storageFileEntities);
 
         return storageFileEntities;
     }

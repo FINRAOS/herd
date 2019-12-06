@@ -23,6 +23,10 @@ import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.BooleanUtils;
+import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +38,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
+import org.springframework.util.Assert;
 
 /**
  * The builder that knows how to build Business Object Data Status Change notification messages
@@ -46,6 +51,9 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
 
     @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     /**
      * Returns Velocity context map of additional keys and values to place in the velocity context.
@@ -73,9 +81,11 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(event.getBusinessObjectDataKey());
         velocityContextMap.put("businessObjectDataId", businessObjectDataEntity.getId());
 
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectDataEntity.getBusinessObjectFormat();
+
         // Load all attribute definitions for this business object data in a map for easy access.
         Map<String, BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntityMap =
-            businessObjectFormatHelper.getAttributeDefinitionEntities(businessObjectDataEntity.getBusinessObjectFormat());
+            businessObjectFormatHelper.getAttributeDefinitionEntities(businessObjectFormatEntity);
 
         // Build an ordered map of business object data attributes that are flagged to be published in notification messages.
         Map<String, String> businessObjectDataAttributes = new LinkedHashMap<>();
@@ -95,6 +105,20 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
                         businessObjectDataAttributes.put(attributeEntity.getName(), attributeEntity.getValue());
                         businessObjectDataAttributesWithJson.put(escapeJson(attributeEntity.getName()), escapeJson(attributeEntity.getValue()));
                         businessObjectDataAttributesWithXml.put(escapeXml(attributeEntity.getName()), escapeXml(attributeEntity.getValue()));
+                    }
+
+                    if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublishForFilter()))
+                    {
+
+                        // Get notification header key for filter attribute value
+                        String filterAttributeKey = configurationHelper.getRequiredProperty(ConfigurationValue.MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE);
+                        if (velocityContextMap.containsKey(filterAttributeKey))
+                        {
+                            throw new IllegalStateException(String.format("Multiple attributes are marked as publishForFilter for business object format {%s}.",
+                                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
+                        }
+
+                        addStringPropertyToContext(velocityContextMap, filterAttributeKey, attributeEntity.getValue());
                     }
                 }
             }

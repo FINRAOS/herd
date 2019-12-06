@@ -862,6 +862,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Validate attribute definitions if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributeDefinitions()))
         {
+            boolean isPublishForFilterFound = false;
+
             Map<String, AttributeDefinition> attributeNameValidationMap = new HashMap<>();
             for (AttributeDefinition attributeDefinition : request.getAttributeDefinitions())
             {
@@ -874,6 +876,17 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 {
                     throw new IllegalArgumentException(String.format("Duplicate attribute definition name \"%s\" found.", attributeDefinition.getName()));
                 }
+
+                // Ensure the attribute definitions do not have multiple publish for filters defined
+                if (BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()) && !isPublishForFilterFound)
+                {
+                    isPublishForFilterFound = true;
+                }
+                else if (BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()) && isPublishForFilterFound)
+                {
+                    throw new IllegalArgumentException("Only a single publish for filter attribute can be defined per business object format.");
+                }
+
                 attributeNameValidationMap.put(lowercaseAttributeDefinitionName, attributeDefinition);
             }
         }
@@ -1300,6 +1313,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
                 // For the "publish" option, default a Boolean null value to "false".
                 attributeDefinitionEntity.setPublish(BooleanUtils.isTrue(attributeDefinition.isPublish()));
+
+                // For the "publish for filter" option, default a Boolean null value to "false".
+                attributeDefinitionEntity.setPublishForFilter(BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()));
             }
         }
 
@@ -1329,6 +1345,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             businessObjectFormatEntity.setCollectionItemsDelimiter(schema.getCollectionItemsDelimiter());
             businessObjectFormatEntity.setMapKeysDelimiter(schema.getMapKeysDelimiter());
             businessObjectFormatEntity.setEscapeCharacter(schema.getEscapeCharacter());
+            businessObjectFormatEntity.setCustomRowFormat(schema.getCustomRowFormat());
             businessObjectFormatEntity.setPartitionKeyGroup(partitionKeyGroupEntity);
 
             // Create a schema column entities collection, if needed.
@@ -1429,6 +1446,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setCollectionItemsDelimiter(null);
         businessObjectFormatEntity.setMapKeysDelimiter(null);
         businessObjectFormatEntity.setEscapeCharacter(null);
+        businessObjectFormatEntity.setCustomRowFormat(null);
         businessObjectFormatEntity.setPartitionKeyGroup(null);
         businessObjectFormatEntity.getSchemaColumns().clear();
     }
@@ -1525,11 +1543,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 // Check if the attribute definition value needs to be updated.
                 BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity =
                     existingAttributeDefinitionEntities.get(lowercaseAttributeName);
-                if (!attributeDefinition.isPublish().equals(businessObjectDataAttributeDefinitionEntity.getPublish()))
-                {
-                    // Update the business object attribute entity.
-                    businessObjectDataAttributeDefinitionEntity.setPublish(attributeDefinition.isPublish());
-                }
+                businessObjectDataAttributeDefinitionEntity.setPublish(BooleanUtils.isTrue(attributeDefinition.isPublish()));
+                businessObjectDataAttributeDefinitionEntity.setPublishForFilter(BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()));
 
                 // Add this entity to the list of business object definition attribute entities to be retained.
                 retainedAttributeDefinitionEntities.add(businessObjectDataAttributeDefinitionEntity);
@@ -1542,6 +1557,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 businessObjectDataAttributeDefinitionEntity.setBusinessObjectFormat(businessObjectFormatEntity);
                 businessObjectDataAttributeDefinitionEntity.setName(attributeDefinition.getName());
                 businessObjectDataAttributeDefinitionEntity.setPublish(BooleanUtils.isTrue(attributeDefinition.isPublish()));
+                businessObjectDataAttributeDefinitionEntity.setPublishForFilter(BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()));
 
                 // Add this entity to the list of the newly created business object definition attribute entities.
                 createdAttributeDefinitionEntities.add(businessObjectDataAttributeDefinitionEntity);
@@ -1564,18 +1580,31 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     {
         Assert.notNull(attributeDefinitions, "A business object format attribute definitions list is required.");
 
+        boolean isPublishForFilterFound = false;
+
         Map<String, AttributeDefinition> attributeDefinitionNameValidationMap = new HashMap<>();
         for (AttributeDefinition attributeDefinition : attributeDefinitions)
         {
             Assert.hasText(attributeDefinition.getName(), "An attribute definition name must be specified.");
             attributeDefinition.setName(attributeDefinition.getName().trim());
 
-            // Ensure the attribute defination key isn't a duplicate by using a map with a "lowercase" name as the key for case insensitivity.
+            // Ensure the attribute definition key isn't a duplicate by using a map with a "lowercase" name as the key for case insensitivity.
             String lowercaseAttributeDefinitionName = attributeDefinition.getName().toLowerCase();
             if (attributeDefinitionNameValidationMap.containsKey(lowercaseAttributeDefinitionName))
             {
                 throw new IllegalArgumentException(String.format("Duplicate attribute definition name \"%s\" found.", attributeDefinition.getName()));
             }
+
+            // Ensure the attribute definitions do not have multiple publish for filters defined
+            if (BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()) && !isPublishForFilterFound)
+            {
+                isPublishForFilterFound = true;
+            }
+            else if (BooleanUtils.isTrue(attributeDefinition.isPublishForFilter()) && isPublishForFilterFound)
+            {
+                throw new IllegalArgumentException("Only a single publish for filter attribute can be defined per business object format.");
+            }
+
             attributeDefinitionNameValidationMap.put(lowercaseAttributeDefinitionName, attributeDefinition);
         }
     }

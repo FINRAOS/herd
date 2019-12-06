@@ -422,6 +422,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer FIFTH_FORMAT_VERSION = 4;
 
+    public static final Boolean FILTER_ON_LATEST_VALID_VERSION = true;
+
     public static final Boolean FILTER_ON_RETENTION_EXPIRATION = true;
 
     public static final String FIRST_COLUMN_DATA_TYPE = "TINYINT";
@@ -566,6 +568,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> LOCAL_FILES_SUBSET = Arrays.asList("Foo2.dat", "FOO3.DAT", "folder/foo2.dat");
 
+    public static final List<String> LOCAL_FILES_2 = Arrays.asList("bar1.dat", "Bar2.dat", "BAR3.DAT", "folder/bar3.dat", "folder/bar2.dat", "folder/bar1.dat");
+
     public static final Long LONG_VALUE = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final String MARKER = "UT_Marker_" + RANDOM_SUFFIX;
@@ -683,7 +687,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final StoragePlatformEntity NO_EXCLUDED_STORAGE_PLATFORM_ENTITY = null;
 
-    public static final String NO_EXCLUDED_STORAGE_PLATFORM_TYPE  = null;
+    public static final String NO_EXCLUDED_STORAGE_PLATFORM_TYPE = null;
 
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
 
@@ -854,6 +858,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean PUBLISH_ATTRIBUTE = true;
 
+    public static final Boolean PUBLISH_FOR_FILTER = true;
+
+    public static final Boolean NO_PUBLISH_FOR_FILTER = false;
+
     public static final Integer READ_TIMEOUT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final String REALM = "UT_Realm_" + RANDOM_SUFFIX;
@@ -929,6 +937,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SCHEMA_MAP_KEYS_DELIMITER_HASH = "#";
 
     public static final String SCHEMA_ESCAPE_CHARACTER_BACKSLASH = "\\";
+
+    public static final String SCHEMA_CUSTOM_ROW_FORMAT = "SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'";
+
+    public static final String SCHEMA_CUSTOM_ROW_FORMAT_WITH_SERDE_PROPS =
+        "SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'\n" + "WITH SERDEPROPERTIES (\n" + "   \"separatorChar\" = \"\\t\",\n" +
+            "   \"quoteChar\"     = \"'\",\n" + "   \"escapeChar\"    = \"\\\\\"\n" + ") ";
 
     public static final String SCHEMA_ESCAPE_CHARACTER_TILDE = "~";
 
@@ -1023,6 +1037,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String STORAGE_DIRECTORY_PATH = "UT_Storage_Directory/Some_Path/" + RANDOM_SUFFIX;
 
     public static final String STORAGE_NAME = "UT_Storage_1_" + RANDOM_SUFFIX;
+
+    public static final List<String> SINGLE_STORAGE_NAMES = Arrays.asList("UT_Storage_1_" + RANDOM_SUFFIX);
 
     public static final List<String> STORAGE_NAMES = Arrays.asList("UT_Storage_1_" + RANDOM_SUFFIX, "UT_Storage_2_" + RANDOM_SUFFIX);
 
